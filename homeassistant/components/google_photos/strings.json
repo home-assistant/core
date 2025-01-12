@@ -48,7 +48,7 @@
       "message": "`{filename}` is not an image"
     },
     "missing_upload_permission": {
-      "message": "Home Assistnt was not granted permission to upload to Google Photos"
+      "message": "Home Assistant was not granted permission to upload to Google Photos"
     },
     "upload_error": {
       "message": "Failed to upload content: {message}"
@@ -66,11 +66,11 @@
   "services": {
     "upload": {
       "name": "Upload media",
-      "description": "Upload images or videos to Google Photos.",
+      "description": "Uploads images or videos to Google Photos.",
       "fields": {
         "config_entry_id": {
-          "name": "Integration Id",
-          "description": "The Google Photos integration id."
+          "name": "Integration ID",
+          "description": "The Google Photos integration ID."
         },
         "filename": {
           "name": "Filename",

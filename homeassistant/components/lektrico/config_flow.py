@@ -116,7 +116,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial_number = str(settings["serial_number"])
         self._device_type = settings["type"]
         self._board_revision = settings["board_revision"]
-        self._name = f"{settings["type"]}_{self._serial_number}"
+        self._name = f"{settings['type']}_{self._serial_number}"
 
         # Check if already configured
         # Set unique id

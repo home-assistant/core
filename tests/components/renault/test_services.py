@@ -30,7 +30,7 @@ from homeassistant.const import (
     ATTR_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_VEHICLES
@@ -341,12 +341,14 @@ async def test_service_invalid_device_id(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    data = {ATTR_VEHICLE: "VF1AAAAA555777999"}
+    data = {ATTR_VEHICLE: "some_random_id"}
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
         )
+    assert err.value.translation_key == "invalid_device_id"
+    assert err.value.translation_placeholders == {"device_id": "some_random_id"}
 
 
 async def test_service_invalid_device_id2(
@@ -372,7 +374,9 @@ async def test_service_invalid_device_id2(
 
     data = {ATTR_VEHICLE: device_id}
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN, SERVICE_AC_CANCEL, service_data=data, blocking=True
         )
+    assert err.value.translation_key == "no_config_entry_for_device"
+    assert err.value.translation_placeholders == {"device_id": "REG-NUMBER"}

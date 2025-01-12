@@ -34,10 +34,11 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
 class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMLIGHT Zigbee."""
 
+    host: str
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.client: Api2
-        self.host: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -46,9 +47,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            self.client = Api2(host, session=async_get_clientsession(self.hass))
-            self.host = host
+            self.host = user_input[CONF_HOST]
+            self.client = Api2(self.host, session=async_get_clientsession(self.hass))
 
             try:
                 if not await self._async_check_auth_required(user_input):
@@ -138,9 +138,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth when API Authentication failed."""
 
-        host = entry_data[CONF_HOST]
-        self.client = Api2(host, session=async_get_clientsession(self.hass))
-        self.host = host
+        self.host = entry_data[CONF_HOST]
+        self.client = Api2(self.host, session=async_get_clientsession(self.hass))
 
         return await self.async_step_reauth_confirm()
 

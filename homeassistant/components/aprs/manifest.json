@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/aprs",
   "iot_class": "cloud_push",
   "loggers": ["aprslib", "geographiclib", "geopy"],
+  "quality_scale": "legacy",
   "requirements": ["aprslib==0.7.2", "geopy==2.3.0"]
 }

@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'devices': list([
+      dict({
+        'power_meter': dict({
+          'energy_return': 111.111,
+          'energy_usage': 1111.111,
+          'energy_usage_high_tariff': 111.111,
+          'energy_usage_low_tariff': 111.111,
+          'outdated': False,
+          'power': 111,
+          'timestamp': '2024-11-26 10:48:51',
+        }),
+      }),
+      dict({
+        'water_meter': dict({
+          'cold_water': 1111.111,
+          'outdated': False,
+          'timestamp': '2024-11-26 10:48:51',
+          'warm_water': 0.0,
+        }),
+      }),
+      dict({
+        'heat_meter': dict({
+          'delta_energy': 111,
+          'delta_volume': 0.111,
+          'outdated': False,
+          'timestamp': '2024-11-26 10:48:51',
+          'total_energy': 1111.111,
+          'total_volume': 1111.111,
+        }),
+      }),
+    ]),
+  })
+# ---

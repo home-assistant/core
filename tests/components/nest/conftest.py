@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import AbstractEventLoop
 from collections.abc import Generator
 import copy
 import shutil
@@ -13,100 +12,131 @@ import uuid
 
 import aiohttp
 from google_nest_sdm import diagnostics
-from google_nest_sdm.auth import AbstractAuth
-from google_nest_sdm.device_manager import DeviceManager
+from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
+from google_nest_sdm.streaming_manager import StreamingManager
 import pytest
+from yarl import URL
 
 from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.nest import DOMAIN
-from homeassistant.components.nest.const import CONF_SUBSCRIBER_ID, SDM_SCOPES
+from homeassistant.components.nest.const import API_URL, CONF_SUBSCRIBER_ID, SDM_SCOPES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .common import (
     DEVICE_ID,
+    DEVICE_URL_MATCH,
     PROJECT_ID,
     SUBSCRIBER_ID,
+    TEST_CLIP_URL,
     TEST_CONFIG_APP_CREDS,
+    TEST_IMAGE_URL,
     CreateDevice,
-    FakeSubscriber,
     NestTestConfig,
     PlatformSetup,
     YieldFixture,
 )
 
 from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
+from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 
 FAKE_TOKEN = "some-token"
 FAKE_REFRESH_TOKEN = "some-refresh-token"
 
 
-class FakeAuth(AbstractAuth):
-    """A fake implementation of the auth class that records requests.
+class FakeAuth:
+    """A fixture for request handling that records requests.
 
-    This class captures the outgoing requests, and can also be used by
-    tests to set up fake responses.  This class is registered as a response
-    handler for a fake aiohttp_server and can simulate successes or failures
-    from the API.
+    This class is used with AiohttpClientMocker to capture outgoing requests
+    and can also be used by tests to set up fake responses.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        aioclient_mock: AiohttpClientMocker,
+        device_factory: CreateDevice,
+        project_id: str,
+    ) -> None:
         """Initialize FakeAuth."""
-        super().__init__(None, None)
-        # Tests can set fake responses here.
-        self.responses = []
+        # Tests can factory fixture to create fake device responses.
+        self.device_factory = device_factory
+        # Tests can set fake structure responses here.
+        self.structures: list[dict[str, Any]] = []
+        # Tests can set fake command responses here.
+        self.responses: list[aiohttp.web.Response] = []
+
         # The last request is recorded here.
         self.method = None
         self.url = None
         self.json = None
         self.headers = None
         self.captured_requests = []
-        # Set up by fixture
-        self.client = None
 
-    async def async_get_access_token(self) -> str:
-        """Return a valid access token."""
-        return ""
+        # API makes a call to request structures to initiate pubsub feed, but the
+        # integration does not use this.
+        aioclient_mock.get(
+            f"{API_URL}/enterprises/{project_id}/structures",
+            side_effect=self.request_structures,
+        )
+        aioclient_mock.get(
+            f"{API_URL}/enterprises/{project_id}/devices",
+            side_effect=self.request_devices,
+        )
+        aioclient_mock.post(DEVICE_URL_MATCH, side_effect=self.request)
+        aioclient_mock.get(TEST_IMAGE_URL, side_effect=self.request)
+        aioclient_mock.get(TEST_CLIP_URL, side_effect=self.request)
 
-    async def request(self, method, url, **kwargs):
+    async def request_structures(
+        self, method: str, url: str, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        """Handle requests to create devices."""
+        return AiohttpClientMockResponse(
+            method, url, json={"structures": self.structures}
+        )
+
+    async def request_devices(
+        self, method: str, url: str, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
+        """Handle requests to create devices."""
+        return AiohttpClientMockResponse(
+            method, url, json={"devices": self.device_factory.devices}
+        )
+
+    async def request(
+        self, method: str, url: URL, data: dict[str, Any]
+    ) -> AiohttpClientMockResponse:
         """Capure the request arguments for tests to assert on."""
         self.method = method
-        self.url = url
-        self.json = kwargs.get("json")
-        self.headers = kwargs.get("headers")
-        self.captured_requests.append((method, url, self.json, self.headers))
-        return await self.client.get("/")
+        str_url = str(url)
+        self.url = str_url[len(API_URL) + 1 :]
+        self.json = data
+        self.captured_requests.append((method, url, self.json))
 
-    async def response_handler(self, request):
-        """Handle fake responess for aiohttp_server."""
         if len(self.responses) > 0:
-            return self.responses.pop(0)
-        return aiohttp.web.json_response()
+            response = self.responses.pop(0)
+            return AiohttpClientMockResponse(
+                method, url, response=response.body, status=response.status
+            )
+        return AiohttpClientMockResponse(method, url)
+
+
+@pytest.fixture(name="device_access_project_id")
+def mock_device_access_project_id() -> str:
+    """Fixture to configure the device access console project id used in tests."""
+    return PROJECT_ID
 
 
 @pytest.fixture
-def aiohttp_client(
-    event_loop: AbstractEventLoop,
-    aiohttp_client: ClientSessionGenerator,
-    socket_enabled: None,
-) -> ClientSessionGenerator:
-    """Return aiohttp_client and allow opening sockets."""
-    return aiohttp_client
-
-
-@pytest.fixture
-async def auth(aiohttp_client: ClientSessionGenerator) -> FakeAuth:
+async def auth(
+    aioclient_mock: AiohttpClientMocker,
+    create_device: CreateDevice,
+    device_access_project_id: str,
+) -> FakeAuth:
     """Fixture for an AbstractAuth."""
-    auth = FakeAuth()
-    app = aiohttp.web.Application()
-    app.router.add_get("/", auth.response_handler)
-    app.router.add_post("/", auth.response_handler)
-    auth.client = await aiohttp_client(app)
-    return auth
+    return FakeAuth(aioclient_mock, create_device, device_access_project_id)
 
 
 @pytest.fixture(autouse=True)
@@ -119,31 +149,37 @@ def cleanup_media_storage(hass: HomeAssistant) -> Generator[None]:
 
 
 @pytest.fixture
-def subscriber() -> YieldFixture[FakeSubscriber]:
-    """Set up the FakeSusbcriber."""
-    subscriber = FakeSubscriber()
+def subscriber_side_effect() -> Any | None:
+    """Fixture to inject failures into FakeSubscriber start."""
+    return None
+
+
+@pytest.fixture(autouse=True)
+def subscriber(subscriber_side_effect: Any | None) -> Generator[AsyncMock]:
+    """Fixture to allow tests to emulate the pub/sub subscriber receiving messages."""
     with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=subscriber,
-    ):
-        yield subscriber
+        "google_nest_sdm.google_nest_subscriber.StreamingManager", spec=StreamingManager
+    ) as mock_manager:
+        # Use side_effect to capture the callback
+        def mock_init(**kwargs: Any) -> AsyncMock:
+            mock_manager.async_receive_event = kwargs["callback"]
+            if subscriber_side_effect is not None:
+                mock_manager.start.side_effect = subscriber_side_effect
+            return mock_manager
+
+        mock_manager.side_effect = mock_init
+        yield mock_manager
 
 
 @pytest.fixture
 def mock_subscriber() -> YieldFixture[AsyncMock]:
     """Fixture for injecting errors into the subscriber."""
-    mock_subscriber = AsyncMock(FakeSubscriber)
+    mock_subscriber = AsyncMock(GoogleNestSubscriber)
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber",
         return_value=mock_subscriber,
     ):
         yield mock_subscriber
-
-
-@pytest.fixture
-async def device_manager(subscriber: FakeSubscriber) -> DeviceManager:
-    """Set up the DeviceManager."""
-    return await subscriber.async_get_device_manager()
 
 
 @pytest.fixture
@@ -166,14 +202,12 @@ async def device_traits() -> dict[str, Any]:
 
 @pytest.fixture
 async def create_device(
-    device_manager: DeviceManager,
-    auth: FakeAuth,
     device_id: str,
     device_type: str,
     device_traits: dict[str, Any],
 ) -> CreateDevice:
     """Fixture for creating devices."""
-    factory = CreateDevice(device_manager, auth)
+    factory = CreateDevice()
     factory.data.update(
         {
             "name": device_id,
@@ -200,20 +234,6 @@ def subscriber_id() -> str:
 def nest_test_config() -> NestTestConfig:
     """Fixture that sets up the configuration used for the test."""
     return TEST_CONFIG_APP_CREDS
-
-
-@pytest.fixture
-def config(
-    subscriber_id: str | None, nest_test_config: NestTestConfig
-) -> dict[str, Any]:
-    """Fixture that sets up the configuration.yaml for the test."""
-    config = copy.deepcopy(nest_test_config.config)
-    if CONF_SUBSCRIBER_ID in config.get(DOMAIN, {}):
-        if subscriber_id:
-            config[DOMAIN][CONF_SUBSCRIBER_ID] = subscriber_id
-        else:
-            del config[DOMAIN][CONF_SUBSCRIBER_ID]
-    return config
 
 
 @pytest.fixture
@@ -275,26 +295,26 @@ async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> N
 async def setup_base_platform(
     hass: HomeAssistant,
     platforms: list[str],
-    config: dict[str, Any],
     config_entry: MockConfigEntry | None,
+    auth: FakeAuth,
 ) -> YieldFixture[PlatformSetup]:
     """Fixture to setup the integration platform."""
-    if config_entry:
-        config_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
     with patch("homeassistant.components.nest.PLATFORMS", platforms):
 
         async def _setup_func() -> bool:
-            assert await async_setup_component(hass, DOMAIN, config)
+            await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
 
         yield _setup_func
-        if config_entry and config_entry.state == ConfigEntryState.LOADED:
+        if config_entry.state == ConfigEntryState.LOADED:
             await hass.config_entries.async_unload(config_entry.entry_id)
 
 
 @pytest.fixture
 async def setup_platform(
-    setup_base_platform: PlatformSetup, subscriber: FakeSubscriber
+    setup_base_platform: PlatformSetup,
+    subscriber: AsyncMock,
 ) -> PlatformSetup:
     """Fixture to setup the integration platform and subscriber."""
     return setup_base_platform

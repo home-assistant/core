@@ -361,7 +361,7 @@
     },
     "suspend_integration": {
       "name": "Suspend integration",
-      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the resume_integration action to resume.\n.",
+      "description": "Suspends integration. Suspending logs the integration out from the router, and stops accessing it. Useful e.g. if accessing the router web interface from another source such as a web browser is temporarily required. Invoke the 'Resume integration' action to resume.",
       "fields": {
         "url": {
           "name": "[%key:common::config_flow::data::url%]",

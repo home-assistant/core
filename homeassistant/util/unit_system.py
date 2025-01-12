@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ACCUMULATED_PRECIPITATION,
+    AREA,
     LENGTH,
     MASS,
     PRESSURE,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     WIND_SPEED,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -27,6 +29,7 @@ from homeassistant.const import (
 )
 
 from .unit_conversion import (
+    AreaConverter,
     DistanceConverter,
     PressureConverter,
     SpeedConverter,
@@ -40,6 +43,8 @@ if TYPE_CHECKING:
 _CONF_UNIT_SYSTEM_IMPERIAL: Final = "imperial"
 _CONF_UNIT_SYSTEM_METRIC: Final = "metric"
 _CONF_UNIT_SYSTEM_US_CUSTOMARY: Final = "us_customary"
+
+AREA_UNITS = AreaConverter.VALID_UNITS
 
 LENGTH_UNITS = DistanceConverter.VALID_UNITS
 
@@ -66,6 +71,7 @@ _VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
     MASS: MASS_UNITS,
     VOLUME: VOLUME_UNITS,
     PRESSURE: PRESSURE_UNITS,
+    AREA: AREA_UNITS,
 }
 
 
@@ -84,6 +90,7 @@ class UnitSystem:
         name: str,
         *,
         accumulated_precipitation: UnitOfPrecipitationDepth,
+        area: UnitOfArea,
         conversions: dict[tuple[SensorDeviceClass | str | None, str | None], str],
         length: UnitOfLength,
         mass: UnitOfMass,
@@ -97,6 +104,7 @@ class UnitSystem:
             UNIT_NOT_RECOGNIZED_TEMPLATE.format(unit, unit_type)
             for unit, unit_type in (
                 (accumulated_precipitation, ACCUMULATED_PRECIPITATION),
+                (area, AREA),
                 (temperature, TEMPERATURE),
                 (length, LENGTH),
                 (wind_speed, WIND_SPEED),
@@ -112,10 +120,11 @@ class UnitSystem:
 
         self._name = name
         self.accumulated_precipitation_unit = accumulated_precipitation
-        self.temperature_unit = temperature
+        self.area_unit = area
         self.length_unit = length
         self.mass_unit = mass
         self.pressure_unit = pressure
+        self.temperature_unit = temperature
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
         self._conversions = conversions
@@ -147,6 +156,16 @@ class UnitSystem:
         # type ignore: https://github.com/python/mypy/issues/7207
         return DistanceConverter.convert(  # type: ignore[unreachable]
             precip, from_unit, self.accumulated_precipitation_unit
+        )
+
+    def area(self, area: float | None, from_unit: str) -> float:
+        """Convert the given area to this unit system."""
+        if not isinstance(area, Number):
+            raise TypeError(f"{area!s} is not a numeric value.")
+
+        # type ignore: https://github.com/python/mypy/issues/7207
+        return AreaConverter.convert(  # type: ignore[unreachable]
+            area, from_unit, self.area_unit
         )
 
     def pressure(self, pressure: float | None, from_unit: str) -> float:
@@ -184,6 +203,7 @@ class UnitSystem:
         return {
             LENGTH: self.length_unit,
             ACCUMULATED_PRECIPITATION: self.accumulated_precipitation_unit,
+            AREA: self.area_unit,
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
             TEMPERATURE: self.temperature_unit,
@@ -213,7 +233,6 @@ def _deprecated_unit_system(value: str) -> str:
     """Convert deprecated unit system."""
 
     if value == _CONF_UNIT_SYSTEM_IMPERIAL:
-        # need to add warning in 2023.1
         return _CONF_UNIT_SYSTEM_US_CUSTOMARY
     return value
 
@@ -234,6 +253,12 @@ METRIC_SYSTEM = UnitSystem(
             for unit in UnitOfPressure
             if unit != UnitOfPressure.HPA
         },
+        # Convert non-metric area
+        ("area", UnitOfArea.SQUARE_INCHES): UnitOfArea.SQUARE_CENTIMETERS,
+        ("area", UnitOfArea.SQUARE_FEET): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.SQUARE_MILES): UnitOfArea.SQUARE_KILOMETERS,
+        ("area", UnitOfArea.SQUARE_YARDS): UnitOfArea.SQUARE_METERS,
+        ("area", UnitOfArea.ACRES): UnitOfArea.HECTARES,
         # Convert non-metric distances
         ("distance", UnitOfLength.FEET): UnitOfLength.METERS,
         ("distance", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -285,6 +310,7 @@ METRIC_SYSTEM = UnitSystem(
             if unit not in (UnitOfSpeed.KILOMETERS_PER_HOUR, UnitOfSpeed.KNOTS)
         },
     },
+    area=UnitOfArea.SQUARE_METERS,
     length=UnitOfLength.KILOMETERS,
     mass=UnitOfMass.GRAMS,
     pressure=UnitOfPressure.PA,
@@ -303,6 +329,12 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
             for unit in UnitOfPressure
             if unit != UnitOfPressure.INHG
         },
+        # Convert non-USCS areas
+        ("area", UnitOfArea.SQUARE_METERS): UnitOfArea.SQUARE_FEET,
+        ("area", UnitOfArea.SQUARE_CENTIMETERS): UnitOfArea.SQUARE_INCHES,
+        ("area", UnitOfArea.SQUARE_MILLIMETERS): UnitOfArea.SQUARE_INCHES,
+        ("area", UnitOfArea.SQUARE_KILOMETERS): UnitOfArea.SQUARE_MILES,
+        ("area", UnitOfArea.HECTARES): UnitOfArea.ACRES,
         # Convert non-USCS distances
         ("distance", UnitOfLength.CENTIMETERS): UnitOfLength.INCHES,
         ("distance", UnitOfLength.KILOMETERS): UnitOfLength.MILES,
@@ -356,6 +388,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
             if unit not in (UnitOfSpeed.KNOTS, UnitOfSpeed.MILES_PER_HOUR)
         },
     },
+    area=UnitOfArea.SQUARE_FEET,
     length=UnitOfLength.MILES,
     mass=UnitOfMass.POUNDS,
     pressure=UnitOfPressure.PSI,

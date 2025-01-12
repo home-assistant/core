@@ -2,24 +2,19 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
-from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 API_SET_LIGHT = "set_light"
 
@@ -78,32 +73,6 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
 
         data = cast(SwitcherLight, self.coordinator.data)
         return bool(data.light[self._light_id] == DeviceState.ON)
-
-    async def _async_call_api(self, api: str, *args: Any) -> None:
-        """Call Switcher API."""
-        _LOGGER.debug("Calling api for %s, api: '%s', args: %s", self.name, api, args)
-        response: SwitcherBaseResponse | None = None
-        error = None
-
-        try:
-            async with SwitcherType2Api(
-                self.coordinator.data.device_type,
-                self.coordinator.data.ip_address,
-                self.coordinator.data.device_id,
-                self.coordinator.data.device_key,
-                self.coordinator.token,
-            ) as swapi:
-                response = await getattr(swapi, api)(*args)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
-            self.coordinator.last_update_success = False
-            self.async_write_ha_state()
-            raise HomeAssistantError(
-                f"Call api for {self.name} failed, api: '{api}', "
-                f"args: {args}, response/error: {response or error}"
-            )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

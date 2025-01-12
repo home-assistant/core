@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
     UnitOfDataRate,
@@ -32,8 +33,9 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    AreaConverter,
     BaseUnitConverter,
-    BloodGlugoseConcentrationConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -61,7 +63,8 @@ INVALID_SYMBOL = "bob"
 _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
     converter: sorted(converter.VALID_UNITS, key=lambda x: (x is None, x))
     for converter in (
-        BloodGlugoseConcentrationConverter,
+        AreaConverter,
+        BloodGlucoseConcentrationConverter,
         ConductivityConverter,
         DataRateConverter,
         DistanceConverter,
@@ -83,7 +86,8 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
-    BloodGlugoseConcentrationConverter: (
+    AreaConverter: (UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS, 0.000001),
+    BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
         UnitOfBloodGlucoseConcentration.MILLIMOLE_PER_LITER,
         18,
@@ -138,7 +142,63 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
 _CONVERTED_VALUE: dict[
     type[BaseUnitConverter], list[tuple[float, str | None, float, str | None]]
 ] = {
-    BloodGlugoseConcentrationConverter: [
+    AreaConverter: [
+        # Square Meters to other units
+        (5, UnitOfArea.SQUARE_METERS, 50000, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.SQUARE_METERS, 5000000, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.SQUARE_METERS, 0.000005, UnitOfArea.SQUARE_KILOMETERS),
+        (5, UnitOfArea.SQUARE_METERS, 7750.015500031001, UnitOfArea.SQUARE_INCHES),
+        (5, UnitOfArea.SQUARE_METERS, 53.81955, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.SQUARE_METERS, 5.979950231505403, UnitOfArea.SQUARE_YARDS),
+        (5, UnitOfArea.SQUARE_METERS, 1.9305107927122295e-06, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.SQUARE_METERS, 0.0012355269073358272, UnitOfArea.ACRES),
+        (5, UnitOfArea.SQUARE_METERS, 0.0005, UnitOfArea.HECTARES),
+        # Square Kilometers to other units
+        (1, UnitOfArea.SQUARE_KILOMETERS, 1000000, UnitOfArea.SQUARE_METERS),
+        (1, UnitOfArea.SQUARE_KILOMETERS, 1e10, UnitOfArea.SQUARE_CENTIMETERS),
+        (1, UnitOfArea.SQUARE_KILOMETERS, 1e12, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.SQUARE_KILOMETERS, 1.9305107927122296, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.SQUARE_KILOMETERS, 1235.5269073358272, UnitOfArea.ACRES),
+        (5, UnitOfArea.SQUARE_KILOMETERS, 500, UnitOfArea.HECTARES),
+        # Acres to other units
+        (5, UnitOfArea.ACRES, 20234.3, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.ACRES, 202342821.11999995, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.ACRES, 20234282111.999992, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.ACRES, 0.0202343, UnitOfArea.SQUARE_KILOMETERS),
+        (5, UnitOfArea.ACRES, 217800, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.ACRES, 24200.0, UnitOfArea.SQUARE_YARDS),
+        (5, UnitOfArea.ACRES, 0.0078125, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.ACRES, 2.02343, UnitOfArea.HECTARES),
+        # Hectares to other units
+        (5, UnitOfArea.HECTARES, 50000, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.HECTARES, 500000000, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.HECTARES, 50000000000.0, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.HECTARES, 0.019305107927122298, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.HECTARES, 538195.5, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.HECTARES, 59799.50231505403, UnitOfArea.SQUARE_YARDS),
+        (5, UnitOfArea.HECTARES, 12.355269073358272, UnitOfArea.ACRES),
+        # Square Miles to other units
+        (5, UnitOfArea.SQUARE_MILES, 12949940.551679997, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.SQUARE_MILES, 129499405516.79997, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.SQUARE_MILES, 12949940551679.996, UnitOfArea.SQUARE_MILLIMETERS),
+        (5, UnitOfArea.SQUARE_MILES, 1294.9940551679997, UnitOfArea.HECTARES),
+        (5, UnitOfArea.SQUARE_MILES, 3200, UnitOfArea.ACRES),
+        # Square Yards to other units
+        (5, UnitOfArea.SQUARE_YARDS, 4.1806367999999985, UnitOfArea.SQUARE_METERS),
+        (5, UnitOfArea.SQUARE_YARDS, 41806.4, UnitOfArea.SQUARE_CENTIMETERS),
+        (5, UnitOfArea.SQUARE_YARDS, 4180636.7999999984, UnitOfArea.SQUARE_MILLIMETERS),
+        (
+            5,
+            UnitOfArea.SQUARE_YARDS,
+            4.180636799999998e-06,
+            UnitOfArea.SQUARE_KILOMETERS,
+        ),
+        (5, UnitOfArea.SQUARE_YARDS, 45.0, UnitOfArea.SQUARE_FEET),
+        (5, UnitOfArea.SQUARE_YARDS, 6479.999999999998, UnitOfArea.SQUARE_INCHES),
+        (5, UnitOfArea.SQUARE_YARDS, 1.6141528925619832e-06, UnitOfArea.SQUARE_MILES),
+        (5, UnitOfArea.SQUARE_YARDS, 0.0010330578512396695, UnitOfArea.ACRES),
+    ],
+    BloodGlucoseConcentrationConverter: [
         (
             90,
             UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
@@ -374,9 +434,15 @@ _CONVERTED_VALUE: dict[
     ],
     ElectricPotentialConverter: [
         (5, UnitOfElectricPotential.VOLT, 5000, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.VOLT, 5e6, UnitOfElectricPotential.MICROVOLT),
         (5, UnitOfElectricPotential.MILLIVOLT, 0.005, UnitOfElectricPotential.VOLT),
+        (5, UnitOfElectricPotential.MILLIVOLT, 5e3, UnitOfElectricPotential.MICROVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-3, UnitOfElectricPotential.MILLIVOLT),
+        (5, UnitOfElectricPotential.MICROVOLT, 5e-6, UnitOfElectricPotential.VOLT),
     ],
     EnergyConverter: [
+        (10, UnitOfEnergy.MILLIWATT_HOUR, 0.00001, UnitOfEnergy.KILO_WATT_HOUR),
+        (10, UnitOfEnergy.WATT_HOUR, 10000, UnitOfEnergy.MILLIWATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.01, UnitOfEnergy.KILO_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00001, UnitOfEnergy.MEGA_WATT_HOUR),
         (10, UnitOfEnergy.WATT_HOUR, 0.00000001, UnitOfEnergy.GIGA_WATT_HOUR),
@@ -471,6 +537,7 @@ _CONVERTED_VALUE: dict[
         (10, UnitOfPower.GIGA_WATT, 10e9, UnitOfPower.WATT),
         (10, UnitOfPower.TERA_WATT, 10e12, UnitOfPower.WATT),
         (10, UnitOfPower.WATT, 0.01, UnitOfPower.KILO_WATT),
+        (10, UnitOfPower.MILLIWATT, 0.01, UnitOfPower.WATT),
     ],
     PressureConverter: [
         (1000, UnitOfPressure.HPA, 14.5037743897, UnitOfPressure.PSI),
@@ -678,6 +745,18 @@ _CONVERTED_VALUE: dict[
             UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
             7.48051948,
             UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        ),
+        (
+            9,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+            2500,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
+        ),
+        (
+            3,
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            50,
+            UnitOfVolumeFlowRate.MILLILITERS_PER_SECOND,
         ),
     ],
 }

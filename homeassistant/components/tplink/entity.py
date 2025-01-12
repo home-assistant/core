@@ -89,6 +89,15 @@ class TPLinkFeatureEntityDescription(EntityDescription):
     """Base class for a TPLink feature based entity description."""
 
     deprecated_info: DeprecatedInfo | None = None
+    available_fn: Callable[[Device], bool] = lambda _: True
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkModuleEntityDescription(EntityDescription):
+    """Base class for a TPLink module based entity description."""
+
+    deprecated_info: DeprecatedInfo | None = None
+    available_fn: Callable[[Device], bool] = lambda _: True
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -153,6 +162,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
         registry_device = device
         device_name = get_device_name(device, parent=parent)
+        translation_key: str | None = None
+        translation_placeholders: Mapping[str, str] | None = None
+
         if parent and parent.device_type is not Device.Type.Hub:
             if not feature or feature.id == PRIMARY_STATE_ID:
                 # Entity will be added to parent if not a hub and no feature
@@ -160,6 +172,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 # is the primary state
                 registry_device = parent
                 device_name = get_device_name(registry_device)
+                if not device_name:
+                    translation_key = "unnamed_device"
+                    translation_placeholders = {"model": parent.model}
             else:
                 # Prefix the device name with the parent name unless it is a
                 # hub attached device. Sensible default for child devices like
@@ -168,13 +183,28 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 # Bedroom Ceiling Fan; Child device aliases will be Ceiling Fan
                 # and Dimmer Switch for both so should be distinguished by the
                 # parent name.
-                device_name = f"{get_device_name(parent)} {get_device_name(device, parent=parent)}"
+                parent_device_name = get_device_name(parent)
+                child_device_name = get_device_name(device, parent=parent)
+                if parent_device_name:
+                    device_name = f"{parent_device_name} {child_device_name}"
+                else:
+                    device_name = None
+                    translation_key = "unnamed_device"
+                    translation_placeholders = {
+                        "model": f"{parent.model} {child_device_name}"
+                    }
+
+        if device_name is None and not translation_key:
+            translation_key = "unnamed_device"
+            translation_placeholders = {"model": device.model}
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(registry_device.device_id))},
             manufacturer="TP-Link",
             model=registry_device.model,
             name=device_name,
+            translation_key=translation_key,
+            translation_placeholders=translation_placeholders,
             sw_version=registry_device.hw_info["sw_ver"],
             hw_version=registry_device.hw_info["hw_ver"],
         )
@@ -200,15 +230,18 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     @abstractmethod
     @callback
-    def _async_update_attrs(self) -> None:
-        """Platforms implement this to update the entity internals."""
+    def _async_update_attrs(self) -> bool:
+        """Platforms implement this to update the entity internals.
+
+        The return value is used to the set the entity available attribute.
+        """
         raise NotImplementedError
 
     @callback
     def _async_call_update_attrs(self) -> None:
         """Call update_attrs and make entity unavailable on errors."""
         try:
-            self._async_update_attrs()
+            available = self._async_update_attrs()
         except Exception as ex:  # noqa: BLE001
             if self._attr_available:
                 _LOGGER.warning(
@@ -219,7 +252,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
                 )
             self._attr_available = False
         else:
-            self._attr_available = True
+            self._attr_available = available
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -308,6 +341,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
 
         if descriptions and (desc := descriptions.get(feature.id)):
             translation_key: str | None = feature.id
+
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).

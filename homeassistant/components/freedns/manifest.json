@@ -3,5 +3,6 @@
   "name": "FreeDNS",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/freedns",
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
 }

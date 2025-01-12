@@ -24,6 +24,8 @@ class SongpalConfig:
     def __init__(self, name: str, host: str | None, endpoint: str) -> None:
         """Initialize Configuration."""
         self.name = name
+        if TYPE_CHECKING:
+            assert host is not None
         self.host = host
         self.endpoint = endpoint
 
@@ -114,7 +116,7 @@ class SongpalConfigFlow(ConfigFlow, domain=DOMAIN):
         ]
 
         # Ignore Bravia TVs
-        if "videoScreen" in service_types:
+        if "videoScreen" in service_types or "video" in service_types:
             return self.async_abort(reason="not_songpal_device")
 
         if TYPE_CHECKING:
