@@ -67,9 +67,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations:
-    status: exempt
-    comment: |
-      This integration does not have custom icons.
+    status: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
