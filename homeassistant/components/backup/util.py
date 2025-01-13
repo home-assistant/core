@@ -9,11 +9,13 @@ import tarfile
 from typing import cast
 
 import aiohttp
+from securetar import SecureTarFile
 
+from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
-from .const import BUF_SIZE
+from .const import BUF_SIZE, LOGGER
 from .models import AddonInfo, AgentBackup, Folder
 
 
@@ -50,6 +52,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
         if (
             homeassistant := cast(JsonObjectType, data.get("homeassistant"))
         ) and "version" in homeassistant:
+            homeassistant_included = True
             homeassistant_version = cast(str, homeassistant["version"])
             database_included = not cast(
                 bool, homeassistant.get("exclude_database", False)
@@ -60,6 +63,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
             backup_id=cast(str, data["slug"]),
             database_included=database_included,
             date=cast(str, data["date"]),
+            extra_metadata=cast(dict[str, bool | str], data.get("extra", {})),
             folders=folders,
             homeassistant_included=homeassistant_included,
             homeassistant_version=homeassistant_version,
@@ -67,6 +71,39 @@ def read_backup(backup_path: Path) -> AgentBackup:
             protected=cast(bool, data.get("protected", False)),
             size=backup_path.stat().st_size,
         )
+
+
+def validate_password(path: Path, password: str | None) -> bool:
+    """Validate the password."""
+    with tarfile.open(path, "r:", bufsize=BUF_SIZE) as backup_file:
+        compressed = False
+        ha_tar_name = "homeassistant.tar"
+        try:
+            ha_tar = backup_file.extractfile(ha_tar_name)
+        except KeyError:
+            compressed = True
+            ha_tar_name = "homeassistant.tar.gz"
+            try:
+                ha_tar = backup_file.extractfile(ha_tar_name)
+            except KeyError:
+                LOGGER.error("No homeassistant.tar or homeassistant.tar.gz found")
+                return False
+        try:
+            with SecureTarFile(
+                path,  # Not used
+                gzip=compressed,
+                key=password_to_key(password) if password is not None else None,
+                mode="r",
+                fileobj=ha_tar,
+            ):
+                # If we can read the tar file, the password is correct
+                return True
+        except tarfile.ReadError:
+            LOGGER.debug("Invalid password")
+            return False
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected error validating password")
+    return False
 
 
 async def receive_file(

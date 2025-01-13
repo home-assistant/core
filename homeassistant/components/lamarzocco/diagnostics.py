@@ -31,7 +31,7 @@ async def async_get_config_entry_diagnostics(
     entry: LaMarzoccoConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
     device = coordinator.device
     # collect all data sources
     diagnostics_data = DiagnosticsData(

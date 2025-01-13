@@ -19,13 +19,8 @@ rules:
   unique-config-entry: done
   entity-unique-id: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
-  test-before-setup:
-    status: todo
-    comment: |
-      The integration refreshes the access token, but does not poll the API. The
-      setup can be changed to request the list of todo lists in setup instead
-      of during platform setup.
+  docs-removal-instructions: done
+  test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
   docs-actions:
@@ -36,41 +31,39 @@ rules:
   # Silver
   log-when-unavailable: done
   config-entry-unloading: done
-  reauthentication-flow:
-    status: todo
-    comment: Missing a test that reauthenticates with the wrong account
-  action-exceptions: todo
-  docs-installation-parameters: todo
+  reauthentication-flow: done
+  action-exceptions: done
+  docs-installation-parameters: done
   integration-owner: done
-  parallel-updates: todo
-  test-coverage:
-    status: todo
-    comment: Test coverage for __init__.py is not above 95% yet
-  docs-configuration-parameters: todo
+  parallel-updates: done
+  test-coverage: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not have any configuration parameters.
   entity-unavailable: done
 
   # Gold
-  docs-examples: todo
+  docs-examples: done
   discovery-update-info: todo
   entity-device-class: todo
   entity-translations: todo
-  docs-data-update: todo
+  docs-data-update: done
   entity-disabled-by-default: todo
   discovery: todo
   exception-translations: todo
   devices: todo
-  docs-supported-devices: todo
+  docs-supported-devices: done
   icon-translations: todo
-  docs-known-limitations: todo
+  docs-known-limitations: done
   stale-devices: todo
-  docs-supported-functions: todo
+  docs-supported-functions: done
   repair-issues: todo
   reconfiguration-flow: todo
   entity-category: todo
   dynamic-devices: todo
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   diagnostics: todo
-  docs-use-cases: todo
+  docs-use-cases: done
 
   # Platinum
   async-dependency: todo

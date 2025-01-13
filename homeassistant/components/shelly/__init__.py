@@ -15,6 +15,7 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -331,3 +332,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
     return await hass.config_entries.async_unload_platforms(
         entry, runtime_data.platforms
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
+    """Remove a config entry."""
+    if get_device_entry_gen(entry) in RPC_GENERATIONS and (
+        mac_address := entry.unique_id
+    ):
+        async_remove_scanner(hass, mac_address)

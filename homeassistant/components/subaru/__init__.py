@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Subaru from a config entry."""
     config = entry.data
-    websession = aiohttp_client.async_get_clientsession(hass)
+    websession = aiohttp_client.async_create_clientsession(hass)
     try:
         controller = SubaruAPI(
             websession,

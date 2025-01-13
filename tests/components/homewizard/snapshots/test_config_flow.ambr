@@ -30,14 +30,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
-      'subentries': list([
-      ]),
       'title': 'P1 meter',
       'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -78,14 +74,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
-      'subentries': list([
-      ]),
       'title': 'P1 meter',
       'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -126,14 +118,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
-      'subentries': list([
-      ]),
       'title': 'Energy Socket',
       'unique_id': 'HWE-SKT_5c2fafabcdef',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Energy Socket',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -170,14 +158,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'P1 meter',
       'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'P1 meter',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
