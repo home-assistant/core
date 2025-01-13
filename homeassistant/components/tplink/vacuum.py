@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from kasa import Device, Module
-from kasa.smart.modules.vacuum import Status, Vacuum
+from kasa.smart.modules.clean import Clean, Status
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -41,7 +41,7 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    if Module.Vacuum in device.modules:
+    if Module.Clean in device.modules:
         async_add_entities([TPLinkVacuumEntity(device, parent_coordinator)])
 
 
@@ -63,7 +63,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         coordinator: TPLinkDataUpdateCoordinator,
     ) -> None:
         """Initialize the vacuum entity."""
-        self._vacuum_module: Vacuum = device.modules[Module.Vacuum]
+        self._vacuum_module: Clean = device.modules[Module.Clean]
         super().__init__(device, coordinator)
 
     @async_refresh_after
