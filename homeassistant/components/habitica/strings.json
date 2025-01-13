@@ -25,8 +25,8 @@
       "user": {
         "title": "Habitica - Gamify your life",
         "menu_options": {
-          "login": "Login to Habitica",
-          "advanced": "Login to other instances"
+          "login": "Log in to Habitica",
+          "advanced": "Log in to other instances"
         },
         "description": "![Habiticans]({habiticans}) Connect your Habitica account to keep track of your adventurer's stats, progress, and manage your to-dos and daily tasks.\n\n[Don't have a Habitica account? Sign up here.]({signup})"
       },
