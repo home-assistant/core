@@ -211,8 +211,6 @@ class TriggerBaseEntity(Entity):
                 )
 
             for key in self._to_render_complex:
-                if key == CONF_AVAILABILITY:
-                    continue
                 rendered[key] = render_complex(
                     self._config[key],
                     variables,
