@@ -48,14 +48,6 @@ class HomeeEntity(Entity):
         """Return the availability of the underlying node."""
         return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
 
-    def is_reversed(self) -> bool:
-        """Check if movement direction is reversed."""
-        if hasattr(self._attribute.options, "reverse_control_ui"):
-            if self._attribute.options.reverse_control_ui:
-                return True
-
-        return False
-
     async def async_update(self) -> None:
         """Update entity from homee."""
         homee = self._entry.runtime_data

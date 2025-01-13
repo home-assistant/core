@@ -33,47 +33,20 @@
       "brightness_sensor": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "brightness_sensor_1": {
-        "name": "Illuminance 1"
-      },
-      "brightness_sensor_2": {
-        "name": "Illuminance 2"
-      },
-      "brightness_sensor_3": {
-        "name": "Illuminance 3"
-      },
-      "brightness_sensor_4": {
-        "name": "Illuminance 4"
+      "brightness_sensor_instance": {
+        "name": "Illuminance {instance}"
       },
       "button_state_sensor": {
         "name": "Button State"
       },
-      "button_state_sensor_1": {
-        "name": "Button State 1"
-      },
-      "button_state_sensor_2": {
-        "name": "Button State 2"
-      },
-      "button_state_sensor_3": {
-        "name": "Button State 3"
-      },
-      "button_state_sensor_4": {
-        "name": "Button State 4"
+      "button_state_sensor_instance": {
+        "name": "Button State {instance}"
       },
       "current_sensor": {
         "name": "[%key:component::sensor::entity_component::current::name%]"
       },
-      "current_sensor_1": {
-        "name": "Current 1"
-      },
-      "current_sensor_2": {
-        "name": "Current 2"
-      },
-      "current_sensor_3": {
-        "name": "Current 3"
-      },
-      "current_sensor_4": {
-        "name": "Current 4"
+      "current_sensor_instance": {
+        "name": "Current instance"
       },
       "dawn_sensor": {
         "name": "Dawn"
@@ -84,17 +57,8 @@
       "energy_sensor": {
         "name": "[%key:component::sensor::entity_component::energy::name%]"
       },
-      "energy_sensor_1": {
-        "name": "Energy 1"
-      },
-      "energy_sensor_2": {
-        "name": "Energy 2"
-      },
-      "energy_sensor_3": {
-        "name": "Energy 3"
-      },
-      "energy_sensor_4": {
-        "name": "Energy 4"
+      "energy_sensor_instance": {
+        "name": "Energy {instance}"
       },
       "relative_humidity_sensor": {
         "name": "Relative Humidity"
@@ -114,26 +78,14 @@
       "power_sensor": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
-      "power_sensor_1": {
-        "name": "Power 1"
-      },
-      "power_sensor_2": {
-        "name": "Power 2"
-      },
-      "power_sensor_3": {
-        "name": "Power 3"
-      },
-      "power_sensor_4": {
-        "name": "Power 4"
+      "power_sensor_instance": {
+        "name": "Power {instance}"
       },
       "rainfall_hour_sensor": {
         "name": "Rainfall Last Hour"
       },
       "rainfall_day_sensor": {
         "name": "Rainfall Today"
-      },
-      "temperature_sensor": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "total_current_sensor": {
         "name": "Total Current"
@@ -150,21 +102,11 @@
       "up_down_sensor": {
         "name": "State",
         "state": {
-          "0": "Open",
-          "1": "Closed",
-          "2": "Partially Open",
-          "3": "Opening",
-          "4": "Closing"
-        }
-      },
-      "up_down_sensor_rev": {
-        "name": "State",
-        "state": {
-          "0": "Closed",
-          "1": "Open",
-          "2": "Partially Open",
-          "3": "Closing",
-          "4": "Opening"
+          "open": "Open",
+          "closed": "Closed",
+          "partial": "Partially Open",
+          "opening": "Opening",
+          "closing": "Closing"
         }
       },
       "uv_sensor": {
@@ -176,17 +118,8 @@
       "voltage_sensor": {
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
-      "voltage_sensor_1": {
-        "name": "Voltage 1"
-      },
-      "voltage_sensor_2": {
-        "name": "Voltage 2"
-      },
-      "voltage_sensor_3": {
-        "name": "Voltage 3"
-      },
-      "voltage_sensor_4": {
-        "name": "Voltage 4"
+      "voltage_sensor_instance": {
+        "name": "Voltage {instance}"
       },
       "wind_speed_sensor": {
         "name": "[%key:component::sensor::entity_component::wind_speed::name%]"

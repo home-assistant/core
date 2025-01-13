@@ -1,5 +1,8 @@
 """The homee sensor platform."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from pyHomee.const import AttributeType, NodeProtocol, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -14,147 +17,158 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeeConfigEntry, helpers
+from .const import OPEN_CLOSE_MAP, OPEN_CLOSE_MAP_REVERSED
 from .entity import HomeeEntity, HomeeNodeEntity
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class HomeeSensorEntityDescription(SensorEntityDescription):
+    """A class that describes Homee sensor entities."""
+
+    value_fn: Callable[[float, bool | None], str | float | None] = lambda value: value
+
+
+SENSOR_DESCRIPTIONS: tuple[HomeeSensorEntityDescription, ...] = (
+    HomeeSensorEntityDescription(
+        key=AttributeType.ACCUMULATED_ENERGY_USE,
+        translation_key="energy_sensor",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    HomeeSensorEntityDescription(
         key=AttributeType.BATTERY_LEVEL,
         translation_key="battery_sensor",
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
         key=AttributeType.BRIGHTNESS,
         translation_key="brightness_sensor",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
         key=AttributeType.BUTTON_STATE,
         translation_key="button_state_sensor",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
         key=AttributeType.CURRENT,
         translation_key="current_sensor",
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=AttributeType.TOTAL_CURRENT,
-        translation_key="total_current_sensor",
-        device_class=SensorDeviceClass.CURRENT,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.CURRENT_VALVE_POSITION,
-        translation_key="valve_position_sensor",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.DAWN,
-        translation_key="dawn_sensor",
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.ACCUMULATED_ENERGY_USE,
-        translation_key="energy_sensor",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.TOTAL_ACCUMULATED_ENERGY_USE,
-        translation_key="total_energy_sensor",
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.RELATIVE_HUMIDITY,
-        translation_key="relative_humidity_sensor",
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.LINK_QUALITY,
-        translation_key="link_quality_sensor",
-        icon="mdi:signal",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.POSITION,
-        translation_key="position_sensor",
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
         key=AttributeType.CURRENT_ENERGY_USE,
         translation_key="power_sensor",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=AttributeType.TOTAL_CURRENT_ENERGY_USE,
-        translation_key="total_power_sensor",
-        device_class=SensorDeviceClass.POWER,
+    HomeeSensorEntityDescription(
+        key=AttributeType.CURRENT_VALVE_POSITION,
+        translation_key="valve_position_sensor",
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=AttributeType.RAIN_FALL_LAST_HOUR,
-        translation_key="rainfall_hour_sensor",
-        device_class=SensorDeviceClass.PRECIPITATION,
+    HomeeSensorEntityDescription(
+        key=AttributeType.DAWN,
+        translation_key="dawn_sensor",
+        device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=AttributeType.RAIN_FALL_TODAY,
-        translation_key="rainfall_day_sensor",
-        device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key=AttributeType.TEMPERATURE,
-        translation_key="temperature_sensor",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
         key=AttributeType.DEVICE_TEMPERATURE,
         translation_key="device_temperature_sensor",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=AttributeType.UP_DOWN,
-        translation_key="up_down_sensor",
-    ),
-    SensorEntityDescription(
-        key=AttributeType.UV,
-        translation_key="uv_sensor",
+    HomeeSensorEntityDescription(
+        key=AttributeType.LINK_QUALITY,
+        translation_key="link_quality_sensor",
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
-        key=AttributeType.VOLTAGE,
-        translation_key="voltage_sensor",
-        device_class=SensorDeviceClass.VOLTAGE,
+    HomeeSensorEntityDescription(
+        key=AttributeType.POSITION,
+        translation_key="position_sensor",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
+        key=AttributeType.RAIN_FALL_LAST_HOUR,
+        translation_key="rainfall_hour_sensor",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.RAIN_FALL_TODAY,
+        translation_key="rainfall_day_sensor",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.RELATIVE_HUMIDITY,
+        translation_key="relative_humidity_sensor",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.TOTAL_ACCUMULATED_ENERGY_USE,
+        translation_key="total_energy_sensor",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.TOTAL_CURRENT,
+        translation_key="total_current_sensor",
+        device_class=SensorDeviceClass.CURRENT,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.TOTAL_CURRENT_ENERGY_USE,
+        translation_key="total_power_sensor",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
         key=AttributeType.TOTAL_VOLTAGE,
         translation_key="total_voltage_sensor",
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
+        key=AttributeType.UP_DOWN,
+        translation_key="up_down_sensor",
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda value, reversed: OPEN_CLOSE_MAP.get(value)
+        if not reversed
+        else OPEN_CLOSE_MAP_REVERSED.get(value),
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.UV,
+        translation_key="uv_sensor",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
+        key=AttributeType.VOLTAGE,
+        translation_key="voltage_sensor",
+        device_class=SensorDeviceClass.VOLTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    HomeeSensorEntityDescription(
         key=AttributeType.WIND_SPEED,
         translation_key="wind_speed_sensor",
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    SensorEntityDescription(
+    HomeeSensorEntityDescription(
         key=AttributeType.WINDOW_POSITION,
         translation_key="window_position_sensor",
-        icon="mdi:window-closed",
+        device_class=SensorDeviceClass.ENUM,
     ),
 )
 
@@ -191,11 +205,12 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         self,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
-        sensor_descr: SensorEntityDescription,
+        sensor_descr: HomeeSensorEntityDescription,
     ) -> None:
         """Initialize a homee sensor entity."""
         super().__init__(attribute, entry)
-        self.entity_description = sensor_descr
+        self.entity_description: HomeeSensorEntityDescription = sensor_descr
+        self._attr_translation_placeholders = {"instance": attribute.instance}
 
     @property
     def translation_key(self) -> str | None:
@@ -203,20 +218,20 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         trans_key = self.entity_description.translation_key
 
         if self._attribute.instance > 0:
-            trans_key = f"{trans_key}_{self._attribute.instance}"
-        if self._attribute.is_reversed:
-            trans_key = f"{trans_key}_rev"
+            trans_key = f"{trans_key}_instance"
 
         return trans_key
 
     @property
-    def native_value(self) -> float | int:
+    def native_value(self) -> float | str | None:
         """Return the native value of the sensor."""
         if self._attribute.type in [
             AttributeType.UP_DOWN,
             AttributeType.WINDOW_POSITION,
         ]:
-            return int(self._attribute.current_value)
+            return self.entity_description.value_fn(
+                self._attribute.current_value, self._attribute.is_reversed
+            )
 
         if self._attribute.unit == "klx":
             return self._attribute.current_value * 1000

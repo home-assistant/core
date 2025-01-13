@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "link_quality_sensor": {
+        "default": "mdi:signal"
+      },
+      "window_position_sensor": {
+        "default": "mdi:window-closed"
+      }
+    }
+  }
+}
