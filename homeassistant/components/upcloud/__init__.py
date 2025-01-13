@@ -92,8 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: UpCloudConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
