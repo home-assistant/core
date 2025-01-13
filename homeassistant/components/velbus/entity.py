@@ -40,6 +40,10 @@ class VelbusEntity(Entity):
         """Add listener for state changes."""
         self._channel.on_status_update(self._on_update)
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove listener for state changes."""
+        self._channel.remove_on_status_update(self._on_update)
+
     async def _on_update(self) -> None:
         self.async_write_ha_state()
 
