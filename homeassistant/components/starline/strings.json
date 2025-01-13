@@ -33,7 +33,7 @@
       }
     },
     "error": {
-      "error_auth_app": "Incorrect application id or secret",
+      "error_auth_app": "Incorrect application ID or secret",
       "error_auth_user": "Incorrect username or password",
       "error_auth_mfa": "Incorrect code"
     }
@@ -64,8 +64,11 @@
       "moving_ban": {
         "name": "Moving ban"
       },
-      "is_running": {
-        "name": "Running"
+      "ignition": {
+        "name": "Ignition"
+      },
+      "autostart": {
+        "name": "Autostart"
       }
     },
     "device_tracker": {
@@ -136,11 +139,11 @@
   "services": {
     "update_state": {
       "name": "Update state",
-      "description": "Fetches the last state of the devices from the StarLine server.\n."
+      "description": "Fetches the last state of the devices from the StarLine server."
     },
     "set_scan_interval": {
       "name": "Set scan interval",
-      "description": "Sets update frequency.",
+      "description": "Sets the update frequency for entities.",
       "fields": {
         "scan_interval": {
           "name": "Scan interval",
@@ -150,7 +153,7 @@
     },
     "set_scan_obd_interval": {
       "name": "Set scan OBD interval",
-      "description": "Sets OBD info update frequency.",
+      "description": "Sets the update frequency for OBD information.",
       "fields": {
         "scan_interval": {
           "name": "Scan interval",

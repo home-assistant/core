@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from habiticalib import (
     ContentData,
@@ -18,25 +18,18 @@ from habiticalib import (
 )
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    async_create_issue,
-    async_delete_issue,
-)
 from homeassistant.helpers.typing import StateType
 
-from .const import ASSETS_URL, DOMAIN
+from .const import ASSETS_URL
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
-from .util import entity_used_in, get_attribute_points, get_attributes_total
+from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,8 +66,6 @@ class HabiticaSensorEntity(StrEnum):
     GOLD = "gold"
     CLASS = "class"
     HABITS = "habits"
-    DAILIES = "dailys"
-    TODOS = "todos"
     REWARDS = "rewards"
     GEMS = "gems"
     TRINKETS = "trinkets"
@@ -82,6 +73,11 @@ class HabiticaSensorEntity(StrEnum):
     INTELLIGENCE = "intelligence"
     CONSTITUTION = "constitution"
     PERCEPTION = "perception"
+    EGGS_TOTAL = "eggs_total"
+    HATCHING_POTIONS_TOTAL = "hatching_potions_total"
+    FOOD_TOTAL = "food_total"
+    SADDLE = "saddle"
+    QUEST_SCROLLS = "quest_scrolls"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -144,14 +140,14 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.GEMS,
         translation_key=HabiticaSensorEntity.GEMS,
-        value_fn=lambda user, _: round(user.balance * 4) if user.balance else None,
+        value_fn=lambda user, _: None if (b := user.balance) is None else round(b * 4),
         suggested_display_precision=0,
         entity_picture="shop_gem.png",
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.TRINKETS,
         translation_key=HabiticaSensorEntity.TRINKETS,
-        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets or 0,
+        value_fn=lambda user, _: user.purchased.plan.consecutive.trinkets,
         suggested_display_precision=0,
         native_unit_of_measurement="⧖",
         entity_picture="notif_subscriber_reward.png",
@@ -187,6 +183,44 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         attributes_fn=lambda user, content: get_attribute_points(user, content, "con"),
         suggested_display_precision=0,
         native_unit_of_measurement="CON",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.EGGS_TOTAL,
+        translation_key=HabiticaSensorEntity.EGGS_TOTAL,
+        value_fn=lambda user, _: sum(n for n in user.items.eggs.values()),
+        entity_picture="Pet_Egg_Egg.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "eggs"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HATCHING_POTIONS_TOTAL,
+        translation_key=HabiticaSensorEntity.HATCHING_POTIONS_TOTAL,
+        value_fn=lambda user, _: sum(n for n in user.items.hatchingPotions.values()),
+        entity_picture="Pet_HatchingPotion_RoyalPurple.png",
+        attributes_fn=(
+            lambda user, content: inventory_list(user, content, "hatchingPotions")
+        ),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.FOOD_TOTAL,
+        translation_key=HabiticaSensorEntity.FOOD_TOTAL,
+        value_fn=(
+            lambda user, _: sum(n for k, n in user.items.food.items() if k != "Saddle")
+        ),
+        entity_picture="Pet_Food_Strawberry.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "food"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.SADDLE,
+        translation_key=HabiticaSensorEntity.SADDLE,
+        value_fn=lambda user, _: user.items.food.get("Saddle", 0),
+        entity_picture="Pet_Food_Saddle.png",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.QUEST_SCROLLS,
+        translation_key=HabiticaSensorEntity.QUEST_SCROLLS,
+        value_fn=(lambda user, _: sum(n for n in user.items.quests.values())),
+        entity_picture="inventory_quest_scroll_dustbunnies.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "quests"),
     ),
 )
 
@@ -226,22 +260,6 @@ TASK_SENSOR_DESCRIPTION: tuple[HabiticaTaskSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.HABITS,
         translation_key=HabiticaSensorEntity.HABITS,
         value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.HABIT],
-    ),
-    HabiticaTaskSensorEntityDescription(
-        key=HabiticaSensorEntity.DAILIES,
-        translation_key=HabiticaSensorEntity.DAILIES,
-        value_fn=lambda tasks: [r for r in tasks if r.Type is TaskType.DAILY],
-        entity_registry_enabled_default=False,
-    ),
-    HabiticaTaskSensorEntityDescription(
-        key=HabiticaSensorEntity.TODOS,
-        translation_key=HabiticaSensorEntity.TODOS,
-        value_fn=(
-            lambda tasks: [
-                r for r in tasks if r.Type is TaskType.TODO and not r.completed
-            ]
-        ),
-        entity_registry_enabled_default=False,
     ),
     HabiticaTaskSensorEntityDescription(
         key=HabiticaSensorEntity.REWARDS,
@@ -324,37 +342,3 @@ class HabiticaTaskSensor(HabiticaBase, SensorEntity):
                     task[map_key] = value
             attrs[str(task_id)] = task
         return attrs
-
-    async def async_added_to_hass(self) -> None:
-        """Raise issue when entity is registered and was not disabled."""
-        if TYPE_CHECKING:
-            assert self.unique_id
-        if entity_id := er.async_get(self.hass).async_get_entity_id(
-            SENSOR_DOMAIN, DOMAIN, self.unique_id
-        ):
-            if (
-                self.enabled
-                and self.entity_description.key
-                in (HabiticaSensorEntity.TODOS, HabiticaSensorEntity.DAILIES)
-                and entity_used_in(self.hass, entity_id)
-            ):
-                async_create_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_task_entity_{self.entity_description.key}",
-                    breaks_in_ha_version="2025.2.0",
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_task_entity",
-                    translation_placeholders={
-                        "task_name": str(self.name),
-                        "entity": entity_id,
-                    },
-                )
-            else:
-                async_delete_issue(
-                    self.hass,
-                    DOMAIN,
-                    f"deprecated_task_entity_{self.entity_description.key}",
-                )
-        await super().async_added_to_hass()

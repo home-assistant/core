@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
+import random
 from typing import TYPE_CHECKING, Self, TypedDict
 
 from cronsim import CronSim
@@ -27,6 +28,10 @@ if TYPE_CHECKING:
 # Run the backup at 04:45.
 CRON_PATTERN_DAILY = "45 4 * * *"
 CRON_PATTERN_WEEKLY = "45 4 * * {}"
+
+# Randomize the start time of the backup by up to 60 minutes to avoid
+# all backups running at the same time.
+BACKUP_START_TIME_JITTER = 60 * 60
 
 
 class StoredBackupConfig(TypedDict):
@@ -124,6 +129,7 @@ class BackupConfig:
     def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
         self.data = BackupConfigData.from_dict(stored_config)
+        self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
     async def update(
@@ -160,8 +166,13 @@ class RetentionConfig:
     def apply(self, manager: BackupManager) -> None:
         """Apply backup retention configuration."""
         if self.days is not None:
+            LOGGER.debug(
+                "Scheduling next automatic delete of backups older than %s in 1 day",
+                self.days,
+            )
             self._schedule_next(manager)
         else:
+            LOGGER.debug("Unscheduling next automatic delete")
             self._unschedule_next(manager)
 
     def to_dict(self) -> StoredRetentionConfig:
@@ -323,6 +334,8 @@ class BackupSchedule:
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error creating automatic backup")
 
+        next_time += timedelta(seconds=random.randint(0, BACKUP_START_TIME_JITTER))
+        LOGGER.debug("Scheduling next automatic backup at %s", next_time)
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
         )

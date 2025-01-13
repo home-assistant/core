@@ -201,7 +201,7 @@
           "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
           "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
           "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
-          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it looses the connection to your broker.",
+          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it loses the connection to your broker.",
           "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to.",
           "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
           "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",

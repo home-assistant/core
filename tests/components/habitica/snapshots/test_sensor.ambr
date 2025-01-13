@@ -114,268 +114,6 @@
     'state': '102',
   })
 # ---
-# name: test_sensors[sensor.test_user_dailies-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_user_dailies',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Dailies',
-    'platform': 'habitica',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <HabiticaSensorEntity.DAILIES: 'dailys'>,
-    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
-    'unit_of_measurement': 'tasks',
-  })
-# ---
-# name: test_sensors[sensor.test_user_dailies-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      '2c6d136c-a1c3-4bef-b7c4-fa980784b1e1': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-09-22T11:44:43.774000+00:00',
-        'every_x': 1,
-        'frequency': 'weekly',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'is_due': True,
-        'next_due': list([
-          '2024-09-24T22:00:00+00:00',
-          '2024-09-27T22:00:00+00:00',
-          '2024-09-28T22:00:00+00:00',
-          '2024-10-01T22:00:00+00:00',
-          '2024-10-04T22:00:00+00:00',
-          '2024-10-08T22:00:00+00:00',
-        ]),
-        'notes': 'Ein einstündiges Workout im Fitnessstudio absolvieren.',
-        'priority': 2,
-        'repeat': dict({
-          'f': False,
-          'm': False,
-          's': True,
-          'su': True,
-          't': False,
-          'th': False,
-          'w': True,
-        }),
-        'start_date': '2024-09-21T22:00:00+00:00',
-        'tags': list([
-          '51076966-2970-4b40-b6ba-d58c6a756dd7',
-        ]),
-        'text': 'Fitnessstudio besuchen',
-        'type': 'daily',
-        'yester_daily': True,
-      }),
-      '564b9ac9-c53d-4638-9e7f-1cd96fe19baa': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'completed': True,
-        'created_at': '2024-07-07T17:51:53.268000+00:00',
-        'every_x': 1,
-        'frequency': 'weekly',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'is_due': True,
-        'next_due': list([
-          '2024-09-23T00:00:00+02:00',
-          '2024-09-24T00:00:00+02:00',
-          '2024-09-25T00:00:00+02:00',
-          '2024-09-26T00:00:00+02:00',
-          '2024-09-27T00:00:00+02:00',
-          '2024-09-28T00:00:00+02:00',
-        ]),
-        'notes': 'Klicke um Änderungen zu machen!',
-        'priority': 1,
-        'repeat': dict({
-          'f': True,
-          'm': True,
-          's': True,
-          'su': True,
-          't': True,
-          'th': True,
-          'w': True,
-        }),
-        'start_date': '2024-07-06T22:00:00+00:00',
-        'streak': 1,
-        'text': 'Zahnseide benutzen',
-        'type': 'daily',
-        'value': -2.9663035443712333,
-        'yester_daily': True,
-      }),
-      '6e53f1f5-a315-4edd-984d-8d762e4a08ef': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-10-10T15:57:14.304000+00:00',
-        'every_x': 1,
-        'frequency': 'monthly',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'next_due': list([
-          '2024-12-14T23:00:00+00:00',
-          '2025-01-18T23:00:00+00:00',
-          '2025-02-15T23:00:00+00:00',
-          '2025-03-15T23:00:00+00:00',
-          '2025-04-19T23:00:00+00:00',
-          '2025-05-17T23:00:00+00:00',
-        ]),
-        'notes': 'Klicke um den Namen Deines aktuellen Projekts anzugeben & setze einen Terminplan!',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': False,
-          's': False,
-          'su': True,
-          't': False,
-          'th': False,
-          'w': False,
-        }),
-        'start_date': '2024-09-20T23:00:00+00:00',
-        'streak': 1,
-        'text': 'Arbeite an einem kreativen Projekt',
-        'type': 'daily',
-        'value': -0.9215181434950852,
-        'weeks_of_month': list([
-          3,
-        ]),
-        'yester_daily': True,
-      }),
-      'f2c85972-1a19-4426-bc6d-ce3337b9d99f': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-07-07T17:51:53.266000+00:00',
-        'every_x': 1,
-        'frequency': 'weekly',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'is_due': True,
-        'next_due': list([
-          '2024-09-22T22:00:00+00:00',
-          '2024-09-23T22:00:00+00:00',
-          '2024-09-24T22:00:00+00:00',
-          '2024-09-25T22:00:00+00:00',
-          '2024-09-26T22:00:00+00:00',
-          '2024-09-27T22:00:00+00:00',
-        ]),
-        'notes': 'Klicke um Deinen Terminplan festzulegen!',
-        'priority': 1,
-        'repeat': dict({
-          'f': True,
-          'm': True,
-          's': True,
-          'su': True,
-          't': True,
-          'th': True,
-          'w': True,
-        }),
-        'start_date': '2024-07-06T22:00:00+00:00',
-        'text': '5 Minuten ruhig durchatmen',
-        'type': 'daily',
-        'value': -1.919611992979862,
-        'yester_daily': True,
-      }),
-      'friendly_name': 'test-user Dailies',
-      'unit_of_measurement': 'tasks',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_user_dailies',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
-  })
-# ---
 # name: test_sensors[sensor.test_user_display_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -420,6 +158,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'test-user',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_eggs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eggs',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.EGGS_TOTAL: 'eggs_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_eggs_total',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Pandajunges': 2,
+      'Tigerjunges': 0,
+      'Wolfsjunges': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Egg.png',
+      'friendly_name': 'test-user Eggs',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_eggs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.test_user_experience-entry]
@@ -774,6 +563,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hatching potions',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HATCHING_POTIONS_TOTAL: 'hatching_potions_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_hatching_potions_total',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Normales': 2,
+      'Weißes': 0,
+      'Wüstenfarbenes': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
+      'friendly_name': 'test-user Hatching potions',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.test_user_health-entry]
@@ -1224,6 +1064,109 @@
     'state': '75',
   })
 # ---
+# name: test_sensors[sensor.test_user_pet_food-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pet_food',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pet food',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.FOOD_TOTAL: 'food_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_food_total',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pet_food-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Fleisch': 0,
+      'Kartoffel': 2,
+      'Milch': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Strawberry.png',
+      'friendly_name': 'test-user Pet food',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pet_food',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_quest_scrolls-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_quest_scrolls',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quest scrolls',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.QUEST_SCROLLS: 'quest_scrolls'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_quest_scrolls',
+    'unit_of_measurement': 'scrolls',
+  })
+# ---
+# name: test_sensors[sensor.test_user_quest_scrolls-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Angriff des Banalen, Teil 1: Abwasch-Katastrophe!': 1,
+      'Der Basi-List': 0,
+      'Die goldene Ritterin, Teil 1: Ein ernstes Gespräch': 0,
+      'Die ungezähmten Staubmäuse': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_dustbunnies.png',
+      'friendly_name': 'test-user Quest scrolls',
+      'unit_of_measurement': 'scrolls',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_quest_scrolls',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
 # name: test_sensors[sensor.test_user_rewards-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1310,6 +1253,54 @@
     'state': '1',
   })
 # ---
+# name: test_sensors[sensor.test_user_saddles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_saddles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Saddles',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.SADDLE: 'saddle'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_saddle',
+    'unit_of_measurement': 'saddles',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Saddle.png',
+      'friendly_name': 'test-user Saddles',
+      'unit_of_measurement': 'saddles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_saddles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
 # name: test_sensors[sensor.test_user_strength-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1363,207 +1354,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '104',
-  })
-# ---
-# name: test_sensors[sensor.test_user_to_do_s-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.test_user_to_do_s',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': "To-Do's",
-    'platform': 'habitica',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': <HabiticaSensorEntity.TODOS: 'todos'>,
-    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
-    'unit_of_measurement': 'tasks',
-  })
-# ---
-# name: test_sensors[sensor.test_user_to_do_s-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      '1aa3137e-ef72-4d1f-91ee-41933602f438': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-09-21T22:16:38.153000+00:00',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Rasen mähen und die Pflanzen gießen.',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Garten pflegen',
-        'type': 'todo',
-      }),
-      '2f6fcabc-f670-4ec3-ba65-817e8deea490': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-09-21T22:17:19.513000+00:00',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Strom- und Internetrechnungen rechtzeitig überweisen.',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Rechnungen bezahlen',
-        'type': 'todo',
-      }),
-      '86ea2475-d1b5-4020-bdcc-c188c7996afa': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-09-21T22:16:16.756000+00:00',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Den Ausflug für das kommende Wochenende organisieren.',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'tags': list([
-          '51076966-2970-4b40-b6ba-d58c6a756dd7',
-        ]),
-        'text': 'Wochenendausflug planen',
-        'type': 'todo',
-      }),
-      '88de7cd9-af2b-49ce-9afd-bf941d87336b': dict({
-        'challenge': dict({
-          'broken': None,
-          'id': None,
-          'shortName': None,
-          'taskId': None,
-          'winner': None,
-        }),
-        'created_at': '2024-09-21T22:17:57.816000+00:00',
-        'group': dict({
-          'assignedDate': None,
-          'assignedUsers': list([
-          ]),
-          'assignedUsersDetail': dict({
-          }),
-          'assigningUsername': None,
-          'completedBy': dict({
-            'date': None,
-            'userId': None,
-          }),
-          'id': None,
-          'managerNotes': None,
-          'taskId': None,
-        }),
-        'notes': 'Das Buch, das du angefangen hast, bis zum Wochenende fertig lesen.',
-        'priority': 1,
-        'repeat': dict({
-          'f': False,
-          'm': True,
-          's': False,
-          'su': False,
-          't': True,
-          'th': False,
-          'w': True,
-        }),
-        'text': 'Buch zu Ende lesen',
-        'type': 'todo',
-      }),
-      'friendly_name': "test-user To-Do's",
-      'unit_of_measurement': 'tasks',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_user_to_do_s',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '4',
   })
 # ---

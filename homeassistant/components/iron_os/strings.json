@@ -136,8 +136,8 @@
       "temp_unit": {
         "name": "Temperature display unit",
         "state": {
-          "celsius": "Celsius (C°)",
-          "fahrenheit": "Fahrenheit (F°)"
+          "celsius": "Celsius (°C)",
+          "fahrenheit": "Fahrenheit (°F)"
         }
       },
       "desc_scroll_speed": {
@@ -165,6 +165,13 @@
           "seconds_4": "4 second",
           "seconds_5": "5 second",
           "loop": "Loop"
+        }
+      },
+      "usb_pd_mode": {
+        "name": "Power Delivery 3.1 EPR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       }
     },
@@ -244,9 +251,6 @@
       },
       "calibrate_cjc": {
         "name": "Calibrate CJC"
-      },
-      "usb_pd_mode": {
-        "name": "Power Delivery 3.1 EPR"
       }
     }
   },

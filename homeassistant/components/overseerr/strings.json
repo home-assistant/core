@@ -21,6 +21,19 @@
     }
   },
   "entity": {
+    "event": {
+      "last_media_event": {
+        "name": "Last media event",
+        "state": {
+          "pending": "Pending",
+          "approved": "Approved",
+          "available": "Available",
+          "failed": "Failed",
+          "declined": "Declined",
+          "auto_approved": "Auto-approved"
+        }
+      }
+    },
     "sensor": {
       "total_requests": {
         "name": "Total requests"
@@ -48,6 +61,54 @@
   "exceptions": {
     "connection_error": {
       "message": "Error connecting to the Overseerr instance: {error}"
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    }
+  },
+  "services": {
+    "get_requests": {
+      "name": "Get requests",
+      "description": "Get media requests from Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Overseerr instance",
+          "description": "The Overseerr instance to get requests from."
+        },
+        "status": {
+          "name": "Request status",
+          "description": "Filter the requests by status."
+        },
+        "sort_order": {
+          "name": "Sort order",
+          "description": "Sort the requests by added or modified date."
+        },
+        "requested_by": {
+          "name": "Requested by",
+          "description": "Filter the requests by the user id that requested them."
+        }
+      }
+    }
+  },
+  "selector": {
+    "request_status": {
+      "options": {
+        "approved": "Approved",
+        "pending": "Pending",
+        "available": "Available",
+        "processing": "Processing",
+        "unavailable": "Unavailable",
+        "failed": "Failed"
+      }
+    },
+    "request_sort_order": {
+      "options": {
+        "added": "Added",
+        "modified": "Modified"
+      }
     }
   }
 }

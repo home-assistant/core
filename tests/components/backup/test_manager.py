@@ -383,7 +383,7 @@ async def test_async_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_data["backup_id"]}.tar"
+    assert tar_file_path == f"{backup_directory}/{backup_data['backup_id']}.tar"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -1397,6 +1397,9 @@ async def test_receive_backup(
 
     with (
         patch("pathlib.Path.open", open_mock),
+        patch(
+            "homeassistant.components.backup.manager.make_backup_dir"
+        ) as make_backup_dir_mock,
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
@@ -1412,6 +1415,7 @@ async def test_receive_backup(
 
     assert resp.status == 201
     assert open_mock.call_count == open_call_count
+    assert make_backup_dir_mock.call_count == move_call_count + 1
     assert move_mock.call_count == move_call_count
     for index, name in enumerate(move_path_names):
         assert move_mock.call_args_list[index].args[1].name == name

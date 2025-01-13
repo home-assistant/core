@@ -67,6 +67,36 @@
       },
       "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
     },
+    "tags": [
+      {
+        "id": "8515e4ae-2f4b-455a-b4a4-8939e04b1bfd",
+        "name": "Arbeit"
+      },
+      {
+        "id": "6aa65cbb-dc08-4fdd-9a66-7dedb7ba4cab",
+        "name": "Training"
+      },
+      {
+        "id": "20409521-c096-447f-9a90-23e8da615710",
+        "name": "Gesundheit + Wohlbefinden"
+      },
+      {
+        "id": "2ac458af-0833-4f3f-bf04-98a0c33ef60b",
+        "name": "Schule"
+      },
+      {
+        "id": "1bcb1a0f-4d05-4087-8223-5ea779e258b0",
+        "name": "Teams"
+      },
+      {
+        "id": "b2780f82-b3b5-49a3-a677-48f2c8c7e3bb",
+        "name": "Hausarbeiten"
+      },
+      {
+        "id": "3450351f-1323-4c7e-9fd2-0cdff25b3ce0",
+        "name": "Kreativität"
+      }
+    ],
     "needsCron": true,
     "lastCron": "2024-09-21T22:01:55.586Z",
     "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
@@ -82,8 +112,37 @@
           "eyewear": "eyewear_armoire_plagueDoctorMask",
           "body": "body_special_aetherAmulet"
         }
+      },
+      "quests": {
+        "atom1": 1,
+        "goldenknight1": 0,
+        "dustbunnies": 1,
+        "basilist": 0
+      },
+      "food": {
+        "Saddle": 2,
+        "Meat": 0,
+        "Milk": 1,
+        "Potatoe": 2
+      },
+      "hatchingPotions": {
+        "Base": 2,
+        "White": 0,
+        "Desert": 1
+      },
+      "eggs": {
+        "Wolf": 1,
+        "TigerCub": 0,
+        "PandaCub": 2
       }
     },
-    "balance": 10
+    "balance": 10,
+    "purchased": {
+      "plan": {
+        "consecutive": {
+          "trinkets": 0
+        }
+      }
+    }
   }
 }

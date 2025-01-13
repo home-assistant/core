@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import fields
+from dataclasses import asdict, fields
 import datetime
 from math import floor
 from typing import TYPE_CHECKING
@@ -33,6 +33,8 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
     """Calculate due date for dailies and yesterdailies."""
 
     if task.everyX == 0 or not task.nextDue:  # grey dailies never become due
+        return None
+    if task.frequency is Frequency.WEEKLY and not any(asdict(task.repeat).values()):
         return None
 
     if TYPE_CHECKING:
@@ -159,3 +161,14 @@ def get_attributes_total(user: UserData, content: ContentData, attribute: str) -
     return floor(
         sum(value for value in get_attribute_points(user, content, attribute).values())
     )
+
+
+def inventory_list(
+    user: UserData, content: ContentData, item_type: str
+) -> dict[str, int]:
+    """List inventory items of given type."""
+    return {
+        getattr(content, item_type)[k].text: v
+        for k, v in getattr(user.items, item_type, {}).items()
+        if k != "Saddle"
+    }
