@@ -360,9 +360,7 @@ class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             update_interval=SCAN_MOBILE_DEVICE_INTERVAL,
         )
         self._tado = tado
-        self.data: dict[str, dict] = {
-            "mobile_device": {},
-        }
+        self.data: dict[str, dict] = {}
 
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch the latest data from Tado."""
@@ -392,5 +390,5 @@ class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     mobile_device_id,
                 )
 
-        self.data["mobile_device"] = mapped_mobile_devices
+        self.data = mapped_mobile_devices
         return self.data
