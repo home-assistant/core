@@ -1,0 +1,11 @@
+{
+    "domain": "redgtech",
+    "name": "Redgtech",
+    "documentation": "https://www.redgtech.com.br/doc/home_assistant",
+    "requirements": ["aiohttp"],
+    "dependencies": [],
+    "codeowners": ["@jonhsady"],
+    "version": "1.0.0",
+    "iot_class": "Local Push"
+  }
+  
