@@ -400,6 +400,7 @@ async def async_setup_entry(
     entities.extend(
         TeslemetryEnergyLiveBinarySensorEntity(energysite, description)
         for energysite in entry.runtime_data.energysites
+        if energysite.live_coordinator
         for description in ENERGY_LIVE_DESCRIPTIONS
         if description.key in energysite.live_coordinator.data
     )
