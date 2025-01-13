@@ -138,7 +138,7 @@
           "description": "The message to display."
         },
         "icon": {
-          "name": "Icon",
+          "name": "Icon ID",
           "description": "The ID number of the icon or animation to display. List of all icons and their IDs can be found at: https://developer.lametric.com/icons."
         },
         "sound": {
