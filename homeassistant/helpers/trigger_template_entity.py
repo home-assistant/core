@@ -197,6 +197,7 @@ class TriggerBaseEntity(Entity):
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
         """Render templates."""
+        self._render_availability_template(variables)
         rendered = dict(self._rendered)
         if CONF_AVAILABILITY in rendered and rendered[CONF_AVAILABILITY] is False:
             return
@@ -263,7 +264,6 @@ class ManualTriggerEntity(TriggerBaseEntity):
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
             **(run_variables or {}),
         }
-        self._render_availability_template(variables)
         self._render_templates(variables)
 
 
