@@ -1,7 +1,7 @@
 {
     "domain": "redgtech",
     "name": "Redgtech",
-    "documentation": "https://www.redgtech.com.br/doc/home_assistant",
+    "documentation": "https://www.redgtech.com.br/home_assistant/doc",
     "requirements": ["aiohttp"],
     "dependencies": [],
     "codeowners": ["@jonhsady"],

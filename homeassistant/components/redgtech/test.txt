@@ -1,0 +1,125 @@
+// Plugin para Redgtech Automação - Controle de Dispositivos com Autenticação
+plugin.id = 'redgtechautomacao';
+plugin.name = 'Redgtech Automação';
+plugin.author = 'luan-nvg';
+plugin.version = '1.0';
+plugin.type = 'HTTP';
+
+// Token de acesso para autenticação
+let accessToken = '';
+
+// URL base configurável
+let baseURL = plugin.settings.baseURL || 'https://redgtech-dev.com'; // URL da sua empresa
+
+// Função para autenticar e obter o access token
+function authenticate() {
+    let credentials = {
+        email: plugin.settings.email,
+        password: plugin.settings.password,
+    };
+
+    let response = httpClient.post({
+        url: `${baseURL}/home_assistant/login`,
+        headers: {'Content-Type': 'application/json'},
+        data: JSON.stringify(credentials),
+    });
+
+    if (response.status === 200) {
+        let data = JSON.parse(response.data);
+        accessToken = data.data.access_token;
+        console.log('Autenticação bem-sucedida');
+        return true;
+    } else {
+        console.log('Falha na autenticação');
+        return false;
+    }
+}
+
+// Função para obter o cabeçalho de autenticação com o access token
+function getAuthHeader() {
+    return {Authorization: `Bearer ${accessToken}`};
+}
+
+// Evento para listar os dispositivos disponíveis
+plugin.onSync = function () {
+    if (!authenticate()) {
+        console.log('Falha ao autenticar durante a sincronização');
+        return [];
+    }
+
+    // Solicitação para obter os dispositivos da API
+    let response = httpClient.get({
+        url: `${baseURL}/home_assistant?access_token=${accessToken}`,
+        headers: getAuthHeader(),
+    });
+
+    if (response.status === 200) {
+        let data = JSON.parse(response.data);
+        let devices = data.boards;
+        plugin.devices = devices.map(device => ({
+            id: device.endpointId,
+            name: device.friendlyName,
+            type: device.displayCategories.includes('SWITCH') ? 'Switch' : 'Dimmer',
+        }));
+    } else {
+        console.log('Falha ao obter os dispositivos');
+        return [];
+    }
+
+    return plugin.devices;
+};
+
+// Evento para enviar comandos para dimmer e switch
+plugin.onChangeRequest = function (device, attribute, value) {
+    if (!accessToken) {
+        console.log('Token expirado, autenticando novamente...');
+        if (!authenticate()) return;
+    }
+
+    let url = '';
+    let headers = getAuthHeader();
+    let payload = {};
+
+    if (device.type === 'Dimmer' && attribute === 'dimmerLevel') {
+        url = `${baseURL}/home_assistant/execute/${device.id}`;
+        payload = { state: 'on', brightness: value };
+    } else if (device.type === 'Switch' && attribute === 'power') {
+        url = `${baseURL}/home_assistant/execute/${device.id}`;
+        payload = { state: value ? 'on' : 'off' };
+    }
+
+    let response = httpClient.post({
+        url: url,
+        headers: headers,
+        data: JSON.stringify(payload),
+    });
+
+    if (response.status !== 200) {
+        console.log('Erro ao enviar o comando');
+    }
+};
+
+// Evento para ler o estado atual de cada dispositivo
+plugin.onPoll = function (device) {
+    if (!accessToken) {
+        console.log('Token expirado, autenticando novamente...');
+        if (!authenticate()) return;
+    }
+
+    let statusUrl = `${baseURL}/home_assistant?access_token=${accessToken}`;
+    let response = httpClient.get({url: statusUrl, headers: getAuthHeader()});
+
+    if (response.status === 200) {
+        let data = JSON.parse(response.data);
+        let deviceData = data.boards.find(d => d.endpointId === device.id);
+        if (deviceData) {
+            if (device.type === 'Dimmer') {
+                device.dimmerLevel = deviceData.bright;
+            } else if (device.type === 'Switch') {
+                device.power = deviceData.value;
+            }
+        }
+    } else {
+        console.log('Falha ao obter o status do dispositivo.');
+    }
+};
