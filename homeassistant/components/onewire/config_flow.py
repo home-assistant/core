@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import logging
 from typing import Any
 
 from pyownet import protocol
@@ -29,7 +28,6 @@ from .const import (
 )
 from .onewirehub import OneWireConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
@@ -54,7 +52,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
-    _discovery: dict[str, Any]
+    _discovery_data: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -108,12 +106,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle hassio discovery."""
-        _LOGGER.warning(
-            "Hassio discovery implementation in progress: %s", discovery_info
-        )
         await self._async_handle_discovery_without_unique_id()
 
-        self._discovery = {
+        self._discovery_data = {
             "title": discovery_info.config["addon"],
             CONF_HOST: discovery_info.config[CONF_HOST],
             CONF_PORT: int(discovery_info.config[CONF_PORT]),
@@ -127,13 +122,13 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {
-                CONF_HOST: self._discovery[CONF_HOST],
-                CONF_PORT: self._discovery[CONF_PORT],
+                CONF_HOST: self._discovery_data[CONF_HOST],
+                CONF_PORT: self._discovery_data[CONF_PORT],
             }
             await validate_input(self.hass, data, errors)
             if not errors:
                 return self.async_create_entry(
-                    title=self._discovery["title"], data=data
+                    title=self._discovery_data["title"], data=data
                 )
 
         return self.async_show_form(
