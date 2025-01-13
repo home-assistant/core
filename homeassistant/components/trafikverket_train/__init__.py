@@ -69,7 +69,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) ->
     if entry.version == 1:
         if entry.minor_version == 1:
             # Remove unique id
-            hass.config_entries.async_update_entry(entry, unique_id=None, minor_version=2)
+            hass.config_entries.async_update_entry(
+                entry, unique_id=None, minor_version=2
+            )
 
         # Change from station names to station signatures
         try:
