@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import fields
+from dataclasses import asdict, fields
 import datetime
 from math import floor
 from typing import TYPE_CHECKING
@@ -33,6 +33,8 @@ def next_due_date(task: TaskData, today: datetime.datetime) -> datetime.date | N
     """Calculate due date for dailies and yesterdailies."""
 
     if task.everyX == 0 or not task.nextDue:  # grey dailies never become due
+        return None
+    if task.frequency is Frequency.WEEKLY and not any(asdict(task.repeat).values()):
         return None
 
     if TYPE_CHECKING:
