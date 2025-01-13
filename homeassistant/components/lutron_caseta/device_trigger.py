@@ -404,6 +404,8 @@ async def async_get_triggers(
     ):
         return []
 
+    print("caseta debug", data)
+
     keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
 
     # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
