@@ -94,7 +94,6 @@ class TadoDeviceTrackerEntity(CoordinatorEntity[DataUpdateCoordinator], TrackerE
         self._attr_unique_id = str(device_id)
         self._device_id = device_id
         self._device_name = device_name
-        self._tado = coordinator
         self._active = False
 
     @callback
@@ -111,7 +110,7 @@ class TadoDeviceTrackerEntity(CoordinatorEntity[DataUpdateCoordinator], TrackerE
             self._device_name,
             self._device_id,
         )
-        device = self._tado.data["mobile_device"][self._device_id]
+        device = self.coordinator.data["mobile_device"][self._device_id]
 
         self._attr_available = False
         _LOGGER.debug(
@@ -130,11 +129,6 @@ class TadoDeviceTrackerEntity(CoordinatorEntity[DataUpdateCoordinator], TrackerE
             self._active = True
         else:
             _LOGGER.debug("Tado device %s is not at home", device["name"])
-
-    @callback
-    def on_demand_update(self) -> None:
-        """Update state on demand."""
-        self.update_state()
 
     @property
     def name(self) -> str:
