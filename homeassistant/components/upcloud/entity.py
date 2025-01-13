@@ -11,9 +11,8 @@ from homeassistant.const import CONF_USERNAME, STATE_OFF, STATE_ON, STATE_PROBLE
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UpCloudConfigEntry
 from .const import DOMAIN
-from .coordinator import UpCloudDataUpdateCoordinator
+from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

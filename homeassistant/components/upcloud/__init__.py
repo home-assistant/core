@@ -8,7 +8,6 @@ import logging
 import requests.exceptions
 import upcloud_api
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -23,13 +22,11 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
-from .coordinator import UpCloudDataUpdateCoordinator
+from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
-
-type UpCloudConfigEntry = ConfigEntry[UpCloudDataUpdateCoordinator]
 
 
 def _config_entry_update_signal_name(config_entry: UpCloudConfigEntry) -> str:
