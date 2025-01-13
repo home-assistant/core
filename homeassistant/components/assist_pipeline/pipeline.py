@@ -1017,9 +1017,18 @@ class PipelineRun:
             raise RuntimeError("Recognize intent was not prepared")
 
         if self.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use pipeline language for
-            # intent fallback.
-            input_language = self.pipeline.language
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            input_language = (
+                self.pipeline.stt_language
+                or self.pipeline.tts_language
+                or self.pipeline.language
+            )
         else:
             input_language = self.pipeline.conversation_language
 
