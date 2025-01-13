@@ -55,7 +55,9 @@ class ListAddItemIntent(intent.IntentHandler):
             match_result.states[0].entity_id
         )
         if target_list is None:
-            raise intent.IntentHandleError(f"No to-do list: {list_name}")
+            raise intent.IntentHandleError(
+                f"No to-do list: {list_name}", "list_not_found"
+            )
 
         # Add to list
         await target_list.async_create_todo_item(
@@ -111,7 +113,9 @@ class ListCompleteItemIntent(intent.IntentHandler):
             match_result.states[0].entity_id
         )
         if target_list is None:
-            raise intent.IntentHandleError(f"No to-do list: {list_name}")
+            raise intent.IntentHandleError(
+                f"No to-do list: {list_name}", "list_not_found"
+            )
 
         # Find item in list
         matching_item = None
@@ -120,7 +124,9 @@ class ListCompleteItemIntent(intent.IntentHandler):
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:
-            raise intent.IntentHandleError(f"Item '{item}' not found on list")
+            raise intent.IntentHandleError(
+                f"Item '{item}' not found on list", "item_not_found"
+            )
 
         # Mark as completed
         await target_list.async_update_todo_item(
