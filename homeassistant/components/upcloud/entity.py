@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 import upcloud_api
@@ -13,8 +12,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CORE_NUMBER = "core_number"
 ATTR_HOSTNAME = "hostname"
