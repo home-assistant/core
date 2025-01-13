@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Any, Concatenate
 
-from azure.core.exceptions import HttpResponseError
+from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -164,10 +164,8 @@ class AzureStorageBackupAgent(BackupAgent):
         blob_client = self._client.get_blob_client(f"{backup_id}.tar")
         try:
             blob_properties = await blob_client.get_blob_properties()
-        except HttpResponseError as err:
-            if err.status_code == 404:
-                return None
-            raise
+        except ResourceNotFoundError:
+            return None
 
         return self._parse_blob_metadata(blob_properties.metadata)
 

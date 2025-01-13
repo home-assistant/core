@@ -22,8 +22,18 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
+@pytest.fixture
+def mock_blob_client() -> Mock:
+    """Mock the Azure Storage blob client."""
+    blob_client = Mock()
+    blob_client.get_blob_properties = AsyncMock(
+        return_value=BlobProperties(metadata=BACKUP_METADATA)
+    )
+    return blob_client
+
+
 @pytest.fixture(autouse=True)
-def mock_client() -> Generator[MagicMock]:
+def mock_client(mock_blob_client: Mock) -> Generator[MagicMock]:
     """Mock the Azure Storage client."""
     with (
         patch(
@@ -43,12 +53,7 @@ def mock_client() -> Generator[MagicMock]:
 
         client.list_blobs.return_value = async_list_blobs()
 
-        blob_client = Mock()
-        blob_client.get_blob_properties = AsyncMock(
-            return_value=BlobProperties(metadata=BACKUP_METADATA)
-        )
-
-        client.get_blob_client.return_value = blob_client
+        client.get_blob_client.return_value = mock_blob_client
 
         class MockStream:
             async def chunks(self) -> AsyncIterator[bytes]:
