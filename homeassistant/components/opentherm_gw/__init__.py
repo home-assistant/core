@@ -10,9 +10,11 @@ from serial import SerialException
 import voluptuous as vol
 
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_DATE,
+    ATTR_ENTITY_ID,
     ATTR_ID,
     ATTR_MODE,
     ATTR_TEMPERATURE,
@@ -24,6 +26,8 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
@@ -52,6 +56,8 @@ from .const import (
     DATA_GATEWAYS,
     DATA_OPENTHERM_GW,
     DOMAIN,
+    ENTITY_KEY_CENTRAL_HEATING_1_OVERRIDE,
+    ENTITY_KEY_CENTRAL_HEATING_2_OVERRIDE,
     SERVICE_RESET_GATEWAY,
     SERVICE_SEND_TRANSP_CMD,
     SERVICE_SET_CH_OVRD,
@@ -573,3 +579,29 @@ class OpenThermGatewayHub:
         return await self.gateway.set_target_temp(
             temp, self.options.get(CONF_TEMPORARY_OVRD_MODE, True)
         )
+
+    async def set_control_setpoint(self, circuit: int, setpoint: float) -> float:
+        """Set the control setpoint on a heating circuit. Return the new setpoint."""
+        if circuit == 2:
+            ret_value = await self.gateway.set_control_setpoint_2(setpoint)
+            key = ENTITY_KEY_CENTRAL_HEATING_2_OVERRIDE
+        else:
+            ret_value = await self.gateway.set_control_setpoint(setpoint)
+            key = ENTITY_KEY_CENTRAL_HEATING_1_OVERRIDE
+        ent_reg = er.async_get(self.hass)
+        ent_id = ent_reg.async_get_entity_id(
+            SWITCH_DOMAIN,
+            DOMAIN,
+            f"{self.hub_id}-{OpenThermDeviceIdentifier.GATEWAY}-{key}",
+        )
+
+        if ent_id is None or (entity := ent_reg.async_get(ent_id)) is None:
+            return ret_value
+
+        if not entity.disabled and ret_value is not None:
+            switch_service = SERVICE_TURN_OFF if ret_value == 0 else SERVICE_TURN_ON
+            await self.hass.services.async_call(
+                SWITCH_DOMAIN, switch_service, {ATTR_ENTITY_ID: ent_id}
+            )
+
+        return ret_value

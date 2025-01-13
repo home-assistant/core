@@ -11,7 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenThermGatewayHub
-from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, GATEWAY_DEVICE_DESCRIPTION
+from .const import (
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    ENTITY_KEY_CENTRAL_HEATING_1_OVERRIDE,
+    ENTITY_KEY_CENTRAL_HEATING_2_OVERRIDE,
+    GATEWAY_DEVICE_DESCRIPTION,
+)
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
 
@@ -27,7 +33,7 @@ class OpenThermSwitchEntityDescription(
 
 SWITCH_DESCRIPTIONS: tuple[OpenThermSwitchEntityDescription, ...] = (
     OpenThermSwitchEntityDescription(
-        key="central_heating_1_override",
+        key=ENTITY_KEY_CENTRAL_HEATING_1_OVERRIDE,
         translation_key="central_heating_override_n",
         translation_placeholders={"circuit_number": "1"},
         device_description=GATEWAY_DEVICE_DESCRIPTION,
@@ -35,7 +41,7 @@ SWITCH_DESCRIPTIONS: tuple[OpenThermSwitchEntityDescription, ...] = (
         turn_on_action=lambda hub: hub.gateway.set_ch_enable_bit(1),
     ),
     OpenThermSwitchEntityDescription(
-        key="central_heating_2_override",
+        key=ENTITY_KEY_CENTRAL_HEATING_2_OVERRIDE,
         translation_key="central_heating_override_n",
         translation_placeholders={"circuit_number": "2"},
         device_description=GATEWAY_DEVICE_DESCRIPTION,
