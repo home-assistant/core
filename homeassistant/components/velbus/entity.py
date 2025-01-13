@@ -29,7 +29,7 @@ class VelbusEntity(Entity):
     def __init__(self, channel: VelbusChannel) -> None:
         """Initialize a Velbus entity."""
         self._channel = channel
-        self._module_adress = channel.get_module_address()
+        self._module_adress = str(channel.get_module_address())
         self._attr_name = channel.get_name()
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -45,15 +45,15 @@ class VelbusEntity(Entity):
         if self._channel.is_sub_device():
             self._attr_device_info["via_device"] = (
                 DOMAIN,
-                str(self._module_adress),
+                self._module_adress,
             )
-        serial = channel.get_module_serial() or str(self._module_adress)
+        serial = channel.get_module_serial() or self._module_adress
         self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""
         if not self._channel.is_sub_device():
-            return str(self._module_adress)
+            return self._module_adress
         return f"{self._module_adress}-{self._channel.get_channel_number()}"
 
     async def async_added_to_hass(self) -> None:
