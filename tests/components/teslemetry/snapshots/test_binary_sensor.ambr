@@ -923,7 +923,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_europe_vehicle-entry]
+# name: test_binary_sensor[binary_sensor.test_european_vehicle-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -935,7 +935,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.test_europe_vehicle',
+    'entity_id': 'binary_sensor.test_european_vehicle',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -947,7 +947,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Europe vehicle',
+    'original_name': 'European vehicle',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -956,13 +956,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.test_europe_vehicle-state]
+# name: test_binary_sensor[binary_sensor.test_european_vehicle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Europe vehicle',
+      'friendly_name': 'Test European vehicle',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_europe_vehicle',
+    'entity_id': 'binary_sensor.test_european_vehicle',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2628,13 +2628,13 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor_refresh[binary_sensor.test_europe_vehicle-statealt]
+# name: test_binary_sensor_refresh[binary_sensor.test_european_vehicle-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Europe vehicle',
+      'friendly_name': 'Test European vehicle',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.test_europe_vehicle',
+    'entity_id': 'binary_sensor.test_european_vehicle',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
