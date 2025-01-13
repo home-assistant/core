@@ -26,7 +26,7 @@ from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
-from .util import next_due_date
+from .util import apply_stats, next_due_date
 
 PARALLEL_UPDATES = 1
 
@@ -207,9 +207,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 self.hass, message=msg, title="Habitica"
             )
         if score_result:
-            for field in self.coordinator.data.user.stats.__annotations__:
-                if (value := getattr(score_result.data, field)) is not None:
-                    setattr(self.coordinator.data.user.stats, field, value)
+            apply_stats(self.coordinator.data.user, score_result.data)
 
         self.coordinator.async_update_listeners()
 

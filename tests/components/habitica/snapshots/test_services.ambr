@@ -301,7 +301,7 @@
         'up': True,
         'updatedAt': datetime.datetime(2024, 7, 12, 9, 58, 45, 438000, tzinfo=datetime.timezone.utc),
         'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
-        'value': 0.0,
+        'value': None,
         'weeksOfMonth': list([
         ]),
         'yesterDaily': None,
@@ -1718,7 +1718,7 @@
         'up': True,
         'updatedAt': datetime.datetime(2024, 7, 12, 9, 58, 45, 438000, tzinfo=datetime.timezone.utc),
         'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
-        'value': 0.0,
+        'value': None,
         'weeksOfMonth': list([
         ]),
         'yesterDaily': None,
@@ -2617,7 +2617,7 @@
         'up': True,
         'updatedAt': datetime.datetime(2024, 7, 12, 9, 58, 45, 438000, tzinfo=datetime.timezone.utc),
         'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
-        'value': 0.0,
+        'value': None,
         'weeksOfMonth': list([
         ]),
         'yesterDaily': None,
@@ -4027,7 +4027,7 @@
         'up': True,
         'updatedAt': datetime.datetime(2024, 7, 12, 9, 58, 45, 438000, tzinfo=datetime.timezone.utc),
         'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
-        'value': 0.0,
+        'value': None,
         'weeksOfMonth': list([
         ]),
         'yesterDaily': None,
@@ -5493,7 +5493,7 @@
         'up': True,
         'updatedAt': datetime.datetime(2024, 7, 12, 9, 58, 45, 438000, tzinfo=datetime.timezone.utc),
         'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
-        'value': 0.0,
+        'value': None,
         'weeksOfMonth': list([
         ]),
         'yesterDaily': None,

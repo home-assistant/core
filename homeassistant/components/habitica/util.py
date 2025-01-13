@@ -21,7 +21,7 @@ from dateutil.rrule import (
     YEARLY,
     rrule,
 )
-from habiticalib import ContentData, Frequency, TaskData, UserData
+from habiticalib import ContentData, Frequency, QuestData, StatsUser, TaskData, UserData
 
 from homeassistant.util import dt as dt_util
 
@@ -162,3 +162,19 @@ def inventory_list(
         for k, v in getattr(user.items, item_type, {}).items()
         if k != "Saddle"
     }
+
+
+def apply_stats(user: UserData, data: StatsUser) -> None:
+    """Apply stats response to user data."""
+
+    for field in StatsUser.__annotations__:
+        if (value := getattr(data, field)) is not None:
+            setattr(user.stats, field, value)
+
+
+def apply_quest(user: UserData, data: QuestData) -> None:
+    """Apply quest response to user data."""
+
+    user.party.quest.progress = data.progress
+    user.party.quest.key = data.key
+    user.party.quest.RSVPNeeded = not data.members.get(str(user.id), False)

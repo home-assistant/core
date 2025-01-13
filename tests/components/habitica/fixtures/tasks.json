@@ -108,7 +108,7 @@
       "text": "Füge eine Aufgabe zu Habitica hinzu",
       "notes": "Eine Gewohnheit, eine Tagesaufgabe oder ein To-Do",
       "tags": [],
-      "value": 0,
+      "value": null,
       "priority": 1,
       "attribute": "str",
       "challenge": {},

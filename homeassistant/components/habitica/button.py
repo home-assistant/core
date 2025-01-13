@@ -11,6 +11,8 @@ from aiohttp import ClientError
 from habiticalib import (
     HabiticaClass,
     HabiticaException,
+    HabiticaStatsResponse,
+    HabiticaUserResponse,
     NotAuthorizedError,
     Skill,
     TaskType,
@@ -31,6 +33,7 @@ from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
+from .util import apply_stats
 
 PARALLEL_UPDATES = 1
 
@@ -330,7 +333,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
-            await self.entity_description.press_fn(self.coordinator)
+            response = await self.entity_description.press_fn(self.coordinator)
         except TooManyRequestsError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -347,7 +350,14 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
                 translation_key="service_call_exception",
             ) from e
         else:
-            await self.coordinator.async_request_refresh()
+            if isinstance(response, HabiticaUserResponse):
+                self.coordinator.data.user = response.data
+                self.async_write_ha_state()
+            if isinstance(response, HabiticaStatsResponse):
+                apply_stats(self.coordinator.data.user, response.data)
+                self.async_write_ha_state()
+            else:
+                await self.coordinator.async_request_refresh()
 
     @property
     def available(self) -> bool:
