@@ -43,6 +43,7 @@ def async_connect_scanner(
                 hass,
                 scanner,
                 source_domain=DOMAIN,
+                source_model=device_info.model,
                 source_config_entry_id=entry_data.entry_id,
             ),
             scanner.async_setup(),

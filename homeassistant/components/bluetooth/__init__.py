@@ -79,6 +79,8 @@ from .const import (
     CONF_DETAILS,
     CONF_PASSIVE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
@@ -316,8 +318,10 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
-    if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
-        if not hass.config_entries.async_get_entry(source_entry_id):
+    if (source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID)) and (
+        source_domain := entry.data.get(CONF_SOURCE_DOMAIN)
+    ):
+        if source_entry := hass.config_entries.async_get_entry(source_entry_id):
             # Cleanup the orphaned entry using a call_soon to ensure
             # we can return before the entry is removed
             hass.loop.call_soon(
@@ -328,6 +332,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     )
                 )
             )
+        address = entry.unique_id
+        assert address is not None
+        assert source_entry is not None
+        await async_update_device(
+            hass,
+            entry,
+            source_entry.title,
+            AdapterDetails(
+                address=address,
+                product=entry.data.get(CONF_SOURCE_MODEL),
+                manufacturer=source_domain,
+            ),
+        )
         return True
     manager = _get_manager(hass)
     address = entry.unique_id

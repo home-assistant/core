@@ -33,6 +33,7 @@ from .const import (
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
     CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
     DOMAIN,
 )
 from .util import adapter_title
@@ -71,6 +72,8 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
+        if discovery_info and CONF_SOURCE in discovery_info:
+            return await self.async_step_external_scanner(discovery_info)
         self._adapter = cast(str, discovery_info[CONF_ADAPTER])
         self._details = cast(AdapterDetails, discovery_info[CONF_DETAILS])
         await self.async_set_unique_id(self._details[ADAPTER_ADDRESS])
@@ -182,6 +185,8 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         source = user_input[CONF_SOURCE]
         await self.async_set_unique_id(source)
         data = {
+            CONF_SOURCE: source,
+            CONF_SOURCE_MODEL: user_input[CONF_SOURCE_MODEL],
             CONF_SOURCE_DOMAIN: user_input[CONF_SOURCE_DOMAIN],
             CONF_SOURCE_CONFIG_ENTRY_ID: user_input[CONF_SOURCE_CONFIG_ENTRY_ID],
         }
@@ -195,8 +200,6 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if user_input and CONF_SOURCE in user_input:
-            return await self.async_step_external_scanner(user_input)
         return await self.async_step_multiple_adapters()
 
     @staticmethod

@@ -32,6 +32,7 @@ async def async_connect_scanner(
             hass,
             scanner,
             source_domain=entry.domain,
+            source_model=coordinator.model,
             source_config_entry_id=entry.entry_id,
         ),
         scanner.async_setup(),
