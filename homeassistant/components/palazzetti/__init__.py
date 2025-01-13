@@ -7,7 +7,12 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.NUMBER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
+    Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SENSOR,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PalazzettiConfigEntry) -> bool:
