@@ -27,13 +27,18 @@ class UpCloudDataUpdateCoordinator(
         self,
         hass: HomeAssistant,
         *,
+        config_entry: UpCloudConfigEntry,
         cloud_manager: upcloud_api.CloudManager,
         update_interval: timedelta,
         username: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{username}@UpCloud",
+            update_interval=update_interval,
         )
         self.cloud_manager = cloud_manager
 

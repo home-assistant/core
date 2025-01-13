@@ -66,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
 
     coordinator = UpCloudDataUpdateCoordinator(
         hass,
+        config_entry=entry,
         update_interval=update_interval,
         cloud_manager=manager,
         username=entry.data[CONF_USERNAME],
