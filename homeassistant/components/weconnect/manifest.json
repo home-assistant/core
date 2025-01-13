@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/weconnect/",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["weconnect==0.60.3"]
+  "requirements": ["weconnect==0.60.8"]
 }
