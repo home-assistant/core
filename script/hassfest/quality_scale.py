@@ -1118,7 +1118,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "weatherflow_cloud",
     "weatherkit",
     "webmin",
-    "weheat",
     "wemo",
     "whirlpool",
     "whois",

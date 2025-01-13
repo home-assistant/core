@@ -647,6 +647,8 @@ class UnitOfElectricPotential(StrEnum):
     MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
+    KILOVOLT = "kV"
+    MEGAVOLT = "MV"
 
 
 # Degree units
