@@ -8,7 +8,14 @@ import logging
 from operator import ior
 from typing import Any
 
-from pyheos import HeosError, const as heos_const
+from pyheos import (
+    AddCriteriaType,
+    ControlType,
+    HeosError,
+    HeosPlayer,
+    PlayState,
+    const as heos_const,
+)
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -47,25 +54,25 @@ BASE_SUPPORTED_FEATURES = (
 )
 
 PLAY_STATE_TO_STATE = {
-    heos_const.PLAY_STATE_PLAY: MediaPlayerState.PLAYING,
-    heos_const.PLAY_STATE_STOP: MediaPlayerState.IDLE,
-    heos_const.PLAY_STATE_PAUSE: MediaPlayerState.PAUSED,
+    PlayState.PLAY: MediaPlayerState.PLAYING,
+    PlayState.STOP: MediaPlayerState.IDLE,
+    PlayState.PAUSE: MediaPlayerState.PAUSED,
 }
 
 CONTROL_TO_SUPPORT = {
-    heos_const.CONTROL_PLAY: MediaPlayerEntityFeature.PLAY,
-    heos_const.CONTROL_PAUSE: MediaPlayerEntityFeature.PAUSE,
-    heos_const.CONTROL_STOP: MediaPlayerEntityFeature.STOP,
-    heos_const.CONTROL_PLAY_PREVIOUS: MediaPlayerEntityFeature.PREVIOUS_TRACK,
-    heos_const.CONTROL_PLAY_NEXT: MediaPlayerEntityFeature.NEXT_TRACK,
+    ControlType.PLAY: MediaPlayerEntityFeature.PLAY,
+    ControlType.PAUSE: MediaPlayerEntityFeature.PAUSE,
+    ControlType.STOP: MediaPlayerEntityFeature.STOP,
+    ControlType.PLAY_PREVIOUS: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    ControlType.PLAY_NEXT: MediaPlayerEntityFeature.NEXT_TRACK,
 }
 
 HA_HEOS_ENQUEUE_MAP = {
-    None: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
-    MediaPlayerEnqueue.ADD: heos_const.ADD_QUEUE_ADD_TO_END,
-    MediaPlayerEnqueue.REPLACE: heos_const.ADD_QUEUE_REPLACE_AND_PLAY,
-    MediaPlayerEnqueue.NEXT: heos_const.ADD_QUEUE_PLAY_NEXT,
-    MediaPlayerEnqueue.PLAY: heos_const.ADD_QUEUE_PLAY_NOW,
+    None: AddCriteriaType.REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.ADD: AddCriteriaType.ADD_TO_END,
+    MediaPlayerEnqueue.REPLACE: AddCriteriaType.REPLACE_AND_PLAY,
+    MediaPlayerEnqueue.NEXT: AddCriteriaType.PLAY_NEXT,
+    MediaPlayerEnqueue.PLAY: AddCriteriaType.PLAY_NOW,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,11 +125,14 @@ class HeosMediaPlayer(MediaPlayerEntity):
     _attr_name = None
 
     def __init__(
-        self, player, source_manager: SourceManager, group_manager: GroupManager
+        self,
+        player: HeosPlayer,
+        source_manager: SourceManager,
+        group_manager: GroupManager,
     ) -> None:
         """Initialize."""
         self._media_position_updated_at = None
-        self._player = player
+        self._player: HeosPlayer = player
         self._source_manager = source_manager
         self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
@@ -134,10 +144,8 @@ class HeosMediaPlayer(MediaPlayerEntity):
             sw_version=player.version,
         )
 
-    async def _player_update(self, player_id, event):
+    async def _player_update(self, event):
         """Handle player attribute updated."""
-        if self._player.player_id != player_id:
-            return
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
         await self.async_update_ha_state(True)
@@ -149,11 +157,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
         # Update state when attributes of the player change
-        self.async_on_remove(
-            self._player.heos.dispatcher.connect(
-                heos_const.SIGNAL_PLAYER_EVENT, self._player_update
-            )
-        )
+        self.async_on_remove(self._player.add_on_player_event(self._player_update))
         # Update state when heos changes
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
@@ -268,7 +272,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
                 )
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
-            await self._player.play_favorite(index)
+            await self._player.play_preset_station(index)
             return
 
         raise ValueError(f"Unsupported media type '{media_type}'")

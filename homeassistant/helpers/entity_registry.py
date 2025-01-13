@@ -648,6 +648,7 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
+    device_id: str | None | UndefinedType = None,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
@@ -665,12 +666,16 @@ def _validate_item(
         # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
-            ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
+            "'%s' from integration %s has a non string unique_id '%s', please %s",
             domain,
             platform,
             unique_id,
             report_issue,
         )
+    if device_id and device_id is not UNDEFINED:
+        device_registry = dr.async_get(hass)
+        if not device_registry.async_get(device_id):
+            raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
         and disabled_by is not UNDEFINED
@@ -794,7 +799,7 @@ class EntityRegistry(BaseRegistry):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
-                f"{preferred_string[:MAX_LENGTH_STATE_ENTITY_ID-len_suffix]}_{tries}"
+                f"{preferred_string[: MAX_LENGTH_STATE_ENTITY_ID - len_suffix]}_{tries}"
             )
 
         return test_string
@@ -859,6 +864,7 @@ class EntityRegistry(BaseRegistry):
             self.hass,
             domain,
             platform,
+            device_id=device_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
             hidden_by=hidden_by,
@@ -1090,6 +1096,7 @@ class EntityRegistry(BaseRegistry):
                 self.hass,
                 old.domain,
                 old.platform,
+                device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity_category,
                 hidden_by=hidden_by,

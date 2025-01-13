@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import ClientSession
 from kasa import (
@@ -22,7 +22,6 @@ from kasa.iot import IotStrip
 
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_AUTHENTICATION,
@@ -59,10 +58,7 @@ from .const import (
     DOMAIN,
     PLATFORMS,
 )
-from .coordinator import TPLinkDataUpdateCoordinator
-from .models import TPLinkData
-
-type TPLinkConfigEntry = ConfigEntry[TPLinkData]
+from .coordinator import TPLinkConfigEntry, TPLinkData, TPLinkDataUpdateCoordinator
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -178,9 +174,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         if not credentials and entry_credentials_hash:
             data = {k: v for k, v in entry.data.items() if k != CONF_CREDENTIALS_HASH}
             hass.config_entries.async_update_entry(entry, data=data)
-        raise ConfigEntryAuthFailed from ex
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="device_authentication",
+            translation_placeholders={
+                "func": "connect",
+                "exc": str(ex),
+            },
+        ) from ex
     except KasaException as ex:
-        raise ConfigEntryNotReady from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_error",
+            translation_placeholders={
+                "func": "connect",
+                "exc": str(ex),
+            },
+        ) from ex
 
     device_credentials_hash = device.credentials_hash
 
@@ -212,10 +222,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         # wait for the next discovery to find the device at its new address
         # and update the config entry so we do not mix up devices.
         raise ConfigEntryNotReady(
-            f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
+            translation_domain=DOMAIN,
+            translation_key="unexpected_device",
+            translation_placeholders={
+                "host": host,
+                # all entries have a unique id
+                "expected": cast(str, entry.unique_id),
+                "found": found_mac,
+            },
         )
 
-    parent_coordinator = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5))
+    parent_coordinator = TPLinkDataUpdateCoordinator(
+        hass, device, timedelta(seconds=5), entry
+    )
     child_coordinators: list[TPLinkDataUpdateCoordinator] = []
 
     # The iot HS300 allows a limited number of concurrent requests and fetching the
@@ -224,7 +243,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         child_coordinators = [
             # The child coordinators only update energy data so we can
             # set a longer update interval to avoid flooding the device
-            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60))
+            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60), entry)
             for child in device.children
         ]
 
@@ -263,7 +282,7 @@ def legacy_device_id(device: Device) -> str:
     return device_id.split("_")[1]
 
 
-def get_device_name(device: Device, parent: Device | None = None) -> str:
+def get_device_name(device: Device, parent: Device | None = None) -> str | None:
     """Get a name for the device. alias can be none on some devices."""
     if device.alias:
         return device.alias
@@ -278,7 +297,7 @@ def get_device_name(device: Device, parent: Device | None = None) -> str:
         ]
         suffix = f" {devices.index(device.device_id) + 1}" if len(devices) > 1 else ""
         return f"{device.device_type.value.capitalize()}{suffix}"
-    return f"Unnamed {device.model}"
+    return None
 
 
 async def get_credentials(hass: HomeAssistant) -> Credentials | None:
@@ -325,7 +344,9 @@ def _device_id_is_mac_or_none(mac: str, device_ids: Iterable[str]) -> str | None
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TPLinkConfigEntry
+) -> bool:
     """Migrate old entry."""
     entry_version = config_entry.version
     entry_minor_version = config_entry.minor_version
