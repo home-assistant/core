@@ -517,6 +517,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             CONST_MODE_SMART_SCHEDULE,
         ):
             await self._control_hvac(target_temp=temperature)
+            await self.coordinator.async_refresh()
             return
 
         new_hvac_mode = CONST_MODE_COOL if self._ac_device else CONST_MODE_HEAT
