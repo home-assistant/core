@@ -78,6 +78,7 @@ from .const import (
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
@@ -315,6 +316,19 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
+    if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
+        if not hass.config_entries.async_get_entry(source_entry_id):
+            # Cleanup the orphaned entry using a call_soon to ensure
+            # we can return before the entry is removed
+            hass.loop.call_soon(
+                hass_callback(
+                    lambda: hass.async_create_task(
+                        hass.config_entries.async_remove(entry.entry_id),
+                        "remove orphaned bluetooth entry {entry.entry_id}",
+                    )
+                )
+            )
+        return True
     manager = _get_manager(hass)
     address = entry.unique_id
     assert address is not None

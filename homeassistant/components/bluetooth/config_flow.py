@@ -26,7 +26,15 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import CONF_ADAPTER, CONF_DETAILS, CONF_PASSIVE, DOMAIN
+from .const import (
+    CONF_ADAPTER,
+    CONF_DETAILS,
+    CONF_PASSIVE,
+    CONF_SOURCE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DOMAIN,
+    DOMAIN,
+)
 from .util import adapter_title
 
 OPTIONS_SCHEMA = vol.Schema(
@@ -167,10 +175,28 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    async def async_step_external_scanner(
+        self, user_input: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by an external scanner."""
+        source = user_input[CONF_SOURCE]
+        await self.async_set_unique_id(source)
+        data = {
+            CONF_SOURCE_DOMAIN: user_input[CONF_SOURCE_DOMAIN],
+            CONF_SOURCE_CONFIG_ENTRY_ID: user_input[CONF_SOURCE_CONFIG_ENTRY_ID],
+        }
+        self._abort_if_unique_id_configured(updates=data)
+        manager = get_manager()
+        scanner = manager.async_scanner_by_source(source)
+        assert scanner is not None
+        return self.async_create_entry(title=scanner.name, data=data)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
+        if user_input and CONF_SOURCE in user_input:
+            return await self.async_step_external_scanner(user_input)
         return await self.async_step_multiple_adapters()
 
     @staticmethod
