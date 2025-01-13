@@ -49,7 +49,7 @@ async def test_async_set_data(
         blocking=True,
     )
     mock_palazzetti_client.set_power_mode.assert_called_once_with(1)
-    mock_palazzetti_client.set_on.reset_mock()
+    mock_palazzetti_client.set_power_mode.reset_mock()
 
     # Set value: Error
     mock_palazzetti_client.set_power_mode.side_effect = CommunicationError()
@@ -60,7 +60,7 @@ async def test_async_set_data(
             {ATTR_ENTITY_ID: ENTITY_ID, "value": 1},
             blocking=True,
         )
-    mock_palazzetti_client.set_on.reset_mock()
+    mock_palazzetti_client.set_power_mode.reset_mock()
 
     mock_palazzetti_client.set_power_mode.side_effect = ValidationError()
     with pytest.raises(ServiceValidationError):
