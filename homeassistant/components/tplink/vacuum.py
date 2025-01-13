@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Device, Module
 from kasa.smart.modules.clean import Clean, Status
@@ -29,6 +29,11 @@ STATUS_TO_ACTIVITY = {
     Status.Paused: VacuumActivity.PAUSED,
     Status.Error: VacuumActivity.ERROR,
 }
+
+
+# TODO: only for testing until speaker module gets merged into python-kasa
+if TYPE_CHECKING:
+    from kasa.smart.modules.speaker import Speaker
 
 
 async def async_setup_entry(
@@ -66,6 +71,10 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         """Initialize the vacuum entity."""
         self._vacuum_module: Clean = device.modules[Module.Clean]
         super().__init__(device, coordinator)
+        # TODO optional until speaker PR gets merged into python-kasa
+        self._speaker_module: Speaker | None = device.modules.get(Module.Speaker)
+        if self._speaker_module is not None:
+            self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
     @async_refresh_after
     async def async_start(self) -> None:
@@ -87,6 +96,11 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         """Set fan speed."""
         await self._vacuum_module.set_fan_speed_preset(fan_speed)
 
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Locate the device."""
+        if self._speaker_module is not None:
+            await self._speaker_module.locate()
+
     @property
     def battery_level(self) -> int | None:
         """Return battery level."""
@@ -95,8 +109,9 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)
-        self._attr_fan_speed_list = self._vacuum_module.get_feature(
-            "fan_speed_preset"
-        ).choices
+        if (
+            fanspeeds := self._vacuum_module.get_feature("fan_speed_preset")
+        ) is not None:
+            self._attr_fan_speed_list = cast(list[str], fanspeeds.choices)
         self._attr_fan_speed = self._vacuum_module.fan_speed_preset
         return True
