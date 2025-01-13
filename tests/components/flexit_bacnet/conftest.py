@@ -44,6 +44,7 @@ def mock_flexit_bacnet() -> Generator[AsyncMock]:
     ):
         flexit_bacnet.serial_number = "0000-0001"
         flexit_bacnet.device_name = "Device Name"
+        flexit_bacnet.model = "S4 RER"
         flexit_bacnet.room_temperature = 19.0
         flexit_bacnet.air_temp_setpoint_away = 18.0
         flexit_bacnet.air_temp_setpoint_home = 22.0
@@ -68,16 +69,16 @@ def mock_flexit_bacnet() -> Generator[AsyncMock]:
         flexit_bacnet.electric_heater = True
 
         # Mock fan setpoints
-        flexit_bacnet.fan_setpoint_extract_air_fire = 10
-        flexit_bacnet.fan_setpoint_supply_air_fire = 20
-        flexit_bacnet.fan_setpoint_extract_air_away = 30
-        flexit_bacnet.fan_setpoint_supply_air_away = 40
-        flexit_bacnet.fan_setpoint_extract_air_home = 50
-        flexit_bacnet.fan_setpoint_supply_air_home = 60
-        flexit_bacnet.fan_setpoint_extract_air_high = 70
-        flexit_bacnet.fan_setpoint_supply_air_high = 80
-        flexit_bacnet.fan_setpoint_extract_air_cooker = 90
-        flexit_bacnet.fan_setpoint_supply_air_cooker = 100
+        flexit_bacnet.fan_setpoint_extract_air_fire = 56
+        flexit_bacnet.fan_setpoint_supply_air_fire = 77
+        flexit_bacnet.fan_setpoint_extract_air_away = 40
+        flexit_bacnet.fan_setpoint_supply_air_away = 42
+        flexit_bacnet.fan_setpoint_extract_air_home = 70
+        flexit_bacnet.fan_setpoint_supply_air_home = 74
+        flexit_bacnet.fan_setpoint_extract_air_high = 100
+        flexit_bacnet.fan_setpoint_supply_air_high = 100
+        flexit_bacnet.fan_setpoint_extract_air_cooker = 50
+        flexit_bacnet.fan_setpoint_supply_air_cooker = 70
 
         yield flexit_bacnet
 

@@ -30,6 +30,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     STATE_CLOSED,
+    STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
@@ -397,7 +398,7 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
         callback.reset_mock()
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert callback.call_count == 1
-        assert callback.call_args[0][0] == sentence
+        assert callback.call_args[0][0].text == sentence
         assert (
             result.response.response_type == intent.IntentResponseType.ACTION_DONE
         ), sentence
@@ -770,8 +771,8 @@ async def test_error_no_device_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on test light on the ground floor", None, Context(), None
@@ -838,8 +839,8 @@ async def test_error_no_domain(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -873,8 +874,8 @@ async def test_error_no_domain_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "turn on the fans", None, Context(), None
@@ -1047,8 +1048,8 @@ async def test_error_no_device_class(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open the windows", None, Context(), None
@@ -1096,8 +1097,8 @@ async def test_error_no_device_class_exposed(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open all the windows", None, Context(), None
@@ -1207,8 +1208,8 @@ async def test_error_no_device_class_on_floor_exposed(
     )
 
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[recognize_result],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=recognize_result,
     ):
         result = await conversation.async_converse(
             hass, "open ground floor windows", None, Context(), None
@@ -1229,8 +1230,8 @@ async def test_error_no_device_class_on_floor_exposed(
 async def test_error_no_intent(hass: HomeAssistant) -> None:
     """Test response with an intent match failure."""
     with patch(
-        "homeassistant.components.conversation.default_agent.recognize_all",
-        return_value=[],
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=None,
     ):
         result = await conversation.async_converse(
             hass, "do something", None, Context(), None
@@ -1735,7 +1736,7 @@ async def test_empty_aliases(
         return_value=None,
     ) as mock_recognize_all:
         await conversation.async_converse(
-            hass, "turn on lights in the kitchen", None, Context(), None
+            hass, "turn on kitchen light", None, Context(), None
         )
 
         assert mock_recognize_all.call_count > 0
@@ -2833,3 +2834,273 @@ async def test_query_same_name_different_areas(
     assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
     assert len(result.response.matched_states) == 1
     assert result.response.matched_states[0].entity_id == kitchen_light.entity_id
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_exposed(hass: HomeAssistant) -> None:
+    """Test that intent recognition results are cached for exposed entities."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    entity_id = "light.test_light"
+    hass.states.async_set(entity_id, "off")
+    expose_entity(hass, entity_id, True)
+    await hass.async_block_till_done()
+
+    user_input = ConversationInput(
+        text="turn on test light",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert result.entities["name"].text == "test light"
+
+    # Mark this result so we know it is from cache next time
+    mark = "_from_cache"
+    setattr(result, mark, True)
+
+    # Should be from cache this time
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is True
+
+    # Unexposing clears the cache
+    expose_entity(hass, entity_id, False)
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_all_entities(hass: HomeAssistant) -> None:
+    """Test that intent recognition results are cached for all entities."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    entity_id = "light.test_light"
+    hass.states.async_set(entity_id, "off")
+    expose_entity(hass, entity_id, False)  # not exposed
+    await hass.async_block_till_done()
+
+    user_input = ConversationInput(
+        text="turn on test light",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert result.entities["name"].text == "test light"
+
+    # Mark this result so we know it is from cache next time
+    mark = "_from_cache"
+    setattr(result, mark, True)
+
+    # Should be from cache this time
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is True
+
+    # Adding a new entity clears the cache
+    hass.states.async_set("light.new_light", "off")
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_intent_cache_fuzzy(hass: HomeAssistant) -> None:
+    """Test that intent recognition results are cached for fuzzy matches."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    # There is no entity named test light
+    user_input = ConversationInput(
+        text="turn on test light",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert result.unmatched_entities["area"].text == "test "
+
+    # Mark this result so we know it is from cache next time
+    mark = "_from_cache"
+    setattr(result, mark, True)
+
+    # Should be from cache this time
+    result = await agent.async_recognize_intent(user_input)
+    assert result is not None
+    assert getattr(result, mark, None) is True
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_entities_filtered_by_input(hass: HomeAssistant) -> None:
+    """Test that entities are filtered by the input text before intent matching."""
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    # Only the switch is exposed
+    hass.states.async_set("light.test_light", "off")
+    hass.states.async_set(
+        "light.test_light_2", "off", attributes={ATTR_FRIENDLY_NAME: "test light"}
+    )
+    hass.states.async_set("cover.garage_door", "closed")
+    hass.states.async_set("switch.test_switch", "off")
+    expose_entity(hass, "light.test_light", False)
+    expose_entity(hass, "light.test_light_2", False)
+    expose_entity(hass, "cover.garage_door", False)
+    expose_entity(hass, "switch.test_switch", True)
+    await hass.async_block_till_done()
+
+    # test switch is exposed
+    user_input = ConversationInput(
+        text="turn on test switch",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=None,
+    ) as recognize_best:
+        await agent.async_recognize_intent(user_input)
+
+        # (1) exposed, (2) all entities
+        assert len(recognize_best.call_args_list) == 2
+
+        # Only the test light should have been considered because its name shows
+        # up in the input text.
+        slot_lists = recognize_best.call_args_list[0].kwargs["slot_lists"]
+        name_list = slot_lists["name"]
+        assert len(name_list.values) == 1
+        assert name_list.values[0].text_in.text == "test switch"
+
+    # test light is not exposed
+    user_input = ConversationInput(
+        text="turn on Test Light",  # different casing for name
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.recognize_best",
+        return_value=None,
+    ) as recognize_best:
+        await agent.async_recognize_intent(user_input)
+
+        # (1) exposed, (2) all entities
+        assert len(recognize_best.call_args_list) == 2
+
+        # Both test lights should have been considered because their name shows
+        # up in the input text.
+        slot_lists = recognize_best.call_args_list[1].kwargs["slot_lists"]
+        name_list = slot_lists["name"]
+        assert len(name_list.values) == 2
+        assert name_list.values[0].text_in.text == "test light"
+        assert name_list.values[1].text_in.text == "test light"
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_entities_names_are_not_templates(hass: HomeAssistant) -> None:
+    """Test that entities names are not treated as hassil templates."""
+    # Contains hassil template characters
+    hass.states.async_set(
+        "light.test_light", "off", attributes={ATTR_FRIENDLY_NAME: "<test [light"}
+    )
+
+    async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+
+    # Exposed
+    result = await conversation.async_converse(
+        hass,
+        "turn on <test [light",
+        None,
+        Context(),
+        language=hass.config.language,
+    )
+
+    assert result is not None
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+
+    # Not exposed
+    expose_entity(hass, "light.test_light", False)
+    result = await conversation.async_converse(
+        hass,
+        "turn on <test [light",
+        None,
+        Context(),
+        language=hass.config.language,
+    )
+
+    assert result is not None
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+
+
+@pytest.mark.parametrize(
+    ("language", "light_name", "on_sentence", "off_sentence"),
+    [
+        ("en", "test light", "turn on test light", "turn off test light"),
+        ("de", "Testlicht", "Schalte Testlicht ein", "Schalte Testlicht aus"),
+        (
+            "fr",
+            "lumière de test",
+            "Allumer la lumière de test",
+            "Éteindre la lumière de test",
+        ),
+        ("nl", "testlicht", "Zet testlicht aan", "Zet testlicht uit"),
+        ("zh-cn", "卧室灯", "打开卧室灯", "关闭卧室灯"),
+        ("zh-hk", "睡房燈", "打開睡房燈", "關閉睡房燈"),
+        ("zh-tw", "臥室檯燈", "打開臥室檯燈", "關臥室檯燈"),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_turn_on_off(
+    hass: HomeAssistant,
+    language: str,
+    light_name: str,
+    on_sentence: str,
+    off_sentence: str,
+) -> None:
+    """Test turn on/off in multiple languages."""
+    entity_id = "light.light1234"
+    hass.states.async_set(
+        entity_id, STATE_OFF, attributes={ATTR_FRIENDLY_NAME: light_name}
+    )
+
+    on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await conversation.async_converse(
+        hass,
+        on_sentence,
+        None,
+        Context(),
+        language=language,
+    )
+    assert len(on_calls) == 1
+    assert on_calls[0].data.get("entity_id") == [entity_id]
+
+    off_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+    await conversation.async_converse(
+        hass,
+        off_sentence,
+        None,
+        Context(),
+        language=language,
+    )
+    assert len(off_calls) == 1
+    assert off_calls[0].data.get("entity_id") == [entity_id]

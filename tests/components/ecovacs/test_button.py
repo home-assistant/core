@@ -1,7 +1,12 @@
 """Tests for Ecovacs sensors."""
 
 from deebot_client.command import Command
-from deebot_client.commands.json import ResetLifeSpan, SetRelocationState
+from deebot_client.commands import StationAction
+from deebot_client.commands.json import (
+    ResetLifeSpan,
+    SetRelocationState,
+    station_action,
+)
 from deebot_client.events import LifeSpan
 import pytest
 from syrupy import SnapshotAssertion
@@ -60,8 +65,38 @@ def platforms() -> Platform | list[Platform]:
                 ),
             ],
         ),
+        (
+            "qhe2o2",
+            [
+                ("button.dusty_relocate", SetRelocationState()),
+                (
+                    "button.dusty_reset_main_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.BRUSH),
+                ),
+                (
+                    "button.dusty_reset_filter_lifespan",
+                    ResetLifeSpan(LifeSpan.FILTER),
+                ),
+                (
+                    "button.dusty_reset_side_brush_lifespan",
+                    ResetLifeSpan(LifeSpan.SIDE_BRUSH),
+                ),
+                (
+                    "button.dusty_reset_unit_care_lifespan",
+                    ResetLifeSpan(LifeSpan.UNIT_CARE),
+                ),
+                (
+                    "button.dusty_reset_round_mop_lifespan",
+                    ResetLifeSpan(LifeSpan.ROUND_MOP),
+                ),
+                (
+                    "button.dusty_empty_dustbin",
+                    station_action.StationAction(StationAction.EMPTY_DUSTBIN),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2"],
 )
 async def test_buttons(
     hass: HomeAssistant,

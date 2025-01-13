@@ -28,6 +28,10 @@
     "deprecated_yaml_import_issue_auth_error": {
       "title": "YAML import failed due to an authentication error",
       "description": "Configuring {integration_title} using YAML is being removed but there was an authentication error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "YAML import failed due to a connection error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connect error while importing your existing configuration.\nSetup will not proceed.\n\nVerify that your {integration_title} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually."
     }
   },
   "entity": {

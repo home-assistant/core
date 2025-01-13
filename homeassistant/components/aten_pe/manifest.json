@@ -4,5 +4,6 @@
   "codeowners": ["@mtdcr"],
   "documentation": "https://www.home-assistant.io/integrations/aten_pe",
   "iot_class": "local_polling",
+  "quality_scale": "legacy",
   "requirements": ["atenpdu==0.3.2"]
 }

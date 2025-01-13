@@ -6,11 +6,11 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import ElgatorConfigEntry
+from .coordinator import ElgatoConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ElgatorConfigEntry
+    hass: HomeAssistant, entry: ElgatoConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data

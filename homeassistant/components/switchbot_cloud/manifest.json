@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["switchbot-api"],
-  "requirements": ["switchbot-api==2.2.1"]
+  "requirements": ["switchbot-api==2.3.1"]
 }

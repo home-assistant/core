@@ -28,6 +28,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ReolinkBinarySensorEntityDescription(
@@ -98,11 +100,19 @@ BINARY_PUSH_SENSORS = (
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
     ),
+    ReolinkBinarySensorEntityDescription(
+        key="cry",
+        cmd_id=33,
+        translation_key="cry",
+        value=lambda api, ch: api.ai_detected(ch, "cry"),
+        supported=lambda api, ch: api.ai_supported(ch, "cry"),
+    ),
 )
 
 BINARY_SENSORS = (
     ReolinkBinarySensorEntityDescription(
         key="sleep",
+        cmd_id=145,
         cmd_key="GetChannelstatus",
         translation_key="sleep",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -173,14 +183,14 @@ class ReolinkPushBinarySensorEntity(ReolinkBinarySensorEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._host.webhook_id}_{self._channel}",
+                f"{self._host.unique_id}_{self._channel}",
                 self._async_handle_event,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{self._host.webhook_id}_all",
+                f"{self._host.unique_id}_all",
                 self._async_handle_event,
             )
         )
