@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from copy import deepcopy
 from functools import wraps
 import json
 import logging
@@ -115,11 +116,11 @@ class AzureStorageBackupAgent(BackupAgent):
         metadata = {
             **backup.as_dict(),
             "version": 1,
-            "folders": json.dumps(backup.folders) if backup.folders else None,
-            "addons": json.dumps(backup.addons) if backup.addons else None,
+            "folders": json.dumps(backup.folders) if backup.folders else "",
+            "addons": json.dumps(backup.addons) if backup.addons else "",
             "extra_metadata": json.dumps(backup.extra_metadata)
             if backup.extra_metadata
-            else None,
+            else "",
         }
 
         # ensure dict is [str, str]
@@ -172,10 +173,24 @@ class AzureStorageBackupAgent(BackupAgent):
 
     def _parse_blob_metadata(self, metadata: dict[str, str]) -> AgentBackup:
         """Parse backup metadata."""
-        if metadata.get("folders"):
-            metadata["folders"] = json.loads(metadata["folders"])
-        if metadata.get("addons"):
-            metadata["addons"] = json.loads(metadata["addons"])
-        if metadata.get("extra_metadata"):
-            metadata["extra_metadata"] = json.loads(metadata["extra_metadata"])
-        return AgentBackup.from_dict(metadata)
+        agent_backup: dict[str, Any] = deepcopy(metadata)
+        agent_backup["folders"] = (
+            json.loads(metadata["folders"]) if metadata.get("folders") else []
+        )
+        agent_backup["addons"] = (
+            json.loads(metadata["addons"]) if metadata.get("addons") else []
+        )
+        agent_backup["extra_metadata"] = (
+            json.loads(metadata["extra_metadata"])
+            if metadata.get("extra_metadata")
+            else {}
+        )
+        agent_backup["protected"] = bool(metadata.get("protected", False))
+        agent_backup["database_included"] = bool(
+            metadata.get("database_included", False)
+        )
+        agent_backup["homeassistant_included"] = bool(
+            metadata.get("homeassistant_included", False)
+        )
+        agent_backup["size"] = int(metadata.get("size", 0))
+        return AgentBackup.from_dict(agent_backup)

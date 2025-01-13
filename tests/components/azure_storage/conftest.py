@@ -39,8 +39,7 @@ def mock_client() -> Generator[MagicMock]:
         client.exists.return_value = True
 
         async def async_list_blobs():
-            for blob in BlobProperties(metadata=BACKUP_METADATA):
-                yield blob
+            yield BlobProperties(metadata=BACKUP_METADATA)
 
         client.list_blobs.return_value = async_list_blobs()
 
