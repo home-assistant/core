@@ -54,7 +54,7 @@ async def test_coordinator_update_error(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
     assert coordinator.last_update_success is True
 
     with patch(

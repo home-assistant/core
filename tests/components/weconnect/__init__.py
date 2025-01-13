@@ -2,13 +2,18 @@
 
 from typing import Any
 
-from homeassistant.components.weconnect.const import CONF_SPIN, DOMAIN
+from homeassistant.components.weconnect.const import (
+    CONF_ACCEPT_TERMS,
+    CONF_SPIN,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 MOCK_CONFIG_DATA: dict[str, Any] = {
     CONF_PASSWORD: "password",
     CONF_USERNAME: "username",
     CONF_SPIN: "",
+    CONF_ACCEPT_TERMS: False,
 }
 
 MOCK_CONFIG_ENTRY: dict[str, Any] = {
