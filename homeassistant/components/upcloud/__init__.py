@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 from datetime import timedelta
 import logging
 
@@ -23,34 +22,23 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from .const import (
-    CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE,
-    DATA_UPCLOUD,
-    DEFAULT_SCAN_INTERVAL,
-)
+from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
 from .coordinator import UpCloudDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
-
-@dataclasses.dataclass
-class UpCloudHassData:
-    """Home Assistant UpCloud runtime data."""
-
-    coordinators: dict[str, UpCloudDataUpdateCoordinator] = dataclasses.field(
-        default_factory=dict
-    )
+type UpCloudConfigEntry = ConfigEntry[UpCloudDataUpdateCoordinator]
 
 
-def _config_entry_update_signal_name(config_entry: ConfigEntry) -> str:
+def _config_entry_update_signal_name(config_entry: UpCloudConfigEntry) -> str:
     """Get signal name for updates to a config entry."""
     return CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE.format(config_entry.unique_id)
 
 
 async def _async_signal_options_update(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: UpCloudConfigEntry
 ) -> None:
     """Signal config entry options update."""
     async_dispatcher_send(
@@ -58,7 +46,7 @@ async def _async_signal_options_update(
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
     """Set up the UpCloud config entry."""
 
     manager = upcloud_api.CloudManager(
@@ -85,6 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         cloud_manager=manager,
         username=entry.data[CONF_USERNAME],
     )
+    entry.runtime_data = coordinator
 
     # Call the UpCloud API to refresh data
     await coordinator.async_config_entry_first_refresh()
@@ -99,21 +88,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    hass.data[DATA_UPCLOUD] = UpCloudHassData()
-    hass.data[DATA_UPCLOUD].coordinators[entry.data[CONF_USERNAME]] = coordinator
-
     # Forward entry setup
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: UpCloudConfigEntry
+) -> bool:
     """Unload the config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    hass.data[DATA_UPCLOUD].coordinators.pop(config_entry.data[CONF_USERNAME])
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

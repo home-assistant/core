@@ -428,10 +428,16 @@ async def provide_webrtc_answer(stream_source: str, offer: str, stream_id: str) 
 
 
 @pytest.fixture(name="mock_rtsp_to_webrtc")
-def mock_rtsp_to_webrtc_fixture(hass: HomeAssistant) -> Generator[Mock]:
+def mock_rtsp_to_webrtc_fixture(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> Generator[Mock]:
     """Fixture that registers a mock rtsp to webrtc provider."""
     mock_provider = Mock(side_effect=provide_webrtc_answer)
     unsub = async_register_rtsp_to_web_rtc_provider(hass, "mock_domain", mock_provider)
+    assert (
+        "async_register_rtsp_to_web_rtc_provider is a deprecated function which will"
+        " be removed in HA Core 2025.6. Use async_register_webrtc_provider instead"
+    ) in caplog.text
     yield mock_provider
     unsub()
 

@@ -13,6 +13,7 @@ from homeassistant.core import callback
 from .binary_sensor import DISCOVERY_SCHEMAS as BINARY_SENSOR_SCHEMAS
 from .button import DISCOVERY_SCHEMAS as BUTTON_SCHEMAS
 from .climate import DISCOVERY_SCHEMAS as CLIMATE_SENSOR_SCHEMAS
+from .const import FEATUREMAP_ATTRIBUTE_ID
 from .cover import DISCOVERY_SCHEMAS as COVER_SCHEMAS
 from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .fan import DISCOVERY_SCHEMAS as FAN_SCHEMAS
@@ -121,12 +122,24 @@ def async_discover_entities(
             continue
 
         # check for required value in (primary) attribute
+        primary_attribute = schema.required_attributes[0]
+        primary_value = endpoint.get_attribute_value(None, primary_attribute)
         if schema.value_contains is not None and (
-            (primary_attribute := next((x for x in schema.required_attributes), None))
-            is None
-            or (value := endpoint.get_attribute_value(None, primary_attribute)) is None
-            or not isinstance(value, list)
-            or schema.value_contains not in value
+            isinstance(primary_value, list)
+            and schema.value_contains not in primary_value
+        ):
+            continue
+
+        # check for required value in cluster featuremap
+        if schema.featuremap_contains is not None and (
+            not bool(
+                int(
+                    endpoint.get_attribute_value(
+                        primary_attribute.cluster_id, FEATUREMAP_ATTRIBUTE_ID
+                    )
+                )
+                & schema.featuremap_contains
+            )
         ):
             continue
 
@@ -147,6 +160,7 @@ def async_discover_entities(
             attributes_to_watch=attributes_to_watch,
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
+            discovery_schema=schema,
         )
 
         # prevent re-discovery of the primary attribute if not allowed

@@ -67,9 +67,7 @@ from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
-from .const import (  # noqa: F401
-    _DEPRECATED_STREAM_TYPE_HLS,
-    _DEPRECATED_STREAM_TYPE_WEB_RTC,
+from .const import (
     CAMERA_IMAGE_TIMEOUT,
     CAMERA_STREAM_SOURCE_TIMEOUT,
     CONF_DURATION,
@@ -133,16 +131,6 @@ class CameraEntityFeature(IntFlag):
 
     ON_OFF = 1
     STREAM = 2
-
-
-# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
-# Pleease use the CameraEntityFeature enum instead.
-_DEPRECATED_SUPPORT_ON_OFF: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.ON_OFF, "2025.1"
-)
-_DEPRECATED_SUPPORT_STREAM: Final = DeprecatedConstantEnum(
-    CameraEntityFeature.STREAM, "2025.1"
-)
 
 
 DEFAULT_CONTENT_TYPE: Final = "image/jpeg"

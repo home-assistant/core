@@ -39,26 +39,22 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
-    comment: |
-      The integration doesn't update the device info based on DHCP discovery
-      of known existing devices.
+  discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -67,14 +63,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: todo
-    comment: |
-      While the integration provides some of the exception translations, the
-      translation for the error raised in the update error of the coordinator
-      is missing.
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |

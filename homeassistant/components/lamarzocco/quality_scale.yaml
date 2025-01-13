@@ -42,14 +42,14 @@ rules:
     status: done
     comment: |
       Handled by coordinator.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
+  discovery-update-info: done
   discovery:
     status: done
     comment: |
@@ -62,21 +62,21 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: exempt
+    status: done
     comment: |
-      Device type integration.
+      Device type integration, only possible for addon scale
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
-    status: exempt
+    status: done
     comment: |
-      Device type integration.
+      Device type integration, only possible for addon scale
 
   # Platinum
   async-dependency: done

@@ -48,6 +48,7 @@ from aioesphomeapi import (
 from aioesphomeapi.model import ButtonInfo
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
+from homeassistant.components.assist_satellite import AssistSatelliteConfiguration
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -151,6 +152,12 @@ class RuntimeEntryData:
     original_options: dict[str, Any] = field(default_factory=dict)
     media_player_formats: dict[str, list[MediaPlayerSupportedFormat]] = field(
         default_factory=lambda: defaultdict(list)
+    )
+    assist_satellite_config_update_callbacks: list[
+        Callable[[AssistSatelliteConfiguration], None]
+    ] = field(default_factory=list)
+    assist_satellite_set_wake_word_callbacks: list[Callable[[str], None]] = field(
+        default_factory=list
     )
 
     @property
@@ -504,3 +511,35 @@ class RuntimeEntryData:
         # We use this to determine if a deep sleep device should
         # be marked as unavailable or not.
         self.expected_disconnect = True
+
+    @callback
+    def async_register_assist_satellite_config_updated_callback(
+        self,
+        callback_: Callable[[AssistSatelliteConfiguration], None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when the Assist satellite's configuration is updated."""
+        self.assist_satellite_config_update_callbacks.append(callback_)
+        return lambda: self.assist_satellite_config_update_callbacks.remove(callback_)
+
+    @callback
+    def async_assist_satellite_config_updated(
+        self, config: AssistSatelliteConfiguration
+    ) -> None:
+        """Notify listeners that the Assist satellite configuration has been updated."""
+        for callback_ in self.assist_satellite_config_update_callbacks.copy():
+            callback_(config)
+
+    @callback
+    def async_register_assist_satellite_set_wake_word_callback(
+        self,
+        callback_: Callable[[str], None],
+    ) -> CALLBACK_TYPE:
+        """Register to receive callbacks when the Assist satellite's wake word is set."""
+        self.assist_satellite_set_wake_word_callbacks.append(callback_)
+        return lambda: self.assist_satellite_set_wake_word_callbacks.remove(callback_)
+
+    @callback
+    def async_assist_satellite_set_wake_word(self, wake_word_id: str) -> None:
+        """Notify listeners that the Assist satellite wake word has been set."""
+        for callback_ in self.assist_satellite_set_wake_word_callbacks.copy():
+            callback_(wake_word_id)

@@ -84,7 +84,6 @@ from .exceptions import (
 )
 from .helpers.deprecation import (
     DeferredDeprecatedAlias,
-    DeprecatedConstantEnum,
     EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -175,14 +174,6 @@ class EventStateReportedData(EventStateEventData):
     """
 
     old_last_reported: datetime.datetime
-
-
-# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
-    ConfigSource.DISCOVERED, "2025.1"
-)
-_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 def _deprecated_core_config() -> Any:
@@ -1162,8 +1153,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for integrations to stop, the shutdown will"
-                " continue"
+                "Timed out waiting for integrations to stop, the shutdown will continue"
             )
             self._async_log_running_tasks("stop integrations")
 
@@ -2441,10 +2431,11 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("domain", "service", "data", "context", "return_response")
+    __slots__ = ("hass", "domain", "service", "data", "context", "return_response")
 
     def __init__(
         self,
+        hass: HomeAssistant,
         domain: str,
         service: str,
         data: dict[str, Any] | None = None,
@@ -2452,6 +2443,7 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
+        self.hass = hass
         self.domain = domain
         self.service = service
         self.data = ReadOnlyDict(data or {})
@@ -2777,7 +2769,7 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            domain, service, processed_data, context, return_response
+            self._hass, domain, service, processed_data, context, return_response
         )
 
         self._hass.bus.async_fire_internal(

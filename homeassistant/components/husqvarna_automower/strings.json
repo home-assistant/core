@@ -27,7 +27,9 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account.",
-      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal."
+      "no_mower_connected": "No mowers connected to this account.",
+      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"

@@ -10,7 +10,6 @@ from contextlib import suppress
 import copy
 from dataclasses import dataclass
 from enum import StrEnum
-from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any, Generic, Required, TypedDict, cast
@@ -20,12 +19,6 @@ import voluptuous as vol
 
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
-from .helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from .helpers.frame import ReportBehavior, report_usage
 from .loader import async_suggest_report_issue
 from .util import uuid as uuid_util
@@ -45,26 +38,6 @@ class FlowResultType(StrEnum):
     SHOW_PROGRESS_DONE = "progress_done"
     MENU = "menu"
 
-
-# RESULT_TYPE_* is deprecated, to be removed in 2025.1
-_DEPRECATED_RESULT_TYPE_FORM = DeprecatedConstantEnum(FlowResultType.FORM, "2025.1")
-_DEPRECATED_RESULT_TYPE_CREATE_ENTRY = DeprecatedConstantEnum(
-    FlowResultType.CREATE_ENTRY, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_ABORT = DeprecatedConstantEnum(FlowResultType.ABORT, "2025.1")
-_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP = DeprecatedConstantEnum(
-    FlowResultType.EXTERNAL_STEP, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_EXTERNAL_STEP_DONE = DeprecatedConstantEnum(
-    FlowResultType.EXTERNAL_STEP_DONE, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS = DeprecatedConstantEnum(
-    FlowResultType.SHOW_PROGRESS, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_SHOW_PROGRESS_DONE = DeprecatedConstantEnum(
-    FlowResultType.SHOW_PROGRESS_DONE, "2025.1"
-)
-_DEPRECATED_RESULT_TYPE_MENU = DeprecatedConstantEnum(FlowResultType.MENU, "2025.1")
 
 # Event that is fired when a flow is progressed via external or progress source.
 EVENT_DATA_ENTRY_FLOW_PROGRESSED = "data_entry_flow_progressed"
@@ -126,6 +99,7 @@ class InvalidData(vol.Invalid):
         schema_errors: dict[str, Any],
         **kwargs: Any,
     ) -> None:
+        """Initialize an invalid data exception."""
         super().__init__(message, path, error_message, **kwargs)
         self.schema_errors = schema_errors
 
@@ -929,11 +903,3 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

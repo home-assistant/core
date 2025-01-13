@@ -545,3 +545,22 @@ async def test_sleeping_block_device_wrong_sleep_period(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_EXPECTED_SLEEP_PERIOD
+
+
+async def test_bluetooth_cleanup_on_remove_entry(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test bluetooth is cleaned up on entry removal."""
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.shelly.async_remove_scanner") as remove_mock:
+        await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+
+    remove_mock.assert_called_once_with(hass, entry.unique_id.upper())
