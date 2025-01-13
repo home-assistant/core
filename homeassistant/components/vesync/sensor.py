@@ -7,9 +7,6 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncfan import VeSyncAirBypass
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -31,6 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .common import is_humidifier
 from .const import (
     DEV_TYPE_TO_HA,
     DOMAIN,
@@ -49,14 +47,10 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncSensorEntityDescription(SensorEntityDescription):
     """Describe VeSync sensor entity."""
 
-    value_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], StateType]
+    value_fn: Callable[[VeSyncBaseDevice], StateType]
 
-    exists_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], bool] = (
-        lambda _: True
-    )
-    update_fn: Callable[[VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch], None] = (
-        lambda _: None
-    )
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
+    update_fn: Callable[[VeSyncBaseDevice], None] = lambda _: None
 
 
 def update_energy(device):
@@ -186,6 +180,14 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         update_fn=update_energy,
         exists_fn=lambda device: ha_dev_type(device) == "outlet",
     ),
+    VeSyncSensorEntityDescription(
+        key="humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.details["humidity"],
+        exists_fn=is_humidifier,
+    ),
 )
 
 
@@ -213,7 +215,7 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is online and add entity."""
@@ -236,9 +238,9 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        device: VeSyncAirBypass | VeSyncOutlet | VeSyncSwitch,
+        device: VeSyncBaseDevice,
         description: VeSyncSensorEntityDescription,
-        coordinator,
+        coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the VeSync outlet device."""
         super().__init__(device, coordinator)
