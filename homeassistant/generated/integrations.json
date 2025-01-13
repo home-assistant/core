@@ -2918,6 +2918,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "iometer": {
+      "name": "IOmeter",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "ios": {
       "name": "Home Assistant iOS",
       "integration_type": "hub",
