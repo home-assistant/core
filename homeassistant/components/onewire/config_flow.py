@@ -128,32 +128,11 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
 
         self._discovery_data = {
-            "title": discovery_info.hostname,
+            "title": discovery_info.name,
             CONF_HOST: discovery_info.hostname,
             CONF_PORT: discovery_info.port,
         }
         return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm discovery."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            data = {
-                CONF_HOST: self._discovery[CONF_HOST],
-                CONF_PORT: self._discovery[CONF_PORT],
-            }
-            await validate_input(self.hass, data, errors)
-            if not errors:
-                return self.async_create_entry(
-                    title=self._discovery["title"], data=data
-                )
-
-        return self.async_show_form(
-            step_id="discovery_confirm",
-            errors=errors,
-        )
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
