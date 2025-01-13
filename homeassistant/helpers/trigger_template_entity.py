@@ -121,7 +121,7 @@ class TriggerBaseEntity(Entity):
         self._rendered = dict(self._static_rendered)
         self._parse_result = {CONF_AVAILABILITY}
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self.error = False
+        self._render_error = False
 
     @property
     def name(self) -> str | None:
@@ -147,7 +147,7 @@ class TriggerBaseEntity(Entity):
     def available(self) -> bool:
         """Return availability of the entity."""
         return (
-            self.error is False
+            self._render_error is False
             and
             # Check against False so `None` is ok
             self._rendered.get(CONF_AVAILABILITY) is not False
@@ -179,7 +179,7 @@ class TriggerBaseEntity(Entity):
 
     def _render_availability_template(self, variables: dict[str, Any]) -> None:
         """Render availability template."""
-        self.error = False
+        self._render_error = False
         rendered = {**self._static_rendered, **self._rendered}
         key = CONF_AVAILABILITY
         try:
@@ -192,7 +192,7 @@ class TriggerBaseEntity(Entity):
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
-            self.error = True
+            self._render_error = True
         self._rendered = rendered
 
     def _render_templates(self, variables: dict[str, Any]) -> None:
@@ -227,7 +227,7 @@ class TriggerBaseEntity(Entity):
             logging.getLogger(f"{__package__}.{self.entity_id.split('.')[0]}").error(
                 "Error rendering %s template for %s: %s", key, self.entity_id, err
             )
-            self.error = True
+            self._render_error = True
             return
         self._rendered = rendered
 
