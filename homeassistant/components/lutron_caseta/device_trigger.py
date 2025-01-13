@@ -360,6 +360,8 @@ async def async_validate_trigger_config(
     ):
         return config
 
+    print("validate trigger conf", data)
+
     keypad_trigger_schemas = data.keypad_data.trigger_schemas
     keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
 
@@ -403,6 +405,8 @@ async def async_get_triggers(
         keypad := data.keypad_data.dr_device_id_to_keypad.get(device_id)
     ):
         return []
+
+    print("caseta debug", data)
 
     keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
 
