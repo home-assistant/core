@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from copy import deepcopy
-import logging
 from typing import Any
 
 from pyownet import protocol
@@ -30,7 +29,6 @@ from .const import (
 )
 from .onewirehub import OneWireConfigEntry
 
-_LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
@@ -122,9 +120,6 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        _LOGGER.warning(
-            "Zeroconf discovery implementation in progress: %s", discovery_info
-        )
         await self._async_handle_discovery_without_unique_id()
 
         self._discovery_data = {
