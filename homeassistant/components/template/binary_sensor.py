@@ -250,7 +250,6 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._template = config[CONF_STATE]
-        self._state: bool | None = None
         self._delay_cancel = None
         self._delay_on = None
         self._delay_on_raw = config.get(CONF_DELAY_ON)
@@ -268,7 +267,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             and (last_state := await self.async_get_last_state()) is not None
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
         ):
-            self._state = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == STATE_ON
         await super().async_added_to_hass()
 
     @callback
@@ -308,7 +307,7 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             else template.result_as_boolean(result)
         )
 
-        if state == self._state:
+        if state == self._attr_is_on:
             return
 
         # state without delay
@@ -317,23 +316,18 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
             or (state and not self._delay_on)
             or (not state and not self._delay_off)
         ):
-            self._state = state
+            self._attr_is_on = state
             return
 
         @callback
         def _set_state(_):
             """Set state of template binary sensor."""
-            self._state = state
+            self._attr_is_on = state
             self.async_write_ha_state()
 
         delay = (self._delay_on if state else self._delay_off).total_seconds()
         # state with delay. Cancelled if template result changes.
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if sensor is on."""
-        return self._state
 
 
 class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity):
@@ -359,7 +353,6 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         self._delay_cancel: CALLBACK_TYPE | None = None
         self._auto_off_cancel: CALLBACK_TYPE | None = None
         self._auto_off_time: datetime | None = None
-        self._state: bool | None = None
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
@@ -371,9 +364,9 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             # The trigger might have fired already while we waited for stored data,
             # then we should not restore state
-            and self._state is None
+            and self._attr_is_on is None
         ):
-            self._state = last_state.state == STATE_ON
+            self._attr_is_on = last_state.state == STATE_ON
             self.restore_attributes(last_state)
 
             if CONF_AUTO_OFF not in self._config:
@@ -383,15 +376,10 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
                 auto_off_time := extra_data.auto_off_time
             ) is not None and auto_off_time <= dt_util.utcnow():
                 # It's already past the saved auto off time
-                self._state = False
+                self._attr_is_on = False
 
-            if self._state and auto_off_time is not None:
+            if self._attr_is_on and auto_off_time is not None:
                 self._set_auto_off(auto_off_time)
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return state of the sensor."""
-        return self._state
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -418,7 +406,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         delay = self._rendered.get(key) or self._config.get(key)
 
         # state without delay. None means rendering failed.
-        if self._state == state or state is None or delay is None:
+        if self._attr_is_on == state or state is None or delay is None:
             self._set_state(state)
             return
 
@@ -439,7 +427,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
     @callback
     def _set_state(self, state, _=None):
         """Set up auto off."""
-        self._state = state
+        self._attr_is_on = state
         self.async_set_context(self.coordinator.data["context"])
         self.async_write_ha_state()
 
@@ -469,7 +457,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
         @callback
         def _auto_off(_):
             """Reset state of template binary sensor."""
-            self._state = False
+            self._attr_is_on = False
             self.async_write_ha_state()
 
         self._auto_off_time = auto_off_time

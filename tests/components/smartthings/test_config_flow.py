@@ -16,9 +16,9 @@ from homeassistant.components.smartthings.const import (
     CONF_LOCATION_ID,
     DOMAIN,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry

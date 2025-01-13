@@ -56,11 +56,15 @@ CONF_SUPPORTED_FEATURES = "supported_features"
 
 CONF_ACTION_TEMPLATE = "action_template"
 CONF_ACTION_TOPIC = "action_topic"
+CONF_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 CONF_CURRENT_HUMIDITY_TEMPLATE = "current_humidity_template"
 CONF_CURRENT_HUMIDITY_TOPIC = "current_humidity_topic"
 CONF_CURRENT_TEMP_TEMPLATE = "current_temperature_template"
 CONF_CURRENT_TEMP_TOPIC = "current_temperature_topic"
 CONF_ENABLED_BY_DEFAULT = "enabled_by_default"
+CONF_ENTITY_PICTURE = "entity_picture"
+CONF_MAX_KELVIN = "max_kelvin"
+CONF_MIN_KELVIN = "min_kelvin"
 CONF_MODE_COMMAND_TEMPLATE = "mode_command_template"
 CONF_MODE_COMMAND_TOPIC = "mode_command_topic"
 CONF_MODE_LIST = "modes"
@@ -89,6 +93,7 @@ CONF_TEMP_MIN = "min_temp"
 CONF_CERTIFICATE = "certificate"
 CONF_CLIENT_KEY = "client_key"
 CONF_CLIENT_CERT = "client_cert"
+CONF_COMPONENTS = "components"
 CONF_TLS_INSECURE = "tls_insecure"
 
 # Device and integration info options
@@ -158,7 +163,7 @@ MQTT_CONNECTION_STATE = "mqtt_connection_state"
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
 
-RELOADABLE_PLATFORMS = [
+ENTITY_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -189,7 +194,7 @@ RELOADABLE_PLATFORMS = [
 
 TEMPLATE_ERRORS = (jinja2.TemplateError, TemplateError, TypeError, ValueError)
 
-SUPPORTED_COMPONENTS = {
+SUPPORTED_COMPONENTS = (
     "alarm_control_panel",
     "binary_sensor",
     "button",
@@ -218,4 +223,4 @@ SUPPORTED_COMPONENTS = {
     "vacuum",
     "valve",
     "water_heater",
-}
+)

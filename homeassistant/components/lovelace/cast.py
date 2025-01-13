@@ -101,7 +101,7 @@ async def async_browse_media(
             BrowseMedia(
                 title=view["title"],
                 media_class=MediaClass.APP,
-                media_content_id=f'{info["url_path"]}/{view["path"]}',
+                media_content_id=f"{info['url_path']}/{view['path']}",
                 media_content_type=DOMAIN,
                 thumbnail="https://brands.home-assistant.io/_/lovelace/logo.png",
                 can_play=True,

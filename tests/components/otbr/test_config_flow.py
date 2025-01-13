@@ -9,22 +9,23 @@ import aiohttp
 import pytest
 import python_otbr_api
 
-from homeassistant.components import hassio, otbr
+from homeassistant.components import otbr
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import DATASET_CH15, DATASET_CH16, TEST_BORDER_AGENT_ID, TEST_BORDER_AGENT_ID_2
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-HASSIO_DATA = hassio.HassioServiceInfo(
+HASSIO_DATA = HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol", "port": 8081},
     name="Silicon Labs Multiprotocol",
     slug="otbr",
     uuid="12345",
 )
-HASSIO_DATA_2 = hassio.HassioServiceInfo(
+HASSIO_DATA_2 = HassioServiceInfo(
     config={"host": "core-silabs-multiprotocol_2", "port": 8082},
     name="Silicon Labs Multiprotocol",
     slug="other_addon",
@@ -829,7 +830,9 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={
-            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']+1}"
+            "url": (
+                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
+            )
         },
         domain=otbr.DOMAIN,
         options={},
@@ -860,7 +863,9 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={
-            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']+1}"
+            "url": (
+                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
+            )
         },
         domain=otbr.DOMAIN,
         options={},
@@ -896,7 +901,9 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={"url": f"http://openthread_border_router:{HASSIO_DATA.config['port']+1}"},
+        data={
+            "url": f"http://openthread_border_router:{HASSIO_DATA.config['port'] + 1}"
+        },
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
@@ -913,7 +920,7 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
 
     # Make sure the data of the existing entry was not updated
     expected_data = {
-        "url": f"http://openthread_border_router:{HASSIO_DATA.config['port']+1}",
+        "url": f"http://openthread_border_router:{HASSIO_DATA.config['port'] + 1}",
     }
     config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert config_entry.data == expected_data

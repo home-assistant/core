@@ -227,10 +227,15 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
                     state = new_state.attributes.get(self._attribute)
                 else:
                     state = new_state.state
-                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+
+                if state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                    self._attr_available = False
+                else:
+                    self._attr_available = True
                     sample = (new_state.last_updated.timestamp(), float(state))  # type: ignore[arg-type]
                     self.samples.append(sample)
-                    self.async_schedule_update_ha_state(True)
+
+                self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
 

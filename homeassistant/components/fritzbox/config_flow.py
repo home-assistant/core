@@ -43,10 +43,11 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _name: str
+
     def __init__(self) -> None:
         """Initialize flow."""
         self._host: str | None = None
-        self._name: str | None = None
         self._password: str | None = None
         self._username: str | None = None
 
@@ -121,8 +122,7 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
-            if uuid.startswith("uuid:"):
-                uuid = uuid[5:]
+            uuid = uuid.removeprefix("uuid:")
             await self.async_set_unique_id(uuid)
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
@@ -158,7 +158,6 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             result = await self.async_try_connect()
 
             if result == RESULT_SUCCESS:
-                assert self._name is not None
                 return self._get_entry(self._name)
             if result != RESULT_INVALID_AUTH:
                 return self.async_abort(reason=result)

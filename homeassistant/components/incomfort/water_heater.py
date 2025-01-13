@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -54,11 +56,15 @@ class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
         return {k: v for k, v in self._heater.status.items() if k in HEATER_ATTRS}
 
     @property
-    def current_temperature(self) -> float:
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self._heater.is_tapping:
             return self._heater.tap_temp
         if self._heater.is_pumping:
+            return self._heater.heater_temp
+        if self._heater.heater_temp is None:
+            return self._heater.tap_temp
+        if self._heater.tap_temp is None:
             return self._heater.heater_temp
         return max(self._heater.heater_temp, self._heater.tap_temp)
 

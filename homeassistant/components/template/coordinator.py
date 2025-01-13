@@ -24,7 +24,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:
         """Instantiate trigger data."""
-        super().__init__(hass, _LOGGER, name="Trigger Update Coordinator")
+        super().__init__(
+            hass, _LOGGER, config_entry=None, name="Trigger Update Coordinator"
+        )
         self.config = config
         self._cond_func: Callable[[Mapping[str, Any] | None], bool] | None = None
         self._unsub_start: Callable[[], None] | None = None

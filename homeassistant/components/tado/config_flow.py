@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         tado = await hass.async_add_executor_job(
             Tado, data[CONF_USERNAME], data[CONF_PASSWORD]
         )
-        tado_me = await hass.async_add_executor_job(tado.getMe)
+        tado_me = await hass.async_add_executor_job(tado.get_me)
     except KeyError as ex:
         raise InvalidAuth from ex
     except RuntimeError as ex:
@@ -160,15 +160,11 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle an option flow for Tado."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

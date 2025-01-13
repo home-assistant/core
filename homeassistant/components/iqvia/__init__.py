@@ -76,6 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = coordinators[sensor_type] = DataUpdateCoordinator(
             hass,
             LOGGER,
+            config_entry=entry,
             name=f"{entry.data[CONF_ZIP_CODE]} {sensor_type}",
             update_interval=DEFAULT_SCAN_INTERVAL,
             update_method=partial(async_get_data_from_api, api_coro),

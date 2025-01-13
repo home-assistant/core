@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import TwenteMilieuConfigEntry
 from .const import WASTE_TYPE_TO_DESCRIPTION
+from .coordinator import TwenteMilieuConfigEntry
 from .entity import TwenteMilieuEntity
 
 

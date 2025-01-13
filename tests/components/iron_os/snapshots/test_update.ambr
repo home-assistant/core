@@ -40,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/iron_os/icon.png',
       'friendly_name': 'Pinecil Firmware',
       'in_progress': False,

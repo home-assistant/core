@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import AsyncGenerator, Generator
 from random import getrandbits
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -87,7 +87,8 @@ async def setup_with_birth_msg_client_mock(
         patch("homeassistant.components.mqtt.client.SUBSCRIBE_COOLDOWN", 0.0),
     ):
         entry = MockConfigEntry(
-            domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"}
+            domain=mqtt.DOMAIN,
+            data=mqtt_config_entry_data or {mqtt.CONF_BROKER: "test-broker"},
         )
         entry.add_to_hass(hass)
         hass.config.components.add(mqtt.DOMAIN)
@@ -121,3 +122,10 @@ def record_calls(recorded_calls: list[ReceiveMessage]) -> MessageCallbackType:
         recorded_calls.append(msg)
 
     return record_calls
+
+
+@pytest.fixture
+def tag_mock() -> Generator[AsyncMock]:
+    """Fixture to mock tag."""
+    with patch("homeassistant.components.tag.async_scan_tag") as mock_tag:
+        yield mock_tag

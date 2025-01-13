@@ -7,7 +7,7 @@ from dateutil.tz import tzutc
 from twitchAPI.object.api import FollowedChannel, Stream, UserSubscription
 from twitchAPI.type import TwitchResourceNotFound
 
-from homeassistant.components.twitch import DOMAIN
+from homeassistant.components.twitch.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from . import TwitchIterObject, get_generator_from_data, setup_integration
@@ -21,8 +21,8 @@ async def test_offline(
     hass: HomeAssistant, twitch_mock: AsyncMock, config_entry: MockConfigEntry
 ) -> None:
     """Test offline state."""
-    twitch_mock.return_value.get_streams.return_value = get_generator_from_data(
-        [], Stream
+    twitch_mock.return_value.get_followed_streams.return_value = (
+        get_generator_from_data([], Stream)
     )
     await setup_integration(hass, config_entry)
 

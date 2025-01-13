@@ -127,7 +127,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
 @patch("homeassistant.components.homeassistant._LOGGER.error")
-@patch("homeassistant.config.async_process_ha_core_config")
+@patch("homeassistant.core_config.async_process_ha_core_config")
 async def test_reload_core_with_wrong_conf(
     mock_process, mock_error, hass: HomeAssistant
 ) -> None:
@@ -184,6 +184,7 @@ async def test_turn_on_skips_domains_without_service(
     # because by mocking out the call service method, we mock out all
     # So we mimic how the service registry calls services
     service_call = ha.ServiceCall(
+        hass,
         "homeassistant",
         "turn_on",
         {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},
@@ -242,7 +243,7 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     assert elevation != 50
     await hass.services.async_call(
         "homeassistant",
-        "set_location",
+        SERVICE_SET_LOCATION,
         {"latitude": 30, "longitude": 40},
         blocking=True,
     )
@@ -253,11 +254,23 @@ async def test_setting_location(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "homeassistant",
-        "set_location",
+        SERVICE_SET_LOCATION,
         {"latitude": 30, "longitude": 40, "elevation": 50},
         blocking=True,
     )
+    assert hass.config.latitude == 30
+    assert hass.config.longitude == 40
     assert hass.config.elevation == 50
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_SET_LOCATION,
+        {"latitude": 30, "longitude": 40, "elevation": 0},
+        blocking=True,
+    )
+    assert hass.config.latitude == 30
+    assert hass.config.longitude == 40
+    assert hass.config.elevation == 0
 
 
 async def test_require_admin(

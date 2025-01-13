@@ -36,6 +36,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/tessie/icon.png',
       'friendly_name': 'Test Update',
       'in_progress': False,

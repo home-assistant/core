@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_all_entities[climate.stove-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'silent',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        'high',
+        'auto',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 50,
+      'min_temp': 5,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.stove',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'palazzetti',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': 'palazzetti',
+    'unique_id': '11:22:33:44:55:66',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.stove-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 18,
+      'fan_mode': '3',
+      'fan_modes': list([
+        'silent',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        'high',
+        'auto',
+      ]),
+      'friendly_name': 'Stove',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 50,
+      'min_temp': 5,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'target_temp_step': 1.0,
+      'temperature': 21,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.stove',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---

@@ -37,6 +37,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
       'friendly_name': 'Device 1',
       'in_progress': False,
@@ -95,6 +96,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
       'friendly_name': 'Device 2',
       'in_progress': False,
@@ -153,6 +155,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
       'friendly_name': 'Device 1',
       'in_progress': False,
@@ -211,6 +214,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/unifi/icon.png',
       'friendly_name': 'Device 2',
       'in_progress': False,

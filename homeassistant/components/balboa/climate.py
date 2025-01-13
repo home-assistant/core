@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -24,6 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import BalboaConfigEntry
 from .const import DOMAIN
 from .entity import BalboaEntity
 
@@ -45,10 +45,12 @@ TEMPERATURE_UNIT_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BalboaConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the spa climate entity."""
-    async_add_entities([BalboaClimateEntity(hass.data[DOMAIN][entry.entry_id])])
+    async_add_entities([BalboaClimateEntity(entry.runtime_data)])
 
 
 class BalboaClimateEntity(BalboaEntity, ClimateEntity):
@@ -63,7 +65,6 @@ class BalboaClimateEntity(BalboaEntity, ClimateEntity):
     )
     _attr_translation_key = DOMAIN
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, client: SpaClient) -> None:
         """Initialize the climate entity."""

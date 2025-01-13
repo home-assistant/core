@@ -2,16 +2,14 @@
 
 import datetime
 from unittest.mock import AsyncMock, patch
-import zoneinfo
 
 from aioautomower.exceptions import ApiException
-from aioautomower.utils import mower_list_to_dictionary_dataclass
+from aioautomower.model import MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -26,12 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_value_fixture,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
@@ -40,6 +33,7 @@ async def test_button_states_and_commands(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test error confirm button command."""
     entity_id = "button.test_mower_1_confirm_error"
@@ -48,9 +42,6 @@ async def test_button_states_and_commands(
     assert state.name == "Test Mower 1 Confirm error"
     assert state.state == STATE_UNAVAILABLE
 
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     values[TEST_MOWER_ID].mower.is_error_confirmable = None
     mock_automower_client.get_status.return_value = values
     freezer.tick(SCAN_INTERVAL)
@@ -99,6 +90,7 @@ async def test_sync_clock(
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test sync clock button command."""
     entity_id = "button.test_mower_1_sync_clock"
@@ -106,9 +98,6 @@ async def test_sync_clock(
     state = hass.states.get(entity_id)
     assert state.name == "Test Mower 1 Sync clock"
 
-    values = mower_list_to_dictionary_dataclass(
-        load_json_value_fixture("mower.json", DOMAIN)
-    )
     mock_automower_client.get_status.return_value = values
 
     await hass.services.async_call(
@@ -118,12 +107,7 @@ async def test_sync_clock(
         blocking=True,
     )
     mocked_method = mock_automower_client.commands.set_datetime
-    # datetime(2024, 2, 29, 11, tzinfo=datetime.UTC) is in local time of the tests
-    # datetime(2024, 2, 29, 12, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin'))
-    mocked_method.assert_called_once_with(
-        TEST_MOWER_ID,
-        datetime.datetime(2024, 2, 29, 12, tzinfo=zoneinfo.ZoneInfo("Europe/Berlin")),
-    )
+    mocked_method.assert_called_once_with(TEST_MOWER_ID)
     await hass.async_block_till_done()
     state = hass.states.get(entity_id)
     assert state.state == "2024-02-29T11:00:00+00:00"

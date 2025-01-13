@@ -84,6 +84,15 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not pong:
                     errors["base"] = "cannot_connect"
                 else:
+                    await hub.refresh()
+                    rooms = set(hub.rooms.keys())
+                    for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+                        if (
+                            entry.runtime_data
+                            and entry.runtime_data.rooms
+                            and set(entry.runtime_data.rooms.keys()) == rooms
+                        ):
+                            return self.async_abort(reason="already_configured")
                     return self.async_create_entry(title=host, data=user_input)
 
         if self.source == dhcp.DOMAIN:

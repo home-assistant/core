@@ -24,13 +24,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.const import (
-    AREA_SQUARE_METERS,
-    PERCENTAGE,
-    EntityCategory,
-    UnitOfTime,
-)
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -118,6 +114,13 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(
+        key="total_cleaning_count",
+        translation_key="total_cleaning_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.clean_summary.clean_count,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescription(
         key="status",
         device_class=SensorDeviceClass.ENUM,
         translation_key="status",
@@ -131,14 +134,14 @@ SENSOR_DESCRIPTIONS = [
         translation_key="cleaning_area",
         value_fn=lambda data: data.status.square_meter_clean_area,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     RoborockSensorDescription(
         key="total_cleaning_area",
         translation_key="total_cleaning_area",
         value_fn=lambda data: data.clean_summary.square_meter_clean_area,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
     ),
     RoborockSensorDescription(
         key="vacuum_error",

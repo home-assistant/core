@@ -473,13 +473,13 @@ class _ScriptRun:
             script_execution_set("aborted")
         except _StopScript as err:
             script_execution_set("finished", err.response)
-            response = err.response
 
             # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
-                # We already consumed the response, do not pass it on
-                err.response = None
                 raise
+
+            response = err.response
+
         except Exception:
             script_execution_set("error")
             raise
@@ -1133,7 +1133,11 @@ class _ScriptRun:
         self._step_log("wait for trigger", timeout)
 
         variables = {**self._variables}
-        self._variables["wait"] = {"remaining": timeout, "trigger": None}
+        self._variables["wait"] = {
+            "remaining": timeout,
+            "completed": False,
+            "trigger": None,
+        }
         trace_set_result(wait=self._variables["wait"])
 
         if timeout == 0:
@@ -1151,6 +1155,7 @@ class _ScriptRun:
             variables: dict[str, Any], context: Context | None = None
         ) -> None:
             self._async_set_remaining_time_var(timeout_handle)
+            self._variables["wait"]["completed"] = True
             self._variables["wait"]["trigger"] = variables["trigger"]
             _set_result_unless_done(done)
 
@@ -1765,7 +1770,7 @@ class Script:
                 f"{self.domain}.{self.name} which is already running "
                 "in the current execution path; "
                 "Traceback (most recent call last):\n"
-                f"{"\n".join(formatted_stack)}",
+                f"{'\n'.join(formatted_stack)}",
                 level=logging.WARNING,
             )
             return None
@@ -1829,7 +1834,7 @@ class Script:
 
     def _prep_repeat_script(self, step: int) -> Script:
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Repeat at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Repeat at step {step + 1}")
         sub_script = Script(
             self._hass,
             action[CONF_REPEAT][CONF_SEQUENCE],
@@ -1852,7 +1857,7 @@ class Script:
 
     async def _async_prep_choose_data(self, step: int) -> _ChooseData:
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Choose at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Choose at step {step + 1}")
         choices = []
         for idx, choice in enumerate(action[CONF_CHOOSE], start=1):
             conditions = [
@@ -1906,7 +1911,7 @@ class Script:
     async def _async_prep_if_data(self, step: int) -> _IfData:
         """Prepare data for an if statement."""
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"If at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"If at step {step + 1}")
 
         conditions = [
             await self._async_get_condition(config) for config in action[CONF_IF]
@@ -1957,7 +1962,7 @@ class Script:
 
     async def _async_prep_parallel_scripts(self, step: int) -> list[Script]:
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Parallel action at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Parallel action at step {step + 1}")
         parallel_scripts: list[Script] = []
         for idx, parallel_script in enumerate(action[CONF_PARALLEL], start=1):
             parallel_name = parallel_script.get(CONF_ALIAS, f"parallel {idx}")
@@ -1989,7 +1994,7 @@ class Script:
     async def _async_prep_sequence_script(self, step: int) -> Script:
         """Prepare a sequence script."""
         action = self.sequence[step]
-        step_name = action.get(CONF_ALIAS, f"Sequence action at step {step+1}")
+        step_name = action.get(CONF_ALIAS, f"Sequence action at step {step + 1}")
 
         sequence_script = Script(
             self._hass,

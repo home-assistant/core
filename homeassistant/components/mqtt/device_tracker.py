@@ -36,6 +36,8 @@ from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"

@@ -177,6 +177,9 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
+    # Ensure all setup tasks are done (avoid flaky tests)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
     device_1 = f"{DEVICE_TRACKER_DOMAIN}.device_1"
     device_2 = f"{DEVICE_TRACKER_DOMAIN}.device_2"
 

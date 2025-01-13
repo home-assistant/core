@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -84,4 +85,7 @@ class TeslaFleetDeviceTrackerRouteEntity(TeslaFleetDeviceTrackerEntity):
     @property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
-        return self.get("drive_state_active_route_destination")
+        location = self.get("drive_state_active_route_destination")
+        if location == "Home":
+            return STATE_HOME
+        return location

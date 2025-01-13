@@ -15,6 +15,8 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -60,8 +62,8 @@ class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):
             ]
         return CalendarEvent(
             summary=make_name_string(work_area_name, program_event.schedule_no),
-            start=program_event.start.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
-            end=program_event.end.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE),
+            start=program_event.start,
+            end=program_event.end,
             rrule=program_event.rrule_str,
         )
 

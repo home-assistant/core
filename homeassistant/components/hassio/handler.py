@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_DISCOVERY, ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,15 +77,6 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
 
 
 @bind_hass
-async def async_get_addon_discovery_info(hass: HomeAssistant, slug: str) -> dict | None:
-    """Return discovery data for an add-on."""
-    hassio: HassIO = hass.data[DOMAIN]
-    data = await hassio.retrieve_discovery_messages()
-    discovered_addons = data[ATTR_DISCOVERY]
-    return next((addon for addon in discovered_addons if addon["addon"] == slug), None)
-
-
-@bind_hass
 @api_data
 async def async_create_backup(
     hass: HomeAssistant, payload: dict, partial: bool = False
@@ -98,61 +89,6 @@ async def async_create_backup(
     backup_type = "partial" if partial else "full"
     command = f"/backups/new/{backup_type}"
     return await hassio.send_command(command, payload=payload, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_os(hass: HomeAssistant, version: str | None = None) -> dict:
-    """Update Home Assistant Operating System.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/os/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version},
-        timeout=None,
-    )
-
-
-@bind_hass
-@api_data
-async def async_update_supervisor(hass: HomeAssistant) -> dict:
-    """Update Home Assistant Supervisor.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/supervisor/update"
-    return await hassio.send_command(command, timeout=None)
-
-
-@bind_hass
-@api_data
-async def async_update_core(
-    hass: HomeAssistant, version: str | None = None, backup: bool = False
-) -> dict:
-    """Update Home Assistant Core.
-
-    The caller of the function should handle HassioAPIError.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    command = "/core/update"
-    return await hassio.send_command(
-        command,
-        payload={"version": version, "backup": backup},
-        timeout=None,
-    )
-
-
-@bind_hass
-@_api_bool
-async def async_apply_suggestion(hass: HomeAssistant, suggestion_uuid: str) -> dict:
-    """Apply a suggestion from supervisor's resolution center."""
-    hassio: HassIO = hass.data[DOMAIN]
-    command = f"/resolution/suggestion/{suggestion_uuid}"
-    return await hassio.send_command(command, timeout=None)
 
 
 @api_data
@@ -197,16 +133,6 @@ async def async_set_yellow_settings(
     )
 
 
-@api_data
-async def async_reboot_host(hass: HomeAssistant) -> dict:
-    """Reboot the host.
-
-    Returns an empty dict.
-    """
-    hassio: HassIO = hass.data[DOMAIN]
-    return await hassio.send_command("/host/reboot", method="post", timeout=60)
-
-
 class HassIO:
     """Small API wrapper for Hass.io."""
 
@@ -227,14 +153,6 @@ class HassIO:
     def base_url(self) -> URL:
         """Return base url for Supervisor."""
         return self._base_url
-
-    @_api_bool
-    def is_connected(self) -> Coroutine:
-        """Return true if it connected to Hass.io supervisor.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/supervisor/ping", method="get", timeout=15)
 
     @api_data
     def get_info(self) -> Coroutine:
@@ -309,66 +227,6 @@ class HassIO:
         return self.send_command("/ingress/panels", method="get")
 
     @_api_bool
-    def restart_homeassistant(self) -> Coroutine:
-        """Restart Home-Assistant container.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/homeassistant/restart")
-
-    @_api_bool
-    def stop_homeassistant(self) -> Coroutine:
-        """Stop Home-Assistant container.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/homeassistant/stop")
-
-    @_api_bool
-    def refresh_updates(self) -> Coroutine:
-        """Refresh available updates.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/refresh_updates", timeout=300)
-
-    @api_data
-    def retrieve_discovery_messages(self) -> Coroutine:
-        """Return all discovery data from Hass.io API.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/discovery", method="get", timeout=60)
-
-    @api_data
-    def get_discovery_message(self, uuid: str) -> Coroutine:
-        """Return a single discovery data message.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/discovery/{uuid}", method="get")
-
-    @api_data
-    def get_resolution_info(self) -> Coroutine:
-        """Return data for Supervisor resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command("/resolution/info", method="get")
-
-    @api_data
-    def get_suggestions_for_issue(
-        self, issue_id: str
-    ) -> Coroutine[Any, Any, dict[str, Any]]:
-        """Return suggestions for issue from Supervisor resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(
-            f"/resolution/issue/{issue_id}/suggestions", method="get"
-        )
-
-    @_api_bool
     async def update_hass_api(
         self, http_config: dict[str, Any], refresh_token: RefreshToken
     ):
@@ -406,14 +264,6 @@ class HassIO:
         return self.send_command(
             "/supervisor/options", payload={"diagnostics": diagnostics}
         )
-
-    @_api_bool
-    def apply_suggestion(self, suggestion_uuid: str) -> Coroutine:
-        """Apply a suggestion from supervisor's resolution center.
-
-        This method returns a coroutine.
-        """
-        return self.send_command(f"/resolution/suggestion/{suggestion_uuid}")
 
     async def send_command(
         self,
@@ -485,7 +335,7 @@ def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
     """Return supervisor client."""
     hassio: HassIO = hass.data[DOMAIN]
     return SupervisorClient(
-        hassio.base_url,
+        str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),
         session=hassio.websession,
     )

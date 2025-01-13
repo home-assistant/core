@@ -8,8 +8,8 @@ import pytest
 from yarl import URL
 
 from homeassistant.components import cloud
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers.network import (
     NoURLAvailableError,
     _get_cloud_url,
@@ -727,7 +727,7 @@ async def test_get_current_request_url_with_known_host(
 
 
 @patch(
-    "homeassistant.components.hassio.is_hassio",
+    "homeassistant.helpers.network.is_hassio",
     Mock(return_value={"hostname": "homeassistant"}),
 )
 @patch(

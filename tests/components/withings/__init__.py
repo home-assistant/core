@@ -10,8 +10,8 @@ from aiowithings import Activity, Device, Goals, MeasurementGroup, SleepSummary,
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 
 from tests.common import (
     MockConfigEntry,

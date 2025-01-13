@@ -102,6 +102,7 @@
                 'id': '120',
                 'mode': 'ro',
                 'name': '错误代码',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -109,6 +110,7 @@
                 'id': '121',
                 'mode': 'ro',
                 'name': '设备状态',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -116,6 +118,7 @@
                 'id': '122',
                 'mode': 'ro',
                 'name': '设备电量',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -123,6 +126,7 @@
                 'id': '123',
                 'mode': 'rw',
                 'name': '清扫模式',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -130,6 +134,7 @@
                 'id': '124',
                 'mode': 'rw',
                 'name': '拖地模式',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -137,6 +142,7 @@
                 'id': '125',
                 'mode': 'rw',
                 'name': '主刷寿命',
+                'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
                 'type': 'VALUE',
               }),
               dict({
@@ -144,6 +150,7 @@
                 'id': '126',
                 'mode': 'rw',
                 'name': '边刷寿命',
+                'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
                 'type': 'VALUE',
               }),
               dict({
@@ -151,6 +158,7 @@
                 'id': '127',
                 'mode': 'rw',
                 'name': '滤网寿命',
+                'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
                 'type': 'VALUE',
               }),
               dict({
@@ -381,6 +389,7 @@
                 'id': '120',
                 'mode': 'ro',
                 'name': '错误代码',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -388,6 +397,7 @@
                 'id': '121',
                 'mode': 'ro',
                 'name': '设备状态',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -395,6 +405,7 @@
                 'id': '122',
                 'mode': 'ro',
                 'name': '设备电量',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -402,6 +413,7 @@
                 'id': '123',
                 'mode': 'rw',
                 'name': '清扫模式',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -409,6 +421,7 @@
                 'id': '124',
                 'mode': 'rw',
                 'name': '拖地模式',
+                'property': '{"range": []}',
                 'type': 'ENUM',
               }),
               dict({
@@ -416,6 +429,7 @@
                 'id': '125',
                 'mode': 'rw',
                 'name': '主刷寿命',
+                'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
                 'type': 'VALUE',
               }),
               dict({
@@ -423,6 +437,7 @@
                 'id': '126',
                 'mode': 'rw',
                 'name': '边刷寿命',
+                'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
                 'type': 'VALUE',
               }),
               dict({
@@ -430,6 +445,7 @@
                 'id': '127',
                 'mode': 'rw',
                 'name': '滤网寿命',
+                'property': '{"max": 100, "min": 0, "step": 1, "unit": null, "scale": 1}',
                 'type': 'VALUE',
               }),
               dict({

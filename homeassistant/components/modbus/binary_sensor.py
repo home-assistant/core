@@ -90,6 +90,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=None,
             name=name,
         )
 
@@ -120,7 +121,7 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         else:
             self._attr_available = True
             if self._input_type in (CALL_TYPE_COIL, CALL_TYPE_DISCRETE):
-                self._result = result.bits
+                self._result = [int(bit) for bit in result.bits]
             else:
                 self._result = result.registers
             self._attr_is_on = bool(self._result[0] & 1)

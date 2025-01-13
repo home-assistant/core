@@ -1,4 +1,51 @@
 # serializer version: 1
+# name: test_binary_sensor[load_platforms0][binary_sensor.device4_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.device4_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'yale_smart_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'RF4-battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[load_platforms0][binary_sensor.device4_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Device4 Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.device4_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device4_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -40,6 +87,53 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.device4_door',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[load_platforms0][binary_sensor.device5_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.device5_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'yale_smart_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'RF5-battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[load_platforms0][binary_sensor.device5_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Device5 Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.device5_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -93,6 +187,53 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensor[load_platforms0][binary_sensor.device6_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.device6_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'yale_smart_alarm',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'RF6-battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[load_platforms0][binary_sensor.device6_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Device6 Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.device6_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensor[load_platforms0][binary_sensor.device6_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -140,7 +281,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_battery-entry]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -152,7 +293,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_battery',
+    'entity_id': 'binary_sensor.test_username_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -173,21 +314,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_battery-state]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Yale Smart Alarm Battery',
+      'friendly_name': 'test-username Battery',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_battery',
+    'entity_id': 'binary_sensor.test_username_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_jam-entry]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_jam-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -199,7 +340,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_jam',
+    'entity_id': 'binary_sensor.test_username_jam',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -220,21 +361,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_jam-state]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_jam-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Yale Smart Alarm Jam',
+      'friendly_name': 'test-username Jam',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_jam',
+    'entity_id': 'binary_sensor.test_username_jam',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_power_loss-entry]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_power_loss-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -246,7 +387,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_power_loss',
+    'entity_id': 'binary_sensor.test_username_power_loss',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -267,21 +408,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_power_loss-state]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_power_loss-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Yale Smart Alarm Power loss',
+      'friendly_name': 'test-username Power loss',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_power_loss',
+    'entity_id': 'binary_sensor.test_username_power_loss',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_tamper-entry]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_tamper-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -293,7 +434,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_tamper',
+    'entity_id': 'binary_sensor.test_username_tamper',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -314,14 +455,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[load_platforms0][binary_sensor.yale_smart_alarm_tamper-state]
+# name: test_binary_sensor[load_platforms0][binary_sensor.test_username_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Yale Smart Alarm Tamper',
+      'friendly_name': 'test-username Tamper',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.yale_smart_alarm_tamper',
+    'entity_id': 'binary_sensor.test_username_tamper',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

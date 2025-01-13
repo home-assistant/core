@@ -100,21 +100,23 @@ class MatterUpdate(MatterEntity, UpdateEntity):
             == clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum.kIdle
         ):
             self._attr_in_progress = False
+            self._attr_update_percentage = None
             return
 
         update_progress: int = self.get_matter_attribute_value(
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateStateProgress
         )
 
+        self._attr_in_progress = True
         if (
             update_state
             == clusters.OtaSoftwareUpdateRequestor.Enums.UpdateStateEnum.kDownloading
             and update_progress is not None
             and update_progress > 0
         ):
-            self._attr_in_progress = update_progress
+            self._attr_update_percentage = update_progress
         else:
-            self._attr_in_progress = True
+            self._attr_update_percentage = None
 
     async def async_update(self) -> None:
         """Call when the entity needs to be updated."""

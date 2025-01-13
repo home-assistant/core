@@ -74,7 +74,7 @@ class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Define the config flow to handle options."""
-        return DlnaDmrOptionsFlowHandler(config_entry)
+        return DlnaDmrOptionsFlowHandler()
 
     async def async_step_user(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user.
@@ -326,10 +326,6 @@ class DlnaDmrOptionsFlowHandler(OptionsFlow):
 
     Configures the single instance and updates the existing config entry.
     """
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

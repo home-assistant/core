@@ -1,0 +1,15 @@
+{
+  "domain": "eheimdigital",
+  "name": "EHEIM Digital",
+  "codeowners": ["@autinerd"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/eheimdigital",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "loggers": ["eheimdigital"],
+  "quality_scale": "bronze",
+  "requirements": ["eheimdigital==1.0.3"],
+  "zeroconf": [
+    { "type": "_http._tcp.local.", "name": "eheimdigital._http._tcp.local." }
+  ]
+}

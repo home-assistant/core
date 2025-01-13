@@ -1,0 +1,275 @@
+# serializer version: 1
+# name: test_media_player[media_player.my_super_test_player_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.my_super_test_player_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': 'mdi:speaker',
+    'original_name': None,
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 4126655>,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:02',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player[media_player.my_super_test_player_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active_queue': None,
+      'app_id': 'spotify',
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'My Super Test Player 2',
+      'group_members': list([
+      ]),
+      'icon': 'mdi:speaker',
+      'is_volume_muted': False,
+      'mass_player_type': 'player',
+      'media_album_name': 'Test Album',
+      'media_artist': 'Test Artist',
+      'media_content_id': 'spotify://track/5d95dc5be77e4f7eb4939f62cfef527b',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_duration': 300,
+      'media_position': 0,
+      'media_title': 'Test Track',
+      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+      'volume_level': 0.2,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.my_super_test_player_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_media_player[media_player.test_group_player_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_group_player_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': 'mdi:speaker-multiple',
+    'original_name': None,
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 4126655>,
+    'translation_key': None,
+    'unique_id': 'test_group_player_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player[media_player.test_group_player_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active_queue': 'test_group_player_1',
+      'app_id': 'music_assistant',
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'Test Group Player 1',
+      'group_members': list([
+        'media_player.my_super_test_player_2',
+        'media_player.test_player_1',
+      ]),
+      'icon': 'mdi:speaker-multiple',
+      'is_volume_muted': False,
+      'mass_player_type': 'group',
+      'media_album_name': 'Use Your Illusion I',
+      'media_artist': "Guns N' Roses",
+      'media_content_id': 'spotify://track/3YRCqOhFifThpSRFJ1VWFM',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_duration': 536,
+      'media_position': 232,
+      'media_position_updated_at': datetime.datetime(2024, 10, 30, 18, 31, 49, 565951, tzinfo=datetime.timezone.utc),
+      'media_title': 'November Rain',
+      'repeat': 'all',
+      'shuffle': True,
+      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+      'volume_level': 0.06,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_group_player_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_media_player[media_player.test_player_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.test_player_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <MediaPlayerDeviceClass.SPEAKER: 'speaker'>,
+    'original_icon': 'mdi:speaker',
+    'original_name': None,
+    'platform': 'music_assistant',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 4126655>,
+    'translation_key': None,
+    'unique_id': '00:00:00:00:00:01',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_media_player[media_player.test_player_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'active_queue': '00:00:00:00:00:01',
+      'device_class': 'speaker',
+      'friendly_name': 'Test Player 1',
+      'group_members': list([
+      ]),
+      'icon': 'mdi:speaker',
+      'mass_player_type': 'player',
+      'supported_features': <MediaPlayerEntityFeature: 4126655>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.test_player_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_media_player_get_queue_action
+  dict({
+    'media_player.test_group_player_1': dict({
+      'active': True,
+      'current_index': 26,
+      'current_item': dict({
+        'duration': 536,
+        'media_item': dict({
+          'album': dict({
+            'image': None,
+            'media_type': <MediaType.ALBUM: 'album'>,
+            'name': 'Use Your Illusion I',
+            'uri': 'spotify://album/0CxPbTRARqKUYighiEY9Sz',
+            'version': '',
+          }),
+          'artists': list([
+            dict({
+              'image': None,
+              'media_type': <MediaType.ARTIST: 'artist'>,
+              'name': "Guns N' Roses",
+              'uri': 'spotify://artist/3qm84nBOXUEQ2vnTfUTTFC',
+              'version': '',
+            }),
+          ]),
+          'image': None,
+          'media_type': <MediaType.TRACK: 'track'>,
+          'name': 'November Rain',
+          'uri': 'spotify://track/3YRCqOhFifThpSRFJ1VWFM',
+          'version': '',
+        }),
+        'name': "Guns N' Roses - November Rain",
+        'queue_item_id': '5d95dc5be77e4f7eb4939f62cfef527b',
+        'stream_details': dict({
+          'bit_depth': 16,
+          'content_type': 'ogg',
+          'item_id': '3YRCqOhFifThpSRFJ1VWFM',
+          'provider': 'spotify',
+          'sample_rate': 44100,
+        }),
+        'stream_title': None,
+      }),
+      'items': 1094,
+      'name': 'Test Group Player 1',
+      'next_item': dict({
+        'duration': 207,
+        'media_item': dict({
+          'album': dict({
+            'image': None,
+            'media_type': <MediaType.ALBUM: 'album'>,
+            'name': 'La Folie',
+            'uri': 'qobuz://album/0724353468859',
+            'version': '',
+          }),
+          'artists': list([
+            dict({
+              'image': None,
+              'media_type': <MediaType.ARTIST: 'artist'>,
+              'name': 'The Stranglers',
+              'uri': 'qobuz://artist/26779',
+              'version': '',
+            }),
+          ]),
+          'image': None,
+          'media_type': <MediaType.TRACK: 'track'>,
+          'name': 'Golden Brown',
+          'uri': 'qobuz://track/1004735',
+          'version': '',
+        }),
+        'name': 'The Stranglers - Golden Brown',
+        'queue_item_id': '990ae8f29cdf4fb588d679b115621f55',
+        'stream_details': dict({
+          'bit_depth': 16,
+          'content_type': 'flac',
+          'item_id': '1004735',
+          'provider': 'qobuz',
+          'sample_rate': 44100,
+        }),
+        'stream_title': None,
+      }),
+      'queue_id': 'test_group_player_1',
+      'repeat_mode': 'all',
+      'shuffle_enabled': True,
+    }),
+  })
+# ---

@@ -220,7 +220,6 @@ class RiscoOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize."""
-        self.config_entry = config_entry
         self._data = {**DEFAULT_OPTIONS, **config_entry.options}
 
     def _options_schema(self) -> vol.Schema:

@@ -9,12 +9,7 @@ from typing import Any
 from aioimaplib import AioImapException
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -35,6 +30,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.ssl import SSLCipherList
 
+from . import ImapConfigEntry
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
@@ -212,13 +208,13 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+        config_entry: ImapConfigEntry,
+    ) -> ImapOptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlow(config_entry)
+        return ImapOptionsFlow()
 
 
-class OptionsFlow(OptionsFlowWithConfigEntry):
+class ImapOptionsFlow(OptionsFlow):
     """Option flow handler."""
 
     async def async_step_init(
@@ -226,13 +222,13 @@ class OptionsFlow(OptionsFlowWithConfigEntry):
     ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] | None = None
-        entry_data: dict[str, Any] = dict(self._config_entry.data)
+        entry_data: dict[str, Any] = dict(self.config_entry.data)
         if user_input is not None:
             try:
                 self._async_abort_entries_match(
                     {
-                        CONF_SERVER: self._config_entry.data[CONF_SERVER],
-                        CONF_USERNAME: self._config_entry.data[CONF_USERNAME],
+                        CONF_SERVER: self.config_entry.data[CONF_SERVER],
+                        CONF_USERNAME: self.config_entry.data[CONF_USERNAME],
                         CONF_FOLDER: user_input[CONF_FOLDER],
                         CONF_SEARCH: user_input[CONF_SEARCH],
                     }
