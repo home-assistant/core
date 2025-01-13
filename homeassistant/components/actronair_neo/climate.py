@@ -21,7 +21,6 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DOMAIN
 from .coordinator import ActronNeoDataUpdateCoordinator
-from .device import ACUnit
 from .models import ActronAirNeoData
 
 type ActronConfigEntry = ConfigEntry[ActronAirNeoData]
