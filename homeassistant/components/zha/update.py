@@ -124,7 +124,7 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool | None:
         """Update installation progress.
 
         Should return a boolean (True if in progress, False if not).
