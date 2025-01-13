@@ -86,7 +86,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             raise ConfigEntryAuthFailed from err
         except CannotConnect as err:
             _LOGGER.error("Error during login: %s", err)
-            raise UpdateFailed from err
+            raise UpdateFailed(f"Error during login: {err}") from err
         try:
             forecasts: list[Forecast] = await self.api.async_get_forecast()
         except aiohttp.ClientError as err:
