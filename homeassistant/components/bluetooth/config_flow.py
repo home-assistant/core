@@ -18,7 +18,12 @@ from habluetooth import get_manager
 import voluptuous as vol
 
 from homeassistant.components import onboarding
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
@@ -206,8 +211,10 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler:
+    ) -> SchemaOptionsFlowHandler | RemoteAdapterOptionsFlowHandler:
         """Get the options flow for this handler."""
+        if CONF_SOURCE in config_entry.data:
+            return RemoteAdapterOptionsFlowHandler()
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     @classmethod
@@ -215,3 +222,13 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return bool((manager := get_manager()) and manager.supports_passive_scan)
+
+
+class RemoteAdapterOptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for remote adapters."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        return self.async_abort(reason="remote_adapters_not_supported")
