@@ -68,7 +68,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         self.devices: list[dict[Any, Any]] = []
         self.data: dict[str, dict] = {
             "device": {},
-            "mobile_device": {},
             "weather": {},
             "geofence": {},
             "zone": {},
@@ -101,12 +100,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Fetch the latest data from Tado."""
 
         devices = await self._async_update_devices()
-        mobile_devices = await self._async_update_mobile_devices()
         zones = await self._async_update_zones()
         home = await self._async_update_home()
 
         self.data["device"] = devices
-        self.data["mobile_device"] = mobile_devices
         self.data["zone"] = zones
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
@@ -157,35 +154,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             mapped_devices[device_short_serial_no] = device
 
         return mapped_devices
-
-    async def _async_update_mobile_devices(self) -> dict[str, dict]:
-        """Update the mobile device(s) data from Tado."""
-        try:
-            mobile_devices = await self.hass.async_add_executor_job(
-                self._tado.get_mobile_devices
-            )
-        except RequestException as err:
-            _LOGGER.error("Error updating Tado mobile devices: %s", err)
-            raise UpdateFailed(f"Error updating Tado mobile devices: {err}") from err
-
-        mapped_mobile_devices: dict[str, dict] = {}
-        for mobile_device in mobile_devices:
-            mobile_device_id = mobile_device["id"]
-            _LOGGER.debug("Updating mobile device %s", mobile_device_id)
-            try:
-                mapped_mobile_devices[mobile_device_id] = mobile_device
-                _LOGGER.debug(
-                    "Mobile device %s updated, with data: %s",
-                    mobile_device_id,
-                    mobile_device,
-                )
-            except RequestException:
-                _LOGGER.error(
-                    "Unable to connect to Tado while updating mobile device %s",
-                    mobile_device_id,
-                )
-
-        return mapped_mobile_devices
 
     async def _async_update_zones(self) -> dict[int, dict]:
         """Update the zone data from Tado."""
