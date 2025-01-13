@@ -19,10 +19,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
-from tests.typing import WebSocketGenerator
+from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
 
-_NO_LOOPBACK_IPADDR = "192.168.1.5"
-_LOOPBACK_IPADDR = "127.0.0.1"
+from tests.typing import WebSocketGenerator
 
 
 def _mock_cond_socket(sockname):
@@ -47,8 +46,7 @@ def _mock_socket_exception(exc):
     return mock_socket
 
 
-@pytest.mark.parametrize("mock_socket", [[_NO_LOOPBACK_IPADDR]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_no_loopback")
 async def test_async_detect_interfaces_setting_non_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -106,8 +104,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
     ]
 
 
-@pytest.mark.parametrize("mock_socket", [[_LOOPBACK_IPADDR]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_loopback")
 async def test_async_detect_interfaces_setting_loopback_route(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -282,8 +279,7 @@ async def test_async_detect_interfaces_setting_exception(
     ]
 
 
-@pytest.mark.parametrize("mock_socket", [[_NO_LOOPBACK_IPADDR]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_no_loopback")
 async def test_interfaces_configured_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -360,7 +356,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
     }
     with patch(
         "homeassistant.components.network.util.socket.socket",
-        return_value=MagicMock(getsockname=Mock(return_value=[_NO_LOOPBACK_IPADDR])),
+        return_value=MagicMock(getsockname=Mock(return_value=[NO_LOOPBACK_IPADDR])),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -476,8 +472,7 @@ async def test_interfaces_configured_from_storage_websocket_update(
     ]
 
 
-@pytest.mark.parametrize("mock_socket", [["192.168.1.5"]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_no_loopback")
 async def test_async_get_source_ip_matching_interface(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -491,11 +486,10 @@ async def test_async_get_source_ip_matching_interface(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
+    assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == NO_LOOPBACK_IPADDR
 
 
-@pytest.mark.parametrize("mock_socket", [["192.168.1.5"]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_no_loopback")
 async def test_async_get_source_ip_interface_not_match(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -527,11 +521,10 @@ async def test_async_get_source_ip_cannot_determine_target(
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
+    assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == NO_LOOPBACK_IPADDR
 
 
-@pytest.mark.parametrize("mock_socket", [["192.168.1.5"]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_no_loopback")
 async def test_async_get_ipv4_broadcast_addresses_default(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -550,8 +543,7 @@ async def test_async_get_ipv4_broadcast_addresses_default(
     }
 
 
-@pytest.mark.parametrize("mock_socket", [[_LOOPBACK_IPADDR]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_loopback")
 async def test_async_get_ipv4_broadcast_addresses_multiple(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
@@ -572,8 +564,7 @@ async def test_async_get_ipv4_broadcast_addresses_multiple(
     }
 
 
-@pytest.mark.parametrize("mock_socket", [["192.168.1.5"]], indirect=True)
-@pytest.mark.usefixtures("mock_socket")
+@pytest.mark.usefixtures("mock_socket_no_loopback")
 async def test_async_get_source_ip_no_enabled_addresses(
     hass: HomeAssistant, hass_storage: dict[str, Any], caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -591,7 +582,10 @@ async def test_async_get_source_ip_no_enabled_addresses(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
 
-        assert await network.async_get_source_ip(hass, MDNS_TARGET_IP) == "192.168.1.5"
+        assert (
+            await network.async_get_source_ip(hass, MDNS_TARGET_IP)
+            == NO_LOOPBACK_IPADDR
+        )
 
     assert "source address detection may be inaccurate" in caplog.text
 
@@ -635,7 +629,7 @@ async def test_async_get_source_ip_no_ip_loopback(
         ),
         patch(
             "homeassistant.components.network.util.socket.socket",
-            return_value=_mock_cond_socket(_LOOPBACK_IPADDR),
+            return_value=_mock_cond_socket(LOOPBACK_IPADDR),
         ),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})

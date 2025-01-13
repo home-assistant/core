@@ -6,11 +6,13 @@ from unittest.mock import MagicMock, Mock, _patch, patch
 import ifaddr
 import pytest
 
+from . import LOOPBACK_IPADDR, NO_LOOPBACK_IPADDR
+
 
 def _generate_mock_adapters():
     mock_lo0 = Mock(spec=ifaddr.Adapter)
     mock_lo0.nice_name = "lo0"
-    mock_lo0.ips = [ifaddr.IP("127.0.0.1", 8, "lo0")]
+    mock_lo0.ips = [ifaddr.IP(LOOPBACK_IPADDR, 8, "lo0")]
     mock_lo0.index = 0
     mock_eth0 = Mock(spec=ifaddr.Adapter)
     mock_eth0.nice_name = "eth0"
@@ -18,13 +20,22 @@ def _generate_mock_adapters():
     mock_eth0.index = 1
     mock_eth1 = Mock(spec=ifaddr.Adapter)
     mock_eth1.nice_name = "eth1"
-    mock_eth1.ips = [ifaddr.IP("192.168.1.5", 23, "eth1")]
+    mock_eth1.ips = [ifaddr.IP(NO_LOOPBACK_IPADDR, 23, "eth1")]
     mock_eth1.index = 2
     mock_vtun0 = Mock(spec=ifaddr.Adapter)
     mock_vtun0.nice_name = "vtun0"
     mock_vtun0.ips = [ifaddr.IP("169.254.3.2", 16, "vtun0")]
     mock_vtun0.index = 3
     return [mock_eth0, mock_lo0, mock_eth1, mock_vtun0]
+
+
+def _mock_socket(sockname: list[str]) -> Generator[None]:
+    """Mock the network socket."""
+    with patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=MagicMock(getsockname=Mock(return_value=sockname)),
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -50,8 +61,16 @@ def override_mock_get_source_ip(
 @pytest.fixture
 def mock_socket(request: pytest.FixtureRequest) -> Generator[None]:
     """Mock the network socket."""
-    with patch(
-        "homeassistant.components.network.util.socket.socket",
-        return_value=MagicMock(getsockname=Mock(return_value=request.param)),
-    ):
-        yield
+    yield from _mock_socket(request.param)
+
+
+@pytest.fixture
+def mock_socket_loopback() -> Generator[None]:
+    """Mock the network socket with loopback address."""
+    yield from _mock_socket([LOOPBACK_IPADDR])
+
+
+@pytest.fixture
+def mock_socket_no_loopback() -> Generator[None]:
+    """Mock the network socket with loopback address."""
+    yield from _mock_socket([NO_LOOPBACK_IPADDR])
