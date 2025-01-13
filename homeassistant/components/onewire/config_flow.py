@@ -111,7 +111,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         self._discovery_data = {
             "title": discovery_info.config["addon"],
             CONF_HOST: discovery_info.config[CONF_HOST],
-            CONF_PORT: int(discovery_info.config[CONF_PORT]),
+            CONF_PORT: discovery_info.config[CONF_PORT],
         }
         return await self.async_step_discovery_confirm()
 
