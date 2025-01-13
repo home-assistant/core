@@ -55,6 +55,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         | VacuumEntityFeature.START
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.FAN_SPEED
     )
 
     def __init__(
@@ -81,6 +82,11 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         """Return home."""
         await self._vacuum_module.return_home()
 
+    @async_refresh_after
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set fan speed."""
+        await self._vacuum_module.set_fan_speed_preset(fan_speed)
+
     @property
     def battery_level(self) -> int | None:
         """Return battery level."""
@@ -89,4 +95,8 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)
+        self._attr_fan_speed_list = self._vacuum_module.get_feature(
+            "fan_speed_preset"
+        ).choices
+        self._attr_fan_speed = self._vacuum_module.fan_speed_preset
         return True
