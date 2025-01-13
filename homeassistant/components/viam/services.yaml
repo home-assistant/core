@@ -1,0 +1,102 @@
+capture_data:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
+    values:
+      required: true
+      selector:
+        object:
+    component_name:
+      required: true
+      selector:
+        text:
+    component_type:
+      required: false
+      selector:
+        text:
+capture_image:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
+    filepath:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        entity:
+          filter:
+            domain: camera
+    file_name:
+      required: false
+      selector:
+        text:
+    component_name:
+      required: false
+      selector:
+        text:
+get_classifications:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
+    classifier_name:
+      required: true
+      selector:
+        text:
+    confidence:
+      required: false
+      default: 0.6
+      selector:
+        text:
+          type: number
+    count:
+      required: false
+      selector:
+        number:
+    filepath:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        entity:
+          filter:
+            domain: camera
+get_detections:
+  fields:
+    config_entry:
+      required: true
+      selector:
+        config_entry:
+          integration: viam
+    detector_name:
+      required: true
+      selector:
+        text:
+    confidence:
+      required: false
+      default: 0.6
+      selector:
+        text:
+          type: number
+    filepath:
+      required: false
+      selector:
+        text:
+    camera:
+      required: false
+      selector:
+        entity:
+          filter:
+            domain: camera
