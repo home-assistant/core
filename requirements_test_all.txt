@@ -1609,7 +1609,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==0.9.0
+pyheos==1.0.0
 
 # homeassistant.components.hive
 pyhiveapi==0.5.16
@@ -2261,7 +2261,7 @@ sunweg==3.0.2
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.2.1
+switchbot-api==2.3.1
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.1.5
