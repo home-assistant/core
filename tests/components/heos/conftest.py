@@ -25,7 +25,7 @@ import pytest
 import pytest_asyncio
 
 from homeassistant.components import ssdp
-from homeassistant.components.heos import DOMAIN, ControllerManager
+from homeassistant.components.heos import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
@@ -52,14 +52,6 @@ def config_entry_options_fixture():
         options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         unique_id=DOMAIN,
     )
-
-
-@pytest.fixture(name="controller_manager")
-def controller_manager_fixture(controller):
-    """Create a mock controller manager fixture."""
-    mock_controller_manager = Mock(ControllerManager)
-    mock_controller_manager.controller = controller
-    return mock_controller_manager
 
 
 @pytest.fixture(name="controller")
@@ -90,12 +82,6 @@ def controller_fixture(
         patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
     ):
         yield mock_heos
-
-
-@pytest.fixture(name="config")
-def config_fixture():
-    """Create hass config fixture."""
-    return {DOMAIN: {CONF_HOST: "127.0.0.1"}}
 
 
 @pytest.fixture(name="players")
@@ -267,7 +253,7 @@ def quick_selects_fixture() -> dict[int, str]:
 
 @pytest.fixture(name="playlists")
 def playlists_fixture() -> Sequence[MediaItem]:
-    """Create favorites fixture."""
+    """Create playlists fixture."""
     playlist = MediaItem(
         source_id=const.MUSIC_SOURCE_PLAYLISTS,
         name="Awesome Music",

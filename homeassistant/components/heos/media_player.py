@@ -158,11 +158,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
-        await self.async_update_ha_state(True)
-
-    async def _heos_updated(self) -> None:
-        """Handle sources changed."""
-        await self.async_update_ha_state(True)
+        self._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
@@ -170,7 +166,9 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
         # Update state when heos changes
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
+            async_dispatcher_connect(
+                self.hass, SIGNAL_HEOS_UPDATED, self._handle_coordinator_update
+            )
         )
         # Register this player's entity_id so it can be resolved by the group manager
         self.async_on_remove(
@@ -185,6 +183,11 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+        controls = self._player.now_playing_media.supported_controls
+        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
+        self._attr_supported_features = reduce(
+            ior, current_support, BASE_SUPPORTED_FEATURES
+        )
         self.async_write_ha_state()
 
     @log_command_error("clear playlist")

@@ -64,7 +64,7 @@ def _get_controller(hass: HomeAssistant) -> Heos:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="integration_not_loaded"
         )
-    return entry.runtime_data.controller_manager.controller
+    return entry.runtime_data.coordinator.heos
 
 
 async def _sign_in_handler(service: ServiceCall) -> None:

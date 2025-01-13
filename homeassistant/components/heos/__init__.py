@@ -15,7 +15,6 @@ from homeassistant.helpers.typing import ConfigType
 from . import services
 from .const import DOMAIN
 from .coordinator import (
-    ControllerManager,
     GroupManager,
     HeosConfigEntry,
     HeosCoordinator,
@@ -75,16 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
         _LOGGER.debug("Unable to retrieve players and sources: %s", error)
         raise ConfigEntryNotReady from error
 
-    controller_manager = ControllerManager(hass, controller)
-    await controller_manager.connect_listeners()
-
     source_manager = SourceManager(favorites, inputs)
     source_manager.connect_update(hass, controller)
 
     group_manager = GroupManager(hass, controller, players)
 
     entry.runtime_data = HeosRuntimeData(
-        coordinator, controller_manager, group_manager, source_manager, players
+        coordinator, group_manager, source_manager, players
     )
 
     group_manager.connect_update()

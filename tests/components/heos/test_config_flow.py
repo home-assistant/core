@@ -117,7 +117,9 @@ async def test_discovery_shows_create_form(
 
 
 async def test_discovery_flow_aborts_already_setup(
-    hass: HomeAssistant, discovery_data: ssdp.SsdpServiceInfo, config_entry
+    hass: HomeAssistant,
+    discovery_data: ssdp.SsdpServiceInfo,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)
