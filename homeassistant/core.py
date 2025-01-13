@@ -1153,8 +1153,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for integrations to stop, the shutdown will"
-                " continue"
+                "Timed out waiting for integrations to stop, the shutdown will continue"
             )
             self._async_log_running_tasks("stop integrations")
 

@@ -1,4 +1,4 @@
-"""Support for TPLink hub alarm."""
+"""Support for TPLink siren entity."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ async def async_setup_entry(
 
 
 class TPLinkSirenEntity(CoordinatedTPLinkEntity, SirenEntity):
-    """Representation of a tplink hub alarm."""
+    """Representation of a tplink siren entity."""
 
     _attr_name = None
     _attr_supported_features = SirenEntityFeature.TURN_OFF | SirenEntityFeature.TURN_ON

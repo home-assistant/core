@@ -1,6 +1,6 @@
 """The tests for the WebOS TV notify platform."""
 
-from unittest.mock import Mock, call
+from unittest.mock import call
 
 from aiowebostv import WebOsTvPairError
 import pytest
@@ -74,14 +74,12 @@ async def test_notify(hass: HomeAssistant, client) -> None:
     )
 
 
-async def test_notify_not_connected(
-    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_notify_not_connected(hass: HomeAssistant, client) -> None:
     """Test sending a message when client is not connected."""
     await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
+    client.is_connected.return_value = False
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_NAME,
@@ -99,16 +97,13 @@ async def test_notify_not_connected(
 
 
 async def test_icon_not_found(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    client,
-    monkeypatch: pytest.MonkeyPatch,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client
 ) -> None:
     """Test notify icon not found error."""
     await setup_webostv(hass)
     assert hass.services.has_service(NOTIFY_DOMAIN, SERVICE_NAME)
 
-    monkeypatch.setattr(client, "send_message", Mock(side_effect=FileNotFoundError))
+    client.send_message.side_effect = FileNotFoundError
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_NAME,
@@ -134,19 +129,14 @@ async def test_icon_not_found(
     ],
 )
 async def test_connection_errors(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    client,
-    monkeypatch: pytest.MonkeyPatch,
-    side_effect,
-    error,
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, client, side_effect, error
 ) -> None:
     """Test connection errors scenarios."""
     await setup_webostv(hass)
     assert hass.services.has_service("notify", SERVICE_NAME)
 
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "connect", Mock(side_effect=side_effect))
+    client.is_connected.return_value = False
+    client.connect.side_effect = side_effect
     await hass.services.async_call(
         NOTIFY_DOMAIN,
         SERVICE_NAME,
@@ -159,7 +149,7 @@ async def test_connection_errors(
         blocking=True,
     )
     assert client.mock_calls[0] == call.connect()
-    assert client.connect.call_count == 1
+    assert client.connect.call_count == 2
     client.send_message.assert_not_called()
     assert error in caplog.text
 

@@ -79,7 +79,10 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
         """Get the address that identifies the Picnic service."""
         if self._user_address is None:
             address = self.picnic_api_client.get_user()["address"]
-            self._user_address = f'{address["street"]} {address["house_number"]}{address["house_number_ext"]}'
+            self._user_address = (
+                f"{address['street']} "
+                f"{address['house_number']}{address['house_number_ext']}"
+            )
 
         return self._user_address
 

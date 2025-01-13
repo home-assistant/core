@@ -51,7 +51,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.loader import async_get_bluetooth
 
-from . import passive_update_processor
+from . import passive_update_processor, websocket_api
 from .api import (
     _get_manager,
     async_address_present,
@@ -66,6 +66,7 @@ from .api import (
     async_rediscover_address,
     async_register_callback,
     async_register_scanner,
+    async_remove_scanner,
     async_scanner_by_source,
     async_scanner_count,
     async_scanner_devices_by_address,
@@ -109,6 +110,7 @@ __all__ = [
     "async_scanner_count",
     "async_scanner_devices_by_address",
     "async_get_advertisement_callback",
+    "async_remove_scanner",
     "BaseHaScanner",
     "HomeAssistantRemoteScanner",
     "BluetoothCallbackMatcher",
@@ -232,6 +234,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     set_manager(manager)
     await storage_setup_task
     await manager.async_setup()
+    websocket_api.async_setup(hass)
 
     hass.async_create_background_task(
         _async_start_adapter_discovery(hass, manager, bluetooth_adapters),
