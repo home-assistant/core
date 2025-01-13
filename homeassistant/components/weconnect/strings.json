@@ -10,11 +10,15 @@
           "accept_terms": "Automatically accept new terms and conditions"
         },
         "data_description": {
-          "spin": "WeConnect S-PIN is required to do some actions like unlocking the car."
+          "username": "The email address of your WeConnect account.",
+          "password": "The password of your WeConnect account.",
+          "spin": "WeConnect S-PIN is required to do some actions like unlocking the car.",
+          "accept_terms": "Automatically accept new terms and conditions"
         }
       }
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
