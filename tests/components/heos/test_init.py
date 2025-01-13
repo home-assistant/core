@@ -139,6 +139,7 @@ async def test_async_setup_entry_connect_failure(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
 
 
 async def test_async_setup_entry_player_failure(

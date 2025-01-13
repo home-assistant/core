@@ -6,7 +6,7 @@ import logging
 
 from pyheos import HeosError
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -55,17 +55,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             break
 
     coordinator = HeosCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    await coordinator.async_setup()
 
     controller = coordinator.heos
-
-    # Disconnect when shutting down
-    async def disconnect_controller(event):
-        await controller.disconnect()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
-    )
 
     # Get players and sources
     try:
@@ -92,7 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     group_manager = GroupManager(hass, controller, players)
 
     entry.runtime_data = HeosRuntimeData(
-        controller_manager, group_manager, source_manager, players
+        coordinator, controller_manager, group_manager, source_manager, players
     )
 
     group_manager.connect_update()

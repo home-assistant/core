@@ -28,17 +28,19 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import GroupManager, HeosConfigEntry, SourceManager
 from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
+from .coordinator import HeosCoordinator
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -85,7 +87,10 @@ async def async_setup_entry(
     players = entry.runtime_data.players
     devices = [
         HeosMediaPlayer(
-            player, entry.runtime_data.source_manager, entry.runtime_data.group_manager
+            entry.runtime_data.coordinator,
+            player,
+            entry.runtime_data.source_manager,
+            entry.runtime_data.group_manager,
         )
         for player in players.values()
     ]
@@ -114,11 +119,10 @@ def log_command_error[**_P](
     return decorator
 
 
-class HeosMediaPlayer(MediaPlayerEntity):
+class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     """The HEOS player."""
 
     _attr_media_content_type = MediaType.MUSIC
-    _attr_should_poll = False
     _attr_supported_features = BASE_SUPPORTED_FEATURES
     _attr_media_image_remotely_accessible = True
     _attr_has_entity_name = True
@@ -126,11 +130,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
+        coordinator: HeosCoordinator,
         player: HeosPlayer,
         source_manager: SourceManager,
         group_manager: GroupManager,
     ) -> None:
         """Initialize."""
+        super().__init__(coordinator, context=player.player_id)
         self._media_position_updated_at = None
         self._player: HeosPlayer = player
         self._source_manager = source_manager
@@ -173,6 +179,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
             )
         )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
+
+        await super().async_added_to_hass()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.async_write_ha_state()
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self) -> None:

@@ -45,6 +45,8 @@ MIN_UPDATE_SOURCES = timedelta(seconds=1)
 class HeosRuntimeData:
     """Runtime data and coordinators for HEOS config entries."""
 
+    coordinator: "HeosCoordinator"
+
     controller_manager: "ControllerManager"
     group_manager: "GroupManager"
     source_manager: "SourceManager"
@@ -71,8 +73,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            setup_method=self.__async_setup,
-            update_method=self.__async_update,
         )
         self.heos: Heos = self.__create_api()
 
@@ -98,7 +98,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             )
         )
 
-    async def __async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Connect to the HEOS device and add event callbacks."""
         self.heos.add_on_user_credentials_invalid(self.__auth_failure)
 
@@ -107,9 +107,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         except HeosError as error:
             _LOGGER.debug("Unable to connect to host %s: %s", self.host, error)
             raise ConfigEntryNotReady from error
-
-    async def __async_update(self) -> None:
-        """Load players."""
 
     async def __auth_failure(self) -> None:
         """Handle callback when the user credentials are no longer valid.
