@@ -66,11 +66,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: TVTrainConfigEntry) ->
         # This means the user has downgraded from a future version
         return False
 
-    if entry.version == 1 and entry.minor_version == 1:
-        # Remove unique id
-        hass.config_entries.async_update_entry(entry, unique_id=None, minor_version=2)
-
     if entry.version == 1:
+        if entry.minor_version == 1:
+            # Remove unique id
+            hass.config_entries.async_update_entry(entry, unique_id=None, minor_version=2)
+
         # Change from station names to station signatures
         try:
             web_session = async_get_clientsession(hass)
