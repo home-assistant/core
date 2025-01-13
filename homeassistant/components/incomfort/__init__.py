@@ -25,7 +25,7 @@ INTEGRATION_TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
 type InComfortConfigEntry = ConfigEntry[InComfortDataCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) -> bool:
     """Set up a config entry."""
     try:
         data = await async_connect_gateway(hass, dict(entry.data))

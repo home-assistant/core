@@ -54,11 +54,21 @@ def mock_entry_data() -> dict[str, Any]:
 
 
 @pytest.fixture
+def mock_entry_options() -> dict[str, Any] | None:
+    """Mock config entry options for fixture."""
+    return None
+
+
+@pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant, mock_entry_data: dict[str, Any]
+    hass: HomeAssistant,
+    mock_entry_data: dict[str, Any],
+    mock_entry_options: dict[str, Any],
 ) -> ConfigEntry:
     """Mock a config entry setup for incomfort integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data=mock_entry_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=mock_entry_data, options=mock_entry_options
+    )
     entry.add_to_hass(hass)
     return entry
 
