@@ -47,10 +47,7 @@ rules:
     comment: |
       PARALLEL_UPDATES is not set.
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Total coverage is at 93%
+  test-coverage: done
 
   # Gold
   devices: done
