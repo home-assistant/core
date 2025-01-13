@@ -183,12 +183,10 @@ class AzureStorageBackupAgent(BackupAgent):
             if metadata.get("extra_metadata")
             else {}
         )
-        agent_backup["protected"] = bool(metadata.get("protected", False))
-        agent_backup["database_included"] = bool(
-            metadata.get("database_included", False)
-        )
-        agent_backup["homeassistant_included"] = bool(
-            metadata.get("homeassistant_included", False)
+        agent_backup["protected"] = metadata.get("protected") == "True"
+        agent_backup["database_included"] = metadata.get("database_included") == "True"
+        agent_backup["homeassistant_included"] = (
+            metadata.get("homeassistant_included") == "True"
         )
         agent_backup["size"] = int(metadata.get("size", 0))
         return AgentBackup.from_dict(agent_backup)

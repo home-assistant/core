@@ -8,7 +8,6 @@ from unittest.mock import ANY, Mock, patch
 
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.azure_storage.const import DOMAIN
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
@@ -62,7 +61,7 @@ async def test_agents_info(
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent list backups."""
 
@@ -72,13 +71,20 @@ async def test_agents_list_backups(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backups"] == snapshot
+    expected = {
+        **TEST_BACKUP.as_dict(),
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+        "failed_agent_ids": [],
+        "with_automatic_settings": None,
+    }
+    del expected["extra_metadata"]
+    assert response["result"]["backups"] == [expected]
 
 
 async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent get backup."""
 
@@ -87,9 +93,17 @@ async def test_agents_get_backup(
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
     response = await client.receive_json()
 
+    expected = {
+        **TEST_BACKUP.as_dict(),
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+        "failed_agent_ids": [],
+        "with_automatic_settings": None,
+    }
+    del expected["extra_metadata"]
+
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backup"] == snapshot
+    assert response["result"]["backup"] == expected
 
 
 async def test_agents_get_backup_not_found(
