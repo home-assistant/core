@@ -27,6 +27,13 @@
           "filter_product": "To filter by product description add the phrase here to match"
         }
       },
+      "select_stations": {
+        "description": "More than one station was found with the provided name, select the correct ones from the provided lists",
+        "data": {
+          "to": "To station",
+          "from": "From station"
+        }
+      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"

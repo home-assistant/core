@@ -383,7 +383,7 @@ async def test_async_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_data["backup_id"]}.tar"
+    assert tar_file_path == f"{backup_directory}/{backup_data['backup_id']}.tar"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")

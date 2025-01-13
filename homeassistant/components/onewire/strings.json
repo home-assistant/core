@@ -41,6 +41,17 @@
         "name": "Hub short on branch {id}"
       }
     },
+    "select": {
+      "tempres": {
+        "name": "Temperature resolution",
+        "state": {
+          "9": "9 bits (0.5°C, fastest, up to 93.75ms)",
+          "10": "10 bits (0.25°C, up to 187.5ms)",
+          "11": "11 bits (0.125°C, up to 375ms)",
+          "12": "12 bits (0.0625°C, slowest, up to 750ms)"
+        }
+      }
+    },
     "sensor": {
       "counter_id": {
         "name": "Counter {id}"

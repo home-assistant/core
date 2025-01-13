@@ -85,7 +85,7 @@ def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
 
 
 @callback
-def async_register_api(hass: HomeAssistant, api: API) -> None:
+def async_register_api(hass: HomeAssistant, api: API) -> Callable[[], None]:
     """Register an API to be exposed to LLMs."""
     apis = _async_get_apis(hass)
 
@@ -93,6 +93,13 @@ def async_register_api(hass: HomeAssistant, api: API) -> None:
         raise HomeAssistantError(f"API {api.id} is already registered")
 
     apis[api.id] = api
+
+    @callback
+    def unregister() -> None:
+        """Unregister the API."""
+        apis.pop(api.id)
+
+    return unregister
 
 
 async def async_get_api(

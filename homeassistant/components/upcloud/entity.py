@@ -11,6 +11,7 @@ from homeassistant.const import CONF_USERNAME, STATE_OFF, STATE_ON, STATE_PROBLE
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import UpCloudConfigEntry
 from .const import DOMAIN
 from .coordinator import UpCloudDataUpdateCoordinator
 
@@ -33,11 +34,12 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: UpCloudDataUpdateCoordinator,
+        config_entry: UpCloudConfigEntry,
         uuid: str,
     ) -> None:
         """Initialize the UpCloud server entity."""
-        super().__init__(coordinator)
+        super().__init__(config_entry.runtime_data)
+        self.config_entry = config_entry
         self.uuid = uuid
 
     @property
@@ -95,13 +97,11 @@ class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
     @property
     def device_info(self) -> DeviceInfo:
         """Return info for device registry."""
-        assert self.coordinator.config_entry is not None
+        assert self.config_entry is not None
         return DeviceInfo(
             configuration_url="https://hub.upcloud.com",
             model="Control Panel",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")
-            },
+            identifiers={(DOMAIN, f"{self.config_entry.data[CONF_USERNAME]}@hub")},
             manufacturer="UpCloud Ltd",
         )

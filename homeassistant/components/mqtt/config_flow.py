@@ -76,6 +76,8 @@ from .const import (
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_BIRTH,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
@@ -205,7 +207,9 @@ def update_password_from_user_input(
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    # Can be bumped to version 2.1 with HA Core 2026.1.0
+    VERSION = CONFIG_ENTRY_VERSION  # 1
+    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 2
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
@@ -496,7 +500,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         reconfigure_entry,
                         data=validated_user_input,
                     )
-                validated_user_input[CONF_DISCOVERY] = DEFAULT_DISCOVERY
                 return self.async_create_entry(
                     title=validated_user_input[CONF_BROKER],
                     data=validated_user_input,
@@ -564,58 +567,17 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
-    def __init__(self) -> None:
-        """Initialize MQTT options flow."""
-        self.broker_config: dict[str, Any] = {}
-
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
         """Manage the MQTT options."""
-        return await self.async_step_broker()
-
-    async def async_step_broker(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the MQTT broker configuration."""
-        errors: dict[str, str] = {}
-        fields: OrderedDict[Any, Any] = OrderedDict()
-        validated_user_input: dict[str, Any] = {}
-        if await async_get_broker_settings(
-            self,
-            fields,
-            self.config_entry.data,
-            user_input,
-            validated_user_input,
-            errors,
-        ):
-            self.broker_config.update(
-                update_password_from_user_input(
-                    self.config_entry.data.get(CONF_PASSWORD), validated_user_input
-                ),
-            )
-            can_connect = await self.hass.async_add_executor_job(
-                try_connection,
-                self.broker_config,
-            )
-
-            if can_connect:
-                return await self.async_step_options()
-
-            errors["base"] = "cannot_connect"
-
-        return self.async_show_form(
-            step_id="broker",
-            data_schema=vol.Schema(fields),
-            errors=errors,
-            last_step=False,
-        )
+        return await self.async_step_options()
 
     async def async_step_options(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the MQTT options."""
         errors = {}
-        current_config = self.config_entry.data
-        options_config: dict[str, Any] = {}
+
+        options_config: dict[str, Any] = dict(self.config_entry.options)
         bad_input: bool = False
 
         def _birth_will(birt_or_will: str) -> dict[str, Any]:
@@ -674,26 +636,18 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 options_config[CONF_WILL_MESSAGE] = {}
 
             if not bad_input:
-                updated_config = {}
-                updated_config.update(self.broker_config)
-                updated_config.update(options_config)
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=updated_config,
-                    title=str(self.broker_config[CONF_BROKER]),
-                )
-                return self.async_create_entry(title="", data={})
+                return self.async_create_entry(data=options_config)
 
         birth = {
             **DEFAULT_BIRTH,
-            **current_config.get(CONF_BIRTH_MESSAGE, {}),
+            **options_config.get(CONF_BIRTH_MESSAGE, {}),
         }
         will = {
             **DEFAULT_WILL,
-            **current_config.get(CONF_WILL_MESSAGE, {}),
+            **options_config.get(CONF_WILL_MESSAGE, {}),
         }
-        discovery = current_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
-        discovery_prefix = current_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
+        discovery = options_config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY)
+        discovery_prefix = options_config.get(CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX)
 
         # build form
         fields: OrderedDict[vol.Marker, Any] = OrderedDict()
@@ -706,8 +660,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[
             vol.Optional(
                 "birth_enable",
-                default=CONF_BIRTH_MESSAGE not in current_config
-                or current_config[CONF_BIRTH_MESSAGE] != {},
+                default=CONF_BIRTH_MESSAGE not in options_config
+                or options_config[CONF_BIRTH_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[
@@ -729,8 +683,8 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         fields[
             vol.Optional(
                 "will_enable",
-                default=CONF_WILL_MESSAGE not in current_config
-                or current_config[CONF_WILL_MESSAGE] != {},
+                default=CONF_WILL_MESSAGE not in options_config
+                or options_config[CONF_WILL_MESSAGE] != {},
             )
         ] = BOOLEAN_SELECTOR
         fields[

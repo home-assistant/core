@@ -59,7 +59,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME):
 
 
 def _strip_uuid(udn: str) -> str:
-    return udn[5:] if udn.startswith("uuid:") else udn
+    return udn.removeprefix("uuid:")
 
 
 def _entry_is_complete(

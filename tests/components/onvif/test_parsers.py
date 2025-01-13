@@ -119,7 +119,83 @@ async def test_line_detector_crossed(hass: HomeAssistant) -> None:
     )
 
 
-async def test_tapo_vehicle(hass: HomeAssistant) -> None:
+async def test_tapo_line_crossed(hass: HomeAssistant) -> None:
+    """Tests tns1:RuleEngine/CellMotionDetector/LineCross."""
+    event = await get_event(
+        {
+            "SubscriptionReference": {
+                "Address": {
+                    "_value_1": "http://CAMERA_LOCAL_IP:2020/event-0_2020",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/CellMotionDetector/LineCross",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": {
+                "Address": {
+                    "_value_1": "http://CAMERA_LOCAL_IP:5656/event",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyLineCrossDetectorRule"},
+                        ],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "IsLineCross", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 1, 3, 21, 5, 14, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Changed",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Line Detector Crossed"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "motion"
+    assert event.value
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/CellMotionDetector/"
+        "LineCross_VideoSourceToken_VideoAnalyticsToken_MyLineCrossDetectorRule"
+    )
+
+
+async def test_tapo_tpsmartevent_vehicle(hass: HomeAssistant) -> None:
     """Tests tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent - vehicle."""
     event = await get_event(
         {
@@ -198,7 +274,83 @@ async def test_tapo_vehicle(hass: HomeAssistant) -> None:
     )
 
 
-async def test_tapo_person(hass: HomeAssistant) -> None:
+async def test_tapo_cellmotiondetector_vehicle(hass: HomeAssistant) -> None:
+    """Tests tns1:RuleEngine/CellMotionDetector/TpSmartEvent - vehicle."""
+    event = await get_event(
+        {
+            "SubscriptionReference": {
+                "Address": {
+                    "_value_1": "http://CAMERA_LOCAL_IP:2020/event-0_2020",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/CellMotionDetector/TpSmartEvent",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": {
+                "Address": {
+                    "_value_1": "http://CAMERA_LOCAL_IP:5656/event",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyTPSmartEventDetectorRule"},
+                        ],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "IsVehicle", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 1, 5, 14, 2, 9, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Changed",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Vehicle Detection"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "motion"
+    assert event.value
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/CellMotionDetector/"
+        "TpSmartEvent_VideoSourceToken_VideoAnalyticsToken_MyTPSmartEventDetectorRule"
+    )
+
+
+async def test_tapo_tpsmartevent_person(hass: HomeAssistant) -> None:
     """Tests tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent - person."""
     event = await get_event(
         {
@@ -271,6 +423,234 @@ async def test_tapo_person(hass: HomeAssistant) -> None:
     assert event.uid == (
         f"{TEST_UID}_tns1:RuleEngine/PeopleDetector/"
         "People_VideoSourceToken_VideoAnalyticsToken_MyPeopleDetectorRule"
+    )
+
+
+async def test_tapo_cellmotiondetector_person(hass: HomeAssistant) -> None:
+    """Tests tns1:RuleEngine/CellMotionDetector/People - person."""
+    event = await get_event(
+        {
+            "SubscriptionReference": {
+                "Address": {
+                    "_value_1": "http://192.168.56.63:2020/event-0_2020",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/CellMotionDetector/People",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": {
+                "Address": {
+                    "_value_1": "http://192.168.56.63:5656/event",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyPeopleDetectorRule"},
+                        ],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "IsPeople", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 1, 3, 20, 9, 22, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Changed",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Person Detection"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "motion"
+    assert event.value
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/CellMotionDetector/"
+        "People_VideoSourceToken_VideoAnalyticsToken_MyPeopleDetectorRule"
+    )
+
+
+async def test_tapo_tamper(hass: HomeAssistant) -> None:
+    """Tests tns1:RuleEngine/CellMotionDetector/Tamper - tamper."""
+    event = await get_event(
+        {
+            "SubscriptionReference": {
+                "Address": {
+                    "_value_1": "http://CAMERA_LOCAL_IP:2020/event-0_2020",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/CellMotionDetector/Tamper",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": {
+                "Address": {
+                    "_value_1": "http://CAMERA_LOCAL_IP:5656/event",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyTamperDetectorRule"},
+                        ],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "IsTamper", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 1, 5, 21, 1, 5, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Changed",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Tamper Detection"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "tamper"
+    assert event.value
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/CellMotionDetector/"
+        "Tamper_VideoSourceToken_VideoAnalyticsToken_MyTamperDetectorRule"
+    )
+
+
+async def test_tapo_intrusion(hass: HomeAssistant) -> None:
+    """Tests tns1:RuleEngine/CellMotionDetector/Intrusion - intrusion."""
+    event = await get_event(
+        {
+            "SubscriptionReference": {
+                "Address": {
+                    "_value_1": "http://192.168.100.155:2020/event-0_2020",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Topic": {
+                "_value_1": "tns1:RuleEngine/CellMotionDetector/Intrusion",
+                "Dialect": "http://www.onvif.org/ver10/tev/topicExpression/ConcreteSet",
+                "_attr_1": {},
+            },
+            "ProducerReference": {
+                "Address": {
+                    "_value_1": "http://192.168.100.155:5656/event",
+                    "_attr_1": None,
+                },
+                "ReferenceParameters": None,
+                "Metadata": None,
+                "_value_1": None,
+                "_attr_1": None,
+            },
+            "Message": {
+                "_value_1": {
+                    "Source": {
+                        "SimpleItem": [
+                            {
+                                "Name": "VideoSourceConfigurationToken",
+                                "Value": "vsconf",
+                            },
+                            {
+                                "Name": "VideoAnalyticsConfigurationToken",
+                                "Value": "VideoAnalyticsToken",
+                            },
+                            {"Name": "Rule", "Value": "MyIntrusionDetectorRule"},
+                        ],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Key": None,
+                    "Data": {
+                        "SimpleItem": [{"Name": "IsIntrusion", "Value": "true"}],
+                        "ElementItem": [],
+                        "Extension": None,
+                        "_attr_1": None,
+                    },
+                    "Extension": None,
+                    "UtcTime": datetime.datetime(
+                        2025, 1, 11, 10, 40, 45, tzinfo=datetime.UTC
+                    ),
+                    "PropertyOperation": "Changed",
+                    "_attr_1": {},
+                }
+            },
+        }
+    )
+
+    assert event is not None
+    assert event.name == "Intrusion Detection"
+    assert event.platform == "binary_sensor"
+    assert event.device_class == "safety"
+    assert event.value
+    assert event.uid == (
+        f"{TEST_UID}_tns1:RuleEngine/CellMotionDetector/"
+        "Intrusion_VideoSourceToken_VideoAnalyticsToken_MyIntrusionDetectorRule"
     )
 
 

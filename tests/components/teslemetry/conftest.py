@@ -7,6 +7,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from teslemetry_stream.stream import recursive_match
 
 from .const import (
     COMMAND_OK,
@@ -109,9 +110,53 @@ def mock_energy_history():
 
 
 @pytest.fixture(autouse=True)
-def mock_listen():
+def mock_add_listener():
     """Mock Teslemetry Stream listen method."""
     with patch(
-        "homeassistant.components.teslemetry.TeslemetryStream.listen",
-    ) as mock_listen:
-        yield mock_listen
+        "homeassistant.components.teslemetry.TeslemetryStream.async_add_listener",
+    ) as mock_add_listener:
+        mock_add_listener.listeners = []
+
+        def unsubscribe() -> None:
+            return
+
+        def side_effect(callback, filters):
+            mock_add_listener.listeners.append((callback, filters))
+            return unsubscribe
+
+        def send(event) -> None:
+            for listener, filters in mock_add_listener.listeners:
+                if recursive_match(filters, event):
+                    listener(event)
+
+        mock_add_listener.send = send
+        mock_add_listener.side_effect = side_effect
+        yield mock_add_listener
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_get_config():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.get_config",
+    ) as mock_stream_get_config:
+        yield mock_stream_get_config
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_update_config():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.update_config",
+    ) as mock_stream_update_config:
+        yield mock_stream_update_config
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_connected():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.connected",
+        return_value=True,
+    ) as mock_stream_connected:
+        yield mock_stream_connected

@@ -49,6 +49,12 @@
           'summary': 'Arbeite an einem kreativen Projekt',
           'uid': '6e53f1f5-a315-4edd-984d-8d762e4a08ef',
         }),
+        dict({
+          'description': 'Wähle eine Programmiersprache aus, die du noch nicht kennst, und lerne die Grundlagen.',
+          'status': 'needs_action',
+          'summary': 'Lerne eine neue Programmiersprache',
+          'uid': '7d92278b-9361-4854-83b6-0a66b57dce20',
+        }),
       ]),
     }),
   })
@@ -144,7 +150,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3',
+    'state': '4',
   })
 # ---
 # name: test_todos[todo.test_user_to_do_s-entry]

@@ -1345,6 +1345,7 @@ async def test_config_update_errors(
         ),
     ],
 )
+@patch("homeassistant.components.backup.config.BACKUP_START_TIME_JITTER", 0)
 async def test_config_schedule_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1787,6 +1788,7 @@ async def test_config_schedule_logic(
         ),
     ],
 )
+@patch("homeassistant.components.backup.config.BACKUP_START_TIME_JITTER", 0)
 async def test_config_retention_copies_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

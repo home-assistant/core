@@ -501,7 +501,7 @@ async def test_unlink_devices(
 
     # Generate list of test identifiers
     test_identifiers = [
-        (domain, f"{device_id}{"" if i == 0 else f"_000{i}"}")
+        (domain, f"{device_id}{'' if i == 0 else f'_000{i}'}")
         for i in range(id_count)
         for domain in domains
     ]

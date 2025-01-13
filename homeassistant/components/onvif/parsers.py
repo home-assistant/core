@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+import dataclasses
 import datetime
 from typing import Any
 
@@ -370,22 +371,56 @@ async def async_parse_vehicle_detector(uid: str, msg) -> Event | None:
         return None
 
 
-@PARSERS.register("tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent")
+_TAPO_EVENT_TEMPLATES: dict[str, Event] = {
+    "IsVehicle": Event(
+        uid="",
+        name="Vehicle Detection",
+        platform="binary_sensor",
+        device_class="motion",
+    ),
+    "IsPeople": Event(
+        uid="", name="Person Detection", platform="binary_sensor", device_class="motion"
+    ),
+    "IsLineCross": Event(
+        uid="",
+        name="Line Detector Crossed",
+        platform="binary_sensor",
+        device_class="motion",
+    ),
+    "IsTamper": Event(
+        uid="", name="Tamper Detection", platform="binary_sensor", device_class="tamper"
+    ),
+    "IsIntrusion": Event(
+        uid="",
+        name="Intrusion Detection",
+        platform="binary_sensor",
+        device_class="safety",
+    ),
+}
+
+
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/Intrusion")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/LineCross")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/People")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/Tamper")
+@PARSERS.register("tns1:RuleEngine/CellMotionDetector/TpSmartEvent")
 @PARSERS.register("tns1:RuleEngine/PeopleDetector/People")
+@PARSERS.register("tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent")
 async def async_parse_tplink_detector(uid: str, msg) -> Event | None:
     """Handle parsing tplink smart event messages.
 
-    Topic: tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent
+    Topic: tns1:RuleEngine/CellMotionDetector/Intrusion
+    Topic: tns1:RuleEngine/CellMotionDetector/LineCross
+    Topic: tns1:RuleEngine/CellMotionDetector/People
+    Topic: tns1:RuleEngine/CellMotionDetector/Tamper
+    Topic: tns1:RuleEngine/CellMotionDetector/TpSmartEvent
     Topic: tns1:RuleEngine/PeopleDetector/People
+    Topic: tns1:RuleEngine/TPSmartEventDetector/TPSmartEvent
     """
-    video_source = ""
-    video_analytics = ""
-    rule = ""
-    topic = ""
-    vehicle = False
-    person = False
-    enabled = False
     try:
+        video_source = ""
+        video_analytics = ""
+        rule = ""
         topic, payload = extract_message(msg)
         for source in payload.Source.SimpleItem:
             if source.Name == "VideoSourceConfigurationToken":
@@ -396,33 +431,18 @@ async def async_parse_tplink_detector(uid: str, msg) -> Event | None:
                 rule = source.Value
 
         for item in payload.Data.SimpleItem:
-            if item.Name == "IsVehicle":
-                vehicle = True
-                enabled = item.Value == "true"
-            if item.Name == "IsPeople":
-                person = True
-                enabled = item.Value == "true"
+            event_template = _TAPO_EVENT_TEMPLATES.get(item.Name, None)
+            if event_template is None:
+                continue
+
+            return dataclasses.replace(
+                event_template,
+                uid=f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
+                value=item.Value == "true",
+            )
+
     except (AttributeError, KeyError):
         return None
-
-    if vehicle:
-        return Event(
-            f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-            "Vehicle Detection",
-            "binary_sensor",
-            "motion",
-            None,
-            enabled,
-        )
-    if person:
-        return Event(
-            f"{uid}_{topic}_{video_source}_{video_analytics}_{rule}",
-            "Person Detection",
-            "binary_sensor",
-            "motion",
-            None,
-            enabled,
-        )
 
     return None
 

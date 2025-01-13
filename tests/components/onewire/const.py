@@ -92,6 +92,7 @@ MOCK_OWPROXY_DEVICES = {
         ATTR_INJECT_READS: {
             "/type": [b"DS18B20"],
             "/temperature": [b"    26.984"],
+            "/tempres": [b"    12"],
         },
     },
     "28.222222222222": {

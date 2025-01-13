@@ -25,8 +25,8 @@
       "user": {
         "title": "Habitica - Gamify your life",
         "menu_options": {
-          "login": "Login to Habitica",
-          "advanced": "Login to other instances"
+          "login": "Log in to Habitica",
+          "advanced": "Log in to other instances"
         },
         "description": "![Habiticans]({habiticans}) Connect your Habitica account to keep track of your adventurer's stats, progress, and manage your to-dos and daily tasks.\n\n[Don't have a Habitica account? Sign up here.]({signup})"
       },
@@ -310,6 +310,26 @@
             "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
           }
         }
+      },
+      "eggs_total": {
+        "name": "Eggs",
+        "unit_of_measurement": "eggs"
+      },
+      "hatching_potions_total": {
+        "name": "Hatching potions",
+        "unit_of_measurement": "potions"
+      },
+      "food_total": {
+        "name": "Pet food",
+        "unit_of_measurement": "foods"
+      },
+      "saddle": {
+        "name": "Saddles",
+        "unit_of_measurement": "saddles"
+      },
+      "quest_scrolls": {
+        "name": "Quest scrolls",
+        "unit_of_measurement": "scrolls"
       }
     },
     "switch": {
@@ -401,6 +421,10 @@
     }
   },
   "issues": {
+    "deprecated_entity": {
+      "title": "The Habitica {name} entity is deprecated",
+      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+    },
     "deprecated_api_call": {
       "title": "The Habitica action habitica.api_call is deprecated",
       "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."

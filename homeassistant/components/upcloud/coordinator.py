@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 import upcloud_api
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+if TYPE_CHECKING:
+    from . import UpCloudConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +37,7 @@ class UpCloudDataUpdateCoordinator(
         )
         self.cloud_manager = cloud_manager
 
-    async def async_update_config(self, config_entry: ConfigEntry) -> None:
+    async def async_update_config(self, config_entry: UpCloudConfigEntry) -> None:
         """Handle config update."""
         self.update_interval = timedelta(
             seconds=config_entry.options[CONF_SCAN_INTERVAL]

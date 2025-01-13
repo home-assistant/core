@@ -69,6 +69,8 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -76,6 +78,7 @@ from .const import (  # noqa: F401
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
+    ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
 )
@@ -282,15 +285,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate the options from config entry data."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        # Can be removed when config entry is bumped to version 2.1
+        # with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
+        # From 2026.1 we will write version 2.1
+        for key in ENTRY_OPTION_FIELDS:
+            if key not in data:
+                continue
+            options[key] = data.pop(key)
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            options=options,
+            version=CONFIG_ENTRY_VERSION,
+            minor_version=CONFIG_ENTRY_MINOR_VERSION,
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf: dict[str, Any]
     mqtt_data: MqttData
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
-        conf = dict(entry.data)
+        conf = dict(entry.data | entry.options)
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from dataclasses import asdict
 from datetime import date, datetime, timedelta
 from enum import StrEnum
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from dateutil.rrule import rrule
-from habiticalib import TaskType
+from habiticalib import Frequency, TaskType
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -193,6 +194,10 @@ class HabiticaDailiesCalendarEntity(HabiticaCalendarEntity):
             #  only dailies that that are not 'grey dailies'
             if not (task.Type is TaskType.DAILY and task.everyX):
                 continue
+            if task.frequency is Frequency.WEEKLY and not any(
+                asdict(task.repeat).values()
+            ):
+                continue
 
             recurrences = build_rrule(task)
             recurrence_dates = self.get_recurrence_dates(
@@ -332,6 +337,11 @@ class HabiticaDailyRemindersCalendarEntity(HabiticaCalendarEntity):
 
         for task in self.coordinator.data.tasks:
             if not (task.Type is TaskType.DAILY and task.everyX):
+                continue
+
+            if task.frequency is Frequency.WEEKLY and not any(
+                asdict(task.repeat).values()
+            ):
                 continue
 
             recurrences = build_rrule(task)

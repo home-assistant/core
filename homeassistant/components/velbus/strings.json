@@ -20,6 +20,12 @@
   "exceptions": {
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
     }
   },
   "services": {
@@ -30,6 +36,10 @@
         "interface": {
           "name": "Interface",
           "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+        },
+        "config_entry": {
+          "name": "Config entry",
+          "description": "The config entry of the velbus integration"
         }
       }
     },
@@ -40,6 +50,10 @@
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
           "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
+        },
+        "config_entry": {
+          "name": "[%key:component::velbus::services::sync_clock::fields::config_entry::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::config_entry::description%]"
         }
       }
     },
@@ -50,6 +64,10 @@
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
           "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
+        },
+        "config_entry": {
+          "name": "[%key:component::velbus::services::sync_clock::fields::config_entry::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::config_entry::description%]"
         },
         "address": {
           "name": "Address",
@@ -65,6 +83,10 @@
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
           "description": "[%key:component::velbus::services::sync_clock::fields::interface::description%]"
         },
+        "config_entry": {
+          "name": "[%key:component::velbus::services::sync_clock::fields::config_entry::name%]",
+          "description": "[%key:component::velbus::services::sync_clock::fields::config_entry::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "The module address in decimal format. The decimal addresses are displayed in front of the modules listed at the integration page."
@@ -74,6 +96,12 @@
           "description": "The actual text to be displayed. Text is limited to 64 characters."
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_interface_parameter": {
+      "title": "Deprecated 'interface' parameter",
+      "description": "The 'interface' parameter in the Velbus service calls is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   }
 }

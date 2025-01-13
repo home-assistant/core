@@ -36,14 +36,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
 )
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    DEFAULT_MAX_BIND_VARS,
-    DOMAIN,
-    SQLITE_MAX_BIND_VARS,
-    SQLITE_MODERN_MAX_BIND_VARS,
-    SQLITE_URL_PREFIX,
-    SupportedDialect,
-)
+from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
@@ -95,9 +88,7 @@ RECOMMENDED_MIN_VERSION_MARIA_DB_108 = _simple_version("10.8.4")
 MARIADB_WITH_FIXED_IN_QUERIES_108 = _simple_version("10.8.4")
 MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
-MIN_VERSION_SQLITE = _simple_version("3.31.0")
-UPCOMING_MIN_VERSION_SQLITE = _simple_version("3.40.1")
-MIN_VERSION_SQLITE_MODERN_BIND_VARS = _simple_version("3.32.0")
+MIN_VERSION_SQLITE = _simple_version("3.40.1")
 
 
 # This is the maximum time after the recorder ends the session
@@ -376,37 +367,6 @@ def _raise_if_version_unsupported(
     raise UnsupportedDialect
 
 
-@callback
-def _async_delete_issue_deprecated_version(
-    hass: HomeAssistant, dialect_name: str
-) -> None:
-    """Delete the issue about upcoming unsupported database version."""
-    ir.async_delete_issue(hass, DOMAIN, f"{dialect_name}_too_old")
-
-
-@callback
-def _async_create_issue_deprecated_version(
-    hass: HomeAssistant,
-    server_version: AwesomeVersion,
-    dialect_name: str,
-    min_version: AwesomeVersion,
-) -> None:
-    """Warn about upcoming unsupported database version."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        f"{dialect_name}_too_old",
-        is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
-        translation_key=f"{dialect_name}_too_old",
-        translation_placeholders={
-            "server_version": str(server_version),
-            "min_version": str(min_version),
-        },
-        breaks_in_ha_version="2025.2.0",
-    )
-
-
 def _extract_version_from_server_response_or_raise(
     server_response: str,
 ) -> AwesomeVersion:
@@ -505,7 +465,6 @@ def setup_connection_for_dialect(
     version: AwesomeVersion | None = None
     slow_range_in_select = False
     if dialect_name == SupportedDialect.SQLITE:
-        max_bind_vars = SQLITE_MAX_BIND_VARS
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
             dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
@@ -522,23 +481,6 @@ def setup_connection_for_dialect(
                 _raise_if_version_unsupported(
                     version or version_string, "SQLite", MIN_VERSION_SQLITE
                 )
-
-            # No elif here since _raise_if_version_unsupported raises
-            if version < UPCOMING_MIN_VERSION_SQLITE:
-                instance.hass.add_job(
-                    _async_create_issue_deprecated_version,
-                    instance.hass,
-                    version or version_string,
-                    dialect_name,
-                    UPCOMING_MIN_VERSION_SQLITE,
-                )
-            else:
-                instance.hass.add_job(
-                    _async_delete_issue_deprecated_version, instance.hass, dialect_name
-                )
-
-            if version and version > MIN_VERSION_SQLITE_MODERN_BIND_VARS:
-                max_bind_vars = SQLITE_MODERN_MAX_BIND_VARS
 
         # The upper bound on the cache size is approximately 16MiB of memory
         execute_on_connection(dbapi_connection, "PRAGMA cache_size = -16384")
@@ -558,7 +500,6 @@ def setup_connection_for_dialect(
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
     elif dialect_name == SupportedDialect.MYSQL:
-        max_bind_vars = DEFAULT_MAX_BIND_VARS
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -599,7 +540,6 @@ def setup_connection_for_dialect(
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
     elif dialect_name == SupportedDialect.POSTGRESQL:
-        max_bind_vars = DEFAULT_MAX_BIND_VARS
         # PostgreSQL does not support a skip/loose index scan so its
         # also slow for large distinct queries:
         # https://wiki.postgresql.org/wiki/Loose_indexscan
@@ -626,7 +566,7 @@ def setup_connection_for_dialect(
         dialect=SupportedDialect(dialect_name),
         version=version,
         optimizer=DatabaseOptimizer(slow_range_in_select=slow_range_in_select),
-        max_bind_vars=max_bind_vars,
+        max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )
 
 
@@ -987,10 +927,7 @@ def filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated %s rows, please report"
-                    " at %s"
-                ),
+                "Blocked attempt to insert duplicated %s rows, please report at %s",
                 row_type,
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,

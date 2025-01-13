@@ -94,7 +94,8 @@ def raise_for_blocking_call(
 
         if found_frame is None:
             raise RuntimeError(  # noqa: TRY200
-                f"Caught blocking call to {func.__name__} with args {mapped_args.get("args")} "
+                f"Caught blocking call to {func.__name__} "
+                f"with args {mapped_args.get('args')} "
                 f"in {offender_filename}, line {offender_lineno}: {offender_line} "
                 "inside the event loop; "
                 "This is causing stability issues. "

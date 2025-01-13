@@ -30,6 +30,7 @@ from homeassistant.components.bluetooth.const import (
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.components.bluetooth.match import (
     ADDRESS,
     CONNECTABLE,
@@ -3020,6 +3021,23 @@ async def test_scanner_count_connectable(hass: HomeAssistant) -> None:
     cancel = bluetooth.async_register_scanner(hass, scanner)
     assert bluetooth.async_scanner_count(hass, connectable=True) == 1
     cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_scanner_remove(hass: HomeAssistant) -> None:
+    """Test permanently removing a scanner."""
+    scanner = FakeScanner("any", "any")
+    cancel = bluetooth.async_register_scanner(hass, scanner)
+    assert bluetooth.async_scanner_count(hass, connectable=True) == 1
+    device = generate_ble_device("44:44:33:11:23:45", "name")
+    adv = generate_advertisement_data(local_name="name", service_uuids=[])
+    inject_advertisement_with_time_and_source_connectable(
+        hass, device, adv, time.monotonic(), scanner.source, True
+    )
+    cancel()
+    bluetooth.async_remove_scanner(hass, scanner.source)
+    manager: HomeAssistantBluetoothManager = _get_manager()
+    assert not manager.storage.async_get_advertisement_history(scanner.source)
 
 
 @pytest.mark.usefixtures("enable_bluetooth")

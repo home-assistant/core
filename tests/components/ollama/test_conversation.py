@@ -341,7 +341,7 @@ async def test_message_history_trimming(
         for i in range(5):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id="1234",
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -432,7 +432,7 @@ async def test_message_history_pruning(
         for i in range(3):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=None,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -490,7 +490,7 @@ async def test_message_history_unlimited(
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=conversation_id,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,

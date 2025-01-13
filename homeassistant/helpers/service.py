@@ -133,8 +133,7 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
         domain, enum, option = option_or_feature.split(".", 2)
     except ValueError as exc:
         raise vol.Invalid(
-            f"Invalid {label} '{option_or_feature}', expected "
-            "<domain>.<enum>.<member>"
+            f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
     base_components = _base_components()

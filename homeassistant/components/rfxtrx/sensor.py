@@ -57,7 +57,7 @@ def _rssi_convert(value: int | None) -> str | None:
     """Rssi is given as dBm value."""
     if value is None:
         return None
-    return f"{value*8-120}"
+    return f"{value * 8 - 120}"
 
 
 @dataclass(frozen=True)

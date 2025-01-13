@@ -19,7 +19,7 @@ rules:
       The integration does not provide any additional actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -41,7 +41,7 @@ rules:
     status: exempt
     comment: |
       The integration does not provide any additional options.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done

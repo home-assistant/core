@@ -138,6 +138,27 @@
       },
       "constitution": {
         "default": "mdi:run-fast"
+      },
+      "food_total": {
+        "default": "mdi:candy",
+        "state": {
+          "0": "mdi:candy-off"
+        }
+      },
+      "eggs_total": {
+        "default": "mdi:egg",
+        "state": {
+          "0": "mdi:egg-off"
+        }
+      },
+      "hatching_potions_total": {
+        "default": "mdi:flask-round-bottom"
+      },
+      "saddle": {
+        "default": "mdi:horse"
+      },
+      "quest_scrolls": {
+        "default": "mdi:script-text-outline"
       }
     },
     "switch": {

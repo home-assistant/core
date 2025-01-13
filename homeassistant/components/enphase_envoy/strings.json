@@ -23,6 +23,13 @@
         "data_description": {
           "host": "[%key:component::enphase_envoy::config::step::user::data_description::host%]"
         }
+      },
+      "reauth_confirm": {
+        "description": "[%key:component::enphase_envoy::config::step::user::description%]",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {

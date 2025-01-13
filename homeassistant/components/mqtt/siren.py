@@ -217,10 +217,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             try:
                 json_payload = json_loads_object(payload)
                 _LOGGER.debug(
-                    (
-                        "JSON payload detected after processing payload '%s' on"
-                        " topic %s"
-                    ),
+                    "JSON payload detected after processing payload '%s' on topic %s",
                     json_payload,
                     msg.topic,
                 )

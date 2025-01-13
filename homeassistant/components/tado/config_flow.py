@@ -49,7 +49,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         tado = await hass.async_add_executor_job(
             Tado, data[CONF_USERNAME], data[CONF_PASSWORD]
         )
-        tado_me = await hass.async_add_executor_job(tado.getMe)
+        tado_me = await hass.async_add_executor_job(tado.get_me)
     except KeyError as ex:
         raise InvalidAuth from ex
     except RuntimeError as ex:

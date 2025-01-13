@@ -61,18 +61,25 @@ POWER_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=UnitOfPower.WATT,
 )
 
-VOLATGE_DESCRIPTION = SensorEntityDescription(
+VOLTAGE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_VOLTAGE,
     device_class=SensorDeviceClass.VOLTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricPotential.VOLT,
 )
 
-CURRENT_DESCRIPTION = SensorEntityDescription(
+CURRENT_DESCRIPTION_IN_MA = SensorEntityDescription(
     key=SENSOR_TYPE_CURRENT,
     device_class=SensorDeviceClass.CURRENT,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+)
+
+CURRENT_DESCRIPTION_IN_A = SensorEntityDescription(
+    key=SENSOR_TYPE_CURRENT,
+    device_class=SensorDeviceClass.CURRENT,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
 )
 
 CO2_DESCRIPTION = SensorEntityDescription(
@@ -100,8 +107,16 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Relay Switch 1PM": (
         POWER_DESCRIPTION,
-        VOLATGE_DESCRIPTION,
-        CURRENT_DESCRIPTION,
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_MA,
+    ),
+    "Plug Mini (US)": (
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_A,
+    ),
+    "Plug Mini (JP)": (
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_A,
     ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,

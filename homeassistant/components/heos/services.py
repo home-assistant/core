@@ -2,7 +2,7 @@
 
 import logging
 
-from pyheos import CommandFailedError, Heos, HeosError, const
+from pyheos import CommandAuthenticationError, Heos, HeosError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -69,16 +69,12 @@ def _get_controller(hass: HomeAssistant) -> Heos:
 
 async def _sign_in_handler(service: ServiceCall) -> None:
     """Sign in to the HEOS account."""
-
     controller = _get_controller(service.hass)
-    if controller.connection_state != const.STATE_CONNECTED:
-        _LOGGER.error("Unable to sign in because HEOS is not connected")
-        return
     username = service.data[ATTR_USERNAME]
     password = service.data[ATTR_PASSWORD]
     try:
         await controller.sign_in(username, password)
-    except CommandFailedError as err:
+    except CommandAuthenticationError as err:
         _LOGGER.error("Sign in failed: %s", err)
     except HeosError as err:
         _LOGGER.error("Unable to sign in: %s", err)
@@ -88,9 +84,6 @@ async def _sign_out_handler(service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
 
     controller = _get_controller(service.hass)
-    if controller.connection_state != const.STATE_CONNECTED:
-        _LOGGER.error("Unable to sign out because HEOS is not connected")
-        return
     try:
         await controller.sign_out()
     except HeosError as err:

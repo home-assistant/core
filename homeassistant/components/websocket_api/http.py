@@ -63,7 +63,7 @@ class WebSocketAdapter(logging.LoggerAdapter):
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
         assert self.extra is not None
-        return f'[{self.extra["connid"]}] {msg}', kwargs
+        return f"[{self.extra['connid']}] {msg}", kwargs
 
 
 class WebSocketHandler:

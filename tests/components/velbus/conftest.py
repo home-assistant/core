@@ -1,7 +1,7 @@
 """Fixtures for the Velbus tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from velbusaio.channels import (
@@ -72,6 +72,7 @@ def mock_controller(
             4: mock_module_no_subdevices,
             99: mock_module_subdevices,
         }
+        cont.get_module.return_value = mock_module_subdevices
         yield controller
 
 
@@ -300,7 +301,7 @@ def mock_cover_no_position() -> AsyncMock:
 @pytest.fixture(name="config_entry")
 async def mock_config_entry(
     hass: HomeAssistant,
-    controller: MagicMock,
+    controller: AsyncMock,
 ) -> VelbusConfigEntry:
     """Create and register mock config entry."""
     config_entry = MockConfigEntry(

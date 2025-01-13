@@ -160,6 +160,57 @@
     'state': 'test-user',
   })
 # ---
+# name: test_sensors[sensor.test_user_eggs-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_eggs',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Eggs',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.EGGS_TOTAL: 'eggs_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_eggs_total',
+    'unit_of_measurement': 'eggs',
+  })
+# ---
+# name: test_sensors[sensor.test_user_eggs-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Pandajunges': 2,
+      'Tigerjunges': 0,
+      'Wolfsjunges': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Egg_Egg.png',
+      'friendly_name': 'test-user Eggs',
+      'unit_of_measurement': 'eggs',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_eggs',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_sensors[sensor.test_user_experience-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -512,6 +563,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hatching potions',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.HATCHING_POTIONS_TOTAL: 'hatching_potions_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_hatching_potions_total',
+    'unit_of_measurement': 'potions',
+  })
+# ---
+# name: test_sensors[sensor.test_user_hatching_potions-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Normales': 2,
+      'Weißes': 0,
+      'Wüstenfarbenes': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_HatchingPotion_RoyalPurple.png',
+      'friendly_name': 'test-user Hatching potions',
+      'unit_of_measurement': 'potions',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_hatching_potions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_sensors[sensor.test_user_health-entry]
@@ -962,6 +1064,109 @@
     'state': '75',
   })
 # ---
+# name: test_sensors[sensor.test_user_pet_food-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_pet_food',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pet food',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.FOOD_TOTAL: 'food_total'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_food_total',
+    'unit_of_measurement': 'foods',
+  })
+# ---
+# name: test_sensors[sensor.test_user_pet_food-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Fleisch': 0,
+      'Kartoffel': 2,
+      'Milch': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Strawberry.png',
+      'friendly_name': 'test-user Pet food',
+      'unit_of_measurement': 'foods',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_pet_food',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
+# name: test_sensors[sensor.test_user_quest_scrolls-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_quest_scrolls',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Quest scrolls',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.QUEST_SCROLLS: 'quest_scrolls'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_quest_scrolls',
+    'unit_of_measurement': 'scrolls',
+  })
+# ---
+# name: test_sensors[sensor.test_user_quest_scrolls-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Angriff des Banalen, Teil 1: Abwasch-Katastrophe!': 1,
+      'Der Basi-List': 0,
+      'Die goldene Ritterin, Teil 1: Ein ernstes Gespräch': 0,
+      'Die ungezähmten Staubmäuse': 1,
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/inventory_quest_scroll_dustbunnies.png',
+      'friendly_name': 'test-user Quest scrolls',
+      'unit_of_measurement': 'scrolls',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_quest_scrolls',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
+  })
+# ---
 # name: test_sensors[sensor.test_user_rewards-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1046,6 +1251,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddles-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_user_saddles',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Saddles',
+    'platform': 'habitica',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <HabiticaSensorEntity.SADDLE: 'saddle'>,
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_saddle',
+    'unit_of_measurement': 'saddles',
+  })
+# ---
+# name: test_sensors[sensor.test_user_saddles-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'https://habitica-assets.s3.amazonaws.com/mobileApp/images/Pet_Food_Saddle.png',
+      'friendly_name': 'test-user Saddles',
+      'unit_of_measurement': 'saddles',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_user_saddles',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2',
   })
 # ---
 # name: test_sensors[sensor.test_user_strength-entry]

@@ -181,7 +181,8 @@ def test_validate_stun_or_turn_url() -> None:
     invalid_urls = (
         "custom_stun_server",
         "custom_stun_server:3478",
-        "bum:custom_stun_server:3478" "http://blah.com:80",
+        "bum:custom_stun_server:3478",
+        "http://blah.com:80",
     )
 
     valid_urls = (

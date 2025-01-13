@@ -1041,7 +1041,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "torque",
     "touchline",
     "touchline_sl",
-    "tplink",
     "tplink_lte",
     "tplink_omada",
     "traccar",
