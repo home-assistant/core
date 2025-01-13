@@ -318,10 +318,8 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
-    if (source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID)) and (
-        source_domain := entry.data.get(CONF_SOURCE_DOMAIN)
-    ):
-        if source_entry := hass.config_entries.async_get_entry(source_entry_id):
+    if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
+        if not (source_entry := hass.config_entries.async_get_entry(source_entry_id)):
             # Cleanup the orphaned entry using a call_soon to ensure
             # we can return before the entry is removed
             hass.loop.call_soon(
@@ -342,7 +340,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             AdapterDetails(
                 address=address,
                 product=entry.data.get(CONF_SOURCE_MODEL),
-                manufacturer=source_domain,
+                manufacturer=entry.data[CONF_SOURCE_DOMAIN],
             ),
         )
         return True
