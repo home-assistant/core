@@ -17,7 +17,7 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: todo
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: todo
   runtime-data: done
