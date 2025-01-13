@@ -1794,7 +1794,9 @@ async def test_config_entry_does_not_exist(entity_registry: er.EntityRegistry) -
 
     entity_id = entity_registry.async_get_or_create("light", "hue", "1234").entity_id
     with pytest.raises(ValueError):
-        entity_registry.async_update_entity(entity_id, config_entry=mock_config)
+        entity_registry.async_update_entity(
+            entity_id, config_entry_id=mock_config.entry_id
+        )
 
 
 async def test_device_does_not_exist(entity_registry: er.EntityRegistry) -> None:
