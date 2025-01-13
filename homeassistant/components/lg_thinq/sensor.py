@@ -265,11 +265,13 @@ WATER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
 ELAPSED_DAY_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.ELAPSED_DAY_STATE: SensorEntityDescription(
         key=ThinQProperty.ELAPSED_DAY_STATE,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         translation_key=ThinQProperty.ELAPSED_DAY_STATE,
     ),
     ThinQProperty.ELAPSED_DAY_TOTAL: SensorEntityDescription(
         key=ThinQProperty.ELAPSED_DAY_TOTAL,
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         translation_key=ThinQProperty.ELAPSED_DAY_TOTAL,
     ),
