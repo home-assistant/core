@@ -10,7 +10,7 @@ from PyTado.interface import Tado
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
     except PyTado.exceptions.TadoWrongCredentialsException as err:
         raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
     except PyTado.exceptions.TadoException as err:
-        raise HomeAssistantError(f"Error during Tado setup: {err}") from err
+        raise ConfigEntryNotReady(f"Error during Tado setup: {err}") from err
     _LOGGER.debug(
         "Tado connection established for username: %s", entry.data[CONF_USERNAME]
     )

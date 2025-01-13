@@ -96,19 +96,14 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
-        _LOGGER.info("Tado setup complete")
 
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch the latest data from Tado."""
 
-        try:
-            # Fetch updated data for devices, mobile devices, zones, and home
-            devices = await self._async_update_devices()
-            mobile_devices = await self._async_update_mobile_devices()
-            zones = await self._async_update_zones()
-            home = await self._async_update_home()
-        except RequestException as err:
-            raise UpdateFailed(f"Error updating Tado data: {err}") from err
+        devices = await self._async_update_devices()
+        mobile_devices = await self._async_update_mobile_devices()
+        zones = await self._async_update_zones()
+        home = await self._async_update_home()
 
         self.data["device"] = devices
         self.data["mobile_device"] = mobile_devices
@@ -237,8 +232,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         _LOGGER.debug(
             "Home data updated, with weather and geofence data: %s, %s",
-            self.data["weather"],
-            self.data["geofence"],
+            weather,
+            geofence,
         )
 
         return {"weather": weather, "geofence": geofence}
