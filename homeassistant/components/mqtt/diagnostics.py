@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components import device_tracker
 from homeassistant.components.diagnostics import async_redact_data
@@ -18,7 +18,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from . import debug_info, is_connected
-from .models import DATA_MQTT
 
 REDACT_CONFIG = {CONF_PASSWORD, CONF_USERNAME}
 REDACT_STATE_DEVICE_TRACKER = {ATTR_LATITUDE, ATTR_LONGITUDE}
@@ -45,11 +44,10 @@ def _async_get_diagnostics(
     device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    mqtt_instance = hass.data[DATA_MQTT].client
-    if TYPE_CHECKING:
-        assert mqtt_instance is not None
-
-    redacted_config = async_redact_data(mqtt_instance.conf, REDACT_CONFIG)
+    redacted_config = {
+        "data": async_redact_data(dict(entry.data), REDACT_CONFIG),
+        "options": dict(entry.options),
+    }
 
     data = {
         "connected": is_connected(hass),

@@ -96,10 +96,9 @@ class GenericCamera(Camera):
         self._stream_source = device_info.get(CONF_STREAM_SOURCE)
         if self._stream_source:
             self._stream_source = Template(self._stream_source, hass)
-        self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
-        self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
-        if self._stream_source:
             self._attr_supported_features = CameraEntityFeature.STREAM
+        self._limit_refetch = device_info.get(CONF_LIMIT_REFETCH_TO_URL_CHANGE, False)
+        self._attr_frame_interval = 1 / device_info[CONF_FRAMERATE]
         self.content_type = device_info[CONF_CONTENT_TYPE]
         self.verify_ssl = device_info[CONF_VERIFY_SSL]
         if device_info.get(CONF_RTSP_TRANSPORT):

@@ -33,7 +33,6 @@
     ]),
     'entry': dict({
       'data': dict({
-        'mydevolo_url': 'https://test_mydevolo_url.test',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),

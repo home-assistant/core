@@ -60,10 +60,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 return await self._entry_from_data(auth)
 
             except AuthError as err:
-                if err.code == "invalid_security_code":
-                    errors[KEY_SECURITY_CODE] = err.code
-                else:
-                    errors["base"] = err.code
+                errors["base"] = err.code
         else:
             user_input = {}
 

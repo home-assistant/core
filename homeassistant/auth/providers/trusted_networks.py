@@ -104,7 +104,9 @@ class TrustedNetworksAuthProvider(AuthProvider):
         """Trusted Networks auth provider does not support MFA."""
         return False
 
-    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
+    async def async_login_flow(
+        self, context: AuthFlowContext | None
+    ) -> TrustedNetworksLoginFlow:
         """Return a flow to login."""
         assert context is not None
         ip_addr = cast(IPAddress, context.get("ip_address"))
@@ -214,7 +216,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
         self.async_validate_access(ip_address(remote_ip))
 
 
-class TrustedNetworksLoginFlow(LoginFlow):
+class TrustedNetworksLoginFlow(LoginFlow[TrustedNetworksAuthProvider]):
     """Handler for the login flow."""
 
     def __init__(
@@ -235,9 +237,7 @@ class TrustedNetworksLoginFlow(LoginFlow):
     ) -> AuthFlowResult:
         """Handle the step of the form."""
         try:
-            cast(
-                TrustedNetworksAuthProvider, self._auth_provider
-            ).async_validate_access(self._ip_address)
+            self._auth_provider.async_validate_access(self._ip_address)
 
         except InvalidAuthError:
             return self.async_abort(reason="not_allowed")

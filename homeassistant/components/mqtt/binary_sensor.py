@@ -43,6 +43,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 DEFAULT_NAME = "MQTT Binary sensor"
 CONF_OFF_DELAY = "off_delay"
 DEFAULT_PAYLOAD_OFF = "OFF"

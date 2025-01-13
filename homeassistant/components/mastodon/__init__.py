@@ -81,7 +81,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MastodonConfigEntry) ->
     )
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> bool:
     """Migrate old config."""
 
     if entry.version == 1 and entry.minor_version == 1:
@@ -113,7 +113,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-def setup_mastodon(entry: ConfigEntry) -> tuple[Mastodon, dict, dict]:
+def setup_mastodon(entry: MastodonConfigEntry) -> tuple[Mastodon, dict, dict]:
     """Get mastodon details."""
     client = create_mastodon_client(
         entry.data[CONF_BASE_URL],

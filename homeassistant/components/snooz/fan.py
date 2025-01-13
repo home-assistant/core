@@ -83,7 +83,6 @@ class SnoozFan(FanEntity, RestoreEntity):
     _attr_should_poll = False
     _is_on: bool | None = None
     _percentage: int | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, data: SnoozConfigurationData) -> None:
         """Initialize a Snooz fan entity."""

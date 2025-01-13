@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import frame
+from homeassistant.loader import async_get_integration
 
 from tests.common import extract_stack_to_frame
 
@@ -261,8 +262,8 @@ async def test_prevent_flooding(
 
     expected_message = (
         f"Detected that integration '{integration}' {what} at {filename}, line "
-        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}, "
-        f"please create a bug report at https://github.com/home-assistant/core/issues?"
+        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}. "
+        f"Please create a bug report at https://github.com/home-assistant/core/issues?"
         f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
     )
 
@@ -277,6 +278,28 @@ async def test_prevent_flooding(
     assert expected_message not in caplog.text
     assert key in frame._REPORTED_INTEGRATIONS
     assert len(frame._REPORTED_INTEGRATIONS) == 1
+
+
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_breaks_in_ha_version(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_integration_frame: Mock
+) -> None:
+    """Test to ensure a report is only written once to the log."""
+
+    what = "accessed hi instead of hello"
+    integration = "hue"
+    filename = "homeassistant/components/hue/light.py"
+
+    expected_message = (
+        f"Detected that integration '{integration}' {what} at {filename}, line "
+        f"{mock_integration_frame.lineno}: {mock_integration_frame.line}. "
+        f"This will stop working in Home Assistant 2024.11, please create a bug "
+        "report at https://github.com/home-assistant/core/issues?"
+        f"q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+{integration}%22"
+    )
+
+    frame.report_usage(what, breaks_in_ha_version="2024.11")
+    assert expected_message in caplog.text
 
 
 async def test_report_missing_integration_frame(
@@ -423,3 +446,89 @@ async def test_report(
     assert errored == expected_error
 
     assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize(
+    ("behavior", "integration_domain", "source", "logs_again"),
+    [
+        pytest.param(
+            "core_behavior",
+            None,
+            "code that",
+            True,
+            id="core",
+        ),
+        pytest.param(
+            "core_behavior",
+            "unknown_integration",
+            "code that",
+            True,
+            id="unknown integration",
+        ),
+        pytest.param(
+            "core_integration_behavior",
+            "sensor",
+            "that integration 'sensor'",
+            False,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_integration_behavior",
+            "test_package",
+            "that custom integration 'test_package'",
+            False,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("enable_custom_integrations")
+async def test_report_integration_domain(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    behavior: str,
+    integration_domain: str | None,
+    source: str,
+    logs_again: bool,
+) -> None:
+    """Test report."""
+    await async_get_integration(hass, "sensor")
+    await async_get_integration(hass, "test_package")
+
+    what = "test_report_string"
+    lookup_text = f"Detected {source} {what}"
+
+    caplog.clear()
+    frame.report_usage(
+        what,
+        **{behavior: frame.ReportBehavior.IGNORE},
+        integration_domain=integration_domain,
+    )
+
+    assert lookup_text not in caplog.text
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        frame.report_usage(
+            what,
+            **{behavior: frame.ReportBehavior.LOG},
+            integration_domain=integration_domain,
+        )
+
+        assert lookup_text in caplog.text
+
+        # Check that it does not log again
+        caplog.clear()
+        frame.report_usage(
+            what,
+            **{behavior: frame.ReportBehavior.LOG},
+            integration_domain=integration_domain,
+        )
+
+        assert (lookup_text in caplog.text) == logs_again
+
+    # Check that it raises
+    with pytest.raises(RuntimeError, match=lookup_text):
+        frame.report_usage(
+            what,
+            **{behavior: frame.ReportBehavior.ERROR},
+            integration_domain=integration_domain,
+        )

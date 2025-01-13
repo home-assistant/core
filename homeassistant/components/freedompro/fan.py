@@ -40,7 +40,6 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
     _attr_name = None
     _attr_is_on = False
     _attr_percentage = 0
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
