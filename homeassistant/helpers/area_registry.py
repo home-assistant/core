@@ -77,11 +77,11 @@ class AreaEntry(NormalizedNameBaseRegistryEntry):
 
     aliases: set[str]
     floor_id: str | None
+    humidity_entity_id: str | None
     icon: str | None
     id: str
     labels: set[str] = field(default_factory=set)
     picture: str | None
-    humidity_entity_id: str | None
     temperature_entity_id: str | None
     _cache: dict[str, Any] = field(default_factory=dict, compare=False, init=False)
 
@@ -255,10 +255,10 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         *,
         aliases: set[str] | None = None,
         floor_id: str | None = None,
+        humidity_entity_id: str | None = None,
         icon: str | None = None,
         labels: set[str] | None = None,
         picture: str | None = None,
-        humidity_entity_id: str | None = None,
         temperature_entity_id: str | None = None,
     ) -> AreaEntry:
         """Create a new area."""
@@ -279,9 +279,9 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         area = AreaEntry(
             aliases=aliases or set(),
             floor_id=floor_id,
+            humidity_entity_id=humidity_entity_id,
             icon=icon,
             id=self._generate_id(name),
-            humidity_entity_id=humidity_entity_id,
             labels=labels or set(),
             name=name,
             picture=picture,
@@ -358,11 +358,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         floor_id: str | None | UndefinedType = UNDEFINED,
+        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         temperature_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""
