@@ -158,5 +158,5 @@ async def test_device_registry(
     device = device_registry.async_get_device(identifiers={(DOMAIN, "88-9")})
     assert device.via_device_id == device_parent.id
 
-    device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "88-2")})
+    device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
     assert device_no_sub.via_device_id is None
