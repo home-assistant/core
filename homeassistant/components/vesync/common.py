@@ -31,5 +31,4 @@ async def async_generate_device_list(
 def is_humidifier(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a humidifier."""
 
-    # VeSyncHumid200300S is the base for all humidifiers except VeSyncSuperior6000S.
     return isinstance(device, VeSyncHumidifierDevice)
