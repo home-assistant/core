@@ -44,10 +44,13 @@ def get_cover_features(
     """Determine the supported cover features of a homee node based on the available attributes."""
     features = CoverEntityFeature(0)
 
-    if open_close_attribute.editable:
-        features |= (
-            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-        )
+    if open_close_attribute is not None:
+        if open_close_attribute.editable:
+            features |= (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
 
     # Check for up/down position settable.
     attribute = node.get_attribute_by_type(AttributeType.POSITION)
@@ -112,7 +115,13 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
         )
         self._attr_device_class = get_device_class(node)
 
-        self._attr_unique_id = f"{self._attr_unique_id}-{self._open_close_attribute.id}"
+    @property
+    def unique_id(self) -> str:
+        """Return the unique id of the cover."""
+        if self._open_close_attribute is not None:
+            return f"{self._attr_unique_id}-{self._open_close_attribute.id}"
+
+        return f"{self._attr_unique_id}-0"
 
     @property
     def current_cover_position(self) -> int | None:
