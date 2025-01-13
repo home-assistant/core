@@ -273,7 +273,7 @@ aiohttp_sse==2.2.0
 aiohue==4.7.3
 
 # homeassistant.components.imap
-aioimaplib==1.1.0
+aioimaplib==2.0.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -2726,7 +2726,7 @@ slixmpp==1.8.5
 smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.18
+smhi-pkg==1.0.19
 
 # homeassistant.components.snapcast
 snapcast==2.3.6
@@ -2972,7 +2972,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.12.3
+velbus-aio==2025.1.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19

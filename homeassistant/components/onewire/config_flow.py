@@ -8,6 +8,7 @@ from typing import Any
 from pyownet import protocol
 import voluptuous as vol
 
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
@@ -112,6 +113,19 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             "title": discovery_info.config["addon"],
             CONF_HOST: discovery_info.config[CONF_HOST],
             CONF_PORT: discovery_info.config[CONF_PORT],
+        }
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        await self._async_handle_discovery_without_unique_id()
+
+        self._discovery_data = {
+            "title": discovery_info.name,
+            CONF_HOST: discovery_info.hostname,
+            CONF_PORT: discovery_info.port,
         }
         return await self.async_step_discovery_confirm()
 
