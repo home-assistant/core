@@ -71,17 +71,14 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices:
-    status: exempt
+    status: todo
     comment: |
-      This integration does not support dynamic devices as it is very unlikely an additional heat pump is added to the system. If it were to happen, reloading the integration will discover the new heat pump.
+      While unlikely to happen. Check if it is easily integrated.
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: |
-      No exceptions with custom text are raised in the integration.
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
     status: exempt
@@ -92,9 +89,9 @@ rules:
     comment: |
       This is a cloud service and apart form reauthentication there are not user repairable issues.
   stale-devices:
-    status: exempt
+    status: todo
     comment: |
-      This integration does not support stale devices as it is very unlikely an additional heat pump is removed from the system. If it were to happen, reloading the integration will remove the old heat pump.
+      While unlikely to happen. Check if it is easily integrated.
 
   # Platinum
   async-dependency: todo
