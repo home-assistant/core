@@ -322,11 +322,11 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         *,
         aliases: set[str] | UndefinedType = UNDEFINED,
         floor_id: str | None | UndefinedType = UNDEFINED,
+        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
         labels: set[str] | UndefinedType = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
         picture: str | None | UndefinedType = UNDEFINED,
-        humidity_entity_id: str | None | UndefinedType = UNDEFINED,
         temperature_entity_id: str | None | UndefinedType = UNDEFINED,
     ) -> AreaEntry:
         """Update name of area."""

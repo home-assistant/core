@@ -109,12 +109,12 @@ def websocket_delete_area(
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
         vol.Optional("floor_id"): vol.Any(str, None),
+        vol.Optional("humidity_entity_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
         vol.Optional("temperature_entity_id"): vol.Any(str, None),
-        vol.Optional("humidity_entity_id"): vol.Any(str, None),
     }
 )
 @websocket_api.require_admin
