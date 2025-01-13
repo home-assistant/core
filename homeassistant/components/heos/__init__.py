@@ -1,32 +1,18 @@
-"""Denon HEOS Media Player."""
+"""Denon HEOS Integration."""
 
 from __future__ import annotations
 
-import logging
-
-from pyheos import HeosError
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import services
 from .const import DOMAIN
-from .coordinator import (
-    GroupManager,
-    HeosConfigEntry,
-    HeosCoordinator,
-    HeosRuntimeData,
-    SourceManager,
-)
+from .coordinator import HeosConfigEntry, HeosCoordinator, HeosRuntimeData
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
-
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -54,40 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             break
 
     coordinator = HeosCoordinator(hass, entry)
+    entry.runtime_data = HeosRuntimeData(coordinator)
     await coordinator.async_setup()
 
-    controller = coordinator.heos
-
-    # Get players and sources
-    try:
-        players = await controller.get_players()
-        favorites = {}
-        if controller.is_signed_in:
-            favorites = await controller.get_favorites()
-        else:
-            _LOGGER.warning(
-                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-            )
-        inputs = await controller.get_input_sources()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady from error
-
-    source_manager = SourceManager(favorites, inputs)
-    source_manager.connect_update(hass, controller)
-
-    group_manager = GroupManager(hass, controller, players)
-
-    entry.runtime_data = HeosRuntimeData(
-        coordinator, group_manager, source_manager, players
-    )
-
-    group_manager.connect_update()
-    entry.async_on_unload(group_manager.disconnect_update)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
     return True
 
 

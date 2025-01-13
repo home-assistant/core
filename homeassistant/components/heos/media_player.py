@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 from functools import reduce, wraps
 import logging
 from operator import ior
@@ -38,9 +39,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import GroupManager, HeosConfigEntry, SourceManager
 from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
-from .coordinator import HeosCoordinator
+from .coordinator import HeosConfigEntry, HeosCoordinator
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
@@ -84,15 +84,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: HeosConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add media players for a config entry."""
-    players = entry.runtime_data.players
     devices = [
-        HeosMediaPlayer(
-            entry.runtime_data.coordinator,
-            player,
-            entry.runtime_data.source_manager,
-            entry.runtime_data.group_manager,
-        )
-        for player in players.values()
+        HeosMediaPlayer(entry.runtime_data.coordinator, player)
+        for player in entry.runtime_data.coordinator.heos.players.values()
     ]
     async_add_entities(devices, True)
 
@@ -128,19 +122,11 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self,
-        coordinator: HeosCoordinator,
-        player: HeosPlayer,
-        source_manager: SourceManager,
-        group_manager: GroupManager,
-    ) -> None:
+    def __init__(self, coordinator: HeosCoordinator, player: HeosPlayer) -> None:
         """Initialize."""
         super().__init__(coordinator, context=player.player_id)
         self._media_position_updated_at = None
         self._player: HeosPlayer = player
-        self._source_manager = source_manager
-        self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
         model_parts = player.model.split(maxsplit=1)
         manufacturer = model_parts[0] if len(model_parts) == 2 else "HEOS"
@@ -172,7 +158,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         )
         # Register this player's entity_id so it can be resolved by the group manager
         self.async_on_remove(
-            self._group_manager.register_media_player(
+            self.coordinator.group_manager.register_media_player(  # type: ignore[union-attr]
                 self._player.player_id, self.entity_id
             )
         )
@@ -198,7 +184,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("join_players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        await self._group_manager.async_join_players(
+        await self.coordinator.group_manager.async_join_players(  # type: ignore[union-attr]
             self._player.player_id, self.entity_id, group_members
         )
 
@@ -285,7 +271,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
                 index = next(
                     (
                         index
-                        for index, favorite in self._source_manager.favorites.items()
+                        for index, favorite in self.coordinator.source_manager.favorites.items()  # type: ignore[union-attr]
                         if favorite.name == media_id
                     ),
                     None,
@@ -300,7 +286,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._source_manager.play_source(source, self._player)
+        await self.coordinator.source_manager.play_source(source, self._player)  # type: ignore[union-attr]
 
     @log_command_error("set shuffle")
     async def async_set_shuffle(self, shuffle: bool) -> None:
@@ -323,7 +309,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("unjoin_player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self._group_manager.async_unjoin_player(
+        await self.coordinator.group_manager.async_unjoin_player(  # type: ignore[union-attr]
             self._player.player_id, self.entity_id
         )
 
@@ -346,7 +332,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @property
     def group_members(self) -> list[str]:
         """List of players which are grouped together."""
-        return self._group_manager.group_membership.get(self.entity_id, [])
+        return self.coordinator.group_manager.group_membership.get(self.entity_id, [])  # type: ignore[union-attr]
 
     @property
     def is_volume_muted(self) -> bool:
@@ -369,15 +355,15 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         return self._player.now_playing_media.media_id
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         duration = self._player.now_playing_media.duration
         if isinstance(duration, int):
-            return duration / 1000
+            return int(duration / 1000)
         return None
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         # Some media doesn't have duration but reports position, return None
         if not self._player.now_playing_media.duration:
@@ -385,7 +371,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         return self._player.now_playing_media.current_position / 1000
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
         # Some media doesn't have duration but reports position, return None
         if not self._player.now_playing_media.duration:
@@ -412,12 +398,14 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @property
     def source(self) -> str:
         """Name of the current input source."""
-        return self._source_manager.get_current_source(self._player.now_playing_media)
+        return self.coordinator.source_manager.get_current_source(  # type: ignore[union-attr]
+            self._player.now_playing_media
+        )
 
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        return self._source_manager.source_list
+        return self.coordinator.source_manager.source_list  # type: ignore[union-attr]
 
     @property
     def state(self) -> MediaPlayerState:

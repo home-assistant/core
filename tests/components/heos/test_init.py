@@ -151,7 +151,7 @@ async def test_async_setup_entry_player_failure(
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert controller.connect.call_count == 1
-    assert controller.disconnect.call_count == 2  # Temp
+    assert controller.disconnect.call_count == 1
 
 
 async def test_update_sources_retry(
@@ -164,7 +164,7 @@ async def test_update_sources_retry(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.get_favorites.reset_mock()
-    source_manager = config_entry.runtime_data.source_manager
+    source_manager = config_entry.runtime_data.coordinator.source_manager
     source_manager.retry_delay = 0
     source_manager.max_retry_attempts = 1
     controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)

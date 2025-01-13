@@ -4,7 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Optional
 
 from pyheos import (
     Credentials,
@@ -46,10 +46,6 @@ class HeosRuntimeData:
 
     coordinator: "HeosCoordinator"
 
-    group_manager: "GroupManager"
-    source_manager: "SourceManager"
-    players: dict[int, HeosPlayer]
-
 
 type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
 
@@ -63,6 +59,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     need to request new data.
     """
 
+    source_manager: Optional["SourceManager"]
+    group_manager: Optional["GroupManager"]
+
     def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
         """Set up the coordinator."""
         self.host: str = config_entry.data[CONF_HOST]
@@ -73,8 +72,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
         )
         self.heos: Heos = self.__create_api()
+        self.source_manager = None
+        self.group_manager = None
 
-    @callback
     def __create_api(self) -> Heos:
         """Create the HEOS API instance based on the config entry."""
         credentials: Credentials | None = None
@@ -98,8 +98,10 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     async def async_setup(self) -> None:
         """Connect to the HEOS device and add event callbacks."""
+        # Starts reauth flow; add before connect as it may occur during connection
         self.heos.add_on_user_credentials_invalid(self.__auth_failure)
 
+        # Connect to the device
         try:
             await self.heos.connect()
         except HeosError as error:
@@ -113,8 +115,33 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         # Handle controller-wide events and update entities
         self.heos.add_on_controller_event(self.__controller_event)
 
+        # Incorporate the following into the coordinator
+        # Get players and sources
+        try:
+            players = await self.heos.get_players()
+            favorites = {}
+            if self.heos.is_signed_in:
+                favorites = await self.heos.get_favorites()
+            else:
+                _LOGGER.warning(
+                    "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
+                )
+            inputs = await self.heos.get_input_sources()
+        except HeosError as error:
+            _LOGGER.debug("Unable to retrieve players and sources: %s", error)
+            raise ConfigEntryNotReady from error
+
+        self.source_manager = SourceManager(favorites, inputs)
+        self.source_manager.connect_update(self.hass, self.heos)
+
+        self.group_manager = GroupManager(self.hass, self.heos, players)
+        self.group_manager.connect_update()
+
     async def async_shutdown(self):
         """Disconnect all callbacks and disconnect from the device."""
+        if self.group_manager:
+            self.group_manager.disconnect_update()
+        # Removes all callbacks connected through heos.add_on_* and player.add_on_*
         self.heos.dispatcher.disconnect_all()
         await self.heos.disconnect()
         return await super().async_shutdown()

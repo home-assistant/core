@@ -106,7 +106,7 @@ async def test_state_attributes(
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert (
         state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == config_entry.runtime_data.source_manager.source_list
+        == config_entry.runtime_data.coordinator.source_manager.source_list
     )
 
 
@@ -215,7 +215,7 @@ async def test_updates_from_sources_updated(
         SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
     await event.wait()
-    source_list = config_entry.runtime_data.source_manager.source_list
+    source_list = config_entry.runtime_data.coordinator.source_manager.source_list
     assert len(source_list) == 2
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
@@ -296,7 +296,7 @@ async def test_updates_from_user_changed(
         SignalType.CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
     )
     await event.wait()
-    source_list = config_entry.runtime_data.source_manager.source_list
+    source_list = config_entry.runtime_data.coordinator.source_manager.source_list
     assert len(source_list) == 1
     state = hass.states.get("media_player.test_player")
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
