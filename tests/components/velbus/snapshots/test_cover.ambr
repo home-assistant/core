@@ -28,7 +28,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 15>,
     'translation_key': None,
-    'unique_id': '1234-2',
+    'unique_id': '1234-9',
     'unit_of_measurement': None,
   })
 # ---
@@ -76,7 +76,7 @@
     'previous_unique_id': None,
     'supported_features': <CoverEntityFeature: 11>,
     'translation_key': None,
-    'unique_id': '12345-1',
+    'unique_id': '12345-11',
     'unit_of_measurement': None,
   })
 # ---
