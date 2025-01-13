@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
-from copy import deepcopy
 from functools import wraps
 import json
 import logging
@@ -171,26 +170,23 @@ class AzureStorageBackupAgent(BackupAgent):
 
         return self._parse_blob_metadata(blob_properties.metadata)
 
-    def _parse_blob_metadata(self, metadata: dict[str, str]) -> AgentBackup:
+    def _parse_blob_metadata(self, metadata: dict[str, Any]) -> AgentBackup:
         """Parse backup metadata."""
-        agent_backup: dict[str, Any] = deepcopy(metadata)
-        agent_backup["folders"] = (
+        metadata["folders"] = (
             json.loads(metadata["folders"]) if metadata.get("folders") else []
         )
-        agent_backup["addons"] = (
+        metadata["addons"] = (
             json.loads(metadata["addons"]) if metadata.get("addons") else []
         )
-        agent_backup["extra_metadata"] = (
+        metadata["extra_metadata"] = (
             json.loads(metadata["extra_metadata"])
             if metadata.get("extra_metadata")
             else {}
         )
-        agent_backup["protected"] = bool(metadata.get("protected", False))
-        agent_backup["database_included"] = bool(
-            metadata.get("database_included", False)
-        )
-        agent_backup["homeassistant_included"] = bool(
+        metadata["protected"] = bool(metadata.get("protected", False))
+        metadata["database_included"] = bool(metadata.get("database_included", False))
+        metadata["homeassistant_included"] = bool(
             metadata.get("homeassistant_included", False)
         )
-        agent_backup["size"] = int(metadata.get("size", 0))
-        return AgentBackup.from_dict(agent_backup)
+        metadata["size"] = int(metadata.get("size", 0))
+        return AgentBackup.from_dict(metadata)
