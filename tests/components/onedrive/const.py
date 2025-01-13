@@ -16,5 +16,4 @@ BACKUP_METADATA = {
     "name": "Core 2024.12.0.dev0",
     "protected": False,
     "size": 34519040,
-    "storage-type": "backup",
 }

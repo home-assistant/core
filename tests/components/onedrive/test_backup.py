@@ -11,7 +11,6 @@ from unittest.mock import Mock, patch
 from kiota_abstractions.api_error import APIError
 from msgraph.generated.models.drive_item import DriveItem
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.onedrive.const import DOMAIN
@@ -66,7 +65,7 @@ async def test_agents_info(
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent list backups."""
 
@@ -74,16 +73,24 @@ async def test_agents_list_backups(
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
+    expected = {
+        **BACKUP_METADATA,
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+        "failed_agent_ids": [],
+        "with_automatic_settings": None,
+    }
+    del expected["extra_metadata"]
+
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backups"] == snapshot
+    assert response["result"]["backups"] == [expected]
 
 
 async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
-    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent get backup."""
 
@@ -95,9 +102,17 @@ async def test_agents_get_backup(
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
     response = await client.receive_json()
 
+    expected = {
+        **BACKUP_METADATA,
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+        "failed_agent_ids": [],
+        "with_automatic_settings": None,
+    }
+    del expected["extra_metadata"]
+
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backup"] == snapshot
+    assert response["result"]["backup"] == expected
 
 
 async def test_agents_delete(
