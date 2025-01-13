@@ -19,7 +19,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "account_mismatch": "The inexogy account authenticated with, does not match the account needed re-authentication.",
+      "account_mismatch": "The inexogy account authenticated with does not match the account that needed re-authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
