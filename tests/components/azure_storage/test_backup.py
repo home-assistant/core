@@ -4,19 +4,19 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, patch
 
 from azure.core.exceptions import HttpResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.azure_storage.const import DOMAIN
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .const import BACKUP_METADATA
+from .const import BACKUP_METADATA, TEST_BACKUP
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
@@ -83,7 +83,7 @@ async def test_agents_get_backup(
 ) -> None:
     """Test agent get backup."""
 
-    backup_id = BACKUP_METADATA["backup_id"]
+    backup_id = TEST_BACKUP.backup_id
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
     response = await client.receive_json()
@@ -104,7 +104,7 @@ async def test_agents_delete(
     await client.send_json_auto_id(
         {
             "type": "backup/delete",
-            "backup_id": BACKUP_METADATA["backup_id"],
+            "backup_id": TEST_BACKUP.backup_id,
         }
     )
     response = await client.receive_json()
@@ -122,28 +122,31 @@ async def test_agents_upload(
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
-    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
-
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
         ) as fetch_backup,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=test_backup,
+            return_value=TEST_BACKUP,
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        fetch_backup.return_value = test_backup
+        fetch_backup.return_value = TEST_BACKUP
         resp = await client.post(
             f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.title}",
             data={"file": StringIO("test")},
         )
 
     assert resp.status == 201
-    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
-    mock_client.upload_blob.assert_called_once()
+    assert f"Uploading backup {TEST_BACKUP.backup_id}" in caplog.text
+    mock_client.upload_blob.assert_called_once_with(
+        name=f"{TEST_BACKUP.backup_id}.tar",
+        metadata=BACKUP_METADATA,
+        data=ANY,
+        length=ANY,
+    )
 
 
 async def test_agents_download(
