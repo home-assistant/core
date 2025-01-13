@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
+
 from homeassistant.components.enigma2.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -14,11 +16,11 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 async def test_device_without_mac_address(
     hass: HomeAssistant,
-    openwebifdevice_mock: AsyncMock,
+    openwebif_device_mock: AsyncMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that a device gets successfully registered when the device doesn't report a MAC address."""
-    openwebifdevice_mock.return_value.get_about.return_value = load_json_object_fixture(
+    openwebif_device_mock.get_about.return_value = load_json_object_fixture(
         "device_about_without_mac.json", DOMAIN
     )
     entry = MockConfigEntry(
@@ -31,9 +33,8 @@ async def test_device_without_mac_address(
     assert device_registry.async_get_device({(DOMAIN, entry.unique_id)}) is not None
 
 
-async def test_unload_entry(
-    hass: HomeAssistant, openwebifdevice_mock: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("openwebif_device_mock")
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_REQUIRED, title="name")
     entry.add_to_hass(hass)

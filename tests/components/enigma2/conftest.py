@@ -55,11 +55,13 @@ EXPECTED_OPTIONS = {
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
-    return MockConfigEntry(domain=DOMAIN, data=TEST_REQUIRED, unique_id="123456")
+    return MockConfigEntry(
+        domain=DOMAIN, data=TEST_REQUIRED, unique_id="12:34:56:78:90:ab"
+    )
 
 
 @pytest.fixture
-def openwebifdevice_mock() -> Generator[AsyncMock]:
+def openwebif_device_mock() -> Generator[AsyncMock]:
     """Mock a OpenWebIf device."""
 
     with (
@@ -72,22 +74,19 @@ def openwebifdevice_mock() -> Generator[AsyncMock]:
             new=openwebif_device_mock,
         ),
     ):
-        openwebif_device_mock.return_value.status = OpenWebIfStatus(
-            currservice=OpenWebIfServiceEvent()
+        device = openwebif_device_mock.return_value
+        device.status = OpenWebIfStatus(currservice=OpenWebIfServiceEvent())
+        device.turn_off_to_deep = False
+        device.sources = {"Test": "1"}
+        device.source_list = list(device.sources.keys())
+        device.picon_url = "file:///"
+        device.get_about.return_value = load_json_object_fixture(
+            "device_about.json", DOMAIN
         )
-        openwebif_device_mock.return_value.turn_off_to_deep = False
-        openwebif_device_mock.return_value.sources = {"Test": "1"}
-        openwebif_device_mock.return_value.source_list = list(
-            openwebif_device_mock.return_value.sources.keys()
+        device.get_status_info.return_value = load_json_object_fixture(
+            "device_statusinfo_on.json", DOMAIN
         )
-        openwebif_device_mock.return_value.picon_url = "file:///"
-        openwebif_device_mock.return_value.get_about.return_value = (
-            load_json_object_fixture("device_about.json", DOMAIN)
-        )
-        openwebif_device_mock.return_value.get_status_info.return_value = (
-            load_json_object_fixture("device_statusinfo_on.json", DOMAIN)
-        )
-        openwebif_device_mock.return_value.get_all_bouquets.return_value = {
+        device.get_all_bouquets.return_value = {
             "bouquets": [
                 [
                     '1:7:1:0:0:0:0:0:0:0:FROM BOUQUET "userbouquet.favourites.tv" ORDER BY bouquet',
@@ -95,4 +94,4 @@ def openwebifdevice_mock() -> Generator[AsyncMock]:
                 ]
             ]
         }
-        yield openwebif_device_mock
+        yield device

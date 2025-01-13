@@ -7,8 +7,8 @@ from aiohttp.client_exceptions import ClientError
 from openwebif.error import InvalidAuthError
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.enigma2.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,7 +22,7 @@ from tests.common import MockConfigEntry
 async def user_flow(hass: HomeAssistant) -> str:
     """Return a user-initiated flow after filling in host info."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
@@ -34,23 +34,21 @@ async def user_flow(hass: HomeAssistant) -> str:
     [(TEST_FULL), (TEST_REQUIRED)],
 )
 async def test_form_user(
-    hass: HomeAssistant, openwebifdevice_mock: AsyncMock, test_config: dict[str, Any]
+    hass: HomeAssistant, openwebif_device_mock: AsyncMock, test_config: dict[str, Any]
 ) -> None:
     """Test a successful user initiated flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], test_config
     )
-    await hass.async_block_till_done()
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_config[CONF_HOST]
     assert result["data"] == test_config
-    assert result["result"].unique_id == openwebifdevice_mock.return_value.mac_address
+    assert result["result"].unique_id == openwebif_device_mock.mac_address
 
 
 @pytest.mark.parametrize(
@@ -63,16 +61,16 @@ async def test_form_user(
 )
 async def test_form_user_errors(
     hass: HomeAssistant,
-    openwebifdevice_mock: AsyncMock,
+    openwebif_device_mock: AsyncMock,
     side_effect: Exception,
     error_value: str,
 ) -> None:
     """Test we handle errors."""
 
-    openwebifdevice_mock.return_value.get_about.side_effect = side_effect
+    openwebif_device_mock.get_about.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_USER},
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -84,10 +82,10 @@ async def test_form_user_errors(
     await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {"base": error_value}
 
-    openwebifdevice_mock.return_value.get_about.side_effect = None
+    openwebif_device_mock.get_about.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -98,12 +96,11 @@ async def test_form_user_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FULL[CONF_HOST]
     assert result["data"] == TEST_FULL
-    assert result["result"].unique_id == openwebifdevice_mock.return_value.mac_address
+    assert result["result"].unique_id == openwebif_device_mock.mac_address
 
 
-async def test_options_flow(
-    hass: HomeAssistant, openwebifdevice_mock: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("openwebif_device_mock")
+async def test_options_flow(hass: HomeAssistant) -> None:
     """Test the form options."""
 
     entry = MockConfigEntry(domain=DOMAIN, data=TEST_FULL, options={}, entry_id="1")
@@ -111,7 +108,7 @@ async def test_options_flow(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
@@ -127,4 +124,4 @@ async def test_options_flow(
 
     await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
