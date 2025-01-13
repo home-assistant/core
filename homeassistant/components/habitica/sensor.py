@@ -379,10 +379,12 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         if (
-            self.entity_description.key is HabitipySensorEntity.CLASS
-            and self.coordinator.data.user["stats"]["lvl"] >= 10
+            self.entity_description.key is HabiticaSensorEntity.CLASS
+            and self.coordinator.data.user.stats.Class
+            and (lvl := self.coordinator.data.user.stats.lvl)
+            and lvl >= 10
         ):
-            return SVG_CLASS[self.coordinator.data.user["stats"]["class"]]
+            return SVG_CLASS[self.coordinator.data.user.stats.Class.value]
 
         if entity_picture := self.entity_description.entity_picture:
             return (
