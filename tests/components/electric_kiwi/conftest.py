@@ -27,6 +27,17 @@ type YieldFixture = Generator[AsyncMock]
 type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
+@pytest.fixture
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup application credentials component."""
+    await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
+
+
 @pytest.fixture(autouse=True)
 async def request_setup(current_request_with_host: None) -> None:
     """Request setup."""
@@ -63,7 +74,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         title="Electric Kiwi",
         domain=DOMAIN,
         data={
-            "id": "12345",
+            "id": "123456",
             "auth_implementation": DOMAIN,
             "token": {
                 "refresh_token": "mock-refresh-token",
@@ -74,6 +85,8 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             },
         },
         unique_id="123456",
+        version=1,
+        minor_version=1,
     )
 
 
