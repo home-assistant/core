@@ -63,20 +63,20 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.api.register_data_callback(self.callback)
             self.ws_connected = True
         try:
-            self.data = await self.api.get_status()
+            data = await self.api.get_status()
         except ApiException as err:
             raise UpdateFailed(err) from err
         except AuthException as err:
             raise ConfigEntryAuthFailed(err) from err
 
         self._async_add_remove_device()
-        for mower_id in self.data:
-            if self.data[mower_id].capabilities.stay_out_zones:
+        for mower_id in data:
+            if data[mower_id].capabilities.stay_out_zones:
                 self._async_add_remove_stay_out_zones()
-        for mower_id in self.data:
-            if self.data[mower_id].capabilities.work_areas:
+        for mower_id in data:
+            if data[mower_id].capabilities.work_areas:
                 self._async_add_remove_work_areas()
-        return self.data
+        return data
 
     @callback
     def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
@@ -123,7 +123,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             return
 
         # Process removed device
-        removed_device = self._device_last_update - current_device
+        removed_devices = self._devices_last_update - current_devices
         if removed_device:
             _LOGGER.debug("Removed device: %s", ", ".join(map(str, removed_device)))
             self._remove_device(removed_device)
