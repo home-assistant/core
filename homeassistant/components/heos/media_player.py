@@ -31,15 +31,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
+from .const import DOMAIN as HEOS_DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 BASE_SUPPORTED_FEATURES = (
@@ -88,7 +84,7 @@ async def async_setup_entry(
         HeosMediaPlayer(entry.runtime_data.coordinator, player)
         for player in entry.runtime_data.coordinator.heos.players.values()
     ]
-    async_add_entities(devices, True)
+    async_add_entities(devices)
 
 
 type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
@@ -139,6 +135,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
             serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
+        self._handle_coordinator_update(write_state=False)
 
     async def _player_update(self, event):
         """Handle player attribute updated."""
@@ -150,43 +147,28 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         """Device added to hass."""
         # Update state when attributes of the player change
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
-        # Update state when heos changes
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_HEOS_UPDATED, self._handle_coordinator_update
-            )
-        )
-        # Register this player's entity_id so it can be resolved by the group manager
-        self.async_on_remove(
-            self.coordinator.group_manager.register_media_player(  # type: ignore[union-attr]
-                self._player.player_id, self.entity_id
-            )
-        )
-        async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
-
         await super().async_added_to_hass()
 
     @callback
-    def _handle_coordinator_update(self) -> None:
+    def _handle_coordinator_update(self, write_state: bool = True) -> None:
         """Handle updated data from the coordinator."""
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._attr_supported_features = reduce(
             ior, current_support, BASE_SUPPORTED_FEATURES
         )
-        self.async_write_ha_state()
+        if write_state:
+            self.async_write_ha_state()
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._player.clear_queue()
 
-    @log_command_error("join_players")
+    @log_command_error("join players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        await self.coordinator.group_manager.async_join_players(  # type: ignore[union-attr]
-            self._player.player_id, self.entity_id, group_members
-        )
+        await self.coordinator.join_players(self._player.player_id, group_members)
 
     @log_command_error("pause")
     async def async_media_pause(self) -> None:
@@ -291,20 +273,10 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
 
-    async def async_update(self) -> None:
-        """Update supported features of the player."""
-        controls = self._player.now_playing_media.supported_controls
-        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
-        self._attr_supported_features = reduce(
-            ior, current_support, BASE_SUPPORTED_FEATURES
-        )
-
-    @log_command_error("unjoin_player")
+    @log_command_error("unjoin player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self.coordinator.group_manager.async_unjoin_player(  # type: ignore[union-attr]
-            self._player.player_id, self.entity_id
-        )
+        await self.coordinator.unjoin_player(self._player.player_id)
 
     @property
     def available(self) -> bool:
@@ -325,7 +297,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @property
     def group_members(self) -> list[str]:
         """List of players which are grouped together."""
-        return self.coordinator.group_manager.group_membership.get(self.entity_id, [])  # type: ignore[union-attr]
+        return self.coordinator.get_group_members(self._player.player_id)
 
     @property
     def is_volume_muted(self) -> bool:
@@ -396,7 +368,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        return self.coordinator.source_list
+        return list(self.coordinator.source_list)
 
     @property
     def state(self) -> MediaPlayerState:

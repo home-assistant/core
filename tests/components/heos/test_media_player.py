@@ -926,15 +926,9 @@ async def test_media_player_join_group(
         },
         blocking=True,
     )
-    controller.create_group.assert_called_once_with(
-        1,
-        [
-            2,
-        ],
-    )
-    assert "Failed to group media_player.test_player with" not in caplog.text
+    controller.set_group.assert_called_once_with(1, [2])
 
-    controller.create_group.side_effect = HeosError("error")
+    controller.set_group.side_effect = HeosError("error")
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_JOIN,
@@ -944,7 +938,7 @@ async def test_media_player_join_group(
         },
         blocking=True,
     )
-    assert "Failed to group media_player.test_player with" in caplog.text
+    assert "Unable to join players" in caplog.text
 
 
 async def test_media_player_group_members(
@@ -963,7 +957,6 @@ async def test_media_player_group_members(
         "media_player.test_player_2",
     ]
     controller.get_groups.assert_called_once()
-    assert "Unable to get HEOS group info" not in caplog.text
 
 
 async def test_media_player_group_members_error(
@@ -974,10 +967,9 @@ async def test_media_player_group_members_error(
 ) -> None:
     """Test error in HEOS API."""
     controller.get_groups.side_effect = HeosError("error")
+    controller._groups = {}
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert "Unable to get HEOS group info" in caplog.text
     player_entity = hass.states.get("media_player.test_player")
     assert player_entity.attributes[ATTR_GROUP_MEMBERS] == []
 
@@ -1007,10 +999,10 @@ async def test_media_player_unjoin_group(
         },
         blocking=True,
     )
-    controller.create_group.assert_called_once_with(1, [])
+    controller.set_group.assert_called_once_with([1])
     assert "Failed to ungroup media_player.test_player" not in caplog.text
 
-    controller.create_group.side_effect = HeosError("error")
+    controller.set_group.side_effect = HeosError("error")
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_UNJOIN,
@@ -1019,7 +1011,7 @@ async def test_media_player_unjoin_group(
         },
         blocking=True,
     )
-    assert "Failed to ungroup media_player.test_player" in caplog.text
+    assert "Unable to unjoin player: error" in caplog.text
 
 
 async def test_media_player_group_fails_when_entity_removed(
@@ -1038,7 +1030,7 @@ async def test_media_player_group_fails_when_entity_removed(
     # Attempt to group
     with pytest.raises(
         HomeAssistantError,
-        match="The group member media_player.test_player_2 could not be resolved to a HEOS player.",
+        match="Entity media_player.test_player_2 was not found.",
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -1049,4 +1041,4 @@ async def test_media_player_group_fails_when_entity_removed(
             },
             blocking=True,
         )
-    controller.create_group.assert_not_called()
+    controller.set_group.assert_not_called()

@@ -41,9 +41,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
     coordinator = HeosCoordinator(hass, entry)
     entry.runtime_data = HeosRuntimeData(coordinator)
-    await coordinator.async_setup()
 
+    await coordinator.async_setup()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Update all once loaded to ensure group member entity ids are fully populated
+    coordinator.async_update_listeners()
+
     return True
 
 
