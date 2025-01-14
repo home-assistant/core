@@ -164,5 +164,6 @@ async def test_coordinator_skips_deactivated(
 
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     assert mock_bring_client.get_list.await_count == 1
