@@ -10,12 +10,14 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from freezegun.api import FrozenDateTimeFactory
 from kasa import (
     AuthenticationError,
+    Device,
     DeviceConfig,
     DeviceType,
     Feature,
     KasaException,
     Module,
 )
+from kasa.iot import IotStrip
 import pytest
 
 from homeassistant import setup
@@ -837,6 +839,13 @@ async def test_migrate_remove_device_config(
 
 
 @pytest.mark.parametrize(
+    ("device_type"),
+    [
+        (Device),
+        (IotStrip),
+    ],
+)
+@pytest.mark.parametrize(
     ("platform", "feature_id", "translated_name"),
     [
         pytest.param("switch", "led", "led", id="switch"),
@@ -861,6 +870,7 @@ async def test_automatic_device_addition_and_removal(
     platform: str,
     feature_id: str,
     translated_name: str,
+    device_type: type,
 ) -> None:
     """Test for automatic device addition and removal."""
 
@@ -878,6 +888,7 @@ async def test_automatic_device_addition_and_removal(
         alias="hub",
         children=[children["child1"], children["child2"]],
         device_type=DeviceType.Hub,
+        spec=device_type,
     )
 
     with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
