@@ -1757,7 +1757,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "motioneye",
     "motionmount",
     "mpd",
-    "mqtt",
     "mqtt_eventstream",
     "mqtt_json",
     "mqtt_room",
