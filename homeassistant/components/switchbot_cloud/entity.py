@@ -58,3 +58,8 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is about to be added to hass."""
+        await super().async_added_to_hass()
+        self._set_attributes()
