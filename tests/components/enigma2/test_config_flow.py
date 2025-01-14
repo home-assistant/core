@@ -29,13 +29,12 @@ async def user_flow(hass: HomeAssistant) -> str:
     return result["flow_id"]
 
 
+@pytest.mark.usefixtures("openwebif_device_mock")
 @pytest.mark.parametrize(
     ("test_config"),
     [(TEST_FULL), (TEST_REQUIRED)],
 )
-async def test_form_user(
-    hass: HomeAssistant, openwebif_device_mock: AsyncMock, test_config: dict[str, Any]
-) -> None:
+async def test_form_user(hass: HomeAssistant, test_config: dict[str, Any]) -> None:
     """Test a successful user initiated flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -48,7 +47,6 @@ async def test_form_user(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == test_config[CONF_HOST]
     assert result["data"] == test_config
-    assert result["result"].unique_id == openwebif_device_mock.mac_address
 
 
 @pytest.mark.parametrize(
@@ -97,6 +95,34 @@ async def test_form_user_errors(
     assert result["title"] == TEST_FULL[CONF_HOST]
     assert result["data"] == TEST_FULL
     assert result["result"].unique_id == openwebif_device_mock.mac_address
+
+
+@pytest.mark.usefixtures("openwebif_device_mock")
+async def test_duplicate_host(hass: HomeAssistant) -> None:
+    """Test that a duplicate host aborts the config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_FULL
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_FULL[CONF_HOST]
+
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "user"
+    result2 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"], TEST_FULL
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("openwebif_device_mock")
