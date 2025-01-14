@@ -39,7 +39,7 @@ async def test_full_flow(
     aioclient_mock: AiohttpClientMocker,
     mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
-    mock_weheat_config_heat_pump: AsyncMock,
+    mock_weheat_heat_pump: AsyncMock,
     mock_setup_entry,
 ) -> None:
     """Check full of adding a single heat pump."""
@@ -70,7 +70,7 @@ async def test_duplicate_unique_id(
     aioclient_mock: AiohttpClientMocker,
     mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
-    mock_weheat_config_heat_pump: AsyncMock,
+    mock_weheat_heat_pump: AsyncMock,
     mock_setup_entry,
 ) -> None:
     """Check that the config flow is aborted when an entry with the same ID exists."""
@@ -232,7 +232,7 @@ async def test_get_heat_pump_data_error(
     mock_setup_entry,
     mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
-    mock_weheat_config_heat_pump: AsyncMock,
+    mock_weheat_heat_pump: AsyncMock,
     get_heat_pump_data_exception: Exception,
     expected_reason: str,
 ) -> None:
@@ -251,7 +251,7 @@ async def test_get_heat_pump_data_error(
 
     await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
-    mock_weheat_config_heat_pump.get_status.side_effect = get_heat_pump_data_exception
+    mock_weheat_heat_pump.get_status.side_effect = get_heat_pump_data_exception
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -271,7 +271,7 @@ async def test_reauth(
     aioclient_mock: AiohttpClientMocker,
     mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
-    mock_weheat_config_heat_pump: AsyncMock,
+    mock_weheat_heat_pump: AsyncMock,
     setup_credentials,
     logged_in_user: str,
     expected_reason: str,

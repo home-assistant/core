@@ -141,23 +141,12 @@ def mock_weheat_heat_pump(mock_weheat_heat_pump_instance) -> Generator[AsyncMock
     with (
         patch(
             "homeassistant.components.weheat.coordinator.HeatPump",
-        ) as mock_heat_pump,
-    ):
-        mock_heat_pump.return_value = mock_weheat_heat_pump_instance
-
-        yield mock_weheat_heat_pump_instance
-
-
-@pytest.fixture
-def mock_weheat_config_heat_pump(
-    mock_weheat_heat_pump_instance,
-) -> Generator[AsyncMock]:
-    """Mock the config flow HeatPump data."""
-    with (
+        ) as coordinator_mock_heat_pump,
         patch(
             "homeassistant.components.weheat.config_flow.HeatPump",
-        ) as mock_heat_pump,
+        ) as config_mock_heat_pump,
     ):
-        mock_heat_pump.return_value = mock_weheat_heat_pump_instance
+        coordinator_mock_heat_pump.return_value = mock_weheat_heat_pump_instance
+        config_mock_heat_pump.return_value = mock_weheat_heat_pump_instance
 
         yield mock_weheat_heat_pump_instance
