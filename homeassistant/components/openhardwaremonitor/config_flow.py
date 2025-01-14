@@ -1,27 +1,12 @@
 """Config flow for OpenHardwareMonitor integration."""
 
 from __future__ import annotations
-
-import logging
 from typing import Any
 
 import voluptuous as vol
-
+import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_UNIQUE_ID,
-)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-
 from .const import *
-
-_LOGGER = logging.getLogger(__name__)
-DOMAIN = "openhardwaremonitor"
-
 
 class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenHardwareMonitor."""
@@ -32,9 +17,9 @@ class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         data_schema = vol.Schema(
-            {vol.Required(CONNECTION_HOST): str, 
-             vol.Required(CONNECTION_PORT): str,
-             vol.Optional(GROUP_DEVICES_PER_DEPTH_LEVEL): int}
+            {vol.Required(CONNECTION_HOST): cv.string, 
+             vol.Optional(CONNECTION_PORT, default=8085): cv.port,
+             vol.Optional(GROUP_DEVICES_PER_DEPTH_LEVEL, default=2): int}
         )
         if user_input is None:
             return self.async_show_form(data_schema=data_schema)
