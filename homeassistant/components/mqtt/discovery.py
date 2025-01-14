@@ -138,7 +138,10 @@ def get_origin_log_string(
     support_url_log = ""
     if include_url and (support_url := get_origin_support_url(discovery_payload)):
         support_url_log = f", support URL: {support_url}"
-    return f" from external application {origin_info["name"]}{sw_version_log}{support_url_log}"
+    return (
+        " from external application "
+        f"{origin_info['name']}{sw_version_log}{support_url_log}"
+    )
 
 
 @callback

@@ -281,7 +281,7 @@ async def test_import_from_yaml_fails(
     assert not hass.states.get("camera.config_test")
 
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"no_access_path_{slugify("mock.file")}"
+        DOMAIN, f"no_access_path_{slugify('mock.file')}"
     )
     assert issue
     assert issue.translation_key == "no_access_path"
