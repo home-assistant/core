@@ -73,17 +73,16 @@ async def test_agents_list_backups(
     await client.send_json_auto_id({"type": "backup/info"})
     response = await client.receive_json()
 
-    expected = {
-        **BACKUP_METADATA,
-        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
-        "failed_agent_ids": [],
-        "with_automatic_settings": None,
-    }
-    del expected["extra_metadata"]
-
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backups"] == [expected]
+    assert response["result"]["backups"] == [
+        {
+            **AgentBackup.from_dict(BACKUP_METADATA).as_frontend_json(),
+            "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+            "failed_agent_ids": [],
+            "with_automatic_settings": None,
+        }
+    ]
 
 
 async def test_agents_get_backup(
@@ -102,17 +101,14 @@ async def test_agents_get_backup(
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
     response = await client.receive_json()
 
-    expected = {
-        **BACKUP_METADATA,
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backup"] == {
+        **AgentBackup.from_dict(BACKUP_METADATA).as_frontend_json(),
         "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
-    del expected["extra_metadata"]
-
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backup"] == expected
 
 
 async def test_agents_delete(
