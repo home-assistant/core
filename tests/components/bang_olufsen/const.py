@@ -66,6 +66,9 @@ TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-oluf
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
 TEST_HOST_4 = "192.168.0.4"
 
+# Beoremote One
+TEST_REMOTE_SERIAL = "55555555"
+TEST_REMOTE_SW_VERSION = "1.0.0"
 
 TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 
