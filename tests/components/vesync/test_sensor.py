@@ -8,7 +8,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ALL_DEVICE_NAMES, mock_devices_response
+from .common import ALL_DEVICE_NAMES, ENTITY_HUMIDIFIER_HUMIDITY, mock_devices_response
 
 from tests.common import MockConfigEntry
 
@@ -56,4 +56,4 @@ async def test_humidity(
 ) -> None:
     """Test the state of humidity sensor entity."""
 
-    assert hass.states.get("sensor.humidifier_200s_humidity").state == "35"
+    assert hass.states.get(ENTITY_HUMIDIFIER_HUMIDITY).state == "35"

@@ -22,6 +22,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
+from .common import (
+    ENTITY_HUMIDIFIER,
+    ENTITY_HUMIDIFIER_HUMIDITY,
+    ENTITY_HUMIDIFIER_MIST_LEVEL,
+)
+
 from tests.common import MockConfigEntry
 
 NoException = nullcontext()
@@ -32,11 +38,10 @@ async def test_humidifier_state(
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
-    humidifier_id = "humidifier.humidifier_200s"
     expected_entities = [
-        humidifier_id,
-        "sensor.humidifier_200s_humidity",
-        "number.humidifier_200s_mist_level",
+        ENTITY_HUMIDIFIER,
+        ENTITY_HUMIDIFIER_HUMIDITY,
+        ENTITY_HUMIDIFIER_MIST_LEVEL,
     ]
 
     assert humidifier_config_entry.state is ConfigEntryState.LOADED
@@ -44,7 +49,7 @@ async def test_humidifier_state(
     for entity_id in expected_entities:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    state = hass.states.get(humidifier_id)
+    state = hass.states.get(ENTITY_HUMIDIFIER)
 
     # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
     assert state.attributes.get(ATTR_HUMIDITY) == 40
@@ -56,8 +61,6 @@ async def test_set_target_humidity_invalid(
 ) -> None:
     """Test handling of invalid value in set_humidify method."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s"
-
     # Setting value out of range results in ServiceValidationError and
     # VeSyncHumid200300S.set_humidity does not get called.
     with (
@@ -67,7 +70,7 @@ async def test_set_target_humidity_invalid(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_HUMIDITY: 20},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_HUMIDITY: 20},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -86,8 +89,6 @@ async def test_set_target_humidity(
 ) -> None:
     """Test handling of return value from VeSyncHumid200300S.set_humidity."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s"
-
     # If VeSyncHumid200300S.set_humidity fails (returns False), then HomeAssistantError is raised
     with (
         expectation,
@@ -99,7 +100,7 @@ async def test_set_target_humidity(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_HUMIDITY,
-            {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_HUMIDITY: 54},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_HUMIDITY: 54},
             blocking=True,
         )
         await hass.async_block_till_done()
@@ -124,8 +125,6 @@ async def test_turn_on_off(
 ) -> None:
     """Test turn_on/off methods."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s"
-
     # turn_on/turn_off returns False indicating failure in which case humidifier.turn_on/turn_off
     # raises HomeAssistantError.
     with (
@@ -138,7 +137,7 @@ async def test_turn_on_off(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_TURN_ON if turn_on else SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: humidifier_entity_id},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER},
             blocking=True,
         )
 
@@ -152,8 +151,6 @@ async def test_set_mode_invalid(
 ) -> None:
     """Test handling of invalid value in set_mode method."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s"
-
     with patch(
         "pyvesync.vesyncfan.VeSyncHumid200300S.set_humidity_mode"
     ) as method_mock:
@@ -161,7 +158,7 @@ async def test_set_mode_invalid(
             await hass.services.async_call(
                 HUMIDIFIER_DOMAIN,
                 SERVICE_SET_MODE,
-                {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_MODE: "something_invalid"},
+                {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: "something_invalid"},
                 blocking=True,
             )
         await hass.async_block_till_done()
@@ -180,8 +177,6 @@ async def test_set_mode(
 ) -> None:
     """Test handling of value in set_mode method."""
 
-    humidifier_entity_id = "humidifier.humidifier_200s"
-
     # If VeSyncHumid200300S.set_humidity_mode fails (returns False), then HomeAssistantError is raised
     with (
         expectation,
@@ -193,7 +188,7 @@ async def test_set_mode(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: humidifier_entity_id, ATTR_MODE: "auto"},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: "auto"},
             blocking=True,
         )
     await hass.async_block_till_done()

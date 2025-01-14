@@ -13,9 +13,9 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from tests.common import MockConfigEntry
+from .common import ENTITY_HUMIDIFIER_MIST_LEVEL
 
-ENTITY_MIST_LEVEL = "number.humidifier_200s_mist_level"
+from tests.common import MockConfigEntry
 
 
 async def test_set_mist_level_bad_range(
@@ -32,7 +32,7 @@ async def test_set_mist_level_bad_range(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_MIST_LEVEL, ATTR_VALUE: "10"},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL, ATTR_VALUE: "10"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -51,7 +51,7 @@ async def test_set_mist_level(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: ENTITY_MIST_LEVEL, ATTR_VALUE: "3"},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER_MIST_LEVEL, ATTR_VALUE: "3"},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -63,4 +63,4 @@ async def test_mist_level(
 ) -> None:
     """Test the state of mist_level number entity."""
 
-    assert hass.states.get("number.humidifier_200s_mist_level").state == "6"
+    assert hass.states.get(ENTITY_HUMIDIFIER_MIST_LEVEL).state == "6"
