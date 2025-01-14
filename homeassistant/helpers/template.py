@@ -841,16 +841,16 @@ class Template:
         self.ensure_valid()
 
         assert self.hass is not None, "hass variable not set on template"
-        assert (
-            self._limited is None or self._limited == limited
-        ), "can't change between limited and non limited template"
-        assert (
-            self._strict is None or self._strict == strict
-        ), "can't change between strict and non strict template"
+        assert self._limited is None or self._limited == limited, (
+            "can't change between limited and non limited template"
+        )
+        assert self._strict is None or self._strict == strict, (
+            "can't change between strict and non strict template"
+        )
         assert not (strict and limited), "can't combine strict and limited template"
-        assert (
-            self._log_fn is None or self._log_fn == log_fn
-        ), "can't change custom log function"
+        assert self._log_fn is None or self._log_fn == log_fn, (
+            "can't change custom log function"
+        )
         assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited

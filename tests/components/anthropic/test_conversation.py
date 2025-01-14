@@ -127,9 +127,9 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id="conversation.claude"
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert "The user name is Test User." in mock_create.mock_calls[1][2]["system"]
     assert "The user id is 12345." in mock_create.mock_calls[1][2]["system"]
 

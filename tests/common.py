@@ -1197,16 +1197,16 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert (
-            len(config) == 1
-        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
+        assert len(config) == 1, (
+            f"assert_setup_component requires DOMAIN: {list(config.keys())}"
+        )
         domain = list(config.keys())[0]
 
     res = config.get(domain)
     res_len = 0 if res is None else len(res)
-    assert (
-        res_len == count
-    ), f"setup_component failed, expected {count} got {res_len}: {res}"
+    assert res_len == count, (
+        f"setup_component failed, expected {count} got {res_len}: {res}"
+    )
 
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
@@ -1814,9 +1814,9 @@ async def snapshot_platform(
     """Snapshot a platform."""
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
-    assert (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert len({entity_entry.domain for entity_entry in entity_entries}) == 1, (
+        "Please limit the loaded platforms to 1 platform."
+    )
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_entry.disabled_by is None, "Please enable all entities."
