@@ -105,7 +105,7 @@ async def verify_connection(
         errors[CONF_BASE] = "response_error"
     except UnsupportedDeviceError:
         errors[CONF_BASE] = "unsupported"
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.exception(
             "Unknown exception while verifying connection with your Plugwise Smile"
         )
