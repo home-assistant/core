@@ -44,13 +44,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the ecobee weather platform."""
     data = hass.data[DOMAIN]
-    dev = []
-    for index in range(len(data.ecobee.thermostats)):
-        thermostat = data.ecobee.get_thermostat(index)
-        if "weather" in thermostat:
-            dev.append(EcobeeWeather(data, thermostat["name"], index))
 
-    async_add_entities(dev, True)
+    async_add_entities(
+        (
+            EcobeeWeather(data, thermostat["name"], index)
+            for index, thermostat in enumerate(data.ecobee.thermostats)
+            if "weather" in thermostat
+        ),
+        True,
+    )
 
 
 class EcobeeWeather(WeatherEntity):
