@@ -134,6 +134,10 @@ def custom_documentation_url(value: str) -> str:
     parsed_url = urlparse(value)
     if parsed_url.scheme != DOCUMENTATION_URL_SCHEMA:
         raise vol.Invalid("Documentation url is not prefixed with https")
+    if value.startswith("https://www.home-assistant.io/integrations"):
+        raise vol.Invalid(
+            "Documentation URL should point to the custom integration documentation"
+        )
 
     return value
 
