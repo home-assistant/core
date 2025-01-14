@@ -46,13 +46,13 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
     await init_integration(hass, entry)
 
     with patch.object(
-        MockModuleConnection, "control_motors_outputs"
-    ) as control_motors_outputs:
+        MockModuleConnection, "control_motor_outputs"
+    ) as control_motor_outputs:
         state = hass.states.get(COVER_OUTPUTS)
         state.state = CoverState.CLOSED
 
         # command failed
-        control_motors_outputs.return_value = False
+        control_motor_outputs.return_value = False
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -61,7 +61,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motors_outputs.assert_awaited_with(
+        control_motor_outputs.assert_awaited_with(
             MotorStateModifier.UP, MotorReverseTime.RT1200
         )
 
@@ -70,8 +70,8 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
         assert state.state != CoverState.OPENING
 
         # command success
-        control_motors_outputs.reset_mock(return_value=True)
-        control_motors_outputs.return_value = True
+        control_motor_outputs.reset_mock(return_value=True)
+        control_motor_outputs.return_value = True
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -80,7 +80,7 @@ async def test_outputs_open(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motors_outputs.assert_awaited_with(
+        control_motor_outputs.assert_awaited_with(
             MotorStateModifier.UP, MotorReverseTime.RT1200
         )
 
@@ -94,13 +94,13 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
     await init_integration(hass, entry)
 
     with patch.object(
-        MockModuleConnection, "control_motors_outputs"
-    ) as control_motors_outputs:
+        MockModuleConnection, "control_motor_outputs"
+    ) as control_motor_outputs:
         state = hass.states.get(COVER_OUTPUTS)
         state.state = CoverState.OPEN
 
         # command failed
-        control_motors_outputs.return_value = False
+        control_motor_outputs.return_value = False
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -109,7 +109,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
             blocking=True,
         )
 
-        control_motors_outputs.assert_awaited_with(
+        control_motor_outputs.assert_awaited_with(
             MotorStateModifier.DOWN, MotorReverseTime.RT1200
         )
 
@@ -118,8 +118,8 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
         assert state.state != CoverState.CLOSING
 
         # command success
-        control_motors_outputs.reset_mock(return_value=True)
-        control_motors_outputs.return_value = True
+        control_motor_outputs.reset_mock(return_value=True)
+        control_motor_outputs.return_value = True
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -128,7 +128,7 @@ async def test_outputs_close(hass: HomeAssistant, entry: MockConfigEntry) -> Non
             blocking=True,
         )
 
-        control_motors_outputs.assert_awaited_with(
+        control_motor_outputs.assert_awaited_with(
             MotorStateModifier.DOWN, MotorReverseTime.RT1200
         )
 
@@ -142,13 +142,13 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
     await init_integration(hass, entry)
 
     with patch.object(
-        MockModuleConnection, "control_motors_outputs"
-    ) as control_motors_outputs:
+        MockModuleConnection, "control_motor_outputs"
+    ) as control_motor_outputs:
         state = hass.states.get(COVER_OUTPUTS)
         state.state = CoverState.CLOSING
 
         # command failed
-        control_motors_outputs.return_value = False
+        control_motor_outputs.return_value = False
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -157,15 +157,15 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motors_outputs.assert_awaited_with(MotorStateModifier.STOP)
+        control_motor_outputs.assert_awaited_with(MotorStateModifier.STOP)
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
         assert state.state == CoverState.CLOSING
 
         # command success
-        control_motors_outputs.reset_mock(return_value=True)
-        control_motors_outputs.return_value = True
+        control_motor_outputs.reset_mock(return_value=True)
+        control_motor_outputs.return_value = True
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -174,7 +174,7 @@ async def test_outputs_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motors_outputs.assert_awaited_with(MotorStateModifier.STOP)
+        control_motor_outputs.assert_awaited_with(MotorStateModifier.STOP)
 
         state = hass.states.get(COVER_OUTPUTS)
         assert state is not None
@@ -186,16 +186,13 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     await init_integration(hass, entry)
 
     with patch.object(
-        MockModuleConnection, "control_motors_relays"
-    ) as control_motors_relays:
-        states = [MotorStateModifier.NOCHANGE] * 4
-        states[0] = MotorStateModifier.UP
-
+        MockModuleConnection, "control_motor_relays"
+    ) as control_motor_relays:
         state = hass.states.get(COVER_RELAYS)
         state.state = CoverState.CLOSED
 
         # command failed
-        control_motors_relays.return_value = False
+        control_motor_relays.return_value = False
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -204,15 +201,15 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motors_relays.assert_awaited_with(states)
+        control_motor_relays.assert_awaited_with(0, MotorStateModifier.UP)
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
         assert state.state != CoverState.OPENING
 
         # command success
-        control_motors_relays.reset_mock(return_value=True)
-        control_motors_relays.return_value = True
+        control_motor_relays.reset_mock(return_value=True)
+        control_motor_relays.return_value = True
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -221,7 +218,7 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motors_relays.assert_awaited_with(states)
+        control_motor_relays.assert_awaited_with(0, MotorStateModifier.UP)
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -233,16 +230,13 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
     await init_integration(hass, entry)
 
     with patch.object(
-        MockModuleConnection, "control_motors_relays"
-    ) as control_motors_relays:
-        states = [MotorStateModifier.NOCHANGE] * 4
-        states[0] = MotorStateModifier.DOWN
-
+        MockModuleConnection, "control_motor_relays"
+    ) as control_motor_relays:
         state = hass.states.get(COVER_RELAYS)
         state.state = CoverState.OPEN
 
         # command failed
-        control_motors_relays.return_value = False
+        control_motor_relays.return_value = False
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -251,15 +245,15 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motors_relays.assert_awaited_with(states)
+        control_motor_relays.assert_awaited_with(0, MotorStateModifier.DOWN)
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
         assert state.state != CoverState.CLOSING
 
         # command success
-        control_motors_relays.reset_mock(return_value=True)
-        control_motors_relays.return_value = True
+        control_motor_relays.reset_mock(return_value=True)
+        control_motor_relays.return_value = True
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -268,7 +262,7 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motors_relays.assert_awaited_with(states)
+        control_motor_relays.assert_awaited_with(0, MotorStateModifier.DOWN)
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -280,16 +274,13 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     await init_integration(hass, entry)
 
     with patch.object(
-        MockModuleConnection, "control_motors_relays"
-    ) as control_motors_relays:
-        states = [MotorStateModifier.NOCHANGE] * 4
-        states[0] = MotorStateModifier.STOP
-
+        MockModuleConnection, "control_motor_relays"
+    ) as control_motor_relays:
         state = hass.states.get(COVER_RELAYS)
         state.state = CoverState.CLOSING
 
         # command failed
-        control_motors_relays.return_value = False
+        control_motor_relays.return_value = False
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -298,15 +289,15 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motors_relays.assert_awaited_with(states)
+        control_motor_relays.assert_awaited_with(0, MotorStateModifier.STOP)
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
         assert state.state == CoverState.CLOSING
 
         # command success
-        control_motors_relays.reset_mock(return_value=True)
-        control_motors_relays.return_value = True
+        control_motor_relays.reset_mock(return_value=True)
+        control_motor_relays.return_value = True
 
         await hass.services.async_call(
             DOMAIN_COVER,
@@ -315,7 +306,7 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motors_relays.assert_awaited_with(states)
+        control_motor_relays.assert_awaited_with(0, MotorStateModifier.STOP)
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
