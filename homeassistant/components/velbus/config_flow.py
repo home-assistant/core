@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL
 
 from .const import DOMAIN
 
@@ -55,13 +55,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         return self.async_show_menu(
-            step_id="user",
-            menu_options={
-                "signum": "Connect to a Signum or SUB/IP module.",
-                "network": "Connect over the network.",
-                "usbselect": "Connect via an USB device.",
-                "manual": "Manually enter the connection details.",
-            },
+            step_id="user", menu_options=["network", "usbselect"]
         )
 
     async def async_step_network(
@@ -69,46 +63,29 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle network step."""
         if user_input is not None:
-            self._title = "Velbus TCP/IP"
-            self._device = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            await self._try_and_setup()
-        else:
-            user_input = {}
-            user_input[CONF_HOST] = ""
-            user_input[CONF_PORT] = 27015
-
-        return self.async_show_form(
-            step_id="network",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
-                }
-            ),
-            errors=self._errors,
-        )
-
-    async def async_step_signum(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle signum step."""
-        if user_input is not None:
-            self._title = "Velbus Signum"
-            self._device = "tls://"
+            self._title = "Velbus Network"
+            if user_input[CONF_SSL] == "yes":
+                self._device = "tls://"
+            else:
+                self._device = ""
             if user_input[CONF_PASSWORD] != "":
                 self._device += f"{user_input[CONF_PASSWORD]}@"
             self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
             await self._try_and_setup()
         else:
             user_input = {}
+            user_input[CONF_SSL] = "yes"
             user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = 27015
             user_input[CONF_PASSWORD] = ""
 
         return self.async_show_form(
-            step_id="signum",
+            step_id="network",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_SSL, default=user_input[CONF_SSL]): vol.In(
+                        ["yes", "no"]
+                    ),
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
                     vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
@@ -143,29 +120,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_PORT, default=user_input[CONF_PORT]): vol.In(
                         list_of_ports
                     )
-                }
-            ),
-            errors=self._errors,
-        )
-
-    async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Step when user initializes a integration."""
-        self._errors = {}
-        if user_input is not None:
-            self._title = "Velbus Manual"
-            self._device = user_input[CONF_PORT]
-            await self._try_and_setup()
-        else:
-            user_input = {}
-            user_input[CONF_PORT] = ""
-
-        return self.async_show_form(
-            step_id="manual",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): str,
                 }
             ),
             errors=self._errors,

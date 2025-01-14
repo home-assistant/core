@@ -8,10 +8,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      Dynamically build up the port parameter based on inputs provided by the user, do not fill-in a name parameter, build it up in the config flow
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
