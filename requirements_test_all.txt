@@ -699,7 +699,7 @@ elevenlabs==1.9.0
 elgato==5.1.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.10
+elkm1-lib==2.2.11
 
 # homeassistant.components.elmax
 elmax-api==0.0.6.4rc0
