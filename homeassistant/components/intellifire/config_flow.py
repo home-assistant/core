@@ -145,13 +145,13 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         LOGGER.debug(
-            f"STEP: pick_cloud_device: {user_input} - DHCP_MODE[{self._dhcp_mode}"
+            "STEP: pick_cloud_device: %s - DHCP_MODE[%s]", user_input, self._dhcp_mode
         )
 
         if self._dhcp_mode or user_input is not None:
             if self._dhcp_mode:
                 serial = self._dhcp_discovered_serial
-                LOGGER.debug(f"DHCP Mode detected for serial [{serial}]")
+                LOGGER.debug("DHCP Mode detected for serial [%s]", serial)
             if user_input is not None:
                 serial = user_input[CONF_SERIAL]
 
