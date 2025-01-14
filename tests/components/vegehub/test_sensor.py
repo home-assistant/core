@@ -37,4 +37,4 @@ def test_vegehub_sensor_properties(config_entry) -> None:
 
     assert sensor.device_class == SensorDeviceClass.VOLTAGE
     assert sensor.native_unit_of_measurement == UnitOfElectricPotential.VOLT
-    assert sensor.unique_id == "vegehub_1234567890ab_1"
+    assert sensor.unique_id == "1234567890ab_1"

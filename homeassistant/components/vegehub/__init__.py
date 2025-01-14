@@ -140,7 +140,7 @@ def get_webhook_handler(
                 slot = sensor.get("slot")
                 latest_sample = sensor["samples"][-1]
                 value = latest_sample["v"]
-                entity_id = f"vegehub_{device_mac}_{slot}".lower()
+                entity_id = f"{device_mac}_{slot}".lower()
 
                 # Build a dict of the data we want so that we can pass it to the coordinator
                 sensor_data[entity_id] = value
