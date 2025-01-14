@@ -1,4 +1,5 @@
 # serializer version: 1
+# name: test_entities[light.bedroom_kid_1_led_buttonon-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -86,7 +87,7 @@
     'previous_unique_id': None,
     'supported_features': <LightEntityFeature: 32>,
     'translation_key': None,
-    'unique_id': 'a1b2c3d4e5f6g7-1',
+    'unique_id': 'a1b2c3d4e5f6g7-10',
     'unit_of_measurement': None,
   })
 # ---
