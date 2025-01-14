@@ -434,8 +434,8 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         feature_type: Feature.Type,
         entity_class: type[_E],
         descriptions: Mapping[str, _D],
-        child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
-        new_children: list[Device] | None = None,
+        known_child_device_ids: set[str],
+        first_check: bool,
     ) -> list[_E]:
         """Create entities for device and its children.
 
@@ -444,7 +444,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
         # Only add the parent entities if new_children is None.
-        if not new_children:
+        if first_check:
             entities.extend(
                 cls._entities_for_device(
                     hass,
@@ -456,27 +456,36 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 )
             )
 
-        children = new_children if new_children else device.children
+        current_child_devices = {child.device_id: child for child in device.children}
+        current_child_device_ids = set(current_child_devices.keys())
+        new_child_device_ids = current_child_device_ids - known_child_device_ids
+        children = []
+
+        if new_child_device_ids:
+            children = [
+                child
+                for child_id, child in current_child_devices.items()
+                if child_id in new_child_device_ids
+            ]
+            known_child_device_ids.update(new_child_device_ids)
+
         if children:
-            _LOGGER.debug("Initializing device with %s children", len(children))
-            for idx, child in enumerate(children):
-                # HS300 does not like too many concurrent requests and its
-                # emeter data requires a request for each socket, so we receive
-                # separate coordinators.
-                if child_coordinators:
-                    child_coordinator = child_coordinators[idx]
-                else:
-                    child_coordinator = coordinator
-                entities.extend(
-                    cls._entities_for_device(
-                        hass,
-                        child,
-                        coordinator=child_coordinator,
-                        feature_type=feature_type,
-                        entity_class=entity_class,
-                        descriptions=descriptions,
-                        parent=device,
-                    )
+            _LOGGER.debug(
+                "Initializing %s children on device %s", len(children), device.host
+            )
+        for child in children:
+            child_coordinator = coordinator.get_child_coordinator(child)
+
+            entities.extend(
+                cls._entities_for_device(
+                    hass,
+                    child,
+                    coordinator=child_coordinator,
+                    feature_type=feature_type,
+                    entity_class=entity_class,
+                    descriptions=descriptions,
+                    parent=device,
                 )
+            )
 
         return entities

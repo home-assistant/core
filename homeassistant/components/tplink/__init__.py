@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
 from typing import Any, cast
@@ -18,7 +18,6 @@ from kasa import (
     KasaException,
 )
 from kasa.httpclient import get_cookie_jar
-from kasa.iot import IotStrip
 
 from homeassistant import config_entries
 from homeassistant.components import network
@@ -235,9 +234,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     parent_coordinator = TPLinkDataUpdateCoordinator(
         hass, device, timedelta(seconds=5), entry
     )
-    child_coordinators: list[TPLinkDataUpdateCoordinator] = get_child_coordinators(
-        hass, entry, device, device.children
-    )
 
     camera_creds: Credentials | None = None
     if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
@@ -246,31 +242,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         )
     live_view = entry.data.get(CONF_LIVE_VIEW)
 
-    entry.runtime_data = TPLinkData(
-        parent_coordinator, child_coordinators, camera_creds, live_view
-    )
+    entry.runtime_data = TPLinkData(parent_coordinator, camera_creds, live_view)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-def get_child_coordinators(
-    hass: HomeAssistant,
-    entry: TPLinkConfigEntry,
-    device: Device,
-    children: Sequence[Device],
-) -> list[TPLinkDataUpdateCoordinator]:
-    """Get child coordinators for a device or None if not needed."""
-    # The iot HS300 allows a limited number of concurrent requests and fetching the
-    # emeter information requires separate ones so create child coordinators here.
-    if isinstance(device, IotStrip):
-        return [
-            # The child coordinators only update energy data so we can
-            # set a longer update interval to avoid flooding the device
-            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60), entry)
-            for child in device.children
-        ]
-    return []
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:

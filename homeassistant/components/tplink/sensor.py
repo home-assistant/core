@@ -17,7 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry, get_child_coordinators
+from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
 from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
@@ -129,30 +129,11 @@ async def async_setup_entry(
     """Set up sensors."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
-
     known_child_device_ids: set[str] = set()
     first_check = True
 
     def _check_device() -> None:
-        current_child_devices = {child.device_id: child for child in device.children}
-        current_child_device_ids = set(current_child_devices.keys())
-        new_child_device_ids = current_child_device_ids - known_child_device_ids
-        new_children = None
-        new_children_coordinators = None
-        if new_child_device_ids:
-            if not first_check:
-                new_children = [
-                    child
-                    for child_id, child in current_child_devices.items()
-                    if child_id in new_child_device_ids
-                ]
-                new_children_coordinators = get_child_coordinators(
-                    hass, config_entry, device, new_children
-                )
-            known_child_device_ids.update(new_child_device_ids)
-
         entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
             hass=hass,
             device=device,
@@ -160,8 +141,8 @@ async def async_setup_entry(
             feature_type=Feature.Type.Sensor,
             entity_class=TPLinkSensorEntity,
             descriptions=SENSOR_DESCRIPTIONS_MAP,
-            child_coordinators=new_children_coordinators or children_coordinators,
-            new_children=new_children,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
         )
         async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
         async_add_entities(entities)

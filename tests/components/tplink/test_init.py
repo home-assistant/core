@@ -836,23 +836,38 @@ async def test_migrate_remove_device_config(
     assert "Migration to version 1.5 complete" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("platform", "feature_id", "translated_name"),
+    [
+        pytest.param("switch", "led", "led", id="switch"),
+        pytest.param(
+            "sensor", "current_consumption", "current_consumption", id="sensor"
+        ),
+        pytest.param("binary_sensor", "overheated", "overheated", id="binary_sensor"),
+        pytest.param("number", "smooth_transition_on", "smooth_on", id="number"),
+        pytest.param("select", "light_preset", "light_preset", id="select"),
+        pytest.param("button", "reboot", "restart", id="button"),
+    ],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_automatic_device_addition_and_removal(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
+    platform: str,
+    feature_id: str,
+    translated_name: str,
 ) -> None:
     """Test for automatic device addition and removal."""
 
-    # features = {"switch":"led", "sensor":"current_consumption", "binary_sensor":"overheated"}
-    features = {"sensor": "current_consumption"}
     children = {
         f"child{index}": _mocked_device(
             alias=f"child {index}",
-            features=features.values(),
+            features=[feature_id],
             device_type=DeviceType.StripSocket,
             device_id=f"child{index}",
         )
@@ -870,12 +885,11 @@ async def test_automatic_device_addition_and_removal(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    for platform, feature_id in features.items():
-        for child_id in (1, 2):
-            entity_id = f"{platform}.child_{child_id}_{feature_id}"
-            state = hass.states.get(entity_id)
-            assert state
-            assert entity_registry.async_get(entity_id)
+    for child_id in (1, 2):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child2"):
         assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
@@ -885,11 +899,10 @@ async def test_automatic_device_addition_and_removal(
     freezer.tick(5)
     async_fire_time_changed(hass)
 
-    for platform, feature_id in features.items():
-        entity_id = f"{platform}.child_2_{feature_id}"
-        state = hass.states.get(entity_id)
-        assert state is None
-        assert entity_registry.async_get(entity_id) is None
+    entity_id = f"{platform}.child_2_{translated_name}"
+    state = hass.states.get(entity_id)
+    assert state is None
+    assert entity_registry.async_get(entity_id) is None
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
 
@@ -898,12 +911,11 @@ async def test_automatic_device_addition_and_removal(
     freezer.tick(5)
     async_fire_time_changed(hass)
 
-    for platform, feature_id in features.items():
-        for child_id in (1, 3, 4):
-            entity_id = f"{platform}.child_{child_id}_{feature_id}"
-            state = hass.states.get(entity_id)
-            assert state
-            assert entity_registry.async_get(entity_id)
+    for child_id in (1, 3, 4):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child3", "child4"):
         assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
