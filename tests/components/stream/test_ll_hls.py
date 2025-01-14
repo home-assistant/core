@@ -99,9 +99,9 @@ def make_segment_with_parts(
     if discontinuity:
         response.append("#EXT-X-DISCONTINUITY")
     response.extend(
-        f'#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},'
+        f"#EXT-X-PART:DURATION={TEST_PART_DURATION:.3f},"
         f'URI="./segment/{segment}.{i}.m4s"'
-        f'{",INDEPENDENT=YES" if i % independent_period == 0 else ""}'
+        f"{',INDEPENDENT=YES' if i % independent_period == 0 else ''}"
         for i in range(num_parts)
     )
     response.append(
