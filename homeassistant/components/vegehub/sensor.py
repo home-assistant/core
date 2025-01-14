@@ -85,6 +85,7 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
         # Only set a new value if there is one available in the coordinator.
         if value is not None:
             self.latest_value = value
+            super()._handle_coordinator_update()
 
     @property
     def native_value(self) -> float | None:
