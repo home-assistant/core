@@ -39,7 +39,7 @@ def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute:
 
 
 def get_cover_features(
-    node: HomeeNode, open_close_attribute: HomeeAttribute
+    node: HomeeNode, open_close_attribute: HomeeAttribute | None
 ) -> CoverEntityFeature:
     """Determine the supported cover features of a homee node based on the available attributes."""
     features = CoverEntityFeature(0)
