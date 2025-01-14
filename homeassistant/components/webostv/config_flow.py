@@ -16,18 +16,17 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from . import async_control_connect, update_client_key
+from . import async_control_connect
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
 from .helpers import async_get_sources
 
 DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -54,15 +53,11 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors: dict[str, str] = {}
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-            self._name = user_input[CONF_NAME]
             return await self.async_step_pairing()
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
 
     async def async_step_pairing(
         self, user_input: dict[str, Any] | None = None
@@ -71,13 +66,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: self._host})
 
         self.context["title_placeholders"] = {"name": self._name}
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             try:
                 client = await async_control_connect(self._host, None)
             except WebOsTvPairError:
-                return self.async_abort(reason="error_pairing")
+                errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             else:
@@ -86,6 +81,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured({CONF_HOST: self._host})
                 data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
+
+                if not self._name:
+                    self._name = f"{DEFAULT_NAME} {client.system_info['modelName']}"
                 return self.async_create_entry(title=self._name, data=data)
 
         return self.async_show_form(step_id="pairing", errors=errors)
@@ -98,12 +96,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         host = urlparse(discovery_info.ssdp_location).hostname
         assert host
         self._host = host
-        self._name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME)
+        self._name = discovery_info.upnp.get(
+            ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
+        ).replace("[LG]", "LG")
 
         uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
         assert uuid
-        if uuid.startswith("uuid:"):
-            uuid = uuid[5:]
+        uuid = uuid.removeprefix("uuid:")
         await self.async_set_unique_id(uuid)
         self._abort_if_unique_id_configured({CONF_HOST: self._host})
 
@@ -128,20 +127,56 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 client = await async_control_connect(self._host, None)
             except WebOsTvPairError:
-                return self.async_abort(reason="error_pairing")
+                errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
-                return self.async_abort(reason="reauth_unsuccessful")
+                errors["base"] = "cannot_connect"
+            else:
+                reauth_entry = self._get_reauth_entry()
+                data = {CONF_HOST: self._host, CONF_CLIENT_SECRET: client.client_key}
+                return self.async_update_reload_and_abort(reauth_entry, data=data)
 
-            reauth_entry = self._get_reauth_entry()
-            update_client_key(self.hass, reauth_entry, client)
-            await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
+        return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
-        return self.async_show_form(step_id="reauth_confirm")
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            client_key = reconfigure_entry.data.get(CONF_CLIENT_SECRET)
+
+            try:
+                client = await async_control_connect(host, client_key)
+            except WebOsTvPairError:
+                errors["base"] = "error_pairing"
+            except WEBOSTV_EXCEPTIONS:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(client.hello_info["deviceUUID"])
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                data = {CONF_HOST: host, CONF_CLIENT_SECRET: client.client_key}
+                return self.async_update_reload_and_abort(reconfigure_entry, data=data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=reconfigure_entry.data.get(CONF_HOST)
+                    ): cv.string
+                }
+            ),
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(OptionsFlow):
