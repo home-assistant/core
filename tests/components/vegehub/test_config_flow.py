@@ -52,14 +52,14 @@ async def test_user_flow_success(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_IP
     assert result["data"]["mac"] == TEST_SIMPLE_MAC
     # Confirm that the entry was created
@@ -76,14 +76,14 @@ async def test_user_flow_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -96,7 +96,7 @@ async def test_user_flow_device_timeout(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     mocker = mock_aiohttp_session
@@ -115,7 +115,7 @@ async def test_user_flow_device_timeout(
         result["flow_id"], {"ip_address": TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "timeout_connect"
 
 
@@ -128,14 +128,14 @@ async def test_user_flow_cannot_connect_404(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": TEST_IP}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -148,14 +148,14 @@ async def test_user_flow_no_ip_entered(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": ""}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_ip"
 
 
@@ -168,14 +168,14 @@ async def test_user_flow_bad_ip_entered(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": "192.168.0"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_ip"
 
 
@@ -188,12 +188,12 @@ async def test_zeroconf_flow_success(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_HOSTNAME
     assert result["data"]["mac"] == TEST_SIMPLE_MAC
 
@@ -219,7 +219,7 @@ async def test_zeroconf_flow_abort_device_asleep(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "timeout_connect"
 
 
@@ -232,14 +232,14 @@ async def test_zeroconf_flow_abort_same_id(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
 
 
 async def test_zeroconf_flow_abort_cannot_connect(
@@ -251,7 +251,7 @@ async def test_zeroconf_flow_abort_cannot_connect(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -264,7 +264,7 @@ async def test_zeroconf_flow_abort_cannot_connect_404(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -279,7 +279,7 @@ async def test_zeroconf_flow_device_error_response(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Part way through the process, we simulate getting bad responses
@@ -288,7 +288,7 @@ async def test_zeroconf_flow_device_error_response(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
 
@@ -303,7 +303,7 @@ async def test_zeroconf_flow_device_stopped_responding(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     async def timeout_side_effect(*args, **kwargs):
@@ -319,5 +319,5 @@ async def test_zeroconf_flow_device_stopped_responding(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "timeout_connect"
