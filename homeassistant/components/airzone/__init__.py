@@ -125,16 +125,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> 
 async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
     """Migrate an old entry."""
     if entry.version == 1:
-        # Add missing CONF_ID
-        system_id = entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID)
-        new_data = entry.data.copy()
-        new_data[CONF_ID] = system_id
-        hass.config_entries.async_update_entry(
-            entry,
-            data=new_data,
-            version=2,
-        )
+        if entry.minor_version < 2:
+            # Add missing CONF_ID
+            system_id = entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID)
+            new_data = entry.data.copy()
+            new_data[CONF_ID] = system_id
+            hass.config_entries.async_update_entry(
+                entry,
+                data=new_data,
+                minor_version=2,
+            )
 
-    _LOGGER.info("Migration to version %s successful", entry.version)
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
 
     return True

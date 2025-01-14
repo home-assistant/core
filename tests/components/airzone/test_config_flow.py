@@ -171,7 +171,7 @@ async def test_form_duplicated_id(hass: HomeAssistant) -> None:
     """Test setting up duplicated entry."""
 
     config_entry = MockConfigEntry(
-        version=2,
+        minor_version=2,
         data=CONFIG,
         domain=DOMAIN,
         unique_id="airzone_unique_id",

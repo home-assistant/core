@@ -282,7 +282,7 @@
       }),
       'domain': 'airzone',
       'entry_id': '6e7a0798c1734ba81d26ced0e690eaec',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -290,7 +290,7 @@
       'source': 'user',
       'title': 'Mock Title',
       'unique_id': '**REDACTED**',
-      'version': 2,
+      'version': 1,
     }),
     'coord_data': dict({
       'hot-water': dict({

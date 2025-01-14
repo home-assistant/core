@@ -44,7 +44,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_ip: str | None = None
     _discovered_mac: str | None = None
-    VERSION = 2
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

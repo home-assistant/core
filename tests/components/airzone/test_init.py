@@ -22,7 +22,7 @@ async def test_unique_id_migrate(
     """Test unique id migration."""
 
     config_entry = MockConfigEntry(
-        version=2,
+        minor_version=2,
         domain=DOMAIN,
         data=CONFIG,
     )
@@ -95,7 +95,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload."""
 
     config_entry = MockConfigEntry(
-        version=2,
+        minor_version=2,
         data=CONFIG,
         domain=DOMAIN,
         unique_id="airzone_unique_id",
@@ -125,7 +125,7 @@ async def test_migrate_entry_v2(hass: HomeAssistant) -> None:
     """Test entry migration to v2."""
 
     config_entry = MockConfigEntry(
-        version=1,
+        minor_version=1,
         data=USER_INPUT,
         domain=DOMAIN,
     )
@@ -156,5 +156,5 @@ async def test_migrate_entry_v2(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.version == 2
+    assert config_entry.minor_version == 2
     assert config_entry.data.get(CONF_ID) == DEFAULT_SYSTEM_ID
