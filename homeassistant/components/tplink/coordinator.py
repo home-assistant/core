@@ -45,9 +45,12 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         device: Device,
         update_interval: timedelta,
         config_entry: TPLinkConfigEntry,
+        *,
+        update_children: bool,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
+        self.update_children = update_children
         super().__init__(
             hass,
             _LOGGER,
@@ -64,7 +67,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:
-            await self.device.update(update_children=False)
+            await self.device.update(update_children=self.update_children)
         except AuthenticationError as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

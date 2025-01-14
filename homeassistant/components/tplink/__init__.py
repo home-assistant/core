@@ -232,20 +232,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             },
         )
 
-    parent_coordinator = TPLinkDataUpdateCoordinator(
-        hass, device, timedelta(seconds=5), entry
-    )
     child_coordinators: list[TPLinkDataUpdateCoordinator] = []
 
     # The iot HS300 allows a limited number of concurrent requests and fetching the
     # emeter information requires separate ones so create child coordinators here.
     if isinstance(device, IotStrip):
+        parent_coordinator = TPLinkDataUpdateCoordinator(
+            hass, device, timedelta(seconds=5), entry, update_children=False
+        )
         child_coordinators = [
             # The child coordinators only update energy data so we can
             # set a longer update interval to avoid flooding the device
-            TPLinkDataUpdateCoordinator(hass, child, timedelta(seconds=60), entry)
+            TPLinkDataUpdateCoordinator(
+                hass, child, timedelta(seconds=60), entry, update_children=False
+            )
             for child in device.children
         ]
+    else:
+        # Non-hub non-iot devices update children regardless of update_children
+        # Hubs automatically control the frequency of child module updates
+        # to conserve device battery life
+        parent_coordinator = TPLinkDataUpdateCoordinator(
+            hass, device, timedelta(seconds=5), entry, update_children=True
+        )
 
     camera_creds: Credentials | None = None
     if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
