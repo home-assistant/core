@@ -156,7 +156,27 @@ async def test_user_flow_no_ip_entered(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["errors"]["base"] == "missing_data"
+    assert result["errors"]["base"] == "invalid_ip"
+
+
+async def test_user_flow_bad_ip_entered(
+    hass: HomeAssistant, setup_mock_config_flow, mock_aiohttp_session
+) -> None:
+    """Test the user flow with blank IP."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"ip_address": "192.168.0"}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"]["base"] == "invalid_ip"
 
 
 async def test_zeroconf_flow_success(

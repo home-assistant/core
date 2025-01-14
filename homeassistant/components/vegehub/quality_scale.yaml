@@ -30,7 +30,6 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
-
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
