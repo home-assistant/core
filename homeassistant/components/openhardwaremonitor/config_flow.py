@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import *
 
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "openhardwaremonitor-wip"
+DOMAIN = "openhardwaremonitor"
 
 
 class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):

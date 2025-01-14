@@ -45,7 +45,7 @@ OHM_NAME = "Text"
 OHM_ID = "id"
 from .const import *
 
-DOMAIN = "openhardwaremonitor-wip"
+DOMAIN = "openhardwaremonitor"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )

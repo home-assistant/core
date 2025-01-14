@@ -1,5 +1,5 @@
 {
-  "domain": "openhardwaremonitor-wip",
+  "domain": "openhardwaremonitor",
   "name": "Open Hardware Monitor",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/openhardwaremonitor",
