@@ -37,6 +37,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
     mock_weheat_config_heat_pump: AsyncMock,
     mock_setup_entry,
@@ -48,17 +49,11 @@ async def test_full_flow(
 
     await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
-    with (
-        patch(
-            "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
-            return_value=USER_UUID_1,
-        ) as mock_weheat,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_weheat.mock_calls) == 1
+    assert len(mock_user_id.mock_calls) == 1
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == USER_UUID_1
@@ -73,6 +68,7 @@ async def test_duplicate_unique_id(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
     mock_weheat_config_heat_pump: AsyncMock,
     mock_setup_entry,
@@ -92,13 +88,7 @@ async def test_duplicate_unique_id(
 
     await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
-    with (
-        patch(
-            "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
-            return_value=USER_UUID_1,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # only care that the config flow is aborted
     assert result["type"] is FlowResultType.ABORT
@@ -118,6 +108,7 @@ async def test_get_user_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry,
+    mock_user_id: AsyncMock,
     get_user_id_from_token_exception: Exception,
     expected_reason: str,
 ) -> None:
@@ -136,13 +127,9 @@ async def test_get_user_error(
 
     await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
-    with (
-        patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
-            side_effect=get_user_id_from_token_exception,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    mock_user_id.side_effect = get_user_id_from_token_exception
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # only care that the config flow is aborted
     assert result["type"] is FlowResultType.ABORT
@@ -162,6 +149,7 @@ async def test_get_heat_pumps_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry,
+    mock_user_id: AsyncMock,
     get_heat_pump_exception: Exception,
     expected_reason: str,
 ) -> None:
@@ -182,10 +170,6 @@ async def test_get_heat_pumps_error(
 
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
-            return_value=USER_UUID_1,
-        ),
-        patch(
             "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.discover_active",
             side_effect=get_heat_pump_exception,
         ),
@@ -203,6 +187,7 @@ async def test_get_no_heat_pumps_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry,
+    mock_user_id: AsyncMock,
 ) -> None:
     """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
     first_entry = MockConfigEntry(
@@ -220,10 +205,6 @@ async def test_get_no_heat_pumps_error(
     await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     with (
-        patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
-            return_value=USER_UUID_1,
-        ),
         patch(
             "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.discover_active",
             return_value=[],
@@ -249,6 +230,7 @@ async def test_get_heat_pump_data_error(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry,
+    mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
     mock_weheat_config_heat_pump: AsyncMock,
     get_heat_pump_data_exception: Exception,
@@ -271,13 +253,7 @@ async def test_get_heat_pump_data_error(
 
     mock_weheat_config_heat_pump.get_status.side_effect = get_heat_pump_data_exception
 
-    with (
-        patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
-            return_value=USER_UUID_1,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # only care that the config flow is aborted
     assert result["type"] is FlowResultType.ABORT
