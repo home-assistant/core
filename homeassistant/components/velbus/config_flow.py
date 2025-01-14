@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+import serial.tools.list_ports
 import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
 import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.util import slugify
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 
 from .const import DOMAIN
 
@@ -27,14 +27,16 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._device: str = ""
         self._title: str = ""
 
-    def _create_device(self, name: str, prt: str) -> ConfigFlowResult:
+    def _create_device(self) -> ConfigFlowResult:
         """Create an entry async."""
-        return self.async_create_entry(title=name, data={CONF_PORT: prt})
+        return self.async_create_entry(
+            title=self._title, data={CONF_PORT: self._device}
+        )
 
-    async def _test_connection(self, prt: str) -> bool:
+    async def _test_connection(self) -> bool:
         """Try to connect to the velbus with the port specified."""
         try:
-            controller = velbusaio.controller.Velbus(prt)
+            controller = velbusaio.controller.Velbus(self._device)
             await controller.connect()
             await controller.stop()
         except VelbusConnectionFailed:
@@ -42,27 +44,127 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
+    async def _try_and_setup(self) -> ConfigFlowResult:
+        self._async_abort_entries_match({CONF_PORT: self._device})
+        if not await self._test_connection():
+            return self.async_abort(reason="cannot_connect")
+        return self._create_device()
+
     async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Step when user initializes a integration."""
+        return self.async_show_menu(
+            step_id="user",
+            menu_options={
+                "signum": "Connect to a Signum or SUB/IP module.",
+                "network": "Connect over the network.",
+                "usbselect": "Connect via an USB device.",
+                "manual": "Manually enter the connection details.",
+            },
+        )
+
+    async def async_step_network(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle network step."""
+        if user_input is not None:
+            self._title = "Velbus TCP/IP"
+            self._device = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+            await self._try_and_setup()
+        else:
+            user_input = {}
+            user_input[CONF_HOST] = ""
+            user_input[CONF_PORT] = 27015
+
+        return self.async_show_form(
+            step_id="network",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+                }
+            ),
+            errors=self._errors,
+        )
+
+    async def async_step_signum(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle signum step."""
+        if user_input is not None:
+            self._title = "Velbus Signum"
+            self._device = "tls://"
+            if user_input[CONF_PASSWORD] != "":
+                self._device += f"{user_input[CONF_PASSWORD]}@"
+            self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+            await self._try_and_setup()
+        else:
+            user_input = {}
+            user_input[CONF_HOST] = ""
+            user_input[CONF_PORT] = 27015
+            user_input[CONF_PASSWORD] = ""
+
+        return self.async_show_form(
+            step_id="signum",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+                    vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
+                }
+            ),
+            errors=self._errors,
+        )
+
+    async def async_step_usbselect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle usb select step."""
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        list_of_ports = [
+            f"{p}{', s/n: ' + p.serial_number if p.serial_number else ''}"
+            + (f" - {p.manufacturer}" if p.manufacturer else "")
+            for p in ports
+        ]
+
+        if user_input is not None:
+            self._title = "Velbus USB"
+            self._device = ports[list_of_ports.index(user_input[CONF_PORT])].device
+            await self._try_and_setup()
+        else:
+            user_input = {}
+            user_input[CONF_PORT] = ""
+
+        return self.async_show_form(
+            step_id="usbselect",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): vol.In(
+                        list_of_ports
+                    )
+                }
+            ),
+            errors=self._errors,
+        )
+
+    async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
-            name = slugify(user_input[CONF_NAME])
-            prt = user_input[CONF_PORT]
-            self._async_abort_entries_match({CONF_PORT: prt})
-            if await self._test_connection(prt):
-                return self._create_device(name, prt)
+            self._title = "Velbus Manual"
+            self._device = user_input[CONF_PORT]
+            await self._try_and_setup()
         else:
             user_input = {}
-            user_input[CONF_NAME] = ""
             user_input[CONF_PORT] = ""
 
         return self.async_show_form(
-            step_id="user",
+            step_id="manual",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
                     vol.Required(CONF_PORT, default=user_input[CONF_PORT]): str,
                 }
             ),
@@ -76,15 +178,11 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
         )
-        dev_path = discovery_info.device
-        # check if this device is not already configured
-        self._async_abort_entries_match({CONF_PORT: dev_path})
-        # check if we can make a valid velbus connection
-        if not await self._test_connection(dev_path):
-            return self.async_abort(reason="cannot_connect")
-        # store the data for the config step
-        self._device = dev_path
+        self._device = discovery_info.device
         self._title = "Velbus USB"
+        self._async_abort_entries_match({CONF_PORT: self._device})
+        if not await self._test_connection():
+            return self.async_abort(reason="cannot_connect")
         # call the config step
         self._set_confirm_only()
         return await self.async_step_discovery_confirm()
@@ -94,7 +192,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle Discovery confirmation."""
         if user_input is not None:
-            return self._create_device(self._title, self._device)
+            return self._create_device()
 
         return self.async_show_form(
             step_id="discovery_confirm",
