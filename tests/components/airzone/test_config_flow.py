@@ -92,10 +92,7 @@ async def test_form(hass: HomeAssistant) -> None:
         assert entry.state is ConfigEntryState.LOADED
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert (
-            result["title"]
-            == f"Airzone {USER_INPUT[CONF_HOST]}:{USER_INPUT[CONF_PORT]}"
-        )
+        assert result["title"] == f"Airzone {CONFIG[CONF_HOST]}:{CONFIG[CONF_PORT]}"
         assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
         assert result["data"][CONF_PORT] == CONFIG[CONF_PORT]
         assert result["data"][CONF_ID] == CONFIG[CONF_ID]
