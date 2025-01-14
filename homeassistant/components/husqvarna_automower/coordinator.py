@@ -52,7 +52,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         self.new_devices_callbacks: list[Callable[[set[str]], None]] = []
         self.new_zones_callbacks: list[Callable[[str, set[str]], None]] = []
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
-        self._device_last_update: set[str] = set()
+        self._devices_last_update: set[str] = set()
         self._zones_last_update: dict[str, set[str]] = {}
         self._areas_last_update: dict[str, set[int]] = {}
 
@@ -69,7 +69,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         except AuthException as err:
             raise ConfigEntryAuthFailed(err) from err
 
-        self._async_add_remove_device(data)
+        self._async_add_remove_devices(data)
         for mower_id in data:
             if data[mower_id].capabilities.stay_out_zones:
                 self._async_add_remove_stay_out_zones(data)
@@ -114,33 +114,33 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "reconnect_task",
             )
 
-    def _async_add_remove_device(self, data: dict[str, MowerAttributes]) -> None:
+    def _async_add_remove_devices(self, data: dict[str, MowerAttributes]) -> None:
         """Add new device, remove non-existing device."""
-        current_device = set(data)
+        current_devices = set(data)
 
         # Skip update if no changes
-        if current_device == self._device_last_update:
+        if current_devices == self._devices_last_update:
             return
 
-        # Process removed device
-        removed_device = self._device_last_update - current_device
-        if removed_device:
-            _LOGGER.debug("Removed device: %s", ", ".join(map(str, removed_device)))
-            self._remove_device(removed_device)
+        # Process removed devices
+        removed_devices = self._devices_last_update - current_devices
+        if removed_devices:
+            _LOGGER.debug("Removed devices: %s", ", ".join(map(str, removed_devices)))
+            self._remove_device(removed_devices)
 
         # Process new device
-        new_device = current_device - self._device_last_update
-        if new_device:
-            _LOGGER.debug("New device found: %s", ", ".join(map(str, new_device)))
-            self._add_new_device(new_device)
+        new_devices = current_devices - self._devices_last_update
+        if new_devices:
+            _LOGGER.debug("New devices found: %s", ", ".join(map(str, new_devices)))
+            self._add_new_devices(new_devices)
 
         # Update device state
-        self._device_last_update = current_device
+        self._devices_last_update = current_devices
 
-    def _remove_device(self, removed_device: set[str]) -> None:
+    def _remove_device(self, removed_devices: set[str]) -> None:
         """Remove device from the registry."""
         device_registry = dr.async_get(self.hass)
-        for mower_id in removed_device:
+        for mower_id in removed_devices:
             if device := device_registry.async_get_device(
                 identifiers={(DOMAIN, str(mower_id))}
             ):
@@ -149,10 +149,10 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                     remove_config_entry_id=self.config_entry.entry_id,
                 )
 
-    def _add_new_device(self, new_device: set[str]) -> None:
+    def _add_new_devices(self, new_devices: set[str]) -> None:
         """Add new device and trigger callbacks."""
         for mower_callback in self.new_devices_callbacks:
-            mower_callback(new_device)
+            mower_callback(new_devices)
 
     def _async_add_remove_stay_out_zones(
         self, data: dict[str, MowerAttributes]
