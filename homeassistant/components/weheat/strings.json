@@ -28,7 +28,7 @@
       "wrong_account": "You can only reauthenticate this account with the same user.",
       "get_user_failed": "Could not retrieve user information from Weheat due to a HTTP error. Please try again later.",
       "get_heat_pumps_failed": "Could not retrieve heat pumps due to a HTTP error. Please try again later.",
-      "no_heat_pumps": "Zero heat pumps are available for this account. If this is incorrect, please contact Weheta support.",
+      "no_heat_pumps": "Zero heat pumps are available for this account. If this is incorrect, please contact Weheat support.",
       "get_heat_pump_data_failed": "Could not retrieve heat pump data due to a HTTP error. Please try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },

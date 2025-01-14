@@ -74,19 +74,9 @@ async def test_duplicate_unique_id(
     mock_setup_entry,
 ) -> None:
     """Check that the config flow is aborted when an entry with the same ID exists."""
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id=USER_UUID_1,
+    result = await handle_pre_config_flow_test_setup(
+        hass, hass_client_no_auth, aioclient_mock
     )
-
-    first_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -113,19 +103,9 @@ async def test_get_user_error(
     expected_reason: str,
 ) -> None:
     """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id=USER_UUID_1,
+    result = await handle_pre_config_flow_test_setup(
+        hass, hass_client_no_auth, aioclient_mock
     )
-
-    first_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     mock_user_id.side_effect = get_user_id_from_token_exception
 
@@ -153,20 +133,10 @@ async def test_get_heat_pumps_error(
     get_heat_pump_exception: Exception,
     expected_reason: str,
 ) -> None:
-    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id=USER_UUID_1,
+    """Check that the config flow is aborted when getting the heat pumps for this results in an HTTP error or different exception."""
+    result = await handle_pre_config_flow_test_setup(
+        hass, hass_client_no_auth, aioclient_mock
     )
-
-    first_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     with (
         patch(
@@ -189,20 +159,10 @@ async def test_get_no_heat_pumps_error(
     mock_setup_entry,
     mock_user_id: AsyncMock,
 ) -> None:
-    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id=USER_UUID_1,
+    """Check that the config flow is aborted when the used does not have access to any heat pump."""
+    result = await handle_pre_config_flow_test_setup(
+        hass, hass_client_no_auth, aioclient_mock
     )
-
-    first_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     with (
         patch(
@@ -236,20 +196,10 @@ async def test_get_heat_pump_data_error(
     get_heat_pump_data_exception: Exception,
     expected_reason: str,
 ) -> None:
-    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
-    first_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={},
-        unique_id=USER_UUID_1,
+    """Check that the config flow is aborted when getting the heat pump data results in an HTTP error or different exception."""
+    result = await handle_pre_config_flow_test_setup(
+        hass, hass_client_no_auth, aioclient_mock
     )
-
-    first_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
-    )
-
-    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
 
     mock_weheat_heat_pump.get_status.side_effect = get_heat_pump_data_exception
 
@@ -304,6 +254,29 @@ async def test_reauth(
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == expected_reason
     assert entry.unique_id == USER_UUID_1
+
+
+async def handle_pre_config_flow_test_setup(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> ConfigFlowResult:
+    """Handle the pre-test setup."""
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=USER_UUID_1,
+    )
+
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    return result
 
 
 async def handle_oauth(
