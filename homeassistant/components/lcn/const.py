@@ -56,6 +56,7 @@ CONF_SCENES = "scenes"
 CONF_REGISTER = "register"
 CONF_OUTPUTS = "outputs"
 CONF_REVERSE_TIME = "reverse_time"
+CONF_POSITION_MODE = "position_mode"
 
 DIM_MODES = ["STEPS50", "STEPS200"]
 

@@ -6,7 +6,12 @@ from typing import Any
 
 import pypck
 
-from homeassistant.components.cover import DOMAIN as DOMAIN_COVER, CoverEntity
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    DOMAIN as DOMAIN_COVER,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
@@ -176,6 +181,9 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     _attr_is_closing = False
     _attr_is_opening = False
     _attr_assumed_state = True
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN cover."""
@@ -185,6 +193,14 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self.motor_port_onoff = self.motor.value * 2
         self.motor_port_updown = self.motor_port_onoff + 1
 
+        # self.position_mode = pypck.lcn_defs.MotorPositionMode[
+        #     config[CONF_DOMAIN_DATA].get(CONF_POSITION_MODE, "NONE")
+        # ]
+        self.position_mode = pypck.lcn_defs.MotorPositionMode.BS4
+
+        if self.position_mode in [pypck.lcn_defs.MotorPositionMode.BS4]:
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
+
         self._is_closed = False
         self._is_closing = False
         self._is_opening = False
@@ -193,7 +209,9 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.motor)
+            await self.device_connection.activate_status_request_handler(
+                self.motor, self.position_mode
+            )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
@@ -204,7 +222,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if not await self.device_connection.control_motor_relays(
-            self.motor.value, pypck.lcn_defs.MotorStateModifier.DOWN
+            self.motor.value, pypck.lcn_defs.MotorStateModifier.DOWN, self.position_mode
         ):
             return
         self._attr_is_opening = False
@@ -214,7 +232,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if not await self.device_connection.control_motor_relays(
-            self.motor.value, pypck.lcn_defs.MotorStateModifier.UP
+            self.motor.value, pypck.lcn_defs.MotorStateModifier.UP, self.position_mode
         ):
             return
         self._attr_is_closed = False
@@ -225,25 +243,53 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if not await self.device_connection.control_motor_relays(
-            self.motor.value, pypck.lcn_defs.MotorStateModifier.STOP
+            self.motor.value, pypck.lcn_defs.MotorStateModifier.STOP, self.position_mode
         ):
             return
         self._attr_is_closing = False
         self._attr_is_opening = False
         self.async_write_ha_state()
 
-    def input_received(self, input_obj: InputType) -> None:
-        """Set cover states when LCN input object (command) is received."""
-        if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
+        """Move the cover to a specific position."""
+        position = kwargs[ATTR_POSITION]
+        if not await self.device_connection.control_motor_relays_position(
+            self.motor.value, 100 - position, mode=self.position_mode
+        ):
             return
-
-        states = input_obj.states  # list of boolean values (relay on/off)
-        if states[self.motor_port_onoff]:  # motor is on
-            self._attr_is_opening = not states[self.motor_port_updown]  # set direction
-            self._attr_is_closing = states[self.motor_port_updown]  # set direction
-        else:  # motor is off
-            self._attr_is_opening = False
-            self._attr_is_closing = False
-            self._attr_is_closed = states[self.motor_port_updown]
+        self._attr_is_closed = (self._attr_current_cover_position == 0) & (
+            position == 0
+        )
+        self._attr_is_closing = self._attr_current_cover_position > position
+        self._attr_is_opening = self._attr_current_cover_position < position
+        self._attr_current_cover_position = position
 
         self.async_write_ha_state()
+
+    def input_received(self, input_obj: InputType) -> None:
+        """Set cover states when LCN input object (command) is received."""
+        if isinstance(input_obj, pypck.inputs.ModStatusRelays):
+            states = input_obj.states  # list of boolean values (relay on/off)
+            if states[self.motor_port_onoff]:  # motor is on
+                self._attr_is_opening = not states[
+                    self.motor_port_updown
+                ]  # set direction
+                self._attr_is_closing = states[self.motor_port_updown]  # set direction
+            else:  # motor is off
+                self._attr_is_opening = False
+                self._attr_is_closing = False
+
+            if self.position_mode == pypck.lcn_defs.MotorPositionMode.NONE:
+                self._attr_is_closed = states[self.motor_port_updown]
+            self.async_write_ha_state()
+
+        elif (
+            isinstance(input_obj, pypck.inputs.ModStatusMotorPositionBS4)
+            and input_obj.motor == self.motor.value
+        ):
+            self._attr_current_cover_position = 100 - input_obj.position_percent
+            if self._attr_current_cover_position in [0, 100]:
+                self._attr_is_opening = False
+                self._attr_is_closing = False
+                self._attr_is_closed = self._attr_current_cover_position == 0
+            self.async_write_ha_state()
