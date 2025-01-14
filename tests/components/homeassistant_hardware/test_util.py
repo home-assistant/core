@@ -2,11 +2,15 @@
 
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
+    OwningAddon,
+    OwningIntegration,
     guess_firmware_info,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -127,3 +131,106 @@ async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
         assert (
             await guess_firmware_info(hass, "/dev/serial/by-id/device1")
         ) == otbr_firmware_info1
+
+
+async def test_owning_addon(hass: HomeAssistant) -> None:
+    """Test `OwningAddon`."""
+
+    owning_addon = OwningAddon(slug="some-addon-slug")
+
+    # Explicitly running
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager"
+    ) as mock_manager:
+        mock_manager.return_value.async_get_addon_info = AsyncMock(
+            return_value=AddonInfo(
+                available=True,
+                hostname="core_some_addon_slug",
+                options={},
+                state=AddonState.RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
+        )
+        assert (await owning_addon.is_running(hass)) is True
+
+    # Explicitly not running
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager"
+    ) as mock_manager:
+        mock_manager.return_value.async_get_addon_info = AsyncMock(
+            return_value=AddonInfo(
+                available=True,
+                hostname="core_some_addon_slug",
+                options={},
+                state=AddonState.NOT_RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
+        )
+        assert (await owning_addon.is_running(hass)) is False
+
+    # Failed to get status
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager"
+    ) as mock_manager:
+        mock_manager.return_value.async_get_addon_info = AsyncMock(
+            side_effect=AddonError()
+        )
+        assert (await owning_addon.is_running(hass)) is False
+
+
+async def test_owning_integration(hass: HomeAssistant) -> None:
+    """Test `OwningIntegration`."""
+    config_entry = MockConfigEntry(domain="mock_domain", unique_id="some_unique_id")
+    config_entry.add_to_hass(hass)
+
+    owning_integration = OwningIntegration(config_entry_id=config_entry.entry_id)
+
+    # Explicitly running
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    assert (await owning_integration.is_running(hass)) is True
+
+    # Explicitly not running
+    config_entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
+    assert (await owning_integration.is_running(hass)) is False
+
+    # Missing config entry
+    owning_integration2 = OwningIntegration(config_entry_id="some_nonexistenct_id")
+    assert (await owning_integration2.is_running(hass)) is False
+
+
+async def test_firmware_info(hass: HomeAssistant) -> None:
+    """Test `FirmwareInfo`."""
+
+    owner1 = AsyncMock()
+    owner2 = AsyncMock()
+
+    firmware_info = FirmwareInfo(
+        device="/dev/ttyUSB1",
+        firmware_type=ApplicationType.EZSP,
+        firmware_version="1.0.0",
+        source="zha",
+        owners=[owner1, owner2],
+    )
+
+    # Both running
+    owner1.is_running.return_value = True
+    owner2.is_running.return_value = True
+    assert (await firmware_info.is_running(hass)) is True
+
+    # Only one running
+    owner1.is_running.return_value = True
+    owner2.is_running.return_value = False
+    assert (await firmware_info.is_running(hass)) is False
+
+    # No owners
+    firmware_info2 = FirmwareInfo(
+        device="/dev/ttyUSB1",
+        firmware_type=ApplicationType.EZSP,
+        firmware_version="1.0.0",
+        source="zha",
+        owners=[],
+    )
+
+    assert (await firmware_info2.is_running(hass)) is False

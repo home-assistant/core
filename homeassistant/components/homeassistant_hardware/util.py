@@ -120,7 +120,11 @@ class OwningIntegration:
         if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
             return False
 
-        return entry.state == ConfigEntryState.LOADED
+        return entry.state in (
+            ConfigEntryState.LOADED,
+            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_IN_PROGRESS,
+        )
 
 
 @dataclass(kw_only=True)
