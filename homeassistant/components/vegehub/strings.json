@@ -17,7 +17,7 @@
     "error": {
       "cannot_connect": "Failed to connect. Ensure Hub is awake, and try again.",
       "timeout_connect": "Timeout establishing connection. Ensure Hub is awake, and try again.",
-      "missing_data": "Unable to complete setup due to missing data."
+      "invalid_ip": "Invalid IPv4 address."
     },
     "abort": {
       "cannot_connect": "Failed to connect to the device. Please try again.",

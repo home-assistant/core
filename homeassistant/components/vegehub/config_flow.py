@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_WEBHOOK_ID,
 )
+from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN
 
@@ -46,9 +47,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if CONF_IP_ADDRESS in user_input and self._hub is None:
                 # When the user has input the IP manually, we need to gather more information
                 # from the Hub before we can continue setup.
-                if len(user_input[CONF_IP_ADDRESS]) <= 0:
-                    _LOGGER.error("Missing IP address for device")
-                    errors["base"] = "missing_data"
+                if not is_ip_address(user_input[CONF_IP_ADDRESS]):
+                    # User-supplied IP address is invalid.
+                    _LOGGER.error("Invalid IP address")
+                    errors["base"] = "invalid_ip"
                     return self.async_show_form(step_id="user", errors=errors)
 
                 self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
@@ -117,16 +119,14 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         )
                         errors["base"] = "timeout_connect"
 
-                    if len(errors) > 0:
-                        return self.async_show_form(step_id="user", errors=errors)
+                    if not errors:
+                        # Save Hub info to be used later when defining the VegeHub object
+                        info_data[CONF_DEVICE] = hub.info
 
-                    # Save Hub info to be used later when defining the VegeHub object
-                    info_data[CONF_DEVICE] = hub.info
-
-                    # Create the config entry for the new device
-                    return self.async_create_entry(
-                        title=f"{self._hostname}", data=info_data
-                    )
+                        # Create the config entry for the new device
+                        return self.async_create_entry(
+                            title=f"{self._hostname}", data=info_data
+                        )
 
         if self._hub is None:
             # Show the form to allow the user to manually enter the IP address
