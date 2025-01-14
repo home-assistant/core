@@ -132,7 +132,7 @@ async def test_turn_on_off(
     with (
         expectation,
         patch(
-            f"pyvesync.vesyncfan.VeSyncHumid200300S.{"turn_on" if turn_on else "turn_off"}",
+            f"pyvesync.vesyncfan.VeSyncHumid200300S.{'turn_on' if turn_on else 'turn_off'}",
             return_value=api_response,
         ) as method_mock,
     ):
