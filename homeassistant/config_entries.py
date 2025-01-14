@@ -22,11 +22,10 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Generic, Self, cast
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 
 from async_interrupt import interrupt
 from propcache import cached_property
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from . import data_entry_flow, loader

@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from pathlib import Path
-import sys
-from typing import Final
+from typing import TYPE_CHECKING, Final
 
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.web import FileResponse, Request, StreamResponse
@@ -18,14 +17,12 @@ CACHE_HEADER = f"public, max-age={CACHE_TIME}"
 CACHE_HEADERS: Mapping[str, str] = {CACHE_CONTROL: CACHE_HEADER}
 RESPONSE_CACHE: LRU[tuple[str, Path], tuple[Path, str]] = LRU(512)
 
-if sys.version_info >= (3, 13):
-    # guess_type is soft-deprecated in 3.13
-    # for paths and should only be used for
-    # URLs. guess_file_type should be used
-    # for paths instead.
-    _GUESSER = CONTENT_TYPES.guess_file_type
-else:
+if TYPE_CHECKING:
+    # mypy uses Python 3.12 syntax for type checking
+    # once it uses Python 3.13, this can be removed
     _GUESSER = CONTENT_TYPES.guess_type
+else:
+    _GUESSER = CONTENT_TYPES.guess_file_type
 
 
 class CachingStaticResource(StaticResource):
