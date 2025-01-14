@@ -44,7 +44,7 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
         self._device_id = device.device_id
         self._should_poll = not update_by_webhook and not isinstance(device, Remote)
         self._update_by_webhook = update_by_webhook
-        self._need_initialized = update_by_webhook
+        self._is_initialized = not update_by_webhook
 
     def update_by_webhook(self) -> bool:
         """Return update_by_webhook value."""
@@ -52,10 +52,10 @@ class SwitchBotCoordinator(DataUpdateCoordinator[Status]):
 
     async def _async_update_data(self) -> Status:
         """Fetch data from API endpoint."""
-        if not self._should_poll and not self._need_initialized:
+        if not self._should_poll and self._is_initialized:
             return None
 
-        self._need_initialized = False
+        self._is_initialized = True
         try:
             _LOGGER.debug("Refreshing %s", self._device_id)
             async with timeout(10):
