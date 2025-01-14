@@ -268,14 +268,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
                 index = int(media_id)
             except ValueError:
                 # Try finding index by name
-                index = next(
-                    (
-                        index
-                        for index, favorite in self.coordinator.source_manager.favorites.items()  # type: ignore[union-attr]
-                        if favorite.name == media_id
-                    ),
-                    None,
-                )
+                index = self.coordinator.get_favorite_index(media_id)
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_preset_station(index)
@@ -286,7 +279,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self.coordinator.source_manager.play_source(source, self._player)  # type: ignore[union-attr]
+        await self.coordinator.play_source(source, self._player)
 
     @log_command_error("set shuffle")
     async def async_set_shuffle(self, shuffle: bool) -> None:
@@ -396,16 +389,14 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         return self._player.shuffle
 
     @property
-    def source(self) -> str:
+    def source(self) -> str | None:
         """Name of the current input source."""
-        return self.coordinator.source_manager.get_current_source(  # type: ignore[union-attr]
-            self._player.now_playing_media
-        )
+        return self.coordinator.get_current_source(self._player.now_playing_media)
 
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
-        return self.coordinator.source_manager.source_list  # type: ignore[union-attr]
+        return self.coordinator.source_list
 
     @property
     def state(self) -> MediaPlayerState:

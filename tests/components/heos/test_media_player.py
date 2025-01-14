@@ -1,7 +1,7 @@
 """Tests for the Heos Media Player platform."""
 
-import asyncio
 from collections.abc import Sequence
+from datetime import timedelta
 
 from pyheos import (
     AddCriteriaType,
@@ -17,8 +17,8 @@ from pyheos import (
 )
 import pytest
 
-from homeassistant.components.heos import media_player
-from homeassistant.components.heos.const import DOMAIN, SIGNAL_HEOS_UPDATED
+from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.media_player import BASE_SUPPORTED_FEATURES
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -63,9 +63,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("controller")
@@ -101,12 +101,12 @@ async def test_state_attributes(
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | media_player.BASE_SUPPORTED_FEATURES
+        | BASE_SUPPORTED_FEATURES
     )
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert (
         state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == config_entry.runtime_data.coordinator.source_manager.source_list
+        == config_entry.runtime_data.coordinator.source_list
     )
 
 
@@ -193,32 +193,30 @@ async def test_updates_from_connection_event(
     assert "Unable to refresh players" in caplog.text
 
 
-async def test_updates_from_sources_updated(
+@pytest.mark.parametrize(
+    "event", [const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED]
+)
+async def test_sources_updates_from_events(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     controller: Heos,
     input_sources: Sequence[MediaItem],
+    event: str,
 ) -> None:
     """Tests player updates from changes in sources list."""
     config_entry.add_to_hass(hass)
+    controller.get_input_sources.return_value = []
     await hass.config_entries.async_setup(config_entry.entry_id)
     player = controller.players[1]
-    event = asyncio.Event()
-
-    async def set_signal():
-        event.set()
-
-    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
-
-    input_sources.clear()
-    player.heos.dispatcher.send(
-        SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
-    )
-    await event.wait()
-    source_list = config_entry.runtime_data.coordinator.source_manager.source_list
-    assert len(source_list) == 2
     state = hass.states.get("media_player.test_player")
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
+    assert len(state.attributes[ATTR_INPUT_SOURCE_LIST]) == 2
+
+    controller.get_input_sources.return_value = input_sources
+    await player.heos.dispatcher.wait_send(SignalType.CONTROLLER_EVENT, event, {})
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=1))
+    await hass.async_block_till_done()
+    state = hass.states.get("media_player.test_player")
+    assert len(state.attributes[ATTR_INPUT_SOURCE_LIST]) == 3
 
 
 async def test_updates_from_players_changed(
@@ -275,31 +273,6 @@ async def test_updates_from_players_changed_new_ids(
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
         == "media_player.test_player"
     )
-
-
-async def test_updates_from_user_changed(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
-) -> None:
-    """Tests player updates from changes in user."""
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    event = asyncio.Event()
-
-    async def set_signal():
-        event.set()
-
-    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
-
-    controller._signed_in_username = None
-    player.heos.dispatcher.send(
-        SignalType.CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
-    )
-    await event.wait()
-    source_list = config_entry.runtime_data.coordinator.source_manager.source_list
-    assert len(source_list) == 1
-    state = hass.states.get("media_player.test_player")
-    assert state.attributes[ATTR_INPUT_SOURCE_LIST] == source_list
 
 
 async def test_clear_playlist(

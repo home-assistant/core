@@ -1,8 +1,7 @@
 """Define coordinator functionality for HEOS the integration."""
 
-import asyncio
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Optional
 
@@ -10,31 +9,27 @@ from pyheos import (
     Credentials,
     Heos,
     HeosError,
+    HeosNowPlayingMedia,
     HeosOptions,
     HeosPlayer,
+    MediaItem,
     PlayerUpdateResult,
     const as heos_const,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util import Throttle
 
-from .const import (
-    COMMAND_RETRY_ATTEMPTS,
-    COMMAND_RETRY_DELAY,
-    DOMAIN,
-    SIGNAL_HEOS_PLAYER_ADDED,
-    SIGNAL_HEOS_UPDATED,
-)
+from .const import DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
@@ -59,7 +54,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     need to request new data.
     """
 
-    source_manager: Optional["SourceManager"]
     group_manager: Optional["GroupManager"]
 
     def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
@@ -72,7 +66,10 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             name=DOMAIN,
         )
         self.heos: Heos = self.__create_api()
-        self.source_manager = None
+        self._update_sources_pending: bool = False
+        self._source_list: list[str] = []
+        self._favorites: dict[int, MediaItem] = {}
+        self._inputs: list[MediaItem] = []
         self.group_manager = None
 
     def __create_api(self) -> Heos:
@@ -108,6 +105,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             _LOGGER.debug("Unable to connect to host %s: %s", self.host, error)
             raise ConfigEntryNotReady from error
 
+        if not self.heos.is_signed_in:
+            _LOGGER.warning(
+                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
+            )
+        # Update sources
+        await self.__update_sources()
+
         # Update entities when disconnected so they report unavailable
         self.heos.add_on_disconnected(self.__disconnected)
         # Refresh resources when (re)connected and update entities so they report available
@@ -119,20 +123,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         # Get players and sources
         try:
             players = await self.heos.get_players()
-            favorites = {}
-            if self.heos.is_signed_in:
-                favorites = await self.heos.get_favorites()
-            else:
-                _LOGGER.warning(
-                    "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-                )
-            inputs = await self.heos.get_input_sources()
         except HeosError as error:
             _LOGGER.debug("Unable to retrieve players and sources: %s", error)
             raise ConfigEntryNotReady from error
-
-        self.source_manager = SourceManager(favorites, inputs)
-        self.source_manager.connect_update(self.hass, self.heos)
 
         self.group_manager = GroupManager(self.hass, self.heos, players)
         self.group_manager.connect_update()
@@ -168,6 +161,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         # After reconnecting, player_id may have changed
         if player_updates.updated_player_ids:
             self.__update_ids(player_updates.updated_player_ids)
+        # Build sources list
+        await self.__update_sources()
+        # Update players
         self.async_update_listeners()
 
     async def __controller_event(self, event: str, data: PlayerUpdateResult | None):
@@ -179,6 +175,25 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             assert data is not None
             if data.updated_player_ids:
                 self.__update_ids(data.updated_player_ids)
+        elif (
+            event in (heos_const.EVENT_SOURCES_CHANGED, heos_const.EVENT_USER_CHANGED)
+            and not self._update_sources_pending
+        ):
+            # Update the sources after a brief delay as we may have received a flood of
+            # change events and immediately refreshing sources will likely error out.
+            self._update_sources_pending = True
+            assert self.config_entry is not None
+            self.config_entry.async_on_unload(
+                async_call_later(
+                    self.hass,
+                    timedelta(seconds=1),
+                    HassJob(
+                        self.__update_sources,
+                        "heos_update_sources",
+                        cancel_on_shutdown=True,
+                    ),
+                )
+            )
         self.async_update_listeners()
 
     def __update_ids(self, mapped_ids: dict[int, int]):
@@ -209,6 +224,96 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                     entity_id, new_unique_id=str(new_id)
                 )
                 _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
+
+    async def __update_sources(self, _: datetime | None = None) -> None:
+        """Rebuild the source list after a change event."""
+        self._source_list.clear()
+        # Get favorites only if reportedly signed in.
+        if self.heos.is_signed_in:
+            try:
+                self._favorites = await self.heos.get_favorites()
+            except HeosError as error:
+                _LOGGER.error("Unable to retrieve favorites: %s", error)
+            else:
+                self._source_list.extend(
+                    [favorite.name for favorite in self._favorites.values()]
+                )
+        # Get input sources (across all devices in the HEOS system)
+        try:
+            self._inputs = await self.heos.get_input_sources()
+        except HeosError as error:
+            _LOGGER.error("Unable to retrieve input sources: %s", error)
+        else:
+            self._source_list.extend([source.name for source in self._inputs])
+
+        self._update_sources_pending = False
+
+    async def play_source(self, source: str, player: HeosPlayer) -> None:
+        """Determine type of source and play it."""
+        index = next(
+            (
+                index
+                for index, favorite in self._favorites.items()
+                if favorite.name == source
+            ),
+            None,
+        )
+        if index is not None:
+            await player.play_preset_station(index)
+            return
+
+        input_source = next(
+            (
+                input_source
+                for input_source in self._inputs
+                if input_source.name == source
+            ),
+            None,
+        )
+        if input_source is not None:
+            await player.play_input_source(input_source.media_id)
+            return
+
+        _LOGGER.error("Unknown source: %s", source)
+
+    def get_favorite_index(self, name: str) -> int | None:
+        """Get the index of a favorite by media_id,."""
+        return next(
+            (
+                index
+                for index, favorite in self._favorites.items()
+                if favorite.name == name
+            ),
+            None,
+        )
+
+    def get_current_source(self, now_playing_media: HeosNowPlayingMedia) -> str | None:
+        """Determine current source from now playing media."""
+        # Match input by input_name:media_id
+        if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
+            return next(
+                (
+                    input_source.name
+                    for input_source in self._inputs
+                    if input_source.media_id == now_playing_media.media_id
+                ),
+                None,
+            )
+        # Try matching favorite by name:station or media_id:album_id
+        return next(
+            (
+                source.name
+                for source in self._favorites.values()
+                if source.name == now_playing_media.station
+                or source.media_id == now_playing_media.album_id
+            ),
+            None,
+        )
+
+    @property
+    def source_list(self) -> list[str]:
+        """Return the list of sources for all players."""
+        return self._source_list
 
 
 class GroupManager:
@@ -351,131 +456,3 @@ class GroupManager:
     def group_membership(self):
         """Provide access to group members for player entities."""
         return self._group_membership
-
-
-class SourceManager:
-    """Class that manages sources for players."""
-
-    def __init__(
-        self,
-        favorites,
-        inputs,
-        *,
-        retry_delay: int = COMMAND_RETRY_DELAY,
-        max_retry_attempts: int = COMMAND_RETRY_ATTEMPTS,
-    ) -> None:
-        """Init input manager."""
-        self.retry_delay = retry_delay
-        self.max_retry_attempts = max_retry_attempts
-        self.favorites = favorites
-        self.inputs = inputs
-        self.source_list = self._build_source_list()
-
-    def _build_source_list(self):
-        """Build a single list of inputs from various types."""
-        source_list = []
-        source_list.extend([favorite.name for favorite in self.favorites.values()])
-        source_list.extend([source.name for source in self.inputs])
-        return source_list
-
-    async def play_source(self, source: str, player):
-        """Determine type of source and play it."""
-        index = next(
-            (
-                index
-                for index, favorite in self.favorites.items()
-                if favorite.name == source
-            ),
-            None,
-        )
-        if index is not None:
-            await player.play_preset_station(index)
-            return
-
-        input_source = next(
-            (
-                input_source
-                for input_source in self.inputs
-                if input_source.name == source
-            ),
-            None,
-        )
-        if input_source is not None:
-            await player.play_input_source(input_source.media_id)
-            return
-
-        _LOGGER.error("Unknown source: %s", source)
-
-    def get_current_source(self, now_playing_media):
-        """Determine current source from now playing media."""
-        # Match input by input_name:media_id
-        if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
-            return next(
-                (
-                    input_source.name
-                    for input_source in self.inputs
-                    if input_source.media_id == now_playing_media.media_id
-                ),
-                None,
-            )
-        # Try matching favorite by name:station or media_id:album_id
-        return next(
-            (
-                source.name
-                for source in self.favorites.values()
-                if source.name == now_playing_media.station
-                or source.media_id == now_playing_media.album_id
-            ),
-            None,
-        )
-
-    @callback
-    def connect_update(self, hass: HomeAssistant, controller: Heos) -> None:
-        """Connect listener for when sources change and signal player update.
-
-        EVENT_SOURCES_CHANGED is often raised multiple times in response to a
-        physical event therefore throttle it. Retrieving sources immediately
-        after the event may fail so retry.
-        """
-
-        @Throttle(MIN_UPDATE_SOURCES)
-        async def get_sources():
-            retry_attempts = 0
-            while True:
-                try:
-                    favorites = {}
-                    if controller.is_signed_in:
-                        favorites = await controller.get_favorites()
-                    inputs = await controller.get_input_sources()
-                except HeosError as error:
-                    if retry_attempts < self.max_retry_attempts:
-                        retry_attempts += 1
-                        _LOGGER.debug(
-                            "Error retrieving sources and will retry: %s", error
-                        )
-                        await asyncio.sleep(self.retry_delay)
-                    else:
-                        _LOGGER.error("Unable to update sources: %s", error)
-                        return None
-                else:
-                    return favorites, inputs
-
-        async def _update_sources() -> None:
-            # If throttled, it will return None
-            if sources := await get_sources():
-                self.favorites, self.inputs = sources
-                self.source_list = self._build_source_list()
-                _LOGGER.debug("Sources updated due to changed event")
-                # Let players know to update
-                async_dispatcher_send(hass, SIGNAL_HEOS_UPDATED)
-
-        async def _on_controller_event(event: str, data: Any | None) -> None:
-            if event in (
-                heos_const.EVENT_SOURCES_CHANGED,
-                heos_const.EVENT_USER_CHANGED,
-            ):
-                await _update_sources()
-
-        controller.add_on_connected(_update_sources)
-        controller.add_on_user_credentials_invalid(_update_sources)
-        controller.add_on_controller_event(_on_controller_event)

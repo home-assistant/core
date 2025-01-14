@@ -2,15 +2,7 @@
 
 from typing import cast
 
-from pyheos import (
-    CommandFailedError,
-    Heos,
-    HeosError,
-    HeosOptions,
-    SignalHeosEvent,
-    SignalType,
-    const,
-)
+from pyheos import Heos, HeosError, HeosOptions, SignalHeosEvent, SignalType
 import pytest
 
 from homeassistant.components.heos.const import (
