@@ -15,6 +15,7 @@ from habiticalib import (
     TaskType,
     UserData,
     deserialize_task,
+    ha,
 )
 
 from homeassistant.components.automation import automations_with_entity
@@ -35,13 +36,20 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import StateType
 
-from .const import ASSETS_URL, DOMAIN, SVG_CLASS, SVG_GP, SVG_HP, SVG_MP, SVG_XP
+from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
 from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
+
+SVG_CLASS = {
+    HabiticaClass.WARRIOR: ha.WARRIOR,
+    HabiticaClass.ROGUE: ha.ROGUE,
+    HabiticaClass.MAGE: ha.WIZARD,
+    HabiticaClass.HEALER: ha.HEALER,
+}
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -101,7 +109,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.HEALTH,
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.hp,
-        entity_picture=SVG_HP,
+        entity_picture=ha.HP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.HEALTH_MAX,
@@ -114,25 +122,25 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.MANA,
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.mp,
-        entity_picture=SVG_MP,
+        entity_picture=ha.MP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MANA_MAX,
         translation_key=HabiticaSensorEntity.MANA_MAX,
         value_fn=lambda user, _: user.stats.maxMP,
-        entity_picture=SVG_MP,
+        entity_picture=ha.MP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EXPERIENCE,
         translation_key=HabiticaSensorEntity.EXPERIENCE,
         value_fn=lambda user, _: user.stats.exp,
-        entity_picture=SVG_XP,
+        entity_picture=ha.XP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EXPERIENCE_MAX,
         translation_key=HabiticaSensorEntity.EXPERIENCE_MAX,
         value_fn=lambda user, _: user.stats.toNextLevel,
-        entity_picture=SVG_XP,
+        entity_picture=ha.XP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.LEVEL,
@@ -144,7 +152,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.GOLD,
         suggested_display_precision=2,
         value_fn=lambda user, _: user.stats.gp,
-        entity_picture=SVG_GP,
+        entity_picture=ha.GP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.CLASS,
@@ -222,7 +230,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         value_fn=(
             lambda user, _: sum(n for k, n in user.items.food.items() if k != "Saddle")
         ),
-        entity_picture="Pet_Food_Strawberry.png",
+        entity_picture=ha.FOOD,
         attributes_fn=lambda user, content: inventory_list(user, content, "food"),
     ),
     HabiticaSensorEntityDescription(
@@ -378,13 +386,10 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
-        if (
-            self.entity_description.key is HabiticaSensorEntity.CLASS
-            and self.coordinator.data.user.stats.Class
-            and (lvl := self.coordinator.data.user.stats.lvl)
-            and lvl >= 10
+        if self.entity_description.key is HabiticaSensorEntity.CLASS and (
+            _class := self.coordinator.data.user.stats.Class
         ):
-            return SVG_CLASS[self.coordinator.data.user.stats.Class.value]
+            return SVG_CLASS[_class]
 
         if entity_picture := self.entity_description.entity_picture:
             return (
