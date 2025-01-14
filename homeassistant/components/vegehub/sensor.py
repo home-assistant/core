@@ -64,7 +64,7 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
-        self._mac_address: str = mac_address
+        self._mac_address = mac_address
         self._attr_unique_id: str = (
             f"vegehub_{mac_address}_{slot}".lower()
         )  # Generate a unique_id using mac and slot
