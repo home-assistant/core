@@ -63,20 +63,20 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.api.register_data_callback(self.callback)
             self.ws_connected = True
         try:
-            self.data = await self.api.get_status()
+            data = await self.api.get_status()
         except ApiException as err:
             raise UpdateFailed(err) from err
         except AuthException as err:
             raise ConfigEntryAuthFailed(err) from err
 
-        self._async_add_remove_device()
-        for mower_id in self.data:
-            if self.data[mower_id].capabilities.stay_out_zones:
-                self._async_add_remove_stay_out_zones()
-        for mower_id in self.data:
-            if self.data[mower_id].capabilities.work_areas:
-                self._async_add_remove_work_areas()
-        return self.data
+        self._async_add_remove_device(data)
+        for mower_id in data:
+            if data[mower_id].capabilities.stay_out_zones:
+                self._async_add_remove_stay_out_zones(data)
+        for mower_id in data:
+            if data[mower_id].capabilities.work_areas:
+                self._async_add_remove_work_areas(data)
+        return data
 
     @callback
     def callback(self, ws_data: dict[str, MowerAttributes]) -> None:
@@ -114,9 +114,9 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
                 "reconnect_task",
             )
 
-    def _async_add_remove_device(self) -> None:
+    def _async_add_remove_device(self, data: dict[str, MowerAttributes]) -> None:
         """Add new device, remove non-existing device."""
-        current_device = set(self.data)
+        current_device = set(data)
 
         # Skip update if no changes
         if current_device == self._device_last_update:
@@ -154,11 +154,13 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
         for mower_callback in self.new_devices_callbacks:
             mower_callback(new_device)
 
-    def _async_add_remove_stay_out_zones(self) -> None:
+    def _async_add_remove_stay_out_zones(
+        self, data: dict[str, MowerAttributes]
+    ) -> None:
         """Add new stay-out zones, remove non-existing stay-out zones."""
         current_zones = {
             mower_id: set(mower_data.stay_out_zones.zones)
-            for mower_id, mower_data in self.data.items()
+            for mower_id, mower_data in data.items()
             if mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
         }
@@ -200,11 +202,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
 
         return current_zones
 
-    def _async_add_remove_work_areas(self) -> None:
+    def _async_add_remove_work_areas(self, data: dict[str, MowerAttributes]) -> None:
         """Add new work areas, remove non-existing work areas."""
         current_areas = {
             mower_id: set(mower_data.work_areas)
-            for mower_id, mower_data in self.data.items()
+            for mower_id, mower_data in data.items()
             if mower_data.capabilities.work_areas and mower_data.work_areas is not None
         }
 
