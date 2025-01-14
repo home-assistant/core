@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
@@ -69,6 +69,19 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()
 
+        uri = urlparse(discovery_info.config["uri"])
+        for entry in self._async_current_entries(include_ignore=True):
+            if (
+                entry.data[CONF_HOST] == uri.hostname
+                and entry.data[CONF_PORT] == uri.port
+            ):
+                return self.async_update_reload_and_abort(
+                    entry,
+                    unique_id=discovery_info.uuid,
+                    reload_even_if_entry_is_unchanged=False,
+                    reason="already_configured",
+                )
+
         self._hassio_discovery = discovery_info
         self.context.update(
             {
@@ -125,6 +138,19 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         self.context["title_placeholders"] = {"name": self._name}
+
+        for entry in self._async_current_entries(include_ignore=True):
+            if (
+                entry.data[CONF_HOST] == service.host
+                and entry.data[CONF_PORT] == service.port
+                and entry.source != SOURCE_HASSIO
+            ):
+                return self.async_update_reload_and_abort(
+                    entry,
+                    unique_id=unique_id,
+                    reload_even_if_entry_is_unchanged=False,
+                    reason="already_configured",
+                )
 
         self._service = service
         return await self.async_step_zeroconf_confirm()

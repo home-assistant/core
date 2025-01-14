@@ -45,6 +45,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, TIMER_DATA
 from .timers import (
+    CancelAllTimersIntentHandler,
     CancelTimerIntentHandler,
     DecreaseTimerIntentHandler,
     IncreaseTimerIntentHandler,
@@ -130,6 +131,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, SetPositionIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
+    intent.async_register(hass, CancelAllTimersIntentHandler())
     intent.async_register(hass, IncreaseTimerIntentHandler())
     intent.async_register(hass, DecreaseTimerIntentHandler())
     intent.async_register(hass, PauseTimerIntentHandler())
@@ -137,7 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, TimerStatusIntentHandler())
     intent.async_register(hass, GetCurrentDateIntentHandler())
     intent.async_register(hass, GetCurrentTimeIntentHandler())
-    intent.async_register(hass, HelloIntentHandler())
+    intent.async_register(hass, RespondIntentHandler())
 
     return True
 
@@ -421,15 +423,25 @@ class GetCurrentTimeIntentHandler(intent.IntentHandler):
         return response
 
 
-class HelloIntentHandler(intent.IntentHandler):
+class RespondIntentHandler(intent.IntentHandler):
     """Responds with no action."""
 
     intent_type = intent.INTENT_RESPOND
     description = "Returns the provided response with no action."
 
+    slot_schema = {
+        vol.Optional("response"): cv.string,
+    }
+
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Return the provided response, but take no action."""
-        return intent_obj.create_response()
+        slots = self.async_validate_slots(intent_obj.slots)
+        response = intent_obj.create_response()
+
+        if "response" in slots:
+            response.async_set_speech(slots["response"]["value"])
+
+        return response
 
 
 async def _async_process_intent(

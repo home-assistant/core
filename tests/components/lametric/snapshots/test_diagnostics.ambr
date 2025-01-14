@@ -2,6 +2,7 @@
 # name: test_diagnostics
   dict({
     'audio': dict({
+      'available': True,
       'volume': 100,
       'volume_limit': dict({
         'range_max': 100,
@@ -26,6 +27,10 @@
       'brightness_mode': 'auto',
       'display_type': 'mixed',
       'height': 8,
+      'on': None,
+      'screensaver': dict({
+        'enabled': False,
+      }),
       'width': 37,
     }),
     'mode': 'auto',

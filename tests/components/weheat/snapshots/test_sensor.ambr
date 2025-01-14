@@ -123,6 +123,106 @@
     'state': '33',
   })
 # ---
+# name: test_all_entities[sensor.test_model_compressor_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_compressor_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor speed',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_rpm',
+    'unique_id': '0000-1111-2222-3333_compressor_rpm',
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_compressor_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Compressor speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'rpm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_compressor_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '4500',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_compressor_usage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_compressor_usage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor usage',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_percentage',
+    'unique_id': '0000-1111-2222-3333_compressor_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_compressor_usage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Model Compressor usage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_compressor_usage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
 # name: test_all_entities[sensor.test_model_cop-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -602,6 +702,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21',
+  })
+# ---
+# name: test_all_entities[sensor.test_model_total_energy_output-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_model_total_energy_output',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy output',
+    'platform': 'weheat',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_output',
+    'unique_id': '0000-1111-2222-3333_energy_output',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_entities[sensor.test_model_total_energy_output-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Test Model Total energy output',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_model_total_energy_output',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '56789',
   })
 # ---
 # name: test_all_entities[sensor.test_model_water_inlet_temperature-entry]

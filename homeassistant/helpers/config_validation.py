@@ -1574,10 +1574,10 @@ TIME_CONDITION_SCHEMA = vol.All(
             **CONDITION_BASE_SCHEMA,
             vol.Required(CONF_CONDITION): "time",
             vol.Optional("before"): vol.Any(
-                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+                time, vol.All(str, entity_domain(["input_datetime", "time", "sensor"]))
             ),
             vol.Optional("after"): vol.Any(
-                time, vol.All(str, entity_domain(["input_datetime", "sensor"]))
+                time, vol.All(str, entity_domain(["input_datetime", "time", "sensor"]))
             ),
             vol.Optional("weekday"): weekdays,
         }

@@ -239,7 +239,6 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             ].type,  # Device type is not sent in device state update, and it can't change, so we just reuse the existing one
             BarrierState(
                 deviceId=raw_data["deviceId"],
-                desired=json.loads(raw_data["desired"]),
                 reported=json.loads(raw_data["reported"]),
                 connectionState=ConnectionState(
                     connected=raw_data["connectionState"]["connected"],

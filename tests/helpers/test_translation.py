@@ -74,7 +74,7 @@ def test_load_translations_files_by_language(
                             "name": "Other 4",
                             "unit_of_measurement": "quantities",
                         },
-                        "outlet": {"name": "Outlet " "{placeholder}"},
+                        "outlet": {"name": "Outlet {placeholder}"},
                     }
                 },
                 "something": "else",

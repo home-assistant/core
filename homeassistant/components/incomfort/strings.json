@@ -31,6 +31,19 @@
       "unknown": "[%key:component::incomfort::config::abort::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Intergas InComfort Lan2RF Gateway options",
+        "data": {
+          "legacy_setpoint_status": "Legacy setpoint handling"
+        },
+        "data_description": {
+          "legacy_setpoint_status": "Some older gateway models with an older firmware versions might not update the thermostat setpoint and override settings correctly. Enable this option if you experience issues in updating the setpoint for your thermostat. It will use the actual setpoint of the thermostat instead of the override. As side effect is that it might take a few minutes before the setpoint is updated."
+        }
+      }
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_unknown": {
       "title": "YAML import failed with unknown error",

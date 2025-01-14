@@ -12,17 +12,13 @@ from pyrainbird.data import WifiParams
 from pyrainbird.exceptions import RainbirdApiException, RainbirdAuthException
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 
+from . import RainbirdConfigEntry
 from .const import (
     ATTR_DURATION,
     CONF_SERIAL_NUMBER,
@@ -69,7 +65,7 @@ class RainbirdConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RainbirdConfigEntry,
     ) -> RainBirdOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RainBirdOptionsFlowHandler()

@@ -10,10 +10,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PlugwiseConfigEntry
-from .const import LOCATION, SelectOptionsType, SelectType
+from .const import SelectOptionsType, SelectType
 from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -89,8 +91,12 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
     ) -> None:
         """Initialise the selector."""
         super().__init__(coordinator, device_id)
-        self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
+        self.entity_description = entity_description
+
+        self._location = device_id
+        if (location := self.device.get("location")) is not None:
+            self._location = location
 
     @property
     def current_option(self) -> str:
@@ -106,8 +112,8 @@ class PlugwiseSelectEntity(PlugwiseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change to the selected entity option.
 
-        self.device[LOCATION] and STATE_ON are required for the thermostat-schedule select.
+        self._location and STATE_ON are required for the thermostat-schedule select.
         """
         await self.coordinator.api.set_select(
-            self.entity_description.key, self.device[LOCATION], option, STATE_ON
+            self.entity_description.key, self._location, option, STATE_ON
         )

@@ -7,6 +7,11 @@
           "post_code": "Postal code",
           "house_number": "House number",
           "house_letter": "House letter/additional"
+        },
+        "data_description": {
+          "post_code": "The postal code of the address, for example 7500AA",
+          "house_number": "The house number of the address",
+          "house_letter": "The house letter or additional information of the address"
         }
       }
     },

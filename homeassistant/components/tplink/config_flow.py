@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from kasa import (
     AuthenticationError,
@@ -13,13 +13,15 @@ from kasa import (
     DeviceConfig,
     Discover,
     KasaException,
+    Module,
     TimeoutError,
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp
+from homeassistant.components import dhcp, ffmpeg, stream
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -31,6 +33,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
     CONF_MODEL,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -48,9 +51,11 @@ from . import (
 )
 from .const import (
     CONF_AES_KEYS,
+    CONF_CAMERA_CREDENTIALS,
     CONF_CONFIG_ENTRY_MINOR_VERSION,
     CONF_CONNECTION_PARAMETERS,
     CONF_CREDENTIALS_HASH,
+    CONF_LIVE_VIEW,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DOMAIN,
@@ -60,6 +65,16 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_AUTH_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+)
+
+STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
+
+STEP_CAMERA_AUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_LIVE_VIEW): bool,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+    }
 )
 
 
@@ -227,7 +242,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.async_create_task(
                     self._async_reload_requires_auth_entries(), eager_start=False
                 )
-                return self._async_create_entry_from_device(self._discovered_device)
+                if self._async_supports_camera_credentials(device):
+                    return await self.async_step_camera_auth_confirm()
+
+                return self._async_create_or_update_entry_from_device(
+                    self._discovered_device
+                )
 
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
@@ -253,7 +273,12 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovered_device is not None
         if user_input is not None:
-            return self._async_create_entry_from_device(self._discovered_device)
+            if self._async_supports_camera_credentials(self._discovered_device):
+                return await self.async_step_camera_auth_confirm()
+
+            return self._async_create_or_update_entry_from_device(
+                self._discovered_device
+            )
 
         self._set_confirm_only()
         placeholders = self._async_make_placeholders_from_discovery()
@@ -281,6 +306,13 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             return host, None
 
         return host, port
+
+    def _async_supports_camera_credentials(self, device: Device) -> bool:
+        """Return True if device could have separate camera credentials."""
+        if camera_module := device.modules.get(Module.Camera):
+            self._discovered_device = device
+            return bool(camera_module.stream_rtsp_url())
+        return False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -324,7 +356,11 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 if not device:
                     return await self.async_step_user_auth_confirm()
-                return self._async_create_entry_from_device(device)
+
+                if self._async_supports_camera_credentials(device):
+                    return await self.async_step_camera_auth_confirm()
+
+                return self._async_create_or_update_entry_from_device(device)
 
         return self.async_show_form(
             step_id="user",
@@ -375,11 +411,112 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass.async_create_task(
                         self._async_reload_requires_auth_entries(), eager_start=False
                     )
-                    return self._async_create_entry_from_device(device)
+                    if self._async_supports_camera_credentials(device):
+                        return await self.async_step_camera_auth_confirm()
+
+                    return self._async_create_or_update_entry_from_device(device)
 
         return self.async_show_form(
             step_id="user_auth_confirm",
             data_schema=STEP_AUTH_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=placeholders,
+        )
+
+    def _create_camera_entry(
+        self, device: Device, un: str, pw: str
+    ) -> ConfigFlowResult:
+        entry_data: dict[str, bool | dict[str, str]] = {CONF_LIVE_VIEW: True}
+        entry_data[CONF_CAMERA_CREDENTIALS] = {
+            CONF_USERNAME: un,
+            CONF_PASSWORD: pw,
+        }
+        _LOGGER.debug("Creating camera account entry for device %s", device.host)
+        return self._async_create_or_update_entry_from_device(
+            device, camera_data=entry_data
+        )
+
+    async def async_step_camera_auth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that gives the user option to set camera credentials."""
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+        device = self._discovered_device
+        assert device
+
+        if user_input:
+            live_view = user_input[CONF_LIVE_VIEW]
+            if not live_view:
+                return self._async_create_or_update_entry_from_device(
+                    device, camera_data={CONF_LIVE_VIEW: False}
+                )
+
+            un = user_input.get(CONF_USERNAME)
+            pw = user_input.get(CONF_PASSWORD)
+
+        if user_input and un and pw:
+            camera_creds = Credentials(un, cast(str, pw))
+
+            camera_module = device.modules[Module.Camera]
+            rtsp_url = camera_module.stream_rtsp_url(camera_creds)
+            assert rtsp_url
+
+            # If camera fails to create HLS stream via 'stream' then try
+            # ffmpeg.async_get_image as some cameras do not work with HLS
+            # and the frontend will fallback to mpeg on error
+            try:
+                await stream.async_check_stream_client_error(self.hass, rtsp_url)
+            except stream.StreamOpenClientError as ex:
+                if ex.error_code is stream.StreamClientError.Unauthorized:
+                    errors["base"] = "invalid_camera_auth"
+                else:
+                    _LOGGER.debug(
+                        "Device %s client error checking stream: %s", device.host, ex
+                    )
+                    if await ffmpeg.async_get_image(self.hass, rtsp_url):
+                        return self._create_camera_entry(device, un, pw)
+
+                    errors["base"] = "cannot_connect_camera"
+                    placeholders["error"] = str(ex)
+            except Exception as ex:  # noqa: BLE001
+                _LOGGER.debug("Device %s error checking stream: %s", device.host, ex)
+                if await ffmpeg.async_get_image(self.hass, rtsp_url):
+                    return self._create_camera_entry(device, un, pw)
+
+                errors["base"] = "cannot_connect_camera"
+                placeholders["error"] = str(ex)
+            else:
+                return self._create_camera_entry(device, un, pw)
+
+        elif user_input:
+            errors["base"] = "camera_creds"
+
+        entry = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+        elif self.source == SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+
+        if entry:
+            placeholders[CONF_NAME] = entry.data[CONF_ALIAS]
+            placeholders[CONF_MODEL] = entry.data[CONF_MODEL]
+            placeholders[CONF_HOST] = entry.data[CONF_HOST]
+
+        if user_input:
+            form_data = {**user_input}
+        elif entry:
+            form_data = {**entry.data.get(CONF_CAMERA_CREDENTIALS, {})}
+            form_data[CONF_LIVE_VIEW] = entry.data.get(CONF_LIVE_VIEW, False)
+        else:
+            form_data = {}
+
+        self.context["title_placeholders"] = placeholders
+        return self.async_show_form(
+            step_id="camera_auth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_CAMERA_AUTH_DATA_SCHEMA, form_data
+            ),
             errors=errors,
             description_placeholders=placeholders,
         )
@@ -403,7 +540,11 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_user_auth_confirm()
             except KasaException:
                 return self.async_abort(reason="cannot_connect")
-            return self._async_create_entry_from_device(device)
+
+            if self._async_supports_camera_credentials(device):
+                return await self.async_step_camera_auth_confirm()
+
+            return self._async_create_or_update_entry_from_device(device)
 
         configured_devices = {
             entry.unique_id for entry in self._async_current_entries()
@@ -444,11 +585,19 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
                     _config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
-    def _async_create_entry_from_device(self, device: Device) -> ConfigFlowResult:
+    def _async_create_or_update_entry_from_device(
+        self, device: Device, *, camera_data: dict | None = None
+    ) -> ConfigFlowResult:
         """Create a config entry from a smart device."""
-        # This is only ever called after a successful device update so we know that
-        # the credential_hash is correct and should be saved.
-        self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
+        entry = None
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+        elif self.source == SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+
+        if not entry:
+            self._abort_if_unique_id_configured(updates={CONF_HOST: device.host})
+
         data: dict[str, Any] = {
             CONF_HOST: device.host,
             CONF_ALIAS: device.alias,
@@ -456,16 +605,28 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_CONNECTION_PARAMETERS: device.config.connection_type.to_dict(),
             CONF_USES_HTTP: device.config.uses_http,
         }
+        if camera_data is not None:
+            data[CONF_LIVE_VIEW] = camera_data[CONF_LIVE_VIEW]
+            if camera_creds := camera_data.get(CONF_CAMERA_CREDENTIALS):
+                data[CONF_CAMERA_CREDENTIALS] = camera_creds
+
         if device.config.aes_keys:
             data[CONF_AES_KEYS] = device.config.aes_keys
+
+        # This is only ever called after a successful device update so we know that
+        # the credential_hash is correct and should be saved.
         if device.credentials_hash:
             data[CONF_CREDENTIALS_HASH] = device.credentials_hash
         if port := device.config.port_override:
             data[CONF_PORT] = port
-        return self.async_create_entry(
-            title=f"{device.alias} {device.model}",
-            data=data,
-        )
+
+        if not entry:
+            return self.async_create_entry(
+                title=f"{device.alias} {device.model}",
+                data=data,
+            )
+
+        return self.async_update_reload_and_abort(entry, data=data)
 
     async def _async_try_connect_all(
         self,
@@ -546,7 +707,8 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         credentials: Credentials | None,
     ) -> Device:
         """Try to connect."""
-        self._async_abort_entries_match({CONF_HOST: discovered_device.host})
+        if self.source not in {SOURCE_RECONFIGURE, SOURCE_REAUTH}:
+            self._async_abort_entries_match({CONF_HOST: discovered_device.host})
 
         config = discovered_device.config
         if credentials:
@@ -566,6 +728,10 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Start the reauthentication flow if the device needs updated credentials."""
+        if self.context.get("reauth_source") == CONF_CAMERA_CREDENTIALS:
+            self._discovered_device = entry_data["device"]
+            return await self.async_step_camera_auth_confirm()
+
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -633,4 +799,63 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_AUTH_DATA_SCHEMA,
             errors=errors,
             description_placeholders=placeholders,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Trigger a reconfiguration flow."""
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
+
+        reconfigure_entry = self._get_reconfigure_entry()
+        assert reconfigure_entry.unique_id
+        await self.async_set_unique_id(reconfigure_entry.unique_id)
+
+        host = reconfigure_entry.data[CONF_HOST]
+        port = reconfigure_entry.data.get(CONF_PORT)
+
+        if user_input is not None:
+            host, port = self._async_get_host_port(host)
+
+            self.host = host
+            credentials = await get_credentials(self.hass)
+            try:
+                device = await self._async_try_discover_and_update(
+                    host,
+                    credentials,
+                    raise_on_progress=False,
+                    raise_on_timeout=False,
+                    port=port,
+                ) or await self._async_try_connect_all(
+                    host,
+                    credentials=credentials,
+                    raise_on_progress=False,
+                    port=port,
+                )
+            except AuthenticationError:  # Error from the update()
+                return await self.async_step_user_auth_confirm()
+            except KasaException as ex:
+                errors["base"] = "cannot_connect"
+                placeholders["error"] = str(ex)
+            else:
+                if not device:
+                    return await self.async_step_user_auth_confirm()
+
+                if self._async_supports_camera_credentials(device):
+                    return await self.async_step_camera_auth_confirm()
+
+                return self._async_create_or_update_entry_from_device(device)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_RECONFIGURE_DATA_SCHEMA,
+                {CONF_HOST: f"{host}:{port}" if port else host},
+            ),
+            errors=errors,
+            description_placeholders={
+                **placeholders,
+                CONF_MAC: reconfigure_entry.unique_id,
+            },
         )

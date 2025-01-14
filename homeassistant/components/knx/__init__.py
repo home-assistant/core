@@ -54,6 +54,7 @@ from .const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
@@ -90,7 +91,7 @@ from .schema import (
     WeatherSchema,
 )
 from .services import register_knx_services
-from .storage.config_store import KNXConfigStore
+from .storage.config_store import STORAGE_KEY as CONFIG_STORAGE_KEY, KNXConfigStore
 from .telegrams import STORAGE_KEY as TELEGRAMS_STORAGE_KEY, Telegrams
 from .websocket import register_panel
 
@@ -226,6 +227,8 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             with contextlib.suppress(FileNotFoundError):
                 (storage_dir / knxkeys_filename).unlink()
         with contextlib.suppress(FileNotFoundError):
+            (storage_dir / CONFIG_STORAGE_KEY).unlink()
+        with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / TELEGRAMS_STORAGE_KEY).unlink()
@@ -352,6 +355,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 auto_reconnect=True,
@@ -364,6 +368,7 @@ class KNXModule:
         if _conn_type == CONF_KNX_TUNNELING_TCP_SECURE:
             return ConnectionConfig(
                 connection_type=ConnectionType.TUNNELING_TCP_SECURE,
+                individual_address=self.entry.data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
                 gateway_ip=self.entry.data[CONF_HOST],
                 gateway_port=self.entry.data[CONF_PORT],
                 secure_config=SecureConfig(
@@ -398,6 +403,9 @@ class KNXModule:
             )
         return ConnectionConfig(
             auto_reconnect=True,
+            individual_address=self.entry.data.get(
+                CONF_KNX_TUNNEL_ENDPOINT_IA,  # may be configured at knxkey upload
+            ),
             secure_config=SecureConfig(
                 knxkeys_password=self.entry.data.get(CONF_KNX_KNXKEY_PASSWORD),
                 knxkeys_file_path=_knxkeys_file,

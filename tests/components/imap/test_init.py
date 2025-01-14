@@ -20,6 +20,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     BAD_RESPONSE,
     EMPTY_SEARCH_RESPONSE,
+    EMPTY_SEARCH_RESPONSE_ALT,
     TEST_BADLY_ENCODED_CONTENT,
     TEST_FETCH_RESPONSE_BINARY,
     TEST_FETCH_RESPONSE_HTML,
@@ -517,6 +518,11 @@ async def test_fetch_number_of_messages(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "empty_search_reponse",
+    [EMPTY_SEARCH_RESPONSE, EMPTY_SEARCH_RESPONSE_ALT],
+    ids=["regular_empty_search_response", "alt_empty_search_response"],
+)
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
 @pytest.mark.parametrize(
     ("imap_fetch", "valid_date"),
@@ -525,7 +531,10 @@ async def test_fetch_number_of_messages(
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_reset_last_message(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    valid_date: bool,
+    empty_search_reponse: tuple[str, list[bytes]],
 ) -> None:
     """Test receiving a message successfully."""
     event = asyncio.Event()  # needed for pushed coordinator to make a new loop
@@ -580,7 +589,7 @@ async def test_reset_last_message(
     )
 
     # Simulate an update where no messages are found (needed for pushed coordinator)
-    mock_imap_protocol.search.return_value = Response(*EMPTY_SEARCH_RESPONSE)
+    mock_imap_protocol.search.return_value = Response(*empty_search_reponse)
 
     # Make sure we have an update
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
