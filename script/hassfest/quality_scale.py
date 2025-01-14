@@ -1360,7 +1360,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "directv",
     "discogs",
     "discord",
-    "discovergy",
     "dlib_face_detect",
     "dlib_face_identify",
     "dlink",
