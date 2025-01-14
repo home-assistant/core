@@ -183,3 +183,16 @@ async def test_number_connection_error(
     state = hass.states.get("number.frenck_s_lametric_volume")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["computer_powered"])
+async def test_computer_powered_devices(
+    hass: HomeAssistant,
+    mock_lametric: MagicMock,
+) -> None:
+    """Test Brightness is properly limited for computer powered devices."""
+    state = hass.states.get("number.time_brightness")
+    assert state
+    assert state.state == "75"
+    assert state.attributes[ATTR_MIN] == 2
+    assert state.attributes[ATTR_MAX] == 76

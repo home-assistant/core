@@ -25,7 +25,7 @@ class LaMetricNumberEntityDescription(NumberEntityDescription):
     """Class describing LaMetric number entities."""
 
     value_fn: Callable[[Device], int | None]
-    range_fn: Callable[[Device], Range]
+    range_fn: Callable[[Device], Range | None]
     has_fn: Callable[[Device], bool] = lambda device: True
     set_value_fn: Callable[[LaMetricDevice, float], Awaitable[Any]]
 
@@ -36,7 +36,7 @@ NUMBERS = [
         translation_key="brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        range_fn=lambda device: device.display.brightness_range,
+        range_fn=lambda device: device.display.brightness_limit,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda device: device.display.brightness,
         set_value_fn=lambda device, bri: device.display(brightness=int(bri)),
@@ -46,7 +46,7 @@ NUMBERS = [
         translation_key="volume",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
-        range_fn=lambda device: device.audio.volume_range,
+        range_fn=lambda device: device.audio.volume_range if device.audio else None,
         native_unit_of_measurement=PERCENTAGE,
         has_fn=lambda device: bool(device.audio and device.audio.available),
         value_fn=lambda device: device.audio.volume if device.audio else 0,
@@ -94,12 +94,16 @@ class LaMetricNumberEntity(LaMetricEntity, NumberEntity):
     @property
     def native_min_value(self) -> int:
         """Return the min range."""
-        return self.entity_description.range_fn(self.coordinator.data).range_min
+        if limits := self.entity_description.range_fn(self.coordinator.data):
+            return limits.range_min
+        return 0
 
     @property
     def native_max_value(self) -> int:
         """Return the max range."""
-        return self.entity_description.range_fn(self.coordinator.data).range_max
+        if limits := self.entity_description.range_fn(self.coordinator.data):
+            return limits.range_max
+        return 100
 
     @lametric_exception_handler
     async def async_set_native_value(self, value: float) -> None:
