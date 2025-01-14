@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpCloudConfigEntry
+from .coordinator import UpCloudConfigEntry
 from .entity import UpCloudServerEntity
 
 SIGNAL_UPDATE_UPCLOUD = "upcloud_update"
