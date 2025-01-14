@@ -84,7 +84,7 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
-                config_entry_name = f"Train from {station_from["standardname"]} to {station_to["standardname"]}"
+                config_entry_name = f"Train from {station_from['standardname']} to {station_to['standardname']}"
                 return self.async_create_entry(
                     title=config_entry_name,
                     data=user_input,
@@ -157,18 +157,18 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.SENSOR,
                 DOMAIN,
-                f"{prefix}_{station_live["standardname"]}_{station_from["standardname"]}_{station_to["standardname"]}",
+                f"{prefix}_{station_live['standardname']}_{station_from['standardname']}_{station_to['standardname']}",
             ):
-                new_unique_id = f"{DOMAIN}_{prefix}_{station_live["id"]}_{station_from["id"]}_{station_to["id"]}"
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live['id']}_{station_from['id']}_{station_to['id']}"
                 entity_registry.async_update_entity(
                     entity_id, new_unique_id=new_unique_id
                 )
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.SENSOR,
                 DOMAIN,
-                f"{prefix}_{station_live["name"]}_{station_from["name"]}_{station_to["name"]}",
+                f"{prefix}_{station_live['name']}_{station_from['name']}_{station_to['name']}",
             ):
-                new_unique_id = f"{DOMAIN}_{prefix}_{station_live["id"]}_{station_from["id"]}_{station_to["id"]}"
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live['id']}_{station_from['id']}_{station_to['id']}"
                 entity_registry.async_update_entity(
                     entity_id, new_unique_id=new_unique_id
                 )

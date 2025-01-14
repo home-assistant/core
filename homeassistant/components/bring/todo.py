@@ -262,8 +262,6 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         except ValueError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="notify_missing_argument_item",
-                translation_placeholders={
-                    "service": f"{DOMAIN}.{SERVICE_PUSH_NOTIFICATION}",
-                },
+                translation_key="notify_missing_argument",
+                translation_placeholders={"field": "item"},
             ) from e

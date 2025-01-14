@@ -1,6 +1,6 @@
 """Tests for the Heos config flow module."""
 
-from pyheos import CommandFailedError, HeosError
+from pyheos import CommandAuthenticationError, CommandFailedError, HeosError
 import pytest
 
 from homeassistant.components import heos, ssdp
@@ -199,14 +199,9 @@ async def test_reconfigure_cannot_connect_recovers(
     ("error", "expected_error_key"),
     [
         (
-            CommandFailedError("sign_in", "Invalid credentials", 6),
+            CommandAuthenticationError("sign_in", "Invalid credentials", 6),
             "invalid_auth",
         ),
-        (
-            CommandFailedError("sign_in", "User not logged in", 8),
-            "invalid_auth",
-        ),
-        (CommandFailedError("sign_in", "user not found", 10), "invalid_auth"),
         (CommandFailedError("sign_in", "System error", 12), "unknown"),
         (HeosError(), "unknown"),
     ],
@@ -337,14 +332,9 @@ async def test_options_flow_missing_one_param_recovers(
     ("error", "expected_error_key"),
     [
         (
-            CommandFailedError("sign_in", "Invalid credentials", 6),
+            CommandAuthenticationError("sign_in", "Invalid credentials", 6),
             "invalid_auth",
         ),
-        (
-            CommandFailedError("sign_in", "User not logged in", 8),
-            "invalid_auth",
-        ),
-        (CommandFailedError("sign_in", "user not found", 10), "invalid_auth"),
         (CommandFailedError("sign_in", "System error", 12), "unknown"),
         (HeosError(), "unknown"),
     ],
