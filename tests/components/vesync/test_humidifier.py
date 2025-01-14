@@ -1,4 +1,4 @@
-"""Tests for the humidifer module."""
+"""Tests for the humidifier platform."""
 
 from contextlib import nullcontext
 from unittest.mock import patch
@@ -81,7 +81,7 @@ async def test_set_target_humidity_invalid(
     ("api_response", "expectation"),
     [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
-async def test_set_target_humidity_VeSync(
+async def test_set_target_humidity(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
     api_response: bool,
@@ -175,7 +175,7 @@ async def test_set_mode_invalid(
     ("api_response", "expectation"),
     [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
-async def test_set_mode_VeSync(
+async def test_set_mode(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
     api_response: bool,

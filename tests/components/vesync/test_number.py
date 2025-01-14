@@ -1,4 +1,4 @@
-"""Tests for the humidifer module."""
+"""Tests for the number platform."""
 
 from unittest.mock import patch
 
@@ -39,7 +39,7 @@ async def test_set_mist_level_bad_range(
     method_mock.assert_not_called()
 
 
-async def test_set_mist_level_VeSync(
+async def test_set_mist_level(
     hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
 ) -> None:
     """Test set_mist_level usage."""
