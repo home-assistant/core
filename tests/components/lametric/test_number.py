@@ -42,7 +42,7 @@ async def test_brightness(
     assert state.attributes.get(ATTR_DEVICE_CLASS) is None
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Frenck's LaMetric Brightness"
     assert state.attributes.get(ATTR_MAX) == 100
-    assert state.attributes.get(ATTR_MIN) == 0
+    assert state.attributes.get(ATTR_MIN) == 2
     assert state.attributes.get(ATTR_STEP) == 1
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
     assert state.state == "100"
