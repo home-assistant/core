@@ -258,7 +258,7 @@ aiohttp_sse==2.2.0
 aiohue==4.7.3
 
 # homeassistant.components.imap
-aioimaplib==1.1.0
+aioimaplib==2.0.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -846,7 +846,7 @@ georss-qld-bushfire-alert-client==0.8
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.9.4
+getmac==0.9.5
 
 # homeassistant.components.gios
 gios==5.0.0
@@ -1609,10 +1609,10 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==0.9.0
+pyheos==1.0.0
 
 # homeassistant.components.hive
-pyhiveapi==0.5.16
+pyhive-integration==1.0.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1785,7 +1785,7 @@ pyoverkiz==1.15.5
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.16
+pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
 pypck==0.8.1
@@ -2068,6 +2068,9 @@ pyzerproc==0.4.8
 # homeassistant.components.qbittorrent
 qbittorrent-api==2024.2.59
 
+# homeassistant.components.qbus
+qbusmqttapi==1.2.3
+
 # homeassistant.components.qingping
 qingping-ble==0.10.0
 
@@ -2193,7 +2196,7 @@ slackclient==2.5.0
 smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.18
+smhi-pkg==1.0.19
 
 # homeassistant.components.snapcast
 snapcast==2.3.6
@@ -2261,7 +2264,7 @@ sunweg==3.0.2
 surepy==0.9.0
 
 # homeassistant.components.switchbot_cloud
-switchbot-api==2.2.1
+switchbot-api==2.3.1
 
 # homeassistant.components.system_bridge
 systembridgeconnector==4.1.5
@@ -2388,7 +2391,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.12.3
+velbus-aio==2025.1.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
