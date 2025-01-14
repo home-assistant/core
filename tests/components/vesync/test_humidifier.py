@@ -44,9 +44,6 @@ async def test_humidifier_state(
     for entity_id in expected_entities:
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
-    assert hass.states.get("sensor.humidifier_200s_humidity").state == "35"
-    assert hass.states.get("number.humidifier_200s_mist_level").state == "6"
-
     state = hass.states.get(humidifier_id)
 
     # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node

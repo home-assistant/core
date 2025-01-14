@@ -56,3 +56,11 @@ async def test_set_mist_level(
         )
     await hass.async_block_till_done()
     method_mock.assert_called_once()
+
+
+async def test_mist_level(
+    hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
+) -> None:
+    """Test the state of mist_level number entity."""
+
+    assert hass.states.get("number.humidifier_200s_mist_level").state == "6"

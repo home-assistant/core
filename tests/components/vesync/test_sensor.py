@@ -49,3 +49,11 @@ async def test_sensor_state(
     # Check states
     for entity in entities:
         assert hass.states.get(entity.entity_id) == snapshot(name=entity.entity_id)
+
+
+async def test_humidity(
+    hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
+) -> None:
+    """Test the state of humidity sensor entity."""
+
+    assert hass.states.get("sensor.humidifier_200s_humidity").state == "35"
