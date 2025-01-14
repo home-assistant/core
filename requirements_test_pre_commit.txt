@@ -1,5 +1,6 @@
 # Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
+aiohttp-asyncmdnsresolver==0.0.1
 codespell==2.3.0
 ruff==0.8.6
 yamllint==1.35.1
