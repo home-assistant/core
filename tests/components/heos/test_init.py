@@ -4,7 +4,7 @@ import asyncio
 from typing import cast
 from unittest.mock import Mock, patch
 
-from pyheos import CommandFailedError, HeosError, const
+from pyheos import CommandFailedError, HeosError, SignalHeosEvent, SignalType, const
 import pytest
 
 from homeassistant.components.heos import (
@@ -82,7 +82,7 @@ async def test_async_setup_entry_with_options_loads_platforms(
 
     # Assert options passed and methods called
     assert config_entry_options.state is ConfigEntryState.LOADED
-    options = cast(HeosOptions, controller.call_args[0][0])
+    options = cast(HeosOptions, controller.new_mock.call_args[0][0])
     assert options.host == config_entry_options.data[CONF_HOST]
     assert options.credentials.username == config_entry_options.options[CONF_USERNAME]
     assert options.credentials.password == config_entry_options.options[CONF_PASSWORD]
@@ -103,10 +103,9 @@ async def test_async_setup_entry_auth_failure_starts_reauth(
 
     # Simulates what happens when the controller can't sign-in during connection
     async def connect_send_auth_failure() -> None:
-        controller.is_signed_in = False
-        controller.signed_in_username = None
+        controller._signed_in_username = None
         controller.dispatcher.send(
-            const.SIGNAL_HEOS_EVENT, const.EVENT_USER_CREDENTIALS_INVALID
+            SignalType.HEOS_EVENT, SignalHeosEvent.USER_CREDENTIALS_INVALID
         )
 
     controller.connect.side_effect = connect_send_auth_failure
@@ -133,8 +132,7 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
 ) -> None:
     """Test setup does not retrieve favorites when not logged in."""
     config_entry.add_to_hass(hass)
-    controller.is_signed_in = False
-    controller.signed_in_username = None
+    controller._signed_in_username = None
     with patch.object(
         hass.config_entries, "async_forward_entry_setups"
     ) as forward_mock:
@@ -213,7 +211,7 @@ async def test_update_sources_retry(
     source_manager.max_retry_attempts = 1
     controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)
     controller.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
+        SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
     # Wait until it's finished
     while "Unable to update sources" not in caplog.text:
