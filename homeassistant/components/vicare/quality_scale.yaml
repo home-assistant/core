@@ -1,0 +1,43 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry:
+    status: todo
+    comment: Uniqueness is not checked yet.
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: Entities of this integration does not explicitly subscribe to events.
+  dependency-transparency: done
+  action-setup:
+    status: todo
+    comment: service registered in climate async_setup_entry.
+  common-modules:
+    status: done
+    comment: No coordinator is used, data update is centrally handled by the library.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions: done
+  brands: done
+  # Silver
+  integration-owner: done
+  reauthentication-flow: done
+  config-entry-unloading: done
+  # Gold
+  devices: done
+  diagnostics: done
+  entity-category: done
+  dynamic-devices: done
+  entity-device-class: done
+  entity-translations: done
+  entity-disabled-by-default: done
+  repair-issues:
+    status: exempt
+    comment: This integration does not raise any repairable issues.

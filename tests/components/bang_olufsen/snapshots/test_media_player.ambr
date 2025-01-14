@@ -23,7 +23,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -72,7 +71,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -122,7 +120,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -172,7 +169,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -222,7 +218,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -248,7 +243,7 @@
     'state': 'playing',
   })
 # ---
-# name: test_async_beolink_join
+# name: test_async_beolink_join[service_parameters0-method_parameters0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'beolink': dict({
@@ -272,10 +267,243 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
+      'sound_mode': 'Test Listening Mode (123)',
+      'sound_mode_list': list([
+        'Test Listening Mode (123)',
+        'Test Listening Mode (234)',
+        'Test Listening Mode 2 (345)',
+      ]),
+      'source_list': list([
+        'Tidal',
+        'Line-In',
+        'HDMI A',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.beosound_balance_11111111',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_async_beolink_join[service_parameters1-method_parameters1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beolink': dict({
+        'listeners': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'peers': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'self': dict({
+          'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+        }),
+      }),
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'Living room Balance',
+      'group_members': list([
+        'media_player.beosound_balance_11111111',
+        'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+        'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+      ]),
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'sound_mode': 'Test Listening Mode (123)',
+      'sound_mode_list': list([
+        'Test Listening Mode (123)',
+        'Test Listening Mode (234)',
+        'Test Listening Mode 2 (345)',
+      ]),
+      'source_list': list([
+        'Tidal',
+        'Line-In',
+        'HDMI A',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.beosound_balance_11111111',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_async_beolink_join[service_parameters2-method_parameters2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beolink': dict({
+        'listeners': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'peers': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'self': dict({
+          'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+        }),
+      }),
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'Living room Balance',
+      'group_members': list([
+        'media_player.beosound_balance_11111111',
+        'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+        'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+      ]),
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'sound_mode': 'Test Listening Mode (123)',
+      'sound_mode_list': list([
+        'Test Listening Mode (123)',
+        'Test Listening Mode (234)',
+        'Test Listening Mode 2 (345)',
+      ]),
+      'source_list': list([
+        'Tidal',
+        'Line-In',
+        'HDMI A',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.beosound_balance_11111111',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_async_beolink_join_invalid[service_parameters0-expected_result0]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beolink': dict({
+        'listeners': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'peers': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'self': dict({
+          'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+        }),
+      }),
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'Living room Balance',
+      'group_members': list([
+        'media_player.beosound_balance_11111111',
+        'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+        'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+      ]),
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'sound_mode': 'Test Listening Mode (123)',
+      'sound_mode_list': list([
+        'Test Listening Mode (123)',
+        'Test Listening Mode (234)',
+        'Test Listening Mode 2 (345)',
+      ]),
+      'source_list': list([
+        'Tidal',
+        'Line-In',
+        'HDMI A',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.beosound_balance_11111111',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_async_beolink_join_invalid[service_parameters1-expected_result1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beolink': dict({
+        'listeners': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'peers': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'self': dict({
+          'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+        }),
+      }),
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'Living room Balance',
+      'group_members': list([
+        'media_player.beosound_balance_11111111',
+        'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+        'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+      ]),
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'sound_mode': 'Test Listening Mode (123)',
+      'sound_mode_list': list([
+        'Test Listening Mode (123)',
+        'Test Listening Mode (234)',
+        'Test Listening Mode 2 (345)',
+      ]),
+      'source_list': list([
+        'Tidal',
+        'Line-In',
+        'HDMI A',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2095933>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.beosound_balance_11111111',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_async_beolink_join_invalid[service_parameters2-expected_result2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'beolink': dict({
+        'listeners': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'peers': dict({
+          'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+          'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+        }),
+        'self': dict({
+          'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+        }),
+      }),
+      'device_class': 'speaker',
+      'entity_picture_local': None,
+      'friendly_name': 'Living room Balance',
+      'group_members': list([
+        'media_player.beosound_balance_11111111',
+        'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+        'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+      ]),
+      'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
         'Test Listening Mode (123)',
@@ -321,7 +549,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -370,7 +597,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -420,7 +646,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
@@ -467,7 +692,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -517,7 +741,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
@@ -564,7 +787,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'media_position': 0,
       'sound_mode': 'Test Listening Mode (123)',
@@ -613,7 +835,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
@@ -660,7 +881,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
@@ -708,7 +928,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
@@ -755,7 +974,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
@@ -802,7 +1020,6 @@
         'media_player.beosound_balance_22222222',
         'media_player.beosound_balance_11111111',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([
@@ -849,7 +1066,6 @@
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
-      'icon': 'mdi:speaker-wireless',
       'media_content_type': <MediaType.MUSIC: 'music'>,
       'sound_mode': 'Test Listening Mode (123)',
       'sound_mode_list': list([

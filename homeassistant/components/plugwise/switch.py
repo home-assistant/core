@@ -21,6 +21,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class PlugwiseSwitchEntityDescription(SwitchEntityDescription):
@@ -48,7 +50,6 @@ SWITCHES: tuple[PlugwiseSwitchEntityDescription, ...] = (
     PlugwiseSwitchEntityDescription(
         key="cooling_ena_switch",
         translation_key="cooling_ena_switch",
-        name="Cooling",
         entity_category=EntityCategory.CONFIG,
     ),
 )
@@ -93,8 +94,8 @@ class PlugwiseSwitchEntity(PlugwiseEntity, SwitchEntity):
     ) -> None:
         """Set up the Plugwise API."""
         super().__init__(coordinator, device_id)
-        self.entity_description = description
         self._attr_unique_id = f"{device_id}-{description.key}"
+        self.entity_description = description
 
     @property
     def is_on(self) -> bool:

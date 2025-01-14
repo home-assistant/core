@@ -20,8 +20,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    ATTR_MAX_MIREDS,
-    ATTR_MIN_MIREDS,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -1391,8 +1391,8 @@ async def test_light_min_max_mireds(hass: HomeAssistant, hk_driver) -> None:
         {
             ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP],
             ATTR_BRIGHTNESS: 255,
-            ATTR_MAX_MIREDS: 500.5,
-            ATTR_MIN_MIREDS: 153.5,
+            ATTR_MIN_COLOR_TEMP_KELVIN: 1999,
+            ATTR_MAX_COLOR_TEMP_KELVIN: 6499,
         },
     )
     await hass.async_block_till_done()

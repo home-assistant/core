@@ -1,14 +1,7 @@
 {
   "domain": "overkiz",
   "name": "Overkiz",
-  "codeowners": [
-    "@imicknl",
-    "@vlebourl",
-    "@tetienne",
-    "@nyroDev",
-    "@tronix117",
-    "@alexfp14"
-  ],
+  "codeowners": ["@imicknl"],
   "config_flow": true,
   "dhcp": [
     {
@@ -20,7 +13,7 @@
   "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz==1.14.1"],
+  "requirements": ["pyoverkiz==1.15.5"],
   "zeroconf": [
     {
       "type": "_kizbox._tcp.local.",

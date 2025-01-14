@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 from reolink_aio.api import (
+    BinningModeEnum,
     Chime,
     ChimeToneEnum,
     DayNightEnum,
@@ -18,12 +19,10 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import (
@@ -32,9 +31,10 @@ from .entity import (
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -174,6 +174,67 @@ SELECT_ENTITIES = (
         value=lambda api, ch: HDREnum(api.HDR_state(ch)).name,
         method=lambda api, ch, name: api.set_HDR(ch, HDREnum[name].value),
     ),
+    ReolinkSelectEntityDescription(
+        key="binning_mode",
+        cmd_key="GetIsp",
+        translation_key="binning_mode",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in BinningModeEnum],
+        supported=lambda api, ch: api.supported(ch, "binning_mode"),
+        value=lambda api, ch: BinningModeEnum(api.binning_mode(ch)).name,
+        method=lambda api, ch, name: api.set_binning_mode(
+            ch, BinningModeEnum[name].value
+        ),
+    ),
+    ReolinkSelectEntityDescription(
+        key="main_frame_rate",
+        cmd_key="GetEnc",
+        translation_key="main_frame_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "main")],
+        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        value=lambda api, ch: str(api.frame_rate(ch, "main")),
+        method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "main"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_frame_rate",
+        cmd_key="GetEnc",
+        translation_key="sub_frame_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=lambda api, ch: [str(v) for v in api.frame_rate_list(ch, "sub")],
+        supported=lambda api, ch: api.supported(ch, "frame_rate"),
+        value=lambda api, ch: str(api.frame_rate(ch, "sub")),
+        method=lambda api, ch, value: api.set_frame_rate(ch, int(value), "sub"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="main_bit_rate",
+        cmd_key="GetEnc",
+        translation_key="main_bit_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "main")],
+        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        value=lambda api, ch: str(api.bit_rate(ch, "main")),
+        method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "main"),
+    ),
+    ReolinkSelectEntityDescription(
+        key="sub_bit_rate",
+        cmd_key="GetEnc",
+        translation_key="sub_bit_rate",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
+        get_options=lambda api, ch: [str(v) for v in api.bit_rate_list(ch, "sub")],
+        supported=lambda api, ch: api.supported(ch, "bit_rate"),
+        value=lambda api, ch: str(api.bit_rate(ch, "sub")),
+        method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
+    ),
 )
 
 CHIME_SELECT_ENTITIES = (
@@ -291,14 +352,10 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, option)
         self.async_write_ha_state()
 
 
@@ -333,12 +390,8 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._chime, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._chime, option)
         self.async_write_ha_state()

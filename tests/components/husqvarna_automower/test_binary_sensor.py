@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from aioautomower.model import MowerActivities, MowerAttributes
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
@@ -17,6 +18,7 @@ from .const import TEST_MOWER_ID
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_states(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
@@ -50,6 +52,7 @@ async def test_binary_sensor_states(
         assert state.state == "on"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

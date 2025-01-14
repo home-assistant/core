@@ -11,6 +11,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
@@ -169,18 +170,27 @@ def setup_services(hass: HomeAssistant) -> None:
         device_id = service_call_data[ATTR_VEHICLE]
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
-            raise ValueError(f"Unable to find device with id: {device_id}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_device_id",
+                translation_placeholders={"device_id": device_id},
+            )
 
         loaded_entries: list[RenaultConfigEntry] = [
             entry
             for entry in hass.config_entries.async_entries(DOMAIN)
             if entry.state == ConfigEntryState.LOADED
+            and entry.entry_id in device_entry.config_entries
         ]
         for entry in loaded_entries:
             for vin, vehicle in entry.runtime_data.vehicles.items():
                 if (DOMAIN, vin) in device_entry.identifiers:
                     return vehicle
-        raise ValueError(f"Unable to find vehicle with VIN: {device_entry.identifiers}")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_config_entry_for_device",
+            translation_placeholders={"device_id": device_entry.name or device_id},
+        )
 
     hass.services.async_register(
         DOMAIN,

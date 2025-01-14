@@ -15,7 +15,7 @@ from zha.application.platforms.light.const import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_TRANSITION,
@@ -29,6 +29,7 @@ from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -128,14 +129,18 @@ class Light(LightEntity, ZHAEntity):
         return self.entity_data.entity.brightness
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return self.entity_data.entity.min_mireds
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(
+            self.entity_data.entity.min_mireds
+        )
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return self.entity_data.entity.max_mireds
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return color_util.color_temperature_mired_to_kelvin(
+            self.entity_data.entity.max_mireds
+        )
 
     @property
     def xy_color(self) -> tuple[float, float] | None:
@@ -143,9 +148,13 @@ class Light(LightEntity, ZHAEntity):
         return self.entity_data.entity.xy_color
 
     @property
-    def color_temp(self) -> int | None:
-        """Return the CT color value in mireds."""
-        return self.entity_data.entity.color_temp
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        return (
+            color_util.color_temperature_mired_to_kelvin(mireds)
+            if (mireds := self.entity_data.entity.color_temp)
+            else None
+        )
 
     @property
     def color_mode(self) -> ColorMode | None:
@@ -167,12 +176,17 @@ class Light(LightEntity, ZHAEntity):
     @convert_zha_error_to_ha_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
+        color_temp = (
+            color_util.color_temperature_kelvin_to_mired(color_temp_k)
+            if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN))
+            else None
+        )
         await self.entity_data.entity.async_turn_on(
             transition=kwargs.get(ATTR_TRANSITION),
             brightness=kwargs.get(ATTR_BRIGHTNESS),
             effect=kwargs.get(ATTR_EFFECT),
             flash=kwargs.get(ATTR_FLASH),
-            color_temp=kwargs.get(ATTR_COLOR_TEMP),
+            color_temp=color_temp,
             xy_color=kwargs.get(ATTR_XY_COLOR),
         )
         self.async_write_ha_state()
@@ -188,12 +202,17 @@ class Light(LightEntity, ZHAEntity):
     @callback
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
+        color_temp = (
+            color_util.color_temperature_kelvin_to_mired(color_temp_k)
+            if (color_temp_k := state.attributes.get(ATTR_COLOR_TEMP_KELVIN))
+            else None
+        )
         self.entity_data.entity.restore_external_state_attributes(
             state=(state.state == STATE_ON),
             off_with_transition=state.attributes.get(OFF_WITH_TRANSITION),
             off_brightness=state.attributes.get(OFF_BRIGHTNESS),
             brightness=state.attributes.get(ATTR_BRIGHTNESS),
-            color_temp=state.attributes.get(ATTR_COLOR_TEMP),
+            color_temp=color_temp,
             xy_color=state.attributes.get(ATTR_XY_COLOR),
             color_mode=(
                 HA_TO_ZHA_COLOR_MODE[ColorMode(state.attributes[ATTR_COLOR_MODE])]

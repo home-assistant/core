@@ -13,11 +13,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import MockCover
 
-from tests.common import (
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-    setup_test_component_platform,
-)
+from tests.common import help_test_all, setup_test_component_platform
 
 
 async def test_services(
@@ -159,22 +155,6 @@ def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, s
 def test_all() -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(cover)
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(cover.CoverEntityFeature, "SUPPORT_")
-    + _create_tuples(cover.CoverDeviceClass, "DEVICE_CLASS_"),
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, cover, enum, constant_prefix, "2025.1"
-    )
 
 
 def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:

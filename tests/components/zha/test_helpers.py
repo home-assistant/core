@@ -182,8 +182,8 @@ def test_exclude_none_values(
     result = exclude_none_values(obj)
     assert result == expected_output
 
-    for key in expected_output:
-        assert expected_output[key] == obj[key]
+    for key, value in expected_output.items():
+        assert value == obj[key]
 
 
 async def test_create_zha_config_remove_unused(

@@ -9,16 +9,13 @@ from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
     StateVacuumEntityDescription,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -127,25 +124,25 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         operational_state: int = self.get_matter_attribute_value(
             clusters.RvcOperationalState.Attributes.OperationalState
         )
-        state: str | None = None
+        state: VacuumActivity | None = None
         if TYPE_CHECKING:
             assert self._supported_run_modes is not None
         if operational_state in (OperationalState.CHARGING, OperationalState.DOCKED):
-            state = STATE_DOCKED
+            state = VacuumActivity.DOCKED
         elif operational_state == OperationalState.SEEKING_CHARGER:
-            state = STATE_RETURNING
+            state = VacuumActivity.RETURNING
         elif operational_state in (
             OperationalState.UNABLE_TO_COMPLETE_OPERATION,
             OperationalState.UNABLE_TO_START_OR_RESUME,
         ):
-            state = STATE_ERROR
+            state = VacuumActivity.ERROR
         elif (run_mode := self._supported_run_modes.get(run_mode_raw)) is not None:
             tags = {x.value for x in run_mode.modeTags}
             if ModeTag.CLEANING in tags:
-                state = STATE_CLEANING
+                state = VacuumActivity.CLEANING
             elif ModeTag.IDLE in tags:
-                state = STATE_IDLE
-        self._attr_state = state
+                state = VacuumActivity.IDLE
+        self._attr_activity = state
 
     @callback
     def _calculate_features(self) -> None:

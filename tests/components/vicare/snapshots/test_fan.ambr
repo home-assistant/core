@@ -29,7 +29,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': None,
+    'original_icon': 'mdi:fan',
     'original_name': 'Ventilation',
     'platform': 'vicare',
     'previous_unique_id': None,
@@ -43,6 +43,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Ventilation',
+      'icon': 'mdi:fan',
       'percentage': 0,
       'percentage_step': 25.0,
       'preset_mode': None,
