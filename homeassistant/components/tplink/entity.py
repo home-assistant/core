@@ -443,7 +443,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         """
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
-        # Only add the parent entities if new_children is None.
+        # Only add the parent entities the first time
         if first_check:
             entities.extend(
                 cls._entities_for_device(
