@@ -222,7 +222,7 @@ class MatterConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except InvalidServerVersion:
             errors["base"] = "invalid_server_version"
-        except Exception:  # noqa: BLE001
+        except Exception:
             LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
