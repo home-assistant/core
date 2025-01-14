@@ -2,7 +2,6 @@
 
 ATTR_AWAY_TEMP = "away_temp"
 ATTR_COMFORT_TEMP = "comfort_temp"
-ATTR_MAX_HEATING_POWER = "max_heating_power"
 ATTR_ROOM_NAME = "room_name"
 ATTR_SLEEP_TEMP = "sleep_temp"
 BATTERY = "battery"

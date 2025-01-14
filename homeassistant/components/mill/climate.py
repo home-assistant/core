@@ -128,9 +128,6 @@ class MillHeater(CoordinatorEntity[MillDataUpdateCoordinator], ClimateEntity):
         await self.coordinator.mill_data_connection.set_heater_temp(
             self._id, float(temperature)
         )
-        await self.coordinator.mill_data_connection.fetch_historic_energy_usage(
-            self._id
-        )
         await self.coordinator.async_request_refresh()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
