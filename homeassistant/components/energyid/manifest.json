@@ -4,7 +4,7 @@
   "codeowners": ["@JrtPec", "@Molier"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energyid",
-  "iot_class": "cloud_push",
+  "iot_class": "cloud_polling",
   "quality_scale": "bronze",
   "requirements": ["energyid-webhooks==0.0.6"]
 }
