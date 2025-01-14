@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,7 +39,7 @@ OHM_ID = "id"
 from .const import *
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONNECTION_HOST): cv.string, vol.Optional(CONNECTION_PORT, default=8085): cv.port}
+    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )
 
 async def async_setup_entry(
@@ -47,12 +48,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Open Hardware Monitor platform."""
-    #data = OpenHardwareMonitorData(config_entry.data, hass)
-    data = hass.data["monitor_instance"]
-    if data.data is None:
+    entities = hass.data["entities"]
+    if entities is None:
         raise PlatformNotReady
-    #await data.initialize(utcnow())
-    async_add_entities(data.devices, True)
+    async_add_entities(entities, True)
 
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
@@ -62,6 +61,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
     def __init__(self, data, name, path, unit_of_measurement, id, child_names, json):
         """Initialize an OpenHardwareMonitor sensor."""
         groupDevicesPerDepthLevel = data._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
+        host = data._config.get(CONF_HOST)
+        port = data._config.get(CONF_PORT)
         deviceName = " ".join(child_names[0:groupDevicesPerDepthLevel])
 
         self._name = name
@@ -69,15 +70,20 @@ class OpenHardwareMonitorDevice(SensorEntity):
         self._json = json
         self.path = path
         self.id = id
+        self.value = None
         self.attributes = {}
         self._unit_of_measurement = unit_of_measurement
+        self._attr_unique_id = f"ohm-{name}-{id}"
 
-        
-        host = data._config.get(CONNECTION_HOST)
-        port = data._config.get(CONNECTION_PORT)
         manufacturer = ""
         if groupDevicesPerDepthLevel == 1:
-            manufacturer = "Computer"
+            # Computer device
+            self._attr_device_info = DeviceInfo(
+                identifiers= {(DOMAIN, f"{host}:{port}")},
+                name = str(child_names[0]),
+                manufacturer = "Computer",
+            )
+            return
         elif groupDevicesPerDepthLevel == 2:
             manufacturer = "Hardware"
         else:
@@ -86,18 +92,16 @@ class OpenHardwareMonitorDevice(SensorEntity):
         model = ""
         if groupDevicesPerDepthLevel == 2:
             model = child_names[1]
-
-        self._attr_unique_id = f"ohm-{name}-{id}"
+        
+        # Hardware or Group device
         self._attr_device_info = DeviceInfo(
             identifiers= {(DOMAIN, deviceName)},
             via_device=(DOMAIN, f"{host}:{port}"),
-            # If desired, the name for the device could be different to the entity
             name = str(deviceName),
             manufacturer = manufacturer,
             model = model,
         )
 
-        self.value = None
 
     @property
     def name(self):

@@ -5,7 +5,9 @@ from typing import Any
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+
 from .const import *
 
 class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -17,17 +19,17 @@ class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         data_schema = vol.Schema(
-            {vol.Required(CONNECTION_HOST): cv.string, 
-             vol.Optional(CONNECTION_PORT, default=8085): cv.port,
+            {vol.Required(CONF_HOST): cv.string, 
+             vol.Optional(CONF_PORT, default=8085): cv.port,
              vol.Optional(GROUP_DEVICES_PER_DEPTH_LEVEL, default=2): int}
         )
         if user_input is None:
             return self.async_show_form(data_schema=data_schema)
 
-        host = user_input[CONNECTION_HOST]
-        port = user_input[CONNECTION_PORT]
+        host = user_input[CONF_HOST]
+        port = user_input[CONF_PORT]
 
-        await self.async_set_unique_id(str(host) + str(port))
+        await self.async_set_unique_id(f"{host}:{port}")
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(

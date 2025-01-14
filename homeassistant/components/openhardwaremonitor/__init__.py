@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import Platform, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from datetime import timedelta
 import json
 
@@ -29,12 +29,12 @@ OHM_ID = "id"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenHardwareMonitor from a config entry."""
-    data = OpenHardwareMonitorData(entry, hass)
-    await data.initialize()
-    if data.data is None:
-        raise PlatformNotReady
+    data_handler = OpenHardwareMonitorDataHandler(entry, hass)
+    await data_handler.initialize()
+    if data_handler.data is None:
+        raise ConfigEntryNotReady
 
-    hass.data["monitor_instance"] = data
+    hass.data["entities"] = data_handler.entities
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -54,10 +54,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 unique_id=str(config_entry.unique_id),
                 title=str(config_entry.title),
             )
-
     return True
 
-class OpenHardwareMonitorData:
+class OpenHardwareMonitorDataHandler:
     """Class used to pull data from OHM and create sensors."""
 
     def __init__(self, config_entry, hass):
@@ -67,7 +66,6 @@ class OpenHardwareMonitorData:
         self._config = config_entry.data
         self._hass = hass
         self.devices = []
-        #self.initialize(utcnow())
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
@@ -80,8 +78,8 @@ class OpenHardwareMonitorData:
     async def refresh(self):
         """Download and parse JSON from OHM."""
         data_url = (
-            f"http://{self._config.get(CONNECTION_HOST)}:"
-            f"{self._config.get(CONNECTION_PORT)}/data.json"
+            f"http://{self._config.get(CONF_HOST)}:"
+            f"{self._config.get(CONF_PORT)}/data.json"
         )
 
         session = async_get_clientsession(self._hass)
@@ -97,7 +95,7 @@ class OpenHardwareMonitorData:
         if self.data is None:
             return
 
-        self.devices = self.parse_children(self.data, [], [], [])
+        self.entities = self.parse_children(self.data, [], [], [])
 
     def parse_children(self, json, devices, path, names):
         """Recursively loop through child objects, finding the values."""
@@ -106,8 +104,8 @@ class OpenHardwareMonitorData:
         id = str(json[OHM_ID])
         if id == '1' and self._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL) > 1:
             # Create the 'Computer' device here, if should group in multiple devices
-            host = self._config[CONNECTION_HOST]
-            port = self._config[CONNECTION_PORT]
+            host = self._config[CONF_HOST]
+            port = self._config[CONF_PORT]
 
             device_registry = dr.async_get(self._hass)
             device_registry.async_get_or_create(
