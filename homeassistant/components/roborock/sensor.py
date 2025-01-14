@@ -24,6 +24,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant
@@ -110,6 +111,13 @@ SENSOR_DESCRIPTIONS = [
         translation_key="total_cleaning_time",
         device_class=SensorDeviceClass.DURATION,
         value_fn=lambda data: data.clean_summary.clean_time,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    RoborockSensorDescription(
+        key="total_cleaning_count",
+        translation_key="total_cleaning_count",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda data: data.clean_summary.clean_count,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescription(

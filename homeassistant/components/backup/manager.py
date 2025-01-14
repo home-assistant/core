@@ -435,6 +435,7 @@ class BackupManager:
                 # no point in continuing
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
+                LOGGER.error("Error uploading to %s: %s", agent_ids[idx], result)
                 agent_errors[agent_ids[idx]] = result
                 continue
             if isinstance(result, Exception):
@@ -752,7 +753,7 @@ class BackupManager:
 
         backup_name = (
             name
-            or f"{"Automatic" if with_automatic_settings else "Custom"} backup {HAVERSION}"
+            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
 
         try:

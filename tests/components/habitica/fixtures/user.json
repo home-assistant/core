@@ -112,8 +112,37 @@
           "eyewear": "eyewear_armoire_plagueDoctorMask",
           "body": "body_special_aetherAmulet"
         }
+      },
+      "quests": {
+        "atom1": 1,
+        "goldenknight1": 0,
+        "dustbunnies": 1,
+        "basilist": 0
+      },
+      "food": {
+        "Saddle": 2,
+        "Meat": 0,
+        "Milk": 1,
+        "Potatoe": 2
+      },
+      "hatchingPotions": {
+        "Base": 2,
+        "White": 0,
+        "Desert": 1
+      },
+      "eggs": {
+        "Wolf": 1,
+        "TigerCub": 0,
+        "PandaCub": 2
       }
     },
-    "balance": 10
+    "balance": 10,
+    "purchased": {
+      "plan": {
+        "consecutive": {
+          "trinkets": 0
+        }
+      }
+    }
   }
 }
