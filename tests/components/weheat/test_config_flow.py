@@ -37,6 +37,8 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_weheat_discover: AsyncMock,
+    mock_weheat_config_heat_pump: AsyncMock,
     mock_setup_entry,
 ) -> None:
     """Check full of adding a single heat pump."""
@@ -71,6 +73,8 @@ async def test_duplicate_unique_id(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_weheat_discover: AsyncMock,
+    mock_weheat_config_heat_pump: AsyncMock,
     mock_setup_entry,
 ) -> None:
     """Check that the config flow is aborted when an entry with the same ID exists."""
@@ -102,13 +106,22 @@ async def test_duplicate_unique_id(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_http_error(
+@pytest.mark.parametrize(
+    ("get_user_id_from_token_exception", "expected_reason"),
+    [
+        (MaxRetryError(None, ""), "get_user_failed"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_get_user_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry,
+    get_user_id_from_token_exception: Exception,
+    expected_reason: str,
 ) -> None:
-    """Check that the config flow is aborted when getting the user ID results in an HTTP error."""
+    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
     first_entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -126,14 +139,149 @@ async def test_http_error(
     with (
         patch(
             "homeassistant.components.weheat.config_flow.get_user_id_from_token",
-            side_effect=MaxRetryError(None, ""),
+            side_effect=get_user_id_from_token_exception,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # only care that the config flow is aborted
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "get_user_failed"
+    assert result["reason"] == expected_reason
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("get_heat_pump_exception", "expected_reason"),
+    [
+        (MaxRetryError(None, ""), "get_heat_pumps_failed"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_get_heat_pumps_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry,
+    get_heat_pump_exception: Exception,
+    expected_reason: str,
+) -> None:
+    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=USER_UUID_1,
+    )
+
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    with (
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            return_value=USER_UUID_1,
+        ),
+        patch(
+            "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.discover_active",
+            side_effect=get_heat_pump_exception,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # only care that the config flow is aborted
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_get_no_heat_pumps_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry,
+) -> None:
+    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=USER_UUID_1,
+    )
+
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    with (
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            return_value=USER_UUID_1,
+        ),
+        patch(
+            "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.discover_active",
+            return_value=[],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # only care that the config flow is aborted
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_heat_pumps"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("get_heat_pump_data_exception", "expected_reason"),
+    [
+        (MaxRetryError(None, ""), "get_heat_pump_data_failed"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_get_heat_pump_data_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry,
+    mock_weheat_discover: AsyncMock,
+    mock_weheat_config_heat_pump: AsyncMock,
+    get_heat_pump_data_exception: Exception,
+    expected_reason: str,
+) -> None:
+    """Check that the config flow is aborted when getting the user ID results in an HTTP error or different exception."""
+    first_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        unique_id=USER_UUID_1,
+    )
+
+    first_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    await handle_oauth(hass, hass_client_no_auth, aioclient_mock, result)
+
+    mock_weheat_config_heat_pump.get_status.side_effect = get_heat_pump_data_exception
+
+    with (
+        patch(
+            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            return_value=USER_UUID_1,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # only care that the config flow is aborted
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -147,6 +295,7 @@ async def test_reauth(
     aioclient_mock: AiohttpClientMocker,
     mock_user_id: AsyncMock,
     mock_weheat_discover: AsyncMock,
+    mock_weheat_config_heat_pump: AsyncMock,
     setup_credentials,
     logged_in_user: str,
     expected_reason: str,

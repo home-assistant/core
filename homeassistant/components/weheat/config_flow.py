@@ -5,6 +5,8 @@ import logging
 from typing import Any
 
 from urllib3.exceptions import HTTPError
+from weheat.abstractions.discovery import HeatPumpDiscovery
+from weheat.abstractions.heat_pump import HeatPump
 from weheat.abstractions.user import async_get_user_id_from_token
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -44,6 +46,35 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         except HTTPError as e:
             LOGGER.error("Failed to get user id: %s", e)
             return self.async_abort(reason="get_user_failed")
+        except Exception as e:  # noqa: BLE001
+            LOGGER.exception("Unexpected error: %s", e)
+            return self.async_abort(reason="unknown")
+
+        # Test getting heat pumps
+        try:
+            discovered_heat_pumps = await HeatPumpDiscovery.discover_active(
+                API_URL, data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+            )
+        except HTTPError as e:
+            LOGGER.error("Failed to get heat pumps: %s", e)
+            return self.async_abort(reason="get_heat_pumps_failed")
+        except Exception as e:  # noqa: BLE001
+            LOGGER.exception("Unexpected error: %s", e)
+            return self.async_abort(reason="unknown")
+
+        if len(discovered_heat_pumps) == 0:
+            return self.async_abort(reason="no_heat_pumps")
+
+        # Test fetching data for a heat pump
+        try:
+            heat_pump = HeatPump(API_URL, discovered_heat_pumps[0].uuid)
+            await heat_pump.get_status(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        except HTTPError as e:
+            LOGGER.error("Failed to get heat pump data: %s", e)
+            return self.async_abort(reason="get_heat_pump_data_failed")
+        except Exception as e:  # noqa: BLE001
+            LOGGER.exception("Unexpected error: %s", e)
+            return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(user_id)
         if self.source != SOURCE_REAUTH:

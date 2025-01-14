@@ -8,8 +8,8 @@
         "title": "Select your heat pump"
       },
       "reauth_confirm": {
-        "title": "Re-authenticate with WeHeat",
-        "description": "You need to re-authenticate with WeHeat to continue"
+        "title": "Re-authenticate with Weheat",
+        "description": "You need to re-authenticate with Weheat to continue"
       }
     },
     "abort": {
@@ -26,7 +26,11 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "no_devices_found": "Could not find any heat pumps on this account",
       "wrong_account": "You can only reauthenticate this account with the same user.",
-      "get_user_failed": "Could not retrieve user information from WeHeat due to a HTTP error. Please try again later."
+      "get_user_failed": "Could not retrieve user information from Weheat due to a HTTP error. Please try again later.",
+      "get_heat_pumps_failed": "Could not retrieve heat pumps due to a HTTP error. Please try again later.",
+      "no_heat_pumps": "Zero heat pumps are available for this account. If this is incorrect, please contact Weheta support.",
+      "get_heat_pump_data_failed": "Could not retrieve heat pump data due to a HTTP error. Please try again later.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
