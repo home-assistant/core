@@ -3,7 +3,7 @@
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, UnitOfElectricPotential
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -65,8 +65,8 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
         self._mac_address = mac_address
-        self._attr_unique_id: str = (
-            f"vegehub_{mac_address}_{slot}".lower()
+        self._attr_unique_id = (
+            f"{mac_address}_{slot}".lower()
         )  # Generate a unique_id using mac and slot
         self._attr_suggested_display_precision = 2
         self._attr_device_info = DeviceInfo(
@@ -76,13 +76,17 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
             model=MODEL,
         )
 
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         value = None
-        if self.coordinator.data is not None:
+        if self.coordinator.data is not None and self._attr_unique_id is not None:
             value = self.coordinator.data.get(self._attr_unique_id)
         # Only set a new value if there is one available in the coordinator.
         if value is not None:
             self.latest_value = value
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
         return self.latest_value
