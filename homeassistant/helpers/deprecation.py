@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
-from enum import Enum, EnumType, _EnumDict
+from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
@@ -255,7 +255,7 @@ class DeprecatedConstant(NamedTuple):
 class DeprecatedConstantEnum(NamedTuple):
     """Deprecated constant."""
 
-    enum: Enum
+    enum: StrEnum | IntEnum | IntFlag
     breaks_in_ha_version: str | None
 
 
@@ -306,7 +306,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     elif isinstance(deprecated_const, DeprecatedConstantEnum):
-        value = deprecated_const.enum.value
+        value = deprecated_const.enum
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )

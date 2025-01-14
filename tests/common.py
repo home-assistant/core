@@ -15,7 +15,7 @@ from collections.abc import (
 )
 from contextlib import asynccontextmanager, contextmanager, suppress
 from datetime import UTC, datetime, timedelta
-from enum import Enum
+from enum import Enum, StrEnum
 import functools as ft
 from functools import lru_cache
 from io import StringIO
@@ -108,7 +108,7 @@ from homeassistant.util.json import (
 from homeassistant.util.signal_type import SignalType
 import homeassistant.util.ulid as ulid_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-import homeassistant.util.yaml.loader as yaml_loader
+from homeassistant.util.yaml import load_yaml_dict, loader as yaml_loader
 
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
@@ -120,6 +120,14 @@ _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
 CLIENT_ID = "https://example.com/app"
 CLIENT_REDIRECT_URI = "https://example.com/app/callback"
+
+
+class QualityScaleStatus(StrEnum):
+    """Source of core configuration."""
+
+    DONE = "done"
+    EXEMPT = "exempt"
+    TODO = "todo"
 
 
 async def async_get_device_automations(
@@ -1189,16 +1197,16 @@ def assert_setup_component(count, domain=None):
         yield config
 
     if domain is None:
-        assert (
-            len(config) == 1
-        ), f"assert_setup_component requires DOMAIN: {list(config.keys())}"
+        assert len(config) == 1, (
+            f"assert_setup_component requires DOMAIN: {list(config.keys())}"
+        )
         domain = list(config.keys())[0]
 
     res = config.get(domain)
     res_len = 0 if res is None else len(res)
-    assert (
-        res_len == count
-    ), f"setup_component failed, expected {count} got {res_len}: {res}"
+    assert res_len == count, (
+        f"setup_component failed, expected {count} got {res_len}: {res}"
+    )
 
 
 def mock_restore_cache(hass: HomeAssistant, states: Sequence[State]) -> None:
@@ -1806,9 +1814,9 @@ async def snapshot_platform(
     """Snapshot a platform."""
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
-    assert (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert len({entity_entry.domain for entity_entry in entity_entries}) == 1, (
+        "Please limit the loaded platforms to 1 platform."
+    )
     for entity_entry in entity_entries:
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_entry.disabled_by is None, "Please enable all entities."
@@ -1832,3 +1840,22 @@ def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
         for loaded_components in loaded_categories.values():
             for component_to_unload in components:
                 loaded_components.pop(component_to_unload, None)
+
+
+@lru_cache
+def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
+    """Load quality scale for integration."""
+    quality_scale_file = pathlib.Path(
+        f"homeassistant/components/{integration}/quality_scale.yaml"
+    )
+    if not quality_scale_file.exists():
+        return {}
+    raw = load_yaml_dict(quality_scale_file)
+    return {
+        rule: (
+            QualityScaleStatus(details)
+            if isinstance(details, str)
+            else QualityScaleStatus(details["status"])
+        )
+        for rule, details in raw["rules"].items()
+    }
