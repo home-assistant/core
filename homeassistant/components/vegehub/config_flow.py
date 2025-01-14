@@ -34,7 +34,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the VegeHub config flow."""
         self._hub: VegeHub | None = None
         self._hostname: str = ""
-        self._properties: dict = {}
+        self._discovered: dict[str, Any] = {}  # Add this
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -87,16 +87,15 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             if self._hub is not None:
                 if len(errors) == 0:
-                    info_data: dict[str, Any] = {}
-
-                    info_data[CONF_MAC] = self._hub.mac_address
-                    info_data[CONF_IP_ADDRESS] = self._hub.ip_address
-                    info_data[CONF_HOST] = self._hostname
-                    info_data[CONF_WEBHOOK_ID] = webhook_generate_id()
-
+                    self._discovered = {
+                        CONF_MAC: self._hub.mac_address,
+                        CONF_IP_ADDRESS: self._hub.ip_address,
+                        CONF_HOST: self._hostname,
+                    }
+                    webhook_id = webhook_generate_id()
                     webhook_url = webhook_generate_url(
                         self.hass,
-                        info_data[CONF_WEBHOOK_ID],
+                        webhook_id,
                         allow_external=False,
                         allow_ip=True,
                     )
@@ -121,7 +120,11 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     if not errors:
                         # Save Hub info to be used later when defining the VegeHub object
-                        info_data[CONF_DEVICE] = hub.info
+                        info_data = {
+                            **self._discovered,
+                            CONF_DEVICE: hub.info,
+                            CONF_WEBHOOK_ID: webhook_id,
+                        }
 
                         # Create the config entry for the new device
                         return self.async_create_entry(
@@ -153,7 +156,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._hostname = discovery_info.hostname.removesuffix(".local.")
         config_url = f"http://{discovery_info.hostname[:-1]}:{discovery_info.port}"
-        self._properties = discovery_info.properties
 
         self._async_abort_entries_match({CONF_IP_ADDRESS: discovery_info.host})
 
