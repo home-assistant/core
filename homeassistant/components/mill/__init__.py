@@ -40,13 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval = timedelta(seconds=30)
         key = entry.data[CONF_USERNAME]
         conn_type = CLOUD
+
         historic_data_coordinator = MillHistoricDataUpdateCoordinator(
             hass,
             mill_data_connection=mill_data_connection,
-            update_interval=update_interval,
         )
+        historic_data_coordinator.async_add_listener(lambda: None)
         await historic_data_coordinator.async_config_entry_first_refresh()
-
     try:
         if not await mill_data_connection.connect():
             raise ConfigEntryNotReady

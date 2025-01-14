@@ -25,7 +25,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ONE_YEAR = 1 * 365 * 24
+TWO_YEARS = 2 * 365 * 24
 
 
 class MillDataUpdateCoordinator(DataUpdateCoordinator):
@@ -56,26 +56,25 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        update_interval: timedelta | None = None,
         *,
         mill_data_connection: Mill,
     ) -> None:
         """Initialize global Mill data updater."""
         self.mill_data_connection = mill_data_connection
-        self._last_stats_time = dt_util.utcnow() - timedelta(days=1)
 
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
-            update_interval=update_interval,
+            name="MillHistoricDataUpdateCoordinator",
         )
 
     async def _async_update_data(self):
-        """Update data via API."""
+        """Update historic data via API."""
         now = dt_util.utcnow()
-        if self._last_stats_time > now - timedelta(hours=1):
-            return
+        self.update_interval = (
+            timedelta(hours=1) + now.replace(minute=0, second=0) - now
+        )
+
         for dev_id, heater in self.mill_data_connection.devices.items():
             if not isinstance(heater, Heater):
                 continue
@@ -88,7 +87,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             if not last_stats or not last_stats.get(statistic_id):
                 hourly_data = (
                     await self.mill_data_connection.fetch_historic_energy_usage(
-                        dev_id, n_days=ONE_YEAR
+                        dev_id, n_days=TWO_YEARS
                     )
                 )
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
@@ -108,7 +107,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                     )
                 )
                 if not hourly_data:
-                    return
+                    continue
                 hourly_data = dict(sorted(hourly_data.items(), key=lambda x: x[0]))
                 start_time = next(iter(hourly_data))
 
@@ -151,5 +150,3 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             )
             async_add_external_statistics(self.hass, metadata, statistics)
-            self._last_stats_time = now.replace(minute=0, second=0)
-            return
