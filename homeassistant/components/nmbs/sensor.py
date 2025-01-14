@@ -207,7 +207,10 @@ class NMBSLiveBoard(SensorEntity):
     def unique_id(self) -> str:
         """Return the unique ID."""
 
-        unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
+        unique_id = (
+            f"{self._station["id"]}_{self._station_from["id"]}_"
+            f"{self._station_to["id"]}"
+        )
         return f"nmbs_live_{unique_id}"
 
     @property
