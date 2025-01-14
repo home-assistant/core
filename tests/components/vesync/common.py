@@ -16,7 +16,7 @@ ALL_DEVICE_NAMES: list[str] = [
 ]
 DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 200s": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-200s.json")
     ],
     "Humidifier 600S": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
