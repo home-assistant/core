@@ -1,8 +1,12 @@
 {
-  "domain": "openhardwaremonitor",
+  "domain": "openhardwaremonitor-wip",
   "name": "Open Hardware Monitor",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/openhardwaremonitor",
   "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "quality_scale": "legacy",
+  "requirements": [],
+  "dependencies": [],
+  "config_flow": true,
+  "version": "2.0.0"
 }

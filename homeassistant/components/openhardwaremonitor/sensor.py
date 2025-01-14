@@ -13,11 +13,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
@@ -38,38 +40,97 @@ OHM_VALUE = "Value"
 OHM_MIN = "Min"
 OHM_MAX = "Max"
 OHM_CHILDREN = "Children"
+OHM_IMAGEURL = "ImageURL"
 OHM_NAME = "Text"
+OHM_ID = "id"
+from .const import *
 
+DOMAIN = "openhardwaremonitor-wip"
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )
 
-
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Open Hardware Monitor platform."""
-    data = OpenHardwareMonitorData(config, hass)
+    
+    _LOGGER.warning("Host_pl: " + config_entry.data[CONNECTION_HOST])
+    _LOGGER.warning("Port_pl: " + config_entry.data[CONNECTION_PORT])
+    #data = OpenHardwareMonitorData(config_entry.data, hass)
+    data = hass.data["monitor_instance"]
     if data.data is None:
         raise PlatformNotReady
-    add_entities(data.devices, True)
+    #await data.initialize(utcnow())
+    async_add_entities(data.devices, True)
 
+# async def async_setup_entry(
+#     hass: HomeAssistant,
+#     config_entry: ConfigEntry,
+#     async_add_entities: AddEntitiesCallback,
+# ) -> None:
+#     """Set up the Roborock vacuum sensors."""
+#     _LOGGER.warning("Host: " + config_entry.data[CONNECTION_HOST])
+#     _LOGGER.warning("Port: " + config_entry.data[CONNECTION_PORT])
+#     #setup_platform(hass, config=config_entry.data, async_add_entities=async_add_entities)
+    
+#     """Set up the Open Hardware Monitor platform."""
+#     data = OpenHardwareMonitorData(config_entry.data, hass, async_add_entities)
+#     #await data.initialize(utcnow())
+#     if data.data is None:
+#         raise PlatformNotReady
+
+deviceGroupLevels = 2
 
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, data, name, path, unit_of_measurement):
+    def __init__(self, data, name, path, unit_of_measurement, id, child_names, json):
         """Initialize an OpenHardwareMonitor sensor."""
+        currentLevel = len(child_names)
+        groupDevicesPerDepthLevel = data._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL)
+        deviceName = " ".join(child_names[0:groupDevicesPerDepthLevel])
+
         self._name = name
         self._data = data
+        self._json = json
         self.path = path
+        self.id = id
         self.attributes = {}
         self._unit_of_measurement = unit_of_measurement
+
+        
+        host = data._config.get(CONNECTION_HOST)
+        port = data._config.get(CONNECTION_PORT)
+        manufacturer = ""
+        if groupDevicesPerDepthLevel == 1:
+            manufacturer = "Computer"
+        elif groupDevicesPerDepthLevel == 2:
+            manufacturer = "Hardware"
+        else:
+            manufacturer = "Group"
+        
+        model = ""
+        _LOGGER.warning("|".join(child_names))
+        _LOGGER.warning("cur: "+ str(currentLevel))
+        if groupDevicesPerDepthLevel == 2:
+            model = child_names[1]
+
+        # self._attr_unique_id = f"ohm-{name}---{path}"
+        self._attr_unique_id = f"ohm-{name}-{id}"
+        self._attr_device_info = DeviceInfo(
+            identifiers= {(DOMAIN, deviceName)},
+            via_device=(DOMAIN, f"{host}:{port}"),
+            # If desired, the name for the device could be different to the entity
+            name = str(deviceName),
+            manufacturer = manufacturer,
+            model = model,
+        )
+        self._attr_state_class = SensorStateClass.MEASUREMENT
 
         self.value = None
 
@@ -95,14 +156,20 @@ class OpenHardwareMonitorDevice(SensorEntity):
         """Return the state attributes of the entity."""
         return self.attributes
 
+    @property
+    def device_info(self):
+        """Information about this entity's device."""
+        return self._attr_device_info
+
     @classmethod
     def parse_number(cls, string):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the device from a new JSON object."""
-        self._data.update()
+        #self._data.update()
+        await self._data.async_update()
 
         array = self._data.data[OHM_CHILDREN]
         _attributes = {}
@@ -115,6 +182,8 @@ class OpenHardwareMonitorDevice(SensorEntity):
                 _attributes.update(
                     {
                         "name": values[OHM_NAME],
+                        "path": self.path,
+                        "id": self.id,
                         STATE_MIN_VALUE: self.parse_number(
                             values[OHM_MIN].split(" ")[0]
                         ),
@@ -128,9 +197,20 @@ class OpenHardwareMonitorDevice(SensorEntity):
                 return
             array = array[path_number][OHM_CHILDREN]
             _attributes.update({f"level_{path_index}": values[OHM_NAME]})
+    
+    # @property
+    # def entity_picture(self) -> str | None:
+    #     """Return the icon of the entity."""
+    #     host = self._data._config.get(CONNECTION_HOST)
+    #     port = self._data._config.get(CONNECTION_PORT)
+    #     base = f"http://{host}:{port}/"
+    #     rel = self._json[OHM_IMAGEURL]
+    #     url = f"{base}{rel}"
+    #     _LOGGER.warning("IMG: " + str(url))
+    #     return url
 
 
-class OpenHardwareMonitorData:
+class OpenHardwareMonitorData_old:
     """Class used to pull data from OHM and create sensors."""
 
     def __init__(self, config, hass):
@@ -139,22 +219,23 @@ class OpenHardwareMonitorData:
         self._config = config
         self._hass = hass
         self.devices = []
-        self.initialize(utcnow())
+        #self.initialize(utcnow())
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    async def async_update(self):
         """Hit by the timer with the configured interval."""
         if self.data is None:
-            self.initialize(utcnow())
+            await self.initialize(utcnow())
         else:
-            self.refresh()
+            await self.refresh()
 
-    def refresh(self):
+    async def refresh(self):
         """Download and parse JSON from OHM."""
         data_url = (
             f"http://{self._config.get(CONF_HOST)}:"
             f"{self._config.get(CONF_PORT)}/data.json"
         )
+        _LOGGER.warning("URL: " + str(data_url))
 
         try:
             response = requests.get(data_url, timeout=30)
@@ -162,14 +243,17 @@ class OpenHardwareMonitorData:
         except requests.exceptions.ConnectionError:
             _LOGGER.debug("ConnectionError: Is OpenHardwareMonitor running?")
 
-    def initialize(self, now):
+    async def initialize(self, now, async_add_entities):
         """Parse of the sensors and adding of devices."""
-        self.refresh()
+        await self.refresh()
 
         if self.data is None:
             return
 
         self.devices = self.parse_children(self.data, [], [], [])
+        
+        async_add_entities(
+            self.data.devices, True)
 
     def parse_children(self, json, devices, path, names):
         """Recursively loop through child objects, finding the values."""
@@ -196,12 +280,13 @@ class OpenHardwareMonitorData:
         if json[OHM_VALUE].find(" ") == -1:
             return result
 
+        id = str(json[OHM_ID])
         unit_of_measurement = json[OHM_VALUE].split(" ")[1]
         child_names = names.copy()
         child_names.append(json[OHM_NAME])
         fullname = " ".join(child_names)
 
-        dev = OpenHardwareMonitorDevice(self, fullname, path, unit_of_measurement)
+        dev = OpenHardwareMonitorDevice(self, fullname, path, unit_of_measurement, id, child_names)
 
         result.append(dev)
         return result
