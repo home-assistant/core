@@ -29,7 +29,7 @@ OPEN_CLOSE_ATTRIBUTES = [
 POSITION_ATTRIBUTES = [AttributeType.POSITION, AttributeType.SHUTTER_SLAT_POSITION]
 
 
-def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute:
+def get_open_close_attribute(node: HomeeNode) -> HomeeAttribute | None:
     """Return the attribute used for opening/closing the cover."""
     # We assume, that no device has UP_DOWN and OPEN_CLOSE, but only one of them.
     if (open_close := node.get_attribute_by_type(AttributeType.UP_DOWN)) is None:
@@ -197,17 +197,19 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if not self._open_close_attribute.is_reversed:
-            await self.async_set_value(self._open_close_attribute, 0)
-        else:
-            await self.async_set_value(self._open_close_attribute, 1)
+        if self._open_close_attribute is not None:
+            if not self._open_close_attribute.is_reversed:
+                await self.async_set_value(self._open_close_attribute, 0)
+            else:
+                await self.async_set_value(self._open_close_attribute, 1)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        if not self._open_close_attribute.is_reversed:
-            await self.async_set_value(self._open_close_attribute, 1)
-        else:
-            await self.async_set_value(self._open_close_attribute, 0)
+        if self._open_close_attribute is not None:
+            if not self._open_close_attribute.is_reversed:
+                await self.async_set_value(self._open_close_attribute, 1)
+            else:
+                await self.async_set_value(self._open_close_attribute, 0)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -224,7 +226,8 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.async_set_value(self._open_close_attribute, 2)
+        if self._open_close_attribute is not None:
+            await self.async_set_value(self._open_close_attribute, 2)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
