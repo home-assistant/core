@@ -27,6 +27,8 @@ DOCUMENTATION_URL_HOST = "www.home-assistant.io"
 DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = {"https://www.home-assistant.io/hassio"}
 
+_CORE_DOCUMENTATION_BASE = "https://www.home-assistant.io/integrations"
+
 
 class NonScaledQualityScaleTiers(StrEnum):
     """Supported manifest quality scales."""
