@@ -1,4 +1,4 @@
-"""Tests for the Electric Kiwi component."""
+"""Test the Electric Kiwi init."""
 
 from unittest.mock import AsyncMock
 
