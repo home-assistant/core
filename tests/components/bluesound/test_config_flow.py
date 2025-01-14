@@ -6,7 +6,7 @@ from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound.const import DOMAIN
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -109,63 +109,6 @@ async def test_user_flow_aleady_configured(
     assert result["reason"] == "already_configured"
 
     assert config_entry.data[CONF_HOST] == "1.1.1.2"
-
-    player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
-
-
-async def test_import_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, player_mocks: PlayerMocks
-) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 11000},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "player-name1111"
-    assert result["data"] == {CONF_HOST: "1.1.1.1", CONF_PORT: 11000}
-    assert result["result"].unique_id == "ff:ff:01:01:01:01-11000"
-
-    mock_setup_entry.assert_called_once()
-    player_mocks.player_data.player.sync_status.assert_called_once()
-
-
-async def test_import_flow_cannot_connect(
-    hass: HomeAssistant, player_mocks: PlayerMocks
-) -> None:
-    """Test we handle cannot connect error."""
-    player_mocks.player_data.player.sync_status.side_effect = PlayerUnreachableError(
-        "Player not reachable"
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "1.1.1.1", CONF_PORT: 11000},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-    player_mocks.player_data.player.sync_status.assert_called_once()
-
-
-async def test_import_flow_already_configured(
-    hass: HomeAssistant,
-    player_mocks: PlayerMocks,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test we handle already configured."""
-    config_entry.add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_HOST: "1.1.1.2", CONF_PORT: 11000},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
     player_mocks.player_data_for_already_configured.player.sync_status.assert_called_once()
 

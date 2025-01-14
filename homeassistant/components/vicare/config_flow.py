@@ -30,7 +30,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from . import vicare_login
 from .const import (
     CONF_HEATING_TYPE,
     DEFAULT_HEATING_TYPE,
@@ -38,6 +37,7 @@ from .const import (
     VICARE_NAME,
     HeatingType,
 )
+from .utils import login
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,9 +94,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                await self.hass.async_add_executor_job(
-                    vicare_login, self.hass, user_input
-                )
+                await self.hass.async_add_executor_job(login, self.hass, user_input)
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:
@@ -132,7 +130,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             try:
-                await self.hass.async_add_executor_job(vicare_login, self.hass, data)
+                await self.hass.async_add_executor_job(login, self.hass, data)
             except (PyViCareInvalidConfigurationError, PyViCareInvalidCredentialsError):
                 errors["base"] = "invalid_auth"
             else:

@@ -56,7 +56,7 @@ class WatergateSensorEntityDescription(SensorEntityDescription):
 DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
     WatergateSensorEntityDescription(
         value_fn=lambda data: (
-            data.state.water_meter.duration
+            data.state.water_meter.volume
             if data.state and data.state.water_meter
             else None
         ),

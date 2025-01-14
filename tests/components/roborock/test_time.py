@@ -7,10 +7,17 @@ import pytest
 import roborock
 
 from homeassistant.components.time import SERVICE_SET_VALUE
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.TIME]
 
 
 @pytest.mark.parametrize(

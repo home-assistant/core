@@ -67,11 +67,9 @@ type _ReturnFuncType[_T, **_P, _R] = Callable[
 ]
 
 
-def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> (
-    Callable[
-        [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
-    ]
-):
+def catch_request_errors[_OpenhomeDeviceT: OpenhomeDevice, **_P, _R]() -> Callable[
+    [_FuncType[_OpenhomeDeviceT, _P, _R]], _ReturnFuncType[_OpenhomeDeviceT, _P, _R]
+]:
     """Catch TimeoutError, aiohttp.ClientError, UpnpError errors."""
 
     def call_wrapper(
