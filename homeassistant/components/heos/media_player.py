@@ -140,10 +140,10 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @callback
     def _update_attributes(self) -> None:
         """Update core attributes of the media player."""
-        self._attr_group_members = self.coordinator.get_group_members(
+        self._attr_group_members = self.coordinator.async_get_group_members(
             self._player.group_id
         )
-        self._attr_source = self.coordinator.get_current_source(
+        self._attr_source = self.coordinator.async_get_current_source(
             self._player.now_playing_media
         )
         self._attr_source_list = list(self.coordinator.source_list)
@@ -182,7 +182,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("join players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
-        await self.coordinator.join_players(self._player.player_id, group_members)
+        await self.coordinator.async_join_players(self._player.player_id, group_members)
 
     @log_command_error("pause")
     async def async_media_pause(self) -> None:
@@ -264,7 +264,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
                 index = int(media_id)
             except ValueError:
                 # Try finding index by name
-                index = self.coordinator.get_favorite_index(media_id)
+                index = self.coordinator.async_get_favorite_index(media_id)
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_preset_station(index)
@@ -275,7 +275,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self.coordinator.play_source(source, self._player)
+        await self.coordinator.async_play_source(source, self._player)
 
     @log_command_error("set shuffle")
     async def async_set_shuffle(self, shuffle: bool) -> None:
@@ -290,7 +290,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @log_command_error("unjoin player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self.coordinator.unjoin_player(self._player.player_id)
+        await self.coordinator.async_unjoin_player(self._player.player_id)
 
     @property
     def available(self) -> bool:
