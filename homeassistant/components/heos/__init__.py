@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             break
 
     coordinator = HeosCoordinator(hass, entry)
+    entry.runtime_data = coordinator
     await coordinator.async_setup()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

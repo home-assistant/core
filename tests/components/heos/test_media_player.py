@@ -61,7 +61,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
@@ -1032,8 +1032,8 @@ async def test_media_player_group_fails_when_entity_removed(
 
     # Attempt to group
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity media_player.test_player_2 was not found.",
+        ServiceValidationError,
+        match="Entity media_player.test_player_2 was not found",
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

@@ -91,8 +91,20 @@
     }
   },
   "exceptions": {
+    "entity_not_found": {
+      "message": "Entity {entity_id} was not found"
+    },
     "integration_not_loaded": {
       "message": "The HEOS integration is not loaded"
+    },
+    "not_heos_media_player": {
+      "message": "Entity {entity_id} is not a HEOS media player entity"
+    },
+    "unable_to_connect": {
+      "message": "Unable to connect to HEOS System host {host}: {error}"
+    },
+    "unable_to_retrieve_players": {
+      "message": "Unable to retrieve HEOS players: {error}"
     }
   },
   "issues": {

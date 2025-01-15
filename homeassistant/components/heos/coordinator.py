@@ -20,7 +20,7 @@ from pyheos import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -63,8 +63,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self._source_list: list[str] = []
         self._favorites: dict[int, MediaItem] = {}
         self._inputs: list[MediaItem] = []
-
-        config_entry.runtime_data = self
         super().__init__(
             hass,
             _LOGGER,
@@ -81,15 +79,21 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.heos.connect()
         except HeosError as error:
-            _LOGGER.error("Unable to connect to host %s: %s", self.host, error)
-            raise ConfigEntryNotReady from error
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_connect",
+                translation_placeholders={"host": self.host, "error": error},
+            ) from error
 
         # Load players
         try:
             await self.heos.get_players()
         except HeosError as error:
-            _LOGGER.error("Unable to retrieve players: %s", error)
-            raise ConfigEntryNotReady from error
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_retrieve_players",
+                translation_placeholders={"error": error},
+            ) from error
 
         if not self.heos.is_signed_in:
             _LOGGER.warning(
@@ -317,10 +321,16 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         for entity_id in member_entity_ids:
             entity = entity_registry.async_get(entity_id)
             if entity is None:
-                raise HomeAssistantError(f"Entity {entity_id} was not found.")
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
             if entity.platform != DOMAIN:
-                raise HomeAssistantError(
-                    f"Entity {entity_id} is not a HEOS media player entity."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_heos_media_player",
+                    translation_placeholders={"entity_id": entity_id},
                 )
             member_ids.append(int(entity.unique_id))
 
