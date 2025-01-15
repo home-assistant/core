@@ -81,7 +81,7 @@ async def test_observer_discovery(
 
     async def _mock_monitor_observer_callback(callback):
         await hass.async_add_executor_job(
-            callback, MagicMock(action="create", device_path="/dev/new")
+            callback, MagicMock(action="add", device_path="/dev/new")
         )
 
     def _create_mock_monitor_observer(monitor, callback, name):
