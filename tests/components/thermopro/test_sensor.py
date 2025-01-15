@@ -1,5 +1,7 @@
 """Test the ThermoPro config flow."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.components.thermopro.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
@@ -11,13 +13,17 @@ from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 
-async def test_sensors_tp962r(hass: HomeAssistant) -> None:
+async def test_sensors_tp962r(
+    hass: HomeAssistant, mock_bluetooth_adverts: AsyncMock
+) -> None:
     """Test setting up creates the sensors."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="aa:bb:cc:dd:ee:ff",
     )
     entry.add_to_hass(hass)
+
+    mock_bluetooth_adverts.side_effect = TP962R_SERVICE_INFO
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
