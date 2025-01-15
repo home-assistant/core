@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from async_upnp_client.server import UpnpServer
@@ -19,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -26,6 +28,7 @@ from tests.common import (
     MockConfigEntry,
     MockModule,
     async_fire_time_changed,
+    import_and_test_deprecated_constant,
     mock_integration,
 )
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -1094,3 +1097,30 @@ async def test_ssdp_rediscover_no_match(
     await hass.async_block_till_done()
 
     assert len(mock_flow_init.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement_name", "replacement"),
+    [
+        (
+            "SsdpServiceInfo",
+            "homeassistant.helpers.service_info.ssdp.SsdpServiceInfo",
+            SsdpServiceInfo,
+        ),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        ssdp,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2026.2",
+    )

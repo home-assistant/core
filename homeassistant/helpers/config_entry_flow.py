@@ -16,10 +16,10 @@ if TYPE_CHECKING:
     import asyncio
 
     from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-    from homeassistant.components.ssdp import SsdpServiceInfo
 
     from .service_info.dhcp import DhcpServiceInfo
     from .service_info.mqtt import MqttServiceInfo
+    from .service_info.ssdp import SsdpServiceInfo
     from .service_info.zeroconf import ZeroconfServiceInfo
 
 type DiscoveryFunctionType[_R] = Callable[[HomeAssistant], _R]

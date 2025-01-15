@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
-from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from functools import partial
@@ -44,13 +43,19 @@ from homeassistant.const import (
     __version__ as current_version,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, callback as core_callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo as _SsdpServiceInfo
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
@@ -108,27 +113,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-
-@dataclass(slots=True)
-class SsdpServiceInfo(BaseServiceInfo):
-    """Prepared info from ssdp/upnp entries."""
-
-    ssdp_usn: str
-    ssdp_st: str
-    upnp: Mapping[str, Any]
-    ssdp_location: str | None = None
-    ssdp_nt: str | None = None
-    ssdp_udn: str | None = None
-    ssdp_ext: str | None = None
-    ssdp_server: str | None = None
-    ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
-    ssdp_all_locations: set[str] = field(default_factory=set)
-    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+_DEPRECATED_SsdpServiceInfo = DeprecatedConstant(
+    _SsdpServiceInfo,
+    "homeassistant.helpers.service_info.ssdp.SsdpServiceInfo",
+    "2026.2",
+)
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
 type SsdpHassJobCallback = HassJob[
-    [SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
+    [_SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
 ]
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
@@ -148,7 +142,9 @@ def _format_err(name: str, *args: Any) -> str:
 @bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
-    callback: Callable[[SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None],
+    callback: Callable[
+        [_SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
+    ],
     match_dict: dict[str, str] | None = None,
 ) -> Callable[[], None]:
     """Register to receive a callback on ssdp broadcast.
@@ -169,7 +165,7 @@ async def async_register_callback(
 @bind_hass
 async def async_get_discovery_info_by_udn_st(
     hass: HomeAssistant, udn: str, st: str
-) -> SsdpServiceInfo | None:
+) -> _SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
@@ -178,7 +174,7 @@ async def async_get_discovery_info_by_udn_st(
 @bind_hass
 async def async_get_discovery_info_by_st(
     hass: HomeAssistant, st: str
-) -> list[SsdpServiceInfo]:
+) -> list[_SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_st(st)
@@ -187,7 +183,7 @@ async def async_get_discovery_info_by_st(
 @bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
-) -> list[SsdpServiceInfo]:
+) -> list[_SsdpServiceInfo]:
     """Fetch all the entries matching the udn."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_udn(udn)
@@ -227,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def _async_process_callbacks(
     hass: HomeAssistant,
     callbacks: list[SsdpHassJobCallback],
-    discovery_info: SsdpServiceInfo,
+    discovery_info: _SsdpServiceInfo,
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
@@ -562,11 +558,11 @@ class Scanner:
             )
 
     def _async_dismiss_discoveries(
-        self, byebye_discovery_info: SsdpServiceInfo
+        self, byebye_discovery_info: _SsdpServiceInfo
     ) -> None:
         """Dismiss all discoveries for the given address."""
         for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
-            SsdpServiceInfo,
+            _SsdpServiceInfo,
             lambda service_info: bool(
                 service_info.ssdp_st == byebye_discovery_info.ssdp_st
                 and service_info.ssdp_location == byebye_discovery_info.ssdp_location
@@ -589,7 +585,7 @@ class Scanner:
 
     async def _async_headers_to_discovery_info(
         self, ssdp_device: SsdpDevice, headers: CaseInsensitiveDict
-    ) -> SsdpServiceInfo:
+    ) -> _SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
         Building this is a bit expensive so we only do it on demand.
@@ -602,7 +598,7 @@ class Scanner:
 
     async def async_get_discovery_info_by_udn_st(
         self, udn: str, st: str
-    ) -> SsdpServiceInfo | None:
+    ) -> _SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
         for ssdp_device in self._ssdp_devices:
             if ssdp_device.udn == udn:
@@ -612,7 +608,7 @@ class Scanner:
                     )
         return None
 
-    async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_st(self, st: str) -> list[_SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(ssdp_device, headers)
@@ -620,7 +616,7 @@ class Scanner:
             if (headers := ssdp_device.combined_headers(st))
         ]
 
-    async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_udn(self, udn: str) -> list[_SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
             await self._async_headers_to_discovery_info(ssdp_device, headers)
@@ -665,7 +661,7 @@ def discovery_info_from_headers_and_description(
     ssdp_device: SsdpDevice,
     combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
-) -> SsdpServiceInfo:
+) -> _SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
     ssdp_st = combined_headers.get_lower("st")
@@ -685,7 +681,7 @@ def discovery_info_from_headers_and_description(
         if udn := _udn_from_usn(ssdp_usn):
             upnp_info[ATTR_UPNP_UDN] = udn
 
-    return SsdpServiceInfo(
+    return _SsdpServiceInfo(
         ssdp_usn=ssdp_usn,
         ssdp_st=ssdp_st,
         ssdp_ext=combined_headers.get_lower("ext"),
@@ -887,3 +883,11 @@ class Server:
         """Stop UPnP/SSDP servers."""
         for server in self._upnp_servers:
             await server.async_stop()
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())
