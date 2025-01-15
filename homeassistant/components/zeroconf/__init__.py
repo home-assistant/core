@@ -107,7 +107,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_DEPRECATED_HassioServiceInfo = DeprecatedConstant(
+_DEPRECATED_ZeroconfServiceInfo = DeprecatedConstant(
     _ZeroconfServiceInfo,
     "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
     "2026.2",
