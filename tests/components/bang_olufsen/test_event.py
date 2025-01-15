@@ -37,14 +37,19 @@ async def test_button_event_creation(
     # Add Button Event entity ids
     entity_ids = [
         f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
-            "preset", "preset_"
+            "preset", "favourite_"
         )
         for button_type in DEVICE_BUTTONS
     ]
 
+    # Enable the event entities
+    for entity_id in entity_ids:
+        entity_registry.async_update_entity(entity_id, disabled_by=None)
+    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+
     # Check that the entities are available
     for entity_id in entity_ids:
-        entity_registry.async_get(entity_id)
+        assert entity_registry.async_get(entity_id)
 
     # Check number of entities
     # The media_player entity and all of the button event entities should be the only available
@@ -66,18 +71,6 @@ async def test_button_event_creation_beoconnect_core(
     # Load entry
     mock_config_entry_core.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
-
-    # Add Button Event entity ids
-    entity_ids = [
-        f"event.beoconnect_core_22222222_{underscore(button_type)}".replace(
-            "preset", "preset_"
-        )
-        for button_type in DEVICE_BUTTONS
-    ]
-
-    # Check that the entities are unavailable
-    for entity_id in entity_ids:
-        assert not entity_registry.async_get(entity_id)
 
     # Check number of entities
     # The media_player entity should be the only available
