@@ -135,7 +135,23 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
             serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
-        self._handle_coordinator_update(write_state=False)
+        self._update_attributes()
+
+    @callback
+    def _update_attributes(self) -> None:
+        """Update core attributes of the media player."""
+        self._attr_source = self.coordinator.get_current_source(
+            self._player.now_playing_media
+        )
+        self._attr_source_list = list(self.coordinator.source_list)
+        self._attr_group_members = self.coordinator.get_group_members(
+            self._player.player_id
+        )
+        controls = self._player.now_playing_media.supported_controls
+        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
+        self._attr_supported_features = reduce(
+            ior, current_support, BASE_SUPPORTED_FEATURES
+        )
 
     async def _player_update(self, event):
         """Handle player attribute updated."""
@@ -148,17 +164,15 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         # Update state when attributes of the player change
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
         await super().async_added_to_hass()
+        # Ensure group members are resolved/removed when this entity is added/removed
+        self.coordinator.async_update_listeners()
+        self.async_on_remove(self.coordinator.async_update_listeners)
 
     @callback
-    def _handle_coordinator_update(self, write_state: bool = True) -> None:
+    def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        controls = self._player.now_playing_media.supported_controls
-        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
-        self._attr_supported_features = reduce(
-            ior, current_support, BASE_SUPPORTED_FEATURES
-        )
-        if write_state:
-            self.async_write_ha_state()
+        self._update_attributes()
+        super()._handle_coordinator_update()
 
     @log_command_error("clear playlist")
     async def async_clear_playlist(self) -> None:
@@ -295,7 +309,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         }
 
     @property
-    def group_members(self) -> list[str]:
+    def group_members(self) -> list[str] | None:
         """List of players which are grouped together."""
         return self.coordinator.get_group_members(self._player.player_id)
 
@@ -359,16 +373,6 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         return self._player.shuffle
-
-    @property
-    def source(self) -> str | None:
-        """Name of the current input source."""
-        return self.coordinator.get_current_source(self._player.now_playing_media)
-
-    @property
-    def source_list(self) -> list[str]:
-        """List of available input sources."""
-        return list(self.coordinator.source_list)
 
     @property
     def state(self) -> MediaPlayerState:

@@ -971,7 +971,7 @@ async def test_media_player_group_members_error(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     player_entity = hass.states.get("media_player.test_player")
-    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == []
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] is None
 
 
 async def test_media_player_unjoin_group(

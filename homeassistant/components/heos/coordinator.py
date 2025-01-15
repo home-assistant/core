@@ -365,7 +365,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         else:
             _LOGGER.debug("Player %s is not in a group", player_id)
 
-    def get_group_members(self, player_id: int) -> list[str]:
+    def get_group_members(self, player_id: int) -> list[str] | None:
         """Get group member entity IDs for the current player."""
         group = next(
             (
@@ -377,11 +377,10 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             None,
         )
         if group is None:
-            return []
+            return None
         player_ids = [group.lead_player_id, *group.member_player_ids]
         entity_registry = er.async_get(self.hass)
         entity_ids: list[str] = []
-
         for member_id in player_ids:
             entity = entity_registry.async_get_entity_id(
                 Platform.MEDIA_PLAYER,
