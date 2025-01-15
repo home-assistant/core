@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from .common import (
     mock_air_purifier_400s_update_response,
     mock_device_response,
-    mock_multiple_device_responses,
+    mock_login_and_devices_response,
     mock_outlet_energy_response,
 )
 
@@ -38,7 +38,7 @@ async def test_entity_update(
         entry_id="1",
     )
 
-    mock_multiple_device_responses(requests_mock, ["Air Purifier 400s", "Outlet"])
+    mock_login_and_devices_response(requests_mock, ["Air Purifier 400s", "Outlet"])
 
     expected_entities = [
         # From "Air Purifier 400s"

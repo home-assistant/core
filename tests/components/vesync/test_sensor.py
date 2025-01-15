@@ -8,7 +8,11 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .common import ALL_DEVICE_NAMES, ENTITY_HUMIDIFIER_HUMIDITY, mock_devices_response
+from .common import (
+    ALL_DEVICE_NAMES,
+    ENTITY_HUMIDIFIER_HUMIDITY,
+    mock_login_and_devices_response,
+)
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +30,7 @@ async def test_sensor_state(
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_login_and_devices_response(requests_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)

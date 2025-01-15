@@ -54,36 +54,16 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
 }
 
 
-def mock_devices_response(
-    requests_mock: requests_mock.Mocker, device_name: str
+def mock_login_and_devices_response(
+    requests_mock: requests_mock.Mocker, device_names: str | list[str]
 ) -> None:
-    """Build a response for the Helpers.call_api method."""
-    device_list = [
-        device
-        for device in ALL_DEVICES["result"]["list"]
-        if device["deviceName"] == device_name
-    ]
+    """Build a response for all the Helpers.call_api method for the specified devices."""
 
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        json={"code": 0, "result": {"list": device_list}},
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/user/login",
-        json=load_json_object_fixture("vesync-login.json", DOMAIN),
-    )
-    for fixture in DEVICE_FIXTURES[device_name]:
-        requests_mock.request(
-            fixture[0],
-            f"https://smartapi.vesync.com{fixture[1]}",
-            json=load_json_object_fixture(fixture[2], DOMAIN),
-        )
+    if isinstance(device_names, list):
+        device_names = device_names[:]
+    else:
+        device_names = [device_names]
 
-
-def mock_multiple_device_responses(
-    requests_mock: requests_mock.Mocker, device_names: list[str]
-) -> None:
-    """Build a response for the Helpers.call_api method for multiple devices."""
     device_list = [
         device
         for device in ALL_DEVICES["result"]["list"]
@@ -124,7 +104,7 @@ def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) 
 def mock_device_response(
     requests_mock: requests_mock.Mocker, device_name: str, override: Any
 ) -> None:
-    """Build a response for the Helpers.call_api method with updated data."""
+    """Build device data response for the Helpers.call_api method."""
 
     def load_and_merge(source: str) -> JsonObjectType:
         json = load_json_object_fixture(source, DOMAIN)
