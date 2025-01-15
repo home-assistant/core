@@ -80,12 +80,11 @@ def _setup_entities(devices, async_add_entities, coordinator):
             for description in SENSOR_DESCRIPTIONS
             if rgetattr(dev, description.key) is not None
         ),
-        update_before_add=True,
     )
 
 
 class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
-    """Vesync Connect binary sensor class."""
+    """Vesync binary sensor class."""
 
     def __init__(
         self,
