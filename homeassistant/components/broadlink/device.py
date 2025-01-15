@@ -3,7 +3,7 @@
 from contextlib import suppress
 from functools import partial
 import logging
-from typing import Generic
+from typing import Generic, TypeVar
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -13,7 +13,6 @@ from broadlink.exceptions import (
     ConnectionClosedError,
     NetworkTimeoutError,
 )
-from typing_extensions import TypeVar
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (

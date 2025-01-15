@@ -249,11 +249,15 @@ class ElectricPotentialConverter(BaseUnitConverter):
         UnitOfElectricPotential.VOLT: 1,
         UnitOfElectricPotential.MILLIVOLT: 1e3,
         UnitOfElectricPotential.MICROVOLT: 1e6,
+        UnitOfElectricPotential.KILOVOLT: 1 / 1e3,
+        UnitOfElectricPotential.MEGAVOLT: 1 / 1e6,
     }
     VALID_UNITS = {
         UnitOfElectricPotential.VOLT,
         UnitOfElectricPotential.MILLIVOLT,
         UnitOfElectricPotential.MICROVOLT,
+        UnitOfElectricPotential.KILOVOLT,
+        UnitOfElectricPotential.MEGAVOLT,
     }
 
 
@@ -340,6 +344,7 @@ class PowerConverter(BaseUnitConverter):
 
     UNIT_CLASS = "power"
     _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfPower.MILLIWATT: 1 * 1000,
         UnitOfPower.WATT: 1,
         UnitOfPower.KILO_WATT: 1 / 1000,
         UnitOfPower.MEGA_WATT: 1 / 1e6,
@@ -347,6 +352,7 @@ class PowerConverter(BaseUnitConverter):
         UnitOfPower.TERA_WATT: 1 / 1e12,
     }
     VALID_UNITS = {
+        UnitOfPower.MILLIWATT,
         UnitOfPower.WATT,
         UnitOfPower.KILO_WATT,
         UnitOfPower.MEGA_WATT,

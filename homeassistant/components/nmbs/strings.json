@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "api_unavailable": "The API is currently unavailable.",
+      "same_station": "[%key:component::nmbs::config::error::same_station%]",
+      "invalid_station": "Invalid station."
+    },
+    "error": {
+      "same_station": "Departure and arrival station can not be the same."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station_from": "Departure station",
+          "station_to": "Arrival station",
+          "exclude_vias": "Direct connections only",
+          "show_on_map": "Display on map"
+        },
+        "data_description": {
+          "station_from": "Station where the train departs",
+          "station_to": "Station where the train arrives",
+          "exclude_vias": "Exclude connections with transfers",
+          "show_on_map": "Show the station on the map"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_station_not_found": {
+      "title": "The {integration_title} YAML configuration import failed",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an problem importing your YAML configuration.\n\nThe used station \"{station_name}\" could not be found. Fix it or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  }
+}

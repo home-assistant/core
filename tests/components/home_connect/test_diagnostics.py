@@ -1,8 +1,9 @@
 """Test diagnostics for Home Connect."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
+from homeconnect.api import HomeConnectError
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -63,14 +64,13 @@ async def test_async_get_device_diagnostics(
 
 
 @pytest.mark.usefixtures("bypass_throttle")
-async def test_async_device_diagnostics_exceptions(
+async def test_async_device_diagnostics_not_found(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[], Awaitable[bool]],
     setup_credentials: None,
     get_appliances: MagicMock,
     device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test device config entry diagnostics."""
     get_appliances.side_effect = get_all_appliances
@@ -85,3 +85,45 @@ async def test_async_device_diagnostics_exceptions(
 
     with pytest.raises(ValueError):
         await async_get_device_diagnostics(hass, config_entry, device)
+
+
+@pytest.mark.parametrize(
+    ("api_error", "expected_connection_status"),
+    [
+        (HomeConnectError(), "unknown"),
+        (
+            HomeConnectError(
+                {
+                    "key": "SDK.Error.HomeAppliance.Connection.Initialization.Failed",
+                }
+            ),
+            "offline",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("bypass_throttle")
+async def test_async_device_diagnostics_api_error(
+    api_error: HomeConnectError,
+    expected_connection_status: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: MagicMock,
+    appliance: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device config entry diagnostics."""
+    appliance.get_programs_available.side_effect = api_error
+    get_appliances.return_value = [appliance]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.haId)},
+    )
+
+    diagnostics = await async_get_device_diagnostics(hass, config_entry, device)
+    assert diagnostics["programs"] is None

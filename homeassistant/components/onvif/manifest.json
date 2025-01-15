@@ -1,7 +1,7 @@
 {
   "domain": "onvif",
   "name": "ONVIF",
-  "codeowners": ["@hunterjm"],
+  "codeowners": ["@hunterjm", "@jterrace"],
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "dhcp": [{ "registered_devices": true }],

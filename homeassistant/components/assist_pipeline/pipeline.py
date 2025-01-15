@@ -1010,16 +1010,29 @@ class PipelineRun:
         self.intent_agent = agent_info.id
 
     async def recognize_intent(
-        self, intent_input: str, conversation_id: str | None, device_id: str | None
+        self,
+        intent_input: str,
+        conversation_id: str | None,
+        device_id: str | None,
+        conversation_extra_system_prompt: str | None,
     ) -> str:
         """Run intent recognition portion of pipeline. Returns text to speak."""
         if self.intent_agent is None:
             raise RuntimeError("Recognize intent was not prepared")
 
         if self.pipeline.conversation_language == MATCH_ALL:
-            # LLMs support all languages ('*') so use pipeline language for
-            # intent fallback.
-            input_language = self.pipeline.language
+            # LLMs support all languages ('*') so use languages from the
+            # pipeline for intent fallback.
+            #
+            # We prioritize the STT and TTS languages because they may be more
+            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # for languages whose intents are split out by region when
+            # preferring local intent matching.
+            input_language = (
+                self.pipeline.stt_language
+                or self.pipeline.tts_language
+                or self.pipeline.language
+            )
         else:
             input_language = self.pipeline.conversation_language
 
@@ -1045,6 +1058,7 @@ class PipelineRun:
                 device_id=device_id,
                 language=input_language,
                 agent_id=self.intent_agent,
+                extra_system_prompt=conversation_extra_system_prompt,
             )
             processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
@@ -1392,8 +1406,13 @@ class PipelineInput:
     """Input for text-to-speech. Required when start_stage = tts."""
 
     conversation_id: str | None = None
+    """Identifier for the conversation."""
+
+    conversation_extra_system_prompt: str | None = None
+    """Extra prompt information for the conversation agent."""
 
     device_id: str | None = None
+    """Identifier of the device that is processing the input/output of the pipeline."""
 
     async def execute(self) -> None:
         """Run pipeline."""
@@ -1453,9 +1472,9 @@ class PipelineInput:
                 if stt_audio_buffer:
                     # Send audio in the buffer first to speech-to-text, then move on to stt_stream.
                     # This is basically an async itertools.chain.
-                    async def buffer_then_audio_stream() -> (
-                        AsyncGenerator[EnhancedAudioChunk]
-                    ):
+                    async def buffer_then_audio_stream() -> AsyncGenerator[
+                        EnhancedAudioChunk
+                    ]:
                         # Buffered audio
                         for chunk in stt_audio_buffer:
                             yield chunk
@@ -1483,6 +1502,7 @@ class PipelineInput:
                         intent_input,
                         self.conversation_id,
                         self.device_id,
+                        self.conversation_extra_system_prompt,
                     )
                     if tts_input.strip():
                         current_stage = PipelineStage.TTS

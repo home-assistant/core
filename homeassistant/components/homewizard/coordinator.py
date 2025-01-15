@@ -2,68 +2,34 @@
 
 from __future__ import annotations
 
-import logging
-
-from homewizard_energy import HomeWizardEnergyV1
-from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
-from homewizard_energy.v1.const import SUPPORTS_IDENTIFY, SUPPORTS_STATE
-from homewizard_energy.v1.models import Device
+from homewizard_energy import HomeWizardEnergy
+from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, UPDATE_INTERVAL, DeviceResponseEntry
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
 
 
 class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]):
     """Gather data for the energy device."""
 
-    api: HomeWizardEnergyV1
+    api: HomeWizardEnergy
     api_disabled: bool = False
-
-    _unsupported_error: bool = False
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: HomeWizardEnergy) -> None:
         """Initialize update coordinator."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-        self.api = HomeWizardEnergyV1(
-            self.config_entry.data[CONF_IP_ADDRESS],
-            clientsession=async_get_clientsession(hass),
-        )
+        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        self.api = api
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
         try:
-            data = DeviceResponseEntry(
-                device=await self.api.device(),
-                data=await self.api.data(),
-            )
-
-            try:
-                if self.supports_state(data.device):
-                    data.state = await self.api.state()
-
-                data.system = await self.api.system()
-
-            except UnsupportedError as ex:
-                # Old firmware, ignore
-                if not self._unsupported_error:
-                    self._unsupported_error = True
-                    _LOGGER.warning(
-                        "%s is running an outdated firmware version (%s). Contact HomeWizard support to update your device",
-                        self.config_entry.title,
-                        ex,
-                    )
+            data = await self.api.combined()
 
         except RequestError as ex:
             raise UpdateFailed(
@@ -89,18 +55,3 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
         self.data = data
         return data
-
-    def supports_state(self, device: Device | None = None) -> bool:
-        """Return True if the device supports state."""
-
-        if device is None:
-            device = self.data.device
-
-        return device.product_type in SUPPORTS_STATE
-
-    def supports_identify(self, device: Device | None = None) -> bool:
-        """Return True if the device supports identify."""
-        if device is None:
-            device = self.data.device
-
-        return device.product_type in SUPPORTS_IDENTIFY

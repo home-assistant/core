@@ -18,6 +18,8 @@ DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
 DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
+EVENT_CLOUD_EVENT = "cloud_event"
+
 REQUEST_TIMEOUT = 10
 
 PREF_ENABLE_ALEXA = "alexa_enabled"
@@ -74,7 +76,6 @@ CONF_USER_POOL_ID = "user_pool_id"
 CONF_ACCOUNT_LINK_SERVER = "account_link_server"
 CONF_ACCOUNTS_SERVER = "accounts_server"
 CONF_ACME_SERVER = "acme_server"
-CONF_ALEXA_SERVER = "alexa_server"
 CONF_CLOUDHOOK_SERVER = "cloudhook_server"
 CONF_RELAYER_SERVER = "relayer_server"
 CONF_REMOTESTATE_SERVER = "remotestate_server"

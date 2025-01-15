@@ -108,6 +108,7 @@ async def async_pipeline_from_audio_stream(
     device_id: str | None = None,
     start_stage: PipelineStage = PipelineStage.STT,
     end_stage: PipelineStage = PipelineStage.TTS,
+    conversation_extra_system_prompt: str | None = None,
 ) -> None:
     """Create an audio pipeline from an audio stream.
 
@@ -119,6 +120,7 @@ async def async_pipeline_from_audio_stream(
         stt_metadata=stt_metadata,
         stt_stream=stt_stream,
         wake_word_phrase=wake_word_phrase,
+        conversation_extra_system_prompt=conversation_extra_system_prompt,
         run=PipelineRun(
             hass,
             context=context,
