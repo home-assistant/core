@@ -81,7 +81,7 @@ def mock_user_id() -> Generator[AsyncMock]:
     """Mock the user API call."""
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.get_user_id_from_token",
+            "homeassistant.components.weheat.config_flow.async_get_user_id_from_token",
             return_value=USER_UUID_1,
         ) as user_mock,
     ):
@@ -93,7 +93,7 @@ def mock_weheat_discover(mock_heat_pump_info) -> Generator[AsyncMock]:
     """Mock an Weheat discovery."""
     with (
         patch(
-            "homeassistant.components.weheat.HeatPumpDiscovery.discover_active",
+            "homeassistant.components.weheat.HeatPumpDiscovery.async_discover_active",
             autospec=True,
         ) as mock_discover,
     ):

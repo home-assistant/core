@@ -755,7 +755,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.1.1
+demetriek==1.2.0
 
 # homeassistant.components.denonavr
 denonavr==1.0.1
@@ -830,7 +830,7 @@ elgato==5.1.2
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.10
+elkm1-lib==2.2.11
 
 # homeassistant.components.elmax
 elmax-api==0.0.6.4rc0
@@ -1094,13 +1094,13 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.2
+habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
 habluetooth==3.8.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.87.0
+hass-nabucasa==0.88.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -2668,7 +2668,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2024.11.0
+securetar==2025.1.2
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
@@ -3036,7 +3036,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.12.22
+weheat==2025.1.14
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.11

@@ -1638,8 +1638,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
-/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
-/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
+/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW

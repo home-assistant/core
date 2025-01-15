@@ -412,7 +412,9 @@ def verify_cleanup(
 
     try:
         # Verify respx.mock has been cleaned up
-        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        assert not respx.mock.routes, (
+            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        )
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
