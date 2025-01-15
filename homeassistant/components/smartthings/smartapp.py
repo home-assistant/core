@@ -480,6 +480,7 @@ async def smartapp_update(hass: HomeAssistant, req, resp, app):
             req.installed_app_id,
             app.app_id,
         )
+        return
     entry = next(
         (
             entry
