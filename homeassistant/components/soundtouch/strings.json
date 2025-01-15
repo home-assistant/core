@@ -51,7 +51,7 @@
       "description": "Adds media players to a SoundTouch multi-room zone.",
       "fields": {
         "master": {
-          "name": "Leader",
+          "name": "[%key:component::soundtouch::services::create_zone::fields::master::name%]",
           "description": "The media player entity that is coordinating the multi-room zone. Platform dependent."
         },
         "slaves": {
@@ -65,7 +65,7 @@
       "description": "Removes media players from a SoundTouch multi-room zone.",
       "fields": {
         "master": {
-          "name": "Leader",
+          "name": "[%key:component::soundtouch::services::create_zone::fields::master::name%]",
           "description": "[%key:component::soundtouch::services::add_zone_slave::fields::master::description%]"
         },
         "slaves": {
