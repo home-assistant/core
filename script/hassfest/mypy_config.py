@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 from typing import Final
 
+from homeassistant.const import REQUIRED_PYTHON_VER
+
 from .model import Config, Integration
 
 # Component modules which should set no_implicit_reexport = true.
@@ -29,18 +31,7 @@ HEADER: Final = """
 """.lstrip()
 
 GENERAL_SETTINGS: Final[dict[str, str]] = {
-    # We use @dataclass_transform in all our EntityDescriptions, causing
-    # `__replace__` to be already synthesized by mypy, causing **every** use of
-    # our entity descriptions to fail:
-    #
-    # error: Signature of "__replace__" incompatible with supertype "EntityDescription"
-    #
-    # Until this is fixed in mypy, we keep mypy locked on to Python 3.12 as we
-    # have done for the past few releases.
-    #
-    # Ref: https://github.com/python/mypy/issues/18216
-    # "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
-    "python_version": "3.12",
+    "python_version": ".".join(str(x) for x in REQUIRED_PYTHON_VER[:2]),
     "platform": "linux",
     "plugins": ", ".join(  # noqa: FLY002
         [
