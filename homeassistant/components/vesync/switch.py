@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import is_outlet, is_switch
+from .common import is_outlet, is_wall_switch
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -39,7 +39,8 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     VeSyncSwitchEntityDescription(
         key="device_status",
         is_on=lambda device: device.device_status == "on",
-        exists_fn=lambda device: is_switch(device) or is_outlet(device),
+        # Other types of wall switches support dimming.  Those use light.py platform.
+        exists_fn=lambda device: is_wall_switch(device) or is_outlet(device),
         name=None,
     ),
 )

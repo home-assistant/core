@@ -5,7 +5,7 @@ import logging
 from pyvesync import VeSync
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
+from pyvesync.vesyncswitch import VeSyncWallSwitch
 
 from homeassistant.core import HomeAssistant
 
@@ -64,7 +64,7 @@ def is_outlet(device: VeSyncBaseDevice) -> bool:
     return isinstance(device, VeSyncOutlet)
 
 
-def is_switch(device: VeSyncBaseDevice) -> bool:
+def is_wall_switch(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a fan."""
 
-    return isinstance(device, VeSyncSwitch)
+    return isinstance(device, VeSyncWallSwitch)
