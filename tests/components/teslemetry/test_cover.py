@@ -55,6 +55,7 @@ async def test_cover_noscope(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct without scopes."""
 
