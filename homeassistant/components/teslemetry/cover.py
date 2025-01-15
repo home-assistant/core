@@ -260,6 +260,7 @@ class TeslemetryPollingChargePortEntity(
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         self._attr_is_closed = self._value is False
+        self.async_write_ha_state()
 
 
 class TeslemetryStreamingChargePortEntity(
@@ -272,7 +273,6 @@ class TeslemetryStreamingChargePortEntity(
         super().__init__(
             vehicle,
             "charge_state_charge_port_door_open",
-            streaming_key=Signal.CHARGE_PORT_DOOR_OPEN,
         )
         self.scoped = any(
             scope in scopes
@@ -282,12 +282,24 @@ class TeslemetryStreamingChargePortEntity(
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
-    def _async_value_from_stream(self, value) -> None:
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.vehicle.stream_vehicle.listen_ChargePortDoorOpen(
+                self._async_value_from_stream
+            )
+        )
+        self.vehicle.config_entry.async_create_background_task(
+            self.hass,
+            self.add_field(Signal.CHARGE_PORT_DOOR_OPEN),
+            f"Adding field {Signal.CHARGE_PORT_DOOR_OPEN} to {self.vehicle.vin}",
+        )
+
+    def _async_value_from_stream(self, value: bool | None) -> None:
         """Update the value of the entity."""
-        if value is None:
-            self._attr_is_closed = None
-        else:
-            self._attr_is_closed = not value
+        self._attr_is_closed = None if value is None else not value
+        self.async_write_ha_state()
 
 
 class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
@@ -331,20 +343,29 @@ class TeslemetryStreamingFrontTrunkEntity(
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the sensor."""
-        super().__init__(vehicle, "vehicle_state_ft", Signal.DOOR_STATE)
+        super().__init__(vehicle, "vehicle_state_ft")
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
-    def _async_value_from_stream(self, value) -> None:
-        """Update the entity attributes."""
-        door = value.get("TrunkFront")
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.vehicle.stream_vehicle.listen_TrunkFront(self._async_value_from_stream)
+        )
+        self.vehicle.config_entry.async_create_background_task(
+            self.hass,
+            self.add_field(Signal.DOOR_STATE),
+            f"Adding field {Signal.DOOR_STATE} to {self.vehicle.vin}",
+        )
 
-        if isinstance(door, bool):
-            self._attr_is_closed = not door
-        else:
-            self._attr_is_closed = None
+    def _async_value_from_stream(self, value: bool | None) -> None:
+        """Update the entity attributes."""
+
+        self._attr_is_closed = None if value is None else not value
+        self.async_write_ha_state()
 
 
 class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
@@ -396,19 +417,28 @@ class TeslemetryStreamingRearTrunkEntity(
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the sensor."""
-        super().__init__(vehicle, "vehicle_state_rt", Signal.DOOR_STATE)
+        super().__init__(vehicle, "vehicle_state_rt")
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
         self._attr_is_closed = None
 
-    def _async_value_from_stream(self, value) -> None:
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.vehicle.stream_vehicle.listen_TrunkRear(self._async_value_from_stream)
+        )
+        self.vehicle.config_entry.async_create_background_task(
+            self.hass,
+            self.add_field(Signal.DOOR_STATE),
+            f"Adding field {Signal.DOOR_STATE} to {self.vehicle.vin}",
+        )
+
+    def _async_value_from_stream(self, value: bool | None) -> None:
         """Update the entity attributes."""
-        door = value.get("TrunkRear")
-        if isinstance(door, bool):
-            self._attr_is_closed = not door
-        else:
-            self._attr_is_closed = None
+
+        self._attr_is_closed = None if value is None else not value
 
 
 class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):

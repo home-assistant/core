@@ -245,7 +245,7 @@ async def test_cover_streaming(
                         "DriverRear": False,
                         "PassengerFront": False,
                         "PassengerRear": False,
-                        "TrunkFront": False,
+                        "TrunkFront": True,
                         "TrunkRear": False,
                     }
                 },

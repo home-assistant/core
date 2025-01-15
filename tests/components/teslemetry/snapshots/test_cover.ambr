@@ -672,13 +672,13 @@
   })
 # ---
 # name: test_cover_streaming[cover.test_charge_port_door-state]
-  'closed'
+  'unknown'
 # ---
 # name: test_cover_streaming[cover.test_frunk-state]
-  'unknown'
+  'open'
 # ---
 # name: test_cover_streaming[cover.test_trunk-state]
-  'unknown'
+  'open'
 # ---
 # name: test_cover_streaming[cover.test_windows-state]
   'unknown'
