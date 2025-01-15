@@ -39,45 +39,54 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "battery": SensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "voc": SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "light": SensorEntityDescription(
         key="light",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="light",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "virusRisk": SensorEntityDescription(
         key="virusRisk",
         translation_key="virus_risk",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "mold": SensorEntityDescription(
         key="mold",
         translation_key="mold",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "rssi": SensorEntityDescription(
         key="rssi",
@@ -85,16 +94,19 @@ SENSORS: dict[str, SensorEntityDescription] = {
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pm25": SensorEntityDescription(
         key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
@@ -143,8 +155,7 @@ class AirthingsHeaterEnergySensor(
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
             configuration_url=(
-                "https://dashboard.airthings.com/devices/"
-                f"{airthings_device.device_id}"
+                f"https://dashboard.airthings.com/devices/{airthings_device.device_id}"
             ),
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,

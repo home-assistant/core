@@ -184,6 +184,12 @@ def async_register_scanner(
 
 
 @hass_callback
+def async_remove_scanner(hass: HomeAssistant, source: str) -> None:
+    """Permanently remove a BleakScanner by source address."""
+    return _get_manager(hass).async_remove_scanner(source)
+
+
+@hass_callback
 def async_get_advertisement_callback(
     hass: HomeAssistant,
 ) -> Callable[[BluetoothServiceInfoBleak], None]:
