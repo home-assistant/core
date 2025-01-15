@@ -38,7 +38,7 @@ async def async_setup_entry(
     entry: TeslemetryConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Teslemetry sensor platform from a config entry."""
+    """Set up the Teslemetry cover platform from a config entry."""
 
     async_add_entities(
         chain(
@@ -82,7 +82,7 @@ async def async_setup_entry(
 
 
 class CoverRestoreEntity(CoverEntity, RestoreEntity):
-    """Restore entity for covers."""
+    """Restore class for cover entities."""
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -95,7 +95,7 @@ class CoverRestoreEntity(CoverEntity, RestoreEntity):
 
 
 class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
-    """Base class for window entities."""
+    """Base class for window cover entities."""
 
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -127,7 +127,7 @@ class TeslemetryPollingWindowEntity(
     """Polling cover entity for windows."""
 
     def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(data, "windows")
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
@@ -159,7 +159,7 @@ class TeslemetryStreamingWindowEntity(
     rp: bool | None = None
 
     def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(
             data,
             "windows",
@@ -216,13 +216,13 @@ class TeslemetryChargePortEntity(
     TeslemetryRootEntity,
     CoverEntity,
 ):
-    """Cover entity for the charge port."""
+    """Base class for for charge port cover entities."""
 
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     async def async_open_cover(self, **kwargs: Any) -> None:
-        """Open windows."""
+        """Open charge port."""
         self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
 
         await handle_vehicle_command(self.api.charge_port_door_open())
@@ -230,7 +230,7 @@ class TeslemetryChargePortEntity(
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
-        """Close windows."""
+        """Close charge port."""
         self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
 
         await handle_vehicle_command(self.api.charge_port_door_close())
@@ -244,7 +244,7 @@ class TeslemetryPollingChargePortEntity(
     """Polling cover entity for the charge port."""
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         self.scoped = any(
             scope in scopes
             for scope in (Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS)
@@ -303,7 +303,7 @@ class TeslemetryStreamingChargePortEntity(
 
 
 class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
-    """Cover entity for the front trunk."""
+    """Base class for the front trunk cover entities."""
 
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
@@ -325,7 +325,7 @@ class TeslemetryPollingFrontTrunkEntity(
     """Polling cover entity for the front trunk."""
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
@@ -396,7 +396,7 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
 class TeslemetryPollingRearTrunkEntity(
     TeslemetryVehicleEntity, TeslemetryRearTrunkEntity
 ):
-    """Polling Cover entity for the rear trunk."""
+    """Base class for the rear trunk cover entities."""
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the sensor."""
@@ -413,10 +413,10 @@ class TeslemetryPollingRearTrunkEntity(
 class TeslemetryStreamingRearTrunkEntity(
     TeslemetryVehicleStreamEntity, TeslemetryRearTrunkEntity, CoverRestoreEntity
 ):
-    """Polling Cover entity for the rear trunk."""
+    """Polling cover entity for the rear trunk."""
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(vehicle, "vehicle_state_rt")
         self.scoped = Scope.VEHICLE_CMDS in scopes
         if not self.scoped:
@@ -451,7 +451,7 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
     _attr_entity_registry_enabled_default = False
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
-        """Initialize the sensor."""
+        """Initialize the cover."""
         super().__init__(vehicle, "vehicle_state_sun_roof_state")
 
         self.scoped = Scope.VEHICLE_CMDS in scopes
