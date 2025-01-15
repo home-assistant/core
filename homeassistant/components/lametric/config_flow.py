@@ -23,7 +23,6 @@ from demetriek import (
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
@@ -44,6 +43,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN, LOGGER
