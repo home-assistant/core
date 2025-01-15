@@ -88,19 +88,20 @@ async def test_service_post(
 
     await setup_integration(hass, mock_config_entry)
 
-    hass.config.is_allowed_path = Mock(return_value=True)
-    mock_mastodon_client.media_post.return_value = {"id": "1"}
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_POST,
-        {
-            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
-        }
-        | payload,
-        blocking=True,
-        return_response=False,
-    )
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch.object(mock_mastodon_client, "media_post", return_value={"id": "1"}),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_POST,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            }
+            | payload,
+            blocking=True,
+            return_response=False,
+        )
 
     mock_mastodon_client.status_post.assert_called_with(**kwargs)
 
