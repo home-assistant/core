@@ -107,8 +107,8 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 if child_coordinator:
                     await child_coordinator.async_shutdown()
 
-            self._previous_child_device_ids = current_child_device_ids
-            self.removed_child_device_ids = stale_device_ids
+        self._previous_child_device_ids = current_child_device_ids
+        self.removed_child_device_ids = stale_device_ids
 
     def get_child_coordinator(
         self,
