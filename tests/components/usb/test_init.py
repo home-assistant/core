@@ -1301,6 +1301,7 @@ async def test_register_port_event_callback(
         await ws_client.send_json({"id": 2, "type": "usb/scan"})
         response = await ws_client.receive_json()
         assert response["success"]
+        await hass.async_block_till_done()
 
     assert mock_callback1.mock_calls == [call(set(), {port2_usb})]
     assert mock_callback2.mock_calls == []  # The second callback was unregistered
@@ -1313,6 +1314,7 @@ async def test_register_port_event_callback(
         await ws_client.send_json({"id": 3, "type": "usb/scan"})
         response = await ws_client.receive_json()
         assert response["success"]
+        await hass.async_block_till_done()
 
     # Nothing changed so no callback is called
     assert mock_callback1.mock_calls == []
@@ -1323,6 +1325,7 @@ async def test_register_port_event_callback(
         await ws_client.send_json({"id": 4, "type": "usb/scan"})
         response = await ws_client.receive_json()
         assert response["success"]
+        await hass.async_block_till_done()
 
     assert mock_callback1.mock_calls == [call({port2_usb}, {port1_usb})]
     assert mock_callback2.mock_calls == []
