@@ -59,12 +59,43 @@ class VoipOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            if "enable_advanced" in user_input:
+                return await self.async_step_advanced()
+
             return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_SIP_PORT,
+                        default=self.config_entry.options.get(
+                            CONF_SIP_PORT,
+                            SIP_PORT,
+                        ),
+                    ): cv.port,
+                    vol.Optional("enable_advanced"): bool,
+                }
+            ),
+            description_placeholders={
+                "note": "Enable advanced options by checking the box.",
+            },
+        )
+
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the advanced options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input}
+            )
 
         default_host = await async_get_source_ip(self.hass)
 
         return self.async_show_form(
-            step_id="init",
+            step_id="advanced",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
@@ -81,13 +112,6 @@ class VoipOptionsFlowHandler(OptionsFlow):
                             default_host,
                         ),
                     ): str,
-                    vol.Required(
-                        CONF_SIP_PORT,
-                        default=self.config_entry.options.get(
-                            CONF_SIP_PORT,
-                            SIP_PORT,
-                        ),
-                    ): cv.port,
                 }
             ),
         )
