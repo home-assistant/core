@@ -12,6 +12,13 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
+from homeassistant.components.vesync.const import (
+    VS_HUMIDIFIER_MODE_AUTO,
+    VS_HUMIDIFIER_MODE_HUMIDITY,
+    VS_HUMIDIFIER_MODE_MANUAL,
+    VS_HUMIDIFIER_MODE_SLEEP,
+)
+from homeassistant.components.vesync.humidifier import _get_available_modes
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -53,6 +60,33 @@ async def test_humidifier_state(
 
     # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
     assert state.attributes.get(ATTR_HUMIDITY) == 40
+
+
+async def test_invalid_available_modes() -> None:
+    """Test invalid available mode mapping."""
+
+    with patch(
+        "homeassistant.components.vesync.humidifier._LOGGER.warning"
+    ) as mocked_warning:
+        _get_available_modes(["invalid_mode"])
+        mocked_warning.assert_called_once()
+
+
+async def test_valid_available_modes() -> None:
+    """Test valid available mode mapping."""
+
+    with patch(
+        "homeassistant.components.vesync.humidifier._LOGGER.warning"
+    ) as mocked_warning:
+        _get_available_modes(
+            [
+                VS_HUMIDIFIER_MODE_AUTO,
+                VS_HUMIDIFIER_MODE_HUMIDITY,
+                VS_HUMIDIFIER_MODE_MANUAL,
+                VS_HUMIDIFIER_MODE_SLEEP,
+            ]
+        )
+        mocked_warning.assert_not_called()
 
 
 async def test_set_target_humidity_invalid(

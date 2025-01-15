@@ -87,6 +87,7 @@ def _get_ha_mode(vs_mode: str) -> str | None:
     return ha_mode
 
 
+
 class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
