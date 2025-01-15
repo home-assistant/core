@@ -8,7 +8,7 @@ from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from vegehub import VegeHub
+from vegehub import VegeHub, update_data_to_latest_dict
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -132,19 +132,7 @@ def get_webhook_handler(
                 result="No Body", status_code=HTTPStatus.BAD_REQUEST
             )
         data = await request.json()
-
-        sensor_data = {}
-        # Process sensor data
-        if "sensors" in data:
-            for sensor in data["sensors"]:
-                slot = sensor.get("slot")
-                latest_sample = sensor["samples"][-1]
-                value = latest_sample["v"]
-                entity_id = f"{device_mac}_{slot}".lower()
-
-                # Build a dict of the data we want so that we can pass it to the coordinator
-                sensor_data[entity_id] = value
-
+        sensor_data = update_data_to_latest_dict(data)
         if coordinator and sensor_data:
             await coordinator.async_update_data(sensor_data)
 
