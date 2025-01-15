@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+      "frequency": "weekly",
+      "everyX": 1,
+      "repeat": {
+        "m": false,
+        "t": false,
+        "w": false,
+        "th": false,
+        "f": false,
+        "s": false,
+        "su": false
+      },
+      "streak": 1,
+      "nextDue": ["2024-09-20T22:00:00.000Z", "2024-09-27T22:00:00.000Z"],
+      "yesterDaily": true,
+      "history": [],
+      "completed": false,
+      "collapseChecklist": false,
+      "type": "daily",
+      "text": "Zahnseide benutzen",
+      "notes": "Klicke um Änderungen zu machen!",
+      "tags": [],
+      "value": -2.9663035443712333,
+      "priority": 1,
+      "attribute": "str",
+      "challenge": {},
+      "group": {
+        "completedBy": {},
+        "assignedUsers": []
+      },
+      "byHabitica": false,
+      "startDate": "2024-09-25T22:00:00.000Z",
+      "daysOfMonth": [],
+      "weeksOfMonth": [],
+      "checklist": [],
+      "reminders": [],
+      "createdAt": "2024-07-07T17:51:53.268Z",
+      "updatedAt": "2024-09-21T22:24:20.154Z",
+      "userId": "5f359083-ef78-4af0-985a-0b2c6d05797c",
+      "isDue": false,
+      "id": "564b9ac9-c53d-4638-9e7f-1cd96fe19baa"
+    }
+  ],
+  "notifications": [],
+  "userV": 589,
+  "appVersion": "5.28.6"
+}
