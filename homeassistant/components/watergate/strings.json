@@ -19,6 +19,19 @@
     }
   },
   "entity": {
+    "event": {
+      "auto_shut_off": {
+        "name": "Auto shut-off",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "volume_threshold": "Volume",
+              "duration_threshold": "Duration"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "water_meter_volume": {
         "name": "Water meter volume"
