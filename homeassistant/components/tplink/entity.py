@@ -458,6 +458,13 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
 
         # Remove any device ids removed via the coordinator so they can be re-added
         for removed_child_id in coordinator.removed_child_device_ids:
+            _LOGGER.debug(
+                "Removing %s from known %s child ids for device %s"
+                "as it has been removed by the coordinator",
+                removed_child_id,
+                entity_class,
+                device.host,
+            )
             known_child_device_ids.discard(removed_child_id)
 
         current_child_devices = {child.device_id: child for child in device.children}
@@ -475,21 +482,30 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
 
         if children:
             _LOGGER.debug(
-                "Initializing %s children on device %s", len(children), device.host
+                "Getting %s, entities for %s child devices on device %s",
+                entity_class,
+                len(children),
+                device.host,
             )
         for child in children:
             child_coordinator = coordinator.get_child_coordinator(child)
 
-            entities.extend(
-                cls._entities_for_device(
-                    hass,
-                    child,
-                    coordinator=child_coordinator,
-                    feature_type=feature_type,
-                    entity_class=entity_class,
-                    descriptions=descriptions,
-                    parent=device,
-                )
+            child_entities = cls._entities_for_device(
+                hass,
+                child,
+                coordinator=child_coordinator,
+                feature_type=feature_type,
+                entity_class=entity_class,
+                descriptions=descriptions,
+                parent=device,
             )
+            _LOGGER.debug(
+                "Device %s, found %s child %s entities for child id %s",
+                device.host,
+                len(entities),
+                entity_class,
+                child.device_id,
+            )
+            entities.extend(child_entities)
 
         return entities

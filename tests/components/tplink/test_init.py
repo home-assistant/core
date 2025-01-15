@@ -887,8 +887,10 @@ async def test_automatic_device_addition_and_removal(
     mock_device = _mocked_device(
         alias="hub",
         children=[children["child1"], children["child2"]],
+        features=[feature_id],
         device_type=DeviceType.Hub,
         spec=device_type,
+        device_id="hub_parent",
     )
 
     with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
@@ -902,8 +904,17 @@ async def test_automatic_device_addition_and_removal(
         assert state
         assert entity_registry.async_get(entity_id)
 
+    parent_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "hub_parent")}
+    )
+    assert parent_device
+
     for device_id in ("child1", "child2"):
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
 
     # Remove one of the devices
     mock_device.children = [children["child1"]]
@@ -916,6 +927,27 @@ async def test_automatic_device_addition_and_removal(
     assert entity_registry.async_get(entity_id) is None
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
+
+    # Re-dd the previously removed child device
+    mock_device.children = [
+        children["child1"],
+        children["child2"],
+    ]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 2):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child2"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
 
     # Add child devices
     mock_device.children = [children["child1"], children["child3"], children["child4"]]
@@ -948,4 +980,8 @@ async def test_automatic_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child2", "child3", "child4"):
-        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
