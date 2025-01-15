@@ -36,12 +36,12 @@ from typing import (
     NotRequired,
     Self,
     TypedDict,
+    TypeVar,
     cast,
     overload,
 )
 
 from propcache import cached_property, under_cached_property
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from . import util

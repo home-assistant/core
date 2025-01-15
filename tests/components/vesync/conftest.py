@@ -7,15 +7,18 @@ from unittest.mock import Mock, patch
 import pytest
 from pyvesync import VeSync
 from pyvesync.vesyncbulb import VeSyncBulb
-from pyvesync.vesyncfan import VeSyncAirBypass
+from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
 from pyvesync.vesyncoutlet import VeSyncOutlet
 from pyvesync.vesyncswitch import VeSyncSwitch
+import requests_mock
 
 from homeassistant.components.vesync import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
+
+from .common import mock_multiple_device_responses
 
 from tests.common import MockConfigEntry
 
@@ -100,3 +103,29 @@ def dimmable_switch_fixture():
 def outlet_fixture():
     """Create a mock VeSync outlet fixture."""
     return Mock(VeSyncOutlet)
+
+
+@pytest.fixture(name="humidifier")
+def humidifier_fixture():
+    """Create a mock VeSync humidifier fixture."""
+    return Mock(VeSyncHumid200300S)
+
+
+@pytest.fixture(name="humidifier_config_entry")
+async def humidifier_config_entry(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for `Humidifier 200s`."""
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+    )
+    entry.add_to_hass(hass)
+
+    device_name = "Humidifier 200s"
+    mock_multiple_device_responses(requests_mock, [device_name])
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry

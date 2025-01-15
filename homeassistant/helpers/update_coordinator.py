@@ -9,13 +9,12 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol
+from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
 from propcache import cached_property
 import requests
-from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP

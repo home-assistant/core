@@ -13,8 +13,8 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-from . import UpCloudConfigEntry
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .coordinator import UpCloudConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

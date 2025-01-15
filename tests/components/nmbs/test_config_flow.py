@@ -68,7 +68,7 @@ async def test_full_flow(
     }
     assert (
         result["result"].unique_id
-        == f"{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
+        == f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
     )
 
 
@@ -243,15 +243,21 @@ async def test_invalid_station_name(
 async def test_sensor_id_migration_standardname(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating unique id."""
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"live_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"]}",
-        config_entry=mock_config_entry,
+    old_unique_id = (
+        f"live_{DUMMY_DATA_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_IMPORT['STAT_BRUSSELS_SOUTH']}"
+    )
+    new_unique_id = (
+        f"nmbs_live_{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
+    )
+    old_entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -264,29 +270,34 @@ async def test_sensor_id_migration_standardname(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry_id = result["result"].entry_id
     await hass.async_block_till_done()
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entities) == 1
-    assert (
-        entities[0].unique_id
-        == f"nmbs_live_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
-    )
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert len(entities) == 3
+    entities_map = {entity.unique_id: entity for entity in entities}
+    assert old_unique_id not in entities_map
+    assert new_unique_id in entities_map
+    assert entities_map[new_unique_id].id == old_entry.id
 
 
 async def test_sensor_id_migration_localized_name(
     hass: HomeAssistant,
     mock_nmbs_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migrating unique id."""
-    entity_registry.async_get_or_create(
-        SENSOR_DOMAIN,
-        DOMAIN,
-        f"live_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_SOUTH"]}",
-        config_entry=mock_config_entry,
+    old_unique_id = (
+        f"live_{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_SOUTH']}"
+    )
+    new_unique_id = (
+        f"nmbs_live_{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
+    )
+    old_entry = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN, DOMAIN, old_unique_id
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -299,12 +310,11 @@ async def test_sensor_id_migration_localized_name(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry_id = result["result"].entry_id
     await hass.async_block_till_done()
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-    assert len(entities) == 1
-    assert (
-        entities[0].unique_id
-        == f"nmbs_live_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
-    )
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry_id)
+    assert len(entities) == 3
+    entities_map = {entity.unique_id: entity for entity in entities}
+    assert old_unique_id not in entities_map
+    assert new_unique_id in entities_map
+    assert entities_map[new_unique_id].id == old_entry.id

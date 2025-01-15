@@ -1,7 +1,9 @@
 """Unit tests for the bring integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.bring import (
@@ -11,11 +13,14 @@ from homeassistant.components.bring import (
     async_setup_entry,
 )
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from .conftest import UUID
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def setup_integration(
@@ -133,3 +138,32 @@ async def test_config_entry_not_ready_auth_error(
     await hass.async_block_till_done()
 
     assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_bring_client")
+async def test_coordinator_skips_deactivated(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_bring_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the coordinator skips fetching lists for deactivated lists."""
+    await setup_integration(hass, bring_config_entry)
+
+    assert bring_config_entry.state is ConfigEntryState.LOADED
+
+    assert mock_bring_client.get_list.await_count == 2
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{UUID}_b4776778-7f6c-496e-951b-92a35d3db0dd")}
+    )
+    device_registry.async_update_device(device.id, disabled_by=ConfigEntryDisabler.USER)
+
+    mock_bring_client.get_list.reset_mock()
+
+    freezer.tick(timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_bring_client.get_list.await_count == 1

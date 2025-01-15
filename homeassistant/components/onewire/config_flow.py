@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     DEFAULT_HOST,
@@ -112,6 +113,19 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             "title": discovery_info.config["addon"],
             CONF_HOST: discovery_info.config[CONF_HOST],
             CONF_PORT: discovery_info.config[CONF_PORT],
+        }
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        await self._async_handle_discovery_without_unique_id()
+
+        self._discovery_data = {
+            "title": discovery_info.name,
+            CONF_HOST: discovery_info.hostname,
+            CONF_PORT: discovery_info.port,
         }
         return await self.async_step_discovery_confirm()
 

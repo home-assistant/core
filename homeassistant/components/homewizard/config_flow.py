@@ -21,13 +21,14 @@ from homewizard_energy.errors import (
 from homewizard_energy.models import Device
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_API_ENABLED,
@@ -140,7 +141,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if (

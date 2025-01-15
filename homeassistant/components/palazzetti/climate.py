@@ -122,7 +122,7 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan mode."""
-        api_state = self.coordinator.client.fan_speed
+        api_state = self.coordinator.client.current_fan_speed()
         return FAN_MODES[api_state]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
