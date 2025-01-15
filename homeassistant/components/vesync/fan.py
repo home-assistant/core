@@ -24,8 +24,8 @@ from .const import (
     DOMAIN,
     SKU_TO_BASE_DEVICE,
     VS_COORDINATOR,
+    VS_DEVICES,
     VS_DISCOVERY,
-    VS_FANS,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -74,10 +74,10 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities, coordinator)
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback
@@ -86,16 +86,12 @@ def _setup_entities(
     async_add_entities,
     coordinator: VeSyncDataCoordinator,
 ):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan":
-            entities.append(VeSyncFanHA(dev, coordinator))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
+    """Check if device is fan and add entity."""
+    entities = [
+        VeSyncFanHA(dev, coordinator)
+        for dev in devices
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan"
+    ]
 
     async_add_entities(entities, update_before_add=True)
 

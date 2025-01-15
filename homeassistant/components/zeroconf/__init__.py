@@ -615,9 +615,9 @@ def info_from_service(service: AsyncServiceInfo) -> ZeroconfServiceInfo | None:
         return None
 
     if TYPE_CHECKING:
-        assert (
-            service.server is not None
-        ), "server cannot be none if there are addresses"
+        assert service.server is not None, (
+            "server cannot be none if there are addresses"
+        )
     return ZeroconfServiceInfo(
         ip_address=ip_address,
         ip_addresses=ip_addresses,
