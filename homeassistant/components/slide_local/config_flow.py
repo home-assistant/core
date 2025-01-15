@@ -63,7 +63,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 
@@ -85,7 +85,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 
