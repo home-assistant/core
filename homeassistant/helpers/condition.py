@@ -830,7 +830,7 @@ def time(
             STATE_UNAVAILABLE,
             STATE_UNKNOWN,
         ):
-            after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
+            after = dt_datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
             after_entity.attributes.get(ATTR_DEVICE_CLASS)
             == SensorDeviceClass.TIMESTAMP
@@ -858,7 +858,7 @@ def time(
             )
         elif before_entity.domain == "time":
             try:
-                before = datetime.strptime(before_entity.state, "%H:%M:%S").time()
+                before = dt_datetime.strptime(before_entity.state, "%H:%M:%S").time()
             except ValueError:
                 return False
         elif (
