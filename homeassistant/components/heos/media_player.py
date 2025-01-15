@@ -140,17 +140,20 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
     @callback
     def _update_attributes(self) -> None:
         """Update core attributes of the media player."""
+        self._attr_group_members = self.coordinator.get_group_members(
+            self._player.group_id
+        )
         self._attr_source = self.coordinator.get_current_source(
             self._player.now_playing_media
         )
         self._attr_source_list = list(self.coordinator.source_list)
-        self._attr_group_members = self.coordinator.get_group_members(
-            self._player.group_id
-        )
-        controls = self._player.now_playing_media.supported_controls
-        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._attr_supported_features = reduce(
-            ior, current_support, BASE_SUPPORTED_FEATURES
+            ior,
+            [
+                CONTROL_TO_SUPPORT[control]
+                for control in self._player.now_playing_media.supported_controls
+            ],
+            BASE_SUPPORTED_FEATURES,
         )
 
     async def _player_update(self, event):

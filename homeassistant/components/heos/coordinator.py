@@ -154,6 +154,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             assert data is not None
             if data.updated_player_ids:
                 self._update_player_ids(data.updated_player_ids)
+        elif event == heos_const.EVENT_GROUPS_CHANGED:
+            await self._update_players()
         elif (
             event in (heos_const.EVENT_SOURCES_CHANGED, heos_const.EVENT_USER_CHANGED)
             and not self._update_sources_pending
