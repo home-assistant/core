@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from teslemetry_stream import Signal
 
 from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
@@ -215,3 +216,55 @@ async def test_cover_services(
         state = hass.states.get(entity_id)
         assert state
         assert state.state == CoverState.CLOSED
+
+
+async def test_cover_streaming(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests that the binary sensor entities with streaming are correct."""
+
+    await setup_platform(hass, [Platform.COVER])
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.FD_WINDOW: "WindowStateClosed",
+                Signal.FP_WINDOW: "WindowStateClosed",
+                Signal.RD_WINDOW: "WindowStateClosed",
+                Signal.RP_WINDOW: "WindowStateClosed",
+                Signal.CHARGE_PORT_DOOR_OPEN: False,
+                Signal.DOOR_STATE: {
+                    "DoorState": {
+                        "DriverFront": True,
+                        "DriverRear": False,
+                        "PassengerFront": False,
+                        "PassengerRear": False,
+                        "TrunkFront": False,
+                        "TrunkRear": False,
+                    }
+                },
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Reload the entry
+    # await hass.config_entries.async_reload(entry.entry_id)
+    # await hass.async_block_till_done()
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "cover.test_windows",
+        "cover.test_charge_port_door",
+        "cover.test_frunk",
+        "cover.test_trunk",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-state")

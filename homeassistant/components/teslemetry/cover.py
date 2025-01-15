@@ -121,7 +121,9 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
         self.async_write_ha_state()
 
 
-class TeslemetryPollingWindowEntity(TeslemetryVehicleEntity, CoverEntity):
+class TeslemetryPollingWindowEntity(
+    TeslemetryVehicleEntity, TeslemetryWindowEntity, CoverEntity
+):
     """Polling cover entity for windows."""
 
     def __init__(self, data: TeslemetryVehicleData, scopes: list[Scope]) -> None:
@@ -147,7 +149,7 @@ class TeslemetryPollingWindowEntity(TeslemetryVehicleEntity, CoverEntity):
 
 
 class TeslemetryStreamingWindowEntity(
-    TeslemetryVehicleStreamEntity, CoverRestoreEntity
+    TeslemetryVehicleStreamEntity, TeslemetryWindowEntity, CoverRestoreEntity
 ):
     """Streaming cover entity for windows."""
 
@@ -441,7 +443,6 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.VENT))
         self._attr_is_closed = False
         self.async_write_ha_state()
@@ -449,7 +450,6 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.CLOSE))
         self._attr_is_closed = True
         self.async_write_ha_state()
@@ -457,7 +457,6 @@ class TeslemetrySunroofEntity(TeslemetryVehicleEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.STOP))
         self._attr_is_closed = False
         self.async_write_ha_state()
