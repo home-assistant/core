@@ -8,15 +8,10 @@ rules:
     comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      - test_zero_conf_malformed_serial_property - with pytest.raises(KeyError) as ex::
-      I don't believe this should be able to raise a KeyError Shouldn't we abort the flow?
+  config-flow-test-coverage: done
   config-flow:
     status: todo
-    comment: |
-      - async_step_reaut L160: I believe that the unique is already set when starting a reauth flow
+    comment: Even though redundant as explained in PR133726, add data-description fields for config-flow steps
   dependency-transparency: done
   docs-actions:
     status: done
@@ -60,11 +55,7 @@ rules:
     status: done
     comment: pending https://github.com/home-assistant/core/pull/132373
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      - test_config_different_unique_id -> unique_id set to the mock config entry is an int, not a str
-      - Apart from the coverage, test_option_change_reload does not verify that the config entry is reloaded
+  test-coverage: done
 
   # Gold
   devices: done

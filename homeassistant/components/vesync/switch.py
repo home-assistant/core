@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .common import rgetattr
-from .const import DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_SWITCHES
+from .const import DOMAIN, VS_COORDINATOR, VS_DISCOVERY, VS_DEVICES
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -59,10 +59,10 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_SWITCHES), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_SWITCHES], async_add_entities, coordinator)
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback

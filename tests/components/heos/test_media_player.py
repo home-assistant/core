@@ -3,8 +3,15 @@
 import asyncio
 from typing import Any
 
-from pyheos import CommandFailedError, const
-from pyheos.error import HeosError
+from pyheos import (
+    AddCriteriaType,
+    CommandFailedError,
+    HeosError,
+    PlayState,
+    SignalHeosEvent,
+    SignalType,
+    const,
+)
 import pytest
 
 from homeassistant.components.heos import media_player
@@ -115,18 +122,18 @@ async def test_updates_from_signals(
     player = controller.players[1]
 
     # Test player does not update for other players
-    player.state = const.PLAY_STATE_PLAY
+    player.state = PlayState.PLAY
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT, 2, const.EVENT_PLAYER_STATE_CHANGED
+        SignalType.PLAYER_EVENT, 2, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_IDLE
 
     # Test player_update standard events
-    player.state = const.PLAY_STATE_PLAY
+    player.state = PlayState.PLAY
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
+        SignalType.PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
 
@@ -137,7 +144,7 @@ async def test_updates_from_signals(
     player.now_playing_media.duration = 360000
     player.now_playing_media.current_position = 1000
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT,
+        SignalType.PLAYER_EVENT,
         player.player_id,
         const.EVENT_PLAYER_NOW_PLAYING_PROGRESS,
     )
@@ -167,7 +174,7 @@ async def test_updates_from_connection_event(
 
     # Connected
     player.available = True
-    player.heos.dispatcher.send(const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
+    player.heos.dispatcher.send(SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED)
     await event.wait()
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_IDLE
@@ -175,10 +182,9 @@ async def test_updates_from_connection_event(
 
     # Disconnected
     event.clear()
-    player.reset_mock()
     controller.load_players.reset_mock()
     player.available = False
-    player.heos.dispatcher.send(const.SIGNAL_HEOS_EVENT, const.EVENT_DISCONNECTED)
+    player.heos.dispatcher.send(SignalType.HEOS_EVENT, SignalHeosEvent.DISCONNECTED)
     await event.wait()
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_UNAVAILABLE
@@ -186,11 +192,10 @@ async def test_updates_from_connection_event(
 
     # Connected handles refresh failure
     event.clear()
-    player.reset_mock()
     controller.load_players.reset_mock()
     controller.load_players.side_effect = CommandFailedError(None, "Failure", 1)
     player.available = True
-    player.heos.dispatcher.send(const.SIGNAL_HEOS_EVENT, const.EVENT_CONNECTED)
+    player.heos.dispatcher.send(SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED)
     await event.wait()
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_IDLE
@@ -213,7 +218,7 @@ async def test_updates_from_sources_updated(
 
     input_sources.clear()
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
+        SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
     await event.wait()
     source_list = config_entry.runtime_data.source_manager.source_list
@@ -241,9 +246,9 @@ async def test_updates_from_players_changed(
     async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     assert hass.states.get("media_player.test_player").state == STATE_IDLE
-    player.state = const.PLAY_STATE_PLAY
+    player.state = PlayState.PLAY
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
+        SignalType.CONTROLLER_EVENT, const.EVENT_PLAYERS_CHANGED, change_data
     )
     await event.wait()
     await hass.async_block_till_done()
@@ -279,7 +284,7 @@ async def test_updates_from_players_changed_new_ids(
 
     async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT,
+        SignalType.CONTROLLER_EVENT,
         const.EVENT_PLAYERS_CHANGED,
         change_data_mapped_ids,
     )
@@ -309,10 +314,9 @@ async def test_updates_from_user_changed(
 
     async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
-    controller.is_signed_in = False
-    controller.signed_in_username = None
+    controller._signed_in_username = None
     player.heos.dispatcher.send(
-        const.SIGNAL_CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
+        SignalType.CONTROLLER_EVENT, const.EVENT_USER_CHANGED, None
     )
     await event.wait()
     source_list = config_entry.runtime_data.source_manager.source_list
@@ -551,11 +555,11 @@ async def test_select_favorite(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(1)
+    player.play_preset_station.assert_called_once_with(1)
     # Test state is matched by station name
     player.now_playing_media.station = favorite.name
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
+        SignalType.PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
     state = hass.states.get("media_player.test_player")
@@ -576,12 +580,12 @@ async def test_select_radio_favorite(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(2)
+    player.play_preset_station.assert_called_once_with(2)
     # Test state is matched by album id
     player.now_playing_media.station = "Classical"
     player.now_playing_media.album_id = favorite.media_id
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
+        SignalType.PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
     state = hass.states.get("media_player.test_player")
@@ -601,14 +605,14 @@ async def test_select_radio_favorite_command_error(
     player = controller.players[1]
     # Test set radio preset
     favorite = favorites[2]
-    player.play_favorite.side_effect = CommandFailedError(None, "Failure", 1)
+    player.play_preset_station.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(2)
+    player.play_preset_station.assert_called_once_with(2)
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
@@ -629,12 +633,12 @@ async def test_select_input_source(
         },
         blocking=True,
     )
-    player.play_input_source.assert_called_once_with(input_source)
+    player.play_input_source.assert_called_once_with(input_source.media_id)
     # Test state is matched by media id
     player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
     player.now_playing_media.media_id = const.INPUT_AUX_IN_1
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
+        SignalType.PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
     await hass.async_block_till_done()
     state = hass.states.get("media_player.test_player")
@@ -681,7 +685,7 @@ async def test_select_input_command_error(
         },
         blocking=True,
     )
-    player.play_input_source.assert_called_once_with(input_source)
+    player.play_input_source.assert_called_once_with(input_source.media_id)
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
@@ -831,7 +835,7 @@ async def test_play_media_playlist(
         blocking=True,
     )
     player.add_to_queue.assert_called_once_with(
-        playlist, const.ADD_QUEUE_REPLACE_AND_PLAY
+        playlist, AddCriteriaType.REPLACE_AND_PLAY
     )
     # Play with enqueuing
     player.add_to_queue.reset_mock()
@@ -846,7 +850,7 @@ async def test_play_media_playlist(
         },
         blocking=True,
     )
-    player.add_to_queue.assert_called_once_with(playlist, const.ADD_QUEUE_ADD_TO_END)
+    player.add_to_queue.assert_called_once_with(playlist, AddCriteriaType.ADD_TO_END)
     # Invalid name
     player.add_to_queue.reset_mock()
     await hass.services.async_call(
@@ -888,9 +892,9 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(index)
+    player.play_preset_station.assert_called_once_with(index)
     # Play by name
-    player.play_favorite.reset_mock()
+    player.play_preset_station.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -901,9 +905,9 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    player.play_favorite.assert_called_once_with(index)
+    player.play_preset_station.assert_called_once_with(index)
     # Invalid name
-    player.play_favorite.reset_mock()
+    player.play_preset_station.reset_mock()
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -914,7 +918,7 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    assert player.play_favorite.call_count == 0
+    assert player.play_preset_station.call_count == 0
     assert "Unable to play media: Invalid favorite 'Invalid'" in caplog.text
 
 
@@ -1026,7 +1030,7 @@ async def test_media_player_unjoin_group(
     player = controller.players[1]
 
     player.heos.dispatcher.send(
-        const.SIGNAL_PLAYER_EVENT,
+        SignalType.PLAYER_EVENT,
         player.player_id,
         const.EVENT_PLAYER_STATE_CHANGED,
     )

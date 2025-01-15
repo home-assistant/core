@@ -36,9 +36,9 @@ async def test_mapping_integrity() -> None:
         for sensor_map in maps:
             assert sensor_map.attribute in ATTRIBUTES, sensor_map.attribute
             if sensor_map.device_class:
-                assert (
-                    sensor_map.device_class in DEVICE_CLASSES
-                ), sensor_map.device_class
+                assert sensor_map.device_class in DEVICE_CLASSES, (
+                    sensor_map.device_class
+                )
             if sensor_map.state_class:
                 assert sensor_map.state_class in STATE_CLASSES, sensor_map.state_class
 
