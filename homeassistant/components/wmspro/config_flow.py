@@ -34,7 +34,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle the DHCP discovery step."""
         unique_id = format_mac(discovery_info.macaddress)
