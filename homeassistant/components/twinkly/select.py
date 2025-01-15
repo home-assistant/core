@@ -35,7 +35,7 @@ class TwinklyModeSelect(TwinklyEntity, SelectEntity):
     def __init__(self, coordinator: TwinklyCoordinator) -> None:
         """Initialize TwinklyModeSelect."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data.device_info["mac"]}_mode"
+        self._attr_unique_id = f"{coordinator.data.device_info['mac']}_mode"
         self.client = coordinator.client
 
     @property

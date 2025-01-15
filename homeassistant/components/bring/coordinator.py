@@ -70,6 +70,8 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
 
         list_dict: dict[str, BringData] = {}
         for lst in lists_response["lists"]:
+            if (ctx := set(self.async_contexts())) and lst["listUuid"] not in ctx:
+                continue
             try:
                 items = await self.bring.get_list(lst["listUuid"])
             except BringRequestException as e:

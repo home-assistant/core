@@ -237,6 +237,61 @@
     'state': 'right_handed',
   })
 # ---
+# name: test_state[select.pinecil_power_delivery_3_1_epr-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.pinecil_power_delivery_3_1_epr',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power Delivery 3.1 EPR',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <PinecilSelect.USB_PD_MODE: 'usb_pd_mode'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_usb_pd_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_state[select.pinecil_power_delivery_3_1_epr-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Power Delivery 3.1 EPR',
+      'options': list([
+        'off',
+        'on',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.pinecil_power_delivery_3_1_epr',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_state[select.pinecil_power_source-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -523,6 +523,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
+
     entities: list[SensorEntity] = []
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
@@ -551,6 +552,7 @@ async def async_setup_entry(
     entities.extend(
         TeslemetryEnergyLiveSensorEntity(energysite, description)
         for energysite in entry.runtime_data.energysites
+        if energysite.live_coordinator
         for description in ENERGY_LIVE_DESCRIPTIONS
         if description.key in energysite.live_coordinator.data
     )
@@ -558,6 +560,7 @@ async def async_setup_entry(
     entities.extend(
         TeslemetryWallConnectorSensorEntity(energysite, din, description)
         for energysite in entry.runtime_data.energysites
+        if energysite.live_coordinator
         for din in energysite.live_coordinator.data.get("wall_connectors", {})
         for description in WALL_CONNECTOR_DESCRIPTIONS
     )

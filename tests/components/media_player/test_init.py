@@ -152,8 +152,7 @@ async def test_get_image_http(
     client = await hass_client_no_auth()
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity."
-        "async_get_media_image",
+        "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
         return_value=(b"image", "image/jpeg"),
     ):
         resp = await client.get(state.attributes["entity_picture"])
