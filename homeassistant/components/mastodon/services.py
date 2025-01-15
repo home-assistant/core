@@ -79,69 +79,63 @@ def setup_services(hass: HomeAssistant) -> None:
             if ATTR_VISIBILITY in call.data
             else None
         )
-        content_warning: str | None = call.data.get(ATTR_CONTENT_WARNING)
-        media: str | None = call.data.get(ATTR_MEDIA)
+        spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
+        media_path: str | None = call.data.get(ATTR_MEDIA)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
 
-        if media:
-            if not hass.config.is_allowed_path(media):
+        await hass.async_add_executor_job(
+            partial(
+                _post,
+                client=client,
+                status=status,
+                visibility=visibility,
+                spoiler_text=spoiler_text,
+                media_path=media_path,
+                sensitive=media_warning,
+            )
+        )
+
+        return None
+
+    def _post(client: Mastodon, **kwargs: Any) -> None:
+        """Post to Mastodon."""
+
+        media_data: dict[str, Any] | None = None
+
+        media_path = kwargs.get("media_path")
+        if media_path:
+            if not hass.config.is_allowed_path(media_path):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="not_whitelisted_directory",
-                    translation_placeholders={"media": media},
+                    translation_placeholders={"media": media_path},
                 )
-            mediadata = await _upload_media(client, media)
 
+            media_type = get_media_type(media_path)
             try:
-                await hass.async_add_executor_job(
-                    partial(
-                        client.status_post,
-                        status=status,
-                        visibility=visibility,
-                        spoiler_text=content_warning,
-                        media_ids=mediadata["id"],
-                        sensitive=media_warning,
-                    )
+                media_data = client.media_post(
+                    media_file=media_path, mime_type=media_type
                 )
+
             except MastodonAPIError as err:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="unable_to_send_message",
+                    translation_key="unable_to_upload_image",
+                    translation_placeholders={"media_path": media_path},
                 ) from err
-        else:
-            try:
-                await hass.async_add_executor_job(
-                    partial(
-                        client.status_post,
-                        status=status,
-                        visibility=visibility,
-                        spoiler_text=content_warning,
-                    )
-                )
-            except MastodonAPIError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_send_message",
-                ) from err
-        return None
 
-    async def _upload_media(client: Mastodon, media_path: Any = None) -> Any:
-        """Upload media."""
+        kwargs.pop("media_path", None)
 
-        media_type = get_media_type(media_path)
         try:
-            mediadata = await hass.async_add_executor_job(
-                partial(client.media_post, media_file=media_path, mime_type=media_type)
-            )
-
+            media_ids: str | None = None
+            if media_data:
+                media_ids = media_data["id"]
+            client.status_post(media_ids=media_ids, **kwargs)
         except MastodonAPIError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="unable_to_upload_image",
-                translation_placeholders={"media_path": media_path},
+                translation_key="unable_to_send_message",
             ) from err
-
-        return mediadata
 
     hass.services.async_register(
         DOMAIN, SERVICE_POST, async_post, schema=SERVICE_POST_SCHEMA

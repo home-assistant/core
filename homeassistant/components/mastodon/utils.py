@@ -36,7 +36,7 @@ def construct_mastodon_username(
 
 
 def get_media_type(media_path: Any = None) -> Any:
-    """Get media Type."""
+    """Get media type."""
 
     (media_type, _) = mimetypes.guess_type(media_path)
 

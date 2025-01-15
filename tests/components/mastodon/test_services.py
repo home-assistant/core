@@ -1,6 +1,6 @@
 """Tests for the Mastodon services."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from mastodon.Mastodon import MastodonAPIError
 import pytest
@@ -29,11 +29,23 @@ from tests.common import MockConfigEntry
             {
                 ATTR_STATUS: "test toot",
             },
-            {"status": "test toot", "spoiler_text": None, "visibility": None},
+            {
+                "status": "test toot",
+                "spoiler_text": None,
+                "visibility": None,
+                "media_ids": None,
+                "sensitive": None,
+            },
         ),
         (
             {ATTR_STATUS: "test toot", ATTR_VISIBILITY: "private"},
-            {"status": "test toot", "spoiler_text": None, "visibility": "private"},
+            {
+                "status": "test toot",
+                "spoiler_text": None,
+                "visibility": "private",
+                "media_ids": None,
+                "sensitive": None,
+            },
         ),
         (
             {
@@ -41,7 +53,13 @@ from tests.common import MockConfigEntry
                 ATTR_CONTENT_WARNING: "Spoiler",
                 ATTR_VISIBILITY: "private",
             },
-            {"status": "test toot", "spoiler_text": "Spoiler", "visibility": "private"},
+            {
+                "status": "test toot",
+                "spoiler_text": "Spoiler",
+                "visibility": "private",
+                "media_ids": None,
+                "sensitive": None,
+            },
         ),
         (
             {
@@ -153,11 +171,12 @@ async def test_post_media_upload_failed(
 
     payload = {"status": "test toot", "media": "/fail.jpg"}
 
-    hass.config.is_allowed_path = Mock(return_value=True)
-
     getattr(mock_mastodon_client, "media_post").side_effect = MastodonAPIError
 
-    with pytest.raises(HomeAssistantError, match="Unable to upload image /fail.jpg"):
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        pytest.raises(HomeAssistantError, match="Unable to upload image /fail.jpg"),
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_POST,

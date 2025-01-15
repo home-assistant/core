@@ -51,7 +51,7 @@ async def test_notify_failed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    getattr(mock_mastodon_client, "status_post").side_effect = MastodonAPIError
+    mock_mastodon_client.status_post.side_effect = MastodonAPIError
 
     with pytest.raises(HomeAssistantError, match="Unable to send message"):
         await hass.services.async_call(
