@@ -1,6 +1,11 @@
 """Constants for VeSync Component."""
 
-from pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
+from pyvesync.vesyncfan import (
+    VeSyncAir131,
+    VeSyncAirBypass,
+    VeSyncHumid200300S,
+    VeSyncSuperior6000S,
+)
 
 DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
@@ -30,6 +35,9 @@ VS_HUMIDIFIER_MODE_MANUAL = "manual"
 VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
+"""Humidifier device types"""
+
+VeSyncFanDevice = VeSyncAirBypass | VeSyncAir131
 """Humidifier device types"""
 
 DEV_TYPE_TO_HA = {
