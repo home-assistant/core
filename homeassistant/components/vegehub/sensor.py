@@ -28,7 +28,7 @@ async def async_setup_entry(
     for i in range(num_sensors + num_actuators + 1):  # Add 1 for battery
         sensor = VegeHubSensor(
             mac_address=mac_address,
-            slot=i + 1,
+            index=i + 1,
             dev_name=config_entry.data[CONF_HOST],
             coordinator=config_entry.runtime_data.coordinator,
         )
@@ -48,14 +48,14 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
     def __init__(
         self,
         mac_address: str,
-        slot: int,
+        index: int,
         dev_name: str,
         coordinator: VegeHubCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._attr_has_entity_name = True
-        self._attr_translation_placeholders = {"index": str(slot)}
+        self._attr_translation_placeholders = {"index": str(index)}
 
         self._unit_of_measurement = UnitOfElectricPotential.VOLT
         self._attr_device_class = SensorDeviceClass.VOLTAGE
@@ -66,7 +66,7 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_unit_of_measurement = self._unit_of_measurement
         self._mac_address = mac_address
         self._attr_unique_id = (
-            f"{mac_address}_{slot}".lower()
+            f"{mac_address}_{index}".lower()
         )  # Generate a unique_id using mac and slot
         self._attr_suggested_display_precision = 2
         self._attr_device_info = DeviceInfo(

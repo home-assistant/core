@@ -2997,7 +2997,7 @@ vacuum-map-parser-roborock==0.1.2
 vallox-websocket-api==5.3.0
 
 # homeassistant.components.vegehub
-vegehub==0.1.15
+vegehub==0.1.17
 
 # homeassistant.components.rdw
 vehicle==2.2.2
