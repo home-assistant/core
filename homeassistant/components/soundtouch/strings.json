@@ -42,13 +42,13 @@
         },
         "slaves": {
           "name": "Slaves",
-          "description": "Name of slaves entities to add to the new zone."
+          "description": "Names of slave entities to add to the new zone."
         }
       }
     },
     "add_zone_slave": {
       "name": "Add zone slave",
-      "description": "Adds a slave to a SoundTouch multi-room zone.",
+      "description": "Adds slaves to a SoundTouch multi-room zone.",
       "fields": {
         "master": {
           "name": "Master",
@@ -56,13 +56,13 @@
         },
         "slaves": {
           "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
-          "description": "Name of slaves entities to add to the existing zone."
+          "description": "Names of slave entities to add to the existing zone."
         }
       }
     },
     "remove_zone_slave": {
       "name": "Remove zone slave",
-      "description": "Removes a slave from the SoundTouch multi-room zone.",
+      "description": "Removes slaves from a SoundTouch multi-room zone.",
       "fields": {
         "master": {
           "name": "Master",
@@ -70,7 +70,7 @@
         },
         "slaves": {
           "name": "[%key:component::soundtouch::services::create_zone::fields::slaves::name%]",
-          "description": "Name of slaves entities to remove from the existing zone."
+          "description": "Names of slave entities to remove from the existing zone."
         }
       }
     }
