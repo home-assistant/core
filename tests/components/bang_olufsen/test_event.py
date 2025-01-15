@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from inflection import underscore
 from mozart_api.models import ButtonEvent
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
     DEVICE_BUTTON_EVENTS,
@@ -25,6 +26,7 @@ async def test_button_event_creation(
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test button event entities are created."""
 
@@ -44,12 +46,21 @@ async def test_button_event_creation(
     for entity_id in entity_ids:
         entity_registry.async_get(entity_id)
 
+    # Check number of entities
+    # The media_player entity and all of the button event entities should be the only available
+    entity_ids_available = list(entity_registry.entities.keys())
+    assert len(entity_ids_available) == 1 + len(entity_ids)
+
+    # Check snapshot
+    assert entity_ids_available == snapshot()
+
 
 async def test_button_event_creation_beoconnect_core(
     hass: HomeAssistant,
     mock_config_entry_core: MockConfigEntry,
     mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test button event entities are not created when using a Beoconnect Core."""
 
@@ -68,6 +79,14 @@ async def test_button_event_creation_beoconnect_core(
     # Check that the entities are unavailable
     for entity_id in entity_ids:
         assert not entity_registry.async_get(entity_id)
+
+    # Check number of entities
+    # The media_player entity should be the only available
+    entity_ids_available = list(entity_registry.entities.keys())
+    assert len(entity_ids_available) == 1
+
+    # Check snapshot
+    assert entity_ids_available == snapshot()
 
 
 async def test_button(
