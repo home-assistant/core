@@ -87,11 +87,11 @@ from .util.enum import try_parse_enum
 
 if TYPE_CHECKING:
     from .components.bluetooth import BluetoothServiceInfoBleak
-    from .components.ssdp import SsdpServiceInfo
-    from .components.usb import UsbServiceInfo
     from .helpers.service_info.dhcp import DhcpServiceInfo
     from .helpers.service_info.hassio import HassioServiceInfo
     from .helpers.service_info.mqtt import MqttServiceInfo
+    from .helpers.service_info.ssdp import SsdpServiceInfo
+    from .helpers.service_info.usb import UsbServiceInfo
     from .helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
