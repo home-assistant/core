@@ -136,9 +136,9 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert (
         "The user name is Test User."
         in mock_create.mock_calls[0][2]["messages"][0]["content"]
@@ -178,9 +178,9 @@ async def test_extra_systen_prompt(
             extra_system_prompt=extra_system_prompt,
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
         extra_system_prompt
     )
@@ -201,9 +201,9 @@ async def test_extra_systen_prompt(
             extra_system_prompt=None,
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
         extra_system_prompt
     )
@@ -222,9 +222,9 @@ async def test_extra_systen_prompt(
             extra_system_prompt=extra_system_prompt2,
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
         extra_system_prompt2
     )
@@ -242,9 +242,9 @@ async def test_extra_systen_prompt(
             agent_id=mock_config_entry.entry_id,
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
         extra_system_prompt2
     )

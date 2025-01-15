@@ -1193,6 +1193,8 @@ build.json @home-assistant/supervisor
 /tests/components/pyload/ @tr4nt0r
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
+/homeassistant/components/qbus/ @Qbus-iot @thomasddn
+/tests/components/qbus/ @Qbus-iot @thomasddn
 /homeassistant/components/qingping/ @bdraco
 /tests/components/qingping/ @bdraco
 /homeassistant/components/qld_bushfire/ @exxamalte
@@ -1629,15 +1631,15 @@ build.json @home-assistant/supervisor
 /tests/components/valve/ @home-assistant/core
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
-/homeassistant/components/velux/ @Julius2342 @DeerMaximum
-/tests/components/velux/ @Julius2342 @DeerMaximum
+/homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio
+/tests/components/velux/ @Julius2342 @DeerMaximum @pawlizio
 /homeassistant/components/venstar/ @garbled1 @jhollowe
 /tests/components/venstar/ @garbled1 @jhollowe
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
-/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
-/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
+/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW

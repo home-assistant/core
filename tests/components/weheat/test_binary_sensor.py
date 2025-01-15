@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
 from weheat.abstractions.discovery import HeatPumpDiscovery
@@ -40,7 +39,6 @@ async def test_create_binary_entities(
     mock_weheat_heat_pump: AsyncMock,
     mock_heat_pump_info: HeatPumpDiscovery.HeatPumpInfo,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test creating entities."""
     mock_weheat_discover.return_value = [mock_heat_pump_info]

@@ -258,7 +258,7 @@ aiohttp_sse==2.2.0
 aiohue==4.7.3
 
 # homeassistant.components.imap
-aioimaplib==1.1.0
+aioimaplib==2.0.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -267,7 +267,7 @@ aiokafka==0.10.0
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.6.0
+aiolifx-themes==0.6.2
 
 # homeassistant.components.lifx
 aiolifx==1.1.2
@@ -648,7 +648,7 @@ defusedxml==0.7.1
 deluge-client==1.10.2
 
 # homeassistant.components.lametric
-demetriek==1.1.1
+demetriek==1.2.0
 
 # homeassistant.components.denonavr
 denonavr==1.0.1
@@ -708,7 +708,7 @@ elevenlabs==1.9.0
 elgato==5.1.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.2.10
+elkm1-lib==2.2.11
 
 # homeassistant.components.elmax
 elmax-api==0.0.6.4rc0
@@ -849,7 +849,7 @@ georss-qld-bushfire-alert-client==0.8
 # homeassistant.components.nmap_tracker
 # homeassistant.components.samsungtv
 # homeassistant.components.upnp
-getmac==0.9.4
+getmac==0.9.5
 
 # homeassistant.components.gios
 gios==5.0.0
@@ -938,13 +938,13 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.2
+habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
 habluetooth==3.8.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.87.0
+hass-nabucasa==0.88.1
 
 # homeassistant.components.conversation
 hassil==2.1.0
@@ -981,7 +981,7 @@ home-assistant-intents==2025.1.1
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.5
+homematicip==1.1.6
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1615,7 +1615,7 @@ pyhaversion==22.8.0
 pyheos==1.0.0
 
 # homeassistant.components.hive
-pyhiveapi==0.5.16
+pyhive-integration==1.0.1
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1788,7 +1788,7 @@ pyoverkiz==1.15.5
 pyownet==0.10.0.post1
 
 # homeassistant.components.palazzetti
-pypalazzetti==0.1.16
+pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
 pypck==0.8.1
@@ -1878,7 +1878,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.4
+pysmlight==0.1.5
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -1963,7 +1963,7 @@ python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.6.0
+python-otbr-api==2.7.0
 
 # homeassistant.components.overseerr
 python-overseerr==0.5.0
@@ -2071,6 +2071,9 @@ pyzerproc==0.4.8
 # homeassistant.components.qbittorrent
 qbittorrent-api==2024.2.59
 
+# homeassistant.components.qbus
+qbusmqttapi==1.2.3
+
 # homeassistant.components.qingping
 qingping-ble==0.10.0
 
@@ -2147,7 +2150,7 @@ sanix==1.0.6
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2024.11.0
+securetar==2025.1.2
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2196,7 +2199,7 @@ slackclient==2.5.0
 smart-meter-texas==0.5.5
 
 # homeassistant.components.smhi
-smhi-pkg==1.0.18
+smhi-pkg==1.0.19
 
 # homeassistant.components.snapcast
 snapcast==2.3.6
@@ -2391,7 +2394,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2024.12.3
+velbus-aio==2025.1.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2437,7 +2440,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2024.12.22
+weheat==2025.1.14
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.11

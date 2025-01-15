@@ -502,7 +502,7 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 
 
 @bind_hass
-def async_extract_referenced_entity_ids(  # noqa: C901
+def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""

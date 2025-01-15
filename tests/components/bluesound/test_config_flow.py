@@ -5,11 +5,11 @@ from unittest.mock import AsyncMock
 from pyblu.errors import PlayerUnreachableError
 
 from homeassistant.components.bluesound.const import DOMAIN
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import PlayerMocks
 
