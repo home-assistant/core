@@ -43,7 +43,7 @@ from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder  # noqa: F401, isort:skip
+from . import patch_recorder
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip

@@ -11,11 +11,11 @@ import voluptuous as vol
 from wmspro.webcontrol import WebControlPro
 
 from homeassistant.components import dhcp
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, SUGGESTED_HOST
 

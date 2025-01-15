@@ -285,7 +285,7 @@ aiokef==0.2.16
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.6.0
+aiolifx-themes==0.6.2
 
 # homeassistant.components.lifx
 aiolifx==1.1.2
@@ -1149,7 +1149,7 @@ home-assistant-intents==2025.1.1
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.5
+homematicip==1.1.6
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -2303,7 +2303,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.4
+pysmlight==0.1.5
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2424,7 +2424,7 @@ python-opensky==1.0.1
 
 # homeassistant.components.otbr
 # homeassistant.components.thread
-python-otbr-api==2.6.0
+python-otbr-api==2.7.0
 
 # homeassistant.components.overseerr
 python-overseerr==0.5.0
