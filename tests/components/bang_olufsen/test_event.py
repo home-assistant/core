@@ -42,11 +42,6 @@ async def test_button_event_creation(
         for button_type in DEVICE_BUTTONS
     ]
 
-    # Enable the event entities
-    for entity_id in entity_ids:
-        entity_registry.async_update_entity(entity_id, disabled_by=None)
-    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
-
     # Check that the entities are available
     for entity_id in entity_ids:
         assert entity_registry.async_get(entity_id)
