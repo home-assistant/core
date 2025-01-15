@@ -1,4 +1,4 @@
-"""DHCP discovery data."""
+"""SSDP discovery data."""
 
 from collections.abc import Mapping
 from dataclasses import dataclass, field
