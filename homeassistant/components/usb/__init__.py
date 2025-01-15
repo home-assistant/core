@@ -46,7 +46,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_SCAN_COOLDOWN = 1  # 1 second cooldown
+REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 
 __all__ = [
     "async_is_plugged_in",
