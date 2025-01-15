@@ -1,5 +1,6 @@
 """Common methods used across tests for VeSync."""
 
+from collections.abc import Callable
 import json
 from typing import Any
 
@@ -102,15 +103,18 @@ def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) 
 
 
 def mock_device_response(
-    requests_mock: requests_mock.Mocker, device_name: str, override: Any
+    requests_mock: requests_mock.Mocker, device_name: str, override: Callable | Any
 ) -> None:
     """Build device data response for the Helpers.call_api method."""
 
-    def load_and_merge(source: str) -> JsonObjectType:
+    def load_and_merge(name: str, source: str) -> JsonObjectType:
         json = load_json_object_fixture(source, DOMAIN)
 
         if override:
-            json.update(override)
+            if callable(override):
+                override(name, json)
+            else:
+                json.update(override)
 
         return json
 
@@ -123,7 +127,7 @@ def mock_device_response(
         requests_mock.request(
             item[0],
             f"https://smartapi.vesync.com{item[1]}",
-            json=load_and_merge(item[2]),
+            json=load_and_merge(item[0], item[2]),
         )
 
 
