@@ -16,9 +16,9 @@ if TYPE_CHECKING:
     import asyncio
 
     from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-    from homeassistant.components.dhcp import DhcpServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
 
+    from .service_info.dhcp import DhcpServiceInfo
     from .service_info.mqtt import MqttServiceInfo
     from .service_info.zeroconf import ZeroconfServiceInfo
 
