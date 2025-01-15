@@ -2,9 +2,12 @@
 
 from dataclasses import dataclass
 from ipaddress import IPv4Address, IPv6Address
-from typing import Any
+from typing import Any, Final
 
 from homeassistant.data_entry_flow import BaseServiceInfo
+
+# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
+ATTR_PROPERTIES_ID: Final = "id"
 
 
 @dataclass(slots=True)

@@ -24,7 +24,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
 from tests.common import (
@@ -1666,6 +1669,11 @@ async def test_zeroconf_rediscover_no_match(
 @pytest.mark.parametrize(
     ("constant_name", "replacement_name", "replacement"),
     [
+        (
+            "ATTR_PROPERTIES_ID",
+            "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
+            ATTR_PROPERTIES_ID,
+        ),
         (
             "ZeroconfServiceInfo",
             "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",

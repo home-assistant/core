@@ -40,6 +40,7 @@ from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
     ZeroconfServiceInfo as _ZeroconfServiceInfo,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -89,7 +90,11 @@ ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
 # Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
-ATTR_PROPERTIES_ID: Final = "id"
+_DEPRECATED_ATTR_PROPERTIES_ID = DeprecatedConstant(
+    _ATTR_PROPERTIES_ID,
+    "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
+    "2026.2",
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
