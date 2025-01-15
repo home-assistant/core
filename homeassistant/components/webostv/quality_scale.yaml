@@ -26,13 +26,9 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: exempt
-    comment: The device does not have an unavailable state (off when not connected)
+  entity-unavailable: todo
   integration-owner: done
-  log-when-unavailable:
-    status: exempt
-    comment: The device does not have an unavailable state (off when not connected)
+  log-when-unavailable: todo
   parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
