@@ -2,7 +2,6 @@
 
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
@@ -26,6 +25,7 @@ from .const import (
     DOMAIN,
     SERVICE_FETCH_CONNECTIONS,
 )
+from .coordinator import SwissPublicTransportConfigEntry
 
 SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
     {
@@ -41,7 +41,7 @@ SERVICE_FETCH_CONNECTIONS_SCHEMA = vol.Schema(
 
 def async_get_entry(
     hass: HomeAssistant, config_entry_id: str
-) -> config_entries.ConfigEntry:
+) -> SwissPublicTransportConfigEntry:
     """Get the Swiss public transport config entry."""
     if not (entry := hass.config_entries.async_get_entry(config_entry_id)):
         raise ServiceValidationError(
@@ -66,10 +66,12 @@ def setup_services(hass: HomeAssistant) -> None:
     ) -> ServiceResponse:
         """Fetch a set of connections."""
         config_entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+
         limit = call.data.get(ATTR_LIMIT) or CONNECTIONS_COUNT
-        coordinator = hass.data[DOMAIN][config_entry.entry_id]
         try:
-            connections = await coordinator.fetch_connections_as_json(limit=int(limit))
+            connections = await config_entry.runtime_data.fetch_connections_as_json(
+                limit=int(limit)
+            )
         except UpdateFailed as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

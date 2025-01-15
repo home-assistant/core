@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency:
+    status: todo
+    comment: |
+      The package is only tested, but not built and published inside a CI pipeline yet.
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: >
+      Per IMAP service instance there is one numeric sensor entity to reflect
+      the actual number of emails for a service. There is no event registration.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Logs for unavailability are on debug level to avoid flooding the logs.
+  entity-unavailable:
+    status: done
+    comment: >
+      An entity is available as long as the service is loaded.
+      An `unknown` value is set if the mail service is temporary unavailable.
+  action-exceptions: done
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters: done
+
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default:
+    status: done
+    comment: The only entity supplied returns the primary value for the service.
+  discovery:
+    status: exempt
+    comment: |
+      Discovery for IMAP services is not desirerable.
+  stale-devices:
+    status: exempt
+    comment: >
+      The device class is a service. When removed, entities are removed as well.
+  diagnostics: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Options can be set through the option flow, reconfiguration is not supported yet.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      The device class is a service.
+  discovery-update-info:
+    status: exempt
+    comment: Discovery is not desirable for this integration.
+  repair-issues:
+    status: exempt
+    comment: There are no repairs currently.
+  docs-use-cases: done
+  docs-supported-devices:
+    status: exempt
+    comment: The device class is a service.
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not use web sessions.
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'aioimaplib==1.1.0' appears untyped

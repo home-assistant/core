@@ -2,14 +2,19 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
-from aioairzone_cloud.common import AirQualityMode
+from aioairzone_cloud.common import AirQualityMode, OperationMode
 from aioairzone_cloud.const import (
     API_AQ_MODE_CONF,
+    API_MODE,
     API_VALUE,
     AZD_AQ_MODE_CONF,
+    AZD_MASTER,
+    AZD_MODE,
+    AZD_MODES,
     AZD_ZONES,
 )
 
@@ -28,7 +33,10 @@ class AirzoneSelectDescription(SelectEntityDescription):
     """Class to describe an Airzone select entity."""
 
     api_param: str
-    options_dict: dict[str, str]
+    options_dict: dict[str, Any]
+    options_fn: Callable[[dict[str, Any], dict[str, Any]], list[str]] = (
+        lambda zone_data, value: list(value)
+    )
 
 
 AIR_QUALITY_MAP: Final[dict[str, str]] = {
@@ -36,6 +44,35 @@ AIR_QUALITY_MAP: Final[dict[str, str]] = {
     "on": AirQualityMode.ON,
     "auto": AirQualityMode.AUTO,
 }
+
+MODE_MAP: Final[dict[str, int]] = {
+    "cool": OperationMode.COOLING,
+    "dry": OperationMode.DRY,
+    "fan": OperationMode.VENTILATION,
+    "heat": OperationMode.HEATING,
+    "heat_cool": OperationMode.AUTO,
+    "stop": OperationMode.STOP,
+}
+
+
+def main_zone_options(
+    zone_data: dict[str, Any],
+    options: dict[str, int],
+) -> list[str]:
+    """Filter available modes."""
+    modes = zone_data.get(AZD_MODES, [])
+    return [k for k, v in options.items() if v in modes]
+
+
+MAIN_ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
+    AirzoneSelectDescription(
+        api_param=API_MODE,
+        key=AZD_MODE,
+        options_dict=MODE_MAP,
+        options_fn=main_zone_options,
+        translation_key="modes",
+    ),
+)
 
 
 ZONE_SELECT_TYPES: Final[tuple[AirzoneSelectDescription, ...]] = (
@@ -59,7 +96,19 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     # Zones
-    async_add_entities(
+    entities: list[AirzoneZoneSelect] = [
+        AirzoneZoneSelect(
+            coordinator,
+            description,
+            zone_id,
+            zone_data,
+        )
+        for description in MAIN_ZONE_SELECT_TYPES
+        for zone_id, zone_data in coordinator.data.get(AZD_ZONES, {}).items()
+        if description.key in zone_data and zone_data.get(AZD_MASTER)
+    ]
+
+    entities.extend(
         AirzoneZoneSelect(
             coordinator,
             description,
@@ -70,6 +119,8 @@ async def async_setup_entry(
         for zone_id, zone_data in coordinator.data.get(AZD_ZONES, {}).items()
         if description.key in zone_data
     )
+
+    async_add_entities(entities)
 
 
 class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
@@ -110,6 +161,11 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
 
         self._attr_unique_id = f"{zone_id}_{description.key}"
         self.entity_description = description
+
+        self._attr_options = self.entity_description.options_fn(
+            zone_data, description.options_dict
+        )
+
         self.values_dict = {v: k for k, v in description.options_dict.items()}
 
         self._async_update_attrs()

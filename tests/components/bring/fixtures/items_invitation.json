@@ -1,0 +1,44 @@
+{
+  "uuid": "77a151f8-77c4-47a3-8295-c750a0e69d4f",
+  "status": "INVITATION",
+  "purchase": [
+    {
+      "uuid": "b5d0790b-5f32-4d5c-91da-e29066f167de",
+      "itemId": "Paprika",
+      "specification": "Rot",
+      "attributes": [
+        {
+          "type": "PURCHASE_CONDITIONS",
+          "content": {
+            "urgent": true,
+            "convenient": true,
+            "discounted": true
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "72d370ab-d8ca-4e41-b956-91df94795b4e",
+      "itemId": "Pouletbrüstli",
+      "specification": "Bio",
+      "attributes": [
+        {
+          "type": "PURCHASE_CONDITIONS",
+          "content": {
+            "urgent": true,
+            "convenient": true,
+            "discounted": true
+          }
+        }
+      ]
+    }
+  ],
+  "recently": [
+    {
+      "uuid": "fc8db30a-647e-4e6c-9d71-3b85d6a2d954",
+      "itemId": "Ananas",
+      "specification": "",
+      "attributes": []
+    }
+  ]
+}

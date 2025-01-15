@@ -12,19 +12,11 @@ from pyrisco.local.partition import Partition as LocalPartition
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_PIN,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
+from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -48,10 +40,10 @@ from .entity import RiscoCloudEntity
 _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
-    STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
+    AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+    AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }
 
 
@@ -116,14 +108,14 @@ class RiscoAlarm(AlarmControlPanelEntity):
             self._attr_supported_features |= STATES_TO_SUPPORTED_FEATURES[state]
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         if self._partition.triggered:
-            return STATE_ALARM_TRIGGERED
+            return AlarmControlPanelState.TRIGGERED
         if self._partition.arming:
-            return STATE_ALARM_ARMING
+            return AlarmControlPanelState.ARMING
         if self._partition.disarmed:
-            return STATE_ALARM_DISARMED
+            return AlarmControlPanelState.DISARMED
         if self._partition.armed:
             return self._risco_to_ha[RISCO_ARM]
         if self._partition.partially_armed:
@@ -148,21 +140,21 @@ class RiscoAlarm(AlarmControlPanelEntity):
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self._arm(STATE_ALARM_ARMED_HOME, code)
+        await self._arm(AlarmControlPanelState.ARMED_HOME, code)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._arm(STATE_ALARM_ARMED_AWAY, code)
+        await self._arm(AlarmControlPanelState.ARMED_AWAY, code)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        await self._arm(STATE_ALARM_ARMED_NIGHT, code)
+        await self._arm(AlarmControlPanelState.ARMED_NIGHT, code)
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        await self._arm(STATE_ALARM_ARMED_CUSTOM_BYPASS, code)
+        await self._arm(AlarmControlPanelState.ARMED_CUSTOM_BYPASS, code)
 
-    async def _arm(self, mode: str, code: str | None) -> None:
+    async def _arm(self, mode: AlarmControlPanelState, code: str | None) -> None:
         if self.code_arm_required and not self._validate_code(code):
             _LOGGER.warning("Wrong code entered for %s", mode)
             return

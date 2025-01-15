@@ -49,7 +49,7 @@ async def test_climate_hvac_mode(
 
     # Test set hvac mode heat
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -71,7 +71,7 @@ async def test_climate_hvac_mode(
 
     # Test set hvac mode off
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -108,7 +108,7 @@ async def test_climate_temperature(
 
     # Test set target temperature
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -128,7 +128,7 @@ async def test_climate_temperature(
 
     # Test set target temperature - incorrect params
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
@@ -160,7 +160,7 @@ async def test_climate_fan_level(
 
     # Test set fan level to high
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -195,7 +195,7 @@ async def test_climate_swing(
 
     # Test set swing mode on
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -218,7 +218,7 @@ async def test_climate_swing(
 
     # Test set swing mode off
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
     ) as mock_control_device:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
@@ -249,7 +249,7 @@ async def test_control_device_fail(hass: HomeAssistant, mock_bridge, mock_api) -
 
     # Test exception during set hvac mode
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         side_effect=RuntimeError("fake error"),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):
@@ -276,7 +276,7 @@ async def test_control_device_fail(hass: HomeAssistant, mock_bridge, mock_api) -
 
     # Test error response during turn on
     with patch(
-        "homeassistant.components.switcher_kis.climate.SwitcherType2Api.control_breeze_device",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_breeze_device",
         return_value=SwitcherBaseResponse(None),
     ) as mock_control_device:
         with pytest.raises(HomeAssistantError):

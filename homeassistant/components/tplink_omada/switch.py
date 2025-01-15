@@ -229,7 +229,6 @@ class OmadaDevicePortSwitchEntity(
 ):
     """Generic toggle switch entity for a Netork Port of an Omada Device."""
 
-    _attr_has_entity_name = True
     entity_description: OmadaDevicePortSwitchEntityDescription[
         TCoordinator, TDevice, TPort
     ]

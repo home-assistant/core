@@ -15,7 +15,7 @@ from opower import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -66,7 +66,6 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize a new OpowerConfigFlow."""
-        self.reauth_entry: ConfigEntry | None = None
         self.utility_info: dict[str, Any] | None = None
 
     async def async_step_user(
@@ -135,35 +134,29 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self.reauth_entry
         errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            data = {**self.reauth_entry.data, **user_input}
+            data = {**reauth_entry.data, **user_input}
             errors = await _validate_login(self.hass, data)
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.reauth_entry, data=data
-                )
-                await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(reauth_entry, data=data)
+
         schema: VolDictType = {
-            vol.Required(CONF_USERNAME): self.reauth_entry.data[CONF_USERNAME],
+            vol.Required(CONF_USERNAME): reauth_entry.data[CONF_USERNAME],
             vol.Required(CONF_PASSWORD): str,
         }
-        if select_utility(self.reauth_entry.data[CONF_UTILITY]).accepts_mfa():
+        if select_utility(reauth_entry.data[CONF_UTILITY]).accepts_mfa():
             schema[vol.Optional(CONF_TOTP_SECRET)] = str
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(schema),
             errors=errors,
-            description_placeholders={CONF_NAME: self.reauth_entry.title},
+            description_placeholders={CONF_NAME: reauth_entry.title},
         )

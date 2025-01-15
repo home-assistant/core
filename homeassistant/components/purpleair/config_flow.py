@@ -202,7 +202,6 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
-        self._reauth_entry: ConfigEntry | None = None
 
     @staticmethod
     @callback
@@ -210,7 +209,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> PurpleAirOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return PurpleAirOptionsFlowHandler(config_entry)
+        return PurpleAirOptionsFlowHandler()
 
     async def async_step_by_coordinates(
         self, user_input: dict[str, Any] | None = None
@@ -265,9 +264,6 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -289,15 +285,9 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors=validation.errors,
             )
 
-        assert self._reauth_entry
-
-        self.hass.config_entries.async_update_entry(
-            self._reauth_entry, data={CONF_API_KEY: api_key}
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data={CONF_API_KEY: api_key}
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -325,10 +315,9 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
 class PurpleAirOptionsFlowHandler(OptionsFlow):
     """Handle a PurpleAir options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize."""
         self._flow_data: dict[str, Any] = {}
-        self.config_entry = config_entry
 
     @property
     def settings_schema(self) -> vol.Schema:

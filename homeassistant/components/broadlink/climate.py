@@ -52,7 +52,6 @@ class BroadlinkThermostat(BroadlinkEntity, ClimateEntity):
     )
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the climate entity."""

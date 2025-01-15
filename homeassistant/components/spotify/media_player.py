@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from spotifyaio import (
     Device,
@@ -30,17 +31,13 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SpotifyConfigEntry
 from .browse_media import async_browse_media_internal
-from .const import DOMAIN, MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
-from .coordinator import SpotifyCoordinator
+from .const import MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
+from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
+from .entity import SpotifyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +64,7 @@ REPEAT_MODE_MAPPING_TO_HA = {
 REPEAT_MODE_MAPPING_TO_SPOTIFY = {
     value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
 }
+AFTER_REQUEST_SLEEP = 1
 
 
 async def async_setup_entry(
@@ -80,8 +78,6 @@ async def async_setup_entry(
     spotify = SpotifyMediaPlayer(
         data.coordinator,
         data.devices,
-        entry.unique_id,
-        entry.title,
     )
     async_add_entities([spotify])
 
@@ -99,10 +95,22 @@ def ensure_item[_R](
     return wrapper
 
 
-class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntity):
+def async_refresh_after[_T: SpotifyEntity, **_P](
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
+) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+    """Define a wrapper to yield and refresh after."""
+
+    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        await func(self, *args, **kwargs)
+        await asyncio.sleep(AFTER_REQUEST_SLEEP)
+        await self.coordinator.async_refresh()
+
+    return _async_wrap
+
+
+class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     """Representation of a Spotify controller."""
 
-    _attr_has_entity_name = True
     _attr_media_image_remotely_accessible = False
     _attr_name = None
     _attr_translation_key = "spotify"
@@ -111,23 +119,11 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         self,
         coordinator: SpotifyCoordinator,
         device_coordinator: DataUpdateCoordinator[list[Device]],
-        user_id: str,
-        name: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.devices = device_coordinator
-
-        self._attr_unique_id = user_id
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, user_id)},
-            manufacturer="Spotify AB",
-            model=f"Spotify {coordinator.current_user.product}",
-            name=f"Spotify {name}",
-            entry_type=DeviceEntryType.SERVICE,
-            configuration_url="https://open.spotify.com",
-        )
+        self._attr_unique_id = coordinator.current_user.user_id
 
     @property
     def currently_playing(self) -> PlaybackState | None:
@@ -169,20 +165,20 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
     @ensure_item
     def media_content_type(self, item: Item) -> str:  # noqa: PLR0206
         """Return the media type."""
-        return MediaType.PODCAST if item.type == MediaType.EPISODE else MediaType.MUSIC
+        return MediaType.PODCAST if item.type == ItemType.EPISODE else MediaType.MUSIC
 
     @property
     @ensure_item
     def media_duration(self, item: Item) -> int:  # noqa: PLR0206
         """Duration of current playing media in seconds."""
-        return item.duration_ms / 1000
+        return round(item.duration_ms / 1000)
 
     @property
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         if not self.currently_playing or self.currently_playing.progress_ms is None:
             return None
-        return self.currently_playing.progress_ms / 1000
+        return round(self.currently_playing.progress_ms / 1000)
 
     @property
     def media_position_updated_at(self) -> dt.datetime | None:
@@ -286,30 +282,37 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
             return None
         return REPEAT_MODE_MAPPING_TO_HA.get(self.currently_playing.repeat_mode)
 
+    @async_refresh_after
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self.coordinator.client.set_volume(int(volume * 100))
 
+    @async_refresh_after
     async def async_media_play(self) -> None:
         """Start or resume playback."""
         await self.coordinator.client.start_playback()
 
+    @async_refresh_after
     async def async_media_pause(self) -> None:
         """Pause playback."""
         await self.coordinator.client.pause_playback()
 
+    @async_refresh_after
     async def async_media_previous_track(self) -> None:
         """Skip to previous track."""
         await self.coordinator.client.previous_track()
 
+    @async_refresh_after
     async def async_media_next_track(self) -> None:
         """Skip to next track."""
         await self.coordinator.client.next_track()
 
+    @async_refresh_after
     async def async_media_seek(self, position: float) -> None:
         """Send seek command."""
         await self.coordinator.client.seek_track(int(position * 1000))
 
+    @async_refresh_after
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -353,17 +356,22 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
 
         await self.coordinator.client.start_playback(**kwargs)
 
+    @async_refresh_after
     async def async_select_source(self, source: str) -> None:
         """Select playback device."""
         for device in self.devices.data:
             if device.name == source:
+                if TYPE_CHECKING:
+                    assert device.device_id is not None
                 await self.coordinator.client.transfer_playback(device.device_id)
                 return
 
+    @async_refresh_after
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         await self.coordinator.client.set_shuffle(state=shuffle)
 
+    @async_refresh_after
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         if repeat not in REPEAT_MODE_MAPPING_TO_SPOTIFY:
@@ -380,7 +388,6 @@ class SpotifyMediaPlayer(CoordinatorEntity[SpotifyCoordinator], MediaPlayerEntit
         return await async_browse_media_internal(
             self.hass,
             self.coordinator.client,
-            self.coordinator.current_user,
             media_content_type,
             media_content_id,
         )

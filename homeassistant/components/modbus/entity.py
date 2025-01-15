@@ -98,9 +98,9 @@ class BasePlatform(Entity):
         def get_optional_numeric_config(config_name: str) -> int | float | None:
             if (val := entry.get(config_name)) is None:
                 return None
-            assert isinstance(
-                val, (float, int)
-            ), f"Expected float or int but {config_name} was {type(val)}"
+            assert isinstance(val, (float, int)), (
+                f"Expected float or int but {config_name} was {type(val)}"
+            )
             return val
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)
@@ -297,8 +297,10 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._verify_type = convert[
                 config[CONF_VERIFY].get(CONF_INPUT_TYPE, config[CONF_WRITE_TYPE])
             ][0]
-            self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, self.command_on)
-            self._state_off = config[CONF_VERIFY].get(CONF_STATE_OFF, self._command_off)
+            self._state_on = config[CONF_VERIFY].get(CONF_STATE_ON, [self.command_on])
+            self._state_off = config[CONF_VERIFY].get(
+                CONF_STATE_OFF, [self._command_off]
+            )
         else:
             self._verify_active = False
 
@@ -363,9 +365,9 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._attr_is_on = bool(result.bits[0] & 1)
         else:
             value = int(result.registers[0])
-            if value == self._state_on:
+            if value in self._state_on:
                 self._attr_is_on = True
-            elif value == self._state_off:
+            elif value in self._state_off:
                 self._attr_is_on = False
             elif value is not None:
                 _LOGGER.error(

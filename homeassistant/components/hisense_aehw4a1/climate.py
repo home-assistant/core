@@ -155,7 +155,6 @@ class ClimateAehW4a1(ClimateEntity):
     _attr_target_temperature_step = 1
     _previous_state: HVACMode | str | None = None
     _on: str | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device):
         """Initialize the climate device."""
@@ -196,7 +195,7 @@ class ClimateAehW4a1(ClimateEntity):
             fan_mode = status["wind_status"]
             self._attr_fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
 
-            swing_mode = f'{status["up_down"]}{status["left_right"]}'
+            swing_mode = f"{status['up_down']}{status['left_right']}"
             self._attr_swing_mode = AC_TO_HA_SWING[swing_mode]
 
             if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT):

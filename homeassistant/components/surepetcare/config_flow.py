@@ -10,7 +10,7 @@ import surepy
 from surepy.exceptions import SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -30,8 +30,6 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sure Petcare."""
 
     VERSION = 1
-
-    reauth_entry: ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -72,20 +70,17 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self.reauth_entry
         errors = {}
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
             client = surepy.Surepy(
-                self.reauth_entry.data[CONF_USERNAME],
+                reauth_entry.data[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
                 auth_token=None,
                 api_timeout=SURE_API_TIMEOUT,
@@ -102,9 +97,8 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
-                    self.reauth_entry,
-                    data={
-                        **self.reauth_entry.data,
+                    reauth_entry,
+                    data_updates={
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_TOKEN: token,
                     },
@@ -112,9 +106,7 @@ class SurePetCareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            description_placeholders={
-                "username": self.reauth_entry.data[CONF_USERNAME]
-            },
+            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
             data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )

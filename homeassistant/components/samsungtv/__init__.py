@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import getmac
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -36,7 +36,6 @@ from .const import (
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
-    DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
     LEGACY_PORT,
     LOGGER,
@@ -135,16 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SamsungTVConfigEntry) ->
     def _access_denied() -> None:
         """Access denied callback."""
         LOGGER.debug("Access denied in getting remote object")
-        hass.create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={
-                    "source": SOURCE_REAUTH,
-                    "entry_id": entry.entry_id,
-                },
-                data=entry.data,
-            )
-        )
+        entry.async_start_reauth(hass)
 
     bridge.register_reauth_callback(_access_denied)
 

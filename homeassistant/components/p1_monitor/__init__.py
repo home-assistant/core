@@ -7,10 +7,12 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN, LOGGER
+from .const import LOGGER
 from .coordinator import P1MonitorDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+type P1MonitorConfigEntry = ConfigEntry[P1MonitorDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -23,8 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.p1monitor.close()
         raise
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -55,7 +56,4 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload P1 Monitor config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        del hass.data[DOMAIN][entry.entry_id]
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

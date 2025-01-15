@@ -14,7 +14,7 @@ from tesla_fleet_api.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -33,7 +33,6 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
-    _entry: ConfigEntry | None = None
 
     async def async_auth(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Reusable Auth Helper."""
@@ -79,7 +78,6 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
-        self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -87,12 +85,11 @@ class TeslemetryConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle users reauth credentials."""
 
-        assert self._entry
         errors: dict[str, str] = {}
 
         if user_input and not (errors := await self.async_auth(user_input)):
             return self.async_update_reload_and_abort(
-                self._entry,
+                self._get_reauth_entry(),
                 data=user_input,
             )
 

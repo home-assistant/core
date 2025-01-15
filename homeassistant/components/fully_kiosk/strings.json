@@ -1,10 +1,22 @@
 {
+  "common": {
+    "data_description_password": "The Remote Admin Password from the Fully Kiosk Browser app settings.",
+    "data_description_ssl": "Is the Fully Kiosk app configured to require SSL for the connection?",
+    "data_description_verify_ssl": "Should SSL certificartes be verified? This should be off for self-signed certificates."
+  },
   "config": {
     "step": {
       "discovery_confirm": {
         "description": "Do you want to set up {name} ({host})?",
         "data": {
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "password": "[%key:component::fully_kiosk::common::data_description_password%]",
+          "ssl": "[%key:component::fully_kiosk::common::data_description_ssl%]",
+          "verify_ssl": "[%key:component::fully_kiosk::common::data_description_verify_ssl%]"
         }
       },
       "user": {
@@ -15,7 +27,10 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application."
+          "host": "The hostname or IP address of the device running your Fully Kiosk Browser application.",
+          "password": "[%key:component::fully_kiosk::common::data_description_password%]",
+          "ssl": "[%key:component::fully_kiosk::common::data_description_ssl%]",
+          "verify_ssl": "[%key:component::fully_kiosk::common::data_description_verify_ssl%]"
         }
       }
     },

@@ -100,7 +100,12 @@ CONFIG_FIRETV_DEFAULT = CONFIG_FIRETV_PYTHON_ADB
 
 
 def setup_mock_entry(
-    config: dict[str, Any], entity_domain: str
+    config: dict[str, Any],
+    entity_domain: str,
+    *,
+    options=None,
+    version=1,
+    minor_version=2,
 ) -> tuple[str, str, MockConfigEntry]:
     """Prepare mock entry for entities tests."""
     patch_key = config[ADB_PATCH_KEY]
@@ -109,6 +114,9 @@ def setup_mock_entry(
         domain=DOMAIN,
         data=config[DOMAIN],
         unique_id="a1:b1:c1:d1:e1:f1",
+        options=options,
+        version=version,
+        minor_version=minor_version,
     )
 
     return patch_key, entity_id, config_entry

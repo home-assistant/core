@@ -33,7 +33,9 @@ def mock_expires_at() -> int:
     return time.time() + 3600
 
 
-def create_config_entry(expires_at: int, scopes: list[Scope]) -> MockConfigEntry:
+def create_config_entry(
+    expires_at: int, scopes: list[Scope], implementation: str = DOMAIN
+) -> MockConfigEntry:
     """Create Tesla Fleet entry in Home Assistant."""
     access_token = jwt.encode(
         {
@@ -51,7 +53,7 @@ def create_config_entry(expires_at: int, scopes: list[Scope]) -> MockConfigEntry
         title=UID,
         unique_id=UID,
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": implementation,
             "token": {
                 "status": 0,
                 "userid": UID,
@@ -88,6 +90,12 @@ def readonly_config_entry(expires_at: int) -> MockConfigEntry:
             Scope.ENERGY_DEVICE_DATA,
         ],
     )
+
+
+@pytest.fixture
+def bad_config_entry(expires_at: int) -> MockConfigEntry:
+    """Create Tesla Fleet entry in Home Assistant."""
+    return create_config_entry(expires_at, SCOPES, "bad")
 
 
 @pytest.fixture(autouse=True)
@@ -167,3 +175,13 @@ def mock_request():
         return_value=COMMAND_OK,
     ) as mock_request:
         yield mock_request
+
+
+@pytest.fixture(autouse=True)
+def mock_signed_command() -> Generator[AsyncMock]:
+    """Mock Tesla Fleet Api signed_command method."""
+    with patch(
+        "homeassistant.components.tesla_fleet.VehicleSigned.signed_command",
+        return_value=COMMAND_OK,
+    ) as mock_signed_command:
+        yield mock_signed_command

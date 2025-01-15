@@ -51,6 +51,16 @@ async def mock_recorder_before_hass(
     """Set up recorder."""
 
 
+AREA_SENSOR_FT_ATTRIBUTES = {
+    "device_class": "area",
+    "state_class": "measurement",
+    "unit_of_measurement": "ft²",
+}
+AREA_SENSOR_M_ATTRIBUTES = {
+    "device_class": "area",
+    "state_class": "measurement",
+    "unit_of_measurement": "m²",
+}
 DISTANCE_SENSOR_FT_ATTRIBUTES = {
     "device_class": "distance",
     "state_class": "measurement",
@@ -1247,6 +1257,9 @@ async def test_statistic_during_period_calendar(
 @pytest.mark.parametrize(
     ("attributes", "state", "value", "custom_units", "converted_value"),
     [
+        (AREA_SENSOR_M_ATTRIBUTES, 10, 10, {"area": "cm²"}, 100000),
+        (AREA_SENSOR_M_ATTRIBUTES, 10, 10, {"area": "m²"}, 10),
+        (AREA_SENSOR_M_ATTRIBUTES, 10, 10, {"area": "ft²"}, 107.639),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "cm"}, 1000),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "m"}, 10),
         (DISTANCE_SENSOR_M_ATTRIBUTES, 10, 10, {"distance": "in"}, 10 / 0.0254),
@@ -1434,6 +1447,7 @@ async def test_sum_statistics_during_period_unit_conversion(
     "custom_units",
     [
         {"distance": "L"},
+        {"area": "L"},
         {"energy": "W"},
         {"power": "Pa"},
         {"pressure": "K"},
@@ -1678,6 +1692,8 @@ async def test_statistics_during_period_empty_statistic_ids(
 @pytest.mark.parametrize(
     ("units", "attributes", "display_unit", "statistics_unit", "unit_class"),
     [
+        (US_CUSTOMARY_SYSTEM, AREA_SENSOR_M_ATTRIBUTES, "m²", "m²", "area"),
+        (METRIC_SYSTEM, AREA_SENSOR_M_ATTRIBUTES, "m²", "m²", "area"),
         (US_CUSTOMARY_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (METRIC_SYSTEM, DISTANCE_SENSOR_M_ATTRIBUTES, "m", "m", "distance"),
         (
@@ -1852,6 +1868,13 @@ async def test_list_statistic_ids(
 @pytest.mark.parametrize(
     ("attributes", "attributes2", "display_unit", "statistics_unit", "unit_class"),
     [
+        (
+            AREA_SENSOR_M_ATTRIBUTES,
+            AREA_SENSOR_FT_ATTRIBUTES,
+            "ft²",
+            "m²",
+            "area",
+        ),
         (
             DISTANCE_SENSOR_M_ATTRIBUTES,
             DISTANCE_SENSOR_FT_ATTRIBUTES,

@@ -41,31 +41,39 @@
     },
     "sensor": {
       "ads_blocked_today": {
-        "name": "Ads blocked today"
+        "name": "Ads blocked today",
+        "unit_of_measurement": "ads"
       },
       "ads_percentage_today": {
         "name": "Ads percentage blocked today"
       },
       "clients_ever_seen": {
-        "name": "Seen clients"
+        "name": "Seen clients",
+        "unit_of_measurement": "clients"
       },
       "dns_queries_today": {
-        "name": "DNS queries today"
+        "name": "DNS queries today",
+        "unit_of_measurement": "queries"
       },
       "domains_being_blocked": {
-        "name": "Domains blocked"
+        "name": "Domains blocked",
+        "unit_of_measurement": "domains"
       },
       "queries_cached": {
-        "name": "DNS queries cached"
+        "name": "DNS queries cached",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::dns_queries_today::unit_of_measurement%]"
       },
       "queries_forwarded": {
-        "name": "DNS queries forwarded"
+        "name": "DNS queries forwarded",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::dns_queries_today::unit_of_measurement%]"
       },
       "unique_clients": {
-        "name": "DNS unique clients"
+        "name": "DNS unique clients",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::clients_ever_seen::unit_of_measurement%]"
       },
       "unique_domains": {
-        "name": "DNS unique domains"
+        "name": "DNS unique domains",
+        "unit_of_measurement": "[%key:component::pi_hole::entity::sensor::domains_being_blocked::unit_of_measurement%]"
       }
     },
     "update": {

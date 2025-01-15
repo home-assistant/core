@@ -1,6 +1,7 @@
 {
   "domain": "mqtt",
   "name": "MQTT",
+  "after_dependencies": ["hassio"],
   "codeowners": ["@emontnemery", "@jbouwh", "@bdraco"],
   "config_flow": true,
   "dependencies": ["file_upload", "http"],

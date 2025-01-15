@@ -9,13 +9,12 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol
+from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
 from propcache import cached_property
 import requests
-from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -24,12 +23,13 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
     ConfigEntryNotReady,
+    HomeAssistantError,
 )
 from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .frame import report
+from .frame import report_usage
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -43,7 +43,7 @@ _DataUpdateCoordinatorT = TypeVar(
 )
 
 
-class UpdateFailed(Exception):
+class UpdateFailed(HomeAssistantError):
     """Raised when an update has failed."""
 
 
@@ -286,24 +286,20 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         to ensure that multiple retries do not cause log spam.
         """
         if self.config_entry is None:
-            report(
+            report_usage(
                 "uses `async_config_entry_first_refresh`, which is only supported "
-                "for coordinators with a config entry and will stop working in "
-                "Home Assistant 2025.11",
-                error_if_core=True,
-                error_if_integration=False,
+                "for coordinators with a config entry",
+                breaks_in_ha_version="2025.11",
             )
         elif (
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
-            report(
+            report_usage(
                 "uses `async_config_entry_first_refresh`, which is only supported "
                 f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}, "
-                "This will stop working in Home Assistant 2025.11",
-                error_if_core=True,
-                error_if_integration=False,
+                f"but it is in state {self.config_entry.state}",
+                breaks_in_ha_version="2025.11",
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(

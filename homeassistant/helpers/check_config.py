@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant import loader
 from homeassistant.config import (  # type: ignore[attr-defined]
     CONF_PACKAGES,
-    CORE_CONFIG_SCHEMA,
     YAML_CONFIG_FILE,
     config_per_platform,
     extract_domain_configs,
@@ -23,6 +22,7 @@ from homeassistant.config import (  # type: ignore[attr-defined]
     merge_packages_config,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core_config import CORE_CONFIG_SCHEMA
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -220,7 +220,7 @@ async def async_check_ha_config_file(  # noqa: C901
             except (vol.Invalid, HomeAssistantError) as ex:
                 _comp_error(ex, domain, config, config[domain])
                 continue
-            except Exception as err:  # noqa: BLE001
+            except Exception as err:
                 logging.getLogger(__name__).exception(
                     "Unexpected error validating config"
                 )

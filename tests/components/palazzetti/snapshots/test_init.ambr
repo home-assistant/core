@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '11:22:33:44:55:66',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.1.1',
+    'id': <ANY>,
+    'identifiers': set({
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Palazzetti',
+    'model': None,
+    'model_id': None,
+    'name': 'Stove',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '0.0.0',
+    'via_device_id': None,
+  })
+# ---

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from enum import Enum, EnumType, _EnumDict
+from contextlib import suppress
+from enum import EnumType, IntEnum, IntFlag, StrEnum, _EnumDict
 import functools
 import inspect
 import logging
@@ -165,6 +166,30 @@ def _print_deprecation_warning_internal(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
+    # Suppress ImportError due to use of deprecated enum in core.py
+    # Can be removed in HA Core 2025.1
+    with suppress(ImportError):
+        _print_deprecation_warning_internal_impl(
+            obj_name,
+            module_name,
+            replacement,
+            description,
+            verb,
+            breaks_in_ha_version,
+            log_when_no_integration_is_found=log_when_no_integration_is_found,
+        )
+
+
+def _print_deprecation_warning_internal_impl(
+    obj_name: str,
+    module_name: str,
+    replacement: str,
+    description: str,
+    verb: str,
+    breaks_in_ha_version: str | None,
+    *,
+    log_when_no_integration_is_found: bool,
+) -> None:
     # pylint: disable=import-outside-toplevel
     from homeassistant.core import async_get_hass_or_none
     from homeassistant.loader import async_suggest_report_issue
@@ -230,7 +255,7 @@ class DeprecatedConstant(NamedTuple):
 class DeprecatedConstantEnum(NamedTuple):
     """Deprecated constant."""
 
-    enum: Enum
+    enum: StrEnum | IntEnum | IntFlag
     breaks_in_ha_version: str | None
 
 
@@ -281,7 +306,7 @@ def check_if_deprecated_constant(name: str, module_globals: dict[str, Any]) -> A
         replacement = deprecated_const.replacement
         breaks_in_ha_version = deprecated_const.breaks_in_ha_version
     elif isinstance(deprecated_const, DeprecatedConstantEnum):
-        value = deprecated_const.enum.value
+        value = deprecated_const.enum
         replacement = (
             f"{deprecated_const.enum.__class__.__name__}.{deprecated_const.enum.name}"
         )
@@ -363,7 +388,7 @@ class EnumWithDeprecatedMembers(EnumType):
             _print_deprecation_warning_internal(
                 f"{cls.__name__}.{name}",
                 cls.__module__,
-                f"{cls.__name__}.{deprecated[name][0]}",
+                f"{deprecated[name][0]}",
                 "enum member",
                 "used",
                 deprecated[name][1],

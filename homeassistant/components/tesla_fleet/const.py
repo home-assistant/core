@@ -21,6 +21,7 @@ SCOPES = [
     Scope.OPENID,
     Scope.OFFLINE_ACCESS,
     Scope.VEHICLE_DEVICE_DATA,
+    Scope.VEHICLE_LOCATION,
     Scope.VEHICLE_CMDS,
     Scope.VEHICLE_CHARGING_CMDS,
     Scope.ENERGY_DEVICE_DATA,
@@ -32,6 +33,8 @@ MODELS = {
     "3": "Model 3",
     "X": "Model X",
     "Y": "Model Y",
+    "C": "Cybertruck",
+    "T": "Tesla Semi",
 }
 
 

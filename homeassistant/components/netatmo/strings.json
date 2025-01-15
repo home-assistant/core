@@ -168,6 +168,19 @@
     }
   },
   "entity": {
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "frost_guard": "Frost guard",
+              "schedule": "Schedule",
+              "manual": "Manual"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "temp_trend": {
         "name": "Temperature trend"

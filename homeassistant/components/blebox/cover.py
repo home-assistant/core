@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from blebox_uniapi.box import Box
 import blebox_uniapi.cover
 from blebox_uniapi.cover import BleboxCoverState
 
@@ -16,11 +15,10 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, PRODUCT
+from . import BleBoxConfigEntry
 from .entity import BleBoxEntity
 
 BLEBOX_TO_COVER_DEVICE_CLASSES = {
@@ -46,13 +44,13 @@ BLEBOX_TO_HASS_COVER_STATES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: BleBoxConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
-    product: Box = hass.data[DOMAIN][config_entry.entry_id][PRODUCT]
     entities = [
-        BleBoxCoverEntity(feature) for feature in product.features.get("covers", [])
+        BleBoxCoverEntity(feature)
+        for feature in config_entry.runtime_data.features.get("covers", [])
     ]
     async_add_entities(entities, True)
 

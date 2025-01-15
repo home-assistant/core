@@ -13,9 +13,10 @@ from yalesmartalarmclient import (
     YaleSmartAlarmData,
 )
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.yale_smart_alarm.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import STATE_ALARM_ARMED_AWAY, STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -47,7 +48,8 @@ async def test_coordinator_setup_errors(
         options=OPTIONS_CONFIG,
         entry_id="1",
         unique_id="username",
-        version=1,
+        version=2,
+        minor_version=2,
     )
 
     config_entry.add_to_hass(hass)
@@ -60,7 +62,7 @@ async def test_coordinator_setup_errors(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
+    state = hass.states.get("alarm_control_panel.test_username")
     assert not state
 
 
@@ -73,15 +75,15 @@ async def test_coordinator_setup_and_update_errors(
 
     client = load_config_entry[1]
 
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    state = hass.states.get("alarm_control_panel.test_username")
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
     client.reset_mock()
 
     client.get_information.side_effect = ConnectionError("Could not connect")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=1))
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
+    state = hass.states.get("alarm_control_panel.test_username")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
@@ -89,7 +91,7 @@ async def test_coordinator_setup_and_update_errors(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=2))
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
+    state = hass.states.get("alarm_control_panel.test_username")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
@@ -97,7 +99,7 @@ async def test_coordinator_setup_and_update_errors(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=3))
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
+    state = hass.states.get("alarm_control_panel.test_username")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
@@ -105,7 +107,7 @@ async def test_coordinator_setup_and_update_errors(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=4))
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
+    state = hass.states.get("alarm_control_panel.test_username")
     assert state.state == STATE_UNAVAILABLE
     client.reset_mock()
 
@@ -115,13 +117,13 @@ async def test_coordinator_setup_and_update_errors(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
-    assert state.state == STATE_ALARM_ARMED_AWAY
+    state = hass.states.get("alarm_control_panel.test_username")
+    assert state.state == AlarmControlPanelState.ARMED_AWAY
     client.reset_mock()
 
     client.get_information.side_effect = AuthenticationError("Can not authenticate")
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=6))
     await hass.async_block_till_done(wait_background_tasks=True)
     client.get_information.assert_called_once()
-    state = hass.states.get("alarm_control_panel.yale_smart_alarm")
+    state = hass.states.get("alarm_control_panel.test_username")
     assert state.state == STATE_UNAVAILABLE
