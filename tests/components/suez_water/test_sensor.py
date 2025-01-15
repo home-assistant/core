@@ -1,5 +1,6 @@
 """Test Suez_water sensor platform."""
 
+from datetime import date
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -31,6 +32,13 @@ async def test_sensors_valid_state(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    state = hass.states.get("sensor.suez_mock_device_water_usage_yesterday")
+    assert state
+    previous: dict = state.attributes["previous_month_consumption"]
+    assert previous
+    assert previous.get(date.fromisoformat("2024-12-01")) is None
+    assert previous.get(str(date.fromisoformat("2024-12-01"))) == 154
 
 
 @pytest.mark.parametrize("method", [("fetch_aggregated_data"), ("get_price")])

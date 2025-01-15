@@ -1,6 +1,7 @@
 """Tests for the Intergas InComfort config flow."""
 
-from unittest.mock import AsyncMock, MagicMock
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
 from incomfortclient import IncomfortError, InvalidHeaterList
@@ -113,3 +114,39 @@ async def test_form_validation(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert "errors" not in result
+
+
+@pytest.mark.parametrize(
+    ("user_input", "legacy_setpoint_status"),
+    [
+        ({}, False),
+        ({"legacy_setpoint_status": False}, False),
+        ({"legacy_setpoint_status": True}, True),
+    ],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_incomfort: MagicMock,
+    user_input: dict[str, Any],
+    legacy_setpoint_status: bool,
+) -> None:
+    """Test options flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch("homeassistant.components.incomfort.async_setup_entry") as restart_mock:
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert restart_mock.call_count == 1
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {"legacy_setpoint_status": legacy_setpoint_status}
+    assert entry.options.get("legacy_setpoint_status", False) is legacy_setpoint_status

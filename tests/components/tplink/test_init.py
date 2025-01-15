@@ -38,6 +38,14 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
+    _mocked_device,
+    _mocked_feature,
+    _patch_connect,
+    _patch_discovery,
+    _patch_single_discovery,
+)
+from .conftest import override_side_effect
+from .const import (
     ALIAS,
     CREATE_ENTRY_DATA_AES,
     CREATE_ENTRY_DATA_KLAP,
@@ -53,10 +61,6 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     MODEL,
-    _mocked_device,
-    _patch_connect,
-    _patch_discovery,
-    _patch_single_discovery,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -69,6 +73,7 @@ async def test_configuring_tplink_causes_discovery(
     with (
         patch("homeassistant.components.tplink.Discover.discover") as discover,
         patch("homeassistant.components.tplink.Discover.discover_single"),
+        patch("homeassistant.components.tplink.Device.connect"),
     ):
         discover.return_value = {MagicMock(): MagicMock()}
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
@@ -95,7 +100,7 @@ async def test_config_entry_reload(hass: HomeAssistant) -> None:
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state is ConfigEntryState.LOADED
         await hass.config_entries.async_unload(already_migrated_config_entry.entry_id)
@@ -114,7 +119,7 @@ async def test_config_entry_retry(hass: HomeAssistant) -> None:
         _patch_single_discovery(no_device=True),
         _patch_connect(no_device=True),
     ):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -172,7 +177,7 @@ async def test_config_entry_wrong_mac_Address(
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_single_discovery(), _patch_connect():
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -220,8 +225,12 @@ async def test_config_entry_with_stored_credentials(
 
     hass.data.setdefault(DOMAIN, {})[CONF_AUTHENTICATION] = auth
     mock_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.tplink.async_create_clientsession", return_value="Foo"
+    with (
+        patch(
+            "homeassistant.components.tplink.async_create_clientsession",
+            return_value="Foo",
+        ),
+        override_side_effect(mock_discovery["discover"], lambda *_, **__: {}),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -302,7 +311,7 @@ async def test_plug_auth_fails(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     device = _mocked_device(alias="my_plug", features=["state"])
     with _patch_discovery(device=device), _patch_connect(device=device):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug"
@@ -335,13 +344,20 @@ async def test_update_attrs_fails_in_init(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light_module = light.modules[Module.Light]
     p = PropertyMock(side_effect=KasaException)
     type(light_module).color_temp = p
     light.__str__ = lambda _: "MockLight"
     with _patch_discovery(device=light), _patch_connect(device=light):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -363,11 +379,18 @@ async def test_update_attrs_fails_on_update(
         domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     config_entry.add_to_hass(hass)
-    light = _mocked_device(modules=[Module.Light], alias="my_light")
+    features = [
+        _mocked_feature("brightness", value=50),
+        _mocked_feature("hsv", value=(10, 30, 5)),
+        _mocked_feature(
+            "color_temp", value=4000, minimum_value=4000, maximum_value=9000
+        ),
+    ]
+    light = _mocked_device(modules=[Module.Light], alias="my_light", features=features)
     light_module = light.modules[Module.Light]
 
     with _patch_discovery(device=light), _patch_connect(device=light):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "light.my_light"
@@ -413,7 +436,7 @@ async def test_feature_no_category(
     )
     dev.features["led"].category = Feature.Category.Unset
     with _patch_discovery(device=dev), _patch_connect(device=dev):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await hass.config_entries.async_setup(already_migrated_config_entry.entry_id)
         await hass.async_block_till_done()
 
     entity_id = "switch.my_plug_led"
@@ -480,7 +503,7 @@ async def test_unlink_devices(
 
     # Generate list of test identifiers
     test_identifiers = [
-        (domain, f"{device_id}{"" if i == 0 else f"_000{i}"}")
+        (domain, f"{device_id}{'' if i == 0 else f'_000{i}'}")
         for i in range(id_count)
         for domain in domains
     ]

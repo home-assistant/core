@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: Future enhancement to move custom actions for login/out into an options flow.
+  action-setup: done
   appropriate-polling:
     status: done
     comment: Integration is a local push integration
@@ -16,12 +14,8 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
-  entity-event-setup:
-    status: todo
-    comment: |
-      Simplify by using async_on_remove instead of keeping track of listeners to remove
-      later in async_will_remove_from_hass.
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -33,10 +27,7 @@ rules:
     status: todo
     comment: Actions currently only log and instead should raise exceptions.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: done
-    comment: |
-      The integration doesn't provide any additional configuration parameters.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -47,10 +38,7 @@ rules:
   parallel-updates:
     status: todo
     comment: Needs to be set to 0. The underlying library handles parallel updates.
-  reauthentication-flow:
-    status: exempt
-    comment: |
-      This integration doesn't require re-authentication.
+  reauthentication-flow: done
   test-coverage:
     status: todo
     comment: |
@@ -72,14 +60,12 @@ rules:
     status: todo
     comment: Explore if this is possible.
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-    comment: Has some troublehsooting setps, but needs to be improved
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
   entity-category: done

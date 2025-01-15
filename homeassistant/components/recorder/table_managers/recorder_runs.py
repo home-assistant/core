@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import bisect
-from dataclasses import dataclass
 from datetime import datetime
 
 from sqlalchemy.orm.session import Session
@@ -11,34 +9,6 @@ from sqlalchemy.orm.session import Session
 import homeassistant.util.dt as dt_util
 
 from ..db_schema import RecorderRuns
-from ..models import process_timestamp
-
-
-def _find_recorder_run_for_start_time(
-    run_history: _RecorderRunsHistory, start: datetime
-) -> RecorderRuns | None:
-    """Find the recorder run for a start time in _RecorderRunsHistory."""
-    run_timestamps = run_history.run_timestamps
-    runs_by_timestamp = run_history.runs_by_timestamp
-
-    # bisect_left tells us were we would insert
-    # a value in the list of runs after the start timestamp.
-    #
-    # The run before that (idx-1) is when the run started
-    #
-    # If idx is 0, history never ran before the start timestamp
-    #
-    if idx := bisect.bisect_left(run_timestamps, start.timestamp()):
-        return runs_by_timestamp[run_timestamps[idx - 1]]
-    return None
-
-
-@dataclass(frozen=True)
-class _RecorderRunsHistory:
-    """Bisectable history of RecorderRuns."""
-
-    run_timestamps: list[int]
-    runs_by_timestamp: dict[int, RecorderRuns]
 
 
 class RecorderRunsManager:
@@ -48,7 +18,7 @@ class RecorderRunsManager:
         """Track recorder run history."""
         self._recording_start = dt_util.utcnow()
         self._current_run_info: RecorderRuns | None = None
-        self._run_history = _RecorderRunsHistory([], {})
+        self._first_run: RecorderRuns | None = None
 
     @property
     def recording_start(self) -> datetime:
@@ -58,9 +28,7 @@ class RecorderRunsManager:
     @property
     def first(self) -> RecorderRuns:
         """Get the first run."""
-        if runs_by_timestamp := self._run_history.runs_by_timestamp:
-            return next(iter(runs_by_timestamp.values()))
-        return self.current
+        return self._first_run or self.current
 
     @property
     def current(self) -> RecorderRuns:
@@ -77,15 +45,6 @@ class RecorderRunsManager:
     def active(self) -> bool:
         """Return if a run is active."""
         return self._current_run_info is not None
-
-    def get(self, start: datetime) -> RecorderRuns | None:
-        """Return the recorder run that started before or at start.
-
-        If the first run started after the start, return None
-        """
-        if start >= self.recording_start:
-            return self.current
-        return _find_recorder_run_for_start_time(self._run_history, start)
 
     def start(self, session: Session) -> None:
         """Start a new run.
@@ -122,31 +81,17 @@ class RecorderRunsManager:
 
         Must run in the recorder thread.
         """
-        run_timestamps: list[int] = []
-        runs_by_timestamp: dict[int, RecorderRuns] = {}
-
-        for run in session.query(RecorderRuns).order_by(RecorderRuns.start.asc()).all():
+        if (
+            run := session.query(RecorderRuns)
+            .order_by(RecorderRuns.start.asc())
+            .first()
+        ):
             session.expunge(run)
-            if run_dt := process_timestamp(run.start):
-                # Not sure if this is correct or runs_by_timestamp annotation should be changed
-                timestamp = int(run_dt.timestamp())
-                run_timestamps.append(timestamp)
-                runs_by_timestamp[timestamp] = run
-
-        #
-        # self._run_history is accessed in get()
-        # which is allowed to be called from any thread
-        #
-        # We use a dataclass to ensure that when we update
-        # run_timestamps and runs_by_timestamp
-        # are never out of sync with each other.
-        #
-        self._run_history = _RecorderRunsHistory(run_timestamps, runs_by_timestamp)
+        self._first_run = run
 
     def clear(self) -> None:
         """Clear the current run after ending it.
 
         Must run in the recorder thread.
         """
-        if self._current_run_info:
-            self._current_run_info = None
+        self._current_run_info = None

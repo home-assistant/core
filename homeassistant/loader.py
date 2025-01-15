@@ -65,14 +65,15 @@ _LOGGER = logging.getLogger(__name__)
 # This list can be extended by calling async_register_preload_platform
 #
 BASE_PRELOAD_PLATFORMS = [
+    "backup",
     "config",
     "config_flow",
     "diagnostics",
     "energy",
     "group",
-    "logbook",
     "hardware",
     "intent",
+    "logbook",
     "media_source",
     "recorder",
     "repairs",
@@ -1764,8 +1765,7 @@ def async_suggest_report_issue(
         if not integration_domain:
             return "report it to the custom integration author"
         return (
-            f"report it to the author of the '{integration_domain}' "
-            "custom integration"
+            f"report it to the author of the '{integration_domain}' custom integration"
         )
 
     return f"create a bug report at {issue_tracker}"

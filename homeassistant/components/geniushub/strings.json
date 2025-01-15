@@ -37,11 +37,11 @@
   "services": {
     "set_zone_mode": {
       "name": "Set zone mode",
-      "description": "Set the zone to an operating mode.",
+      "description": "Sets the zone to an operating mode.",
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "The zone's entity_id."
+          "description": "The zone's entity ID."
         },
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
@@ -51,7 +51,7 @@
     },
     "set_zone_override": {
       "name": "Set zone override",
-      "description": "Overrides the zone's set point for a given duration.",
+      "description": "Overrides the zone's setpoint for a given duration.",
       "fields": {
         "entity_id": {
           "name": "Entity",

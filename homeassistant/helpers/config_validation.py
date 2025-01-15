@@ -1,8 +1,6 @@
 """Helpers for config validation using voluptuous."""
 
-# PEP 563 seems to break typing.get_type_hints when used
-# with PEP 695 syntax. Fixed in Python 3.13.
-# from __future__ import annotations
+from __future__ import annotations
 
 from collections.abc import Callable, Hashable, Mapping
 import contextlib
@@ -354,7 +352,7 @@ def ensure_list[_T](value: _T | None) -> list[_T] | list[Any]:
     """Wrap value in list if it is not one."""
     if value is None:
         return []
-    return cast("list[_T]", value) if isinstance(value, list) else [value]
+    return cast(list[_T], value) if isinstance(value, list) else [value]
 
 
 def entity_id(value: Any) -> str:
