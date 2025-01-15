@@ -51,8 +51,7 @@ async def test_button_event_creation(
     entity_ids_available = list(entity_registry.entities.keys())
     assert len(entity_ids_available) == 1 + len(entity_ids)
 
-    # Check snapshot
-    assert entity_ids_available == snapshot()
+    assert entity_ids_available == snapshot
 
 
 async def test_button_event_creation_beoconnect_core(
@@ -85,8 +84,7 @@ async def test_button_event_creation_beoconnect_core(
     entity_ids_available = list(entity_registry.entities.keys())
     assert len(entity_ids_available) == 1
 
-    # Check snapshot
-    assert entity_ids_available == snapshot()
+    assert entity_ids_available == snapshot
 
 
 async def test_button(
