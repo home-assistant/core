@@ -24,7 +24,7 @@ from .const import (
     CONF_SERIAL_NUMBER,
     DEFAULT_MODEL,
     DOMAIN,
-    MOZART_MODELS,
+    SELECTABLE_MODELS,
 )
 from .util import get_serial_number_from_jid
 
@@ -70,7 +70,7 @@ class BangOlufsenConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_HOST): str,
                 vol.Required(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
-                    SelectSelectorConfig(options=MOZART_MODELS)
+                    SelectSelectorConfig(options=SELECTABLE_MODELS)
                 ),
             }
         )

@@ -62,6 +62,7 @@ class BangOlufsenMediaType(StrEnum):
 class BangOlufsenModel(StrEnum):
     """Enum for compatible model names."""
 
+    # Mozart devices
     BEOCONNECT_CORE = "Beoconnect Core"
     BEOLAB_8 = "BeoLab 8"
     BEOLAB_28 = "BeoLab 28"
@@ -72,6 +73,7 @@ class BangOlufsenModel(StrEnum):
     BEOSOUND_EMERGE = "Beosound Emerge"
     BEOSOUND_LEVEL = "Beosound Level"
     BEOSOUND_THEATRE = "Beosound Theatre"
+    # Remote devices
     BEOREMOTE_ONE = "Beoremote One"
 
 
@@ -114,7 +116,7 @@ CONF_SERIAL_NUMBER: Final = "serial_number"
 CONF_BEOLINK_JID: Final = "jid"
 
 # Models to choose from in manual configuration.
-MOZART_MODELS: list[str] = [
+SELECTABLE_MODELS: list[str] = [
     model.value for model in BangOlufsenModel if model != BangOlufsenModel.BEOREMOTE_ONE
 ]
 
