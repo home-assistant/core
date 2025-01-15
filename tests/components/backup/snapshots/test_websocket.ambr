@@ -175,6 +175,58 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download[backup.local-2bcb3113-hunter2]
+  dict({
+    'error': dict({
+      'code': 'decrypt_not_supported',
+      'message': 'Decrypt on download not supported',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-ed1608a9-hunter2]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-ed1608a9-wrong_password]
+  dict({
+    'error': dict({
+      'code': 'password_incorrect',
+      'message': 'Incorrect password',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-no_such_backup-hunter2]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Backup no_such_backup not found in agent backup.local',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[no_such_agent-ed1608a9-hunter2]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Invalid agent selected: no_such_agent',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_config_info[None]
   dict({
     'id': 1,
