@@ -15,7 +15,11 @@ from pysmartthings import APIInvalidGrant, Attribute, Capability, SmartThings
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -178,14 +182,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed from ex
     except ClientResponseError as ex:
         if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-            _LOGGER.exception(
-                (
-                    "Unable to setup configuration entry '%s' - please reconfigure the"
-                    " integration"
-                ),
-                entry.title,
-            )
-            raise ConfigEntryAuthFailed from ex
+            raise ConfigEntryError(
+                "The access token is no longer valid. Please remove the integration and set up again."
+            ) from ex
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
