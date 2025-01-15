@@ -175,6 +175,36 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download[2bcb3113-hunter2]
+  dict({
+    'error': dict({
+      'code': 'decrypt_not_supported',
+      'message': 'Decrypt on download not supported',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[ed1608a9-hunter2]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[ed1608a9-wrong_password]
+  dict({
+    'error': dict({
+      'code': 'password_incorrect',
+      'message': 'Incorrect password',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_config_info[None]
   dict({
     'id': 1,

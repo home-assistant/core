@@ -14,7 +14,7 @@ from pathlib import Path, PurePath
 import shutil
 import tarfile
 import time
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict
+from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
@@ -48,7 +48,13 @@ from .const import (
 )
 from .models import AgentBackup, BackupManagerError, Folder
 from .store import BackupStore
-from .util import make_backup_dir, read_backup, validate_password
+from .util import (
+    AsyncIteratorReader,
+    make_backup_dir,
+    read_backup,
+    validate_password,
+    validate_password_stream,
+)
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -986,6 +992,32 @@ class BackupManager:
             translation_key="automatic_backup_failed_upload_agents",
             translation_placeholders={"failed_agents": ", ".join(agent_errors)},
         )
+
+    async def async_can_decrypt_on_download(
+        self,
+        backup_id: str,
+        *,
+        agent_id: str,
+        password: str | None,
+    ) -> None:
+        """Check if we are able to decrypt the backup on download."""
+        try:
+            agent = self.backup_agents[agent_id]
+        except KeyError as err:
+            raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
+        if not await agent.async_get_backup(backup_id):
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            )
+        reader: IO[bytes]
+        if agent_id in self.local_backup_agents:
+            local_agent = self.local_backup_agents[agent_id]
+            path = local_agent.get_backup_path(backup_id)
+            reader = await self.hass.async_add_executor_job(open, path.as_posix(), "rb")
+        else:
+            backup_stream = await agent.async_download_backup(backup_id)
+            reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
+        validate_password_stream(reader, password)
 
 
 class KnownBackups:
