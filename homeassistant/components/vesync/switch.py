@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import is_fan, is_humidifier, rgetattr
+from .common import is_outlet, is_switch
 from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -38,9 +38,8 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     VeSyncSwitchEntityDescription(
         key="device_status",
-        translation_key="on",
         is_on=lambda device: device.device_status == "on",
-        exists_fn=lambda device: not is_humidifier(device) and not is_fan(device),
+        exists_fn=lambda device: is_switch(device) or is_outlet(device),
         name=None,
     ),
 )
@@ -79,7 +78,7 @@ def _setup_entities(
             VeSyncSwitchEntity(dev, description, coordinator)
             for dev in devices
             for description in SENSOR_DESCRIPTIONS
-            if rgetattr(dev, description.key) is not None and description.exists_fn(dev)
+            if description.exists_fn(dev)
         ),
     )
 

@@ -4,10 +4,12 @@ import logging
 
 from pyvesync import VeSync
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.vesyncoutlet import VeSyncOutlet
+from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.core import HomeAssistant
 
-from .const import VeSyncFanDevice, VeSyncHumidifierDevice
+from .const import VeSyncHumidifierDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +58,13 @@ def is_humidifier(device: VeSyncBaseDevice) -> bool:
     return isinstance(device, VeSyncHumidifierDevice)
 
 
-def is_fan(device: VeSyncBaseDevice) -> bool:
+def is_outlet(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a fan."""
 
-    return isinstance(device, VeSyncFanDevice)
+    return isinstance(device, VeSyncOutlet)
+
+
+def is_switch(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a fan."""
+
+    return isinstance(device, VeSyncSwitch)
