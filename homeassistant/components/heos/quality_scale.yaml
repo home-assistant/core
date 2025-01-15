@@ -41,7 +41,7 @@ rules:
   reauthentication-flow: done
   test-coverage:
     status: todo
-    comment: Recommend using snapshot in test_state_attributes.
+    comment: Integration has 99% coverage, however recommend using snapshot in test_state_attributes.
   # Gold
   devices: done
   diagnostics: todo

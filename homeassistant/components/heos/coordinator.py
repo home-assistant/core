@@ -143,7 +143,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             and not self._update_sources_pending
         ):
             # Update the sources after a brief delay as we may have received multiple qualifying
-            # events and devices often errors when immediately attempting to refresh sources.
+            # events and devices often error when immediately attempting to refresh sources.
             self._update_sources_pending = True
 
             async def update_sources_job(_: datetime | None = None) -> None:
@@ -181,7 +181,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         """Update the IDs in the device and entity registry."""
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
-        # mapped_ids contains the mapped IDs (old:new)
+        # updated_player_ids contains the mapped IDs in format old:new
         for old_id, new_id in updated_player_ids.items():
             # update device registry
             entry = device_registry.async_get_device(
@@ -237,14 +237,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     async def async_play_source(self, source: str, player: HeosPlayer) -> None:
         """Determine type of source and play it."""
         # Favorite
-        index = next(
-            (
-                index
-                for index, favorite in self._favorites.items()
-                if favorite.name == source
-            ),
-            None,
-        )
+        index = self.async_get_favorite_index(source)
         if index is not None:
             await player.play_preset_station(index)
             return
@@ -352,8 +345,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             None,
         ):
             new_members = [group.lead_player_id, *group.member_player_ids]
-            if player_id in new_members:
-                new_members.remove(player_id)
+            new_members.remove(player_id)
             await self.heos.set_group(new_members)
 
     @callback
@@ -372,7 +364,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 DOMAIN,
                 str(member_id),
             )
-            # Occurs if the entity hasn't loaded or has been removed
+            # Occurs when the entity hasn't loaded yet or has been removed
             if entity is not None:
                 entity_ids.append(entity)
         return entity_ids or None
