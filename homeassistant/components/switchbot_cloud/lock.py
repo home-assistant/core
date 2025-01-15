@@ -6,7 +6,7 @@ from switchbot_api import LockCommands
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -32,12 +32,10 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
 
     _attr_name = None
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
             self._attr_is_locked = coord_data["lockState"] == "locked"
-            self.async_write_ha_state()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
