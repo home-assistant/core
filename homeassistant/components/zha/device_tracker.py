@@ -61,7 +61,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
         """
         return self.entity_data.entity.battery_level
 
-    @property  # type: ignore[explicit-override, misc]
+    @property  # type: ignore[misc]
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because

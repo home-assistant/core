@@ -7,9 +7,7 @@ from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
 from types import ModuleType
-from typing import Any, Generic
-
-from typing_extensions import TypeVar
+from typing import Any, Generic, TypeVar
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry

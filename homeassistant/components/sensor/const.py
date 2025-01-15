@@ -392,7 +392,7 @@ class SensorDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`, `µV`
+    Unit of measurement: `V`, `mV`, `µV`, `kV`, `MV`
     """
 
     VOLUME = "volume"

@@ -115,7 +115,7 @@ from .coordinator import (
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
-from .discovery import async_setup_discovery_view  # noqa: F401
+from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,

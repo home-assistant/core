@@ -125,12 +125,6 @@
       "signal_level": {
         "default": "mdi:signal"
       },
-      "current_firmware_version": {
-        "default": "mdi:information"
-      },
-      "available_firmware_version": {
-        "default": "mdi:information-outline"
-      },
       "alarm_source": {
         "default": "mdi:bell"
       },

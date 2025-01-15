@@ -310,13 +310,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
             ):
                 match running_state_value:
                     case (
-                        ThermostatRunningState.Heat
-                        | ThermostatRunningState.HeatStage2
+                        ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
                     ):
                         self._attr_hvac_action = HVACAction.HEATING
                     case (
-                        ThermostatRunningState.Cool
-                        | ThermostatRunningState.CoolStage2
+                        ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2
                     ):
                         self._attr_hvac_action = HVACAction.COOLING
                     case (

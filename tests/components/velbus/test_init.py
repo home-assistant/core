@@ -1,14 +1,18 @@
 """Tests for the Velbus component initialisation."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
 from velbusaio.exceptions import VelbusConnectionFailed
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.velbus import VelbusConfigEntry
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_PORT, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
@@ -113,3 +117,46 @@ async def test_migrate_config_entry(
         await hass.config_entries.async_setup(entry.entry_id)
         assert dict(entry.data) == legacy_config
         assert entry.version == 2
+
+
+async def test_api_call(
+    hass: HomeAssistant,
+    mock_relay: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the api call decorator action."""
+    await init_integration(hass, config_entry)
+
+    mock_relay.turn_on.side_effect = OSError()
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.living_room_relayname"},
+            blocking=True,
+        )
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the velbus device registry."""
+    await init_integration(hass, config_entry)
+
+    # Ensure devices are correctly registered
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    assert device_entries == snapshot
+
+    device_parent = device_registry.async_get_device(identifiers={(DOMAIN, "88")})
+    assert device_parent.via_device_id is None
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "88-9")})
+    assert device.via_device_id == device_parent.id
+
+    device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
+    assert device_no_sub.via_device_id is None
