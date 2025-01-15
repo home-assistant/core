@@ -65,12 +65,14 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import MockHeosConfigEntry
+
+from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("controller")
 async def test_state_attributes(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry
 ) -> None:
     """Tests the state attributes."""
     config_entry.add_to_hass(hass)
@@ -106,12 +108,12 @@ async def test_state_attributes(
     assert ATTR_INPUT_SOURCE not in state.attributes
     assert (
         state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == config_entry.runtime_data.coordinator.source_list
+        == config_entry.runtime_data.source_list
     )
 
 
 async def test_updates_from_signals(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry, controller: Heos
 ) -> None:
     """Tests dispatched signals update player."""
     config_entry.add_to_hass(hass)
@@ -150,7 +152,7 @@ async def test_updates_from_signals(
 
 async def test_updates_from_connection_event(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -198,7 +200,7 @@ async def test_updates_from_connection_event(
 )
 async def test_sources_updates_from_events(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     input_sources: Sequence[MediaItem],
     event: str,
@@ -221,7 +223,7 @@ async def test_sources_updates_from_events(
 
 async def test_updates_from_players_changed(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     change_data: PlayerUpdateResult,
 ) -> None:
@@ -242,7 +244,7 @@ async def test_updates_from_players_changed_new_ids(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     change_data_mapped_ids: PlayerUpdateResult,
 ) -> None:
@@ -277,7 +279,7 @@ async def test_updates_from_players_changed_new_ids(
 
 async def test_clear_playlist(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -301,7 +303,7 @@ async def test_clear_playlist(
 
 async def test_pause(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -325,7 +327,7 @@ async def test_pause(
 
 async def test_play(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -349,7 +351,7 @@ async def test_play(
 
 async def test_previous_track(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -373,7 +375,7 @@ async def test_previous_track(
 
 async def test_next_track(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -397,7 +399,7 @@ async def test_next_track(
 
 async def test_stop(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -421,7 +423,7 @@ async def test_stop(
 
 async def test_volume_mute(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -445,7 +447,7 @@ async def test_volume_mute(
 
 async def test_shuffle_set(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -469,7 +471,7 @@ async def test_shuffle_set(
 
 async def test_volume_set(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -493,7 +495,7 @@ async def test_volume_set(
 
 async def test_select_favorite(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     favorites: dict[int, MediaItem],
 ) -> None:
@@ -522,7 +524,7 @@ async def test_select_favorite(
 
 async def test_select_radio_favorite(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     favorites: dict[int, MediaItem],
 ) -> None:
@@ -552,7 +554,7 @@ async def test_select_radio_favorite(
 
 async def test_select_radio_favorite_command_error(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     favorites: dict[int, MediaItem],
     caplog: pytest.LogCaptureFixture,
@@ -576,7 +578,7 @@ async def test_select_radio_favorite_command_error(
 
 async def test_select_input_source(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     input_sources: Sequence[MediaItem],
 ) -> None:
@@ -610,7 +612,7 @@ async def test_select_input_source(
 @pytest.mark.usefixtures("controller")
 async def test_select_input_unknown(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests selecting an unknown input."""
@@ -627,7 +629,7 @@ async def test_select_input_unknown(
 
 async def test_select_input_command_error(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
     input_sources: Sequence[MediaItem],
@@ -653,7 +655,7 @@ async def test_select_input_command_error(
 
 @pytest.mark.usefixtures("controller")
 async def test_unload_config_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry
 ) -> None:
     """Test the player is set unavailable when the config entry is unloaded."""
     config_entry.add_to_hass(hass)
@@ -664,7 +666,7 @@ async def test_unload_config_entry(
 
 async def test_play_media_url(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -693,7 +695,7 @@ async def test_play_media_url(
 
 async def test_play_media_music(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -722,7 +724,7 @@ async def test_play_media_music(
 
 async def test_play_media_quick_select(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
     quick_selects: dict[int, str],
@@ -777,7 +779,7 @@ async def test_play_media_quick_select(
 
 async def test_play_media_playlist(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
     playlists: Sequence[MediaItem],
@@ -833,7 +835,7 @@ async def test_play_media_playlist(
 
 async def test_play_media_favorite(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
     favorites: dict[int, MediaItem],
@@ -889,7 +891,7 @@ async def test_play_media_favorite(
 @pytest.mark.usefixtures("controller")
 async def test_play_media_invalid_type(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the play media service with an invalid type."""
@@ -910,7 +912,7 @@ async def test_play_media_invalid_type(
 
 async def test_media_player_join_group(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -943,7 +945,7 @@ async def test_media_player_join_group(
 
 async def test_media_player_group_members(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -961,7 +963,7 @@ async def test_media_player_group_members(
 
 async def test_media_player_group_members_error(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -976,7 +978,7 @@ async def test_media_player_group_members_error(
 
 async def test_media_player_unjoin_group(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -1016,7 +1018,7 @@ async def test_media_player_unjoin_group(
 
 async def test_media_player_group_fails_when_entity_removed(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     entity_registry: er.EntityRegistry,
 ) -> None:

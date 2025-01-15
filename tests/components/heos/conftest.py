@@ -28,13 +28,13 @@ from homeassistant.components import ssdp
 from homeassistant.components.heos import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry
+from . import MockHeosConfigEntry
 
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture():
     """Create a mock HEOS config entry."""
-    return MockConfigEntry(
+    return MockHeosConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",
@@ -45,7 +45,7 @@ def config_entry_fixture():
 @pytest.fixture(name="config_entry_options")
 def config_entry_options_fixture():
     """Create a mock HEOS config entry with options."""
-    return MockConfigEntry(
+    return MockHeosConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",

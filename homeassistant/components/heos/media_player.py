@@ -81,8 +81,8 @@ async def async_setup_entry(
 ) -> None:
     """Add media players for a config entry."""
     devices = [
-        HeosMediaPlayer(entry.runtime_data.coordinator, player)
-        for player in entry.runtime_data.coordinator.heos.players.values()
+        HeosMediaPlayer(entry.runtime_data, player)
+        for player in entry.runtime_data.heos.players.values()
     ]
     async_add_entities(devices)
 

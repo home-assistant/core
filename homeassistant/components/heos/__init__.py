@@ -9,7 +9,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import services
 from .const import DOMAIN
-from .coordinator import HeosConfigEntry, HeosCoordinator, HeosRuntimeData
+from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             break
 
     coordinator = HeosCoordinator(hass, entry)
-    entry.runtime_data = HeosRuntimeData(coordinator)
+    entry.runtime_data = coordinator
 
     await coordinator.async_setup()
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

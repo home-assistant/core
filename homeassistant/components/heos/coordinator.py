@@ -1,6 +1,5 @@
 """Define coordinator functionality for HEOS the integration."""
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
@@ -29,15 +28,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
-
-@dataclass
-class HeosRuntimeData:
-    """Runtime data and coordinators for HEOS config entries."""
-
-    coordinator: "HeosCoordinator"
-
-
-type HeosConfigEntry = ConfigEntry[HeosRuntimeData]
+type HeosConfigEntry = ConfigEntry[HeosCoordinator]
 
 
 class HeosCoordinator(DataUpdateCoordinator[None]):

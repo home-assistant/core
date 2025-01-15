@@ -13,11 +13,11 @@ from homeassistant.components.heos.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from tests.common import MockConfigEntry
+from . import MockHeosConfigEntry
 
 
 async def test_sign_in(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry, controller: Heos
 ) -> None:
     """Test the sign-in service."""
     config_entry.add_to_hass(hass)
@@ -35,7 +35,7 @@ async def test_sign_in(
 
 async def test_sign_in_failed(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -59,7 +59,7 @@ async def test_sign_in_failed(
 
 async def test_sign_in_unknown_error(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -80,7 +80,7 @@ async def test_sign_in_unknown_error(
 
 
 async def test_sign_in_not_loaded_raises(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry
 ) -> None:
     """Test the sign-in service when entry not loaded raises exception."""
     config_entry.add_to_hass(hass)
@@ -97,7 +97,7 @@ async def test_sign_in_not_loaded_raises(
 
 
 async def test_sign_out(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry, controller: Heos
 ) -> None:
     """Test the sign-out service."""
     config_entry.add_to_hass(hass)
@@ -120,7 +120,7 @@ async def test_sign_out_not_loaded_raises(hass: HomeAssistant, config_entry) -> 
 
 async def test_sign_out_unknown_error(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
