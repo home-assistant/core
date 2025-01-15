@@ -498,6 +498,10 @@ class USBDiscovery:
         removed_devices = self._last_processed_devices - unique_devices
         self._last_processed_devices = unique_devices
 
+        _LOGGER.debug(
+            "Added devices: %r, removed devices: %r", added_devices, removed_devices
+        )
+
         if added_devices or removed_devices:
             for callback in self._port_event_callbacks:
                 callback(added_devices, removed_devices)
