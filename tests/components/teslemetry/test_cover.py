@@ -26,6 +26,7 @@ async def test_cover(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct."""
 
@@ -39,6 +40,7 @@ async def test_cover_alt(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct with alternate values."""
 
@@ -227,7 +229,7 @@ async def test_cover_streaming(
 ) -> None:
     """Tests that the binary sensor entities with streaming are correct."""
 
-    await setup_platform(hass, [Platform.COVER])
+    entry = await setup_platform(hass, [Platform.COVER])
 
     # Stream update
     mock_add_listener.send(
@@ -241,11 +243,11 @@ async def test_cover_streaming(
                 Signal.CHARGE_PORT_DOOR_OPEN: False,
                 Signal.DOOR_STATE: {
                     "DoorState": {
-                        "DriverFront": True,
+                        "DriverFront": False,
                         "DriverRear": False,
                         "PassengerFront": False,
                         "PassengerRear": False,
-                        "TrunkFront": True,
+                        "TrunkFront": False,
                         "TrunkRear": False,
                     }
                 },
@@ -256,8 +258,8 @@ async def test_cover_streaming(
     await hass.async_block_till_done()
 
     # Reload the entry
-    # await hass.config_entries.async_reload(entry.entry_id)
-    # await hass.async_block_till_done()
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Assert the entities restored their values
     for entity_id in (
@@ -267,4 +269,76 @@ async def test_cover_streaming(
         "cover.test_trunk",
     ):
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+        assert state.state == snapshot(name=f"{entity_id}-closed")
+
+    # Send some alternative data with everything open
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.FD_WINDOW: "WindowStateOpened",
+                Signal.FP_WINDOW: "WindowStateOpened",
+                Signal.RD_WINDOW: "WindowStateOpened",
+                Signal.RP_WINDOW: "WindowStateOpened",
+                Signal.CHARGE_PORT_DOOR_OPEN: False,
+                Signal.DOOR_STATE: {
+                    "DoorState": {
+                        "DriverFront": True,
+                        "DriverRear": True,
+                        "PassengerFront": True,
+                        "PassengerRear": True,
+                        "TrunkFront": True,
+                        "TrunkRear": True,
+                    }
+                },
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Assert the entities get new values
+    for entity_id in (
+        "cover.test_windows",
+        "cover.test_charge_port_door",
+        "cover.test_frunk",
+        "cover.test_trunk",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-open")
+
+    # Send some alternative data with everything unknown
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.FD_WINDOW: "WindowStateUnknown",
+                Signal.FP_WINDOW: "WindowStateUnknown",
+                Signal.RD_WINDOW: "WindowStateUnknown",
+                Signal.RP_WINDOW: "WindowStateUnknown",
+                Signal.CHARGE_PORT_DOOR_OPEN: None,
+                Signal.DOOR_STATE: {
+                    "DoorState": {
+                        "DriverFront": None,
+                        "DriverRear": None,
+                        "PassengerFront": None,
+                        "PassengerRear": None,
+                        "TrunkFront": None,
+                        "TrunkRear": None,
+                    }
+                },
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Assert the entities get UNKNOWN values
+    for entity_id in (
+        "cover.test_windows",
+        "cover.test_charge_port_door",
+        "cover.test_frunk",
+        "cover.test_trunk",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-unknown")

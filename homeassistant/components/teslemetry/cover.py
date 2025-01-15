@@ -81,7 +81,7 @@ async def async_setup_entry(
     )
 
 
-class CoverRestoreEntity(CoverEntity, RestoreEntity):
+class CoverRestoreEntity(RestoreEntity, CoverEntity):
     """Restore class for cover entities."""
 
     async def async_added_to_hass(self) -> None:
@@ -245,22 +245,20 @@ class TeslemetryPollingChargePortEntity(
 
     def __init__(self, vehicle: TeslemetryVehicleData, scopes: list[Scope]) -> None:
         """Initialize the cover."""
+        super().__init__(vehicle, "charge_state_charge_port_door_open")
         self.scoped = any(
             scope in scopes
             for scope in (Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS)
         )
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
         if not self.scoped:
             self._attr_supported_features = CoverEntityFeature(0)
 
-        super().__init__(
-            vehicle,
-            "charge_state_charge_port_door_open",
-        )
-
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        self._attr_is_closed = self._value is False
-        self.async_write_ha_state()
+        self._attr_is_closed = not self._value
 
 
 class TeslemetryStreamingChargePortEntity(
