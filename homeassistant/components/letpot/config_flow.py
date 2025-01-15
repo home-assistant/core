@@ -69,7 +69,7 @@ class LetPotConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}, None
         except LetPotAuthenticationException:
             return {"base": "invalid_auth"}, None
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
         return {}, {
