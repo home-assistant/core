@@ -16,7 +16,6 @@ from flux_led.const import (
 from flux_led.scanner import FluxLEDDiscovery
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -30,6 +29,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_wifi_bulb_for_host
@@ -78,7 +78,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
         return FluxLedOptionsFlow()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = FluxLEDDiscovery(

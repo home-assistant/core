@@ -6,7 +6,6 @@ from typing import Any
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -26,6 +25,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_RECEIVER_MAX_VOLUME,
@@ -168,7 +168,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle flow initialized by SSDP discovery."""
         _LOGGER.debug("Config flow start ssdp: %s", discovery_info)

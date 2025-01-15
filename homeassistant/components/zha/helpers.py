@@ -1170,7 +1170,7 @@ def async_add_entities(
         # broad exception to prevent a single entity from preventing an entire platform from loading
         # this can potentially be caused by a misbehaving device or a bad quirk. Not ideal but the
         # alternative is adding try/catch to each entity class __init__ method with a specific exception
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception(
                 "Error while adding entity from entity data: %s", entity_data
             )

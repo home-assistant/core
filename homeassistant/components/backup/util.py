@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 from pathlib import Path
 from queue import SimpleQueue
 import tarfile
-from typing import cast
+from typing import IO, cast
 
 import aiohttp
-from securetar import SecureTarFile
+from securetar import VERSION_HEADER, SecureTarFile, SecureTarReadError
 
 from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
@@ -17,6 +18,22 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE, LOGGER
 from .models import AddonInfo, AgentBackup, Folder
+
+
+class DecryptError(Exception):
+    """Error during decryption."""
+
+
+class UnsuppertedSecureTarVersion(DecryptError):
+    """Unsupported securetar version."""
+
+
+class IncorrectPassword(DecryptError):
+    """Invalid password or corrupted backup."""
+
+
+class BackupEmpty(DecryptError):
+    """No tar files found in the backup."""
 
 
 def make_backup_dir(path: Path) -> None:
@@ -104,6 +121,70 @@ def validate_password(path: Path, password: str | None) -> bool:
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error validating password")
     return False
+
+
+class AsyncIteratorReader:
+    """Wrap an AsyncIterator."""
+
+    def __init__(self, hass: HomeAssistant, stream: AsyncIterator[bytes]) -> None:
+        """Initialize the wrapper."""
+        self._hass = hass
+        self._stream = stream
+        self._buffer: bytes | None = None
+        self._pos: int = 0
+
+    async def _next(self) -> bytes | None:
+        """Get the next chunk from the iterator."""
+        return await anext(self._stream, None)
+
+    def read(self, n: int = -1, /) -> bytes:
+        """Read data from the iterator."""
+        result = bytearray()
+        while n < 0 or len(result) < n:
+            if not self._buffer:
+                self._buffer = asyncio.run_coroutine_threadsafe(
+                    self._next(), self._hass.loop
+                ).result()
+                self._pos = 0
+            if not self._buffer:
+                # The stream is exhausted
+                break
+            chunk = self._buffer[self._pos : self._pos + n]
+            result.extend(chunk)
+            n -= len(chunk)
+            self._pos += len(chunk)
+            if self._pos == len(self._buffer):
+                self._buffer = None
+        return bytes(result)
+
+
+def validate_password_stream(
+    input_stream: IO[bytes],
+    password: str | None,
+) -> None:
+    """Decrypt a backup."""
+    with (
+        tarfile.open(fileobj=input_stream, mode="r|", bufsize=BUF_SIZE) as input_tar,
+    ):
+        for obj in input_tar:
+            if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
+                continue
+            if obj.pax_headers.get(VERSION_HEADER) != "2.0":
+                raise UnsuppertedSecureTarVersion
+            istf = SecureTarFile(
+                None,  # Not used
+                gzip=False,
+                key=password_to_key(password) if password is not None else None,
+                mode="r",
+                fileobj=input_tar.extractfile(obj),
+            )
+            with istf.decrypt(obj) as decrypted:
+                try:
+                    decrypted.read(1)  # Read a single byte to trigger the decryption
+                except SecureTarReadError as err:
+                    raise IncorrectPassword from err
+                return
+    raise BackupEmpty
 
 
 async def receive_file(
