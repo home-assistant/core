@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 import dataclasses
 from datetime import datetime, timedelta
 import fnmatch
