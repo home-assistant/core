@@ -1028,7 +1028,7 @@ class Entity(
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
-        if type(state) is str:  # noqa: E721
+        if type(state) is str:
             # fast path for strings
             return state
         if isinstance(state, float):
