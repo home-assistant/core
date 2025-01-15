@@ -38,7 +38,7 @@ from homeassistant.util.async_ import create_eager_task
 
 # Loading the config flow file will register the flow
 from . import debug_info, discovery
-from .client import (  # noqa: F401
+from .client import (
     MQTT,
     async_publish,
     async_subscribe,
@@ -46,9 +46,9 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA  # noqa: F401
+from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
 from .config_integration import CONFIG_SCHEMA_BASE
-from .const import (  # noqa: F401
+from .const import (
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -69,6 +69,8 @@ from .const import (  # noqa: F401
     CONF_WILL_MESSAGE,
     CONF_WS_HEADERS,
     CONF_WS_PATH,
+    CONFIG_ENTRY_MINOR_VERSION,
+    CONFIG_ENTRY_VERSION,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_PREFIX,
@@ -76,10 +78,11 @@ from .const import (  # noqa: F401
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
+    ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
 )
-from .models import (  # noqa: F401
+from .models import (
     DATA_MQTT,
     DATA_MQTT_AVAILABLE,
     MqttCommandTemplate,
@@ -90,13 +93,13 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     convert_outgoing_mqtt_payload,
 )
-from .subscription import (  # noqa: F401
+from .subscription import (
     EntitySubscription,
     async_prepare_subscribe_topics,
     async_subscribe_topics,
     async_unsubscribe_topics,
 )
-from .util import (  # noqa: F401
+from .util import (
     async_create_certificate_temp_files,
     async_forward_entry_setup_and_setup_discovery,
     async_wait_for_mqtt_client,
@@ -106,6 +109,83 @@ from .util import (  # noqa: F401
     valid_qos_schema,
     valid_subscribe_topic,
 )
+
+__all__ = [
+    "ATTR_PAYLOAD",
+    "ATTR_QOS",
+    "ATTR_RETAIN",
+    "ATTR_TOPIC",
+    "CONFIG_ENTRY_MINOR_VERSION",
+    "CONFIG_ENTRY_VERSION",
+    "CONF_BIRTH_MESSAGE",
+    "CONF_BROKER",
+    "CONF_CERTIFICATE",
+    "CONF_CLIENT_CERT",
+    "CONF_CLIENT_KEY",
+    "CONF_COMMAND_TOPIC",
+    "CONF_DISCOVERY_PREFIX",
+    "CONF_KEEPALIVE",
+    "CONF_QOS",
+    "CONF_STATE_TOPIC",
+    "CONF_TLS_INSECURE",
+    "CONF_TOPIC",
+    "CONF_TRANSPORT",
+    "CONF_WILL_MESSAGE",
+    "CONF_WS_HEADERS",
+    "CONF_WS_PATH",
+    "DATA_MQTT",
+    "DATA_MQTT_AVAILABLE",
+    "DEFAULT_DISCOVERY",
+    "DEFAULT_ENCODING",
+    "DEFAULT_PREFIX",
+    "DEFAULT_QOS",
+    "DEFAULT_RETAIN",
+    "DOMAIN",
+    "ENTITY_PLATFORMS",
+    "ENTRY_OPTION_FIELDS",
+    "EntitySubscription",
+    "MQTT",
+    "MQTT_BASE_SCHEMA",
+    "MQTT_CONNECTION_STATE",
+    "MQTT_RO_SCHEMA",
+    "MQTT_RW_SCHEMA",
+    "MqttCommandTemplate",
+    "MqttData",
+    "MqttValueTemplate",
+    "PayloadSentinel",
+    "PublishPayloadType",
+    "ReceiveMessage",
+    "SERVICE_RELOAD",
+    "SetupPhases",
+    "TEMPLATE_ERRORS",
+    "async_check_config_schema",
+    "async_create_certificate_temp_files",
+    "async_forward_entry_setup_and_setup_discovery",
+    "async_migrate_entry",
+    "async_prepare_subscribe_topics",
+    "async_publish",
+    "async_remove_config_entry_device",
+    "async_setup",
+    "async_setup_entry",
+    "async_subscribe",
+    "async_subscribe_connection_status",
+    "async_subscribe_topics",
+    "async_unload_entry",
+    "async_unsubscribe_topics",
+    "async_wait_for_mqtt_client",
+    "convert_outgoing_mqtt_payload",
+    "create_eager_task",
+    "is_connected",
+    "mqtt_config_entry_enabled",
+    "platforms_from_config",
+    "publish",
+    "subscribe",
+    "valid_publish_topic",
+    "valid_qos_schema",
+    "valid_subscribe_topic",
+    "websocket_mqtt_info",
+    "websocket_subscribe",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -282,15 +362,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate the options from config entry data."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version < 2:
+        # Can be removed when config entry is bumped to version 2.1
+        # with HA Core 2026.1.0. Read support for version 2.1 is expected before 2026.1
+        # From 2026.1 we will write version 2.1
+        for key in ENTRY_OPTION_FIELDS:
+            if key not in data:
+                continue
+            options[key] = data.pop(key)
+        hass.config_entries.async_update_entry(
+            entry,
+            data=data,
+            options=options,
+            version=CONFIG_ENTRY_VERSION,
+            minor_version=CONFIG_ENTRY_MINOR_VERSION,
+        )
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
-    conf: dict[str, Any]
     mqtt_data: MqttData
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""
         # Fetch configuration
-        conf = dict(entry.data)
+        conf = dict(entry.data | entry.options)
         hass_config = await conf_util.async_hass_config_yaml(hass)
         mqtt_yaml = CONFIG_SCHEMA(hass_config).get(DOMAIN, [])
         await async_create_certificate_temp_files(hass, conf)

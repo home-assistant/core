@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Coroutine, Sequence
 import dataclasses
 import fnmatch
+from functools import partial
 import logging
 import os
 import sys
@@ -24,9 +25,15 @@ from homeassistant.core import (
     HomeAssistant,
     callback as hass_callback,
 )
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import config_validation as cv, discovery_flow, system_info
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
+from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
 
@@ -45,7 +52,6 @@ __all__ = [
     "async_is_plugged_in",
     "async_register_scan_request_callback",
     "USBCallbackMatcher",
-    "UsbServiceInfo",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -104,16 +110,11 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
     )
 
 
-@dataclasses.dataclass(slots=True)
-class UsbServiceInfo(BaseServiceInfo):
-    """Prepared info from usb entries."""
-
-    device: str
-    vid: str
-    pid: str
-    serial_number: str | None
-    manufacturer: str | None
-    description: str | None
+_DEPRECATED_UsbServiceInfo = DeprecatedConstant(
+    _UsbServiceInfo,
+    "homeassistant.helpers.service_info.usb.UsbServiceInfo",
+    "2026.2",
+)
 
 
 @overload
@@ -352,7 +353,7 @@ class USBDiscovery:
         if not matched:
             return
 
-        service_info: UsbServiceInfo | None = None
+        service_info: _UsbServiceInfo | None = None
 
         sorted_by_most_targeted = sorted(matched, key=lambda item: -len(item))
         most_matched_fields = len(sorted_by_most_targeted[0])
@@ -364,7 +365,7 @@ class USBDiscovery:
                 break
 
             if service_info is None:
-                service_info = UsbServiceInfo(
+                service_info = _UsbServiceInfo(
                     device=await self.hass.async_add_executor_job(
                         get_serial_by_id, device.device
                     ),
@@ -457,3 +458,11 @@ async def websocket_usb_scan(
     if not usb_discovery.observer_active:
         await usb_discovery.async_request_scan()
     connection.send_result(msg["id"])
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

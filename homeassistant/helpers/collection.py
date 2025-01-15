@@ -11,9 +11,8 @@ from hashlib import md5
 from itertools import groupby
 import logging
 from operator import attrgetter
-from typing import Any, Generic, TypedDict
+from typing import Any, Generic, TypedDict, TypeVar
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 

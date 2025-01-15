@@ -10,7 +10,7 @@ from enum import StrEnum
 import hashlib
 import io
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import shutil
 import tarfile
 import time
@@ -430,18 +430,21 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(sync_backup_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupReaderWriterError):
                 # writer errors will affect all agents
                 # no point in continuing
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
-                LOGGER.error("Error uploading to %s: %s", agent_ids[idx], result)
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                LOGGER.error("Upload failed for %s: %s", agent_id, result)
                 continue
             if isinstance(result, Exception):
                 # trap bugs from agents
-                agent_errors[agent_ids[idx]] = result
-                LOGGER.error("Unexpected error: %s", result, exc_info=result)
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result
@@ -753,7 +756,7 @@ class BackupManager:
 
         backup_name = (
             name
-            or f"{"Automatic" if with_automatic_settings else "Custom"} backup {HAVERSION}"
+            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
 
         try:
@@ -1231,6 +1234,17 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if not database_included:
             excludes = excludes + EXCLUDE_DATABASE_FROM_BACKUP
 
+        def is_excluded_by_filter(path: PurePath) -> bool:
+            """Filter to filter excludes."""
+
+            for exclude in excludes:
+                if not path.match(exclude):
+                    continue
+                LOGGER.debug("Ignoring %s because of %s", path, exclude)
+                return True
+
+            return False
+
         outer_secure_tarfile = SecureTarFile(
             tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
         )
@@ -1249,7 +1263,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 atomic_contents_add(
                     tar_file=core_tar,
                     origin_path=Path(self._hass.config.path()),
-                    excludes=excludes,
+                    file_filter=is_excluded_by_filter,
                     arcname="data",
                 )
         return (tar_file_path, tar_file_path.stat().st_size)
