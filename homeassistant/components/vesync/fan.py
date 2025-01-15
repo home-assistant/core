@@ -86,8 +86,7 @@ def _setup_entities(
     async_add_entities,
     coordinator: VeSyncDataCoordinator,
 ):
-    """Check if device is online and add entity."""
-    entities = []
+    """Check if device is fan and add entity."""
     entities = [
         VeSyncFanHA(dev, coordinator)
         for dev in devices

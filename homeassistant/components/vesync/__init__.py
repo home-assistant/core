@@ -24,6 +24,8 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.FAN,
     Platform.LIGHT,
+    Platform.HUMIDIFIER,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

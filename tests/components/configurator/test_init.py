@@ -14,9 +14,9 @@ async def test_request_least_info(hass: HomeAssistant) -> None:
     """Test request config with least amount of data."""
     request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
 
-    assert (
-        len(hass.services.async_services().get(configurator.DOMAIN, [])) == 1
-    ), "No new service registered"
+    assert len(hass.services.async_services().get(configurator.DOMAIN, [])) == 1, (
+        "No new service registered"
+    )
 
     states = hass.states.async_all()
 

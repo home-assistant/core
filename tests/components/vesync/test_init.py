@@ -49,7 +49,9 @@ async def test_async_setup_entry__no_devices(
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
             Platform.FAN,
+            Platform.HUMIDIFIER,
             Platform.LIGHT,
+            Platform.NUMBER,
             Platform.SENSOR,
             Platform.SWITCH,
         ]
@@ -78,9 +80,10 @@ async def test_async_setup_entry__loads_fans(
         assert setups_mock.call_args.args[1] == [
             Platform.FAN,
             Platform.BINARY_SENSOR,
-            Platform.SENSOR,
+            Platform.HUMIDIFIER,
             Platform.LIGHT,
-            Platform.SWITCH,
+            Platform.NUMBER,
+            Platform.SENSOR,
         ]
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
