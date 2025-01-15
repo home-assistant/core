@@ -917,7 +917,7 @@ async def test_automatic_device_addition_and_removal(
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
 
-    # Add a child devices
+    # Add child devices
     mock_device.children = [children["child1"], children["child3"], children["child4"]]
     freezer.tick(5)
     async_fire_time_changed(hass)
@@ -929,4 +929,23 @@ async def test_automatic_device_addition_and_removal(
         assert entity_registry.async_get(entity_id)
 
     for device_id in ("child1", "child3", "child4"):
+        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+
+    # Add the previously removed child device
+    mock_device.children = [
+        children["child1"],
+        children["child2"],
+        children["child3"],
+        children["child4"],
+    ]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 2, 3, 4):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child2", "child3", "child4"):
         assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})

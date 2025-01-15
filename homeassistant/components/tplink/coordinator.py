@@ -62,6 +62,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ),
         )
         self._previous_child_device_ids = {child.device_id for child in device.children}
+        self.removed_child_device_ids: set[str] = set()
         self._child_coordinators: dict[str, TPLinkDataUpdateCoordinator] = {}
 
     async def _async_update_data(self) -> None:
@@ -107,6 +108,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     await child_coordinator.async_shutdown()
 
             self._previous_child_device_ids = current_child_device_ids
+            self.removed_child_device_ids = stale_device_ids
 
     def get_child_coordinator(
         self,

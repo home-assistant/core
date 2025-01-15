@@ -456,6 +456,10 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 )
             )
 
+        # Remove any device ids removed via the coordinator so they can be re-added
+        for removed_child_id in coordinator.removed_child_device_ids:
+            known_child_device_ids.discard(removed_child_id)
+
         current_child_devices = {child.device_id: child for child in device.children}
         current_child_device_ids = set(current_child_devices.keys())
         new_child_device_ids = current_child_device_ids - known_child_device_ids
