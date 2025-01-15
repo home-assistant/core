@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import Any
 
 import aiolifx_effects
+from aiolifx_themes.painter import ThemePainter
 from aiolifx_themes.themes import Theme, ThemeLibrary
 import voluptuous as vol
 
@@ -42,6 +43,7 @@ SERVICE_EFFECT_MOVE = "effect_move"
 SERVICE_EFFECT_PULSE = "effect_pulse"
 SERVICE_EFFECT_SKY = "effect_sky"
 SERVICE_EFFECT_STOP = "effect_stop"
+SERVICE_PAINT_THEME = "paint_theme"
 
 ATTR_CHANGE = "change"
 ATTR_CLOUD_SATURATION_MIN = "cloud_saturation_min"
@@ -82,6 +84,8 @@ EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MIN = 50
 EFFECT_SKY_DEFAULT_CLOUD_SATURATION_MAX = 180
 
 EFFECT_SKY_SKY_TYPES = ["Sunrise", "Sunset", "Clouds"]
+
+PAINT_THEME_DEFAULT_TRANSITION = 1
 
 PULSE_MODE_BLINK = "blink"
 PULSE_MODE_BREATHE = "breathe"
@@ -201,6 +205,18 @@ LIFX_EFFECT_SKY_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
+    {
+        **LIFX_EFFECT_SCHEMA,
+        ATTR_TRANSITION: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3600)),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
+            vol.In(ThemeLibrary().themes)
+        ),
+        vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
+            cv.ensure_list, [HSBK_SCHEMA]
+        ),
+    }
+)
 
 SERVICES = (
     SERVICE_EFFECT_COLORLOOP,
@@ -210,6 +226,7 @@ SERVICES = (
     SERVICE_EFFECT_PULSE,
     SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
+    SERVICE_PAINT_THEME,
 )
 
 
@@ -302,6 +319,25 @@ class LIFXManager:
             schema=LIFX_EFFECT_STOP_SCHEMA,
         )
 
+        self.hass.services.async_register(
+            DOMAIN,
+            SERVICE_PAINT_THEME,
+            service_handler,
+            schema=LIFX_PAINT_THEME_SCHEMA,
+        )
+
+    @staticmethod
+    def build_theme(theme_name: str = "exciting", palette: list | None = None) -> Theme:
+        """Either return the predefined theme or build one from the palette."""
+        if palette is not None:
+            theme = Theme()
+            for hsbk in palette:
+                theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
+        else:
+            theme = ThemeLibrary().get_theme(theme_name)
+
+        return theme
+
     async def start_effect(
         self, entity_ids: set[str], service: str, **kwargs: Any
     ) -> None:
@@ -330,16 +366,24 @@ class LIFXManager:
                 )
             )
 
+        elif service == SERVICE_PAINT_THEME:
+            theme_name = kwargs.get(ATTR_THEME, "exciting")
+            palette = kwargs.get(ATTR_PALETTE)
+
+            theme = self.build_theme(theme_name, palette)
+
+            await ThemePainter(self.hass.loop).paint(
+                theme,
+                bulbs,
+                duration=kwargs.get(ATTR_TRANSITION, PAINT_THEME_DEFAULT_TRANSITION),
+                power_on=kwargs.get(ATTR_POWER_ON, True),
+            )
+
         elif service == SERVICE_EFFECT_MORPH:
             theme_name = kwargs.get(ATTR_THEME, "exciting")
             palette = kwargs.get(ATTR_PALETTE)
 
-            if palette is not None:
-                theme = Theme()
-                for hsbk in palette:
-                    theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
-            else:
-                theme = ThemeLibrary().get_theme(theme_name)
+            theme = self.build_theme(theme_name, palette)
 
             await asyncio.gather(
                 *(
