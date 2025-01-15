@@ -10,8 +10,7 @@ import aiohttp
 import voluptuous as vol
 from wmspro.webcontrol import WebControlPro
 
-from homeassistant.components import dhcp
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_DHCP, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -95,7 +94,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                             return self.async_abort(reason="already_configured")
                     return self.async_create_entry(title=host, data=user_input)
 
-        if self.source == dhcp.DOMAIN:
+        if self.source == SOURCE_DHCP:
             discovery_info: DhcpServiceInfo = self.init_data
             data_values = {CONF_HOST: discovery_info.ip}
         else:
