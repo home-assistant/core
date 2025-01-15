@@ -370,7 +370,7 @@ async def cleare_storage_entry(store, key):
     # maybe use the async_remove() in the store object
 
 
-async def async_clear_data(hass, store, domain):
+async def async_clear_data(hass: HomeAssistant, store: Store, domain: str):
     """Clear all data from the store and folders."""
 
     # Remove all config entries

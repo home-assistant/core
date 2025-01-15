@@ -11,12 +11,11 @@ from typing import Any
 from dateutil import parser as date_parser
 from mawaqit.consts import BadCredentialsException
 from requests.exceptions import ConnectionError as ConnError
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import (
     async_call_later,
@@ -47,7 +46,7 @@ file_path = f"{CURRENT_DIR}/data/mosq_list_data"
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 
 try:
@@ -60,21 +59,6 @@ except FileNotFoundError:
     # First Run
     _LOGGER.warning("The file %s was not found", file_path)
     CALC_METHODS = []
-
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: {
-                vol.Optional(CONF_CALC_METHOD, default=DEFAULT_CALC_METHOD): vol.In(
-                    CALC_METHODS
-                ),
-            }
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
 
 
 def is_date_parsing(date_str):
@@ -158,9 +142,7 @@ class MawaqitPrayerClient:
             self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY
         )
 
-        self.cancel_events_next_salat: list[
-            Callable[[], None]
-        ] = []  # TODO verify if it should not be None instead # pylint: disable=fixme
+        self.cancel_events_next_salat: list[Callable[[], None]] = []
 
     @property
     def calc_method(self):
@@ -378,7 +360,7 @@ class MawaqitPrayerClient:
                 "Next Salat Time"
             ] - timedelta(minutes=countdown_next_prayer)
         else:
-            # TODO check if this is correct # pylint: disable=fixme
+            # check is this correct
             self.prayer_times_info["Next Salat Preparation"] = None
 
         _LOGGER.debug("Next salat info updated, updating sensors")
