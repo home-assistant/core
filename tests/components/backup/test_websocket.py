@@ -2572,11 +2572,16 @@ def mock_backups() -> Generator[None]:
 
 
 @pytest.mark.parametrize(
-    ("backup_id", "password"),
+    ("agent_id", "backup_id", "password"),
     [
-        ("2bcb3113", "hunter2"),
-        ("ed1608a9", "hunter2"),
-        ("ed1608a9", "wrong_password"),
+        # Invalid agent or backup
+        ("no_such_agent", "ed1608a9", "hunter2"),
+        ("backup.local", "no_such_backup", "hunter2"),
+        # Legacy backup, which can't be streamed
+        ("backup.local", "2bcb3113", "hunter2"),
+        # New backup, which can be streamed, try with correct and wrong password
+        ("backup.local", "ed1608a9", "hunter2"),
+        ("backup.local", "ed1608a9", "wrong_password"),
     ],
 )
 @pytest.mark.usefixtures("mock_backups")
@@ -2584,6 +2589,7 @@ async def test_can_decrypt_on_download(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
+    agent_id: str,
     backup_id: str,
     password: str,
 ) -> None:
@@ -2596,7 +2602,7 @@ async def test_can_decrypt_on_download(
         {
             "type": "backup/can_decrypt_on_download",
             "backup_id": backup_id,
-            "agent_id": "backup.local",
+            "agent_id": agent_id,
             "password": password,
         }
     )
