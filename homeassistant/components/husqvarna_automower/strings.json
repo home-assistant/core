@@ -322,7 +322,7 @@
   "services": {
     "override_schedule": {
       "name": "Override schedule",
-      "description": "Lets the mower mow or park for a given duration, overriding all schedules.",
+      "description": "Lets the mower either mow or park for a given duration, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "Duration",
