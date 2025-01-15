@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from urllib3.exceptions import HTTPError
+from aiohttp import ClientConnectorError
 from weheat.abstractions.discovery import HeatPumpDiscovery
 from weheat.abstractions.heat_pump import HeatPump
 from weheat.abstractions.user import async_get_user_id_from_token
@@ -43,7 +43,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data[CONF_TOKEN][CONF_ACCESS_TOKEN],
                 async_get_clientsession(self.hass),
             )
-        except HTTPError as e:
+        except ClientConnectorError as e:
             LOGGER.error("Failed to get user id: %s", e)
             return self.async_abort(reason="get_user_failed")
         except Exception as e:  # noqa: BLE001
@@ -52,10 +52,12 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # Test getting heat pumps
         try:
-            discovered_heat_pumps = await HeatPumpDiscovery.discover_active(
-                API_URL, data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+            discovered_heat_pumps = await HeatPumpDiscovery.async_discover_active(
+                API_URL,
+                data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+                async_get_clientsession(self.hass),
             )
-        except HTTPError as e:
+        except ClientConnectorError as e:
             LOGGER.error("Failed to get heat pumps: %s", e)
             return self.async_abort(reason="get_heat_pumps_failed")
         except Exception as e:  # noqa: BLE001
@@ -67,9 +69,13 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # Test fetching data for a heat pump
         try:
-            heat_pump = HeatPump(API_URL, discovered_heat_pumps[0].uuid)
-            await heat_pump.get_status(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        except HTTPError as e:
+            heat_pump = HeatPump(
+                API_URL,
+                discovered_heat_pumps[0].uuid,
+                async_get_clientsession(self.hass),
+            )
+            await heat_pump.async_get_status(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        except ClientConnectorError as e:
             LOGGER.error("Failed to get heat pump data: %s", e)
             return self.async_abort(reason="get_heat_pump_data_failed")
         except Exception as e:  # noqa: BLE001

@@ -130,7 +130,7 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
 
-    mock_heat_pump_instance.get_status = AsyncMock()
+    mock_heat_pump_instance.async_get_status = AsyncMock()
 
     return mock_heat_pump_instance
 

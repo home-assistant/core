@@ -2,8 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectorError
+from aiohttp.client_reqrep import ConnectionKey
 import pytest
-from urllib3.exceptions import MaxRetryError
 
 from homeassistant.components.weheat.const import (
     DOMAIN,
@@ -89,7 +90,12 @@ async def test_duplicate_unique_id(
 @pytest.mark.parametrize(
     ("get_user_id_from_token_exception", "expected_reason"),
     [
-        (MaxRetryError(None, ""), "get_user_failed"),
+        (
+            ClientConnectorError(
+                ConnectionKey("", 0, False, False, None, None, None), OSError()
+            ),
+            "get_user_failed",
+        ),
         (Exception, "unknown"),
     ],
 )
@@ -120,7 +126,12 @@ async def test_get_user_error(
 @pytest.mark.parametrize(
     ("get_heat_pump_exception", "expected_reason"),
     [
-        (MaxRetryError(None, ""), "get_heat_pumps_failed"),
+        (
+            ClientConnectorError(
+                ConnectionKey("", 0, False, False, None, None, None), OSError()
+            ),
+            "get_heat_pumps_failed",
+        ),
         (Exception, "unknown"),
     ],
 )
@@ -140,7 +151,7 @@ async def test_get_heat_pumps_error(
 
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.discover_active",
+            "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.async_discover_active",
             side_effect=get_heat_pump_exception,
         ),
     ):
@@ -166,7 +177,7 @@ async def test_get_no_heat_pumps_error(
 
     with (
         patch(
-            "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.discover_active",
+            "homeassistant.components.weheat.config_flow.HeatPumpDiscovery.async_discover_active",
             return_value=[],
         ),
     ):
@@ -181,7 +192,12 @@ async def test_get_no_heat_pumps_error(
 @pytest.mark.parametrize(
     ("get_heat_pump_data_exception", "expected_reason"),
     [
-        (MaxRetryError(None, ""), "get_heat_pump_data_failed"),
+        (
+            ClientConnectorError(
+                ConnectionKey("", 0, False, False, None, None, None), OSError()
+            ),
+            "get_heat_pump_data_failed",
+        ),
         (Exception, "unknown"),
     ],
 )
@@ -201,7 +217,7 @@ async def test_get_heat_pump_data_error(
         hass, hass_client_no_auth, aioclient_mock
     )
 
-    mock_weheat_heat_pump.get_status.side_effect = get_heat_pump_data_exception
+    mock_weheat_heat_pump.async_get_status.side_effect = get_heat_pump_data_exception
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
