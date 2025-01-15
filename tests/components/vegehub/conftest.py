@@ -1,22 +1,22 @@
 """Fixtures and test data for VegeHub test methods."""
 
-import asyncio
 from dataclasses import dataclass
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-import vegehub
+from vegehub import VegeHub
 
 from homeassistant.components.vegehub.coordinator import VegeHubCoordinator
 from homeassistant.core import HomeAssistant
 
 from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 IP_ADDR = "192.168.0.100"
 TEST_API_KEY = "1234567890ABCD"
 UNIQUE_ID = "aabbccddeeff"
 TEST_SERVER = "http://example.com"
+TEST_MAC = "A1:B2:C3:D4:E5:F6"
+TEST_SIMPLE_MAC = "A1B2C3D4E5F6"
 
 
 @dataclass
@@ -24,90 +24,50 @@ class VegeHubData:
     """Define a data class."""
 
     coordinator: VegeHubCoordinator
-    hub: vegehub.VegeHub
+    hub: VegeHub
 
 
 @pytest.fixture
-def mock_aiohttp_session():
-    """Set up mocked client session."""
-    mocker = AiohttpClientMocker()
-
+def mock_vegehub():
+    """Mock the VegeHub library."""
     with patch(
-        "aiohttp.ClientSession",
-        side_effect=lambda *args, **kwargs: mocker.create_session(
-            asyncio.get_event_loop()
-        ),
-    ):
-        mocker.post(
-            f"http://{IP_ADDR}/api/config/get",
-            json={"hub": {}, "api_key": TEST_API_KEY},
-        )
+        "homeassistant.components.vegehub.config_flow.VegeHub", autospec=True
+    ) as mock_vegehub_class:
+        mock_instance = MagicMock()
+        # Simulate successful API calls
+        mock_instance.retrieve_mac_address = AsyncMock(return_value=True)
+        mock_instance.setup = AsyncMock(return_value=True)
 
-        mocker.post(f"http://{IP_ADDR}/api/config/set", status=200)
-
-        # Mock _get_device_info
-        mocker.post(
-            f"http://{IP_ADDR}/api/info/get", text=load_fixture("vegehub/info_hub.json")
+        # Mock properties
+        type(mock_instance).ip_address = PropertyMock(return_value=IP_ADDR)
+        type(mock_instance).mac_address = PropertyMock(return_value=TEST_SIMPLE_MAC)
+        type(mock_instance).unique_id = PropertyMock(return_value=UNIQUE_ID)
+        type(mock_instance).url = PropertyMock(return_value=f"http://{IP_ADDR}")
+        type(mock_instance).info = PropertyMock(
+            return_value=load_fixture("vegehub/info_hub.json")
         )
-        yield mocker
+        type(mock_instance).num_sensors = PropertyMock(return_value=2)
+        type(mock_instance).num_actuators = PropertyMock(return_value=2)
+        type(mock_instance).sw_version = PropertyMock(return_value="3.4.5")
+
+        # Assign the instance to the mocked class
+        mock_vegehub_class.return_value = mock_instance
+        yield mock_instance
+
+
+@pytest.fixture(name="mocked_hub")
+def fixture_mocked_hub(mock_vegehub):
+    """Fixture for creating a mocked VegeHub instance."""
+    return mock_vegehub
 
 
 @pytest.fixture
-def mock_aiohttp_bad_session():
-    """Set up mocked client session that returns bad data."""
-    mocker = AiohttpClientMocker()
-
-    with patch(
-        "aiohttp.ClientSession",
-        side_effect=lambda *args, **kwargs: mocker.create_session(
-            asyncio.get_event_loop()
-        ),
-    ):
-        mocker.post(f"http://{IP_ADDR}/api/config/get", json={})
-
-        mocker.post(f"http://{IP_ADDR}/api/config/set", status=200)
-
-        # Mock _get_device_info
-        mocker.post(
-            f"http://{IP_ADDR}/api/info/get",
-            json={},
-        )
-        yield mocker
-
-
-@pytest.fixture
-def mock_aiohttp_bad_session_404():
-    """Set up mocked client session where responses are errors."""
-    mocker = AiohttpClientMocker()
-
-    with patch(
-        "aiohttp.ClientSession",
-        side_effect=lambda *args, **kwargs: mocker.create_session(
-            asyncio.get_event_loop()
-        ),
-    ):
-        mocker.post(f"http://{IP_ADDR}/api/config/get", json={}, status=404)
-
-        mocker.post(f"http://{IP_ADDR}/api/config/set", status=404)
-
-        # Mock _get_device_info
-        mocker.post(f"http://{IP_ADDR}/api/info/get", json={}, status=404)
-        yield mocker
-
-
-@pytest.fixture(name="basic_hub")
-def fixture_basic_hub(mock_aiohttp_session):
-    """Fixture for creating a VegeHub instance."""
-    return vegehub.VegeHub(ip_address=IP_ADDR, unique_id=UNIQUE_ID)
-
-
-@pytest.fixture
-def config_entry(basic_hub, hass: HomeAssistant):
+def config_entry(mocked_hub, hass: HomeAssistant):
     """Mock a config entry."""
     return MagicMock(
         data={"mac": "1234567890AB", "host": "VegeHub1"},
         runtime_data=VegeHubData(
             coordinator=VegeHubCoordinator(hass=hass, device_id=UNIQUE_ID),
-            hub=basic_hub,
+            hub=mocked_hub,
         ),
     )

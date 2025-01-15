@@ -1,7 +1,7 @@
 """Tests for VegeHub config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 import pytest
 
@@ -43,8 +43,9 @@ def setup_mock_config_flow():
         yield
 
 
+# Tests for flows where the user manually inputs an IP address
 async def test_user_flow_success(
-    hass: HomeAssistant, setup_mock_config_flow, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow, mock_vegehub
 ) -> None:
     """Test the user flow with successful configuration."""
 
@@ -68,7 +69,7 @@ async def test_user_flow_success(
 
 
 async def test_user_flow_cannot_connect(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test the user flow with bad data."""
 
@@ -78,6 +79,8 @@ async def test_user_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+    type(mock_vegehub).mac_address = PropertyMock(return_value="")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": TEST_IP}
@@ -88,7 +91,7 @@ async def test_user_flow_cannot_connect(
 
 
 async def test_user_flow_device_timeout(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test the user flow with bad data."""
 
@@ -99,17 +102,7 @@ async def test_user_flow_device_timeout(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    mocker = mock_aiohttp_session
-
-    async def timeout_side_effect(*args, **kwargs):
-        raise TimeoutError
-
-    mocker.clear_requests()
-    mocker.post(
-        f"http://{TEST_IP}/api/info/get",
-        text="",
-        side_effect=timeout_side_effect,
-    )
+    mock_vegehub.retrieve_mac_address.side_effect = TimeoutError
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": TEST_IP}
@@ -120,7 +113,7 @@ async def test_user_flow_device_timeout(
 
 
 async def test_user_flow_cannot_connect_404(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session_404
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test the user flow with bad responses."""
 
@@ -131,6 +124,8 @@ async def test_user_flow_cannot_connect_404(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    mock_vegehub.retrieve_mac_address.side_effect = ConnectionError
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"ip_address": TEST_IP}
     )
@@ -140,7 +135,7 @@ async def test_user_flow_cannot_connect_404(
 
 
 async def test_user_flow_no_ip_entered(
-    hass: HomeAssistant, setup_mock_config_flow, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow, mock_vegehub
 ) -> None:
     """Test the user flow with blank IP."""
 
@@ -160,7 +155,7 @@ async def test_user_flow_no_ip_entered(
 
 
 async def test_user_flow_bad_ip_entered(
-    hass: HomeAssistant, setup_mock_config_flow, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow, mock_vegehub
 ) -> None:
     """Test the user flow with blank IP."""
 
@@ -179,8 +174,9 @@ async def test_user_flow_bad_ip_entered(
     assert result["errors"]["base"] == "invalid_ip"
 
 
+# Tests for flows that start in zeroconf
 async def test_zeroconf_flow_success(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test the zeroconf discovery flow with successful configuration."""
 
@@ -199,21 +195,11 @@ async def test_zeroconf_flow_success(
 
 
 async def test_zeroconf_flow_abort_device_asleep(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test when zeroconf gets the same device twice."""
 
-    mocker = mock_aiohttp_session
-
-    async def timeout_side_effect(*args, **kwargs):
-        raise TimeoutError
-
-    mocker.clear_requests()
-    mocker.post(
-        f"http://{TEST_IP}/api/info/get",
-        text="",
-        side_effect=timeout_side_effect,
-    )
+    mock_vegehub.retrieve_mac_address.side_effect = TimeoutError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -224,7 +210,7 @@ async def test_zeroconf_flow_abort_device_asleep(
 
 
 async def test_zeroconf_flow_abort_same_id(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test when zeroconf gets the same device twice."""
 
@@ -243,9 +229,11 @@ async def test_zeroconf_flow_abort_same_id(
 
 
 async def test_zeroconf_flow_abort_cannot_connect(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test when zeroconf gets bad data."""
+
+    type(mock_vegehub).mac_address = PropertyMock(return_value="")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -256,9 +244,11 @@ async def test_zeroconf_flow_abort_cannot_connect(
 
 
 async def test_zeroconf_flow_abort_cannot_connect_404(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_bad_session_404
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test when zeroconf gets bad responses."""
+
+    mock_vegehub.retrieve_mac_address.side_effect = ConnectionError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -269,11 +259,9 @@ async def test_zeroconf_flow_abort_cannot_connect_404(
 
 
 async def test_zeroconf_flow_device_error_response(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test when zeroconf detects the device, but the communication fails at setup."""
-
-    mocker = mock_aiohttp_session
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -283,8 +271,7 @@ async def test_zeroconf_flow_device_error_response(
     assert result["step_id"] == "user"
 
     # Part way through the process, we simulate getting bad responses
-    mocker.clear_requests()
-    mocker.post(f"http://{TEST_IP}/api/config/get", json={}, status=500)
+    mock_vegehub.setup.side_effect = ConnectionError
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -293,11 +280,9 @@ async def test_zeroconf_flow_device_error_response(
 
 
 async def test_zeroconf_flow_device_stopped_responding(
-    hass: HomeAssistant, setup_mock_config_flow: None, mock_aiohttp_session
+    hass: HomeAssistant, setup_mock_config_flow: None, mock_vegehub
 ) -> None:
     """Test when the zeroconf detects a device, but then the device goes to sleep before setup."""
-
-    mocker = mock_aiohttp_session
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=DISCOVERY_INFO
@@ -310,12 +295,7 @@ async def test_zeroconf_flow_device_stopped_responding(
         raise TimeoutError
 
     # Part way through the test we simulate getting timeouts
-    mocker.clear_requests()
-    mocker.post(
-        f"http://{TEST_IP}/api/config/get",
-        text="",
-        side_effect=timeout_side_effect,
-    )
+    mock_vegehub.setup.side_effect = TimeoutError
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

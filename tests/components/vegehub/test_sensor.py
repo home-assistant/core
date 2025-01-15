@@ -11,11 +11,11 @@ TEST_API_KEY = "1234567890ABCD"
 TEST_SERVER = "http://example.com"
 
 
-async def test_async_setup_entry(hass: HomeAssistant, config_entry) -> None:
+async def test_async_setup_entry_with_mocked_lib(
+    hass: HomeAssistant, config_entry
+) -> None:
     """Test async_setup_entry for adding sensors."""
     async_add_entities = MagicMock()
-
-    await config_entry.runtime_data.hub.setup(TEST_API_KEY, TEST_SERVER)
 
     # Call async_setup_entry to add sensors
     await async_setup_entry(hass, config_entry, async_add_entities)
@@ -30,7 +30,7 @@ def test_vegehub_sensor_properties(config_entry) -> None:
     """Test VegeHubSensor properties."""
     sensor = VegeHubSensor(
         mac_address="1234567890AB",
-        slot=1,
+        index=1,
         dev_name="VegeHub1",
         coordinator=config_entry.runtime_data.coordinator,
     )
