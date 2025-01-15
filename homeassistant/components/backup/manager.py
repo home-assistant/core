@@ -430,18 +430,21 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(sync_backup_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupReaderWriterError):
                 # writer errors will affect all agents
                 # no point in continuing
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
-                LOGGER.error("Error uploading to %s: %s", agent_ids[idx], result)
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                LOGGER.error("Upload failed for %s: %s", agent_id, result)
                 continue
             if isinstance(result, Exception):
                 # trap bugs from agents
-                agent_errors[agent_ids[idx]] = result
-                LOGGER.error("Unexpected error: %s", result, exc_info=result)
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result
