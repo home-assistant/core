@@ -187,7 +187,7 @@ async def async_setup_entry(
     """Set up the Meteo-France sensor platform."""
     data = hass.data[DOMAIN][entry.entry_id]
     coordinator_forecast: DataUpdateCoordinator[Forecast] = data[COORDINATOR_FORECAST]
-    coordinator_rain: DataUpdateCoordinator[Rain] | None = data[COORDINATOR_RAIN]
+    coordinator_rain: DataUpdateCoordinator[Rain] | None = data.get(COORDINATOR_RAIN)
     coordinator_alert: DataUpdateCoordinator[CurrentPhenomenons] | None = data.get(
         COORDINATOR_ALERT
     )

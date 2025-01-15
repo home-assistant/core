@@ -36,7 +36,7 @@ from .common import (
     setup_backup_platform,
 )
 
-from tests.common import async_fire_time_changed, async_mock_service
+from tests.common import async_fire_time_changed, async_mock_service, get_fixture_path
 from tests.typing import WebSocketGenerator
 
 BACKUP_CALL = call(
@@ -1345,6 +1345,7 @@ async def test_config_update_errors(
         ),
     ],
 )
+@patch("homeassistant.components.backup.config.BACKUP_START_TIME_JITTER", 0)
 async def test_config_schedule_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1787,6 +1788,7 @@ async def test_config_schedule_logic(
         ),
     ],
 )
+@patch("homeassistant.components.backup.config.BACKUP_START_TIME_JITTER", 0)
 async def test_config_retention_copies_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -2550,5 +2552,58 @@ async def test_subscribe_event(
 
     manager.async_on_backup_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+    )
+    assert await client.receive_json() == snapshot
+
+
+@pytest.fixture
+def mock_backups() -> Generator[None]:
+    """Fixture to setup test backups."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.backup import backup as core_backup
+
+    class CoreLocalBackupAgent(core_backup.CoreLocalBackupAgent):
+        def __init__(self, hass: HomeAssistant) -> None:
+            super().__init__(hass)
+            self._backup_dir = get_fixture_path("test_backups", DOMAIN)
+
+    with patch.object(core_backup, "CoreLocalBackupAgent", CoreLocalBackupAgent):
+        yield
+
+
+@pytest.mark.parametrize(
+    ("agent_id", "backup_id", "password"),
+    [
+        # Invalid agent or backup
+        ("no_such_agent", "ed1608a9", "hunter2"),
+        ("backup.local", "no_such_backup", "hunter2"),
+        # Legacy backup, which can't be streamed
+        ("backup.local", "2bcb3113", "hunter2"),
+        # New backup, which can be streamed, try with correct and wrong password
+        ("backup.local", "ed1608a9", "hunter2"),
+        ("backup.local", "ed1608a9", "wrong_password"),
+    ],
+)
+@pytest.mark.usefixtures("mock_backups")
+async def test_can_decrypt_on_download(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    agent_id: str,
+    backup_id: str,
+    password: str,
+) -> None:
+    """Test can decrypt on download."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": backup_id,
+            "agent_id": agent_id,
+            "password": password,
+        }
     )
     assert await client.receive_json() == snapshot
