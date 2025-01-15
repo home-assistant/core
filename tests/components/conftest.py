@@ -7,6 +7,7 @@ from collections.abc import AsyncGenerator, Callable, Generator
 from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
+import re
 import string
 from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -42,6 +43,8 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util import yaml
 
+from tests.common import QualityScaleStatus, get_quality_scale
+
 if TYPE_CHECKING:
     from homeassistant.components.hassio import AddonManager
 
@@ -50,6 +53,9 @@ if TYPE_CHECKING:
     from .light.common import MockLight
     from .sensor.common import MockSensor
     from .switch.common import MockSwitch
+
+# Regex for accessing the integration name from the test path
+RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
@@ -74,9 +80,15 @@ def prevent_io() -> Generator[None]:
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures all entities are enabled in the registry."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.device_tracker.config_entry.ScannerEntity.entity_registry_enabled_default",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -765,7 +777,7 @@ async def _check_config_flow_result_translations(
             translation_errors,
             category,
             integration,
-            f"{key_prefix}abort.{result["reason"]}",
+            f"{key_prefix}abort.{result['reason']}",
             result["description_placeholders"],
         )
 
@@ -798,12 +810,29 @@ async def _check_create_issue_translations(
         )
 
 
+def _get_request_quality_scale(
+    request: pytest.FixtureRequest, rule: str
+) -> QualityScaleStatus:
+    if not (match := RE_REQUEST_DOMAIN.match(str(request.path))):
+        return QualityScaleStatus.TODO
+    integration = match.groups(1)[0]
+    return get_quality_scale(integration).get(rule, QualityScaleStatus.TODO)
+
+
 async def _check_exception_translation(
     hass: HomeAssistant,
     exception: HomeAssistantError,
     translation_errors: dict[str, str],
+    request: pytest.FixtureRequest,
 ) -> None:
     if exception.translation_key is None:
+        if (
+            _get_request_quality_scale(request, "exception-translations")
+            is QualityScaleStatus.DONE
+        ):
+            translation_errors["quality_scale"] = (
+                f"Found untranslated {type(exception).__name__} exception: {exception}"
+            )
         return
     await _validate_translation(
         hass,
@@ -817,13 +846,14 @@ async def _check_exception_translation(
 
 @pytest.fixture(autouse=True)
 async def check_translations(
-    ignore_translations: str | list[str],
+    ignore_translations: str | list[str], request: pytest.FixtureRequest
 ) -> AsyncGenerator[None]:
     """Check that translation requirements are met.
 
     Current checks:
     - data entry flow results (ConfigFlow/OptionsFlow/RepairFlow)
     - issue registry entries
+    - action (service) exceptions
     """
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
@@ -881,7 +911,9 @@ async def check_translations(
             )
         except HomeAssistantError as err:
             translation_coros.add(
-                _check_exception_translation(self._hass, err, translation_errors)
+                _check_exception_translation(
+                    self._hass, err, translation_errors, request
+                )
             )
             raise
 

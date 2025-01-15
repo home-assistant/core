@@ -282,7 +282,7 @@ async def test_async_remove_entry(
         patch("pathlib.Path.rmdir") as rmdir_mock,
     ):
         assert await hass.config_entries.async_remove(config_entry.entry_id)
-        assert unlink_mock.call_count == 3
+        assert unlink_mock.call_count == 4
         rmdir_mock.assert_called_once()
 
     assert hass.config_entries.async_entries() == []
