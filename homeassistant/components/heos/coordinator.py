@@ -1,7 +1,9 @@
 """Define coordinator functionality for HEOS the integration."""
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from pyheos import (
     Credentials,
@@ -17,7 +19,7 @@ from pyheos import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HassJob, HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
@@ -107,6 +109,22 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self.heos.dispatcher.disconnect_all()  # Removes all connected through heos.add_on_* and player.add_on_*
         await self.heos.disconnect()
         await super().async_shutdown()
+
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        """Add a listener for the coordinator."""
+        # Updates group_members to reflect the entity_id of the just-added entity
+        self.async_update_listeners()
+        remove_callback = super().async_add_listener(update_callback, context)
+
+        # Updates group_members to removes the entity_id of the entity being removed
+        def remove_wrapper() -> None:
+            """Remove the listener."""
+            remove_callback()
+            self.async_update_listeners()
+
+        return remove_wrapper
 
     async def _on_auth_failure(self) -> None:
         """Handle when the user credentials are no longer valid."""
