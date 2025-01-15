@@ -110,8 +110,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             )
 
         # Retrieve resources
-        await self.__update_sources()
         await self.__update_groups()
+        await self.__update_sources()
 
         self.heos.add_on_disconnected(self.__disconnected)
         self.heos.add_on_connected(self.__reconnected)
@@ -256,7 +256,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     async def __update_groups(self) -> None:
         """Update the group information."""
         try:
-            self.heos.get_groups()
+            await self.heos.get_groups(refresh=True)
         except HeosError as error:
             _LOGGER.error("Unable to retrieve groups: %s", error)
 
@@ -390,7 +390,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             )
             if entity is not None:
                 entity_ids.append(entity)
-
         return entity_ids
 
     @property
