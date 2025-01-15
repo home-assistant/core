@@ -204,3 +204,33 @@ async def test_device_id_migration(
     assert device_registry.async_get_device({("Other", 1)}) is not None
     assert device_registry.async_get_device({(DOMAIN, 1)}) is None
     assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
+
+
+async def test_async_setup_entry_favorite_failure(
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry, controller: Heos
+) -> None:
+    """Failure to retrieve favorites loads platforms."""
+    controller.get_favorites.side_effect = HeosError()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert controller.connect.call_count == 1
+    assert controller.get_players.call_count == 1
+    assert controller.get_favorites.call_count == 1
+    assert controller.get_input_sources.call_count == 1
+    controller.disconnect.assert_not_called()
+
+
+async def test_async_setup_entry_sources_failure(
+    hass: HomeAssistant, config_entry: MockHeosConfigEntry, controller: Heos
+) -> None:
+    """Failure to retrieve input sources loads platforms."""
+    controller.get_input_sources.side_effect = HeosError()
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert controller.connect.call_count == 1
+    assert controller.get_players.call_count == 1
+    assert controller.get_favorites.call_count == 1
+    assert controller.get_input_sources.call_count == 1
+    controller.disconnect.assert_not_called()

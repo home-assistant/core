@@ -45,6 +45,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Update so group player_ids can be resolved to entity_ids
+    coordinator.async_update_listeners()
+
     return True
 
 

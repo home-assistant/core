@@ -154,6 +154,7 @@ async def test_updates_from_connection_event(
     hass: HomeAssistant,
     config_entry: MockHeosConfigEntry,
     controller: Heos,
+    change_data_mapped_ids: PlayerUpdateResult,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests player updates from connection event after connection failure."""
@@ -172,15 +173,22 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_UNAVAILABLE
     assert controller.load_players.call_count == 0
+    controller.get_groups.reset_mock()
+    controller.get_input_sources.reset_mock()
+    controller.get_favorites.reset_mock()
 
     # Connected
     player.available = True
+    controller.load_players.return_value = change_data_mapped_ids
     await player.heos.dispatcher.wait_send(
         SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
     )
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_IDLE
     assert controller.load_players.call_count == 1
+    assert controller.get_groups.call_count == 1
+    assert controller.get_input_sources.call_count == 1
+    assert controller.get_favorites.call_count == 1
 
     # Connected handles refresh failure
     controller.load_players.reset_mock()
@@ -274,6 +282,43 @@ async def test_updates_from_players_changed_new_ids(
     assert (
         entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
         == "media_player.test_player"
+    )
+
+
+async def test_updates_from_groups_changed(
+    hass: HomeAssistant,
+    config_entry: MockHeosConfigEntry,
+    controller: Heos,
+) -> None:
+    """Test player updates from changes to groups."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Assert current state
+    assert hass.states.get("media_player.test_player").attributes[
+        ATTR_GROUP_MEMBERS
+    ] == ["media_player.test_player", "media_player.test_player_2"]
+    assert hass.states.get("media_player.test_player_2").attributes[
+        ATTR_GROUP_MEMBERS
+    ] == ["media_player.test_player", "media_player.test_player_2"]
+
+    # Clear group information
+    controller._groups = {}
+    controller.get_groups.return_value = {}
+    for player in controller.players.values():
+        player.group_id = None
+    await controller.dispatcher.wait_send(
+        SignalType.CONTROLLER_EVENT, const.EVENT_GROUPS_CHANGED, None
+    )
+
+    # Assert groups changed
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_GROUP_MEMBERS]
+        is None
+    )
+    assert (
+        hass.states.get("media_player.test_player_2").attributes[ATTR_GROUP_MEMBERS]
+        is None
     )
 
 
@@ -910,11 +955,20 @@ async def test_play_media_invalid_type(
     assert "Unable to play media: Unsupported media type 'Other'" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("members", "expected"),
+    [
+        (["media_player.test_player_2"], (1, [2])),
+        (["media_player.test_player_2", "media_player.test_player"], (1, [2])),
+        (["media_player.test_player"], (1, [])),
+    ],
+)
 async def test_media_player_join_group(
     hass: HomeAssistant,
     config_entry: MockHeosConfigEntry,
     controller: Heos,
-    caplog: pytest.LogCaptureFixture,
+    members: list[str],
+    expected: tuple[int, list[int]],
 ) -> None:
     """Test grouping of media players through the join service."""
     config_entry.add_to_hass(hass)
@@ -924,12 +978,22 @@ async def test_media_player_join_group(
         SERVICE_JOIN,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            ATTR_GROUP_MEMBERS: members,
         },
         blocking=True,
     )
-    controller.set_group.assert_called_once_with(1, [2])
+    controller.set_group.assert_called_once_with(*expected)
 
+
+async def test_media_player_join_group_error(
+    hass: HomeAssistant,
+    config_entry: MockHeosConfigEntry,
+    controller: Heos,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test grouping of media players errors, does not join."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     controller.set_group.side_effect = HeosError("error")
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -977,34 +1041,41 @@ async def test_media_player_group_members_error(
     assert player_entity.attributes[ATTR_GROUP_MEMBERS] is None
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "expected_args"),
+    [("media_player.test_player", [1]), ("media_player.test_player_2", [1])],
+)
 async def test_media_player_unjoin_group(
+    hass: HomeAssistant,
+    config_entry: MockHeosConfigEntry,
+    controller: Heos,
+    entity_id: str,
+    expected_args: list[int],
+) -> None:
+    """Test ungrouping of media players through the unjoin service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_UNJOIN,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+    )
+    controller.set_group.assert_called_once_with(expected_args)
+
+
+async def test_media_player_unjoin_group_error(
     hass: HomeAssistant,
     config_entry: MockHeosConfigEntry,
     controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test ungrouping of media players through the join service."""
+    """Test ungrouping of media players with error logs."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-
-    player.heos.dispatcher.send(
-        SignalType.PLAYER_EVENT,
-        player.player_id,
-        const.EVENT_PLAYER_STATE_CHANGED,
-    )
-    await hass.async_block_till_done()
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_UNJOIN,
-        {
-            ATTR_ENTITY_ID: "media_player.test_player",
-        },
-        blocking=True,
-    )
-    controller.set_group.assert_called_once_with([1])
-    assert "Failed to ungroup media_player.test_player" not in caplog.text
-
     controller.set_group.side_effect = HeosError("error")
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
