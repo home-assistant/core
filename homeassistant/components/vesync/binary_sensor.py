@@ -64,7 +64,7 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
     _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)

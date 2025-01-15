@@ -23,8 +23,8 @@ from .coordinator import VeSyncDataCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.FAN,
-    Platform.LIGHT,
     Platform.HUMIDIFIER,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -85,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.pop(DOMAIN)
