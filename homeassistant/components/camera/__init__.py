@@ -736,7 +736,6 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return await self.handle_async_still_stream(request, self.frame_interval)
 
     @property
-    @final
     def state(self) -> str:
         """Return the camera state."""
         if self.is_recording:
