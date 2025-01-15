@@ -1,13 +1,14 @@
 """Config flow for bluesound."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyblu import Player, SyncStatus
 from pyblu.errors import PlayerUnreachableError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -15,6 +16,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 from .media_player import DEFAULT_PORT
 from .utils import format_unique_id
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +76,7 @@ class BluesoundConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         if discovery_info.port is not None:

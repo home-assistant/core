@@ -1,12 +1,13 @@
 """Config flow for Cambridge Audio."""
 
+from __future__ import annotations
+
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiostreammagic import StreamMagicClient
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
@@ -16,6 +17,9 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 
@@ -30,7 +34,7 @@ class CambridgeAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.data[CONF_HOST] = host = discovery_info.host

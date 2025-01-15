@@ -6,7 +6,7 @@ from collections import OrderedDict
 from collections.abc import Mapping
 import json
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aioesphomeapi import (
     APIClient,
@@ -20,7 +20,7 @@ from aioesphomeapi import (
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -44,6 +44,9 @@ from .const import (
     DOMAIN,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 ERROR_REQUIRES_ENCRYPTION_KEY = "requires_encryption_key"
 ERROR_INVALID_ENCRYPTION_KEY = "invalid_psk"
@@ -293,7 +296,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))

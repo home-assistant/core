@@ -5,13 +5,12 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from re import search
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -40,6 +39,9 @@ from .const import (
     SetupException,
 )
 from .device import ConnectXiaomiDevice
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,7 +147,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_cloud()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name

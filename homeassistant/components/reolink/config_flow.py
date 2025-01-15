@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS
 from reolink_aio.exceptions import (
@@ -15,7 +15,6 @@ from reolink_aio.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -44,6 +43,9 @@ from .exceptions import (
 )
 from .host import ReolinkHost
 from .util import ReolinkConfigEntry, is_connected
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,7 +144,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress)

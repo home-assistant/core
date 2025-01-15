@@ -10,7 +10,6 @@ from awesomeversion import AwesomeVersion
 from pyenphase import AUTH_TOKEN_MIN_VERSION, Envoy, EnvoyError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigFlow,
@@ -31,6 +30,9 @@ from .const import (
     OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
 )
 from .coordinator import EnphaseConfigEntry
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,7 +125,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         if _LOGGER.isEnabledFor(logging.DEBUG):

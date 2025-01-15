@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 from elmax_api.http import Elmax, ElmaxLocal, GenericElmax
@@ -38,6 +38,9 @@ from .const import (
     ELMAX_MODE_DIRECT_DEFAULT_HTTP_PORT,
     ELMAX_MODE_DIRECT_DEFAULT_HTTPS_PORT,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

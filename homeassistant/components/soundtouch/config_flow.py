@@ -1,6 +1,8 @@
 """Config flow for Bose SoundTouch integration."""
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 from libsoundtouch import soundtouch_device
 from requests import RequestException
@@ -12,6 +14,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 
 class SoundtouchConfigFlow(ConfigFlow, domain=DOMAIN):

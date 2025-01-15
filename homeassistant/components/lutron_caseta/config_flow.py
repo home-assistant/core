@@ -6,13 +6,12 @@ import asyncio
 import logging
 import os
 import ssl
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pylutron_caseta.pairing import PAIR_CA, PAIR_CERT, PAIR_KEY, async_pair
 from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
@@ -28,6 +27,9 @@ from .const import (
     ERROR_CANNOT_CONNECT,
     STEP_IMPORT_FAILED,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 HOSTNAME = "hostname"
 
@@ -69,7 +71,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         hostname = discovery_info.hostname
@@ -90,7 +92,7 @@ class LutronCasetaFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_zeroconf(discovery_info)

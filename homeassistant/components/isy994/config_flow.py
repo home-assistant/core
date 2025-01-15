@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse, urlunparse
 
 from aiohttp import CookieJar
@@ -14,7 +14,7 @@ from pyisy.configuration import Configuration
 from pyisy.connection import Connection
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp
+from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
@@ -49,6 +49,9 @@ from .const import (
     SCHEME_HTTPS,
     UDN_UUID_PREFIX,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -209,7 +212,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         raise AbortFlow("already_configured")
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered ISY/IoX device via dhcp."""
         friendly_name = discovery_info.hostname

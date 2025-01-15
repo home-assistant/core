@@ -1,13 +1,14 @@
 """Config flow to configure forked-daapd devices."""
 
+from __future__ import annotations
+
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyforked_daapd import ForkedDaapdAPI
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -28,6 +29,9 @@ from .const import (
     DEFAULT_TTS_VOLUME,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,7 +168,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0

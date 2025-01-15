@@ -1,12 +1,13 @@
 """Config flow for Onkyo."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -40,6 +41,9 @@ from .const import (
     InputSource,
 )
 from .receiver import ReceiverInfo, async_discover, async_interview
+
+if TYPE_CHECKING:
+    from homeassistant.components.ssdp import SsdpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +172,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle flow initialized by SSDP discovery."""
         _LOGGER.debug("Config flow start ssdp: %s", discovery_info)

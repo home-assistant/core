@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 from urllib.parse import urlparse
 
 import voluptuous as vol
@@ -11,7 +11,7 @@ import yeelight
 from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
-from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
+from homeassistant.components import onboarding, ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -43,6 +43,10 @@ from .device import (
 )
 from .scanner import YeelightScanner
 
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+
 MODEL_UNKNOWN = "unknown"
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,21 +73,21 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, Any] = {}
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from homekit."""
         self._discovered_ip = discovery_info.host
         return await self._async_handle_discovery()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from dhcp."""
         self._discovered_ip = discovery_info.ip
         return await self._async_handle_discovery()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery from zeroconf."""
         self._discovered_ip = discovery_info.host

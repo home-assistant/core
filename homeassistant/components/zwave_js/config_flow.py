@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 import asyncio
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from serial.tools import list_ports
@@ -66,6 +66,9 @@ from .const import (
     CONF_USE_ADDON,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

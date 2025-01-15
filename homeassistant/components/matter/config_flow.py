@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import CannotConnect, InvalidServerVersion
@@ -34,6 +34,9 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40

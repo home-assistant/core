@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidConfigurationError,
@@ -12,7 +12,6 @@ from PyViCare.PyViCareUtils import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +25,9 @@ from .const import (
     HeatingType,
 )
 from .utils import login
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +111,7 @@ class ViCareConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Invoke when a Viessmann MAC address is discovered on the network."""
         formatted_mac = format_mac(discovery_info.macaddress)

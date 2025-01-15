@@ -3,18 +3,20 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
 from ttls.client import Twinkly
 from voluptuous import Required, Schema
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +60,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery for twinkly."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})

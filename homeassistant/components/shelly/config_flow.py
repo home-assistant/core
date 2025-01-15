@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
@@ -57,6 +57,9 @@ from .utils import (
     get_ws_context,
     mac_address_from_name,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 CONFIG_SCHEMA: Final = vol.Schema(
     {

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from brother import Brother, SnmpError, UnsupportedModelError
 import voluptuous as vol
@@ -16,6 +16,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_host_valid
 
 from .const import DOMAIN, PRINTER_TYPES
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 DATA_SCHEMA = vol.Schema(
     {

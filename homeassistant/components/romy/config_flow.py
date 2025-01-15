@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import romy
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 
 class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -84,7 +88,7 @@ class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 

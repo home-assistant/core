@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import dataclasses
 import re
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from ismartgate.common import AbstractInfoResponse, ApiError
 from ismartgate.const import GogoGate2ApiErrorCode, ISmartGateApiErrorCode
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
+from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE,
@@ -22,6 +22,9 @@ from homeassistant.data_entry_flow import AbortFlow
 
 from .common import get_api
 from .const import DEVICE_TYPE_GOGOGATE2, DEVICE_TYPE_ISMARTGATE, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 DEVICE_NAMES = {
     DEVICE_TYPE_GOGOGATE2: "Gogogate2",
@@ -49,7 +52,7 @@ class Gogogate2FlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._async_discovery_handler(discovery_info.host)
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         await self.async_set_unique_id(discovery_info.macaddress)

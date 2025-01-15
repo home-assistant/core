@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ipaddress import AddressValueError, IPv4Address
-from typing import Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict
 
 from aiohttp.client_exceptions import ClientConnectorError
 from mozart_api.exceptions import ApiException
@@ -27,6 +27,9 @@ from .const import (
     DOMAIN,
 )
 from .util import get_serial_number_from_jid
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 
 class EntryData(TypedDict, total=False):

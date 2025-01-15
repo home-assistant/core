@@ -1,12 +1,13 @@
 """Config flow for Smappee."""
 
+from __future__ import annotations
+
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pysmappee import helper, mqtt
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_IP_ADDRESS
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -19,6 +20,9 @@ from .const import (
     ENV_LOCAL,
     SUPPORTED_LOCAL_DEVICES,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 
 class SmappeeFlowHandler(
@@ -43,7 +47,7 @@ class SmappeeFlowHandler(
         return logging.getLogger(__name__)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 

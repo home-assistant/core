@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from onvif.util import is_auth_error, stringify_onvif_error
@@ -15,7 +15,6 @@ from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
 from zeep.exceptions import Fault
 
-from homeassistant.components import dhcp
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -52,6 +51,9 @@ from .const import (
     LOGGER,
 )
 from .device import get_device
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
@@ -170,7 +172,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         hass = self.hass

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from goslideapi.goslideapi import (
     AuthenticationFailed,
@@ -22,6 +22,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,13 +1,14 @@
 """Config flow to configure Xiaomi Aqara."""
 
+from __future__ import annotations
+
 import logging
 from socket import gaierror
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 from xiaomi_gateway import MULTICAST_PORT, XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 from homeassistant.core import callback
@@ -22,6 +23,9 @@ from .const import (
     ZEROCONF_ACPARTNER,
     ZEROCONF_GATEWAY,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,7 +157,7 @@ class XiaomiAqaraFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name

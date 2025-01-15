@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
@@ -31,6 +31,9 @@ from .const import (
     DEFAULT_WS_PORT,
     DOMAIN,
 )
+
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

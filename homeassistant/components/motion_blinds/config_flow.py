@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from motionblinds import MotionDiscovery, MotionGateway
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -27,6 +26,9 @@ from .const import (
     DOMAIN,
 )
 from .gateway import ConnectMotionGateway
+
+if TYPE_CHECKING:
+    from homeassistant.components.dhcp import DhcpServiceInfo
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -82,7 +84,7 @@ class MotionBlindsFlowHandler(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         mac_address = format_mac(discovery_info.macaddress).replace(":", "")

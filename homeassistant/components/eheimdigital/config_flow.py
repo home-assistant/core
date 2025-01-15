@@ -18,6 +18,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from homeassistant.components.zeroconf import ZeroconfServiceInfo
+
 CONFIG_SCHEMA = vol.Schema(
     {vol.Required(CONF_HOST, default="eheimdigital.local"): selector.TextSelector()}
 )
