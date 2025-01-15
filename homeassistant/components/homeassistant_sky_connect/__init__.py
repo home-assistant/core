@@ -8,11 +8,19 @@ from homeassistant.components.homeassistant_hardware.util import guess_firmware_
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
+from .util import create_entry_title
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
+
+    # Make sure the device config entry has the appropriate title suffix
+    expected_title = create_entry_title(entry)
+    if entry.title != expected_title:
+        hass.config_entries.async_update_entry(entry, title=expected_title)
+
     return True
 
 
