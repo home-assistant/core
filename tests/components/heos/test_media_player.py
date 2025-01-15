@@ -192,7 +192,7 @@ async def test_updates_from_connection_event(
     state = hass.states.get("media_player.test_player")
     assert state.state == STATE_IDLE
     assert controller.load_players.call_count == 1
-    assert "Unable to refresh players" in caplog.text
+    assert "Unable to update players" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -597,7 +597,7 @@ async def test_select_input_source(
         },
         blocking=True,
     )
-    player.play_input_source.assert_called_once_with(input_source.media_id)
+    player.play_media.assert_called_once_with(input_source)
     # Test state is matched by media id
     player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
     player.now_playing_media.media_id = const.INPUT_AUX_IN_1
@@ -639,7 +639,7 @@ async def test_select_input_command_error(
     await hass.config_entries.async_setup(config_entry.entry_id)
     player = controller.players[1]
     input_source = input_sources[0]
-    player.play_input_source.side_effect = CommandFailedError(None, "Failure", 1)
+    player.play_media.side_effect = CommandFailedError(None, "Failure", 1)
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
@@ -649,7 +649,7 @@ async def test_select_input_command_error(
         },
         blocking=True,
     )
-    player.play_input_source.assert_called_once_with(input_source.media_id)
+    player.play_media.assert_called_once_with(input_source)
     assert "Unable to select source: Failure (1)" in caplog.text
 
 
@@ -965,11 +965,12 @@ async def test_media_player_group_members_error(
     hass: HomeAssistant,
     config_entry: MockHeosConfigEntry,
     controller: Heos,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test error in HEOS API."""
     controller.get_groups.side_effect = HeosError("error")
     controller._groups = {}
+    for player in controller.players.values():
+        player.group_id = None
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     player_entity = hass.states.get("media_player.test_player")

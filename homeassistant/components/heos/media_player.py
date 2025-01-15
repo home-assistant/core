@@ -145,7 +145,7 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
         )
         self._attr_source_list = list(self.coordinator.source_list)
         self._attr_group_members = self.coordinator.get_group_members(
-            self._player.player_id
+            self._player.group_id
         )
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
@@ -307,11 +307,6 @@ class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
             "media_station": self._player.now_playing_media.station,
             "media_type": self._player.now_playing_media.type,
         }
-
-    @property
-    def group_members(self) -> list[str] | None:
-        """List of players which are grouped together."""
-        return self.coordinator.get_group_members(self._player.player_id)
 
     @property
     def is_volume_muted(self) -> bool:

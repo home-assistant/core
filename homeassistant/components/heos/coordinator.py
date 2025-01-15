@@ -26,7 +26,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
 type HeosConfigEntry = ConfigEntry[HeosCoordinator]
 
@@ -34,40 +33,23 @@ type HeosConfigEntry = ConfigEntry[HeosCoordinator]
 class HeosCoordinator(DataUpdateCoordinator[None]):
     """Define the HEOS integration coordinator.
 
-    Control of HEOS devices is through the HEOS CLI Protocol and a connection is established to only one device
-    in order to control all devices on the network. Data is pushed through events, which often contain the changed
-    data. Other events represent larger changes (such as a group membership changing) and the coordinator will
-    need to request new data.
+    Control of all HEOS devices is through connection to a single device. Data is pushed through
+    events. The coordinator is responsible for refreshing data in response to system-wide events and notifying
+    entities to update. Entities subscrive to entity-specific updates within the entity class itself.
     """
 
     def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
-        """Set up the coordinator."""
+        """Set up the coordinator and set in config_entry."""
         self.host: str = config_entry.data[CONF_HOST]
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-        )
-        self.heos: Heos = self.__create_api()
-        self._update_sources_pending: bool = False
-        self._source_list: list[str] = []
-        self._favorites: dict[int, MediaItem] = {}
-        self._inputs: list[MediaItem] = []
-
-    def __create_api(self) -> Heos:
-        """Create the HEOS API instance based on the config entry."""
-        credentials: Credentials | None = None
-        assert self.config_entry is not None
-        if self.config_entry.options:
-            credentials = Credentials(
-                self.config_entry.options[CONF_USERNAME],
-                self.config_entry.options[CONF_PASSWORD],
+        credentials: Credentials | None = (
+            Credentials(
+                config_entry.options[CONF_USERNAME],
+                config_entry.options[CONF_PASSWORD],
             )
-
-        # Setting all_progress_events=False ensures that we only receive a
-        # media position update upon start of playback or when media changes
-        return Heos(
+            if config_entry.options
+            else None
+        )
+        self.heos: Heos = Heos(
             HeosOptions(
                 self.host,
                 all_progress_events=False,
@@ -75,11 +57,23 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 credentials=credentials,
             )
         )
+        self._update_sources_pending: bool = False
+        self._source_list: list[str] = []
+        self._favorites: dict[int, MediaItem] = {}
+        self._inputs: list[MediaItem] = []
+
+        config_entry.runtime_data = self
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+        )
 
     async def async_setup(self) -> None:
-        """Connect to the HEOS device and add event callbacks."""
-        # Add before connect as it may occur during connection
-        self.heos.add_on_user_credentials_invalid(self.__auth_failure)
+        """Connect to the HEOS device, pull initial data, and add event callbacks."""
+        # Add before connect as it may occur during initial connection
+        self.heos.add_on_user_credentials_invalid(self._on_auth_failure)
 
         # Connect to the device
         try:
@@ -101,71 +95,53 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             )
 
         # Retrieve resources
-        await self.__update_groups()
-        await self.__update_sources()
+        await self._update_groups()
+        await self._update_sources()
 
-        self.heos.add_on_disconnected(self.__disconnected)
-        self.heos.add_on_connected(self.__reconnected)
-        self.heos.add_on_controller_event(self.__controller_event)
+        self.heos.add_on_disconnected(self._on_disconnected)
+        self.heos.add_on_connected(self._on_reconnected)
+        self.heos.add_on_controller_event(self._on_controller_event)
 
-    async def async_shutdown(self):
+    async def async_shutdown(self) -> None:
         """Disconnect all callbacks and disconnect from the device."""
-        # Removes all callbacks connected through heos.add_on_* and player.add_on_*
-        self.heos.dispatcher.disconnect_all()
+        self.heos.dispatcher.disconnect_all()  # Removes all connected through heos.add_on_* and player.add_on_*
         await self.heos.disconnect()
-        return await super().async_shutdown()
+        await super().async_shutdown()
 
-    async def __auth_failure(self) -> None:
-        """Handle callback when the user credentials are no longer valid.
-
-        This may be raised during setup (inside Heos.connect()) or when calling commands in the API.
-        """
+    async def _on_auth_failure(self) -> None:
+        """Handle when the user credentials are no longer valid."""
         assert self.config_entry is not None
         self.config_entry.async_start_reauth(self.hass)
 
-    async def __disconnected(self) -> None:
-        """Handle when HEOS is disconnected.
-
-        Notify entities to update, which will mark them as unavailable.
-        """
+    async def _on_disconnected(self) -> None:
+        """Handle when disconnected so entities are marked unavailable."""
         self.async_update_listeners()
 
-    async def __reconnected(self) -> None:
-        """Handle when HEOS reconnects.
-
-        Update resources and notify entities to update so they become available.
-        """
-        await self.__update_players()
-        # Update groups
-        await self.__update_groups()
-        # Build sources list
-        await self.__update_sources()
-        # Update entities
+    async def _on_reconnected(self) -> None:
+        """Handle when reconnected so resources are updated and entities marked available."""
+        await self._update_players()
+        await self._update_groups()
+        await self._update_sources()
         self.async_update_listeners()
 
-    async def __controller_event(self, event: str, data: PlayerUpdateResult | None):
-        """Handle a controller event, such as players changing.
-
-        Event values may be: EVENT_SOURCES_CHANGED, EVENT_PLAYERS_CHANGED,
-        EVENT_GROUPS_CHANGED, or EVENT_USER_CHANGED
-
-        EVENT_GROUPS_CHANGED is not explicitly handled since we only need to notify
-        listeners to update and they will popualte the latest group member information.
-        """
+    async def _on_controller_event(
+        self, event: str, data: PlayerUpdateResult | None
+    ) -> None:
+        """Handle a controller event, such as players or groups changed."""
         if event == heos_const.EVENT_PLAYERS_CHANGED:
             assert data is not None
             if data.updated_player_ids:
-                self.__update_player_ids(data.updated_player_ids)
+                self._update_player_ids(data.updated_player_ids)
         elif (
             event in (heos_const.EVENT_SOURCES_CHANGED, heos_const.EVENT_USER_CHANGED)
             and not self._update_sources_pending
         ):
             # Update the sources after a brief delay as we may have received multiple qualifying
-            # events and HEOS often errors when immediately attempting to refresh.
+            # events and devices often errors when immediately attempting to refresh sources.
             self._update_sources_pending = True
 
-            async def update_sources_job(_: datetime | None = None):
-                await self.__update_sources()
+            async def update_sources_job(_: datetime | None = None) -> None:
+                await self._update_sources()
                 self._update_sources_pending = False
                 self.async_update_listeners()
 
@@ -183,23 +159,23 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             )
         self.async_update_listeners()
 
-    async def __update_players(self) -> None:
+    async def _update_players(self) -> None:
         """Update players."""
         try:
             player_updates = await self.heos.load_players()
         except HeosError as error:
-            _LOGGER.error("Unable to refresh players: %s", error)
+            _LOGGER.error("Unable to update players: %s", error)
             return
         # After reconnecting, player_id may have changed
         if player_updates.updated_player_ids:
-            self.__update_player_ids(player_updates.updated_player_ids)
+            self._update_player_ids(player_updates.updated_player_ids)
 
-    def __update_player_ids(self, mapped_ids: dict[int, int]):
+    def _update_player_ids(self, updated_player_ids: dict[int, int]) -> None:
         """Update the IDs in the device and entity registry."""
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
         # mapped_ids contains the mapped IDs (old:new)
-        for old_id, new_id in mapped_ids.items():
+        for old_id, new_id in updated_player_ids.items():
             # update device registry
             entry = device_registry.async_get_device(
                 identifiers={(DOMAIN, old_id)}  # type: ignore[arg-type]  # Fix in the future
@@ -223,8 +199,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 )
                 _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
 
-    async def __update_sources(self) -> None:
-        """Rebuild the source list after a change event."""
+    async def _update_sources(self) -> None:
+        """Build source list for entities."""
         self._source_list.clear()
         # Get favorites only if reportedly signed in.
         if self.heos.is_signed_in:
@@ -244,8 +220,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         else:
             self._source_list.extend([source.name for source in self._inputs])
 
-    async def __update_groups(self) -> None:
-        """Update the group information."""
+    async def _update_groups(self) -> None:
+        """Update group information."""
         try:
             await self.heos.get_groups(refresh=True)
         except HeosError as error:
@@ -253,6 +229,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     async def play_source(self, source: str, player: HeosPlayer) -> None:
         """Determine type of source and play it."""
+        # Favorite
         index = next(
             (
                 index
@@ -264,7 +241,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         if index is not None:
             await player.play_preset_station(index)
             return
-
+        # Input source
         input_source = next(
             (
                 input_source
@@ -274,13 +251,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             None,
         )
         if input_source is not None:
-            await player.play_input_source(input_source.media_id)
+            await player.play_media(input_source)
             return
 
         _LOGGER.error("Unknown source: %s", source)
 
     def get_favorite_index(self, name: str) -> int | None:
-        """Get the index of a favorite by media_id,."""
+        """Get the index of a favorite by name."""
         return next(
             (
                 index
@@ -292,7 +269,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     def get_current_source(self, now_playing_media: HeosNowPlayingMedia) -> str | None:
         """Determine current source from now playing media."""
-        # Match input by input_name:media_id
+        # Try input source. HEOS does not provide the source device, so this may
+        # incorrectly match to the first input of the same media_id on another device.
         if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
             return next(
                 (
@@ -316,7 +294,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
     async def join_players(self, player_id: int, member_entity_ids: list[str]) -> None:
         """Join a player with a group of players."""
         member_ids: list[int] = []
-        # Map entity IDs to player IDs
+        # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
         for entity_id in member_entity_ids:
             entity = entity_registry.async_get(entity_id)
@@ -327,6 +305,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                     f"Entity {entity_id} is not a HEOS media player entity."
                 )
             member_ids.append(int(entity.unique_id))
+
+        if player_id in member_ids:
+            member_ids.remove(player_id)
 
         await self.heos.set_group(player_id, member_ids)
 
@@ -351,25 +332,18 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             ),
             None,
         ):
-            new_members = group.member_player_ids - [player_id]
-            await self.heos.set_group([group.group_id, *new_members])
-        else:
-            _LOGGER.debug("Player %s is not in a group", player_id)
+            new_members = [group.member_player_ids]
+            if player_id in new_members:
+                new_members.remove(player_id)
+            await self.heos.set_group([group.lead_player_id, *new_members])
 
-    def get_group_members(self, player_id: int) -> list[str] | None:
+    def get_group_members(self, group_id: int | None) -> list[str] | None:
         """Get group member entity IDs for the current player."""
-        group = next(
-            (
-                group
-                for group in self.heos.groups.values()
-                if group.lead_player_id == player_id
-                or player_id in group.member_player_ids
-            ),
-            None,
-        )
-        if group is None:
+        if group_id is None:
             return None
+        group = self.heos.groups[group_id]
         player_ids = [group.lead_player_id, *group.member_player_ids]
+        # Resolve player_ids to entity_ids
         entity_registry = er.async_get(self.hass)
         entity_ids: list[str] = []
         for member_id in player_ids:
@@ -378,9 +352,10 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 DOMAIN,
                 str(member_id),
             )
+            # Occurs if the entity hasn't loaded or has been removed
             if entity is not None:
                 entity_ids.append(entity)
-        return entity_ids
+        return entity_ids or None
 
     @property
     def source_list(self) -> list[str]:

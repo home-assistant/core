@@ -106,6 +106,7 @@ def player_fixture(quick_selects):
             repeat=RepeatType.OFF,
             volume=25,
             heos=None,
+            group_id=999,
         )
         player.now_playing_media = Mock()
         player.now_playing_media.supported_controls = CONTROLS_ALL
@@ -128,6 +129,7 @@ def player_fixture(quick_selects):
         player.pause = AsyncMock()
         player.play = AsyncMock()
         player.play_input_source = AsyncMock()
+        player.play_media = AsyncMock()
         player.play_next = AsyncMock()
         player.play_previous = AsyncMock()
         player.play_preset_station = AsyncMock()
