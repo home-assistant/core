@@ -88,6 +88,10 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 },
             ) from ex
 
+        await self._process_child_devices()
+
+    async def _process_child_devices(self) -> None:
+        """Process child devices and remove stale devices."""
         current_child_device_ids = {child.device_id for child in self.device.children}
         if (
             stale_device_ids := self._previous_child_device_ids

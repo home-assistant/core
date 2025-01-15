@@ -462,7 +462,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 "Removing %s from known %s child ids for device %s"
                 "as it has been removed by the coordinator",
                 removed_child_id,
-                entity_class,
+                entity_class.__name__,
                 device.host,
             )
             known_child_device_ids.discard(removed_child_id)
@@ -482,8 +482,8 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
 
         if children:
             _LOGGER.debug(
-                "Getting %s, entities for %s child devices on device %s",
-                entity_class,
+                "Getting %s entities for %s child devices on device %s",
+                entity_class.__name__,
                 len(children),
                 device.host,
             )
@@ -503,7 +503,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 "Device %s, found %s child %s entities for child id %s",
                 device.host,
                 len(entities),
-                entity_class,
+                entity_class.__name__,
                 child.device_id,
             )
             entities.extend(child_entities)
