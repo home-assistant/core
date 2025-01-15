@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
-from typing import cast
+import threading
+from typing import IO, cast
 
 from aiohttp import BodyPartReader
 from aiohttp.hdrs import CONTENT_DISPOSITION
@@ -15,6 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
+from . import util
 from .const import DATA_MANAGER
 
 
@@ -43,8 +45,13 @@ class DownloadBackupView(HomeAssistantView):
             agent_id = request.query.getone("agent_id")
         except KeyError:
             return Response(status=HTTPStatus.BAD_REQUEST)
+        try:
+            password = request.query.getone("password")
+        except KeyError:
+            password = None
 
-        manager = request.app[KEY_HASS].data[DATA_MANAGER]
+        hass = request.app[KEY_HASS]
+        manager = hass.data[DATA_MANAGER]
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]
@@ -58,12 +65,25 @@ class DownloadBackupView(HomeAssistantView):
         headers = {
             CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
         }
+        reader: IO[bytes]
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
             path = local_agent.get_backup_path(backup_id)
-            return FileResponse(path=path.as_posix(), headers=headers)
-
-        stream = await agent.async_download_backup(backup_id)
+            if not password:
+                return FileResponse(path=path.as_posix(), headers=headers)
+            try:
+                reader = await hass.async_add_executor_job(open, path.as_posix(), "rb")
+            except FileNotFoundError:
+                return Response(status=HTTPStatus.NOT_FOUND)
+        else:
+            stream = await agent.async_download_backup(backup_id)
+            if password:
+                reader = cast(IO[bytes], util.AsyncIteratorReader(hass, stream))
+        if password:
+            stream = util.AsyncIteratorWriter(hass)
+            threading.Thread(
+                target=util.decrypt_backup, args=[reader, stream, password]
+            ).start()
         response = StreamResponse(status=HTTPStatus.OK, headers=headers)
         await response.prepare(request)
         async for chunk in stream:

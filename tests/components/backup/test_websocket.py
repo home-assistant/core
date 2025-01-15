@@ -36,7 +36,7 @@ from .common import (
     setup_backup_platform,
 )
 
-from tests.common import async_fire_time_changed, async_mock_service, get_fixture_path
+from tests.common import async_fire_time_changed, async_mock_service
 from tests.typing import WebSocketGenerator
 
 BACKUP_CALL = call(
@@ -2554,21 +2554,6 @@ async def test_subscribe_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
     )
     assert await client.receive_json() == snapshot
-
-
-@pytest.fixture
-def mock_backups() -> Generator[None]:
-    """Fixture to setup test backups."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.backup import backup as core_backup
-
-    class CoreLocalBackupAgent(core_backup.CoreLocalBackupAgent):
-        def __init__(self, hass: HomeAssistant) -> None:
-            super().__init__(hass)
-            self._backup_dir = get_fixture_path("test_backups", DOMAIN)
-
-    with patch.object(core_backup, "CoreLocalBackupAgent", CoreLocalBackupAgent):
-        yield
 
 
 @pytest.mark.parametrize(
