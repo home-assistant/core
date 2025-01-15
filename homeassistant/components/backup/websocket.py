@@ -9,9 +9,12 @@ from homeassistant.core import HomeAssistant, callback
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
-from .manager import IncorrectPasswordError, ManagerStateEvent
+from .manager import (
+    DecryptOnDowloadNotSupported,
+    IncorrectPasswordError,
+    ManagerStateEvent,
+)
 from .models import Folder
-from .util import IncorrectPassword, UnsuppertedSecureTarVersion
 
 
 @callback
@@ -171,9 +174,9 @@ async def handle_can_decrypt_on_download(
             agent_id=msg["agent_id"],
             password=msg.get("password"),
         )
-    except IncorrectPassword:
+    except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
-    except UnsuppertedSecureTarVersion:
+    except DecryptOnDowloadNotSupported:
         connection.send_error(
             msg["id"], "decrypt_not_supported", "Decrypt on download not supported"
         )

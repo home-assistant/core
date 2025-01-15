@@ -31,6 +31,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 
+from . import util as backup_util
 from .agent import (
     BackupAgent,
     BackupAgentError,
@@ -253,6 +254,10 @@ class BackupReaderWriterError(HomeAssistantError):
 
 class IncorrectPasswordError(BackupReaderWriterError):
     """Raised when the password is incorrect."""
+
+
+class DecryptOnDowloadNotSupported(BackupManagerError):
+    """Raised when on-the-fly decryption is not supported."""
 
 
 class BackupManager:
@@ -1017,7 +1022,14 @@ class BackupManager:
         else:
             backup_stream = await agent.async_download_backup(backup_id)
             reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
-        validate_password_stream(reader, password)
+        try:
+            validate_password_stream(reader, password)
+        except backup_util.IncorrectPassword as err:
+            raise IncorrectPasswordError from err
+        except backup_util.UnsuppertedSecureTarVersion as err:
+            raise DecryptOnDowloadNotSupported from err
+        except backup_util.DecryptError as err:
+            raise BackupManagerError(str(err)) from err
 
 
 class KnownBackups:
