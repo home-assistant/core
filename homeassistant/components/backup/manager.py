@@ -255,9 +255,13 @@ class BackupReaderWriterError(HomeAssistantError):
 class IncorrectPasswordError(BackupReaderWriterError):
     """Raised when the password is incorrect."""
 
+    _message = "The password provided is incorrect."
+
 
 class DecryptOnDowloadNotSupported(BackupManagerError):
     """Raised when on-the-fly decryption is not supported."""
+
+    _message = "On-the-fly decryption is not supported for this backup."
 
 
 class BackupManager:
@@ -1413,7 +1417,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             validate_password, path, password
         )
         if not password_valid:
-            raise IncorrectPasswordError("The password provided is incorrect.")
+            raise IncorrectPasswordError
 
         def _write_restore_file() -> None:
             """Write the restore file."""
