@@ -7,9 +7,11 @@ from typing import Any
 import requests_mock
 
 from homeassistant.components.vesync.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import load_fixture, load_json_object_fixture
+from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
 
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
@@ -55,6 +57,29 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
 }
 
 
+def mock_login_response(
+    requests_mock: requests_mock.Mocker, device_names: list[str]
+) -> None:
+    """Build mock login response."""
+
+    device_list = [
+        device
+        for device in ALL_DEVICES["result"]["list"]
+        if device["deviceName"] in device_names
+    ]
+
+    if device_list:
+        requests_mock.post(
+            "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
+            json={"code": 0, "result": {"list": device_list}},
+        )
+
+    requests_mock.post(
+        "https://smartapi.vesync.com/cloud/v1/user/login",
+        json=load_json_object_fixture("vesync-login.json", DOMAIN),
+    )
+
+
 def mock_login_and_devices_response(
     requests_mock: requests_mock.Mocker, device_names: str | list[str]
 ) -> None:
@@ -65,20 +90,8 @@ def mock_login_and_devices_response(
     else:
         device_names = [device_names]
 
-    device_list = [
-        device
-        for device in ALL_DEVICES["result"]["list"]
-        if device["deviceName"] in device_names
-    ]
+    mock_login_response(requests_mock, device_names)
 
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        json={"code": 0, "result": {"list": device_list}},
-    )
-    requests_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/user/login",
-        json=load_json_object_fixture("vesync-login.json", DOMAIN),
-    )
     for device_name in device_names:
         for fixture in DEVICE_FIXTURES[device_name]:
             requests_mock.request(
@@ -103,7 +116,9 @@ def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) 
 
 
 def mock_device_response(
-    requests_mock: requests_mock.Mocker, device_name: str, override: Callable | Any
+    requests_mock: requests_mock.Mocker,
+    device_name: str,
+    override: Callable | Any | None,
 ) -> None:
     """Build device data response for the Helpers.call_api method."""
 
@@ -220,3 +235,27 @@ def call_api_side_effect__single_fan(*args, **kwargs):
             200,
         )
     raise ValueError(f"Unhandled API call args={args}, kwargs={kwargs}")
+
+
+async def build_device_config_entry(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    config: ConfigType,
+    device_name: str,
+    override: Callable | Any | None = None,
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for specified device with optional override."""
+
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+    )
+    entry.add_to_hass(hass)
+
+    mock_login_response(requests_mock, [device_name])
+    mock_device_response(requests_mock, device_name, override)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry

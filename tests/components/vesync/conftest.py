@@ -18,7 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .common import mock_login_and_devices_response
+from .common import build_device_config_entry
 
 from tests.common import MockConfigEntry
 
@@ -116,16 +116,7 @@ async def humidifier_config_entry(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
 ) -> MockConfigEntry:
     """Create a mock VeSync config entry for `Humidifier 200s`."""
-    entry = MockConfigEntry(
-        title="VeSync",
-        domain=DOMAIN,
-        data=config[DOMAIN],
+
+    return await build_device_config_entry(
+        hass, requests_mock, config, "Humidifier 200s"
     )
-    entry.add_to_hass(hass)
-
-    device_name = "Humidifier 200s"
-    mock_login_and_devices_response(requests_mock, device_name)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
