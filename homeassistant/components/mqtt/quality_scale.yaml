@@ -123,7 +123,7 @@ rules:
     comment: |
       This integration does not use web sessions.
   strict-typing:
-    status: exempt
+    status: done
     comment: >
       Typing for 'paho-mqtt==1.6.1' supported via 'types-paho-mqtt==1.6.0.20240321'
-      (requirements_test.txt), set to exempt as hassfest does not support type stubs.
+      (requirements_test.txt).
