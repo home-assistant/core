@@ -31,8 +31,8 @@ from homeassistant.components.bang_olufsen.const import (
     CONF_BEOLINK_JID,
     BangOlufsenSource,
 )
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 TEST_HOST = "192.168.0.1"
 TEST_HOST_INVALID = "192.168.0"
