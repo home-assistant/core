@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, fields
+from dataclasses import asdict, fields, replace
 import datetime
 from math import floor
 from typing import TYPE_CHECKING
@@ -164,12 +164,16 @@ def inventory_list(
     }
 
 
-def apply_stats(user: UserData, data: StatsUser) -> None:
+def apply_stats(user: UserData, data: StatsUser) -> UserData:
     """Apply stats response to user data."""
 
-    for field in StatsUser.__annotations__:
-        if (value := getattr(data, field)) is not None:
-            setattr(user.stats, field, value)
+    stats = {
+        field: value
+        for field in StatsUser.__annotations__
+        if (value := getattr(data, field)) is not None
+    }
+
+    return replace(user, stats=replace(user.stats, **stats))
 
 
 def apply_quest(user: UserData, data: QuestData) -> None:
