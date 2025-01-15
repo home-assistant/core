@@ -20,7 +20,24 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_NT,
+    ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_MODEL_URL,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_SERVICE_LIST,
+    ATTR_UPNP_UDN,
+    ATTR_UPNP_UPC,
+    SsdpServiceInfo,
+)
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -1106,6 +1123,81 @@ async def test_ssdp_rediscover_no_match(
             "SsdpServiceInfo",
             "homeassistant.helpers.service_info.ssdp.SsdpServiceInfo",
             SsdpServiceInfo,
+        ),
+        (
+            "ATTR_ST",
+            "homeassistant.helpers.service_info.ssdp.ATTR_ST",
+            ATTR_ST,
+        ),
+        (
+            "ATTR_NT",
+            "homeassistant.helpers.service_info.ssdp.ATTR_NT",
+            ATTR_NT,
+        ),
+        (
+            "ATTR_UPNP_DEVICE_TYPE",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_DEVICE_TYPE",
+            ATTR_UPNP_DEVICE_TYPE,
+        ),
+        (
+            "ATTR_UPNP_FRIENDLY_NAME",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_FRIENDLY_NAME",
+            ATTR_UPNP_FRIENDLY_NAME,
+        ),
+        (
+            "ATTR_UPNP_MANUFACTURER",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER",
+            ATTR_UPNP_MANUFACTURER,
+        ),
+        (
+            "ATTR_UPNP_MANUFACTURER_URL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER_URL",
+            ATTR_UPNP_MANUFACTURER_URL,
+        ),
+        (
+            "ATTR_UPNP_MODEL_DESCRIPTION",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_DESCRIPTION",
+            ATTR_UPNP_MODEL_DESCRIPTION,
+        ),
+        (
+            "ATTR_UPNP_MODEL_NAME",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NAME",
+            ATTR_UPNP_MODEL_NAME,
+        ),
+        (
+            "ATTR_UPNP_MODEL_NUMBER",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NUMBER",
+            ATTR_UPNP_MODEL_NUMBER,
+        ),
+        (
+            "ATTR_UPNP_MODEL_URL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_URL",
+            ATTR_UPNP_MODEL_URL,
+        ),
+        (
+            "ATTR_UPNP_SERIAL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERIAL",
+            ATTR_UPNP_SERIAL,
+        ),
+        (
+            "ATTR_UPNP_SERVICE_LIST",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERVICE_LIST",
+            ATTR_UPNP_SERVICE_LIST,
+        ),
+        (
+            "ATTR_UPNP_UDN",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UDN",
+            ATTR_UPNP_UDN,
+        ),
+        (
+            "ATTR_UPNP_UPC",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UPC",
+            ATTR_UPNP_UPC,
+        ),
+        (
+            "ATTR_UPNP_PRESENTATION_URL",
+            "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_PRESENTATION_URL",
+            ATTR_UPNP_PRESENTATION_URL,
         ),
     ],
 )

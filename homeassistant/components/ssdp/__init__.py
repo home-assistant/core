@@ -55,7 +55,24 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo as _SsdpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_NT as _ATTR_NT,
+    ATTR_ST as _ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE as _ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME as _ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER as _ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MANUFACTURER_URL as _ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_MODEL_DESCRIPTION as _ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_MODEL_NAME as _ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER as _ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_MODEL_URL as _ATTR_UPNP_MODEL_URL,
+    ATTR_UPNP_PRESENTATION_URL as _ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL as _ATTR_UPNP_SERIAL,
+    ATTR_UPNP_SERVICE_LIST as _ATTR_UPNP_SERVICE_LIST,
+    ATTR_UPNP_UDN as _ATTR_UPNP_UDN,
+    ATTR_UPNP_UPC as _ATTR_UPNP_UPC,
+    SsdpServiceInfo as _SsdpServiceInfo,
+)
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
@@ -82,30 +99,90 @@ ATTR_SSDP_SERVER = "ssdp_server"
 ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
 ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
-ATTR_ST = "st"
-ATTR_NT = "nt"
-ATTR_UPNP_DEVICE_TYPE = "deviceType"
-ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
-ATTR_UPNP_MANUFACTURER = "manufacturer"
-ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
-ATTR_UPNP_MODEL_DESCRIPTION = "modelDescription"
-ATTR_UPNP_MODEL_NAME = "modelName"
-ATTR_UPNP_MODEL_NUMBER = "modelNumber"
-ATTR_UPNP_MODEL_URL = "modelURL"
-ATTR_UPNP_SERIAL = "serialNumber"
-ATTR_UPNP_SERVICE_LIST = "serviceList"
-ATTR_UPNP_UDN = "UDN"
-ATTR_UPNP_UPC = "UPC"
-ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+_DEPRECATED_ATTR_ST = DeprecatedConstant(
+    _ATTR_ST,
+    "homeassistant.helpers.service_info.ssdp.ATTR_ST",
+    "2026.2",
+)
+_DEPRECATED_ATTR_NT = DeprecatedConstant(
+    _ATTR_NT,
+    "homeassistant.helpers.service_info.ssdp.ATTR_NT",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_DEVICE_TYPE = DeprecatedConstant(
+    _ATTR_UPNP_DEVICE_TYPE,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_DEVICE_TYPE",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_FRIENDLY_NAME = DeprecatedConstant(
+    _ATTR_UPNP_FRIENDLY_NAME,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_FRIENDLY_NAME",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MANUFACTURER = DeprecatedConstant(
+    _ATTR_UPNP_MANUFACTURER,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MANUFACTURER_URL = DeprecatedConstant(
+    _ATTR_UPNP_MANUFACTURER_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER_URL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_DESCRIPTION = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_DESCRIPTION,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_DESCRIPTION",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_NAME = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_NAME,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NAME",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_NUMBER = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_NUMBER,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NUMBER",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_URL = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_URL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_SERIAL = DeprecatedConstant(
+    _ATTR_UPNP_SERIAL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERIAL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_SERVICE_LIST = DeprecatedConstant(
+    _ATTR_UPNP_SERVICE_LIST,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERVICE_LIST",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_UDN = DeprecatedConstant(
+    _ATTR_UPNP_UDN,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UDN",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_UPC = DeprecatedConstant(
+    _ATTR_UPNP_UPC,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UPC",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_PRESENTATION_URL = DeprecatedConstant(
+    _ATTR_UPNP_PRESENTATION_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_PRESENTATION_URL",
+    "2026.2",
+)
 # Attributes for accessing info added by Home Assistant
 ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_ST,
-    ATTR_UPNP_DEVICE_TYPE,
-    ATTR_NT,
-    ATTR_UPNP_MANUFACTURER_URL,
+    _ATTR_UPNP_MANUFACTURER,
+    _ATTR_ST,
+    _ATTR_UPNP_DEVICE_TYPE,
+    _ATTR_NT,
+    _ATTR_UPNP_MANUFACTURER_URL,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -677,9 +754,9 @@ def discovery_info_from_headers_and_description(
         ssdp_st = combined_headers["nt"]
 
     # Ensure UPnP "udn" is set
-    if ATTR_UPNP_UDN not in upnp_info:
+    if _ATTR_UPNP_UDN not in upnp_info:
         if udn := _udn_from_usn(ssdp_usn):
-            upnp_info[ATTR_UPNP_UDN] = udn
+            upnp_info[_ATTR_UPNP_UDN] = udn
 
     return _SsdpServiceInfo(
         ssdp_usn=ssdp_usn,
