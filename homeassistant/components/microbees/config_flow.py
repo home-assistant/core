@@ -48,16 +48,13 @@ class OAuth2FlowHandler(
             self.logger.exception("Unexpected error")
             return self.async_abort(reason="unknown")
 
+        # Ensure unique ID is set
         await self.async_set_unique_id(str(current_user.id))
 
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
-            # Salva i dati OAuth nella sessione del flusso e reindirizza al passo MQTT
-            self.context["oauth_data"] = data
-            self.context["current_user"] = current_user
-
-            return await self.async_step_mqtt_custom()
+            return await self.async_step_mqtt_custom(current_user)
 
         self._abort_if_unique_id_mismatch(reason="wrong_account")
         return self.async_update_reload_and_abort(self._get_reauth_entry(), data=data)
@@ -77,26 +74,26 @@ class OAuth2FlowHandler(
         return await self.async_step_user()
 
     async def async_step_mqtt_custom(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None, current_user=None
     ) -> ConfigFlowResult:
         """Handle the MQTT configuration step."""
         errors = {}
 
-        if user_input is not None:
+        if user_input is not None and current_user is not None:
             try:
                 mqtt_username = f"beessmart:{user_input['mqtt_username']}"
+                mqtt_data = {
+                    "host": MQTT_HOST_URL,
+                    "port": user_input.get("mqtt_port", 1883),
+                    "username": mqtt_username,
+                    "password": user_input.get("mqtt_password"),
+                    "client_id": user_input.get("client_id"),
+                }
                 return self.async_create_entry(
-                    title=self.context["current_user"].username,
+                    title=current_user["username"],
                     data={
-                        **self.context.get("oauth_data", {}),
-                        "current_user": self.context["current_user"],
-                        "mqtt": {
-                            "host": MQTT_HOST_URL,
-                            "port": user_input.get("mqtt_port", 1883),
-                            "username": mqtt_username,
-                            "password": user_input.get("mqtt_password"),
-                            "client_id": user_input.get("client_id"),
-                        },
+                        "current_user": current_user,
+                        "mqtt": mqtt_data,
                     },
                 )
             except Exception:
