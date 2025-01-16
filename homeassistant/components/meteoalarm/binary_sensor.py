@@ -27,6 +27,7 @@ from .const import (
     CONF_COUNTRY,
     CONF_LANGUAGE,
     CONF_PROVINCE,
+    DEFAULT_NAME,
     DOMAIN,
     LOGGER,
 )
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_COUNTRY): cv.string,
         vol.Required(CONF_PROVINCE): cv.string,
         vol.Optional(CONF_LANGUAGE, default="en"): cv.string,
-        vol.Optional(CONF_NAME, default=DOMAIN): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
@@ -99,9 +100,8 @@ async def async_setup_entry(
             entry.data[CONF_PROVINCE],
             entry.data[CONF_LANGUAGE],
         )
-    except KeyError:
-        LOGGER.error("Wrong country digits or province name")
-        return
+    except Exception:  # noqa: BLE001
+        LOGGER.error("Something went wrong when connecting to Meteoalert")
 
     async_add_entities([MeteoAlertBinarySensor(entry)], True)
 
@@ -112,12 +112,12 @@ class MeteoAlertBinarySensor(BinarySensorEntity):
     _attr_attribution = ATTRIBUTION
     _attr_device_class = BinarySensorDeviceClass.SAFETY
 
-    def __init__(self, config: ConfigEntry, entry_id: str | None = None) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the MeteoAlert binary sensor."""
         self._api = Meteoalert(
-            country=config.data.get(CONF_COUNTRY),
-            province=config.data.get(CONF_PROVINCE),
-            language=config.data.get(CONF_LANGUAGE),
+            country=entry.data.get(CONF_COUNTRY),
+            province=entry.data.get(CONF_PROVINCE),
+            language=entry.data.get(CONF_LANGUAGE),
         )
         self._attr_unique_id = (
             f"{self._api.country}_{self._api.province}_{self._api.language}"

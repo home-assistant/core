@@ -6,7 +6,8 @@ from meteoalertapi import Meteoalert
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_NAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 import homeassistant.helpers.config_validation as cv
 
@@ -31,8 +32,23 @@ SCHEMA = vol.Schema(
 )
 
 
+async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
+    """Validate user input."""
+
+    meteo = Meteoalert(data[CONF_COUNTRY], data[CONF_PROVINCE], data[CONF_LANGUAGE])
+    result = meteo.get_alert()
+    if not result:
+        raise CannotConnect
+
+    return {
+        "title": f"Alerts for {data[CONF_PROVINCE]}({data[CONF_COUNTRY]}) in {data[CONF_LANGUAGE]}"
+    }
+
+
 class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """MeteoAlarm config flow."""
+
+    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -51,20 +67,21 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                Meteoalert(CONF_COUNTRY, CONF_PROVINCE, CONF_LANGUAGE)
-
-            except KeyError:
-                LOGGER.error("Wrong country digits or province name")
-                errors["base"] = "wrong_country_or_province"
+                info = validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unknown exception")
                 errors["base"] = "unknown"
             else:
                 user_input[CONF_COUNTRY] = SUPPORTED_COUNTRIES.get(
-                    user_input[CONF_COUNTRY], DEFAULT_COUNTRY
+                    user_input[CONF_COUNTRY]
                 )
-                return self.async_create_entry(
-                    title=DOMAIN,
+                await self.async_set_unique_id(
+                    f"{user_input[CONF_COUNTRY]}_{user_input[CONF_PROVINCE]}_{user_input[CONF_LANGUAGE]}"
+                )
+                return await self.async_create_entry(
+                    title=info["title"],
                     data=user_input,
                 )
 
@@ -89,21 +106,18 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            Meteoalert(
-                SUPPORTED_COUNTRIES.get(import_config[CONF_COUNTRY], DEFAULT_COUNTRY),
-                import_config[CONF_PROVINCE],
-                import_config[CONF_LANGUAGE],
-            )
-
-        except KeyError:
-            LOGGER.error("Wrong country digits or province name while importing")
-            return self.async_abort(reason="wrong_country_or_province")
+            info = validate_input(self.hass, import_config)
+        except CannotConnect:
+            return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unknown exception while importing")
             return self.async_abort(reason="unknown")
 
-        return self.async_create_entry(
-            title=import_config.get(CONF_NAME, DOMAIN),
+        await self.async_set_unique_id(
+            f"{import_config[CONF_COUNTRY]}_{import_config[CONF_PROVINCE]}_{import_config[CONF_LANGUAGE]}"
+        )
+        return await self.async_create_entry(
+            title=info["title"],
             data={
                 CONF_COUNTRY: SUPPORTED_COUNTRIES.get(
                     import_config[CONF_COUNTRY], DEFAULT_COUNTRY
@@ -112,3 +126,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_LANGUAGE: import_config[CONF_LANGUAGE],
             },
         )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
