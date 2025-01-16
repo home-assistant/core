@@ -3,17 +3,18 @@
 from unittest.mock import patch
 
 import pytest
+import requests_mock
 
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from .common import ENTITY_HUMIDIFIER_MIST_LEVEL
+from .common import ENTITY_HUMIDIFIER_MIST_LEVEL, build_device_config_entry
 
 from tests.common import MockConfigEntry
 
@@ -59,8 +60,24 @@ async def test_set_mist_level(
 
 
 async def test_mist_level(
-    hass: HomeAssistant, humidifier_config_entry: MockConfigEntry
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
 ) -> None:
     """Test the state of mist_level number entity."""
 
+    await build_device_config_entry(hass, requests_mock, config, "Humidifier 200s")
     assert hass.states.get(ENTITY_HUMIDIFIER_MIST_LEVEL).state == "6"
+
+
+async def test_mist_level_availability(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
+) -> None:
+    """Test the state of mist_level number entity availability."""
+
+    def make_mode_auto(device_name, json) -> None:
+        json["result"]["result"]["mode"] = "auto"
+
+    # Mock a humidifier with "auto" mode where mist_level should be unavailable
+    await build_device_config_entry(
+        hass, requests_mock, config, "Humidifier 200s", make_mode_auto
+    )
+    assert hass.states.get(ENTITY_HUMIDIFIER_MIST_LEVEL).state == STATE_UNAVAILABLE
