@@ -106,14 +106,14 @@ async def test_downloading_remote_encrypted_backup(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test downloading a local backup file."""
-    backup_path = get_fixture_path("test_backups/ed1608a9.tar", DOMAIN)
+    backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     await setup_backup_integration(hass)
     hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest(
         "test",
         [
             AgentBackup(
                 addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
-                backup_id="ed1608a9",
+                backup_id="c0cb53bd",
                 database_included=True,
                 date="1970-01-01T00:00:00Z",
                 extra_metadata={},
@@ -141,7 +141,7 @@ async def _test_downloading_encrypted_backup(
     """Test downloading an encrypted backup file."""
     # Try downloading without supplying a password
     client = await hass_client()
-    resp = await client.get(f"/api/backup/download/ed1608a9?agent_id={agent_id}")
+    resp = await client.get(f"/api/backup/download/c0cb53bd?agent_id={agent_id}")
     assert resp.status == 200
     backup = await resp.read()
     # We expect a valid outer tar file, but the inner tar file is encrypted and
@@ -158,7 +158,7 @@ async def _test_downloading_encrypted_backup(
 
     # Download with the wrong password
     resp = await client.get(
-        f"/api/backup/download/ed1608a9?agent_id={agent_id}&password=wrong"
+        f"/api/backup/download/c0cb53bd?agent_id={agent_id}&password=wrong"
     )
     assert resp.status == 200
     backup = await resp.read()
@@ -171,7 +171,7 @@ async def _test_downloading_encrypted_backup(
 
     # Finally download with the correct password
     resp = await client.get(
-        f"/api/backup/download/ed1608a9?agent_id={agent_id}&password=hunter2"
+        f"/api/backup/download/c0cb53bd?agent_id={agent_id}&password=hunter2"
     )
     assert resp.status == 200
     backup = await resp.read()

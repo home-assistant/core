@@ -13,13 +13,7 @@ import tarfile
 from typing import IO, Self, cast
 
 import aiohttp
-from securetar import (
-    PLAINTEXT_SIZE_HEADER,
-    VERSION_HEADER,
-    SecureTarError,
-    SecureTarFile,
-    SecureTarReadError,
-)
+from securetar import SecureTarError, SecureTarFile, SecureTarReadError
 
 from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
@@ -214,8 +208,6 @@ def validate_password_stream(
         for obj in input_tar:
             if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
                 continue
-            if obj.pax_headers.get(VERSION_HEADER) != "2.0":
-                raise UnsupportedSecureTarVersion
             istf = SecureTarFile(
                 None,  # Not used
                 gzip=False,
@@ -224,6 +216,8 @@ def validate_password_stream(
                 fileobj=input_tar.extractfile(obj),
             )
             with istf.decrypt(obj) as decrypted:
+                if istf.securetar_header.plaintext_size is None:
+                    raise UnsupportedSecureTarVersion
                 try:
                     decrypted.read(1)  # Read a single byte to trigger the decryption
                 except SecureTarReadError as err:
@@ -279,10 +273,6 @@ def _decrypt_backup(
         if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
             output_tar.addfile(obj, input_tar.extractfile(obj))
             continue
-        if obj.pax_headers.get(VERSION_HEADER) != "2.0":
-            raise UnsupportedSecureTarVersion
-        decrypted_obj = copy.deepcopy(obj)
-        decrypted_obj.size = int(obj.pax_headers[PLAINTEXT_SIZE_HEADER])
         istf = SecureTarFile(
             None,  # Not used
             gzip=False,
@@ -291,6 +281,10 @@ def _decrypt_backup(
             fileobj=input_tar.extractfile(obj),
         )
         with istf.decrypt(obj) as decrypted:
+            if (plaintext_size := istf.securetar_header.plaintext_size) is None:
+                raise UnsupportedSecureTarVersion
+            decrypted_obj = copy.deepcopy(obj)
+            decrypted_obj.size = plaintext_size
             output_tar.addfile(decrypted_obj, decrypted)
 
 
