@@ -67,39 +67,29 @@ def async_register_backup_agents_listener(
 
 
 def handle_backup_errors[_R, **P](
-    translation_key: str,
-) -> Callable[
-    [Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]],
-    Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
-]:
+    func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
     """Handle backup errors with a specific translation key."""
 
-    def decorator(
-        func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
-    ) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
-        @wraps(func)
-        async def wrapper(
-            self: OneDriveBackupAgent, *args: P.args, **kwargs: P.kwargs
-        ) -> _R:
-            try:
-                return await func(self, *args, **kwargs)
-            except APIError as err:
-                if err.response_status_code == 403:
-                    self._entry.async_start_reauth(self._hass)
-                _LOGGER.error(
-                    "Error during backup in %s: Status %s, message %s",
-                    func.__name__,
-                    err.response_status_code,
-                    err.message,
-                )
-                _LOGGER.debug("Full error: %s", err, exc_info=True)
-                raise BackupAgentError(
-                    translation_domain=DOMAIN, translation_key=translation_key
-                ) from err
+    @wraps(func)
+    async def wrapper(
+        self: OneDriveBackupAgent, *args: P.args, **kwargs: P.kwargs
+    ) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except APIError as err:
+            if err.response_status_code == 403:
+                self._entry.async_start_reauth(self._hass)
+            _LOGGER.error(
+                "Error during backup in %s: Status %s, message %s",
+                func.__name__,
+                err.response_status_code,
+                err.message,
+            )
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError("Backup operation failed") from err
 
-        return wrapper
-
-    return decorator
+    return wrapper
 
 
 class OneDriveBackupAgent(BackupAgent):
@@ -120,7 +110,7 @@ class OneDriveBackupAgent(BackupAgent):
         )
         self.name = entry.title
 
-    @handle_backup_errors("failed_to_download_backup")
+    @handle_backup_errors
     async def async_download_backup(
         self,
         backup_id: str,
@@ -142,7 +132,7 @@ class OneDriveBackupAgent(BackupAgent):
 
         return response.aiter_bytes(chunk_size=1024)
 
-    @handle_backup_errors("failed_to_create_backup")
+    @handle_backup_errors
     async def async_upload_backup(
         self,
         *,
@@ -197,7 +187,7 @@ class OneDriveBackupAgent(BackupAgent):
             f"{self._folder_id}:/{backup.backup_id}.tar:"
         ).patch(DriveItem(description=description))
 
-    @handle_backup_errors("failed_to_delete_backup")
+    @handle_backup_errors
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -208,7 +198,7 @@ class OneDriveBackupAgent(BackupAgent):
             f"{self._folder_id}:/{backup_id}.tar:"
         ).delete()
 
-    @handle_backup_errors("failed_to_list_backups")
+    @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
@@ -221,7 +211,7 @@ class OneDriveBackupAgent(BackupAgent):
                     backups.append(self._backup_from_description(description))
         return backups
 
-    @handle_backup_errors("failed_to_get_backup")
+    @handle_backup_errors
     async def async_get_backup(
         self,
         backup_id: str,

@@ -5,10 +5,8 @@ from unittest.mock import MagicMock
 from kiota_abstractions.api_error import APIError
 import pytest
 
-from homeassistant.components.onedrive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from . import setup_integration
 
@@ -79,17 +77,35 @@ async def test_faulty_integration_folder(
     assert "Failed to get backups_9f86d081 folder" in caplog.text
 
 
-async def test_backup_folder_did_not_exist(
+@pytest.mark.parametrize(
+    ("status_code", "message"),
+    [
+        (404, "Failed to create backups_9f86d081 folder"),
+        (500, "Failed to get backups_9f86d081 folder"),
+    ],
+)
+async def test_errors_during_backup_folder_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_drive_items: MagicMock,
-    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+    status_code: int,
+    message: str,
 ) -> None:
-    """Test backup folder did not exist."""
+    """Test error during backup folder creation."""
+    mock_drive_items.get.side_effect = APIError(response_status_code=status_code)
+    mock_drive_items.children.post.side_effect = APIError()
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert message in caplog.text
+
+
+async def test_successful_backup_folder_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test successful backup folder creation."""
     mock_drive_items.get.side_effect = APIError(response_status_code=404)
     await setup_integration(hass, mock_config_entry)
-    assert len(issue_registry.issues) == 1
-
-    issue = issue_registry.async_get_issue(DOMAIN, "backup_folder_did_not_exist")
-    assert issue
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.LOADED

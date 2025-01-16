@@ -245,7 +245,7 @@ async def test_error_wrapper(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.title}": "Failed to delete backup"
+            f"{DOMAIN}.{mock_config_entry.title}": "Backup operation failed"
         }
     }
 
@@ -291,7 +291,7 @@ async def test_agents_backup_error(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.title}": "Failed to get backup"
+        f"{DOMAIN}.{mock_config_entry.title}": "Backup operation failed"
     }
 
 
@@ -311,7 +311,7 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.title}": "Failed to get backup"
+        f"{DOMAIN}.{mock_config_entry.title}": "Backup operation failed"
     }
 
     await hass.async_block_till_done()

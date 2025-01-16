@@ -165,7 +165,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_instance_id() -> Generator[AsyncMock]:
     """Mock the instance ID."""
     with patch(
-        "homeassistant.components.onedrive.util.async_get_instance_id",
+        "homeassistant.components.onedrive.async_get_instance_id",
         return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     ):
         yield
