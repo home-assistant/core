@@ -262,7 +262,7 @@
     },
     "browse_media": {
       "name": "Browse media",
-      "description": "Browse Media.",
+      "description": "Browses the available media.",
       "fields": {
         "media_content_id": {
           "name": "Content ID",
