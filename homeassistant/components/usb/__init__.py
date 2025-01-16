@@ -258,7 +258,7 @@ class USBDiscovery:
         self._request_callbacks: list[CALLBACK_TYPE] = []
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
-        self._port_event_callbacks: list[PORT_EVENT_CALLBACK_TYPE] = []
+        self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
         self._last_processed_devices: set[USBDevice] = set()
 
     async def async_setup(self) -> None:
@@ -414,13 +414,11 @@ class USBDiscovery:
         callback: PORT_EVENT_CALLBACK_TYPE,
     ) -> CALLBACK_TYPE:
         """Register a port event callback."""
-        self._port_event_callbacks.append(callback)
+        self._port_event_callbacks.add(callback)
 
         @hass_callback
         def _async_remove_callback() -> None:
-            if callback not in self._port_event_callbacks:
-                return
-            self._port_event_callbacks.remove(callback)
+            self._port_event_callbacks.discard(callback)
 
         return _async_remove_callback
 
@@ -468,11 +466,11 @@ class USBDiscovery:
 
     async def _async_process_ports(self, ports: Sequence[ListPortInfo]) -> None:
         """Process each discovered port."""
-        usb_devices = [
+        usb_devices = {
             usb_device_from_port(port)
             for port in ports
             if port.vid is not None or port.pid is not None
-        ]
+        }
 
         # CP2102N chips create *two* serial ports on macOS: `/dev/cu.usbserial-` and
         # `/dev/cu.SLAB_USBtoUART*`. The former does not work and we should ignore them.
@@ -483,7 +481,7 @@ class USBDiscovery:
                 if dev.device.startswith("/dev/cu.SLAB_USBtoUART")
             }
 
-            usb_devices = [
+            usb_devices = {
                 dev
                 for dev in usb_devices
                 if dev.serial_number not in silabs_serials
@@ -491,19 +489,18 @@ class USBDiscovery:
                     dev.serial_number in silabs_serials
                     and dev.device.startswith("/dev/cu.SLAB_USBtoUART")
                 )
-            ]
+            }
 
-        unique_devices = set(usb_devices)
-        added_devices = unique_devices - self._last_processed_devices
-        removed_devices = self._last_processed_devices - unique_devices
-        self._last_processed_devices = unique_devices
+        added_devices = usb_devices - self._last_processed_devices
+        removed_devices = self._last_processed_devices - usb_devices
+        self._last_processed_devices = usb_devices
 
         _LOGGER.debug(
             "Added devices: %r, removed devices: %r", added_devices, removed_devices
         )
 
         if added_devices or removed_devices:
-            for callback in self._port_event_callbacks:
+            for callback in self._port_event_callbacks.copy():
                 callback(added_devices, removed_devices)
 
         for usb_device in usb_devices:
