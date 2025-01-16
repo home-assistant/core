@@ -11,9 +11,9 @@ import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_SSL
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 
-from .const import DOMAIN
+from .const import CONF_TLS, DOMAIN
 
 
 class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -44,12 +44,6 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             return False
         return True
 
-    async def _try_and_setup(self) -> ConfigFlowResult:
-        self._async_abort_entries_match({CONF_PORT: self._device})
-        if not await self._test_connection():
-            return self.async_abort(reason="cannot_connect")
-        return self._create_device()
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -64,17 +58,19 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle network step."""
         if user_input is not None:
             self._title = "Velbus Network"
-            if user_input[CONF_SSL] == "yes":
+            if user_input[CONF_TLS] == "yes":
                 self._device = "tls://"
             else:
                 self._device = ""
             if user_input[CONF_PASSWORD] != "":
                 self._device += f"{user_input[CONF_PASSWORD]}@"
             self._device += f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
-            await self._try_and_setup()
+            self._async_abort_entries_match({CONF_PORT: self._device})
+            if await self._test_connection():
+                return self._create_device()
         else:
             user_input = {}
-            user_input[CONF_SSL] = "yes"
+            user_input[CONF_TLS] = "yes"
             user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = 27015
             user_input[CONF_PASSWORD] = ""
@@ -83,7 +79,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="network",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_SSL, default=user_input[CONF_SSL]): vol.In(
+                    vol.Required(CONF_TLS, default=user_input[CONF_TLS]): vol.In(
                         ["yes", "no"]
                     ),
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
@@ -108,7 +104,9 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._title = "Velbus USB"
             self._device = ports[list_of_ports.index(user_input[CONF_PORT])].device
-            await self._try_and_setup()
+            self._async_abort_entries_match({CONF_PORT: self._device})
+            if await self._test_connection():
+                return self._create_device()
         else:
             user_input = {}
             user_input[CONF_PORT] = ""
