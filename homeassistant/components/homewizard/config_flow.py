@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from homewizard_energy import HomeWizardEnergyV1
@@ -11,13 +10,14 @@ from homewizard_energy.errors import DisabledError, RequestError, UnsupportedErr
 from homewizard_energy.models import Device
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_API_ENABLED,
@@ -25,9 +25,8 @@ from .const import (
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,
     DOMAIN,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -49,7 +48,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 await self.async_set_unique_id(
@@ -75,7 +74,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if (
@@ -112,7 +111,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             device = await self._async_try_connect(discovery_info.ip)
         except RecoverableError as ex:
-            _LOGGER.error(ex)
+            LOGGER.error(ex)
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(
@@ -142,7 +141,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(self.ip_address)
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 return self.async_create_entry(
@@ -185,7 +184,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(reauth_entry.data[CONF_IP_ADDRESS])
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 await self.hass.config_entries.async_reload(reauth_entry.entry_id)
@@ -203,7 +202,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
 
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 await self.async_set_unique_id(
@@ -248,7 +247,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except UnsupportedError as ex:
-            _LOGGER.error("API version unsuppored")
+            LOGGER.error("API version unsuppored")
             raise AbortFlow("unsupported_api_version") from ex
 
         except RequestError as ex:
@@ -257,7 +256,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except Exception as ex:
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown_error") from ex
 
         finally:

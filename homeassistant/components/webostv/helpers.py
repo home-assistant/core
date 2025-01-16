@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from aiowebostv import WebOsClient
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -55,16 +56,18 @@ def async_get_client_by_device_entry(
     Raises ValueError if client is not found.
     """
     for config_entry_id in device.config_entries:
-        if entry := hass.config_entries.async_get_entry(config_entry_id):
-            client = entry.runtime_data
-            break
+        entry = hass.config_entries.async_get_entry(config_entry_id)
+        if entry and entry.domain == DOMAIN:
+            if entry.state is ConfigEntryState.LOADED:
+                return entry.runtime_data
 
-    if not client:
-        raise ValueError(
-            f"Device {device.id} is not from an existing {DOMAIN} config entry"
-        )
+            raise ValueError(
+                f"Device {device.id} is not from a loaded {DOMAIN} config entry"
+            )
 
-    return client
+    raise ValueError(
+        f"Device {device.id} is not from an existing {DOMAIN} config entry"
+    )
 
 
 async def async_get_sources(host: str, key: str) -> list[str]:

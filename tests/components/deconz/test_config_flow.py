@@ -20,12 +20,15 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
 )
-from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+)
 
 from .conftest import API_KEY, BRIDGE_ID
 

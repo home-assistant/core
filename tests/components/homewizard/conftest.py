@@ -26,7 +26,7 @@ def mock_homewizardenergy(
     """Return a mock bridge."""
     with (
         patch(
-            "homeassistant.components.homewizard.coordinator.HomeWizardEnergyV1",
+            "homeassistant.components.homewizard.HomeWizardEnergyV1",
             autospec=True,
         ) as homewizard,
         patch(

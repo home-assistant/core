@@ -376,7 +376,7 @@ class StateVacuumEntity(
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is int:  # noqa: E721
+        if type(features) is int:
             new_features = VacuumEntityFeature(features)
             self._report_deprecated_supported_features_values(new_features)
             return new_features

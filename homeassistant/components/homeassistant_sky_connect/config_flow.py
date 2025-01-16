@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOCS_WEB_FLASHER_URL, DOMAIN, HardwareVariant
 from .util import get_hardware_variant, get_usb_service_info
@@ -69,7 +70,7 @@ class HomeAssistantSkyConnectConfigFlow(
         """Initialize the config flow."""
         super().__init__(*args, **kwargs)
 
-        self._usb_info: usb.UsbServiceInfo | None = None
+        self._usb_info: UsbServiceInfo | None = None
         self._hw_variant: HardwareVariant | None = None
 
     @staticmethod
@@ -85,9 +86,7 @@ class HomeAssistantSkyConnectConfigFlow(
 
         return HomeAssistantSkyConnectOptionsFlowHandler(config_entry)
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         device = discovery_info.device
         vid = discovery_info.vid
