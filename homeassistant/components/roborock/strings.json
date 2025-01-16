@@ -460,9 +460,9 @@
       "name": "Clean rooms",
       "description": "Clean specific rooms.",
       "fields": {
-        "room_ids": {
-          "name": "Room IDs",
-          "description": "Ids of the Rooms to clean, separated by comma. (retrieve the ids with the service get_maps)"
+        "rooms": {
+          "name": "Rooms",
+          "description": "Names of the Rooms to clean."
         },
         "repeat": {
           "name": "Repeat",

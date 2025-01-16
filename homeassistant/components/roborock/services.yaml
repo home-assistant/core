@@ -32,11 +32,12 @@ clean_rooms:
       integration: roborock
       domain: vacuum
   fields:
-    room_ids:
-      example: 1,3,4
+    rooms:
+      example: Kitchen
       required: true
       selector:
         text:
+          multiple: true
     repeat:
       example: 1
       required: false

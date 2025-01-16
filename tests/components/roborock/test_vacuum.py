@@ -309,25 +309,19 @@ async def test_get_current_position_no_robot_position(
 
 
 @pytest.mark.parametrize(
-    ("room_ids", "repeat", "expected_room_ids"),
+    ("rooms", "repeat", "expected_room_ids"),
     [
-        ([1], 1, [1]),
-        ([1, 2, 3], 2, [1, 2, 3]),
-        ([4, 5], 3, [4, 5]),
-        ("1,2,3", 1, [1, 2, 3]),
-        ("4", 2, [4]),
-        ("5", 3, [5]),
-        ("Living Room", 1, [10]),
-        ("Kitchen", 2, [11]),
-        ("Living Room,Kitchen,3", 1, [10, 11, 3]),
-        ("Living Room,Kitchen", 2, [10, 11]),
+        (["Living Room"], 1, [10]),
+        (["kitchen"], 2, [11]),
+        (["Living Room", "Kitchen"], 1, [10, 11]),
+        (["Living room ", "kitchen"], 1, [10, 11]),
     ],
 )
 async def test_vacuum_clean_rooms(
     hass: HomeAssistant,
     bypass_api_fixture,
     setup_entry: MockConfigEntry,
-    room_ids: int | list[int] | str,
+    rooms: list[str],
     repeat: int,
     expected_room_ids: list[int],
 ) -> None:
@@ -335,7 +329,7 @@ async def test_vacuum_clean_rooms(
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
-    data = {ATTR_ENTITY_ID: ENTITY_ID, "room_ids": room_ids, "repeat": repeat}
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "rooms": rooms, "repeat": repeat}
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.get_current_map_info",
@@ -356,7 +350,7 @@ async def test_vacuum_clean_rooms(
         assert mock_send_command.call_count == 1
         assert mock_send_command.call_args[0][0] == RoborockCommand.APP_SEGMENT_CLEAN
         assert mock_send_command.call_args[0][1] == [
-            {"segments": expected_room_ids, "repeat": repeat}
+            {"repeat": repeat, "segments": expected_room_ids}
         ]
 
 
@@ -369,7 +363,7 @@ async def test_vacuum_clean_rooms_invalid_room_name(
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
-    data = {ATTR_ENTITY_ID: ENTITY_ID, "room_ids": "NonExistentRoom", "repeat": 1}
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "rooms": "NonExistentRoom", "repeat": 1}
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.get_current_map_info",
@@ -399,7 +393,7 @@ async def test_vacuum_clean_rooms_no_map_info(
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
-    data = {ATTR_ENTITY_ID: ENTITY_ID, "room_ids": "Living Room", "repeat": 1}
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "rooms": "Living Room", "repeat": 1}
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.get_current_map_info",

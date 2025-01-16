@@ -101,9 +101,7 @@ async def async_setup_entry(
         CLEAN_ROOMS_SERVICE_NAME,
         cv.make_entity_service_schema(
             {
-                vol.Required("room_ids"): vol.Any(
-                    vol.Coerce(int), [vol.Coerce(int)], vol.Coerce(str)
-                ),
+                vol.Required("rooms"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
                 vol.Optional("repeat"): vol.All(
                     vol.Coerce(int), vol.Clamp(min=1, max=3)
                 ),
@@ -241,27 +239,18 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "y": robot_position.y,
         }
 
-    async def clean_rooms(
-        self, room_ids: int | list[int | str] | str, repeat: int = 1
-    ) -> None:
+    async def clean_rooms(self, rooms: list[str], repeat: int = 1) -> None:
         """Clean specific rooms."""
 
-        segment_ids = await self._convert_to_segment_ids(room_ids)
+        segment_ids = await self._convert_to_segment_ids(rooms)
 
         await self.send(
             RoborockCommand.APP_SEGMENT_CLEAN,
             [{"segments": segment_ids, "repeat": repeat}],
         )
 
-    async def _convert_to_segment_ids(
-        self, room_ids: int | str | list[int | str]
-    ) -> list[int]:
+    async def _convert_to_segment_ids(self, rooms: list[str]) -> list[int]:
         """Parse room IDs from various formats to a list of integers."""
-
-        if isinstance(room_ids, int):
-            return [room_ids]
-        if isinstance(room_ids, str):
-            room_ids = [room_id.strip() for room_id in room_ids.split(",")]
 
         map_info = self.coordinator.get_current_map_info()
         if map_info is None:
@@ -271,15 +260,11 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             room_name.lower(): room_id for room_id, room_name in map_info.rooms.items()
         }
 
-        def map_room_id(room_id: int | str) -> int:
-            if isinstance(room_id, int):
-                return room_id
-            if room_id.isdigit():
-                return int(room_id)
-            room_id_stripped = room_id.strip().lower()
-            mapped_id = section_id_by_lower_room_name.get(room_id_stripped)
+        def map_room_id(room_id: str) -> int:
+            room_name_stripped = room_id.strip().lower()
+            mapped_id = section_id_by_lower_room_name.get(room_name_stripped)
             if mapped_id is not None:
                 return mapped_id
-            raise HomeAssistantError(f"Room name '{room_id_stripped}' not found")
+            raise HomeAssistantError(f"Room name '{room_name_stripped}' not found")
 
-        return [map_room_id(room_id) for room_id in room_ids]
+        return [map_room_id(room_id) for room_id in rooms]
