@@ -72,8 +72,6 @@ class TasmotaCamera(
     _tasmota_entity: tasmota_camera.TasmotaCamera
 
     """Representation of a Tasmota Camera."""
-    fps: int = 0
-    failure: str = ""
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize a MJPEG camera."""
@@ -111,30 +109,3 @@ class TasmotaCamera(
         stream_coro = self._tasmota_entity.get_mjpeg_stream(websession)
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
-
-    async def async_added_to_hass(self) -> None:
-        """Subscribe to MQTT events."""
-        self._tasmota_entity.set_on_state_callback(self.camera_state_updated)
-        await super().async_added_to_hass()
-
-    @callback
-    def camera_state_updated(self, state: Any, **kwargs: Any) -> None:
-        """Handle state updates."""
-        if state.get("CamFail"):
-            self.failure = "Camera Failure"
-        elif state.get("JpegFail"):
-            self.failure = "JPEG Failure"
-        else:
-            self.failure = ""
-        if "FPS" in state:
-            self.fps = state["FPS"]
-        self.async_write_ha_state()
-
-    @property
-    def state(self) -> str:
-        """Override state reporting to report failures and FPS if available."""
-        if self.failure:
-            return self.failure
-        if self.fps:
-            return f"{self.fps} FPS"
-        return super().state
