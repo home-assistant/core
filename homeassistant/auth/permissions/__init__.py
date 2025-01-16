@@ -17,12 +17,12 @@ POLICY_SCHEMA = vol.Schema({vol.Optional(CAT_ENTITIES): ENTITY_POLICY_SCHEMA})
 
 __all__ = [
     "POLICY_SCHEMA",
-    "merge_policies",
-    "PermissionLookup",
-    "PolicyType",
     "AbstractPermissions",
-    "PolicyPermissions",
     "OwnerPermissions",
+    "PermissionLookup",
+    "PolicyPermissions",
+    "PolicyType",
+    "merge_policies",
 ]
 
 

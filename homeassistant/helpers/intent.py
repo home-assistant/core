@@ -58,6 +58,7 @@ INTENT_TIMER_STATUS = "HassTimerStatus"
 INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 INTENT_RESPOND = "HassRespond"
+INTENT_BROADCAST = "HassBroadcast"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 

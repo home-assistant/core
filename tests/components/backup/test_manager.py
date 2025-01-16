@@ -45,6 +45,7 @@ from homeassistant.components.backup.manager import (
     NewBackup,
     ReceiveBackupStage,
     ReceiveBackupState,
+    RestoreBackupState,
     WrittenBackup,
 )
 from homeassistant.core import HomeAssistant
@@ -682,7 +683,7 @@ async def test_create_backup_success_clears_issue(
     assert set(issue_registry.issues) == issues_after_create_backup
 
 
-async def delayed_boom(*args, **kwargs) -> None:
+async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
     """Raise an exception after a delay."""
 
     async def delayed_boom() -> None:
@@ -2224,42 +2225,47 @@ async def test_receive_backup_file_read_error(
     assert unlink_mock.call_count == unlink_call_count
 
 
+@pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("agent_id", "password", "restore_database", "restore_homeassistant", "dir"),
+    ("agent_id", "password_param", "restore_database", "restore_homeassistant", "dir"),
     [
-        (LOCAL_AGENT_ID, None, True, False, "backups"),
-        (LOCAL_AGENT_ID, "abc123", False, True, "backups"),
-        ("test.remote", None, True, True, "tmp_backups"),
+        (LOCAL_AGENT_ID, {}, True, False, "backups"),
+        (LOCAL_AGENT_ID, {"password": "abc123"}, False, True, "backups"),
+        ("test.remote", {}, True, True, "tmp_backups"),
     ],
 )
-async def test_async_trigger_restore(
+async def test_restore_backup(
     hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
     agent_id: str,
-    password: str | None,
+    password_param: dict[str, str],
     restore_database: bool,
     restore_homeassistant: bool,
     dir: str,
 ) -> None:
-    """Test trigger restore."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-
-    await setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    """Test restore backup."""
+    password = password_param.get("password")
+    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
     await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
-            async_get_backup_agents=AsyncMock(
-                return_value=[BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])]
-            ),
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
             spec_set=BackupAgentPlatformProtocol,
         ),
     )
-    await manager.load_platforms()
 
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
 
     with (
         patch("pathlib.Path.exists", return_value=True),
@@ -2269,90 +2275,152 @@ async def test_async_trigger_restore(
         patch(
             "homeassistant.components.backup.manager.validate_password"
         ) as validate_password_mock,
-        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
+        patch.object(remote_agent, "async_download_backup") as download_mock,
+        patch(
+            "homeassistant.components.backup.backup.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
-        await manager.async_restore_backup(
-            TEST_BACKUP_ABC123.backup_id,
-            agent_id=agent_id,
-            password=password,
-            restore_addons=None,
-            restore_database=restore_database,
-            restore_folders=None,
-            restore_homeassistant=restore_homeassistant,
-        )
-        backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
-        expected_restore_file = json.dumps(
+        await ws_client.send_json_auto_id(
             {
-                "path": backup_path,
-                "password": password,
-                "remove_after_restore": agent_id != LOCAL_AGENT_ID,
+                "type": "backup/restore",
+                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "agent_id": agent_id,
                 "restore_database": restore_database,
                 "restore_homeassistant": restore_homeassistant,
             }
+            | password_param
         )
-        validate_password_mock.assert_called_once_with(Path(backup_path), password)
-        assert mocked_write_text.call_args[0][0] == expected_restore_file
-        assert mocked_service_call.called
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.IN_PROGRESS,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.COMPLETED,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+    backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
+    expected_restore_file = json.dumps(
+        {
+            "path": backup_path,
+            "password": password,
+            "remove_after_restore": agent_id != LOCAL_AGENT_ID,
+            "restore_database": restore_database,
+            "restore_homeassistant": restore_homeassistant,
+        }
+    )
+    validate_password_mock.assert_called_once_with(Path(backup_path), password)
+    assert mocked_write_text.call_args[0][0] == expected_restore_file
+    assert mocked_service_call.called
 
 
-async def test_async_trigger_restore_wrong_password(hass: HomeAssistant) -> None:
-    """Test trigger restore."""
+@pytest.mark.usefixtures("path_glob")
+@pytest.mark.parametrize(
+    ("agent_id", "dir"), [(LOCAL_AGENT_ID, "backups"), ("test.remote", "tmp_backups")]
+)
+async def test_restore_backup_wrong_password(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    agent_id: str,
+    dir: str,
+) -> None:
+    """Test restore backup wrong password."""
     password = "hunter2"
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    hass.data[DATA_MANAGER] = manager
-
-    await setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
+    remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
     await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
-            async_get_backup_agents=AsyncMock(
-                return_value=[BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])]
-            ),
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
             spec_set=BackupAgentPlatformProtocol,
         ),
     )
-    await manager.load_platforms()
 
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
 
     with (
         patch("pathlib.Path.exists", return_value=True),
+        patch("pathlib.Path.open"),
         patch("pathlib.Path.write_text") as mocked_write_text,
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
         patch(
             "homeassistant.components.backup.manager.validate_password"
         ) as validate_password_mock,
+        patch.object(remote_agent, "async_download_backup") as download_mock,
+        patch(
+            "homeassistant.components.backup.backup.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
     ):
+        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         validate_password_mock.return_value = False
-        with pytest.raises(
-            HomeAssistantError, match="The password provided is incorrect."
-        ):
-            await manager.async_restore_backup(
-                TEST_BACKUP_ABC123.backup_id,
-                agent_id=LOCAL_AGENT_ID,
-                password=password,
-                restore_addons=None,
-                restore_database=True,
-                restore_folders=None,
-                restore_homeassistant=True,
-            )
+        await ws_client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "agent_id": agent_id,
+                "password": password,
+            }
+        )
 
-        backup_path = f"{hass.config.path()}/backups/abc123.tar"
-        validate_password_mock.assert_called_once_with(Path(backup_path), password)
-        mocked_write_text.assert_not_called()
-        mocked_service_call.assert_not_called()
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.IN_PROGRESS,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.FAILED,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+        result = await ws_client.receive_json()
+        assert not result["success"]
+        assert result["error"]["code"] == "password_incorrect"
+
+    backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
+    validate_password_mock.assert_called_once_with(Path(backup_path), password)
+    mocked_write_text.assert_not_called()
+    mocked_service_call.assert_not_called()
 
 
+@pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
     ("parameters", "expected_error"),
     [
         (
             {"backup_id": TEST_BACKUP_DEF456.backup_id},
-            "Backup def456 not found",
+            f"Backup def456 not found in agent {LOCAL_AGENT_ID}",
         ),
         (
             {"restore_addons": ["blah"]},
@@ -2368,36 +2436,65 @@ async def test_async_trigger_restore_wrong_password(hass: HomeAssistant) -> None
         ),
     ],
 )
-async def test_async_trigger_restore_wrong_parameters(
-    hass: HomeAssistant, parameters: dict[str, Any], expected_error: str
+async def test_restore_backup_wrong_parameters(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    parameters: dict[str, Any],
+    expected_error: str,
 ) -> None:
-    """Test trigger restore."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
+    """Test restore backup wrong parameters."""
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    await setup_backup_platform(hass, domain=DOMAIN, platform=local_backup_platform)
-    await manager.load_platforms()
+    ws_client = await hass_ws_client(hass)
 
-    local_agent = manager.backup_agents[LOCAL_AGENT_ID]
-    local_agent._backups = {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123}
-    local_agent._loaded_backups = True
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
 
-    default_parameters = {
-        "agent_id": LOCAL_AGENT_ID,
-        "backup_id": TEST_BACKUP_ABC123.backup_id,
-        "password": None,
-        "restore_addons": None,
-        "restore_database": True,
-        "restore_folders": None,
-        "restore_homeassistant": True,
-    }
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
 
     with (
         patch("pathlib.Path.exists", return_value=True),
         patch("pathlib.Path.write_text") as mocked_write_text,
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
-        pytest.raises(HomeAssistantError, match=expected_error),
+        patch(
+            "homeassistant.components.backup.backup.read_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
     ):
-        await manager.async_restore_backup(**(default_parameters | parameters))
+        await ws_client.send_json_auto_id(
+            {
+                "type": "backup/restore",
+                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "agent_id": LOCAL_AGENT_ID,
+            }
+            | parameters
+        )
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.IN_PROGRESS,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.FAILED,
+        }
+
+        result = await ws_client.receive_json()
+        assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+        result = await ws_client.receive_json()
+        assert not result["success"]
+        assert result["error"]["code"] == "home_assistant_error"
+        assert result["error"]["message"] == expected_error
 
     mocked_write_text.assert_not_called()
     mocked_service_call.assert_not_called()

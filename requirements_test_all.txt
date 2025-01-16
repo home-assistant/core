@@ -2147,7 +2147,7 @@ sanix==1.0.6
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2025.1.2
+securetar==2025.1.3
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2495,7 +2495,7 @@ yeelight==0.7.14
 yolink-api==0.4.7
 
 # homeassistant.components.youless
-youless-api==2.1.2
+youless-api==2.2.0
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5

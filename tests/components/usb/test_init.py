@@ -1,7 +1,8 @@
 """Tests for the USB Discovery integration."""
 
+import asyncio
+from datetime import timedelta
 import os
-import sys
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
@@ -59,10 +60,6 @@ def mock_venv():
         yield
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_observer_discovery(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
 ) -> None:
@@ -93,6 +90,7 @@ async def test_observer_discovery(
         return mock_observer
 
     with (
+        patch("sys.platform", "linux"),
         patch("pyudev.Context"),
         patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer),
         patch("pyudev.Monitor.filter_by"),
@@ -115,10 +113,65 @@ async def test_observer_discovery(
     assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
+async def test_polling_discovery(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+) -> None:
+    """Test that polling can discover a device without raising an exception."""
+    new_usb = [{"domain": "test1", "vid": "3039"}]
+    mock_comports_found_device = asyncio.Event()
+
+    def get_comports() -> list:
+        nonlocal mock_comports
+
+        # Only "find" a device after a few invocations
+        if len(mock_comports.mock_calls) < 5:
+            return []
+
+        mock_comports_found_device.set()
+        return [
+            MagicMock(
+                device=slae_sh_device.device,
+                vid=12345,
+                pid=12345,
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            )
+        ]
+
+    with (
+        patch("sys.platform", "linux"),
+        patch(
+            "homeassistant.components.usb.USBDiscovery._get_monitor_observer",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.usb.POLLING_MONITOR_SCAN_PERIOD",
+            timedelta(seconds=0.01),
+        ),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch(
+            "homeassistant.components.usb.comports", side_effect=get_comports
+        ) as mock_comports,
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        # Wait until a new device is discovered after a few polling attempts
+        assert len(mock_config_flow.mock_calls) == 0
+        await mock_comports_found_device.wait()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+
 async def test_removal_by_observer_before_started(
     hass: HomeAssistant, operating_system
 ) -> None:
@@ -671,10 +724,6 @@ async def test_non_matching_discovered_by_scanner_after_started(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_observer_on_wsl_fallback_without_throwing_exception(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
 ) -> None:
@@ -713,10 +762,6 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_not_discovered_by_observer_before_started_on_docker(
     hass: HomeAssistant, docker
 ) -> None:
