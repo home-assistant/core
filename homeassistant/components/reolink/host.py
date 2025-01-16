@@ -416,6 +416,9 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
+        if self._api.baichuan.privacy_mode():
+            await self._api.baichuan.get_privacy_mode()
+
         await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
