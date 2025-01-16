@@ -115,6 +115,8 @@ async def async_setup_entry(
                     await host.stop()
                     raise ConfigEntryAuthFailed(err) from err
                 raise UpdateFailed(str(err)) from err
+            except LoginPrivacyModeError:
+                pass  # HTTP API is shutdown when privacy mode is active
             except ReolinkError as err:
                 host.credential_errors = 0
                 raise UpdateFailed(str(err)) from err
