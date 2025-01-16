@@ -6,11 +6,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from bleak.backends.device import BLEDevice
 from habluetooth import BluetoothServiceInfoBleak
 from pynecil import (
+    AnimationSpeed,
+    AutostartMode,
+    BatteryType,
     DeviceInfoResponse,
+    LatestRelease,
     LiveDataResponse,
+    LockingMode,
+    LogoDuration,
     OperatingMode,
     PowerSource,
+    ScreenOrientationMode,
+    ScrollSpeed,
     SettingsDataResponse,
+    TempUnit,
 )
 import pytest
 
@@ -114,24 +123,20 @@ def mock_ble_device() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_githubapi() -> Generator[AsyncMock]:
-    """Mock aiogithubapi."""
+def mock_ironosupdate() -> Generator[AsyncMock]:
+    """Mock IronOSUpdate."""
 
     with patch(
-        "homeassistant.components.iron_os.GitHubAPI",
+        "homeassistant.components.iron_os.IronOSUpdate",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
-        client.repos.releases.latest = AsyncMock()
-
-        client.repos.releases.latest.return_value.data.html_url = (
-            "https://github.com/Ralim/IronOS/releases/tag/v2.22"
+        client.latest_release.return_value = LatestRelease(
+            html_url="https://github.com/Ralim/IronOS/releases/tag/v2.22",
+            name="V2.22 | TS101 & S60 Added | PinecilV2 improved",
+            tag_name="v2.22",
+            body="**RELEASE_NOTES**",
         )
-        client.repos.releases.latest.return_value.data.name = (
-            "V2.22 | TS101 & S60 Added | PinecilV2 improved"
-        )
-        client.repos.releases.latest.return_value.data.tag_name = "v2.22"
-        client.repos.releases.latest.return_value.data.body = "**RELEASE_NOTES**"
 
         yield client
 
@@ -154,7 +159,7 @@ def mock_pynecil() -> Generator[AsyncMock]:
         client.get_settings.return_value = SettingsDataResponse(
             sleep_temp=150,
             sleep_timeout=5,
-            min_dc_voltage_cells=0,
+            min_dc_voltage_cells=BatteryType.BATTERY_3S,
             min_volltage_per_cell=3.3,
             qc_ideal_voltage=9.0,
             accel_sensitivity=7,
@@ -171,6 +176,21 @@ def mock_pynecil() -> Generator[AsyncMock]:
             hall_sensitivity=7,
             pd_negotiation_timeout=2.0,
             display_brightness=3,
+            orientation_mode=ScreenOrientationMode.RIGHT_HANDED,
+            animation_speed=AnimationSpeed.MEDIUM,
+            autostart_mode=AutostartMode.IDLE,
+            temp_unit=TempUnit.CELSIUS,
+            desc_scroll_speed=ScrollSpeed.FAST,
+            logo_duration=LogoDuration.LOOP,
+            locking_mode=LockingMode.FULL_LOCKING,
+            animation_loop=True,
+            cooling_temp_blink=True,
+            idle_screen_details=True,
+            solder_screen_details=True,
+            invert_buttons=True,
+            display_invert=True,
+            calibrate_cjc=True,
+            usb_pd_mode=True,
         )
         client.get_live_data.return_value = LiveDataResponse(
             live_temp=298,

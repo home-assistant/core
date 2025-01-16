@@ -175,6 +175,58 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download[backup.local-2bcb3113-hunter2]
+  dict({
+    'error': dict({
+      'code': 'decrypt_not_supported',
+      'message': 'Decrypt on download not supported',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-ed1608a9-hunter2]
+  dict({
+    'id': 1,
+    'result': None,
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-ed1608a9-wrong_password]
+  dict({
+    'error': dict({
+      'code': 'password_incorrect',
+      'message': 'Incorrect password',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[backup.local-no_such_backup-hunter2]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Backup no_such_backup not found in agent backup.local',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download[no_such_agent-ed1608a9-hunter2]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Invalid agent selected: no_such_agent',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_config_info[None]
   dict({
     'id': 1,
@@ -190,8 +242,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -225,8 +277,8 @@
           'name': 'test-name',
           'password': 'test-password',
         }),
-        'last_attempted_strategy_backup': '2024-10-26T04:45:00+01:00',
-        'last_completed_strategy_backup': '2024-10-26T04:45:00+01:00',
+        'last_attempted_automatic_backup': '2024-10-26T04:45:00+01:00',
+        'last_completed_automatic_backup': '2024-10-26T04:45:00+01:00',
         'retention': dict({
           'copies': 3,
           'days': 7,
@@ -256,8 +308,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -287,8 +339,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': '2024-10-27T04:45:00+01:00',
-        'last_completed_strategy_backup': '2024-10-26T04:45:00+01:00',
+        'last_attempted_automatic_backup': '2024-10-27T04:45:00+01:00',
+        'last_completed_automatic_backup': '2024-10-26T04:45:00+01:00',
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -318,8 +370,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -349,8 +401,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -379,8 +431,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -410,8 +462,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -442,8 +494,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -473,8 +525,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -504,8 +556,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -536,8 +588,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -567,8 +619,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -598,8 +650,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -630,8 +682,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -661,8 +713,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -692,8 +744,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -724,8 +776,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -755,8 +807,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -786,8 +838,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -818,8 +870,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -849,8 +901,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -884,8 +936,8 @@
           'name': 'test-name',
           'password': 'test-password',
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -920,8 +972,8 @@
           'name': 'test-name',
           'password': 'test-password',
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -951,8 +1003,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -982,8 +1034,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': 7,
@@ -1014,8 +1066,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': 7,
@@ -1045,8 +1097,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1076,8 +1128,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1108,8 +1160,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1139,8 +1191,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1170,8 +1222,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -1202,8 +1254,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -1233,8 +1285,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1264,8 +1316,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -1296,8 +1348,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -1327,8 +1379,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1358,8 +1410,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -1390,8 +1442,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -1421,8 +1473,8 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1451,8 +1503,188 @@
           'name': None,
           'password': None,
         }),
-        'last_attempted_strategy_backup': None,
-        'last_completed_strategy_backup': None,
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command1].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command2]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command2].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command3]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command3].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1474,8 +1706,8 @@
       }),
       'backups': list([
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1500,8 +1732,8 @@
       }),
       'backups': list([
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1539,11 +1771,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1568,8 +1800,8 @@
       }),
       'backups': list([
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1607,11 +1839,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1660,11 +1892,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1697,11 +1929,11 @@
           'name': 'Test 2',
           'protected': False,
           'size': 1,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1745,11 +1977,11 @@
           'name': 'Test 2',
           'protected': False,
           'size': 1,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1788,11 +2020,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1841,11 +2073,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1895,11 +2127,11 @@
           'name': 'Test',
           'protected': False,
           'size': 13,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -1950,11 +2182,11 @@
           'name': 'Test',
           'protected': False,
           'size': 13,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2003,11 +2235,11 @@
           'name': 'Test',
           'protected': False,
           'size': 13,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2056,11 +2288,11 @@
           'name': 'Test',
           'protected': False,
           'size': 13,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2109,11 +2341,11 @@
           'name': 'Test',
           'protected': False,
           'size': 13,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2163,11 +2395,11 @@
           'name': 'Test',
           'protected': False,
           'size': 13,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2216,7 +2448,7 @@
         'name': 'Test',
         'protected': False,
         'size': 0,
-        'with_strategy_settings': False,
+        'with_automatic_settings': True,
       }),
     }),
     'success': True,
@@ -2254,7 +2486,7 @@
         'name': 'Test',
         'protected': False,
         'size': 0,
-        'with_strategy_settings': False,
+        'with_automatic_settings': True,
       }),
     }),
     'success': True,
@@ -2305,7 +2537,7 @@
         'name': 'Test',
         'protected': False,
         'size': 0,
-        'with_strategy_settings': False,
+        'with_automatic_settings': True,
       }),
     }),
     'success': True,
@@ -2344,7 +2576,7 @@
         'name': 'Test',
         'protected': False,
         'size': 0,
-        'with_strategy_settings': False,
+        'with_automatic_settings': True,
       }),
     }),
     'success': True,
@@ -2394,7 +2626,7 @@
   dict({
     'id': 2,
     'result': dict({
-      'backup_job_id': '27f5c632',
+      'backup_job_id': '64331d85',
     }),
     'success': True,
     'type': 'result',
@@ -2465,7 +2697,7 @@
   dict({
     'id': 2,
     'result': dict({
-      'backup_job_id': '27f5c632',
+      'backup_job_id': '64331d85',
     }),
     'success': True,
     'type': 'result',
@@ -2536,7 +2768,7 @@
   dict({
     'id': 2,
     'result': dict({
-      'backup_job_id': '27f5c632',
+      'backup_job_id': '64331d85',
     }),
     'success': True,
     'type': 'result',
@@ -2607,11 +2839,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2649,11 +2881,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2692,11 +2924,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2729,7 +2961,7 @@
           'name': 'Test 2',
           'protected': False,
           'size': 1,
-          'with_strategy_settings': False,
+          'with_automatic_settings': None,
         }),
         dict({
           'addons': list([
@@ -2756,11 +2988,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2799,11 +3031,11 @@
           'name': 'Test',
           'protected': False,
           'size': 0,
-          'with_strategy_settings': False,
+          'with_automatic_settings': True,
         }),
       ]),
-      'last_attempted_strategy_backup': None,
-      'last_completed_strategy_backup': None,
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
     }),
     'success': True,
     'type': 'result',
@@ -2869,6 +3101,17 @@
 # ---
 # name: test_restore_remote_agent[remote_agents1-backups1].1
   1
+# ---
+# name: test_restore_wrong_password
+  dict({
+    'error': dict({
+      'code': 'password_incorrect',
+      'message': 'Incorrect password',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
 # ---
 # name: test_subscribe_event
   dict({

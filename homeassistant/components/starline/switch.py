@@ -72,6 +72,7 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the switch."""
         if self._key == "ign":
+            # Deprecated and should be removed in 2025.8
             return self._account.engine_attrs(self._device)
         return None
 

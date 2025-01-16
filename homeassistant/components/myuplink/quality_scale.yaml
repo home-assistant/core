@@ -61,12 +61,12 @@ rules:
     comment: |
       Not possible to discover these devices.
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices: todo
+  docs-supported-devices: done
   docs-supported-functions: todo
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
@@ -78,9 +78,7 @@ rules:
       It is not feasible to use the API names as translation keys as they can change between
       firmware and API upgrades and the number of appliance models and firmware releases are huge.
       Entity names translations are therefore not implemented for the time being.
-  exception-translations:
-    status: todo
-    comment: PR pending review \#191937
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:

@@ -22,14 +22,14 @@
         },
         "high_pass": {
           "name": "High pass",
-          "description": "High-pass mode\"."
+          "description": "High-pass mode."
         },
         "sub_polarity": {
           "name": "Subwoofer polarity",
           "description": "Sub polarity."
         },
         "bass_extension": {
-          "name": "Base extension",
+          "name": "Bass extension",
           "description": "Bass extension."
         }
       }

@@ -64,6 +64,9 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
         )
     except (FileNotFoundError, KeyError, json.JSONDecodeError):
         return None
+    finally:
+        # Always remove the backup instruction file to prevent a boot loop
+        instruction_path.unlink(missing_ok=True)
 
 
 def _clear_configuration_directory(config_dir: Path, keep: Iterable[str]) -> None:
@@ -116,7 +119,7 @@ def _extract_backup(
             Path(
                 tempdir,
                 "extracted",
-                f"homeassistant.tar{'.gz' if backup_meta["compressed"] else ''}",
+                f"homeassistant.tar{'.gz' if backup_meta['compressed'] else ''}",
             ),
             gzip=backup_meta["compressed"],
             key=password_to_key(restore_content.password)

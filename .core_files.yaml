@@ -132,6 +132,7 @@ tests: &tests
   - tests/components/conftest.py
   - tests/components/diagnostics/**
   - tests/components/history/**
+  - tests/components/light/common.py
   - tests/components/logbook/**
   - tests/components/recorder/**
   - tests/components/repairs/**

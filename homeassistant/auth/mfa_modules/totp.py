@@ -114,7 +114,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         self._users[user_id] = ota_secret  # type: ignore[index]
         return ota_secret
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> TotpSetupFlow:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -174,10 +174,9 @@ class TotpAuthModule(MultiFactorAuthModule):
         return bool(pyotp.TOTP(ota_secret).verify(code, valid_window=1))
 
 
-class TotpSetupFlow(SetupFlow):
+class TotpSetupFlow(SetupFlow[TotpAuthModule]):
     """Handler for the setup flow."""
 
-    _auth_module: TotpAuthModule
     _ota_secret: str
     _url: str
     _image: str

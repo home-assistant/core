@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 from aiorussound import Controller
+from aiorussound.const import FeatureFlag
 from aiorussound.models import PlayStatus, Source
 from aiorussound.rio import ZoneControlSurface
+from aiorussound.util import is_feature_supported
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -15,68 +18,15 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RussoundConfigEntry
-from .const import DOMAIN, MP_FEATURES_BY_FLAG
 from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Russound RIO platform."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=config,
-    )
-    if (
-        result["type"] is FlowResultType.CREATE_ENTRY
-        or result["reason"] == "single_instance_allowed"
-    ):
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2025.2.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Russound RIO",
-            },
-        )
-        return
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_yaml_import_issue_{result['reason']}",
-        breaks_in_ha_version="2025.2.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Russound RIO",
-        },
-    )
 
 
 async def async_setup_entry(
@@ -103,6 +53,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -118,9 +69,6 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         self._sources = sources
         self._attr_name = _zone.name
         self._attr_unique_id = f"{self._primary_mac_address}-{_zone.device_str}"
-        for flag, feature in MP_FEATURES_BY_FLAG.items():
-            if flag in self._client.supported_features:
-                self._attr_supported_features |= feature
 
     @property
     def _zone(self) -> ZoneControlSurface:
@@ -155,7 +103,20 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """Return a list of available input sources."""
-        return [x.name for x in self._sources.values()]
+        if TYPE_CHECKING:
+            assert self._client.rio_version
+        available_sources = (
+            [
+                source
+                for source_id, source in self._sources.items()
+                if source_id in self._zone.enabled_sources
+            ]
+            if is_feature_supported(
+                self._client.rio_version, FeatureFlag.SUPPORT_ZONE_SOURCE_EXCLUSION
+            )
+            else self._sources.values()
+        )
+        return [x.name for x in available_sources]
 
     @property
     def media_title(self) -> str | None:
@@ -185,6 +146,11 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         Therefore float divide by 50 to get to the required range.
         """
         return self._zone.volume / 50.0
+
+    @property
+    def is_volume_muted(self) -> bool:
+        """Return whether zone is muted."""
+        return self._zone.is_mute
 
     @command
     async def async_turn_off(self) -> None:
@@ -220,3 +186,16 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     async def async_volume_down(self) -> None:
         """Step the volume down."""
         await self._zone.volume_down()
+
+    @command
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute the media player."""
+        if FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON in self._client.supported_features:
+            if mute:
+                await self._zone.mute()
+            else:
+                await self._zone.unmute()
+            return
+
+        if mute != self.is_volume_muted:
+            await self._zone.toggle_mute()

@@ -16,6 +16,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
@@ -77,6 +79,9 @@ CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE_TEMPLATE = "temperature_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
+
+DEFAULT_MIN_MIREDS = 153
+DEFAULT_MAX_MIREDS = 500
 
 LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -275,7 +280,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._max_mireds is not None:
             return color_util.color_temperature_mired_to_kelvin(self._max_mireds)
 
-        return super().min_color_temp_kelvin
+        return DEFAULT_MIN_KELVIN
 
     @property
     def max_color_temp_kelvin(self) -> int:
@@ -283,7 +288,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._min_mireds is not None:
             return color_util.color_temperature_mired_to_kelvin(self._min_mireds)
 
-        return super().max_color_temp_kelvin
+        return DEFAULT_MAX_KELVIN
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -764,7 +769,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = None
                 return
             temperature = int(render)
-            if self.min_mireds <= temperature <= self.max_mireds:
+            min_mireds = self._min_mireds or DEFAULT_MIN_MIREDS
+            max_mireds = self._max_mireds or DEFAULT_MAX_MIREDS
+            if min_mireds <= temperature <= max_mireds:
                 self._temperature = temperature
             else:
                 _LOGGER.error(
@@ -774,8 +781,8 @@ class LightTemplate(TemplateEntity, LightEntity):
                     ),
                     temperature,
                     self.entity_id,
-                    self.min_mireds,
-                    self.max_mireds,
+                    min_mireds,
+                    max_mireds,
                 )
                 self._temperature = None
         except ValueError:
