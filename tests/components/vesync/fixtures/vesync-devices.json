@@ -108,6 +108,15 @@
         "deviceStatus": "on",
         "connectionStatus": "online",
         "configModule": "configModule"
+      },
+      {
+        "cid": "smarttowerfan",
+        "deviceType": "LTF-F422S-KEU",
+        "deviceName": "SmartTowerFan",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "configModule": "configModule"
       }
     ]
   }

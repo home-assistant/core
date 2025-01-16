@@ -48,6 +48,7 @@ SPEED_RANGE = {  # off is not included
     "EverestAir": (1, 3),
     "Vital200S": (1, 4),
     "Vital100S": (1, 4),
+    "SmartTowerFan": (1, 13),
 }
 
 
