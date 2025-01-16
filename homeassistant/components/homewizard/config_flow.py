@@ -35,10 +35,10 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    ip_address: str
-    product_name: str
-    product_type: str
-    serial: str
+    ip_address: str | None = None
+    product_name: str | None = None
+    product_type: str | None = None
+    serial: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -132,6 +132,11 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+        assert self.ip_address
+        assert self.product_name
+        assert self.product_type
+        assert self.serial
+
         errors: dict[str, str] | None = None
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             try:
