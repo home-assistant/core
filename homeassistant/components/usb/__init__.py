@@ -56,8 +56,8 @@ REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 __all__ = [
     "USBCallbackMatcher",
     "async_is_plugged_in",
-    "async_register_scan_request_callback",
     "async_register_port_event_callback",
+    "async_register_scan_request_callback",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
