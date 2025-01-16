@@ -2306,6 +2306,13 @@ async def test_restore_backup(
         }
 
         result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "stage": None,
+            "state": RestoreBackupState.COMPLETED,
+        }
+
+        result = await ws_client.receive_json()
         assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
         result = await ws_client.receive_json()
