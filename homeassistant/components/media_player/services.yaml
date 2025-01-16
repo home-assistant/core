@@ -175,10 +175,9 @@ browse_media:
       example: "music"
       selector:
         text:
-
     media_content_id:
       required: false
-      example: "https://home-assistant.io/images/cast/splash.png"
+      example: "A:ALBUMARTIST/Beatles"
       selector:
         text:
 
