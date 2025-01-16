@@ -1271,7 +1271,10 @@ async def test_register_port_event_callback(
     mock_callback2 = Mock()
 
     # Start off with no ports
-    with patch("homeassistant.components.usb.comports", return_value=[]):
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+    ):
         assert await async_setup_component(hass, "usb", {"usb": {}})
 
         _cancel1 = usb.async_register_port_event_callback(hass, mock_callback1)
