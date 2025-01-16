@@ -47,39 +47,27 @@ def async_register_backup_agents_listener(
 
 
 def handle_backup_errors[_R, **P](
-    translation_key: str,
-) -> Callable[
-    [Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]]],
-    Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]],
-]:
+    func: Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]]:
     """Handle backup errors with a specific translation key."""
 
-    def decorator(
-        func: Callable[
-            Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]
-        ],
-    ) -> Callable[Concatenate[AzureStorageBackupAgent, P], Coroutine[Any, Any, _R]]:
-        @wraps(func)
-        async def wrapper(
-            self: AzureStorageBackupAgent, *args: P.args, **kwargs: P.kwargs
-        ) -> _R:
-            try:
-                return await func(self, *args, **kwargs)
-            except HttpResponseError as err:
-                _LOGGER.error(
-                    "Error during backup in %s: Status %s, message %s",
-                    func.__name__,
-                    err.status_code,
-                    err.message,
-                )
-                _LOGGER.debug("Full error: %s", err, exc_info=True)
-                raise BackupAgentError(
-                    translation_domain=DOMAIN, translation_key=translation_key
-                ) from err
+    @wraps(func)
+    async def wrapper(
+        self: AzureStorageBackupAgent, *args: P.args, **kwargs: P.kwargs
+    ) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except HttpResponseError as err:
+            _LOGGER.error(
+                "Error during backup in %s: Status %s, message %s",
+                func.__name__,
+                err.status_code,
+                err.message,
+            )
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError("Error during backup operation") from err
 
-        return wrapper
-
-    return decorator
+    return wrapper
 
 
 class AzureStorageBackupAgent(BackupAgent):
@@ -93,7 +81,7 @@ class AzureStorageBackupAgent(BackupAgent):
         self._client = entry.runtime_data
         self.name = entry.title
 
-    @handle_backup_errors("backup_download_error")
+    @handle_backup_errors
     async def async_download_backup(
         self,
         backup_id: str,
@@ -103,7 +91,7 @@ class AzureStorageBackupAgent(BackupAgent):
         download_stream = await self._client.download_blob(f"{backup_id}.tar")
         return download_stream.chunks()
 
-    @handle_backup_errors("backup_upload_error")
+    @handle_backup_errors
     async def async_upload_backup(
         self,
         *,
@@ -133,7 +121,7 @@ class AzureStorageBackupAgent(BackupAgent):
             length=backup.size,
         )
 
-    @handle_backup_errors("backup_delete_error")
+    @handle_backup_errors
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -142,7 +130,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Delete a backup file."""
         await self._client.delete_blob(f"{backup_id}.tar")
 
-    @handle_backup_errors("backup_list_error")
+    @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backups: list[AgentBackup] = []
@@ -154,7 +142,7 @@ class AzureStorageBackupAgent(BackupAgent):
 
         return backups
 
-    @handle_backup_errors("backup_get_error")
+    @handle_backup_errors
     async def async_get_backup(
         self,
         backup_id: str,

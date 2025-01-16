@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import (
     CONF_ACCOUNT_NAME,
@@ -40,24 +39,7 @@ async def async_setup_entry(
 
     try:
         if not await container_client.exists():
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "container_not_found",
-                is_fixable=True,
-                severity=IssueSeverity.ERROR,
-                translation_key="container_not_found",
-                translation_placeholders={
-                    CONF_CONTAINER_NAME: entry.data[CONF_CONTAINER_NAME]
-                },
-            )
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="container_not_found",
-                translation_placeholders={
-                    CONF_CONTAINER_NAME: entry.data[CONF_CONTAINER_NAME]
-                },
-            )
+            await container_client.create_container()
     except ResourceNotFoundError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,

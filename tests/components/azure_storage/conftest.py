@@ -46,7 +46,7 @@ def mock_client(mock_blob_client: Mock) -> Generator[MagicMock]:
         ),
     ):
         client = container_client.return_value
-        client.exists.return_value = True
+        client.exists.return_value = False
 
         async def async_list_blobs():
             yield BlobProperties(metadata=BACKUP_METADATA)

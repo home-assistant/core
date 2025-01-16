@@ -44,8 +44,7 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
                 transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
             )
             try:
-                if not await container_client.exists():
-                    await container_client.create_container()
+                await container_client.exists()
             except ResourceNotFoundError:
                 errors["base"] = "cannot_connect"
             except ClientAuthenticationError:

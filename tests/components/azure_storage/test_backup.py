@@ -216,6 +216,6 @@ async def test_error_wrapper(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.title}": "Error deleting backup from Azure Blob storage"
+            f"{DOMAIN}.{mock_config_entry.title}": "Error during backup operation"
         }
     }
