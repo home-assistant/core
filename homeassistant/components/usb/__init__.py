@@ -501,7 +501,10 @@ class USBDiscovery:
 
         if added_devices or removed_devices:
             for callback in self._port_event_callbacks.copy():
-                callback(added_devices, removed_devices)
+                try:
+                    callback(added_devices, removed_devices)
+                except Exception:
+                    _LOGGER.exception("Error in USB port event callback")
 
         for usb_device in usb_devices:
             await self._async_process_discovered_usb_device(usb_device)

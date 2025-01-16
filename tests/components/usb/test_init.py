@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+import logging
 import os
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
@@ -1332,3 +1333,69 @@ async def test_register_port_event_callback(
 
     assert mock_callback1.mock_calls == [call({port2_usb}, {port1_usb})]
     assert mock_callback2.mock_calls == []
+
+
+@patch("homeassistant.components.usb.REQUEST_SCAN_COOLDOWN", 0)
+async def test_register_port_event_callback_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test port event callback failure handling."""
+
+    port1 = Mock(
+        device=slae_sh_device.device,
+        vid=12345,
+        pid=12345,
+        serial_number=slae_sh_device.serial_number,
+        manufacturer=slae_sh_device.manufacturer,
+        description=slae_sh_device.description,
+    )
+
+    port2 = Mock(
+        device=conbee_device.device,
+        vid=12346,
+        pid=12346,
+        serial_number=conbee_device.serial_number,
+        manufacturer=conbee_device.manufacturer,
+        description=conbee_device.description,
+    )
+
+    port1_usb = usb_device_from_port(port1)
+    port2_usb = usb_device_from_port(port2)
+
+    ws_client = await hass_ws_client(hass)
+
+    mock_callback1 = Mock(side_effect=RuntimeError("Failure 1"))
+    mock_callback2 = Mock(side_effect=RuntimeError("Failure 2"))
+
+    # Start off with no ports
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+
+        usb.async_register_port_event_callback(hass, mock_callback1)
+        usb.async_register_port_event_callback(hass, mock_callback2)
+
+    assert mock_callback1.mock_calls == []
+    assert mock_callback2.mock_calls == []
+
+    # Add two new ports
+    with (
+        patch("homeassistant.components.usb.comports", return_value=[port1, port2]),
+        caplog.at_level(logging.ERROR, logger="homeassistant.components.usb"),
+    ):
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    # Both were called even though they raised exceptions
+    assert mock_callback1.mock_calls == [call({port1_usb, port2_usb}, set())]
+    assert mock_callback2.mock_calls == [call({port1_usb, port2_usb}, set())]
+
+    assert caplog.text.count("Error in USB port event callback") == 2
+    assert "Failure 1" in caplog.text
+    assert "Failure 2" in caplog.text
