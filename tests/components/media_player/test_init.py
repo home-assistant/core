@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
@@ -329,9 +331,9 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
             "media_player",
             SERVICE_BROWSE_MEDIA,
             {
-                "entity_id": "media_player.browse",
-                "media_content_type": "album",
-                "media_content_id": "abcd",
+                ATTR_ENTITY_ID: "media_player.browse",
+                ATTR_MEDIA_CONTENT_TYPE: "album",
+                ATTR_MEDIA_CONTENT_ID: "abcd",
             },
             blocking=True,
             return_response=True,
