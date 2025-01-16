@@ -44,10 +44,10 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    ip_address: str
-    product_name: str
-    product_type: str
-    serial: str
+    ip_address: str | None = None
+    product_name: str | None = None
+    product_type: str | None = None
+    serial: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
