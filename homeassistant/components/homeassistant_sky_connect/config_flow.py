@@ -146,10 +146,8 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
         """Return the radio serial port settings."""
         usb_dev = self.config_entry.data["device"]
-        # The call to get_serial_by_id can be removed in HA Core 2024.1
-        dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, usb_dev)
         return silabs_multiprotocol_addon.SerialPortSettings(
-            device=dev_path,
+            device=usb_dev,
             baudrate="115200",
             flow_control=True,
         )
