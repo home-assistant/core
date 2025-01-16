@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Callable
 import copy
 from pathlib import Path
 from queue import SimpleQueue
@@ -225,6 +225,7 @@ def decrypt_backup(
     input_stream: IO[bytes],
     output_stream: IO[bytes],
     password: str | None,
+    on_done: Callable[[], None],
 ) -> None:
     """Decrypt a backup."""
     try:
@@ -241,6 +242,7 @@ def decrypt_backup(
         LOGGER.warning("Error decrypting backup: %s", err)
     finally:
         output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
+        on_done()
 
 
 def _decrypt_backup(

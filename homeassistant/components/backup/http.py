@@ -120,11 +120,20 @@ class DownloadBackupView(HomeAssistantView):
         else:
             stream = await agent.async_download_backup(backup_id)
             reader = cast(IO[bytes], util.AsyncIteratorReader(hass, stream))
+
+        worker: threading.Thread | None = None
+        worker_done_event = asyncio.Event()
+
+        def on_done() -> None:
+            """Call by the worker thread when it's done."""
+            hass.loop.call_soon_threadsafe(worker_done_event.set)
+
         try:
             stream = util.AsyncIteratorWriter(hass)
-            threading.Thread(
-                target=util.decrypt_backup, args=[reader, stream, password]
-            ).start()
+            worker = threading.Thread(
+                target=util.decrypt_backup, args=[reader, stream, password, on_done]
+            )
+            worker.start()
             response = StreamResponse(status=HTTPStatus.OK, headers=headers)
             await response.prepare(request)
             async for chunk in stream:
@@ -132,6 +141,8 @@ class DownloadBackupView(HomeAssistantView):
             return response
         finally:
             reader.close()
+            if worker is not None:
+                await worker_done_event.wait()
 
 
 class UploadBackupView(HomeAssistantView):
