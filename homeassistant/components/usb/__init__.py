@@ -250,10 +250,7 @@ class USBDiscovery:
 
     async def _async_supports_monitoring(self) -> bool:
         info = await system_info.async_get_system_info(self.hass)
-        if info.get("docker"):
-            return False
-
-        return True
+        return not info.get("docker")
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware."""
@@ -262,9 +259,10 @@ class USBDiscovery:
                 "Falling back to periodic filesystem polling for development, libudev "
                 "is not present"
             )
-            await self._async_start_monitor_polling()
+            self._async_start_monitor_polling()
 
-    async def _async_start_monitor_polling(self) -> None:
+    @hass_callback
+    def _async_start_monitor_polling(self) -> None:
         """Start monitoring hardware with polling (for development only!)."""
 
         async def _scan(event_time: datetime) -> None:
