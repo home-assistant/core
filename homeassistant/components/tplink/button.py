@@ -29,6 +29,10 @@ class TPLinkButtonEntityDescription(
     """Base class for a TPLink feature based button entity description."""
 
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
 BUTTON_DESCRIPTIONS: Final = [
     TPLinkButtonEntityDescription(
         key="test_alarm",
@@ -79,20 +83,27 @@ async def async_setup_entry(
     """Set up buttons."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
+    known_child_device_ids: set[str] = set()
+    first_check = True
 
-    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        hass=hass,
-        device=device,
-        coordinator=parent_coordinator,
-        feature_type=Feature.Type.Action,
-        entity_class=TPLinkButtonEntity,
-        descriptions=BUTTON_DESCRIPTIONS_MAP,
-        child_coordinators=children_coordinators,
-    )
-    async_cleanup_deprecated(hass, BUTTON_DOMAIN, config_entry.entry_id, entities)
-    async_add_entities(entities)
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.Action,
+            entity_class=TPLinkButtonEntity,
+            descriptions=BUTTON_DESCRIPTIONS_MAP,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_cleanup_deprecated(hass, BUTTON_DOMAIN, config_entry.entry_id, entities)
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkButtonEntity(CoordinatedTPLinkFeatureEntity, ButtonEntity):

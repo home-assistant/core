@@ -1,0 +1,22 @@
+{
+  "uid": "abc-123",
+  "region": "NA",
+  "scopes": [
+    "openid",
+    "offline_access",
+    "user_data",
+    "vehicle_device_data",
+    "vehicle_cmds",
+    "vehicle_charging_cmds",
+    "energy_device_data",
+    "energy_cmds"
+  ],
+  "vehicles": {
+    "LRW3F7EK4NC700000": {
+      "access": true,
+      "polling": true,
+      "proxy": true,
+      "firmware": "2024.38.7"
+    }
+  }
+}

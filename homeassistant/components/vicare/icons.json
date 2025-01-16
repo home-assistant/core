@@ -84,6 +84,9 @@
       },
       "compressor_phase": {
         "default": "mdi:information"
+      },
+      "ventilation_level": {
+        "default": "mdi:fan"
       }
     }
   },
