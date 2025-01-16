@@ -72,6 +72,7 @@
       },
       "evse_fault_state": {
         "default": "mdi:ev-station"
+      },
       "battery_replacement_description": {
         "default": "mdi:battery-sync-outline"
       }
