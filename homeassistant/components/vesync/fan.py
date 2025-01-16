@@ -19,34 +19,26 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
+from .common import is_fan
 from .const import (
-    DEV_TYPE_TO_HA,
     DOMAIN,
     SKU_TO_BASE_DEVICE,
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
+    VS_FAN_MODE_ADVANCED_SLEEP,
+    VS_FAN_MODE_AUTO,
+    VS_FAN_MODE_MANUAL,
+    VS_FAN_MODE_PET,
+    VS_FAN_MODE_PRESET_LIST_HA,
+    VS_FAN_MODE_SLEEP,
+    VS_FAN_MODE_TURBO,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-FAN_MODE_AUTO = "auto"
-FAN_MODE_SLEEP = "sleep"
-FAN_MODE_PET = "pet"
-FAN_MODE_TURBO = "turbo"
-
-PRESET_MODES = {
-    "LV-PUR131S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "Core200S": [FAN_MODE_SLEEP],
-    "Core300S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "Core400S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "Core600S": [FAN_MODE_AUTO, FAN_MODE_SLEEP],
-    "EverestAir": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO],
-    "Vital200S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
-    "Vital100S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
-}
 SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
     "Core200S": (1, 3),
@@ -87,13 +79,8 @@ def _setup_entities(
     coordinator: VeSyncDataCoordinator,
 ):
     """Check if device is fan and add entity."""
-    entities = [
-        VeSyncFanHA(dev, coordinator)
-        for dev in devices
-        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan"
-    ]
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(VeSyncFanHA(dev, coordinator) for dev in devices if is_fan(dev))
 
 
 class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
@@ -108,13 +95,6 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
-    def __init__(
-        self, fan: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
-    ) -> None:
-        """Initialize the VeSync fan device."""
-        super().__init__(fan, coordinator)
-        self.smartfan = fan
-
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
@@ -124,8 +104,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     def percentage(self) -> int | None:
         """Return the current speed."""
         if (
-            self.smartfan.mode == "manual"
-            and (current_level := self.smartfan.fan_level) is not None
+            self.device.mode == VS_FAN_MODE_MANUAL
+            and (current_level := self.device.fan_level) is not None
         ):
             return ranged_value_to_percentage(
                 SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], current_level
@@ -142,53 +122,59 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     @property
     def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
+        if hasattr(self.device, "modes"):
+            return sorted(
+                [
+                    mode
+                    for mode in self.device.modes
+                    if mode in VS_FAN_MODE_PRESET_LIST_HA
+                ]
+            )
+        return []
 
     @property
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
-        if self.smartfan.mode in (FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO):
-            return self.smartfan.mode
+        if self.device.mode in VS_FAN_MODE_PRESET_LIST_HA:
+            return self.device.mode
         return None
 
     @property
     def unique_info(self):
         """Return the ID of this fan."""
-        return self.smartfan.uuid
+        return self.device.uuid
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr = {}
 
-        if hasattr(self.smartfan, "active_time"):
-            attr["active_time"] = self.smartfan.active_time
+        if hasattr(self.device, "active_time"):
+            attr["active_time"] = self.device.active_time
 
-        if hasattr(self.smartfan, "screen_status"):
-            attr["screen_status"] = self.smartfan.screen_status
+        if hasattr(self.device, "screen_status"):
+            attr["screen_status"] = self.device.screen_status
 
-        if hasattr(self.smartfan, "child_lock"):
-            attr["child_lock"] = self.smartfan.child_lock
+        if hasattr(self.device, "child_lock"):
+            attr["child_lock"] = self.device.child_lock
 
-        if hasattr(self.smartfan, "night_light"):
-            attr["night_light"] = self.smartfan.night_light
+        if hasattr(self.device, "night_light"):
+            attr["night_light"] = self.device.night_light
 
-        if hasattr(self.smartfan, "mode"):
-            attr["mode"] = self.smartfan.mode
+        if hasattr(self.device, "mode"):
+            attr["mode"] = self.device.mode
 
         return attr
 
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the device."""
         if percentage == 0:
-            self.smartfan.turn_off()
-            return
+            self.device.turn_off()
+        elif not self.device.is_on:
+            self.device.turn_on()
 
-        if not self.smartfan.is_on:
-            self.smartfan.turn_on()
-
-        self.smartfan.manual_mode()
-        self.smartfan.change_fan_speed(
+        self.device.manual_mode()
+        self.device.change_fan_speed(
             math.ceil(
                 percentage_to_ranged_value(
                     SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
@@ -199,23 +185,25 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
-        if preset_mode not in self.preset_modes:
+        if preset_mode not in VS_FAN_MODE_PRESET_LIST_HA:
             raise ValueError(
                 f"{preset_mode} is not one of the valid preset modes: "
-                f"{self.preset_modes}"
+                f"{VS_FAN_MODE_PRESET_LIST_HA}"
             )
 
-        if not self.smartfan.is_on:
-            self.smartfan.turn_on()
+        if not self.device.is_on:
+            self.device.turn_on()
 
-        if preset_mode == FAN_MODE_AUTO:
-            self.smartfan.auto_mode()
-        elif preset_mode == FAN_MODE_SLEEP:
-            self.smartfan.sleep_mode()
-        elif preset_mode == FAN_MODE_PET:
-            self.smartfan.pet_mode()
-        elif preset_mode == FAN_MODE_TURBO:
-            self.smartfan.turbo_mode()
+        if preset_mode == VS_FAN_MODE_AUTO:
+            self.device.auto_mode()
+        elif preset_mode == VS_FAN_MODE_SLEEP:
+            self.device.sleep_mode()
+        elif preset_mode == VS_FAN_MODE_PET:
+            self.device.pet_mode()
+        elif preset_mode == VS_FAN_MODE_TURBO:
+            self.device.turbo_mode()
+        elif preset_mode == VS_FAN_MODE_ADVANCED_SLEEP:
+            self.device.advanced_sleep_mode()
 
         self.schedule_update_ha_state()
 
