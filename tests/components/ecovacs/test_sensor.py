@@ -11,6 +11,7 @@ from deebot_client.events import (
     NetworkInfoEvent,
     StatsEvent,
     TotalStatsEvent,
+    station,
 )
 import pytest
 from syrupy import SnapshotAssertion
@@ -45,6 +46,7 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
     event_bus.notify(LifeSpanEvent(LifeSpan.FILTER, 56, 40 * 60))
     event_bus.notify(LifeSpanEvent(LifeSpan.SIDE_BRUSH, 40, 20 * 60))
     event_bus.notify(ErrorEvent(0, "NoError: Robot is operational"))
+    event_bus.notify(station.StationEvent(station.State.EMPTYING))
     await block_till_done(hass, event_bus)
 
 
@@ -87,8 +89,29 @@ async def notify_events(hass: HomeAssistant, event_bus: EventBus):
                 "sensor.goat_g1_error",
             ],
         ),
+        (
+            "qhe2o2",
+            [
+                "sensor.dusty_area_cleaned",
+                "sensor.dusty_cleaning_duration",
+                "sensor.dusty_total_area_cleaned",
+                "sensor.dusty_total_cleaning_duration",
+                "sensor.dusty_total_cleanings",
+                "sensor.dusty_battery",
+                "sensor.dusty_ip_address",
+                "sensor.dusty_wi_fi_rssi",
+                "sensor.dusty_wi_fi_ssid",
+                "sensor.dusty_station_state",
+                "sensor.dusty_main_brush_lifespan",
+                "sensor.dusty_filter_lifespan",
+                "sensor.dusty_side_brush_lifespan",
+                "sensor.dusty_unit_care_lifespan",
+                "sensor.dusty_round_mop_lifespan",
+                "sensor.dusty_error",
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "qhe2o2"],
 )
 async def test_sensors(
     hass: HomeAssistant,
@@ -99,7 +122,7 @@ async def test_sensors(
     entity_ids: list[str],
 ) -> None:
     """Test that sensor entity snapshots match."""
-    assert entity_ids == hass.states.async_entity_ids()
+    assert hass.states.async_entity_ids() == entity_ids
     for entity_id in entity_ids:
         assert (state := hass.states.get(entity_id)), f"State of {entity_id} is missing"
         assert state.state == STATE_UNKNOWN
@@ -149,9 +172,9 @@ async def test_disabled_by_default_sensors(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (
-            entry := entity_registry.async_get(entity_id)
-        ), f"Entity registry entry for {entity_id} is missing"
+        assert (entry := entity_registry.async_get(entity_id)), (
+            f"Entity registry entry for {entity_id} is missing"
+        )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from typing import Any, cast
 
 from homeassistant.components.todo import (
@@ -20,7 +20,6 @@ from .coordinator import TaskUpdateCoordinator
 from .types import GoogleTasksConfigEntry
 
 PARALLEL_UPDATES = 0
-SCAN_INTERVAL = timedelta(minutes=15)
 
 TODO_STATUS_MAP = {
     "needsAction": TodoItemStatus.NEEDS_ACTION,
@@ -76,14 +75,13 @@ async def async_setup_entry(
     async_add_entities(
         (
             GoogleTaskTodoListEntity(
-                TaskUpdateCoordinator(hass, entry.runtime_data.api, task_list["id"]),
-                task_list["title"],
+                coordinator,
+                coordinator.task_list_title,
                 entry.entry_id,
-                task_list["id"],
+                coordinator.task_list_id,
             )
-            for task_list in entry.runtime_data.task_lists
+            for coordinator in entry.runtime_data
         ),
-        True,
     )
 
 
@@ -118,8 +116,6 @@ class GoogleTaskTodoListEntity(
     @property
     def todo_items(self) -> list[TodoItem] | None:
         """Get the current set of To-do items."""
-        if self.coordinator.data is None:
-            return None
         return [_convert_api_item(item) for item in _order_tasks(self.coordinator.data)]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:

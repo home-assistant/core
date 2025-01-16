@@ -27,7 +27,7 @@ async def test_all_entities(
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
     ]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -48,7 +48,7 @@ async def test_room_sensors(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
     ]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)

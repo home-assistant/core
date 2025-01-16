@@ -399,9 +399,9 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert callback.call_count == 1
         assert callback.call_args[0][0].text == sentence
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), sentence
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            sentence
+        )
         assert result.response.speech == {
             "plain": {"speech": trigger_response, "extra_data": None}
         }
@@ -412,9 +412,9 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     callback.reset_mock()
     for sentence in test_sentences:
         result = await conversation.async_converse(hass, sentence, None, Context())
-        assert (
-            result.response.response_type == intent.IntentResponseType.ERROR
-        ), sentence
+        assert result.response.response_type == intent.IntentResponseType.ERROR, (
+            sentence
+        )
 
     assert len(callback.mock_calls) == 0
 
@@ -3056,6 +3056,14 @@ async def test_entities_names_are_not_templates(hass: HomeAssistant) -> None:
     ("language", "light_name", "on_sentence", "off_sentence"),
     [
         ("en", "test light", "turn on test light", "turn off test light"),
+        ("de", "Testlicht", "Schalte Testlicht ein", "Schalte Testlicht aus"),
+        (
+            "fr",
+            "lumière de test",
+            "Allumer la lumière de test",
+            "Éteindre la lumière de test",
+        ),
+        ("nl", "testlicht", "Zet testlicht aan", "Zet testlicht uit"),
         ("zh-cn", "卧室灯", "打开卧室灯", "关闭卧室灯"),
         ("zh-hk", "睡房燈", "打開睡房燈", "關閉睡房燈"),
         ("zh-tw", "臥室檯燈", "打開臥室檯燈", "關臥室檯燈"),

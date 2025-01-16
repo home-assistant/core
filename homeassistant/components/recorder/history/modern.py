@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
 import homeassistant.util.dt as dt_util
 
-from ..const import LAST_REPORTED_SCHEMA_VERSION, SupportedDialect
+from ..const import LAST_REPORTED_SCHEMA_VERSION
 from ..db_schema import (
     SHARED_ATTR_OR_LEGACY_ATTRIBUTES,
     StateAttributes,
@@ -39,7 +39,6 @@ from ..models import (
     LazyState,
     datetime_to_timestamp_or_none,
     extract_metadata_ids,
-    process_timestamp,
     row_to_compressed_state,
 )
 from ..util import execute_stmt_lambda_element, session_scope
@@ -150,7 +149,6 @@ def _significant_states_stmt(
     no_attributes: bool,
     include_start_time_state: bool,
     run_start_ts: float | None,
-    lateral_join_for_start_time: bool,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     include_last_changed = not significant_changes_only
@@ -184,13 +182,11 @@ def _significant_states_stmt(
     unioned_subquery = union_all(
         _select_from_subquery(
             _get_start_time_state_stmt(
-                run_start_ts,
                 start_time_ts,
                 single_metadata_id,
                 metadata_ids,
                 no_attributes,
                 include_last_changed,
-                lateral_join_for_start_time,
             ).subquery(),
             no_attributes,
             include_last_changed,
@@ -253,15 +249,14 @@ def get_significant_states_with_session(
             if metadata_id is not None
             and split_entity_id(entity_id)[0] in SIGNIFICANT_DOMAINS
         ]
-    run_start_ts: float | None = None
+    oldest_ts: float | None = None
     if include_start_time_state and not (
-        run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
+        oldest_ts := _get_oldest_possible_ts(hass, start_time)
     ):
         include_start_time_state = False
     start_time_ts = start_time.timestamp()
     end_time_ts = datetime_to_timestamp_or_none(end_time)
     single_metadata_id = metadata_ids[0] if len(metadata_ids) == 1 else None
-    lateral_join_for_start_time = instance.dialect_name == SupportedDialect.POSTGRESQL
     stmt = lambda_stmt(
         lambda: _significant_states_stmt(
             start_time_ts,
@@ -272,8 +267,7 @@ def get_significant_states_with_session(
             significant_changes_only,
             no_attributes,
             include_start_time_state,
-            run_start_ts,
-            lateral_join_for_start_time,
+            oldest_ts,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -357,11 +351,12 @@ def _state_changed_during_period_stmt(
         )
     if limit:
         stmt = stmt.limit(limit)
-    stmt = stmt.order_by(
-        States.metadata_id,
-        States.last_updated_ts,
-    )
+    stmt = stmt.order_by(States.metadata_id, States.last_updated_ts)
     if not include_start_time_state or not run_start_ts:
+        # If we do not need the start time state or the
+        # oldest possible timestamp is newer than the start time
+        # we can return the statement as is as there will
+        # never be a start time state.
         return stmt
     return _select_from_subquery(
         union_all(
@@ -420,9 +415,9 @@ def state_changes_during_period(
         entity_id_to_metadata_id: dict[str, int | None] = {
             entity_id: single_metadata_id
         }
-        run_start_ts: float | None = None
+        oldest_ts: float | None = None
         if include_start_time_state and not (
-            run_start_ts := _get_run_start_ts_for_utc_point_in_time(hass, start_time)
+            oldest_ts := _get_oldest_possible_ts(hass, start_time)
         ):
             include_start_time_state = False
         start_time_ts = start_time.timestamp()
@@ -435,7 +430,7 @@ def state_changes_during_period(
                 no_attributes,
                 limit,
                 include_start_time_state,
-                run_start_ts,
+                oldest_ts,
                 has_last_reported,
             ),
             track_on=[
@@ -560,78 +555,43 @@ def get_last_state_changes(
 
 
 def _get_start_time_state_for_entities_stmt(
-    run_start_ts: float,
     epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    lateral_join_for_start_time: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
-    # We got an include-list of entities, accelerate the query by filtering already
-    # in the inner and the outer query.
-    if lateral_join_for_start_time:
-        # PostgreSQL does not support index skip scan/loose index scan
-        # https://wiki.postgresql.org/wiki/Loose_indexscan
-        # so we need to do a lateral join to get the max last_updated_ts
-        # for each metadata_id as a group-by is too slow.
-        # https://github.com/home-assistant/core/issues/132865
-        max_metadata_id = StatesMeta.metadata_id.label("max_metadata_id")
-        max_last_updated = (
-            select(func.max(States.last_updated_ts))
-            .where(
-                (States.metadata_id == max_metadata_id)
-                & (States.last_updated_ts >= run_start_ts)
-                & (States.last_updated_ts < epoch_time)
-            )
-            .subquery()
-            .lateral()
-        )
-        most_recent_states_for_entities_by_date = (
-            select(max_metadata_id, max_last_updated.c[0].label("max_last_updated"))
-            .select_from(StatesMeta)
-            .join(
-                max_last_updated,
-                StatesMeta.metadata_id == max_metadata_id,
-            )
-            .where(StatesMeta.metadata_id.in_(metadata_ids))
-        ).subquery()
-    else:
-        # Simple group-by for MySQL and SQLite, must use less
-        # than 1000 metadata_ids in the IN clause for MySQL
-        # or it will optimize poorly.
-        most_recent_states_for_entities_by_date = (
-            select(
-                States.metadata_id.label("max_metadata_id"),
-                func.max(States.last_updated_ts).label("max_last_updated"),
-            )
-            .filter(
-                (States.last_updated_ts >= run_start_ts)
-                & (States.last_updated_ts < epoch_time)
-                & States.metadata_id.in_(metadata_ids)
-            )
-            .group_by(States.metadata_id)
-            .subquery()
-        )
-
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last state change before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last state change
+    # before a specific point in time for all entities.
     stmt = (
         _stmt_and_join_attributes_for_start_state(
             no_attributes, include_last_changed, False
         )
+        .select_from(StatesMeta)
         .join(
-            most_recent_states_for_entities_by_date,
+            States,
             and_(
-                States.metadata_id
-                == most_recent_states_for_entities_by_date.c.max_metadata_id,
                 States.last_updated_ts
-                == most_recent_states_for_entities_by_date.c.max_last_updated,
+                == (
+                    select(States.last_updated_ts)
+                    .where(
+                        (StatesMeta.metadata_id == States.metadata_id)
+                        & (States.last_updated_ts < epoch_time)
+                    )
+                    .order_by(States.last_updated_ts.desc())
+                    .limit(1)
+                )
+                .scalar_subquery()
+                .correlate(StatesMeta),
+                States.metadata_id == StatesMeta.metadata_id,
             ),
         )
-        .filter(
-            (States.last_updated_ts >= run_start_ts)
-            & (States.last_updated_ts < epoch_time)
-            & States.metadata_id.in_(metadata_ids)
-        )
+        .where(StatesMeta.metadata_id.in_(metadata_ids))
     )
     if no_attributes:
         return stmt
@@ -640,28 +600,26 @@ def _get_start_time_state_for_entities_stmt(
     )
 
 
-def _get_run_start_ts_for_utc_point_in_time(
+def _get_oldest_possible_ts(
     hass: HomeAssistant, utc_point_in_time: datetime
 ) -> float | None:
-    """Return the start time of a run."""
-    run = get_instance(hass).recorder_runs_manager.get(utc_point_in_time)
-    if (
-        run is not None
-        and (run_start := process_timestamp(run.start)) < utc_point_in_time
-    ):
-        return run_start.timestamp()
-    # History did not run before utc_point_in_time but we still
+    """Return the oldest possible timestamp.
+
+    Returns None if there are no states as old as utc_point_in_time.
+    """
+
+    oldest_ts = get_instance(hass).states_manager.oldest_ts
+    if oldest_ts is not None and oldest_ts < utc_point_in_time.timestamp():
+        return oldest_ts
     return None
 
 
 def _get_start_time_state_stmt(
-    run_start_ts: float,
     epoch_time: float,
     single_metadata_id: int | None,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    lateral_join_for_start_time: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
     if single_metadata_id:
@@ -677,12 +635,10 @@ def _get_start_time_state_stmt(
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
     return _get_start_time_state_for_entities_stmt(
-        run_start_ts,
         epoch_time,
         metadata_ids,
         no_attributes,
         include_last_changed,
-        lateral_join_for_start_time,
     )
 
 

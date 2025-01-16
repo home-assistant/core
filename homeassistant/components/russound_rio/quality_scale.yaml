@@ -57,7 +57,7 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have enough / noisy entities that warrant being disabled by default.
-  discovery: todo
+  discovery: done
   stale-devices: todo
   diagnostics: done
   exception-translations: done
@@ -67,8 +67,11 @@ rules:
       There are no entities that require icons.
   reconfiguration-flow: done
   dynamic-devices: todo
-  discovery-update-info: todo
-  repair-issues: done
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: todo
