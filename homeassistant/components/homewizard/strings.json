@@ -18,6 +18,10 @@
       "reauth_confirm": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
       },
+      "authorize": {
+        "title": "Authorize",
+        "description": "Press the button on the HomeWizard Energy device, then click the button below."
+      },
       "reconfigure": {
         "description": "Update configuration for {title}.",
         "data": {
