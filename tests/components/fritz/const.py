@@ -2,7 +2,6 @@
 
 from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -10,6 +9,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+)
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
 )
 
 ATTR_HOST = "host"

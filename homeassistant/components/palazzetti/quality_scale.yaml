@@ -15,8 +15,8 @@ rules:
     comment: |
       This integration does not register actions.
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -35,7 +35,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have configuration.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -51,12 +51,12 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
@@ -67,9 +67,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations:
-    status: exempt
-    comment: |
-      This integration does not have custom icons.
+    status: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

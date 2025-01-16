@@ -431,7 +431,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_power:device-registry]
@@ -1124,7 +1124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_apparent_power_phase_2:device-registry]
@@ -1472,7 +1472,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_current_phase_2:device-registry]
@@ -2084,7 +2084,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_power_factor_phase_2:device-registry]
@@ -2702,7 +2702,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_reactive_power_phase_2:device-registry]
@@ -3476,7 +3476,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-4',
+    'state': '-4.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_2:device-registry]
@@ -3563,7 +3563,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '2.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_current_phase_3:device-registry]
@@ -3650,7 +3650,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_dsmr_version:device-registry]
@@ -4689,7 +4689,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_long_power_failures_detected:device-registry]
@@ -4945,7 +4945,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-123',
+    'state': '-123.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_failures_detected:device-registry]
@@ -5117,7 +5117,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-123',
+    'state': '-123.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_2:device-registry]
@@ -5207,7 +5207,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '456',
+    'state': '456.0',
   })
 # ---
 # name: test_sensors[HWE-P1-entity_ids0][sensor.device_power_phase_3:device-registry]
@@ -7236,7 +7236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-4',
+    'state': '-4.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_current_phase_2:device-registry]
@@ -7323,7 +7323,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2',
+    'state': '2.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_current_phase_3:device-registry]
@@ -7410,7 +7410,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_dsmr_version:device-registry]
@@ -8449,7 +8449,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_long_power_failures_detected:device-registry]
@@ -8705,7 +8705,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-123',
+    'state': '-123.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_power_failures_detected:device-registry]
@@ -8877,7 +8877,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-123',
+    'state': '-123.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_power_phase_2:device-registry]
@@ -8967,7 +8967,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '456',
+    'state': '456.0',
   })
 # ---
 # name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.device_power_phase_3:device-registry]
@@ -10909,7 +10909,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_current_phase_1:device-registry]
@@ -10996,7 +10996,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_current_phase_2:device-registry]
@@ -11083,7 +11083,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_current_phase_3:device-registry]
@@ -11170,7 +11170,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_export:device-registry]
@@ -12127,7 +12127,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_long_power_failures_detected:device-registry]
@@ -13664,7 +13664,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_energy_import:device-registry]
@@ -15316,7 +15316,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[HWE-WTR-entity_ids4][sensor.device_wi_fi_ssid:device-registry]
@@ -15919,7 +15919,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[SDM230-entity_ids5][sensor.device_power:device-registry]
@@ -16612,7 +16612,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_apparent_power_phase_2:device-registry]
@@ -16960,7 +16960,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_current_phase_2:device-registry]
@@ -17572,7 +17572,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100',
+    'state': '100.0',
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_power_factor_phase_2:device-registry]
@@ -18190,7 +18190,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '0.0',
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_reactive_power_phase_2:device-registry]

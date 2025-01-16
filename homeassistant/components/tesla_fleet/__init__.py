@@ -64,6 +64,15 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Set up TeslaFleet config."""
 
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ValueError as e:
+        # Remove invalid implementation from config entry then raise AuthFailed
+        hass.config_entries.async_update_entry(
+            entry, data={"auth_implementation": None}
+        )
+        raise ConfigEntryAuthFailed from e
+
     access_token = entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
     session = async_get_clientsession(hass)
 
@@ -71,7 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     scopes: list[Scope] = [Scope(s) for s in token["scp"]]
     region: str = token["ou_code"].lower()
 
-    implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
     refresh_lock = asyncio.Lock()
 

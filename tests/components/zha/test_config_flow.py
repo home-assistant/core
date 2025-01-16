@@ -22,7 +22,6 @@ import zigpy.types
 from homeassistant import config_entries
 from homeassistant.components import ssdp, usb, zeroconf
 from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
@@ -43,6 +42,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+)
 
 from tests.common import MockConfigEntry
 

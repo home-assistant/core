@@ -75,6 +75,9 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 zone.zone_on = AsyncMock()
                 zone.zone_off = AsyncMock()
                 zone.select_source = AsyncMock()
+                zone.mute = AsyncMock()
+                zone.unmute = AsyncMock()
+                zone.toggle_mute = AsyncMock()
 
         client.controllers = {
             1: Controller(

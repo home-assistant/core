@@ -12,9 +12,11 @@ from homeassistant.const import ATTR_ICON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_CONFIG_ENTRY_ID, DATA_CONFIG_ENTRY, DOMAIN, WEBOSTV_EXCEPTIONS
+from .const import ATTR_CONFIG_ENTRY_ID, WEBOSTV_EXCEPTIONS
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 async def async_get_service(
@@ -27,9 +29,12 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][discovery_info[ATTR_CONFIG_ENTRY_ID]]
+    config_entry = hass.config_entries.async_get_entry(
+        discovery_info[ATTR_CONFIG_ENTRY_ID]
+    )
+    assert config_entry is not None
 
-    return LgWebOSNotificationService(client)
+    return LgWebOSNotificationService(config_entry.runtime_data)
 
 
 class LgWebOSNotificationService(BaseNotificationService):

@@ -5,6 +5,10 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
+# Pre-import backup to avoid it being imported
+# later when the import executor is busy and delaying
+# startup
+from . import backup  # noqa: F401
 from .agent import (
     BackupAgent,
     BackupAgentError,
@@ -17,8 +21,10 @@ from .manager import (
     BackupManager,
     BackupPlatformProtocol,
     BackupReaderWriter,
+    BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
     WrittenBackup,
@@ -29,15 +35,17 @@ from .websocket import async_register_websocket_handlers
 __all__ = [
     "AddonInfo",
     "AgentBackup",
-    "ManagerBackup",
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
+    "BackupReaderWriterError",
     "CreateBackupEvent",
     "Folder",
+    "IncorrectPasswordError",
     "LocalBackupAgent",
+    "ManagerBackup",
     "NewBackup",
     "WrittenBackup",
 ]
