@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, NamedTuple
+from typing import Any
 
 from homewizard_energy import HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
@@ -30,21 +30,15 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class DiscoveryData(NamedTuple):
-    """User metadata."""
-
-    ip: str
-    product_name: str
-    product_type: str
-    serial: str
-
-
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for P1 meter."""
 
     VERSION = 1
 
-    discovery: DiscoveryData
+    ip_address: str
+    product_name: str
+    product_type: str
+    serial: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -96,16 +90,12 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if (discovery_info.properties[CONF_PATH]) != "/api/v1":
             return self.async_abort(reason="unsupported_api_version")
 
-        self.discovery = DiscoveryData(
-            ip=discovery_info.host,
-            product_type=discovery_info.properties[CONF_PRODUCT_TYPE],
-            product_name=discovery_info.properties[CONF_PRODUCT_NAME],
-            serial=discovery_info.properties[CONF_SERIAL],
-        )
+        self.ip_address = discovery_info.host
+        self.product_type = discovery_info.properties[CONF_PRODUCT_TYPE]
+        self.product_name = discovery_info.properties[CONF_PRODUCT_NAME]
+        self.serial = discovery_info.properties[CONF_SERIAL]
 
-        await self.async_set_unique_id(
-            f"{self.discovery.product_type}_{self.discovery.serial}"
-        )
+        await self.async_set_unique_id(f"{self.product_type}_{self.serial}")
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: discovery_info.host}
         )
@@ -145,31 +135,31 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             try:
-                await self._async_try_connect(self.discovery.ip)
+                await self._async_try_connect(self.ip_address)
             except RecoverableError as ex:
                 _LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 return self.async_create_entry(
-                    title=self.discovery.product_name,
-                    data={CONF_IP_ADDRESS: self.discovery.ip},
+                    title=self.product_name,
+                    data={CONF_IP_ADDRESS: self.ip_address},
                 )
 
         self._set_confirm_only()
 
         # We won't be adding mac/serial to the title for devices
         # that users generally don't have multiple of.
-        name = self.discovery.product_name
-        if self.discovery.product_type not in ["HWE-P1", "HWE-WTR"]:
-            name = f"{name} ({self.discovery.serial})"
+        name = self.product_name
+        if self.product_type not in ["HWE-P1", "HWE-WTR"]:
+            name = f"{name} ({self.serial})"
         self.context["title_placeholders"] = {"name": name}
 
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_PRODUCT_TYPE: self.discovery.product_type,
-                CONF_SERIAL: self.discovery.serial,
-                CONF_IP_ADDRESS: self.discovery.ip,
+                CONF_PRODUCT_TYPE: self.product_type,
+                CONF_SERIAL: self.serial,
+                CONF_IP_ADDRESS: self.ip_address,
             },
             errors=errors,
         )
