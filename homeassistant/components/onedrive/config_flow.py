@@ -79,15 +79,9 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        # try to get title from drive owner
-        title = DOMAIN
-        if (
-            drive.owner is not None
-            and drive.owner.user is not None
-            and drive.owner.user.display_name is not None
-        ):
-            title = f"{drive.owner.user.display_name}'s OneDrive"
-
+        title = f"{drive.owner.user.display_name}'s OneDrive" if (
+            drive.owner and drive.owner.user and drive.owner.user.display_name
+        ) else DOMAIN
         return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(
