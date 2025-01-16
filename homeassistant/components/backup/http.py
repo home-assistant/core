@@ -140,8 +140,7 @@ class DownloadBackupView(HomeAssistantView):
             return response
         finally:
             reader.close()
-            if worker is not None:
-                await worker_done_event.wait()
+            await worker_done_event.wait()
 
 
 class UploadBackupView(HomeAssistantView):
