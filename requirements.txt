@@ -38,7 +38,7 @@ psutil-home-assistant==0.0.1
 python-slugify==8.0.4
 PyYAML==6.0.2
 requests==2.32.3
-securetar==2025.1.2
+securetar==2025.1.3
 SQLAlchemy==2.0.36
 standard-aifc==3.13.0;python_version>='3.13'
 standard-telnetlib==3.13.0;python_version>='3.13'
