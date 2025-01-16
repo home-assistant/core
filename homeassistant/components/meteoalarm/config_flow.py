@@ -80,7 +80,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(
                     f"{user_input[CONF_COUNTRY]}_{user_input[CONF_PROVINCE]}_{user_input[CONF_LANGUAGE]}"
                 )
-                return await self.async_create_entry(
+                return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
                 )
@@ -116,7 +116,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{import_config[CONF_COUNTRY]}_{import_config[CONF_PROVINCE]}_{import_config[CONF_LANGUAGE]}"
         )
-        return await self.async_create_entry(
+        return self.async_create_entry(
             title=info["title"],
             data={
                 CONF_COUNTRY: SUPPORTED_COUNTRIES.get(
