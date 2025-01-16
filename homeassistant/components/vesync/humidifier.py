@@ -143,6 +143,12 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not self.device.set_humidity_mode(_get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
 
+        # Changing mode while humidifier is off actually turns it on, as per the app. But
+        # the library does not seem to update the device_status. It is also possible that
+        # other attributes get updated. Scheduling a forced refresh to get device status.
+        # updated.
+        self.schedule_update_ha_state(force_refresh=True)
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         success = self.device.turn_on()
