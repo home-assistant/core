@@ -815,7 +815,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.4
+eheimdigital==1.0.5
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
@@ -1046,7 +1046,7 @@ goslide-api==0.7.0
 gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
-govee-ble==0.41.0
+govee-ble==0.42.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.3
