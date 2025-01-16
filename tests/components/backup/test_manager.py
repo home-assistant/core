@@ -2245,22 +2245,17 @@ async def test_restore_backup(
 ) -> None:
     """Test restore backup."""
     password = password_param.get("password")
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
 
     ws_client = await hass_ws_client(hass)
 
@@ -2345,22 +2340,17 @@ async def test_restore_backup_wrong_password(
 ) -> None:
     """Test restore backup wrong password."""
     password = "hunter2"
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        await setup_backup_platform(
-            hass,
-            domain="test",
-            platform=Mock(
-                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-                spec_set=BackupAgentPlatformProtocol,
-            ),
-        )
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    await setup_backup_platform(
+        hass,
+        domain="test",
+        platform=Mock(
+            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+            spec_set=BackupAgentPlatformProtocol,
+        ),
+    )
 
     ws_client = await hass_ws_client(hass)
 
@@ -2453,13 +2443,8 @@ async def test_restore_backup_wrong_parameters(
     expected_error: str,
 ) -> None:
     """Test restore backup wrong parameters."""
-    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
-    with patch(
-        "homeassistant.components.backup.backup.async_get_backup_agents"
-    ) as core_get_backup_agents:
-        core_get_backup_agents.return_value = [local_agent]
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
     ws_client = await hass_ws_client(hass)
 
