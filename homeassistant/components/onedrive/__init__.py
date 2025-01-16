@@ -118,7 +118,7 @@ async def _async_create_folder_if_not_exists(
 ) -> str:
     """Check if a folder exists and create it if it does not exist."""
     folder_item: DriveItem | None = None
-    """Get drive item id."""
+
     try:
         folder_item = await items.by_drive_item_id(f"{base_folder_id}:/{folder}:").get()
     except APIError as err:
