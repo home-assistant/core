@@ -13,18 +13,28 @@ from homeassistant.helpers import config_entry_flow
 from tests.common import MockConfigEntry, MockModule, mock_integration, mock_platform
 
 
-@pytest.fixture
-def discovery_flow_conf(hass: HomeAssistant) -> Generator[dict[str, bool]]:
+@pytest.fixture(params=["async", "sync"])
+def discovery_flow_conf(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> Generator[dict[str, bool]]:
     """Register a handler."""
     handler_conf = {"discovered": False}
 
-    async def has_discovered_devices(hass: HomeAssistant) -> bool:
+    async def has_discovered_devices_async(hass: HomeAssistant) -> bool:
+        """Mock if we have discovered devices."""
+        return handler_conf["discovered"]
+
+    def has_discovered_devices_sync(hass: HomeAssistant) -> bool:
         """Mock if we have discovered devices."""
         return handler_conf["discovered"]
 
     with patch.dict(config_entries.HANDLERS):
         config_entry_flow.register_discovery_flow(
-            "test", "Test", has_discovered_devices
+            "test",
+            "Test",
+            has_discovered_devices_sync
+            if request.param == "sync"
+            else has_discovered_devices_async,
         )
         yield handler_conf
 
