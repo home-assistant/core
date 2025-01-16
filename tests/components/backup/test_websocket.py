@@ -2560,13 +2560,13 @@ async def test_subscribe_event(
     ("agent_id", "backup_id", "password"),
     [
         # Invalid agent or backup
-        ("no_such_agent", "ed1608a9", "hunter2"),
+        ("no_such_agent", "c0cb53bd", "hunter2"),
         ("backup.local", "no_such_backup", "hunter2"),
         # Legacy backup, which can't be streamed
         ("backup.local", "2bcb3113", "hunter2"),
         # New backup, which can be streamed, try with correct and wrong password
-        ("backup.local", "ed1608a9", "hunter2"),
-        ("backup.local", "ed1608a9", "wrong_password"),
+        ("backup.local", "c0cb53bd", "hunter2"),
+        ("backup.local", "c0cb53bd", "wrong_password"),
     ],
 )
 @pytest.mark.usefixtures("mock_backups")
