@@ -39,20 +39,15 @@ from .const import (
     LOGGER,
 )
 
-
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for P1 meter."""
 
     VERSION = 1
 
-    ip_address: str | None = None
-    product_name: str | None = None
-    product_type: str | None = None
-    serial: str | None = None
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.ip_address: str | None = None
+    ip_address: str
+    product_name: str
+    product_type: str
+    serial: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -216,12 +211,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
         except UnauthorizedError:
             return self.async_abort(reason="unsupported_api_version")
-<<<<<<< HEAD
-        except UnauthorizedError as ex:
-            # Device responded, so IP is correct
-            pass
-=======
->>>>>>> fd945ced06f (Update quality_scale)
 
         await self.async_set_unique_id(
             f"{device.product_type}_{discovery_info.macaddress}"
@@ -346,14 +335,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         Make connection with device to test the connection
         and to get info for unique_id.
         """
-<<<<<<< HEAD
-        api: HomeWizardEnergy
-        
-=======
 
         api: HomeWizardEnergy
 
->>>>>>> fd945ced06f (Update quality_scale)
         # Determine if device is v1 or v2 capable
         if await has_v2_api(ip_address):
             api = HomeWizardEnergyV2(ip_address)
