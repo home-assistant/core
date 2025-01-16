@@ -251,7 +251,11 @@ async def test_reauth_exceptions(
 async def test_reauth_different_user_id(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test reauth flow with different user ID aborting due to wrong account."""
+    """Test reauth flow with different user ID aborting due to wrong account.
+
+    This may happen if the config entry's account was deleted, and a new account
+    used the same email address.
+    """
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
