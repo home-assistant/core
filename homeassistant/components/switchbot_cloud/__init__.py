@@ -75,9 +75,11 @@ def make_device_data(
             )
         if (
             isinstance(device, Device)
-            and device.device_type.startswith("Plug")
-            or isinstance(device, Remote)
-        ):
+            and (
+                device.device_type.startswith("Plug")
+                or device.device_type in ["Relay Switch 1PM", "Relay Switch 1"]
+            )
+        ) or isinstance(device, Remote):
             devices_data.switches.append(
                 prepare_device(hass, api, device, coordinators_by_id)
             )
@@ -88,6 +90,9 @@ def make_device_data(
             "Hub 2",
             "MeterPro",
             "MeterPro(CO2)",
+            "Relay Switch 1PM",
+            "Plug Mini (US)",
+            "Plug Mini (JP)",
         ]:
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)
@@ -130,10 +135,10 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     hass.data[DOMAIN][config.entry_id] = SwitchbotCloudData(
         api=api, devices=make_device_data(hass, api, devices, coordinators_by_id)
     )
-    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     await gather(
         *[coordinator.async_refresh() for coordinator in coordinators_by_id.values()]
     )
+    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     return True
 
 

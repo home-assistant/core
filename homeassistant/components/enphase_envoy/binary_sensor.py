@@ -22,6 +22,8 @@ from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class EnvoyEnchargeBinarySensorEntityDescription(BinarySensorEntityDescription):

@@ -9,13 +9,12 @@ from datetime import datetime, timedelta
 import logging
 from random import randint
 from time import monotonic
-from typing import Any, Generic, Protocol
+from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
 from propcache import cached_property
 import requests
-from typing_extensions import TypeVar
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -289,8 +288,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if self.config_entry is None:
             report_usage(
                 "uses `async_config_entry_first_refresh`, which is only supported "
-                "for coordinators with a config entry and will stop working in "
-                "Home Assistant 2025.11"
+                "for coordinators with a config entry",
+                breaks_in_ha_version="2025.11",
             )
         elif (
             self.config_entry.state
@@ -299,8 +298,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             report_usage(
                 "uses `async_config_entry_first_refresh`, which is only supported "
                 f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}, "
-                "This will stop working in Home Assistant 2025.11",
+                f"but it is in state {self.config_entry.state}",
+                breaks_in_ha_version="2025.11",
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
