@@ -33,6 +33,9 @@
           "passive": "Passive scanning"
         }
       }
+    },
+    "abort": {
+      "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported."
     }
   }
 }
