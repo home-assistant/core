@@ -171,7 +171,7 @@ async def _test_downloading_encrypted_backup(
 
     # Finally download with the correct password
     resp = await client.get(
-        f"/api/backup/download/c0cb53bd?agent_id={agent_id}&password=hunter2"
+        f"/api/backup/download/ed1608a9?agent_id={agent_id}&password=hunter2"
     )
     assert resp.status == 200
     backup = await resp.read()
