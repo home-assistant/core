@@ -46,12 +46,12 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 
 __all__ = [
+    "USBCallbackMatcher",
     "async_is_plugged_in",
     "async_register_scan_request_callback",
-    "USBCallbackMatcher",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
