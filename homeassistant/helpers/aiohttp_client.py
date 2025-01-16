@@ -9,15 +9,16 @@ import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
-from aiohttp.resolver import AsyncResolver
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
+from aiohttp_asyncmdnsresolver.api import AsyncMDNSResolver
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.loader import bind_hass
@@ -80,6 +81,31 @@ class HassClientResponse(aiohttp.ClientResponse):
     ) -> Any:
         """Send a json request and parse the json response."""
         return await super().json(*args, loads=loads, **kwargs)
+
+
+class ChunkAsyncStreamIterator:
+    """Async iterator for chunked streams.
+
+    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
+    bytes instead of tuple[bytes, bool].
+    """
+
+    __slots__ = ("_stream",)
+
+    def __init__(self, stream: aiohttp.StreamReader) -> None:
+        """Initialize."""
+        self._stream = stream
+
+    def __aiter__(self) -> Self:
+        """Iterate."""
+        return self
+
+    async def __anext__(self) -> bytes:
+        """Yield next chunk."""
+        rv = await self._stream.readchunk()
+        if rv == (b"", False):
+            raise StopAsyncIteration
+        return rv[0]
 
 
 @callback
@@ -337,7 +363,7 @@ def _async_get_connector(
         ssl=ssl_context,
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
-        resolver=AsyncResolver(),
+        resolver=_async_make_resolver(hass),
     )
     connectors[connector_key] = connector
 
@@ -348,3 +374,8 @@ def _async_get_connector(
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
 
     return connector
+
+
+@callback
+def _async_make_resolver(hass: HomeAssistant) -> AsyncMDNSResolver:
+    return AsyncMDNSResolver(async_zeroconf=zeroconf.async_get_async_zeroconf(hass))

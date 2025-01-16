@@ -30,6 +30,9 @@ class TPLinkSensorEntityDescription(
     """Base class for a TPLink feature based sensor entity description."""
 
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="current_consumption",
@@ -113,11 +116,6 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="alarm_source",
     ),
-    TPLinkSensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
 )
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
@@ -131,20 +129,27 @@ async def async_setup_entry(
     """Set up sensors."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
+    known_child_device_ids: set[str] = set()
+    first_check = True
 
-    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        hass=hass,
-        device=device,
-        coordinator=parent_coordinator,
-        feature_type=Feature.Type.Sensor,
-        entity_class=TPLinkSensorEntity,
-        descriptions=SENSOR_DESCRIPTIONS_MAP,
-        child_coordinators=children_coordinators,
-    )
-    async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
-    async_add_entities(entities)
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.Sensor,
+            entity_class=TPLinkSensorEntity,
+            descriptions=SENSOR_DESCRIPTIONS_MAP,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):

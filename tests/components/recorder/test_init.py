@@ -9,7 +9,7 @@ import sqlite3
 import sys
 import threading
 from typing import Any, cast
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -2575,23 +2575,25 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
 
 @pytest.mark.parametrize(
     ("func_to_patch", "expected_setup_result"),
-    [("migrate_schema_non_live", False), ("migrate_schema_live", False)],
+    [
+        ("migrate_schema_non_live", False),
+        ("migrate_schema_live", True),
+    ],
 )
 async def test_clean_shutdown_when_schema_migration_fails(
-    hass: HomeAssistant, func_to_patch: str, expected_setup_result: bool
+    hass: HomeAssistant,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with (
-        patch.object(
-            migration,
-            "validate_db_schema",
-            return_value=MagicMock(valid=False, current_version=1),
-        ),
+        patch.object(migration, "_get_current_schema_version", side_effect=[None, 1]),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
         patch.object(
             migration,
             func_to_patch,
-            side_effect=Exception,
+            side_effect=Exception("Boom!"),
         ),
     ):
         if recorder.DOMAIN not in hass.data:
@@ -2610,9 +2612,53 @@ async def test_clean_shutdown_when_schema_migration_fails(
         assert setup_result == expected_setup_result
         await hass.async_block_till_done()
 
+        instance = recorder.get_instance(hass)
+        await hass.async_stop()
+        assert instance.engine is None
+
+        assert "Error during schema migration" in caplog.text
+        # Check the injected exception was logged
+        assert "Boom!" in caplog.text
+
+
+async def test_setup_fails_after_downgrade(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test we fail to setup after a downgrade.
+
+    Also test we shutdown cleanly.
+    """
+    with (
+        patch.object(
+            migration,
+            "_get_current_schema_version",
+            side_effect=[None, SCHEMA_VERSION + 1],
+        ),
+        patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
+    ):
+        if recorder.DOMAIN not in hass.data:
+            recorder_helper.async_initialize_recorder(hass)
+        assert not await async_setup_component(
+            hass,
+            recorder.DOMAIN,
+            {
+                recorder.DOMAIN: {
+                    CONF_DB_URL: "sqlite://",
+                    CONF_DB_RETRY_WAIT: 0,
+                    CONF_DB_MAX_RETRIES: 1,
+                }
+            },
+        )
+        await hass.async_block_till_done()
+
     instance = recorder.get_instance(hass)
     await hass.async_stop()
     assert instance.engine is None
+    assert (
+        f"The database schema version {SCHEMA_VERSION + 1} is newer "
+        f"than {SCHEMA_VERSION} which is the maximum database schema "
+        "version supported by the installed version of Home Assistant Core"
+    ) in caplog.text
 
 
 async def test_events_are_recorded_until_final_write(

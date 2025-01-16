@@ -36,6 +36,10 @@ class TPLinkCameraEntityDescription(
     """Base class for camera entity description."""
 
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
 CAMERA_DESCRIPTIONS: tuple[TPLinkCameraEntityDescription, ...] = (
     TPLinkCameraEntityDescription(
         key="live_view",
@@ -130,7 +134,7 @@ class TPLinkCameraEntity(CoordinatedTPLinkEntity, Camera):
         try:
             await stream.async_check_stream_client_error(self.hass, video_url)
         except stream.StreamOpenClientError as ex:
-            if ex.stream_client_error is stream.StreamClientError.Unauthorized:
+            if ex.error_code is stream.StreamClientError.Unauthorized:
                 _LOGGER.debug(
                     "Camera stream failed authentication for %s",
                     self._device.host,

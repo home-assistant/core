@@ -24,7 +24,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_TYPE_SPECTRUM_TUNE, DEVICE_TYPE_WHITE_TUNE
+from .const import (
+    DEVICE_TYPE_COLOR_TUNE,
+    DEVICE_TYPE_SPECTRUM_TUNE,
+    DEVICE_TYPE_WHITE_TUNE,
+)
 from .entity import LutronCasetaUpdatableEntity
 from .models import LutronCasetaData
 
@@ -35,9 +39,18 @@ SUPPORTED_COLOR_MODE_DICT = {
         ColorMode.WHITE,
     },
     DEVICE_TYPE_WHITE_TUNE: {ColorMode.COLOR_TEMP},
+    DEVICE_TYPE_COLOR_TUNE: {
+        ColorMode.HS,
+        ColorMode.COLOR_TEMP,
+        ColorMode.WHITE,
+    },
 }
 
-WARM_DEVICE_TYPES = {DEVICE_TYPE_WHITE_TUNE, DEVICE_TYPE_SPECTRUM_TUNE}
+WARM_DEVICE_TYPES = {
+    DEVICE_TYPE_WHITE_TUNE,
+    DEVICE_TYPE_SPECTRUM_TUNE,
+    DEVICE_TYPE_COLOR_TUNE,
+}
 
 
 def to_lutron_level(level):
@@ -90,8 +103,14 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         )
 
         self.supports_warm_cool = light_type in WARM_DEVICE_TYPES
-        self.supports_warm_dim = light_type == DEVICE_TYPE_SPECTRUM_TUNE
-        self.supports_spectrum_tune = light_type == DEVICE_TYPE_SPECTRUM_TUNE
+        self.supports_warm_dim = light_type in (
+            DEVICE_TYPE_SPECTRUM_TUNE,
+            DEVICE_TYPE_COLOR_TUNE,
+        )
+        self.supports_spectrum_tune = light_type in (
+            DEVICE_TYPE_SPECTRUM_TUNE,
+            DEVICE_TYPE_COLOR_TUNE,
+        )
 
     def _get_min_color_temp_kelvin(self, light: dict[str, Any]) -> int:
         """Return minimum supported color temperature.
