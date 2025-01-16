@@ -258,15 +258,14 @@ class USBDiscovery:
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware."""
         if not await self._async_start_monitor_udev():
-            # We fall back to polling to make development possible, this is not a proper
-            # way to run Home Assistant
+            _LOGGER.info(
+                "Falling back to periodic filesystem polling for development, libudev "
+                "is not present"
+            )
             await self._async_start_monitor_polling()
 
     async def _async_start_monitor_polling(self) -> None:
         """Start monitoring hardware with polling (for development only!)."""
-        _LOGGER.info(
-            "Falling back to USB port polling for development, libudev is not preset"
-        )
 
         async def _scan(event_time: datetime) -> None:
             await self._async_scan_serial()
@@ -275,6 +274,7 @@ class USBDiscovery:
             self.hass, _scan, POLLING_MONITOR_SCAN_PERIOD
         )
 
+        @hass_callback
         def _stop_polling(event: Event) -> None:
             stop_callback()
 
