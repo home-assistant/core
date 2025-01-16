@@ -34,117 +34,48 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the VegeHub config flow."""
         self._hub: VegeHub | None = None
         self._hostname: str = ""
-        self._discovered: dict[str, Any] = {}  # Add this
+        self._discovered: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial confirmation step with no inputs."""
+        """Handle a flow initiated by the user."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # CONF_IP_ADDRESS is only in user_input if the user has manually typed in the IP address
-            if CONF_IP_ADDRESS in user_input and self._hub is None:
-                # When the user has input the IP manually, we need to gather more information
-                # from the Hub before we can continue setup.
-                if not is_ip_address(user_input[CONF_IP_ADDRESS]):
-                    # User-supplied IP address is invalid.
-                    _LOGGER.error("Invalid IP address")
-                    errors["base"] = "invalid_ip"
-                    return self.async_show_form(step_id="user", errors=errors)
-
-                self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
-
-                try:
-                    await self._hub.retrieve_mac_address(retries=2)
-                except ConnectionError:
-                    _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
-                    errors["base"] = "cannot_connect"
-                except TimeoutError:
-                    _LOGGER.error(
-                        "Timed out trying to connect to %s", self._hub.ip_address
-                    )
-                    errors["base"] = "timeout_connect"
-
-                if len(errors) > 0:
-                    return self.async_show_form(step_id="user", errors=errors)
-
-                if len(self._hub.mac_address) <= 0:
-                    _LOGGER.error(
-                        "Failed to get MAC address for %s", self._hub.ip_address
-                    )
-                    errors["base"] = "cannot_connect"
-                    return self.async_show_form(step_id="user", errors=errors)
-
-                self._async_abort_entries_match({CONF_IP_ADDRESS: self._hub.ip_address})
-
-                # Set the unique ID for the manual configuration
-                await self.async_set_unique_id(self._hub.mac_address)
-                # Abort if this device is already configured
-                self._abort_if_unique_id_configured()
-
-                self._hostname = self._hub.ip_address
-
-            if self._hub is not None:
-                if len(errors) == 0:
-                    self._discovered = {
-                        CONF_MAC: self._hub.mac_address,
-                        CONF_IP_ADDRESS: self._hub.ip_address,
-                        CONF_HOST: self._hostname,
-                    }
-                    webhook_id = webhook_generate_id()
-                    webhook_url = webhook_generate_url(
-                        self.hass,
-                        webhook_id,
-                        allow_external=False,
-                        allow_ip=True,
-                    )
-
-                    hub = VegeHub(
-                        self._hub.ip_address, self._hub.mac_address, self.unique_id
-                    )
-
-                    # Send the webhook address to the hub as its server target.
-                    # This step should only happen when the config flow happens, not
-                    # in the async_setup_entry, which happens again during boot.
-                    try:
-                        await hub.setup("", webhook_url, retries=1)
-                    except ConnectionError:
-                        _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
-                        errors["base"] = "cannot_connect"
-                    except TimeoutError:
-                        _LOGGER.error(
-                            "Timed out trying to connect to %s", self._hub.ip_address
-                        )
-                        errors["base"] = "timeout_connect"
-
-                    if not errors:
-                        # Save Hub info to be used later when defining the VegeHub object
-                        info_data = {
-                            **self._discovered,
-                            CONF_DEVICE: hub.info,
-                            CONF_WEBHOOK_ID: webhook_id,
+            if not is_ip_address(user_input[CONF_IP_ADDRESS]):
+                # User-supplied IP address is invalid.
+                _LOGGER.error("Invalid IP address")
+                errors["base"] = "invalid_ip"
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(
+                                CONF_IP_ADDRESS, default=user_input[CONF_IP_ADDRESS]
+                            ): str,
                         }
+                    ),
+                    errors=errors,
+                )
 
-                        # Create the config entry for the new device
-                        return self.async_create_entry(
-                            title=f"{self._hostname}", data=info_data
-                        )
+            self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
 
-        if self._hub is None:
-            # Show the form to allow the user to manually enter the IP address
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_IP_ADDRESS): str,
-                    }
-                ),
-                errors={},
-            )
+            self._hostname = self._hub.ip_address
 
-        # If we already have an IP address, we can just ask the user if they want to continue
-        return self.async_show_form(step_id="user", errors=errors)
+            # Proceed to create the config entry
+            return await self._async_create_entry()
+
+        # Show the form to allow the user to manually enter the IP address
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_IP_ADDRESS): str,
+                }
+            ),
+            errors={},
+        )
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -154,10 +85,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Extract the IP address from the zeroconf discovery info
         device_ip = discovery_info.host
 
+        self._async_abort_entries_match({CONF_IP_ADDRESS: device_ip})
+
         self._hostname = discovery_info.hostname.removesuffix(".local.")
         config_url = f"http://{discovery_info.hostname[:-1]}:{discovery_info.port}"
-
-        self._async_abort_entries_match({CONF_IP_ADDRESS: discovery_info.host})
 
         self._hub = VegeHub(device_ip)
 
@@ -186,4 +117,78 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # If the device is new, allow the user to continue setup
-        return await self.async_step_user()
+        return self.async_show_form(step_id="zeroconf_confirm")
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user confirmation for a discovered device."""
+        if user_input is not None:
+            return await self._async_create_entry()
+
+        # Show the confirmation form
+        return self.async_show_form(step_id="zeroconf_confirm")
+
+    async def async_step_error_retry(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle error in setup process and allow retry."""
+        if user_input is not None:
+            return await self._async_create_entry()
+
+        # Show the confirmation form
+        return self.async_show_form(step_id="error_retry")
+
+    async def _async_create_entry(self) -> ConfigFlowResult:
+        """Create a config entry for the device."""
+        errors: dict[str, str] = {}
+        webhook_id = webhook_generate_id()
+        webhook_url = webhook_generate_url(
+            self.hass,
+            webhook_id,
+            allow_external=False,
+            allow_ip=True,
+        )
+
+        # This should be impossible, but mypy demands that we check for None
+        if self._hub is None:
+            return self.async_abort(reason="unknown_error")
+
+        # Send the webhook address to the hub as its server target.
+        # This step should only happen when the config flow happens, not
+        # in the async_setup_entry, which happens again during boot.
+        try:
+            await self._hub.setup("", webhook_url, retries=1)
+        except ConnectionError:
+            _LOGGER.error("Failed to connect to %s", self._hub.ip_address)
+            errors["base"] = "cannot_connect"
+        except TimeoutError:
+            _LOGGER.error("Timed out trying to connect to %s", self._hub.ip_address)
+            errors["base"] = "timeout_connect"
+
+        if len(self._hub.mac_address) <= 0:
+            _LOGGER.error("Failed to get MAC address for %s", self._hub.ip_address)
+            errors["base"] = "cannot_connect"
+
+        if len(errors) > 0:
+            return self.async_show_form(step_id="error_retry", errors=errors)
+
+        self._discovered = {
+            CONF_IP_ADDRESS: self._hub.ip_address,
+            CONF_HOST: self._hostname,
+            CONF_MAC: self._hub.mac_address,
+        }
+
+        # Check if this device already exists
+        await self.async_set_unique_id(self._hub.mac_address)
+        self._abort_if_unique_id_configured()
+
+        # Save Hub info to be used later when defining the VegeHub object
+        info_data = {
+            **self._discovered,
+            CONF_DEVICE: self._hub.info,
+            CONF_WEBHOOK_ID: webhook_id,
+        }
+
+        # Create the config entry for the new device
+        return self.async_create_entry(title=f"{self._hostname}", data=info_data)
