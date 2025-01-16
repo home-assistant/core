@@ -43,6 +43,7 @@ API_SCOPES_EXCLUDED_FROM_CLOUD = [
 NETATMO_CREATE_BATTERY = "netatmo_create_battery"
 NETATMO_CREATE_CAMERA = "netatmo_create_camera"
 NETATMO_CREATE_CAMERA_LIGHT = "netatmo_create_camera_light"
+NETATMO_CREATE_DOOR_TAG = "netatmo_create_door_tag"
 NETATMO_CREATE_CLIMATE = "netatmo_create_climate"
 NETATMO_CREATE_COVER = "netatmo_create_cover"
 NETATMO_CREATE_FAN = "netatmo_create_fan"
