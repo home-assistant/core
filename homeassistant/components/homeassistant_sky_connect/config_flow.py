@@ -145,9 +145,8 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
         self,
     ) -> silabs_multiprotocol_addon.SerialPortSettings:
         """Return the radio serial port settings."""
-        usb_dev = self.config_entry.data["device"]
         return silabs_multiprotocol_addon.SerialPortSettings(
-            device=usb_dev,
+            device=self.config_entry.data["device"],
             baudrate="115200",
             flow_control=True,
         )
