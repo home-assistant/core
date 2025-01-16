@@ -134,8 +134,7 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
     @property
     def available(self) -> bool:
         """Check if device is available and the entity is applicable."""
-        return (
-            super().available
-            and self.entity_description.available_fn is not None
-            and self.entity_description.available_fn(self.device)
+        return super().available and (
+            self.entity_description.available_fn is None
+            or self.entity_description.available_fn(self.device)
         )
