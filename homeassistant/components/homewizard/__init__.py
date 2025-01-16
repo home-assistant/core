@@ -30,6 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
             entry.data[CONF_IP_ADDRESS],
             clientsession=async_get_clientsession(hass),
         )
+
     coordinator = HWEnergyDeviceUpdateCoordinator(hass, api)
     try:
         await coordinator.async_config_entry_first_refresh()
