@@ -63,7 +63,7 @@ class WebSocketAdapter(logging.LoggerAdapter):
     def process(self, msg: str, kwargs: Any) -> tuple[str, Any]:
         """Add connid to websocket log messages."""
         assert self.extra is not None
-        return f'[{self.extra["connid"]}] {msg}', kwargs
+        return f"[{self.extra['connid']}] {msg}", kwargs
 
 
 class WebSocketHandler:
@@ -197,7 +197,7 @@ class WebSocketHandler:
             # max pending messages.
             return
 
-        if type(message) is not bytes:  # noqa: E721
+        if type(message) is not bytes:
             if isinstance(message, dict):
                 message = message_to_json_bytes(message)
             elif isinstance(message, str):
@@ -490,7 +490,7 @@ class WebSocketHandler:
                 )
 
             # command_msg_data is always deserialized from JSON as a list
-            if type(command_msg_data) is not list:  # noqa: E721
+            if type(command_msg_data) is not list:
                 async_handle_str(command_msg_data)
                 continue
 

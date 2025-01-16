@@ -51,7 +51,7 @@ async def test_set_target_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.temperature", ATTR_TEMPERATURE: 29},
+        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_TEMPERATURE: 29},
         blocking=True,
     )
     mock_temperature.set_temp.assert_called_once_with(29)
@@ -78,7 +78,7 @@ async def test_set_preset_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_ENTITY_ID: "climate.temperature", ATTR_PRESET_MODE: set_mode},
+        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_PRESET_MODE: set_mode},
         blocking=True,
     )
     mock_temperature.set_preset.assert_called_once_with(expected_mode)
@@ -102,7 +102,7 @@ async def test_set_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.temperature", ATTR_HVAC_MODE: set_mode},
+        {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_HVAC_MODE: set_mode},
         blocking=True,
     )
     mock_temperature.set_mode.assert_called_once_with(set_mode)
@@ -119,7 +119,7 @@ async def test_set_hvac_mode_invalid(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.temperature", ATTR_HVAC_MODE: "auto"},
+            {ATTR_ENTITY_ID: "climate.living_room_temperature", ATTR_HVAC_MODE: "auto"},
             blocking=True,
         )
     mock_temperature.set_mode.assert_not_called()

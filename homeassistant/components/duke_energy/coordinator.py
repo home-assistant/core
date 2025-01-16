@@ -85,7 +85,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 )
                 continue
 
-            id_prefix = f"{meter["serviceType"].lower()}_{serial_number}"
+            id_prefix = f"{meter['serviceType'].lower()}_{serial_number}"
             consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
             self._statistic_ids.add(consumption_statistic_id)
             _LOGGER.debug(
@@ -136,7 +136,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 )
 
             name_prefix = (
-                f"Duke Energy " f"{meter["serviceType"].capitalize()} {serial_number}"
+                f"Duke Energy {meter['serviceType'].capitalize()} {serial_number}"
             )
             consumption_metadata = StatisticMetaData(
                 has_mean=False,

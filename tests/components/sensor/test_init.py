@@ -570,7 +570,7 @@ async def test_unit_translation_key_without_platform_raises(
             match="cannot have a translation key for unit of measurement before "
             "being added to the entity platform",
         ):
-            unit = entity0.unit_of_measurement  # noqa: F841
+            unit = entity0.unit_of_measurement
 
         setup_test_component_platform(hass, sensor.DOMAIN, [entity0])
 
@@ -580,7 +580,7 @@ async def test_unit_translation_key_without_platform_raises(
         await hass.async_block_till_done()
 
         # Should not raise after being added to the platform
-        unit = entity0.unit_of_measurement  # noqa: F841
+        unit = entity0.unit_of_measurement
         assert unit == "Tests"
 
 
