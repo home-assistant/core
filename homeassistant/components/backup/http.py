@@ -121,18 +121,17 @@ class DownloadBackupView(HomeAssistantView):
             stream = await agent.async_download_backup(backup_id)
             reader = cast(IO[bytes], util.AsyncIteratorReader(hass, stream))
 
-        worker: threading.Thread | None = None
         worker_done_event = asyncio.Event()
 
         def on_done() -> None:
             """Call by the worker thread when it's done."""
             hass.loop.call_soon_threadsafe(worker_done_event.set)
 
+        stream = util.AsyncIteratorWriter(hass)
+        worker = threading.Thread(
+            target=util.decrypt_backup, args=[reader, stream, password, on_done]
+        )
         try:
-            stream = util.AsyncIteratorWriter(hass)
-            worker = threading.Thread(
-                target=util.decrypt_backup, args=[reader, stream, password, on_done]
-            )
             worker.start()
             response = StreamResponse(status=HTTPStatus.OK, headers=headers)
             await response.prepare(request)
