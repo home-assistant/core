@@ -46,8 +46,6 @@ VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_SLEEP: MODE_SLEEP,
 }
 
-HA_TO_VS_MODE_MAP = {v: k for k, v in VS_TO_HA_MODE_MAP.items()}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -89,10 +87,6 @@ def _get_ha_mode(vs_mode: str) -> str | None:
     return ha_mode
 
 
-def _get_vs_mode(ha_mode: str) -> str | None:
-    return HA_TO_VS_MODE_MAP.get(ha_mode)
-
-
 class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
@@ -104,15 +98,29 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _attr_supported_features = HumidifierEntityFeature.MODES
 
     device: VeSyncHumidifierDevice
+    _ha_to_vs_mode_map: dict[str, str] = {}
+    _available_modes: list[str] = []
+
+    def _get_vs_mode(self, ha_mode: str) -> str | None:
+        return self._ha_to_vs_mode_map.get(ha_mode)
 
     @property
     def available_modes(self) -> list[str]:
         """Return the available mist modes."""
-        return [
-            ha_mode
-            for ha_mode in (_get_ha_mode(vs_mode) for vs_mode in self.device.mist_modes)
-            if ha_mode
-        ]
+
+        # 2 Vesync humidifier modes (humidity and auto) maps to the HA mode auto.
+        # They are on different devices though. We need to map HA mode to the
+        # device specific mode when setting it.
+
+        # Populate maps once.
+        if not self._available_modes:
+            for vs_mode in self.device.mist_modes:
+                ha_mode = _get_ha_mode(vs_mode)
+                if ha_mode:
+                    self._available_modes.append(ha_mode)
+                    self._ha_to_vs_mode_map[ha_mode] = vs_mode
+
+        return self._available_modes
 
     @property
     def target_humidity(self) -> int:
@@ -137,7 +145,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             raise HomeAssistantError(
                 "{mode} is not one of the valid available modes: {self.available_modes}"
             )
-        if not self.device.set_humidity_mode(_get_vs_mode(mode)):
+        if not self.device.set_humidity_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
 
         # Changing mode while humidifier is off actually turns it on, as per the app. But
