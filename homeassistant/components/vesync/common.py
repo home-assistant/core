@@ -32,3 +32,9 @@ def is_humidifier(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a humidifier."""
 
     return isinstance(device, VeSyncHumidifierDevice)
+
+
+def get_humidifier_mode(device: VeSyncBaseDevice) -> str:
+    """Get the humidifier mode."""
+
+    return device.details.get("mode", "")

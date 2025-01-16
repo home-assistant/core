@@ -19,7 +19,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import is_humidifier
+from .common import get_humidifier_mode, is_humidifier
 from .const import (
     DOMAIN,
     VS_COORDINATOR,
@@ -125,7 +125,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def mode(self) -> str | None:
         """Get the current preset mode."""
-        return _get_ha_mode(self.device.details["mode"])
+        return _get_ha_mode(get_humidifier_mode(self.device))
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
