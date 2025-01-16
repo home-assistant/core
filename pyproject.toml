@@ -754,13 +754,23 @@ select = [
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF007", # Prefer itertools.pairwise() over zip() when iterating over successive pairs
+    "RUF008", # Do not use mutable default values for dataclass attributes
     "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF016", # Slice in indexed access to type {value_type} uses type {index_type} instead of an integer
     "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
+    "RUF020", # {never_like} | T is equivalent to T
     "RUF022", # Sort __all__
+    "RUF024", # Do not pass mutable objects as values to dict.fromkeys
+    "RUF026", # default_factory is a positional-only argument to defaultdict
+    "RUF030", # print() call in assert statement is likely unintentional
+    "RUF033", # __post_init__ method with argument defaults
+    "RUF034", # Useless if-else condition
     "RUF100", # Unused `noqa` directive
+    "RUF200", # Failed to parse pyproject.toml: {message}
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
     "S108", # hardcoded-temp-file
