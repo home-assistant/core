@@ -6,7 +6,6 @@ from typing import Any
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     MODE_AUTO,
     MODE_NORMAL,
     MODE_SLEEP,
@@ -39,8 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_HUMIDITY = 30
 MAX_HUMIDITY = 80
-
-VS_TO_HA_ATTRIBUTES = {ATTR_HUMIDITY: "current_humidity"}
 
 VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_AUTO: MODE_AUTO,
