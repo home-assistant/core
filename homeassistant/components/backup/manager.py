@@ -1037,6 +1037,8 @@ class BackupManager:
             raise DecryptOnDowloadNotSupported from err
         except backup_util.DecryptError as err:
             raise BackupManagerError(str(err)) from err
+        finally:
+            reader.close()
 
 
 class KnownBackups:

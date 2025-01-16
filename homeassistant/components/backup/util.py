@@ -164,6 +164,9 @@ class AsyncIteratorReader:
                 self._buffer = None
         return bytes(result)
 
+    def close(self) -> None:
+        """Close the iterator."""
+
 
 class AsyncIteratorWriter:
     """Wrap an AsyncIterator."""
