@@ -13,8 +13,7 @@ from typing import TYPE_CHECKING, Any, Final
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
-from voip_utils.sip import CallInfo, SipEndpoint
-from voip_utils.voip import CallProtocolFactory, RtcpDatagramProtocol, RtcpState
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
@@ -203,30 +202,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 pass
 
         return rtp_port, rtcp_port
-
-    async def _create_rtp_server(
-        self,
-        protocol_factory: CallProtocolFactory,
-        call_info: CallInfo,
-        rtp_ip: str,
-        rtp_port: int,
-    ):
-        # Shared state between RTP/RTCP servers
-        rtcp_state = RtcpState()
-
-        loop = asyncio.get_running_loop()
-
-        # RTCP server
-        await loop.create_datagram_endpoint(
-            lambda: RtcpDatagramProtocol(rtcp_state),
-            (rtp_ip, rtp_port + 1),
-        )
-
-        # RTP server
-        await loop.create_datagram_endpoint(
-            partial(protocol_factory, call_info, rtcp_state),
-            (rtp_ip, rtp_port),
-        )
 
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
