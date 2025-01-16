@@ -3,7 +3,6 @@
 import asyncio
 from datetime import timedelta
 import os
-import sys
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
@@ -61,10 +60,6 @@ def mock_venv():
         yield
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_observer_discovery(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
 ) -> None:
@@ -95,6 +90,7 @@ async def test_observer_discovery(
         return mock_observer
 
     with (
+        patch("sys.platform", "linux"),
         patch("pyudev.Context"),
         patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer),
         patch("pyudev.Monitor.filter_by"),
@@ -144,6 +140,7 @@ async def test_polling_discovery(
         ]
 
     with (
+        patch("sys.platform", "linux"),
         patch(
             "homeassistant.components.usb.USBDiscovery._get_monitor_observer",
             return_value=None,
@@ -175,10 +172,6 @@ async def test_polling_discovery(
     await hass.async_block_till_done()
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_removal_by_observer_before_started(
     hass: HomeAssistant, operating_system
 ) -> None:
@@ -731,10 +724,6 @@ async def test_non_matching_discovered_by_scanner_after_started(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_observer_on_wsl_fallback_without_throwing_exception(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
 ) -> None:
@@ -773,10 +762,6 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_not_discovered_by_observer_before_started_on_docker(
     hass: HomeAssistant, docker
 ) -> None:
