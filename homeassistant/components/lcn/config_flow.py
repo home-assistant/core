@@ -137,15 +137,22 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
-            if (error := await validate_connection(user_input)) is not None:
-                errors = {CONF_BASE: error}
+            if not (user_input.items() <= reconfigure_entry.data.items()):
+                self._async_abort_entries_match(
+                    {
+                        CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+                        CONF_PORT: user_input[CONF_PORT],
+                    }
+                )
 
-            if errors is None:
+            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
+
+            if (error := await validate_connection(user_input)) is None:
                 return self.async_update_reload_and_abort(
                     reconfigure_entry, data_updates=user_input
                 )
 
+            errors = {CONF_BASE: error}
             await self.hass.config_entries.async_setup(reconfigure_entry.entry_id)
 
         return self.async_show_form(
