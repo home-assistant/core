@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Feature
 
@@ -27,6 +28,9 @@ class TPLinkSensorEntityDescription(
     SensorEntityDescription, TPLinkFeatureEntityDescription
 ):
     """Base class for a TPLink feature based sensor entity description."""
+
+    #: Optional callable to convert the value
+    convert_fn: Callable[[Any], Any] | None = None
 
 
 # Coordinator is used to centralize the data updates
@@ -164,6 +168,9 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             value = round(cast(float, value), self._feature.precision_hint)
             # We probably do not need this, when we are rounding already?
             self._attr_suggested_display_precision = self._feature.precision_hint
+
+        if self.entity_description.convert_fn:
+            value = self.entity_description.convert_fn(value)
 
         if TYPE_CHECKING:
             # pylint: disable-next=import-outside-toplevel
