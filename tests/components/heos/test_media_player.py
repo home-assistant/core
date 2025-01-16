@@ -646,6 +646,7 @@ async def test_select_input_source(
     # Test state is matched by media id
     player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
     player.now_playing_media.media_id = const.INPUT_AUX_IN_1
+    player.now_playing_media.station = input_source.name
     player.heos.dispatcher.send(
         SignalType.PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )

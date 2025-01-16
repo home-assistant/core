@@ -273,14 +273,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self, now_playing_media: HeosNowPlayingMedia
     ) -> str | None:
         """Determine current source from now playing media."""
-        # Try input source. HEOS does not provide the source device, so this may
-        # incorrectly match to the first input of the same media_id on another device.
+        # Try input source by input name:station
         if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
             return next(
                 (
                     input_source.name
                     for input_source in self._inputs
-                    if input_source.media_id == now_playing_media.media_id
+                    if input_source.name == now_playing_media.station
                 ),
                 None,
             )
