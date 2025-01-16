@@ -282,7 +282,7 @@
     },
     "clear_playlist": {
       "name": "Clear playlist",
-      "description": "Clears the playlist."
+      "description": "Removes all items from the playlist."
     },
     "shuffle_set": {
       "name": "Shuffle",

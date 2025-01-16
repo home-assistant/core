@@ -24,6 +24,7 @@ from .coordinator import FytaCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 type FytaConfigEntry = ConfigEntry[FytaCoordinator]
@@ -55,13 +56,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FytaConfigEntry) -> bool:
     """Unload Fyta entity."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: FytaConfigEntry
+) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 

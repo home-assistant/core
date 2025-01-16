@@ -1,16 +1,12 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: data_description is missing.
+  config-flow: done
   test-before-configure: done
   unique-config-entry:
     status: todo
     comment: Uniqueness is not checked yet.
   config-flow-test-coverage: done
-  runtime-data:
-    status: todo
-    comment: runtime_data is not used yet.
+  runtime-data: done
   test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
@@ -27,9 +23,7 @@ rules:
     comment: No coordinator is used, data update is centrally handled by the library.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: removal instructions missing
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   # Silver

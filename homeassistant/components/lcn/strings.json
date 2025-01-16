@@ -70,6 +70,10 @@
     "deprecated_keylock_sensor": {
       "title": "Deprecated LCN key lock binary sensor",
       "description": "Your LCN key lock binary sensor entity `{entity}` is beeing used in automations or scripts. A key lock switch entity is available and should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
+    },
+    "deprecated_address_parameter": {
+      "title": "Deprecated 'address' parameter",
+      "description": "The 'address' parameter in the LCN action calls is deprecated. The 'device_id' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   },
   "services": {
@@ -77,6 +81,10 @@
       "name": "Output absolute brightness",
       "description": "Sets absolute brightness of output port in percent.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "The device_id of the LCN module or group."
+        },
         "address": {
           "name": "Address",
           "description": "Module address."
@@ -99,6 +107,10 @@
       "name": "Output relative brightness",
       "description": "Sets relative brightness of output port in percent.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -117,6 +129,10 @@
       "name": "Toggle output",
       "description": "Toggles output port.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -135,6 +151,10 @@
       "name": "Relays",
       "description": "Sets the relays status.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -147,19 +167,23 @@
     },
     "led": {
       "name": "LED",
-      "description": "Sets the led state.",
+      "description": "Sets the LED state.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
         },
         "led": {
           "name": "[%key:component::lcn::services::led::name%]",
-          "description": "Led."
+          "description": "The LED port of the device."
         },
         "state": {
           "name": "State",
-          "description": "Led state."
+          "description": "The LED state to set."
         }
       }
     },
@@ -167,6 +191,10 @@
       "name": "Set absolute variable",
       "description": "Sets absolute value of a variable or setpoint.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -189,6 +217,10 @@
       "name": "Reset variable",
       "description": "Resets value of variable or setpoint.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -203,6 +235,10 @@
       "name": "Shift variable",
       "description": "Shift value of a variable, setpoint or threshold.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -229,6 +265,10 @@
       "name": "Lock regulator",
       "description": "Locks a regulator setpoint.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -247,6 +287,10 @@
       "name": "Send keys",
       "description": "Sends keys (which executes bound commands).",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -273,6 +317,10 @@
       "name": "Lock keys",
       "description": "Locks keys.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -299,6 +347,10 @@
       "name": "Dynamic text",
       "description": "Sends dynamic text to LCN-GTxD displays.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -317,6 +369,10 @@
       "name": "PCK",
       "description": "Sends arbitrary PCK command.",
       "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "[%key:component::lcn::services::output_abs::fields::device_id::description%]"
+        },
         "address": {
           "name": "Address",
           "description": "[%key:component::lcn::services::output_abs::fields::address::description%]"
@@ -326,6 +382,39 @@
           "description": "PCK command (without address header)."
         }
       }
+    },
+    "address_to_device_id": {
+      "name": "Address to device ID",
+      "description": "Convert LCN address to device ID.",
+      "fields": {
+        "id": {
+          "name": "Module or group ID",
+          "description": "Target module or group ID."
+        },
+        "segment_id": {
+          "name": "Segment ID",
+          "description": "Target segment ID."
+        },
+        "type": {
+          "name": "Type",
+          "description": "Target type."
+        },
+        "host": {
+          "name": "Host name",
+          "description": "Host name as given in the integration panel."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "no_device_identifier": {
+      "message": "No device identifier provided. Please provide the device ID."
+    },
+    "invalid_address": {
+      "message": "LCN device for given address has not been configured."
+    },
+    "invalid_device_id": {
+      "message": "LCN device for given device ID has not been configured."
     }
   }
 }

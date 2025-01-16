@@ -1562,10 +1562,10 @@ async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> N
 
 def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
-    call = ha.ServiceCall("homeassistant", "start")
+    call = ha.ServiceCall(None, "homeassistant", "start")
     assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
-    call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
+    call2 = ha.ServiceCall(None, "homeassistant", "start", {"fast": "yes"})
     assert (
         str(call2)
         == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
