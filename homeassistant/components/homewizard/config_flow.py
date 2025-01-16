@@ -336,16 +336,16 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         and to get info for unique_id.
         """
 
-        api: HomeWizardEnergy
+        energy_api: HomeWizardEnergy
 
         # Determine if device is v1 or v2 capable
         if await has_v2_api(ip_address):
-            api = HomeWizardEnergyV2(ip_address)
+            energy_api = HomeWizardEnergyV2(ip_address)
         else:
-            api = HomeWizardEnergyV1(ip_address)
+            energy_api = HomeWizardEnergyV1(ip_address)
 
         try:
-            return await api.device()
+            return await energy_api.device()
 
         except DisabledError as ex:
             raise RecoverableError(
@@ -372,7 +372,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("unknown_error") from ex
 
         finally:
-            await api.close()
+            await energy_api.close()
 
 
 class RecoverableError(HomeAssistantError):
