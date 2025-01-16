@@ -67,7 +67,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                info = validate_input(self.hass, user_input)
+                validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
@@ -81,7 +81,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                     f"{user_input[CONF_COUNTRY]}_{user_input[CONF_PROVINCE]}_{user_input[CONF_LANGUAGE]}"
                 )
                 return self.async_create_entry(
-                    title=info["title"],
+                    title=DOMAIN,
                     data=user_input,
                 )
 
@@ -106,7 +106,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         try:
-            info = validate_input(self.hass, import_config)
+            validate_input(self.hass, import_config)
         except CannotConnect:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001
@@ -117,7 +117,7 @@ class MeteoAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             f"{import_config[CONF_COUNTRY]}_{import_config[CONF_PROVINCE]}_{import_config[CONF_LANGUAGE]}"
         )
         return self.async_create_entry(
-            title=info["title"],
+            title=DOMAIN,
             data={
                 CONF_COUNTRY: SUPPORTED_COUNTRIES.get(
                     import_config[CONF_COUNTRY], DEFAULT_COUNTRY
