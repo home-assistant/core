@@ -16,8 +16,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import is_humidifier
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY
+from .common import get_humidifier_mode, is_humidifier
+from .const import (
+    DOMAIN,
+    VS_COORDINATOR,
+    VS_DEVICES,
+    VS_DISCOVERY,
+    VS_HUMIDIFIER_MODE_MANUAL,
+)
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -28,9 +34,20 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
 
+    available_fn: Callable[[VeSyncBaseDevice], bool] | None = None
+    """Callback to determine if the entity should be available."""
     exists_fn: Callable[[VeSyncBaseDevice], bool]
+    """Callback to determine if an entity should be added for this description."""
     value_fn: Callable[[VeSyncBaseDevice], float]
+    """Callback to return the value."""
     set_value_fn: Callable[[VeSyncBaseDevice, float], bool]
+    """Callback to set the value."""
+
+
+def is_humidifier_in_manual_mode(device: VeSyncBaseDevice) -> bool:
+    """Get the humidifier mode."""
+
+    return get_humidifier_mode(device) == VS_HUMIDIFIER_MODE_MANUAL
 
 
 NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
@@ -41,6 +58,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         native_max_value=9,
         native_step=1,
         mode=NumberMode.SLIDER,
+        available_fn=is_humidifier_in_manual_mode,
         exists_fn=is_humidifier,
         set_value_fn=lambda device, value: device.set_mist_level(value),
         value_fn=lambda device: device.mist_level,
@@ -112,3 +130,12 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
             self.entity_description.set_value_fn, self.device, value
         ):
             await self.coordinator.async_request_refresh()
+
+    @property
+    def available(self) -> bool:
+        """Check if device is available and the entity is applicable."""
+        return (
+            super().available
+            and self.entity_description.available_fn is not None
+            and self.entity_description.available_fn(self.device)
+        )
