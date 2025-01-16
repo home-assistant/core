@@ -4,9 +4,8 @@ from __future__ import annotations
 
 import logging
 import types
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 

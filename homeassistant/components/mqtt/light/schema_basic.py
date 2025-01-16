@@ -587,7 +587,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_xy_color = cast(tuple[float, float], xy_color)
 
     @callback
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
         self.add_subscription(

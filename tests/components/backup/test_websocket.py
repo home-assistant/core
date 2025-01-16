@@ -2554,3 +2554,41 @@ async def test_subscribe_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
     )
     assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("agent_id", "backup_id", "password"),
+    [
+        # Invalid agent or backup
+        ("no_such_agent", "c0cb53bd", "hunter2"),
+        ("backup.local", "no_such_backup", "hunter2"),
+        # Legacy backup, which can't be streamed
+        ("backup.local", "2bcb3113", "hunter2"),
+        # New backup, which can be streamed, try with correct and wrong password
+        ("backup.local", "c0cb53bd", "hunter2"),
+        ("backup.local", "c0cb53bd", "wrong_password"),
+    ],
+)
+@pytest.mark.usefixtures("mock_backups")
+async def test_can_decrypt_on_download(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    agent_id: str,
+    backup_id: str,
+    password: str,
+) -> None:
+    """Test can decrypt on download."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": backup_id,
+            "agent_id": agent_id,
+            "password": password,
+        }
+    )
+    assert await client.receive_json() == snapshot

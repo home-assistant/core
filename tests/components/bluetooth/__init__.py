@@ -25,17 +25,17 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 __all__ = (
+    "MockBleakClient",
+    "generate_advertisement_data",
+    "generate_ble_device",
     "inject_advertisement",
     "inject_advertisement_with_source",
     "inject_advertisement_with_time_and_source",
     "inject_advertisement_with_time_and_source_connectable",
     "inject_bluetooth_service_info",
     "patch_all_discovered_devices",
-    "patch_discovered_devices",
-    "generate_advertisement_data",
-    "generate_ble_device",
-    "MockBleakClient",
     "patch_bluetooth_time",
+    "patch_discovered_devices",
 )
 
 ADVERTISEMENT_DATA_DEFAULTS = {
