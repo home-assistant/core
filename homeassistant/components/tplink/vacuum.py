@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
-from kasa import Device, Module
+from kasa import Device, Feature, Module
 from kasa.smart.modules.clean import Clean, Status
+from kasa.smart.modules.speaker import Speaker
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -29,11 +30,6 @@ STATUS_TO_ACTIVITY = {
     Status.Paused: VacuumActivity.PAUSED,
     Status.Error: VacuumActivity.ERROR,
 }
-
-
-# TODO: only for testing until speaker module gets merged into python-kasa
-if TYPE_CHECKING:
-    from kasa.smart.modules.speaker import Speaker
 
 
 async def async_setup_entry(
@@ -61,6 +57,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.LOCATE
     )
 
     def __init__(
@@ -70,11 +67,8 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
     ) -> None:
         """Initialize the vacuum entity."""
         self._vacuum_module: Clean = device.modules[Module.Clean]
+        self._speaker_module: Speaker = device.modules[Module.Speaker]
         super().__init__(device, coordinator)
-        # TODO optional until speaker PR gets merged into python-kasa
-        self._speaker_module: Speaker | None = device.modules.get(Module.Speaker)
-        if self._speaker_module is not None:
-            self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
     @async_refresh_after
     async def async_start(self) -> None:
@@ -98,8 +92,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
-        if self._speaker_module is not None:
-            await self._speaker_module.locate()
+        await self._speaker_module.locate()
 
     @property
     def battery_level(self) -> int | None:
@@ -109,9 +102,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)
-        if (
-            fanspeeds := self._vacuum_module.get_feature("fan_speed_preset")
-        ) is not None:
-            self._attr_fan_speed_list = cast(list[str], fanspeeds.choices)
+        fanspeeds = cast(Feature, self._vacuum_module.get_feature("fan_speed_preset"))
+        self._attr_fan_speed_list = cast(list[str], fanspeeds.choices)
         self._attr_fan_speed = self._vacuum_module.fan_speed_preset
         return True
