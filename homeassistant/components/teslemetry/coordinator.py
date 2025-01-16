@@ -69,7 +69,9 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the Teslemetry API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    updated_once: bool
+
+    def __init__(self, hass: HomeAssistant, api: EnergySpecific, data: dict) -> None:
         """Initialize Teslemetry Energy Site Live coordinator."""
         super().__init__(
             hass,
@@ -78,6 +80,12 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             update_interval=ENERGY_LIVE_INTERVAL,
         )
         self.api = api
+
+        # Convert Wall Connectors from array to dict
+        data["wall_connectors"] = {
+            wc["din"]: wc for wc in (data.get("wall_connectors") or [])
+        }
+        self.data = data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using Teslemetry API."""

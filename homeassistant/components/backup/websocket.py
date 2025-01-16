@@ -9,7 +9,11 @@ from homeassistant.core import HomeAssistant, callback
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
-from .manager import IncorrectPasswordError, ManagerStateEvent
+from .manager import (
+    DecryptOnDowloadNotSupported,
+    IncorrectPasswordError,
+    ManagerStateEvent,
+)
 from .models import Folder
 
 
@@ -24,6 +28,7 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
 
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
+    websocket_api.async_register_command(hass, handle_can_decrypt_on_download)
     websocket_api.async_register_command(hass, handle_create)
     websocket_api.async_register_command(hass, handle_create_with_automatic_settings)
     websocket_api.async_register_command(hass, handle_delete)
@@ -143,6 +148,38 @@ async def handle_restore(
         )
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
+    else:
+        connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/can_decrypt_on_download",
+        vol.Required("backup_id"): str,
+        vol.Required("agent_id"): str,
+        vol.Required("password"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_can_decrypt_on_download(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Check if the supplied password is correct."""
+    try:
+        await hass.data[DATA_MANAGER].async_can_decrypt_on_download(
+            msg["backup_id"],
+            agent_id=msg["agent_id"],
+            password=msg.get("password"),
+        )
+    except IncorrectPasswordError:
+        connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
+    except DecryptOnDowloadNotSupported:
+        connection.send_error(
+            msg["id"], "decrypt_not_supported", "Decrypt on download not supported"
+        )
     else:
         connection.send_result(msg["id"])
 

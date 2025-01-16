@@ -126,15 +126,23 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except improv_ble_errors.InvalidCommand as err:
             _LOGGER.warning(
-                "Aborting improv flow, device %s sent invalid improv data: '%s'",
-                self._discovery_info.address,
+                (
+                    "Received invalid improv via BLE data '%s' from device with "
+                    "bluetooth address '%s'; if the device is a self-configured "
+                    "ESPHome device, either correct or disable the 'esp32_improv' "
+                    "configuration; if it's a commercial device, contact the vendor"
+                ),
                 service_data[SERVICE_DATA_UUID].hex(),
+                self._discovery_info.address,
             )
             raise AbortFlow("invalid_improv_data") from err
 
         if improv_service_data.state in (State.PROVISIONING, State.PROVISIONED):
             _LOGGER.debug(
-                "Aborting improv flow, device %s is already provisioned: %s",
+                (
+                    "Aborting improv flow, device with bluetooth address '%s' is "
+                    "already provisioned: %s"
+                ),
                 self._discovery_info.address,
                 improv_service_data.state,
             )

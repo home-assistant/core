@@ -91,6 +91,8 @@ def make_device_data(
             "MeterPro",
             "MeterPro(CO2)",
             "Relay Switch 1PM",
+            "Plug Mini (US)",
+            "Plug Mini (JP)",
         ]:
             devices_data.sensors.append(
                 prepare_device(hass, api, device, coordinators_by_id)
@@ -133,10 +135,10 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     hass.data[DOMAIN][config.entry_id] = SwitchbotCloudData(
         api=api, devices=make_device_data(hass, api, devices, coordinators_by_id)
     )
-    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     await gather(
         *[coordinator.async_refresh() for coordinator in coordinators_by_id.values()]
     )
+    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
     return True
 
 
