@@ -66,15 +66,13 @@ async def test_setup_entry_remote_unpaired(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check API call count (called once during init and once in async_setup_entry in event.py)
+    # Check device and API call count (called once during init and once in async_setup_entry in event.py)
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
-    # Check device and API call count
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
 
     # Check entities
     for entity_id in get_remote_entity_ids():
         assert entity_registry.async_get(entity_id)
-    # list(entity_registry.entities.keys())
 
     # "Unpair" the remote and reload config_entry
     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(

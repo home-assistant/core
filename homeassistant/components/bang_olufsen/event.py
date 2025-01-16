@@ -38,7 +38,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Sensor entities from config entry."""
-    entities: list[BangOlufsenEntity] = []
+    entities: list[BangOlufsenEvent] = []
 
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         entities.extend(

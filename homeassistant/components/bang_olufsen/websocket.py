@@ -170,6 +170,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
         # So the current remote devices have to be compared to available remotes to determine action
         elif notification_type is WebsocketNotification.REMOTE_CONTROL_DEVICES:
             device_registry = dr.async_get(self.hass)
+            # Get remote devices connected to the device from Home Assistant
             device_serial_numbers = [
                 device.serial_number
                 for device in device_registry.devices.get_devices_for_config_entry_id(
@@ -178,6 +179,7 @@ class BangOlufsenWebsocket(BangOlufsenBase):
                 if device.serial_number is not None
                 and device.model == BangOlufsenModel.BEOREMOTE_ONE
             ]
+            # Get paired remotes from device
             remote_serial_numbers = [
                 remote.serial_number
                 for remote in await get_remotes(self._client)
@@ -185,17 +187,11 @@ class BangOlufsenWebsocket(BangOlufsenBase):
             ]
             # Check if number of remote devices correspond to number of paired remotes
             if len(remote_serial_numbers) != len(device_serial_numbers):
-                # Reinitialize the config entry to update Beoremote One entities and device
-                # Wait 5 seconds for the remote to be properly available to the device
                 _LOGGER.info(
-                    "A Beoremote One has been paired or unpaired to %s. Reloading config entry to add device",
-                    self._device.name,
+                    "A Beoremote One has been paired or unpaired to %s. Reloading config entry to add device and entities",
+                    self.entry.title,
                 )
-                self.hass.loop.call_later(
-                    5,
-                    self.hass.config_entries.async_schedule_reload,
-                    self.entry.entry_id,
-                )
+                self.hass.config_entries.async_schedule_reload(self.entry.entry_id)
 
     def on_playback_error_notification(self, notification: PlaybackError) -> None:
         """Send playback_error dispatch."""

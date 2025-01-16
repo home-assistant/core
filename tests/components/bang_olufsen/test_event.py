@@ -2,14 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from inflection import underscore
 from mozart_api.models import BeoRemoteButton, ButtonEvent, PairedRemoteResponse
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
     BEO_REMOTE_KEY_EVENTS,
     DEVICE_BUTTON_EVENTS,
-    DEVICE_BUTTONS,
     EVENT_TRANSLATION_MAP,
 )
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
@@ -18,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .const import TEST_BUTTON_EVENT_ENTITY_ID, TEST_REMOTE_KEY_EVENT_ENTITY_ID
-from .util import get_remote_entity_ids
+from .util import get_button_entity_ids, get_remote_entity_ids
 
 from tests.common import MockConfigEntry
 
@@ -38,14 +36,7 @@ async def test_button_and_key_event_creation(
 
     entity_ids: list[str] = []
     # Add Button Event entity ids
-    entity_ids.extend(
-        [
-            f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
-                "preset", "favourite_"
-            )
-            for button_type in DEVICE_BUTTONS
-        ]
-    )
+    entity_ids.extend(get_button_entity_ids())
 
     # Add remote key Event entity ids
     entity_ids.extend(get_remote_entity_ids())
