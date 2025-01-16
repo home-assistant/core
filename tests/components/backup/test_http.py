@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import AsyncIterator, Iterable
 from io import BytesIO, StringIO
+import json
 import tarfile
 from typing import Any
 from unittest.mock import patch
@@ -145,13 +146,15 @@ async def _test_downloading_encrypted_backup(
     backup = await resp.read()
     # We expect a valid outer tar file, but the inner tar file is encrypted and
     # can't be read
-    with (
-        tarfile.open(fileobj=BytesIO(backup), mode="r") as outer_tar,
-        outer_tar.extractfile("core.tar.gz") as inner_tar_file,
-        pytest.raises(tarfile.ReadError, match="file could not be opened"),
-    ):
-        # pylint: disable-next=consider-using-with
-        tarfile.open(fileobj=inner_tar_file, mode="r")
+    with tarfile.open(fileobj=BytesIO(backup), mode="r") as outer_tar:
+        enc_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
+        assert enc_metadata["protected"] is True
+        with (
+            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            pytest.raises(tarfile.ReadError, match="file could not be opened"),
+        ):
+            # pylint: disable-next=consider-using-with
+            tarfile.open(fileobj=inner_tar_file, mode="r")
 
     # Download with the wrong password
     resp = await client.get(
@@ -168,23 +171,27 @@ async def _test_downloading_encrypted_backup(
 
     # Finally download with the correct password
     resp = await client.get(
-        f"/api/backup/download/ed1608a9?agent_id={agent_id}&password=hunter2"
+        f"/api/backup/download/c0cb53bd?agent_id={agent_id}&password=hunter2"
     )
     assert resp.status == 200
     backup = await resp.read()
     # We expect a valid outer tar file, the inner tar file is decrypted and can be read
     with (
         tarfile.open(fileobj=BytesIO(backup), mode="r") as outer_tar,
-        outer_tar.extractfile("core.tar.gz") as inner_tar_file,
-        tarfile.open(fileobj=inner_tar_file, mode="r") as inner_tar,
     ):
-        assert inner_tar.getnames() == [
-            ".",
-            "README.md",
-            "test_symlink",
-            "test1",
-            "test1/script.sh",
-        ]
+        dec_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
+        assert dec_metadata == enc_metadata | {"protected": False}
+        with (
+            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            tarfile.open(fileobj=inner_tar_file, mode="r") as inner_tar,
+        ):
+            assert inner_tar.getnames() == [
+                ".",
+                "README.md",
+                "test_symlink",
+                "test1",
+                "test1/script.sh",
+            ]
 
 
 async def test_downloading_backup_not_found(

@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Callable
 import copy
-from pathlib import Path
+from io import BytesIO
+import json
+from pathlib import Path, PurePath
 from queue import SimpleQueue
 import tarfile
 from typing import IO, Self, cast
@@ -252,6 +254,19 @@ def _decrypt_backup(
 ) -> None:
     """Decrypt a backup."""
     for obj in input_tar:
+        # We compare with PurePath to avoid issues with different path separators,
+        # for example when backup.json is added as "./backup.json"
+        if PurePath(obj.name) == PurePath("backup.json"):
+            # Rewrite the backup.json file to indicate that the backup is decrypted
+            if not (reader := input_tar.extractfile(obj)):
+                raise DecryptError
+            metadata = json_loads_object(reader.read())
+            metadata["protected"] = False
+            updated_metadata_b = json.dumps(metadata).encode()
+            metadata_obj = copy.deepcopy(obj)
+            metadata_obj.size = len(updated_metadata_b)
+            output_tar.addfile(metadata_obj, BytesIO(updated_metadata_b))
+            continue
         if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
             output_tar.addfile(obj, input_tar.extractfile(obj))
             continue
