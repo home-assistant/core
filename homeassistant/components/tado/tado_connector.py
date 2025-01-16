@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from PyTado.interface import Tado
+from PyTado.http import Http
+from PyTado.interface.api.my_tado import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
@@ -61,7 +62,8 @@ class TadoConnector:
 
     def setup(self):
         """Connect to Tado and fetch the zones."""
-        self.tado = Tado(self._username, self._password)
+        http = Http(username=self._username, password=self._password)
+        self.tado = Tado(http=http)
         # Load zones and devices
         self.zones = self.tado.get_zones()
         self.devices = self.tado.get_devices()
@@ -330,3 +332,11 @@ class TadoConnector:
             return self.tado.set_eiq_meter_readings(date=dt, reading=reading)
         except RequestException as exc:
             raise HomeAssistantError("Could not set meter reading") from exc
+
+    def set_child_lock(self, device_id: str, enabled: bool) -> None:
+        """Set child lock of device."""
+        try:
+            self.tado.set_child_lock(device_id, enabled)  # type: ignore [attr-defined]
+            self.update_devices()
+        except RequestException as exc:
+            _LOGGER.error("Could not set child lock: %s", exc)
