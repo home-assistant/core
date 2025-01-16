@@ -82,7 +82,8 @@ async def test_zeroconf_flow(
 
 
 async def test_zeroconf_flow_abort_duplicate(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test zeroconf flow aborts with duplicate."""
     mock_config_entry.add_to_hass(hass)
@@ -95,12 +96,28 @@ async def test_zeroconf_flow_abort_duplicate(
     assert result["reason"] == "already_configured"
 
 
+async def test_zeroconf_flow_error(
+    hass: HomeAssistant,
+    mock_iometer_client: AsyncMock,
+) -> None:
+    """Test zeroconf flow."""
+    mock_iometer_client.get_current_status.side_effect = IOmeterConnectionError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test flow errors."""
+    """Test flow error."""
     mock_iometer_client.get_current_status.side_effect = IOmeterConnectionError()
 
     result = await hass.config_entries.flow.async_init(
@@ -130,7 +147,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_duplicate(
+async def test_flow_abort_duplicate(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
     mock_setup_entry: AsyncMock,
