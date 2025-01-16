@@ -14,7 +14,9 @@ from habluetooth import BaseHaScanner, BluetoothManager, get_manager
 
 from homeassistant.components.bluetooth import (
     DOMAIN,
+    MONOTONIC_TIME,
     SOURCE_LOCAL,
+    BaseHaRemoteScanner,
     BluetoothServiceInfo,
     BluetoothServiceInfoBleak,
     async_get_advertisement_callback,
@@ -324,3 +326,26 @@ class FakeScanner(FakeScannerMixin, BaseHaScanner):
     ) -> dict[str, tuple[BLEDevice, AdvertisementData]]:
         """Return a list of discovered devices and their advertisement data."""
         return {}
+
+
+class FakeRemoteScanner(BaseHaRemoteScanner):
+    """Fake remote scanner."""
+
+    def inject_advertisement(
+        self,
+        device: BLEDevice,
+        advertisement_data: AdvertisementData,
+        now: float | None = None,
+    ) -> None:
+        """Inject an advertisement."""
+        self._async_on_advertisement(
+            device.address,
+            advertisement_data.rssi,
+            device.name,
+            advertisement_data.service_uuids,
+            advertisement_data.service_data,
+            advertisement_data.manufacturer_data,
+            advertisement_data.tx_power,
+            {"scanner_specific_data": "test"},
+            now or MONOTONIC_TIME(),
+        )
