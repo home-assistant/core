@@ -282,7 +282,11 @@ class Light(HomeAccessory):
                 hue, saturation = color_temperature_to_hs(color_temp)
             elif color_mode == ColorMode.WHITE:
                 hue, saturation = 0, 0
-            elif hue_sat := attributes.get(ATTR_HS_COLOR):
+            elif (
+                (hue_sat := attributes.get(ATTR_HS_COLOR))
+                and isinstance(hue_sat, (list, tuple))
+                and len(hue_sat) == 2
+            ):
                 hue, saturation = hue_sat
             else:
                 hue = None
