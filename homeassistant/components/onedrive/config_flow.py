@@ -7,7 +7,6 @@ from typing import Any, cast
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
 from msgraph import GraphRequestAdapter, GraphServiceClient
-from msgraph.generated.models.drive import Drive
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
@@ -82,7 +81,6 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         # try to get title from drive owner
         title = DOMAIN
-        drive = cast(Drive, drive)
         if (
             drive.owner is not None
             and drive.owner.user is not None
