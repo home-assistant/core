@@ -759,6 +759,7 @@ select = [
     "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
+    "RUF022", # Sort __all__
     "RUF100", # Unused `noqa` directive
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
