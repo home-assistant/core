@@ -3,7 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import IncomfortError
 import pytest
@@ -63,7 +63,18 @@ async def test_coordinator_updates(
     "exc",
     [
         IncomfortError(ClientResponseError(None, None, status=401)),
-        IncomfortError(ClientResponseError(None, None, status=500)),
+        IncomfortError(
+            ClientResponseError(
+                RequestInfo(
+                    url="http://example.com",
+                    method="GET",
+                    headers=[],
+                    real_url="http://example.com",
+                ),
+                None,
+                status=500,
+            )
+        ),
         IncomfortError(ValueError("some_error")),
         TimeoutError,
     ],

@@ -10,11 +10,11 @@ from enum import StrEnum
 import hashlib
 import io
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import shutil
 import tarfile
 import time
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict
+from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
@@ -31,6 +31,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 
+from . import util as backup_util
 from .agent import (
     BackupAgent,
     BackupAgentError,
@@ -48,7 +49,13 @@ from .const import (
 )
 from .models import AgentBackup, BackupManagerError, Folder
 from .store import BackupStore
-from .util import make_backup_dir, read_backup, validate_password
+from .util import (
+    AsyncIteratorReader,
+    make_backup_dir,
+    read_backup,
+    validate_password,
+    validate_password_stream,
+)
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -248,6 +255,14 @@ class BackupReaderWriterError(HomeAssistantError):
 class IncorrectPasswordError(BackupReaderWriterError):
     """Raised when the password is incorrect."""
 
+    _message = "The password provided is incorrect."
+
+
+class DecryptOnDowloadNotSupported(BackupManagerError):
+    """Raised when on-the-fly decryption is not supported."""
+
+    _message = "On-the-fly decryption is not supported for this backup."
+
 
 class BackupManager:
     """Define the format that backup managers can have."""
@@ -430,18 +445,21 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(sync_backup_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupReaderWriterError):
                 # writer errors will affect all agents
                 # no point in continuing
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
-                LOGGER.error("Error uploading to %s: %s", agent_ids[idx], result)
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                LOGGER.error("Upload failed for %s: %s", agent_id, result)
                 continue
             if isinstance(result, Exception):
                 # trap bugs from agents
-                agent_errors[agent_ids[idx]] = result
-                LOGGER.error("Unexpected error: %s", result, exc_info=result)
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result
@@ -987,6 +1005,41 @@ class BackupManager:
             translation_placeholders={"failed_agents": ", ".join(agent_errors)},
         )
 
+    async def async_can_decrypt_on_download(
+        self,
+        backup_id: str,
+        *,
+        agent_id: str,
+        password: str | None,
+    ) -> None:
+        """Check if we are able to decrypt the backup on download."""
+        try:
+            agent = self.backup_agents[agent_id]
+        except KeyError as err:
+            raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
+        if not await agent.async_get_backup(backup_id):
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            )
+        reader: IO[bytes]
+        if agent_id in self.local_backup_agents:
+            local_agent = self.local_backup_agents[agent_id]
+            path = local_agent.get_backup_path(backup_id)
+            reader = await self.hass.async_add_executor_job(open, path.as_posix(), "rb")
+        else:
+            backup_stream = await agent.async_download_backup(backup_id)
+            reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
+        try:
+            validate_password_stream(reader, password)
+        except backup_util.IncorrectPassword as err:
+            raise IncorrectPasswordError from err
+        except backup_util.UnsupportedSecureTarVersion as err:
+            raise DecryptOnDowloadNotSupported from err
+        except backup_util.DecryptError as err:
+            raise BackupManagerError(str(err)) from err
+        finally:
+            reader.close()
+
 
 class KnownBackups:
     """Track known backups."""
@@ -1231,6 +1284,17 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if not database_included:
             excludes = excludes + EXCLUDE_DATABASE_FROM_BACKUP
 
+        def is_excluded_by_filter(path: PurePath) -> bool:
+            """Filter to filter excludes."""
+
+            for exclude in excludes:
+                if not path.match(exclude):
+                    continue
+                LOGGER.debug("Ignoring %s because of %s", path, exclude)
+                return True
+
+            return False
+
         outer_secure_tarfile = SecureTarFile(
             tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
         )
@@ -1249,7 +1313,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 atomic_contents_add(
                     tar_file=core_tar,
                     origin_path=Path(self._hass.config.path()),
-                    excludes=excludes,
+                    file_filter=is_excluded_by_filter,
                     arcname="data",
                 )
         return (tar_file_path, tar_file_path.stat().st_size)
@@ -1358,7 +1422,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             validate_password, path, password
         )
         if not password_valid:
-            raise IncorrectPasswordError("The password provided is incorrect.")
+            raise IncorrectPasswordError
 
         def _write_restore_file() -> None:
             """Write the restore file."""

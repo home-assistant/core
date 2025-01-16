@@ -115,7 +115,7 @@ def humidifier_fixture():
 async def humidifier_config_entry(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
 ) -> MockConfigEntry:
-    """Create a mock VeSync config entry for Humidifier 200s."""
+    """Create a mock VeSync config entry for `Humidifier 200s`."""
     entry = MockConfigEntry(
         title="VeSync",
         domain=DOMAIN,

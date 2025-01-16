@@ -21,7 +21,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import LOGGER, TeslaFleetState
 
-VEHICLE_INTERVAL_SECONDS = 90
+VEHICLE_INTERVAL_SECONDS = 300
 VEHICLE_INTERVAL = timedelta(seconds=VEHICLE_INTERVAL_SECONDS)
 VEHICLE_WAIT = timedelta(minutes=15)
 
@@ -73,7 +73,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.data = flatten(product)
         self.updated_once = False
         self.last_active = datetime.now()
-        self.rate = RateCalculator(200, 86400, VEHICLE_INTERVAL_SECONDS, 3600, 5)
+        self.rate = RateCalculator(100, 86400, VEHICLE_INTERVAL_SECONDS, 3600, 5)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
