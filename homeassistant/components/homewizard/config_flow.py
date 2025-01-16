@@ -97,7 +97,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.ip_address is not None
 
         api = HomeWizardEnergyV2(self.ip_address)
-        token = None
+        token: str | None = None
 
         # Tell device we want a token, user must now press the button within 30 seconds
         with contextlib.suppress(DisabledError):
