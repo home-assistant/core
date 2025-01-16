@@ -34,6 +34,7 @@ from homeassistant.core import State, callback
 from .accessories import TYPES, HomeAccessory
 from .const import (
     CHAR_ACTIVE,
+    CHAR_CONFIGURED_NAME,
     CHAR_NAME,
     CHAR_ON,
     CHAR_ROTATION_DIRECTION,
@@ -115,7 +116,9 @@ class Fan(HomeAccessory):
         elif self.preset_modes:
             for preset_mode in self.preset_modes:
                 preset_serv = self.add_preload_service(
-                    SERV_SWITCH, CHAR_NAME, unique_id=preset_mode
+                    SERV_SWITCH,
+                    [CHAR_NAME, CHAR_CONFIGURED_NAME],
+                    unique_id=preset_mode,
                 )
                 serv_fan.add_linked_service(preset_serv)
                 preset_serv.configure_char(
@@ -123,6 +126,9 @@ class Fan(HomeAccessory):
                     value=cleanup_name_for_homekit(
                         f"{self.display_name} {preset_mode}"
                     ),
+                )
+                preset_serv.configure_char(
+                    CHAR_CONFIGURED_NAME, value=cleanup_name_for_homekit(preset_mode)
                 )
 
                 def setter_callback(value: int, preset_mode: str = preset_mode) -> None:
