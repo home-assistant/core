@@ -39,6 +39,14 @@ def llm_context() -> llm.LLMContext:
     )
 
 
+class MyAPI(llm.API):
+    """Test API."""
+
+    async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
+        """Return a list of tools."""
+        return llm.APIInstance(self, "", [], llm_context)
+
+
 async def test_get_api_no_existing(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
@@ -50,11 +58,6 @@ async def test_get_api_no_existing(
 async def test_register_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
     """Test registering an llm api."""
 
-    class MyAPI(llm.API):
-        async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
-            """Return a list of tools."""
-            return llm.APIInstance(self, "", [], llm_context)
-
     api = MyAPI(hass=hass, id="test", name="Test")
     llm.async_register_api(hass, api)
 
@@ -64,6 +67,59 @@ async def test_register_api(hass: HomeAssistant, llm_context: llm.LLMContext) ->
 
     with pytest.raises(HomeAssistantError):
         llm.async_register_api(hass, api)
+
+
+async def test_unregister_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test unregistering an llm api."""
+
+    unreg = llm.async_register_api(hass, MyAPI(hass=hass, id="test", name="Test"))
+    assert await llm.async_get_api(hass, "test", llm_context)
+    unreg()
+    with pytest.raises(HomeAssistantError):
+        assert await llm.async_get_api(hass, "test", llm_context)
+
+
+async def test_reregister_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test unregistering an llm api then re-registering with the same id."""
+
+    unreg = llm.async_register_api(hass, MyAPI(hass=hass, id="test", name="Test"))
+    assert await llm.async_get_api(hass, "test", llm_context)
+    unreg()
+    llm.async_register_api(hass, MyAPI(hass=hass, id="test", name="Test"))
+    assert await llm.async_get_api(hass, "test", llm_context)
+
+
+async def test_unregister_twice(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test unregistering an llm api twice."""
+
+    unreg = llm.async_register_api(hass, MyAPI(hass=hass, id="test", name="Test"))
+    assert await llm.async_get_api(hass, "test", llm_context)
+    unreg()
+
+    # Unregistering twice is a bug that should not happen
+    with pytest.raises(KeyError):
+        unreg()
+
+
+async def test_multiple_apis(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test registering multiple APIs."""
+
+    unreg1 = llm.async_register_api(hass, MyAPI(hass=hass, id="test-1", name="Test 1"))
+    llm.async_register_api(hass, MyAPI(hass=hass, id="test-2", name="Test 2"))
+
+    # Verify both Apis are registered
+    assert await llm.async_get_api(hass, "test-1", llm_context)
+    assert await llm.async_get_api(hass, "test-2", llm_context)
+
+    # Unregister and verify only one is left
+    unreg1()
+
+    with pytest.raises(HomeAssistantError):
+        assert await llm.async_get_api(hass, "test-1", llm_context)
+
+    assert await llm.async_get_api(hass, "test-2", llm_context)
 
 
 async def test_call_tool_no_existing(
@@ -306,6 +362,7 @@ async def test_assist_api_tools(
         "HassSetPosition",
         "HassStartTimer",
         "HassCancelTimer",
+        "HassCancelAllTimers",
         "HassIncreaseTimer",
         "HassDecreaseTimer",
         "HassPauseTimer",
@@ -516,10 +573,6 @@ async def test_assist_api_prompt(
         )
     )
     exposed_entities_prompt = """An overview of the areas and the devices in this smart home:
-- names: script_with_no_fields
-  domain: script
-  state: 'off'
-  description: This is another test script
 - names: Kitchen
   domain: light
   state: 'on'
@@ -655,7 +708,10 @@ async def test_script_tool(
             "script": {
                 "test_script": {
                     "description": "This is a test script",
-                    "sequence": [],
+                    "sequence": [
+                        {"variables": {"result": {"drinks": 2}}},
+                        {"stop": True, "response_variable": "result"},
+                    ],
                     "fields": {
                         "beer": {"description": "Number of beers", "required": True},
                         "wine": {"selector": {"number": {"min": 0, "max": 3}}},
@@ -691,7 +747,7 @@ async def test_script_tool(
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
-    assert len(tools) == 1
+    assert len(tools) == 2
 
     tool = tools[0]
     assert tool.name == "test_script"
@@ -718,6 +774,7 @@ async def test_script_tool(
         "script_with_no_fields": ("This is another test script", vol.Schema({})),
     }
 
+    # Test script with response
     tool_input = llm.ToolInput(
         tool_name="test_script",
         tool_args={
@@ -730,26 +787,56 @@ async def test_script_tool(
         },
     )
 
-    with patch("homeassistant.core.ServiceRegistry.async_call") as mock_service_call:
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
         response = await api.async_call_tool(tool_input)
 
     mock_service_call.assert_awaited_once_with(
         "script",
-        "turn_on",
+        "test_script",
         {
-            "entity_id": "script.test_script",
-            "variables": {
-                "beer": "3",
-                "wine": 0,
-                "where": area.id,
-                "area_list": [area.id],
-                "floor": floor.floor_id,
-                "floor_list": [floor.floor_id],
-            },
+            "beer": "3",
+            "wine": 0,
+            "where": area.id,
+            "area_list": [area.id],
+            "floor": floor.floor_id,
+            "floor_list": [floor.floor_id],
         },
         context=context,
+        blocking=True,
+        return_response=True,
     )
-    assert response == {"success": True}
+    assert response == {
+        "success": True,
+        "result": {"drinks": 2},
+    }
+
+    # Test script with no response
+    tool_input = llm.ToolInput(
+        tool_name="script_with_no_fields",
+        tool_args={},
+    )
+
+    with patch(
+        "homeassistant.core.ServiceRegistry.async_call",
+        side_effect=hass.services.async_call,
+    ) as mock_service_call:
+        response = await api.async_call_tool(tool_input)
+
+    mock_service_call.assert_awaited_once_with(
+        "script",
+        "script_with_no_fields",
+        {},
+        context=context,
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "success": True,
+        "result": {},
+    }
 
     # Test reload script with new parameters
     config = {
@@ -781,7 +868,7 @@ async def test_script_tool(
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
-    assert len(tools) == 1
+    assert len(tools) == 2
 
     tool = tools[0]
     assert tool.name == "test_script"

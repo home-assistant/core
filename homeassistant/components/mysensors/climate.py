@@ -72,7 +72,6 @@ class MySensorsHVAC(MySensorsChildEntity, ClimateEntity):
     """Representation of a MySensors HVAC."""
 
     _attr_hvac_modes = OPERATION_LIST
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def supported_features(self) -> ClimateEntityFeature:

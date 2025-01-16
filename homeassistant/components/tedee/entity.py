@@ -1,6 +1,6 @@
 """Bases for Tedee entities."""
 
-from pytedee_async.lock import TedeeLock
+from aiotedee.lock import TedeeLock
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo

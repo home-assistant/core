@@ -1,8 +1,12 @@
 """The Homewizard integration."""
 
+from homewizard_energy import HomeWizardEnergy, HomeWizardEnergyV1, HomeWizardEnergyV2
+
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -12,7 +16,22 @@ type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
     """Set up Homewizard from a config entry."""
-    coordinator = HWEnergyDeviceUpdateCoordinator(hass)
+
+    api: HomeWizardEnergy
+
+    if token := entry.data.get(CONF_TOKEN):
+        api = HomeWizardEnergyV2(
+            entry.data[CONF_IP_ADDRESS],
+            token=token,
+            clientsession=async_get_clientsession(hass),
+        )
+    else:
+        api = HomeWizardEnergyV1(
+            entry.data[CONF_IP_ADDRESS],
+            clientsession=async_get_clientsession(hass),
+        )
+
+    coordinator = HWEnergyDeviceUpdateCoordinator(hass, api)
     try:
         await coordinator.async_config_entry_first_refresh()
 

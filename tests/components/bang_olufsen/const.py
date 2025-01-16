@@ -16,6 +16,7 @@ from mozart_api.models import (
     PlayQueueItemType,
     RenderingState,
     SceneProperties,
+    Source,
     UserFlow,
     VolumeLevel,
     VolumeMute,
@@ -30,13 +31,14 @@ from homeassistant.components.bang_olufsen.const import (
     CONF_BEOLINK_JID,
     BangOlufsenSource,
 )
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 TEST_HOST = "192.168.0.1"
 TEST_HOST_INVALID = "192.168.0"
 TEST_HOST_IPV6 = "1111:2222:3333:4444:5555:6666:7777:8888"
 TEST_MODEL_BALANCE = "Beosound Balance"
+TEST_MODEL_CORE = "Beoconnect Core"
 TEST_MODEL_THEATRE = "Beosound Theatre"
 TEST_MODEL_LEVEL = "Beosound Level"
 TEST_SERIAL_NUMBER = "11111111"
@@ -64,6 +66,9 @@ TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.44444444@products.bang-oluf
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = "media_player.beosound_balance_44444444"
 TEST_HOST_4 = "192.168.0.4"
 
+
+TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
+
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
 TEST_NAME_ZEROCONF = TEST_NAME.replace(" ", "-") + "." + TEST_TYPE_ZEROCONF
@@ -80,7 +85,7 @@ TEST_DATA_CREATE_ENTRY = {
 }
 TEST_DATA_CREATE_ENTRY_2 = {
     CONF_HOST: TEST_HOST,
-    CONF_MODEL: TEST_MODEL_BALANCE,
+    CONF_MODEL: TEST_MODEL_CORE,
     CONF_BEOLINK_JID: TEST_JID_2,
     CONF_NAME: TEST_NAME_2,
 }
@@ -125,11 +130,15 @@ TEST_DATA_ZEROCONF_IPV6 = ZeroconfServiceInfo(
     },
 )
 
-TEST_AUDIO_SOURCES = [BangOlufsenSource.TIDAL.name, BangOlufsenSource.LINE_IN.name]
+TEST_SOURCE = Source(
+    name="Tidal", id="tidal", is_seekable=True, is_enabled=True, is_playable=True
+)
+TEST_AUDIO_SOURCES = [TEST_SOURCE.name, BangOlufsenSource.LINE_IN.name]
 TEST_VIDEO_SOURCES = ["HDMI A"]
 TEST_SOURCES = TEST_AUDIO_SOURCES + TEST_VIDEO_SOURCES
 TEST_FALLBACK_SOURCES = [
     "Audio Streamer",
+    "Bluetooth",
     "Spotify Connect",
     "Line-In",
     "Optical",

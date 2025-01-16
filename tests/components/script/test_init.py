@@ -6,7 +6,6 @@ from typing import Any
 from unittest.mock import ANY, Mock, patch
 
 import pytest
-import voluptuous as vol
 
 from homeassistant.components import script
 from homeassistant.components.script import DOMAIN, EVENT_SCRIPT_STARTED, ScriptEntity
@@ -49,7 +48,6 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     MockConfigEntry,
     MockUser,
-    async_capture_events,
     async_fire_time_changed,
     async_mock_service,
     mock_restore_cache,
@@ -557,101 +555,6 @@ async def test_reload_unchanged_script(
         await hass.services.async_call(DOMAIN, object_id)
         await hass.async_block_till_done()
         assert len(calls) == 2
-
-
-async def test_service_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test that service schema are defined correctly."""
-    events = async_capture_events(hass, "test_event")
-
-    assert await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "test": {
-                    "fields": {
-                        "param_with_default": {
-                            "default": "default_value",
-                        },
-                        "required_param": {
-                            "required": True,
-                        },
-                        "selector_param": {
-                            "selector": {
-                                "select": {
-                                    "options": [
-                                        "one",
-                                        "two",
-                                    ]
-                                }
-                            }
-                        },
-                        "invalid_default": {
-                            "default": "invalid-value",
-                            "selector": {"number": {"min": 0, "max": 2}},
-                        },
-                    },
-                    "sequence": [
-                        {
-                            "event": "test_event",
-                            "event_data": {
-                                "param_with_default": "{{ param_with_default }}",
-                                "required_param": "{{ required_param }}",
-                                "selector_param": "{{ selector_param | default('not_set') }}",
-                                "invalid_default": "{{ invalid_default }}",
-                            },
-                        }
-                    ],
-                }
-            }
-        },
-    )
-
-    assert (
-        "Field invalid_default has invalid default value invalid-value" in caplog.text
-    )
-
-    await hass.services.async_call(
-        DOMAIN,
-        "test",
-        {"required_param": "required_value"},
-        blocking=True,
-    )
-    assert len(events) == 1
-    assert events[0].data["param_with_default"] == "default_value"
-    assert events[0].data["required_param"] == "required_value"
-    assert events[0].data["selector_param"] == "not_set"
-    assert events[0].data["invalid_default"] == "invalid-value"
-
-    with pytest.raises(vol.Invalid):
-        await hass.services.async_call(
-            DOMAIN,
-            "test",
-            {
-                "required_param": "required_value",
-                "selector_param": "invalid_value",
-            },
-            blocking=True,
-        )
-
-    await hass.services.async_call(
-        DOMAIN,
-        "test",
-        {
-            "param_with_default": "service_set_value",
-            "required_param": "required_value",
-            "selector_param": "one",
-            "invalid_default": "another-value",
-        },
-        blocking=True,
-    )
-    assert len(events) == 2
-    assert events[1].data["param_with_default"] == "service_set_value"
-    assert events[1].data["required_param"] == "required_value"
-    assert events[1].data["selector_param"] == "one"
-    assert events[1].data["invalid_default"] == "another-value"
 
 
 async def test_service_descriptions(hass: HomeAssistant) -> None:

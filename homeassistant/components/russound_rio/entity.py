@@ -26,7 +26,12 @@ def command[_EntityT: RussoundBaseEntity, **_P](
             await func(self, *args, **kwargs)
         except RUSSOUND_RIO_EXCEPTIONS as exc:
             raise HomeAssistantError(
-                f"Error executing {func.__name__} on entity {self.entity_id},"
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={
+                    "function_name": func.__name__,
+                    "entity_id": self.entity_id,
+                },
             ) from exc
 
     return decorator
@@ -91,6 +96,4 @@ class RussoundBaseEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
-        await self._client.unregister_state_update_callbacks(
-            self._state_update_callback
-        )
+        self._client.unregister_state_update_callbacks(self._state_update_callback)

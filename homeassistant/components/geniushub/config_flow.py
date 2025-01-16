@@ -13,7 +13,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -79,7 +78,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_host"
             except (TimeoutError, aiohttp.ClientConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -114,7 +113,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except (TimeoutError, aiohttp.ClientConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -123,14 +122,3 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="cloud_api", errors=errors, data_schema=CLOUD_API_SCHEMA
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import the yaml config."""
-        if CONF_HOST in import_data:
-            result = await self.async_step_local_api(import_data)
-        else:
-            result = await self.async_step_cloud_api(import_data)
-        if result["type"] is FlowResultType.FORM:
-            assert result["errors"]
-            return self.async_abort(reason=result["errors"]["base"])
-        return result

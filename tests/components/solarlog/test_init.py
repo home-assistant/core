@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import setup_platform
-from .const import HOST, NAME
+from .const import HOST
 
 from tests.common import MockConfigEntry
 
@@ -140,7 +140,7 @@ async def test_migrate_config_entry(
     """Test successful migration of entry data."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title=NAME,
+        title=HOST,
         data={
             CONF_HOST: HOST,
         },

@@ -40,6 +40,8 @@ def mock_smarty() -> Generator[AsyncMock]:
         client.warning = False
         client.alarm = False
         client.boost = False
+        client.enable_boost.return_value = True
+        client.disable_boost.return_value = True
         client.supply_air_temperature = 20
         client.extract_air_temperature = 23
         client.outdoor_air_temperature = 24
@@ -48,6 +50,7 @@ def mock_smarty() -> Generator[AsyncMock]:
         client.filter_timer = 31
         client.get_configuration_version.return_value = 111
         client.get_software_version.return_value = 127
+        client.reset_filters_timer.return_value = True
         yield client
 
 

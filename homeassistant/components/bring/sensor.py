@@ -20,10 +20,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BringConfigEntry
-from .const import UNIT_ITEMS
 from .coordinator import BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 from .util import list_language, sum_attributes
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -48,19 +49,16 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
         key=BringSensor.URGENT,
         translation_key=BringSensor.URGENT,
         value_fn=lambda lst, _: sum_attributes(lst, "urgent"),
-        native_unit_of_measurement=UNIT_ITEMS,
     ),
     BringSensorEntityDescription(
         key=BringSensor.CONVENIENT,
         translation_key=BringSensor.CONVENIENT,
         value_fn=lambda lst, _: sum_attributes(lst, "convenient"),
-        native_unit_of_measurement=UNIT_ITEMS,
     ),
     BringSensorEntityDescription(
         key=BringSensor.DISCOUNTED,
         translation_key=BringSensor.DISCOUNTED,
         value_fn=lambda lst, _: sum_attributes(lst, "discounted"),
-        native_unit_of_measurement=UNIT_ITEMS,
     ),
     BringSensorEntityDescription(
         key=BringSensor.LIST_LANGUAGE,
@@ -79,7 +77,7 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
         translation_key=BringSensor.LIST_ACCESS,
         value_fn=lambda lst, _: lst["status"].lower(),
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=["registered", "shared"],
+        options=["registered", "shared", "invitation"],
         device_class=SensorDeviceClass.ENUM,
     ),
 )

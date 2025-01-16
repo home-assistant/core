@@ -36,12 +36,12 @@ from typing import (
     NotRequired,
     Self,
     TypedDict,
+    TypeVar,
     cast,
     overload,
 )
 
 from propcache import cached_property, under_cached_property
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from . import util
@@ -84,7 +84,6 @@ from .exceptions import (
 )
 from .helpers.deprecation import (
     DeferredDeprecatedAlias,
-    DeprecatedConstantEnum,
     EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -175,14 +174,6 @@ class EventStateReportedData(EventStateEventData):
     """
 
     old_last_reported: datetime.datetime
-
-
-# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
-    ConfigSource.DISCOVERED, "2025.1"
-)
-_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 def _deprecated_core_config() -> Any:
@@ -656,12 +647,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
-            "calls `async_add_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.4; Please review "
+        frame.report_usage(
+            "calls `async_add_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.4",
         )
 
         if target is None:
@@ -712,12 +703,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
-            "calls `async_add_hass_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.5; Please review "
+        frame.report_usage(
+            "calls `async_add_hass_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         return self._async_add_hass_job(hassjob, *args, background=background)
@@ -986,12 +977,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
-            "calls `async_run_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.4; Please review "
+        frame.report_usage(
+            "calls `async_run_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.4",
         )
 
         if asyncio.iscoroutine(target):
@@ -1162,8 +1153,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for integrations to stop, the shutdown will"
-                " continue"
+                "Timed out waiting for integrations to stop, the shutdown will continue"
             )
             self._async_log_running_tasks("stop integrations")
 
@@ -1635,10 +1625,10 @@ class EventBus:
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            frame.report(
-                "calls `async_listen` with run_immediately, which is"
-                " deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+            frame.report_usage(
+                "calls `async_listen` with run_immediately",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.5",
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1705,10 +1695,10 @@ class EventBus:
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            frame.report(
-                "calls `async_listen_once` with run_immediately, which is "
-                "deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+            frame.report_usage(
+                "calls `async_listen_once` with run_immediately",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.5",
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -2441,10 +2431,11 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("domain", "service", "data", "context", "return_response")
+    __slots__ = ("hass", "domain", "service", "data", "context", "return_response")
 
     def __init__(
         self,
+        hass: HomeAssistant,
         domain: str,
         service: str,
         data: dict[str, Any] | None = None,
@@ -2452,6 +2443,7 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
+        self.hass = hass
         self.domain = domain
         self.service = service
         self.data = ReadOnlyDict(data or {})
@@ -2777,7 +2769,7 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            domain, service, processed_data, context, return_response
+            self._hass, domain, service, processed_data, context, return_response
         )
 
         self._hass.bus.async_fire_internal(

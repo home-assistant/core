@@ -6,12 +6,18 @@
         "description": "Select your server. The Overkiz platform is used by various vendors like Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo) and Atlantic (Cozytouch).",
         "data": {
           "hub": "Server"
+        },
+        "data_description": {
+          "hub": "Select the mobile app that you use to control your devices."
         }
       },
       "local_or_cloud": {
-        "description": "Choose between local or cloud API. Local API supports TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are not supported in local API.",
+        "description": "Choose how you want to connect to your gateway.",
         "data": {
           "api_type": "API type"
+        },
+        "data_description": {
+          "api_type": "Local API is only supported by TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are **not** available via the local API."
         }
       },
       "cloud": {
@@ -19,15 +25,25 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username of your cloud account (app).",
+          "password": "The password of your cloud account (app)."
         }
       },
       "local": {
-        "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network. \n\n After activation, enter your application credentials and change the host to include your gateway-pin or enter the IP address of your gateway.",
+        "description": "By activating the [Developer Mode of your TaHoma box](https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started), you can authorize third-party software (like Home Assistant) to connect to it via your local network.\n\nAfter activation, enter your application credentials and change the host to include your Gateway PIN or enter the IP address of your gateway.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Overkiz hub.",
+          "username": "The username of your cloud account (app).",
+          "password": "The password of your cloud account (app).",
+          "verify_ssl": "Verify the SSL certificate. Select this only if you are connecting via the hostname."
         }
       }
     },

@@ -305,7 +305,7 @@ class HassAuthProvider(AuthProvider):
             await data.async_load()
             self.data = data
 
-    async def async_login_flow(self, context: AuthFlowContext | None) -> LoginFlow:
+    async def async_login_flow(self, context: AuthFlowContext | None) -> HassLoginFlow:
         """Return a flow to login."""
         return HassLoginFlow(self)
 
@@ -400,7 +400,7 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class HassLoginFlow(LoginFlow):
+class HassLoginFlow(LoginFlow[HassAuthProvider]):
     """Handler for the login flow."""
 
     async def async_step_init(
@@ -411,7 +411,7 @@ class HassLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                await cast(HassAuthProvider, self._auth_provider).async_validate_login(
+                await self._auth_provider.async_validate_login(
                     user_input["username"], user_input["password"]
                 )
             except InvalidAuth:
