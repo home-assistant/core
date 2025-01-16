@@ -93,6 +93,7 @@ async def integration_fixture(
         "humidity_sensor",
         "leak_sensor",
         "light_sensor",
+        "laundrywasher",
         "microwave_oven",
         "multi_endpoint_light",
         "occupancy_sensor",
