@@ -62,8 +62,8 @@ class LetPotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> tuple[dict[str, str], dict[str, Any] | None]:
         """Try logging in to the LetPot account and returns credential info."""
         websession = async_get_clientsession(self.hass)
+        client = LetPotClient(websession)
         try:
-            client = LetPotClient(websession)
             auth = await client.login(email, password)
         except LetPotConnectionException:
             return {"base": "cannot_connect"}, None
@@ -72,14 +72,15 @@ class LetPotConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Unexpected exception")
             return {"base": "unknown"}, None
-        return {}, {
-            CONF_ACCESS_TOKEN: auth.access_token,
-            CONF_ACCESS_TOKEN_EXPIRES: auth.access_token_expires,
-            CONF_REFRESH_TOKEN: auth.refresh_token,
-            CONF_REFRESH_TOKEN_EXPIRES: auth.refresh_token_expires,
-            CONF_USER_ID: auth.user_id,
-            CONF_EMAIL: auth.email,
-        }
+        else:
+            return {}, {
+                CONF_ACCESS_TOKEN: auth.access_token,
+                CONF_ACCESS_TOKEN_EXPIRES: auth.access_token_expires,
+                CONF_REFRESH_TOKEN: auth.refresh_token,
+                CONF_REFRESH_TOKEN_EXPIRES: auth.refresh_token_expires,
+                CONF_USER_ID: auth.user_id,
+                CONF_EMAIL: auth.email,
+            }
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
