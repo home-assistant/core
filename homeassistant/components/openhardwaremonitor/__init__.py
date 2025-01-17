@@ -10,7 +10,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 from homeassistant.exceptions import ConfigEntryNotReady
 from datetime import timedelta
-import json
+
+from pyopenhardwaremonitor.api import OpenHardwareMonitorAPI
 
 from .const import *
 from .sensor import OpenHardwareMonitorDevice
@@ -76,17 +77,13 @@ class OpenHardwareMonitorDataHandler:
             await self.refresh()
 
     async def refresh(self):
-        """Download and parse JSON from OHM."""
-        data_url = (
-            f"http://{self._config.get(CONF_HOST)}:"
-            f"{self._config.get(CONF_PORT)}/data.json"
-        )
-
+        """Get data from OHM remote server."""
         session = async_get_clientsession(self._hass)
-        async with session.get(data_url) as response:
-            self.json = await response.text()
-
-        self.data = json.loads(self.json)
+        api = OpenHardwareMonitorAPI(
+            self._config.get(CONF_HOST),
+            self._config.get(CONF_PORT),
+            session=session)
+        self.data = await api.get_data()
 
     async def initialize(self):
         """Parse of the sensors and adding of devices."""
