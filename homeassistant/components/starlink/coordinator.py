@@ -70,8 +70,6 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         index = history[0]
         usage, consumption = history[5:7]
         self.history_stats_start = index["end_counter"]
-        if self.data is None:
-            return usage, consumption
         if index["samples"] == 0:
             return self.data.usage, self.data.consumption
         usage["download_usage"] += self.data.usage["download_usage"]
