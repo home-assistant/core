@@ -61,23 +61,6 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             update_interval=timedelta(seconds=5),
         )
 
-    def _get_starlink_cumulative_stats(self) -> tuple[UsageDict, PowerDict]:
-        """Retrieve Starlink cumulative stats."""
-        context = self.channel_context
-        history = history_stats(
-            parse_samples=-1, start=self.history_stats_start, context=context
-        )
-        index = history[0]
-        usage, consumption = history[5:7]
-        self.history_stats_start = index["end_counter"]
-        if self.data:
-            if index["samples"] == 0:
-                return self.data.usage, self.data.consumption
-            usage["download_usage"] += self.data.usage["download_usage"]
-            usage["upload_usage"] += self.data.usage["upload_usage"]
-            consumption["total_energy"] += self.data.consumption["total_energy"]
-        return usage, consumption
-
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
@@ -85,7 +68,20 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
-        usage, consumption = self._get_starlink_cumulative_stats()
+        history = history_stats(
+            parse_samples=-1, start=self.history_stats_start, context=context
+        )
+        index = history[0]
+        usage, consumption = history[5:7]
+        self.history_stats_start = index["end_counter"]
+        if self.data:
+            if index["samples"] > 0:
+                usage["download_usage"] += self.data.usage["download_usage"]
+                usage["upload_usage"] += self.data.usage["upload_usage"]
+                consumption["total_energy"] += self.data.consumption["total_energy"]
+            else:
+                usage = self.data.usage
+                consumption = self.data.consumption
         return StarlinkData(
             location, sleep, status, obstruction, alert, usage, consumption
         )
