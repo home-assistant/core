@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -154,7 +155,11 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterButtonEntityDescription(
             key="EnergyEvseEnableChargingButton",
             translation_key="enable_charging",
-            command=clusters.EnergyEvse.Commands.EnableCharging,
+            command=clusters.EnergyEvse.Commands.EnableCharging(
+                chargingEnabledUntil=NullValue,
+                minimumChargeCurrent=0,
+                maximumChargeCurrent=0,
+            ),
             command_timeout=3000,
         ),
         entity_class=MatterCommandButton,
