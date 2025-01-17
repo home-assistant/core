@@ -170,6 +170,7 @@ def mock_pynecil() -> Generator[AsyncMock]:
             address="c0:ff:ee:c0:ff:ee",
             device_sn="0000c0ffeec0ffee",
             name=DEFAULT_NAME,
+            is_synced=True,
         )
         client.get_settings.return_value = SettingsDataResponse(
             sleep_temp=150,
