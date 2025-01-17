@@ -58,8 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _async_import_options_from_data_if_missing(hass, entry)
 
+    _LOGGER.debug("Setting up Tado connection")
     try:
-        _LOGGER.debug("Setting up Tado connection")
         tado = await hass.async_add_executor_job(
             Tado,
             entry.data[CONF_USERNAME],
