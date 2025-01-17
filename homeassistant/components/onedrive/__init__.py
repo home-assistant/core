@@ -21,7 +21,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.httpx_client import create_async_httpx_client
+from homeassistant.helpers.httpx_client import (
+    create_async_httpx_client,
+    get_async_client,
+)
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .api import OneDriveConfigEntryAccessTokenProvider
@@ -33,6 +36,7 @@ class OneDriveRuntimeData:
     """Runtime data for the OneDrive integration."""
 
     items: ItemsRequestBuilder
+    download_items: ItemsRequestBuilder
     backup_folder_id: str
 
 
@@ -52,13 +56,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     )
     adapter = GraphRequestAdapter(
         auth_provider=auth_provider,
-        client=create_async_httpx_client(hass, follow_redirects=True),
+        client=get_async_client(hass),
     )
 
     graph_client = GraphServiceClient(
         request_adapter=adapter,
         scopes=OAUTH_SCOPES,
     )
+
+    # adapter for download with special httpx client
+    download_adapter = GraphRequestAdapter(
+        auth_provider=auth_provider,
+        client=create_async_httpx_client(hass, follow_redirects=True, timeout=43200),
+    )
+
+    download_graph_client = GraphServiceClient(
+        request_adapter=download_adapter,
+        scopes=OAUTH_SCOPES,
+    )
+
     assert entry.unique_id
     drive_item = graph_client.drives.by_drive_id(entry.unique_id)
 
@@ -94,6 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     entry.runtime_data = OneDriveRuntimeData(
         items=drive_item.items,
+        download_items=download_graph_client.drives.by_drive_id(entry.unique_id).items,
         backup_folder_id=backup_folder_id,
     )
 

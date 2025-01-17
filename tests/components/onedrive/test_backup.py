@@ -221,16 +221,26 @@ async def test_agents_download(
     mock_drive_items.content.get.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (
+            APIError(response_status_code=404, message="File not found."),
+            "Backup operation failed",
+        ),
+        (TimeoutError(), "Backup operation timed out"),
+    ],
+)
 async def test_error_wrapper(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
 ) -> None:
     """Test the error wrapper."""
-    mock_drive_items.delete = AsyncMock(
-        side_effect=APIError(response_status_code=404, message="File not found.")
-    )
+    mock_drive_items.delete = AsyncMock(side_effect=side_effect)
 
     client = await hass_ws_client(hass)
 
@@ -244,9 +254,7 @@ async def test_error_wrapper(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.title}": "Backup operation failed"
-        }
+        "agent_errors": {f"{DOMAIN}.{mock_config_entry.title}": error}
     }
 
 
