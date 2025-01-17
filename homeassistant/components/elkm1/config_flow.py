@@ -9,7 +9,6 @@ from elkm1_lib.discovery import ElkSystem
 from elkm1_lib.elk import Elk
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -21,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
 from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address
@@ -140,7 +140,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, ElkSystem] = {}
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         self._discovered_device = ElkSystem(

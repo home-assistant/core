@@ -1,9 +1,6 @@
 """Assist pipeline Websocket API."""
 
 import asyncio
-
-# Suppressing disable=deprecated-module is needed for Python 3.11
-import audioop  # pylint: disable=deprecated-module
 import base64
 from collections.abc import AsyncGenerator, Callable
 import contextlib
@@ -11,6 +8,8 @@ import logging
 import math
 from typing import Any, Final
 
+# Suppressing disable=deprecated-module is needed for Python 3.11
+import audioop  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api

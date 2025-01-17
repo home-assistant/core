@@ -25,10 +25,8 @@ def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> Non
         if (side_effect := dir_side_effect.get(path)) is None:
             raise NotImplementedError(f"Unexpected _dir call: {path}")
         result = side_effect.pop(0)
-        if (
-            isinstance(result, Exception)
-            or isinstance(result, type)
-            and issubclass(result, Exception)
+        if isinstance(result, Exception) or (
+            isinstance(result, type) and issubclass(result, Exception)
         ):
             raise result
         return result
@@ -39,10 +37,8 @@ def setup_owproxy_mock_devices(owproxy: MagicMock, device_ids: list[str]) -> Non
         if len(side_effect) == 0:
             raise ProtocolError(f"Missing injected value for: {path}")
         result = side_effect.pop(0)
-        if (
-            isinstance(result, Exception)
-            or isinstance(result, type)
-            and issubclass(result, Exception)
+        if isinstance(result, Exception) or (
+            isinstance(result, type) and issubclass(result, Exception)
         ):
             raise result
         return result
