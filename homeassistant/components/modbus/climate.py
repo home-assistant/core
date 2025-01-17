@@ -48,6 +48,7 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_FAN_MODE_AUTO,
     CONF_FAN_MODE_DIFFUSE,
     CONF_FAN_MODE_FOCUS,
@@ -147,6 +148,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         ]
         self._unit = config[CONF_TEMPERATURE_UNIT]
         self._attr_current_temperature = None
+        self._current_temperature_scale = config[CONF_CURRENT_TEMP_SCALE]
         self._attr_target_temperature = None
         self._attr_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
@@ -427,8 +429,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ],
         )
 
-        self._attr_current_temperature = await self._async_read_register(
-            self._input_type, self._address
+        self._attr_current_temperature = int(
+            await self._async_read_register(self._input_type, self._address)
+            * self._current_temperature_scale
         )
         # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
