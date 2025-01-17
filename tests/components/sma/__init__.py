@@ -1,5 +1,6 @@
 """Tests for the sma integration."""
 
+import unittest
 from unittest.mock import patch
 
 from homeassistant.components.sma.const import CONF_GROUP
@@ -36,7 +37,8 @@ MOCK_DHCP_DISCOVERY = {
 }
 
 
-def _patch_async_setup_entry(return_value=True):
+def _patch_async_setup_entry(return_value=True) -> unittest.mock._patch:
+    """Patch async_setup_entry."""
     return patch(
         "homeassistant.components.sma.async_setup_entry",
         return_value=return_value,
