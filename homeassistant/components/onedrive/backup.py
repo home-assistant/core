@@ -88,8 +88,6 @@ def handle_backup_errors[_R, **P](
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError("Backup operation failed") from err
-        except TimeoutError as err:
-            raise BackupAgentError("Backup operation timed out") from err
 
     return wrapper
 
@@ -105,7 +103,6 @@ class OneDriveBackupAgent(BackupAgent):
         self._hass = hass
         self._entry = entry
         self._items = entry.runtime_data.items
-        self._download_items = entry.runtime_data.download_items
         self._folder_id = entry.runtime_data.backup_folder_id
         self._anonymous_auth_adapter = GraphRequestAdapter(
             auth_provider=AnonymousAuthenticationProvider(),
@@ -128,7 +125,7 @@ class OneDriveBackupAgent(BackupAgent):
         )
         response = cast(
             Response,
-            await self._download_items.by_drive_item_id(
+            await self._items.by_drive_item_id(
                 f"{self._folder_id}:/{backup_id}.tar:"
             ).content.get(request_configuration=request_config),
         )
