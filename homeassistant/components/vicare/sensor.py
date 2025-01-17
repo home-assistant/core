@@ -796,7 +796,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "production"],
-        value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
+        value_getter=lambda api: _filter_states(api.getPhotovoltaicStatus()),
     ),
     ViCareSensorEntityDescription(
         key="room_temperature",
@@ -811,6 +811,29 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_level",
+        translation_key="ventilation_level",
+        value_getter=lambda api: _filter_states(api.getVentilationLevel().lower()),
+        device_class=SensorDeviceClass.ENUM,
+        options=["standby", "levelone", "leveltwo", "levelthree", "levelfour"],
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_reason",
+        translation_key="ventilation_reason",
+        value_getter=lambda api: api.getVentilationReason().lower(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "standby",
+            "permanent",
+            "schedule",
+            "sensordriven",
+            "silent",
+            "forcedlevelfour",
+        ],
     ),
 )
 
@@ -920,7 +943,7 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _filter_pv_states(state: str) -> str | None:
+def _filter_states(state: str) -> str | None:
     return None if state in ("nothing", "unknown") else state
 
 

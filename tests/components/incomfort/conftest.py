@@ -20,12 +20,29 @@ MOCK_CONFIG = {
 }
 
 MOCK_HEATER_STATUS = {
-    "display_code": DisplayCode(126),
+    "display_code": DisplayCode.STANDBY,
     "display_text": "standby",
     "fault_code": None,
     "is_burning": False,
     "is_failed": False,
     "is_pumping": False,
+    "is_tapping": False,
+    "heater_temp": 35.34,
+    "tap_temp": 30.21,
+    "pressure": 1.86,
+    "serial_no": "c0ffeec0ffee",
+    "nodenr": 249,
+    "rf_message_rssi": 30,
+    "rfstatus_cntr": 0,
+}
+
+MOCK_HEATER_STATUS_HEATING = {
+    "display_code": DisplayCode.OPENTHERM,
+    "display_text": "opentherm",
+    "fault_code": None,
+    "is_burning": True,
+    "is_failed": False,
+    "is_pumping": True,
     "is_tapping": False,
     "heater_temp": 35.34,
     "tap_temp": 30.21,
@@ -54,11 +71,21 @@ def mock_entry_data() -> dict[str, Any]:
 
 
 @pytest.fixture
+def mock_entry_options() -> dict[str, Any] | None:
+    """Mock config entry options for fixture."""
+    return None
+
+
+@pytest.fixture
 def mock_config_entry(
-    hass: HomeAssistant, mock_entry_data: dict[str, Any]
+    hass: HomeAssistant,
+    mock_entry_data: dict[str, Any],
+    mock_entry_options: dict[str, Any],
 ) -> ConfigEntry:
     """Mock a config entry setup for incomfort integration."""
-    entry = MockConfigEntry(domain=DOMAIN, data=mock_entry_data)
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=mock_entry_data, options=mock_entry_options
+    )
     entry.add_to_hass(hass)
     return entry
 
