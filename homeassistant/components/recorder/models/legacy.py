@@ -24,12 +24,12 @@ class LegacyLazyState(State):
     """A lazy version of core State after schema 31."""
 
     __slots__ = [
-        "_row",
         "_attributes",
-        "_last_changed_ts",
-        "_last_updated_ts",
-        "_last_reported_ts",
         "_context",
+        "_last_changed_ts",
+        "_last_reported_ts",
+        "_last_updated_ts",
+        "_row",
         "attr_cache",
     ]
 
