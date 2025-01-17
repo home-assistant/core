@@ -116,6 +116,41 @@ async def test_form_validation(
     assert "errors" not in result
 
 
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_incomfort: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the re-authentication flow."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    # Simulate a new reauth flow with an authentication issue
+    mock_incomfort().heaters.side_effect = IncomfortError(
+        ClientResponseError(None, None, status=401)
+    )
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+
+
 @pytest.mark.parametrize(
     ("user_input", "legacy_setpoint_status"),
     [
