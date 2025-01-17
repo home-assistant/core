@@ -166,6 +166,73 @@ async def test_form_g2(
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
+async def test_form_g2_with_service_code(
+    hass: HomeAssistant,
+    mock_apiclient_class: type[ApiClient],
+    mock_apiclient: ApiClient,
+) -> None:
+    """Test the config flow for G2 models with a Service Code."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.kostal_plenticore.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        # mock of the context manager instance
+        mock_apiclient.login = AsyncMock()
+        mock_apiclient.get_settings = AsyncMock(
+            return_value={
+                "scb:network": [
+                    SettingsData(
+                        min="1",
+                        max="63",
+                        default=None,
+                        access="readwrite",
+                        unit=None,
+                        id="Network:Hostname",
+                        type="string",
+                    ),
+                ]
+            }
+        )
+        mock_apiclient.get_setting_values = AsyncMock(
+            # G1 model has the entry id "Hostname"
+            return_value={"scb:network": {"Network:Hostname": "scb"}}
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "host": "1.1.1.1",
+                "password": "test-password",
+                "service_code": "test-service-code"
+            },
+        )
+        await hass.async_block_till_done()
+
+        mock_apiclient_class.assert_called_once_with(ANY, "1.1.1.1")
+        mock_apiclient.__aenter__.assert_called_once()
+        mock_apiclient.__aexit__.assert_called_once()
+        mock_apiclient.login.assert_called_once_with(key="test-password", service_code="test-service-code")
+        mock_apiclient.get_settings.assert_called_once()
+        mock_apiclient.get_setting_values.assert_called_once_with(
+            "scb:network", "Network:Hostname"
+        )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "scb"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "password": "test-password",
+        "service_code": "test-service-code"
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     """Test we handle invalid auth."""
