@@ -182,6 +182,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/azure_service_bus/ @hfurubotten
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
+/homeassistant/components/backup_sftp/ @maretodoric
 /homeassistant/components/baf/ @bdraco @jfroy
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
