@@ -197,19 +197,19 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        if self._open_close_attribute is not None:
-            if not self._open_close_attribute.is_reversed:
-                await self.async_set_value(self._open_close_attribute, 0)
-            else:
-                await self.async_set_value(self._open_close_attribute, 1)
+        assert self._open_close_attribute is not None
+        if not self._open_close_attribute.is_reversed:
+            await self.async_set_value(self._open_close_attribute, 0)
+        else:
+            await self.async_set_value(self._open_close_attribute, 1)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        if self._open_close_attribute is not None:
-            if not self._open_close_attribute.is_reversed:
-                await self.async_set_value(self._open_close_attribute, 1)
-            else:
-                await self.async_set_value(self._open_close_attribute, 0)
+        assert self._open_close_attribute is not None
+        if not self._open_close_attribute.is_reversed:
+            await self.async_set_value(self._open_close_attribute, 1)
+        else:
+            await self.async_set_value(self._open_close_attribute, 0)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
@@ -222,7 +222,7 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             homee_max = attribute.maximum
             homee_position = (position / 100) * (homee_max - homee_min) + homee_min
 
-            await self.async_set_value(AttributeType.POSITION, homee_position)
+            await self.async_set_value(attribute, homee_position)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -235,9 +235,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             AttributeType.SLAT_ROTATION_IMPULSE
         )
         if not slat_attribute.is_reversed:
-            await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 2)
+            await self.async_set_value(slat_attribute, 2)
         else:
-            await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 1)
+            await self.async_set_value(slat_attribute, 1)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
@@ -245,9 +245,9 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             AttributeType.SLAT_ROTATION_IMPULSE
         )
         if not slat_attribute.is_reversed:
-            await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 1)
+            await self.async_set_value(slat_attribute, 1)
         else:
-            await self.async_set_value(AttributeType.SLAT_ROTATION_IMPULSE, 2)
+            await self.async_set_value(slat_attribute, 2)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -262,6 +262,4 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
             homee_max = attribute.maximum
             homee_position = (position / 100) * (homee_max - homee_min) + homee_min
 
-            await self.async_set_value(
-                AttributeType.SHUTTER_SLAT_POSITION, homee_position
-            )
+            await self.async_set_value(attribute, homee_position)
