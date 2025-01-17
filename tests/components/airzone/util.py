@@ -28,6 +28,7 @@ from aioairzone.const import (
     API_HEAT_STAGES,
     API_HUMIDITY,
     API_MAC,
+    API_MASTER_ZONE_ID,
     API_MAX_TEMP,
     API_MIN_TEMP,
     API_MODE,
@@ -214,6 +215,7 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 0,
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
+                    API_MASTER_ZONE_ID: None,
                 },
             ]
         },
