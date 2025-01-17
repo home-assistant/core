@@ -1202,17 +1202,17 @@ class Intent:
     """Hold the intent."""
 
     __slots__ = [
+        "assistant",
+        "category",
+        "context",
+        "conversation_agent_id",
+        "device_id",
         "hass",
-        "platform",
         "intent_type",
+        "language",
+        "platform",
         "slots",
         "text_input",
-        "context",
-        "language",
-        "category",
-        "assistant",
-        "device_id",
-        "conversation_agent_id",
     ]
 
     def __init__(

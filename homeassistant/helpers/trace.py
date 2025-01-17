@@ -23,11 +23,11 @@ class TraceElement:
         "_child_run_id",
         "_error",
         "_last_variables",
-        "path",
         "_result",
-        "reuse_by_child",
         "_timestamp",
         "_variables",
+        "path",
+        "reuse_by_child",
     )
 
     def __init__(self, variables: TemplateVarsType, path: str) -> None:

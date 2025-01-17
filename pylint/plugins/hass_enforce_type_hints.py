@@ -55,10 +55,14 @@ class TypeHintMatch:
         """Confirm if function should be checked."""
         return (
             self.function_name == node.name
-            or self.has_async_counterpart
-            and node.name == f"async_{self.function_name}"
-            or self.function_name.endswith("*")
-            and node.name.startswith(self.function_name[:-1])
+            or (
+                self.has_async_counterpart
+                and node.name == f"async_{self.function_name}"
+            )
+            or (
+                self.function_name.endswith("*")
+                and node.name.startswith(self.function_name[:-1])
+            )
         )
 
 
@@ -2998,8 +3002,8 @@ def _is_valid_type(
         isinstance(node, nodes.Subscript)
         and isinstance(node.value, nodes.Name)
         and node.value.name in _KNOWN_GENERIC_TYPES
-        or isinstance(node, nodes.Name)
-        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
+    ) or (
+        isinstance(node, nodes.Name) and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 

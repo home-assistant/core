@@ -82,7 +82,7 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.139.0"
+    "zeroconf==0.140.1"
 ]
 
 [project.urls]
@@ -763,13 +763,16 @@ select = [
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
     "RUF020", # {never_like} | T is equivalent to T
+    "RUF021", # Parenthesize a and b expressions when chaining and and or together, to make the precedence clear
     "RUF022", # Sort __all__
+    "RUF023", # Sort __slots__
     "RUF024", # Do not pass mutable objects as values to dict.fromkeys
     "RUF026", # default_factory is a positional-only argument to defaultdict
     "RUF030", # print() call in assert statement is likely unintentional
     "RUF033", # __post_init__ method with argument defaults
     "RUF034", # Useless if-else condition
     "RUF100", # Unused `noqa` directive
+    "RUF101", # noqa directives that use redirected rule codes
     "RUF200", # Failed to parse pyproject.toml: {message}
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
