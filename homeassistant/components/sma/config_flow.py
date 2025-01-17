@@ -72,8 +72,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_HOST] = (
             self._discovery_data[CONF_HOST] if discovery else user_input[CONF_HOST]
         )
-        if discovery:
-            self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
         self._data[CONF_SSL] = user_input[CONF_SSL]
         self._data[CONF_VERIFY_SSL] = user_input[CONF_VERIFY_SSL]
         self._data[CONF_GROUP] = user_input[CONF_GROUP]
@@ -104,6 +102,7 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(str(device_info["serial"]))
                 self._abort_if_unique_id_configured(updates=self._data)
+
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
                 )
@@ -152,6 +151,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             if not errors:
                 await self.async_set_unique_id(str(device_info["serial"]))
                 self._abort_if_unique_id_configured(updates=self._data)
+
+                self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
                 )
@@ -161,9 +162,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self._data[CONF_HOST]): cv.string,
-                    vol.Optional(
-                        CONF_MAC, default=self._discovery_data[CONF_MAC]
-                    ): cv.string,
                     vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
                     vol.Optional(
                         CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
