@@ -63,7 +63,7 @@ async def test_entity_state(
     )
     assert kwargs["stt_stream"] is audio_stream
     assert kwargs["pipeline_id"] is None
-    assert kwargs["device_id"] is None
+    assert kwargs["device_id"] is entity.device_entry.id
     assert kwargs["tts_audio_output"] is None
     assert kwargs["wake_word_phrase"] is None
     assert kwargs["audio_settings"] == AudioSettings(

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Coroutine, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 import dataclasses
+from datetime import datetime, timedelta
 import fnmatch
 from functools import partial
 import logging
@@ -33,6 +34,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
 )
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service_info.usb import UsbServiceInfo as _UsbServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import USBMatcher, async_get_usb
@@ -46,12 +48,16 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUEST_SCAN_COOLDOWN = 60  # 1 minute cooldown
+PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
+
+POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
+REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
 
 __all__ = [
-    "async_is_plugged_in",
-    "async_register_scan_request_callback",
     "USBCallbackMatcher",
+    "async_is_plugged_in",
+    "async_register_port_event_callback",
+    "async_register_scan_request_callback",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -83,6 +89,15 @@ def async_register_initial_scan_callback(
 
 
 @hass_callback
+def async_register_port_event_callback(
+    hass: HomeAssistant, callback: PORT_EVENT_CALLBACK_TYPE
+) -> CALLBACK_TYPE:
+    """Register to receive a callback when a USB device is connected or disconnected."""
+    discovery: USBDiscovery = hass.data[DOMAIN]
+    return discovery.async_register_port_event_callback(callback)
+
+
+@hass_callback
 def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> bool:
     """Return True is a USB device is present."""
 
@@ -105,8 +120,25 @@ def async_is_plugged_in(hass: HomeAssistant, matcher: USBCallbackMatcher) -> boo
 
     usb_discovery: USBDiscovery = hass.data[DOMAIN]
     return any(
-        _is_matching(USBDevice(*device_tuple), matcher)
-        for device_tuple in usb_discovery.seen
+        _is_matching(
+            USBDevice(
+                device=device,
+                vid=vid,
+                pid=pid,
+                serial_number=serial_number,
+                manufacturer=manufacturer,
+                description=description,
+            ),
+            matcher,
+        )
+        for (
+            device,
+            vid,
+            pid,
+            serial_number,
+            manufacturer,
+            description,
+        ) in usb_discovery.seen
     )
 
 
@@ -226,10 +258,14 @@ class USBDiscovery:
         self._request_callbacks: list[CALLBACK_TYPE] = []
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
+        self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
+        self._last_processed_devices: set[USBDevice] = set()
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
-        await self._async_start_monitor()
+        if await self._async_supports_monitoring():
+            await self._async_start_monitor()
+
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
@@ -243,26 +279,54 @@ class USBDiscovery:
         if self._request_debouncer:
             self._request_debouncer.async_shutdown()
 
-    async def _async_start_monitor(self) -> None:
-        """Start monitoring hardware with pyudev."""
-        if not sys.platform.startswith("linux"):
-            return
+    async def _async_supports_monitoring(self) -> bool:
         info = await system_info.async_get_system_info(self.hass)
-        if info.get("docker"):
-            return
+        return not info.get("docker")
+
+    async def _async_start_monitor(self) -> None:
+        """Start monitoring hardware."""
+        if not await self._async_start_monitor_udev():
+            _LOGGER.info(
+                "Falling back to periodic filesystem polling for development, libudev "
+                "is not present"
+            )
+            self._async_start_monitor_polling()
+
+    @hass_callback
+    def _async_start_monitor_polling(self) -> None:
+        """Start monitoring hardware with polling (for development only!)."""
+
+        async def _scan(event_time: datetime) -> None:
+            await self._async_scan_serial()
+
+        stop_callback = async_track_time_interval(
+            self.hass, _scan, POLLING_MONITOR_SCAN_PERIOD
+        )
+
+        @hass_callback
+        def _stop_polling(event: Event) -> None:
+            stop_callback()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
+
+    async def _async_start_monitor_udev(self) -> bool:
+        """Start monitoring hardware with pyudev. Returns True if successful."""
+        if not sys.platform.startswith("linux"):
+            return False
 
         if not (
             observer := await self.hass.async_add_executor_job(
                 self._get_monitor_observer
             )
         ):
-            return
+            return False
 
         def _stop_observer(event: Event) -> None:
             observer.stop()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
         self.observer_active = True
+        return True
 
     def _get_monitor_observer(self) -> MonitorObserver | None:
         """Get the monitor observer.
@@ -291,20 +355,23 @@ class USBDiscovery:
             return None
 
         observer = MonitorObserver(
-            monitor, callback=self._device_discovered, name="usb-observer"
+            monitor, callback=self._device_event, name="usb-observer"
         )
 
         observer.start()
         return observer
 
-    def _device_discovered(self, device: Device) -> None:
-        """Call when the observer discovers a new usb tty device."""
-        if device.action != "add":
+    def _device_event(self, device: Device) -> None:
+        """Call when the observer receives a USB device event."""
+        if device.action not in ("add", "remove"):
             return
-        _LOGGER.debug(
-            "Discovered Device at path: %s, triggering scan serial",
-            device.device_path,
+
+        _LOGGER.info(
+            "Received a udev device event %r for %s, triggering scan",
+            device.action,
+            device.device_node,
         )
+
         self.hass.create_task(self._async_scan())
 
     @hass_callback
@@ -338,6 +405,20 @@ class USBDiscovery:
             if callback not in self._initial_scan_callbacks:
                 return
             self._initial_scan_callbacks.remove(callback)
+
+        return _async_remove_callback
+
+    @hass_callback
+    def async_register_port_event_callback(
+        self,
+        callback: PORT_EVENT_CALLBACK_TYPE,
+    ) -> CALLBACK_TYPE:
+        """Register a port event callback."""
+        self._port_event_callbacks.add(callback)
+
+        @hass_callback
+        def _async_remove_callback() -> None:
+            self._port_event_callbacks.discard(callback)
 
         return _async_remove_callback
 
@@ -385,11 +466,11 @@ class USBDiscovery:
 
     async def _async_process_ports(self, ports: Sequence[ListPortInfo]) -> None:
         """Process each discovered port."""
-        usb_devices = [
+        usb_devices = {
             usb_device_from_port(port)
             for port in ports
             if port.vid is not None or port.pid is not None
-        ]
+        }
 
         # CP2102N chips create *two* serial ports on macOS: `/dev/cu.usbserial-` and
         # `/dev/cu.SLAB_USBtoUART*`. The former does not work and we should ignore them.
@@ -400,7 +481,7 @@ class USBDiscovery:
                 if dev.device.startswith("/dev/cu.SLAB_USBtoUART")
             }
 
-            usb_devices = [
+            usb_devices = {
                 dev
                 for dev in usb_devices
                 if dev.serial_number not in silabs_serials
@@ -408,7 +489,22 @@ class USBDiscovery:
                     dev.serial_number in silabs_serials
                     and dev.device.startswith("/dev/cu.SLAB_USBtoUART")
                 )
-            ]
+            }
+
+        added_devices = usb_devices - self._last_processed_devices
+        removed_devices = self._last_processed_devices - usb_devices
+        self._last_processed_devices = usb_devices
+
+        _LOGGER.debug(
+            "Added devices: %r, removed devices: %r", added_devices, removed_devices
+        )
+
+        if added_devices or removed_devices:
+            for callback in self._port_event_callbacks.copy():
+                try:
+                    callback(added_devices, removed_devices)
+                except Exception:
+                    _LOGGER.exception("Error in USB port event callback")
 
         for usb_device in usb_devices:
             await self._async_process_discovered_usb_device(usb_device)
