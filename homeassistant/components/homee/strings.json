@@ -87,6 +87,9 @@
       "rainfall_day_sensor": {
         "name": "Rainfall Today"
       },
+      "temperature_sensor": {
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
+      },
       "total_current_sensor": {
         "name": "Total Current"
       },
