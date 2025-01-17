@@ -145,6 +145,14 @@ async def test_device_registry(
 ) -> None:
     """Test the velbus device registry."""
     await init_integration(hass, config_entry)
+    # create device 88
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, 88)},
+        manufacturer="Velleman",
+        name="Dummy module",
+        model="ModuleType",
+    )
 
     # Ensure devices are correctly registered
     device_entries = dr.async_entries_for_config_entry(
