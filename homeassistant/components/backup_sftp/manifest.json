@@ -1,13 +1,9 @@
 {
-    "domain": "backup_sftp",
-    "name": "SFTP Backup Storage",
-    "codeowners": ["@maretodoric"],
-    "config_flow": true,
-    "dependencies": [],
-    "documentation": "https://www.home-assistant.io/integrations/backup_sftp",
-    "homekit": {},
-    "iot_class": "local_polling",
-    "requirements": ["paramiko"],
-    "ssdp": [],
-    "zeroconf": []
+  "domain": "backup_sftp",
+  "name": "SFTP Backup Storage",
+  "codeowners": ["@maretodoric"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/backup_sftp",
+  "iot_class": "local_polling",
+  "requirements": ["paramiko==3.5.0"]
 }
