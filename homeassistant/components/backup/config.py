@@ -97,7 +97,7 @@ class BackupConfigData:
                 days=retention["days"],
             ),
             schedule=BackupSchedule(
-                recurrence=ScheduleState(data["schedule"]["state"]), time=time
+                state=ScheduleState(data["schedule"]["state"]), time=time
             ),
         )
 
@@ -257,7 +257,7 @@ class StoredBackupSchedule(TypedDict):
 class ScheduleParametersDict(TypedDict, total=False):
     """Represent parameters for backup schedule."""
 
-    recurrence: ScheduleState
+    state: ScheduleState
     time: dt.time | None
 
 
@@ -279,7 +279,7 @@ class ScheduleState(StrEnum):
 class BackupSchedule:
     """Represent the backup schedule."""
 
-    recurrence: ScheduleState = ScheduleState.NEVER
+    state: ScheduleState = ScheduleState.NEVER
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
     next_automatic_backup: datetime | None = field(init=False, default=None)
@@ -293,12 +293,12 @@ class BackupSchedule:
 
         There are only three possible state types: never, daily, or weekly.
         """
-        if self.recurrence is ScheduleState.NEVER:
+        if self.state is ScheduleState.NEVER:
             self._unschedule_next(manager)
             return
 
         time = self.time if self.time is not None else dt.time(4, 45)
-        if self.recurrence is ScheduleState.DAILY:
+        if self.state is ScheduleState.DAILY:
             self._schedule_next(
                 CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour),
                 manager,
@@ -306,7 +306,7 @@ class BackupSchedule:
         else:
             self._schedule_next(
                 CRON_PATTERN_WEEKLY.format(
-                    m=time.minute, h=time.hour, d=self.recurrence.value
+                    m=time.minute, h=time.hour, d=self.state.value
                 ),
                 manager,
             )
@@ -374,7 +374,7 @@ class BackupSchedule:
     def to_dict(self) -> StoredBackupSchedule:
         """Convert backup schedule to a dict."""
         return StoredBackupSchedule(
-            state=self.recurrence,
+            state=self.state,
             time=self.time.isoformat() if self.time else None,
         )
 

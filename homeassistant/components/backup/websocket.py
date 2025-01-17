@@ -361,7 +361,7 @@ def time_from_dict(data: dict[str, int]) -> time:
         ),
         vol.Optional("schedule"): vol.Schema(
             {
-                vol.Optional("recurrence"): vol.All(str, vol.Coerce(ScheduleState)),
+                vol.Optional("state"): vol.All(str, vol.Coerce(ScheduleState)),
                 vol.Optional("time"): vol.Any(cv.time, None),
             }
         ),
