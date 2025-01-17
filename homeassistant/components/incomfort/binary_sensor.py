@@ -13,12 +13,15 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import InComfortConfigEntry
 from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,6 +30,7 @@ class IncomfortBinarySensorEntityDescription(BinarySensorEntityDescription):
 
     value_key: str
     extra_state_attributes_fn: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    entity_category: EntityCategory = EntityCategory.DIAGNOSTIC
 
 
 SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (

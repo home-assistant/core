@@ -64,21 +64,22 @@ async def test_text_set_value(hass: HomeAssistant) -> None:
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
+            text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: ""})
         )
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"})
+            text,
+            ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "hello world!"}),
         )
 
     with pytest.raises(ValueError):
         await _async_set_value(
-            text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
+            text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "HELLO"})
         )
 
     await _async_set_value(
-        text, ServiceCall(DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
+        text, ServiceCall(hass, DOMAIN, SERVICE_SET_VALUE, {ATTR_VALUE: "test2"})
     )
 
     assert text.state == "test2"

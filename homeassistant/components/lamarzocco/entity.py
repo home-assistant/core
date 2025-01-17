@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from pylamarzocco.const import FirmwareType
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
 from homeassistant.helpers.device_registry import (
@@ -85,3 +86,26 @@ class LaMarzoccoEntity(LaMarzoccoBaseEntity):
         """Initialize the entity."""
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
+
+
+class LaMarzoccScaleEntity(LaMarzoccoEntity):
+    """Common class for scale."""
+
+    def __init__(
+        self,
+        coordinator: LaMarzoccoUpdateCoordinator,
+        entity_description: LaMarzoccoEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator, entity_description)
+        scale = coordinator.device.config.scale
+        if TYPE_CHECKING:
+            assert scale
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, scale.address)},
+            name=scale.name,
+            manufacturer="Acaia",
+            model="Lunar",
+            model_id="Y.301",
+            via_device=(DOMAIN, coordinator.device.serial_number),
+        )

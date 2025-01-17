@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPressure, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -22,6 +22,8 @@ from . import InComfortConfigEntry
 from .coordinator import InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class IncomfortSensorEntityDescription(SensorEntityDescription):
@@ -29,6 +31,7 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
 
     value_key: str
     extra_key: str | None = None
+    entity_category = EntityCategory.DIAGNOSTIC
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (

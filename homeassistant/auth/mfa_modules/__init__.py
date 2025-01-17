@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import types
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -33,6 +33,12 @@ MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
 DATA_REQS: HassKey[set[str]] = HassKey("mfa_auth_module_reqs_processed")
 
 _LOGGER = logging.getLogger(__name__)
+
+_MultiFactorAuthModuleT = TypeVar(
+    "_MultiFactorAuthModuleT",
+    bound="MultiFactorAuthModule",
+    default="MultiFactorAuthModule",
+)
 
 
 class MultiFactorAuthModule:
@@ -71,7 +77,7 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
-    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+    async def async_setup_flow(self, user_id: str) -> SetupFlow[Any]:
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
@@ -95,11 +101,14 @@ class MultiFactorAuthModule:
         raise NotImplementedError
 
 
-class SetupFlow(data_entry_flow.FlowHandler):
+class SetupFlow(data_entry_flow.FlowHandler, Generic[_MultiFactorAuthModuleT]):
     """Handler for the setup flow."""
 
     def __init__(
-        self, auth_module: MultiFactorAuthModule, setup_schema: vol.Schema, user_id: str
+        self,
+        auth_module: _MultiFactorAuthModuleT,
+        setup_schema: vol.Schema,
+        user_id: str,
     ) -> None:
         """Initialize the setup flow."""
         self._auth_module = auth_module

@@ -94,6 +94,8 @@ COPY . /usr/src/homeassistant
 
 # Uv is only needed during build
 RUN --mount=from=ghcr.io/astral-sh/uv:{uv},source=/uv,target=/bin/uv \
+    # Uv creates a lock file in /tmp
+    --mount=type=tmpfs,target=/tmp \
     # Required for PyTurboJPEG
     apk add --no-cache libturbojpeg \
     && uv pip install \
@@ -185,12 +187,12 @@ def _generate_files(config: Config) -> list[File]:
         + 10
     ) * 1000
 
-    package_versions = _get_package_versions(Path("requirements.txt"), {"uv"})
+    package_versions = _get_package_versions(config.root / "requirements.txt", {"uv"})
     package_versions |= _get_package_versions(
-        Path("requirements_test.txt"), {"pipdeptree", "tqdm"}
+        config.root / "requirements_test.txt", {"pipdeptree", "tqdm"}
     )
     package_versions |= _get_package_versions(
-        Path("requirements_test_pre_commit.txt"), {"ruff"}
+        config.root / "requirements_test_pre_commit.txt", {"ruff"}
     )
 
     return [

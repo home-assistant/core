@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import TwenteMilieuConfigEntry
+from .coordinator import TwenteMilieuConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

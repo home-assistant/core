@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import InvalidCommand, VehicleOffline
+from tesla_fleet_api.exceptions import InvalidCommand
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -19,7 +19,6 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -31,11 +30,10 @@ from .const import (
     COMMAND_IGNORED_REASON,
     METADATA_NOSCOPE,
     VEHICLE_DATA_ALT,
+    VEHICLE_DATA_ASLEEP,
     WAKE_UP_ASLEEP,
     WAKE_UP_ONLINE,
 )
-
-from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -205,20 +203,6 @@ async def test_climate_alt(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_climate_offline(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the climate entity is correct."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    entry = await setup_platform(hass, [Platform.CLIMATE])
-    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
-
-
 async def test_invalid_error(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Tests service error is handled."""
 
@@ -296,18 +280,9 @@ async def test_asleep_or_offline(
 ) -> None:
     """Tests asleep is handled."""
 
+    mock_vehicle_data.return_value = VEHICLE_DATA_ASLEEP
     await setup_platform(hass, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
-    mock_vehicle_data.assert_called_once()
-
-    # Put the vehicle alseep
-    mock_vehicle_data.reset_mock()
-    mock_vehicle_data.side_effect = VehicleOffline
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_vehicle_data.assert_called_once()
-    mock_wake_up.reset_mock()
 
     # Run a command but fail trying to wake up the vehicle
     mock_wake_up.side_effect = InvalidCommand

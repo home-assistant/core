@@ -50,7 +50,7 @@ async def async_setup_entry(
 
     descriptions: list[AprilaireHumidifierDescription] = []
 
-    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in (0, 1, 2):
+    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in (1, 2):
         descriptions.append(
             AprilaireHumidifierDescription(
                 key="humidifier",
@@ -67,7 +67,7 @@ async def async_setup_entry(
             )
         )
 
-    if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) in (0, 1):
+    if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
         descriptions.append(
             AprilaireHumidifierDescription(
                 key="dehumidifier",

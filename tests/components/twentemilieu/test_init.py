@@ -29,7 +29,7 @@ async def test_load_unload_config_entry(
 
 
 @patch(
-    "homeassistant.components.twentemilieu.TwenteMilieu.update",
+    "homeassistant.components.twentemilieu.coordinator.TwenteMilieu.update",
     side_effect=RuntimeError,
 )
 async def test_config_entry_not_ready(
