@@ -52,6 +52,7 @@ from .const import (
     PROP_MIN_VALUE,
     SERV_LIGHTBULB,
 )
+from .util import get_min_max
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,11 +121,13 @@ class Light(HomeAccessory):
             self.char_brightness = serv_light.configure_char(CHAR_BRIGHTNESS, value=100)
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
-            self.min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
-            )
-            self.max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
+            self.min_mireds, self.max_mireds = get_min_max(
+                color_temperature_kelvin_to_mired(
+                    attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
+                ),
+                color_temperature_kelvin_to_mired(
+                    attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
+                ),
             )
             if not self.color_temp_supported and not self.rgbww_supported:
                 self.max_mireds = self.min_mireds

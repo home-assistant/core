@@ -90,7 +90,7 @@ from .const import (
     SERV_FANV2,
     SERV_THERMOSTAT,
 )
-from .util import temperature_to_homekit, temperature_to_states
+from .util import get_min_max, temperature_to_homekit, temperature_to_states
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -838,6 +838,9 @@ def _get_temperature_range_from_state(
         max_temp = round(temperature_to_homekit(max_temp, unit) * 2) / 2
     else:
         max_temp = default_max
+
+    # Handle reversed temperature range
+    min_temp, max_temp = get_min_max(min_temp, max_temp)
 
     # Homekit only supports 10-38, overwriting
     # the max to appears to work, but less than 0 causes
