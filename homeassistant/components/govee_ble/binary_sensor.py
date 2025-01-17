@@ -39,6 +39,10 @@ BINARY_SENSOR_DESCRIPTIONS = {
         key=GoveeBLEBinarySensorDeviceClass.OCCUPANCY,
         device_class=BinarySensorDeviceClass.OCCUPANCY,
     ),
+    GoveeBLEBinarySensorDeviceClass.PRESENCE: BinarySensorEntityDescription(
+        key=GoveeBLEBinarySensorDeviceClass.PRESENCE,
+        device_class=BinarySensorDeviceClass.PRESENCE,
+    ),
 }
 
 

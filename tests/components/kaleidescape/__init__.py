@@ -1,7 +1,10 @@
 """Tests for Kaleidescape integration."""
 
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+)
 
 MOCK_HOST = "127.0.0.1"
 MOCK_SERIAL = "123456"

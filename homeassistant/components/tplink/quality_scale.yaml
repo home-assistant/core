@@ -32,7 +32,7 @@ rules:
   parallel-updates: done
   test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: The integration does not have any options configuration parameters.
@@ -52,13 +52,13 @@ rules:
   dynamic-devices: todo
   discovery-update-info: done
   repair-issues: done
-  docs-use-cases: todo
+  docs-use-cases: done
   docs-supported-devices: done
-  docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
-  docs-examples: todo
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
 
   # Platinum
   async-dependency: done

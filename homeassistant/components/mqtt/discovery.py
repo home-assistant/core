@@ -386,7 +386,7 @@ async def async_start(  # noqa: C901
         _async_add_component(discovery_payload)
 
     @callback
-    def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
+    def async_discovery_message_received(msg: ReceiveMessage) -> None:
         """Process the received message."""
         mqtt_data.last_discovery = msg.timestamp
         payload = msg.payload
