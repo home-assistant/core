@@ -386,19 +386,19 @@ class RenderInfo:
     """Holds information about a template render."""
 
     __slots__ = (
-        "template",
-        "filter_lifecycle",
-        "filter",
         "_result",
-        "is_static",
-        "exception",
         "all_states",
         "all_states_lifecycle",
         "domains",
         "domains_lifecycle",
         "entities",
-        "rate_limit",
+        "exception",
+        "filter",
+        "filter_lifecycle",
         "has_time",
+        "is_static",
+        "rate_limit",
+        "template",
     )
 
     def __init__(self, template: Template) -> None:
@@ -507,17 +507,17 @@ class Template:
 
     __slots__ = (
         "__weakref__",
-        "template",
+        "_compiled",
+        "_compiled_code",
+        "_exc_info",
+        "_hash_cache",
+        "_limited",
+        "_log_fn",
+        "_renders",
+        "_strict",
         "hass",
         "is_static",
-        "_compiled_code",
-        "_compiled",
-        "_exc_info",
-        "_limited",
-        "_strict",
-        "_log_fn",
-        "_hash_cache",
-        "_renders",
+        "template",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -991,7 +991,7 @@ class StateTranslated:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    __slots__ = ("_hass", "_domain")
+    __slots__ = ("_domain", "_hass")
 
     __setitem__ = _readonly
     __delitem__ = _readonly
@@ -1035,7 +1035,7 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id", "_state")
+    __slots__ = ("_collect", "_entity_id", "_hass", "_state")
 
     _state: State
 

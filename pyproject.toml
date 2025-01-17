@@ -764,6 +764,7 @@ select = [
     "RUF019", # Unnecessary key check before dictionary access
     "RUF020", # {never_like} | T is equivalent to T
     "RUF022", # Sort __all__
+    "RUF023", # Sort __slots__
     "RUF024", # Do not pass mutable objects as values to dict.fromkeys
     "RUF026", # default_factory is a positional-only argument to defaultdict
     "RUF030", # print() call in assert statement is likely unintentional
