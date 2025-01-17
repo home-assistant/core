@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.hydrawise.const import DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -41,7 +41,7 @@ async def test_form(
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Hydrawise"
+    assert result2["title"] == "asdf@asdf.com"
     assert result2["data"] == {
         CONF_USERNAME: "asdf@asdf.com",
         CONF_PASSWORD: "__password__",
@@ -76,7 +76,7 @@ async def test_form_api_error(
 async def test_form_auth_connect_timeout(
     hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock
 ) -> None:
-    """Test we handle API errors."""
+    """Test we handle connection timeout errors."""
     mock_auth.token.side_effect = TimeoutError
     init_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -148,7 +148,8 @@ async def test_reauth(
         title="Hydrawise",
         domain=DOMAIN,
         data={
-            CONF_API_KEY: "__api_key__",
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "bad-password",
         },
         unique_id="hydrawise-12345",
     )
@@ -160,7 +161,7 @@ async def test_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     [result] = flows
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
