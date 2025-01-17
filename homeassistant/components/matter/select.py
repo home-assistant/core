@@ -131,11 +131,12 @@ class MatterLevelSelectEntity(MatterSelectEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         temperature_level_list = self.get_matter_attribute_value(
-            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels
+            self._entity_info.secondary_attribute
         )
         selected_level = self.get_matter_attribute_value(
-            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel
+            self._entity_info.primary_attribute
         )
+
         self._attr_options = list(temperature_level_list)
         self._attr_current_option = temperature_level_list[selected_level]
 
