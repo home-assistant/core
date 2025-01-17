@@ -18,7 +18,7 @@ from kasa import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ffmpeg, stream
+from homeassistant.components import ffmpeg, stream
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import (
@@ -93,7 +94,7 @@ class TPLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: Device | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(

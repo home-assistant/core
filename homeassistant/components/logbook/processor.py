@@ -115,9 +115,9 @@ class EventProcessor:
         include_entity_name: bool = True,
     ) -> None:
         """Init the event stream."""
-        assert not (
-            context_id and (entity_ids or device_ids)
-        ), "can't pass in both context_id and (entity_ids or device_ids)"
+        assert not (context_id and (entity_ids or device_ids)), (
+            "can't pass in both context_id and (entity_ids or device_ids)"
+        )
         self.hass = hass
         self.ent_reg = er.async_get(hass)
         self.event_types = event_types

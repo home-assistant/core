@@ -458,7 +458,7 @@ class ZwaveLight(ZWaveBaseEntity, LightEntity):
         if warm_white and cool_white:
             self._supports_color_temp = True
         # only one white channel (warm white or cool white) = rgbw support
-        elif red and green and blue and warm_white or cool_white:
+        elif (red and green and blue and warm_white) or cool_white:
             self._supports_rgbw = True
 
     @callback

@@ -101,7 +101,8 @@ async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> Non
         if (
             "xe" in entity.unique_id
             and currency not in config_entry.options.get(CONF_EXCHANGE_RATES, [])
-            or "wallet" in entity.unique_id
+        ) or (
+            "wallet" in entity.unique_id
             and currency not in config_entry.options.get(CONF_CURRENCIES, [])
         ):
             registry.async_remove(entity.entity_id)
