@@ -82,3 +82,14 @@ async def test_operational_state_buttons(
         command=clusters.OperationalState.Commands.Pause(),
         timed_request_timeout_ms=None,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["evse_charging"])
+async def test_evse_buttons(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test if button entities are created for EVSE commands."""
+    assert hass.states.get("button.evse_enable_charging")
+    assert hass.states.get("button.evse_disable_charging")
