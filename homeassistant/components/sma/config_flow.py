@@ -28,14 +28,23 @@ from .const import CONF_GROUP, DOMAIN, GROUPS
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(
+    hass: HomeAssistant,
+    user_input: dict[str, Any],
+    data: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
-    session = async_get_clientsession(hass, verify_ssl=data[CONF_VERIFY_SSL])
+    session = async_get_clientsession(hass, verify_ssl=user_input[CONF_VERIFY_SSL])
 
-    protocol = "https" if data[CONF_SSL] else "http"
-    url = f"{protocol}://{data[CONF_HOST]}"
+    protocol = "https" if user_input[CONF_SSL] else "http"
+    # If data is set, it means the data comes from discovery
+    url = (
+        f"{protocol}://{data[CONF_HOST] if data is not None else user_input[CONF_HOST]}"
+    )
 
-    sma = pysma.SMA(session, url, data[CONF_PASSWORD], group=data[CONF_GROUP])
+    sma = pysma.SMA(
+        session, url, user_input[CONF_PASSWORD], group=user_input[CONF_GROUP]
+    )
 
     # new_session raises SmaAuthenticationException on failure
     await sma.new_session()
@@ -69,16 +78,18 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         device_info: dict[str, str] = {}
 
-        self._data[CONF_HOST] = (
-            self._discovery_data[CONF_HOST] if discovery else user_input[CONF_HOST]
-        )
+        if not discovery:
+            self._data[CONF_HOST] = user_input[CONF_HOST]
+
         self._data[CONF_SSL] = user_input[CONF_SSL]
         self._data[CONF_VERIFY_SSL] = user_input[CONF_VERIFY_SSL]
         self._data[CONF_GROUP] = user_input[CONF_GROUP]
         self._data[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
         try:
-            device_info = await validate_input(self.hass, user_input)
+            device_info = await validate_input(
+                self.hass, user_input=user_input, data=self._data
+            )
         except pysma.exceptions.SmaConnectionException:
             errors["base"] = "cannot_connect"
         except pysma.exceptions.SmaAuthenticationException:
@@ -132,6 +143,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_data[CONF_HOST] = discovery_info.ip
         self._discovery_data[CONF_MAC] = format_mac(discovery_info.macaddress)
         self._discovery_data[CONF_NAME] = discovery_info.hostname
+        self._data[CONF_HOST] = discovery_info.ip
+        self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
 
         await self.async_set_unique_id(str(discovery_info.hostname.replace("SMA", "")))
         self._abort_if_unique_id_configured()
@@ -152,7 +165,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(str(device_info["serial"]))
                 self._abort_if_unique_id_configured(updates=self._data)
 
-                self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
                 return self.async_create_entry(
                     title=self._data[CONF_HOST], data=self._data
                 )
@@ -161,7 +173,6 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=self._data[CONF_HOST]): cv.string,
                     vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
                     vol.Optional(
                         CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]

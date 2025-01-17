@@ -27,6 +27,14 @@ MOCK_USER_INPUT = {
     CONF_PASSWORD: "password",
 }
 
+MOCK_DHCP_DISCOVERY_INPUT = {
+    # CONF_HOST: "1.1.1.2",
+    CONF_SSL: True,
+    CONF_VERIFY_SSL: False,
+    CONF_GROUP: "user",
+    CONF_PASSWORD: "password",
+}
+
 MOCK_DHCP_DISCOVERY = {
     CONF_HOST: "1.1.1.1",
     CONF_SSL: True,

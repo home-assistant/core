@@ -18,6 +18,7 @@ from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from . import (
     MOCK_DEVICE,
     MOCK_DHCP_DISCOVERY,
+    MOCK_DHCP_DISCOVERY_INPUT,
     MOCK_USER_INPUT,
     _patch_async_setup_entry,
 )
@@ -129,7 +130,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_USER_INPUT,
+            MOCK_DHCP_DISCOVERY_INPUT,
         )
         await hass.async_block_till_done()
 
@@ -161,7 +162,7 @@ async def test_dhcp_already_configured(hass: HomeAssistant, mock_config_entry) -
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_USER_INPUT,
+            MOCK_DHCP_DISCOVERY_INPUT,
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -194,7 +195,7 @@ async def test_dhcp_exceptions(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_USER_INPUT,
+            MOCK_DHCP_DISCOVERY_INPUT,
         )
 
     assert result["type"] is FlowResultType.FORM
