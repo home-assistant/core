@@ -643,7 +643,8 @@ def state_needs_accessory_mode(state: State) -> bool:
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS)
         in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
-        or state.domain == REMOTE_DOMAIN
+    ) or (
+        state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )

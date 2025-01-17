@@ -38,7 +38,7 @@ from homeassistant.loader import (
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
+__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
 
 _LOGGER = logging.getLogger(__name__)
 

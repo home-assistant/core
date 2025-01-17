@@ -1,13 +1,14 @@
 """Tests for Intergas InComfort integration."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
 from incomfortclient import IncomfortError
 import pytest
 
+from homeassistant.components.incomfort import InvalidHeaterList
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -63,7 +64,18 @@ async def test_coordinator_updates(
     "exc",
     [
         IncomfortError(ClientResponseError(None, None, status=401)),
-        IncomfortError(ClientResponseError(None, None, status=500)),
+        IncomfortError(
+            ClientResponseError(
+                RequestInfo(
+                    url="http://example.com",
+                    method="GET",
+                    headers=[],
+                    real_url="http://example.com",
+                ),
+                None,
+                status=500,
+            )
+        ),
         IncomfortError(ValueError("some_error")),
         TimeoutError,
     ],
@@ -91,3 +103,53 @@ async def test_coordinator_update_fails(
     state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("exc", "config_entry_state"),
+    [
+        (
+            IncomfortError(ClientResponseError(None, None, status=401)),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            IncomfortError(ClientResponseError(None, None, status=404)),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (InvalidHeaterList, ConfigEntryState.SETUP_RETRY),
+        (
+            IncomfortError(
+                ClientResponseError(
+                    RequestInfo(
+                        url="http://example.com",
+                        method="GET",
+                        headers=[],
+                        real_url="http://example.com",
+                    ),
+                    None,
+                    status=500,
+                )
+            ),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (IncomfortError(ValueError("some_error")), ConfigEntryState.SETUP_RETRY),
+        (TimeoutError, ConfigEntryState.SETUP_RETRY),
+    ],
+)
+async def test_entry_setup_fails(
+    hass: HomeAssistant,
+    mock_incomfort: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: ConfigEntry,
+    exc: Exception,
+    config_entry_state: ConfigEntryState,
+) -> None:
+    """Test the incomfort coordinator entry setup fails."""
+    with patch(
+        "homeassistant.components.incomfort.async_connect_gateway",
+        AsyncMock(side_effect=exc),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    state = hass.states.get("sensor.boiler_pressure")
+    assert state is None
+    assert mock_config_entry.state is config_entry_state
