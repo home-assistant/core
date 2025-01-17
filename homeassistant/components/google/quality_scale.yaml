@@ -49,7 +49,11 @@ rules:
   # Silver
   log-when-unavailable: done
   config-entry-unloading: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      The integration supports reauthentication, however the config flow test
+      coverage can be improved on reauth corner cases.
   action-exceptions: done
   docs-installation-parameters: todo
   integration-owner: done
@@ -85,9 +89,13 @@ rules:
 
   # Platinum
   async-dependency:
-    status: todo
-    comment: The oauth2client library used in config flow is not async
+    status: done
+    comment: |
+      The main client `gcal_sync` library is async. The primary authentication
+      used in config flow is handled by built in async OAuth code. The
+      integration still supports legacy OAuth credentials setup in the
+      configuration flow, which is no longer recommended or described in the
+      documentation for new users. This legacy config flow uses oauth2client
+      which is not natively async.
   strict-typing: done
-  inject-websession:
-    status: todo
-    comment: True for primary client library, but not oauth library used in config flow
+  inject-websession: done
