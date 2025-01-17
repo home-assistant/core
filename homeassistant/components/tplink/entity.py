@@ -239,8 +239,9 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
-        self._async_call_update_attrs()
         await super().async_added_to_hass()
+
+        self._async_call_update_attrs()
 
     @abstractmethod
     @callback
@@ -301,8 +302,8 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         )
 
         # Update the feature attributes so the registered entity contains
-        # values like unit_of_measurement and precision.
-        self._attr_available = self._async_update_attrs()
+        # values like unit_of_measurement and suggested_display_precision
+        self._async_call_update_attrs()
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
@@ -475,7 +476,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 )
             )
 
-        children = _get_new_children(device, coordinator, known_child_device_ids)
+        children = _get_new_children(
+            device, coordinator, known_child_device_ids, entity_class.__name__
+        )
 
         if children:
             _LOGGER.debug(
@@ -550,11 +553,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
         descriptions: Iterable[_D],
         parent: Device | None = None,
     ) -> list[_E]:
-        """Return a list of entities to add.
-
-        This filters out unwanted features to avoid creating unnecessary entities
-        for device features that are implemented by specialized platforms like light.
-        """
+        """Return a list of entities to add."""
         entities: list[_E] = [
             entity_class(
                 device,
@@ -602,11 +601,14 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             )
             has_parent_entities = bool(entities)
 
-        children = _get_new_children(device, coordinator, known_child_device_ids)
+        children = _get_new_children(
+            device, coordinator, known_child_device_ids, entity_class.__name__
+        )
 
         if children:
             _LOGGER.debug(
-                "Getting %s entities for child devices on device %s",
+                "Getting %s entities for %s child devices on device %s",
+                entity_class.__name__,
                 len(children),
                 device.host,
             )
@@ -622,9 +624,10 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                 parent=device,
             )
             _LOGGER.debug(
-                "Device %s, found %s child entities for child id %s",
+                "Device %s, found %s child %s entities for child id %s",
                 device.host,
                 len(entities),
+                entity_class.__name__,
                 child.device_id,
             )
             entities.extend(child_entities)
@@ -646,14 +649,16 @@ def _get_new_children(
     device: Device,
     coordinator: TPLinkDataUpdateCoordinator,
     known_child_device_ids: set[str],
+    entity_class_name: str,
 ) -> list[Device]:
     """Get a list of children to check for entity creation."""
     # Remove any device ids removed via the coordinator so they can be re-added
     for removed_child_id in coordinator.removed_child_device_ids:
         _LOGGER.debug(
-            "Removing %s from known child ids for device %s"
+            "Removing %s from known %s child ids for device %s"
             "as it has been removed by the coordinator",
             removed_child_id,
+            entity_class_name,
             device.host,
         )
         known_child_device_ids.discard(removed_child_id)

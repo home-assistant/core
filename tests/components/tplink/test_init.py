@@ -20,7 +20,6 @@ from kasa import (
 from kasa.iot import IotStrip
 import pytest
 
-from homeassistant import setup
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import (
     CONF_AES_KEYS,
@@ -164,7 +163,7 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         _patch_single_discovery(device=dimmer),
         _patch_connect(device=dimmer),
     ):
-        await setup.async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     migrated_dimmer_entity_reg = entity_registry.async_get_or_create(
@@ -997,6 +996,15 @@ async def test_automatic_feature_device_addition_and_removal(
         ),
         pytest.param("fan", [Module.Fan], [], None, DeviceType.Fan, id="fan"),
         pytest.param("siren", [Module.Alarm], [], None, DeviceType.Camera, id="siren"),
+        pytest.param("light", [Module.Light], [], None, DeviceType.Camera, id="light"),
+        pytest.param(
+            "light",
+            [Module.Light, Module.LightEffect],
+            [],
+            None,
+            DeviceType.Camera,
+            id="light_effect",
+        ),
         pytest.param(
             "climate",
             [],

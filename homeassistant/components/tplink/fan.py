@@ -1,7 +1,5 @@
 """Support for TPLink Fan devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import math

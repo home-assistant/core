@@ -175,7 +175,8 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    known_child_device_ids: set[str] = set()
+    known_child_device_ids_light: set[str] = set()
+    known_child_device_ids_light_effect: set[str] = set()
     first_check = True
 
     def _check_device() -> None:
@@ -185,7 +186,7 @@ async def async_setup_entry(
             coordinator=parent_coordinator,
             entity_class=TPLinkLightEntity,
             descriptions=LIGHT_DESCRIPTIONS,
-            known_child_device_ids=known_child_device_ids,
+            known_child_device_ids=known_child_device_ids_light,
             first_check=first_check,
         )
         entities.extend(
@@ -195,7 +196,7 @@ async def async_setup_entry(
                 coordinator=parent_coordinator,
                 entity_class=TPLinkLightEffectEntity,
                 descriptions=LIGHT_EFFECT_DESCRIPTIONS,
-                known_child_device_ids=known_child_device_ids,
+                known_child_device_ids=known_child_device_ids_light_effect,
                 first_check=first_check,
             )
         )
