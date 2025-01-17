@@ -203,7 +203,7 @@ class PlexServer:
                             config_entry_update_needed = True
                         else:
                             # pylint: disable-next=raise-missing-from
-                            raise Unauthorized(  # noqa: TRY200
+                            raise Unauthorized(  # noqa: B904
                                 "New certificate cannot be validated"
                                 " with provided token"
                             )

@@ -434,7 +434,8 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         feature_type: Feature.Type,
         entity_class: type[_E],
         descriptions: Mapping[str, _D],
-        child_coordinators: list[TPLinkDataUpdateCoordinator] | None = None,
+        known_child_device_ids: set[str],
+        first_check: bool,
     ) -> list[_E]:
         """Create entities for device and its children.
 
@@ -442,36 +443,69 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         """
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
-        entities.extend(
-            cls._entities_for_device(
+        # Only add the parent entities the first time
+        if first_check:
+            entities.extend(
+                cls._entities_for_device(
+                    hass,
+                    device,
+                    coordinator=coordinator,
+                    feature_type=feature_type,
+                    entity_class=entity_class,
+                    descriptions=descriptions,
+                )
+            )
+
+        # Remove any device ids removed via the coordinator so they can be re-added
+        for removed_child_id in coordinator.removed_child_device_ids:
+            _LOGGER.debug(
+                "Removing %s from known %s child ids for device %s"
+                "as it has been removed by the coordinator",
+                removed_child_id,
+                entity_class.__name__,
+                device.host,
+            )
+            known_child_device_ids.discard(removed_child_id)
+
+        current_child_devices = {child.device_id: child for child in device.children}
+        current_child_device_ids = set(current_child_devices.keys())
+        new_child_device_ids = current_child_device_ids - known_child_device_ids
+        children = []
+
+        if new_child_device_ids:
+            children = [
+                child
+                for child_id, child in current_child_devices.items()
+                if child_id in new_child_device_ids
+            ]
+            known_child_device_ids.update(new_child_device_ids)
+
+        if children:
+            _LOGGER.debug(
+                "Getting %s entities for %s child devices on device %s",
+                entity_class.__name__,
+                len(children),
+                device.host,
+            )
+        for child in children:
+            child_coordinator = coordinator.get_child_coordinator(child)
+
+            child_entities = cls._entities_for_device(
                 hass,
-                device,
-                coordinator=coordinator,
+                child,
+                coordinator=child_coordinator,
                 feature_type=feature_type,
                 entity_class=entity_class,
                 descriptions=descriptions,
+                parent=device,
             )
-        )
-        if device.children:
-            _LOGGER.debug("Initializing device with %s children", len(device.children))
-            for idx, child in enumerate(device.children):
-                # HS300 does not like too many concurrent requests and its
-                # emeter data requires a request for each socket, so we receive
-                # separate coordinators.
-                if child_coordinators:
-                    child_coordinator = child_coordinators[idx]
-                else:
-                    child_coordinator = coordinator
-                entities.extend(
-                    cls._entities_for_device(
-                        hass,
-                        child,
-                        coordinator=child_coordinator,
-                        feature_type=feature_type,
-                        entity_class=entity_class,
-                        descriptions=descriptions,
-                        parent=device,
-                    )
-                )
+            _LOGGER.debug(
+                "Device %s, found %s child %s entities for child id %s",
+                device.host,
+                len(entities),
+                entity_class.__name__,
+                child.device_id,
+            )
+            entities.extend(child_entities)
 
         return entities
