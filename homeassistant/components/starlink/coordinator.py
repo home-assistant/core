@@ -61,7 +61,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             update_interval=timedelta(seconds=5),
         )
 
-    def _get_starlink_cumulative_stats(self) -> tuple[UsageDict, PowerDict]:
+    def _get_starlink_cumulative_stats(self) -> tuple:
         """Retrieve Starlink history stats."""
         context = self.channel_context
         history = history_stats(
