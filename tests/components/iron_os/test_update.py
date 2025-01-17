@@ -13,7 +13,7 @@ from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, mock_restore_cache, snapshot_platform
 from tests.typing import WebSocketGenerator
 
 
@@ -87,21 +87,23 @@ async def test_update_restore_last_state(
     """Test update entity restore last state."""
 
     mock_pynecil.get_device_info.side_effect = CommunicationError
-    with patch(
-        "homeassistant.components.iron_os.update.IronOSUpdate.async_get_last_state",
-        return_value=State(
-            "update.pinecil_firmware",
-            STATE_ON,
-            attributes={ATTR_INSTALLED_VERSION: "v2.21"},
+    mock_restore_cache(
+        hass,
+        (
+            State(
+                "update.pinecil_firmware",
+                STATE_ON,
+                attributes={ATTR_INSTALLED_VERSION: "v2.21"},
+            ),
         ),
-    ):
-        config_entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
-        state = hass.states.get("update.pinecil_firmware")
-        assert state is not None
-        assert state.state == STATE_ON
-        assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.21"
+    state = hass.states.get("update.pinecil_firmware")
+    assert state is not None
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.21"
