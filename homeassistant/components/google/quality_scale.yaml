@@ -47,41 +47,47 @@ rules:
       updated to use `runtime_data`.
 
   # Silver
-  log-when-unavailable: todo
-  config-entry-unloading: todo
-  reauthentication-flow: todo
-  action-exceptions: todo
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: done
+  action-exceptions: done
   docs-installation-parameters: todo
-  integration-owner: todo
+  integration-owner: done
   parallel-updates: todo
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: One module needs an additional line of coverage to be above the bar
   docs-configuration-parameters: todo
-  entity-unavailable: todo
+  entity-unavailable: done
 
   # Gold
-  docs-examples: todo
-  discovery-update-info: todo
+  docs-examples: done
+  discovery-update-info: exempt
   entity-device-class: todo
   entity-translations: todo
   docs-data-update: todo
-  entity-disabled-by-default: todo
-  discovery: todo
+  entity-disabled-by-default: done
+  discovery: exempt
   exception-translations: todo
   devices: todo
-  docs-supported-devices: todo
-  icon-translations: todo
+  docs-supported-devices: done
+  icon-translations: exempt
   docs-known-limitations: todo
-  stale-devices: todo
-  docs-supported-functions: todo
-  repair-issues: todo
-  reconfiguration-flow: todo
-  entity-category: todo
-  dynamic-devices: todo
+  stale-devices: exempt
+  docs-supported-functions: done
+  repair-issues: exempt
+  reconfiguration-flow: exempt
+  entity-category: exempt
+  dynamic-devices: exempt
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo
 
   # Platinum
-  async-dependency: todo
-  strict-typing: todo
-  inject-websession: todo
+  async-dependency:
+    status: todo
+    comment: The oauth2client library used in config flow is not async
+  strict-typing: done
+  inject-websession:
+    status: todo
+    comment: True for primary client library, but not oauth library used in config flow
