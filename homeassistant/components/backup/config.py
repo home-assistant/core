@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import datetime, time, timedelta
 from enum import StrEnum
 import random
 from typing import TYPE_CHECKING, Self, TypedDict
@@ -26,8 +26,8 @@ if TYPE_CHECKING:
 # The time of the automatic backup event should be compatible with
 # the time of the recorder's nightly job which runs at 04:12.
 # Run the backup at 04:45.
-CRON_PATTERN_DAILY = "45 4 * * *"
-CRON_PATTERN_WEEKLY = "45 4 * * {}"
+CRON_PATTERN_DAILY = "{m} {h} * * *"
+CRON_PATTERN_WEEKLY = "{m} {h} * * {d}"
 
 # Randomize the start time of the backup by up to 60 minutes to avoid
 # all backups running at the same time.
@@ -90,7 +90,12 @@ class BackupConfigData:
                 copies=retention["copies"],
                 days=retention["days"],
             ),
-            schedule=BackupSchedule(state=ScheduleState(data["schedule"]["state"])),
+            schedule=BackupSchedule(
+                recurrence=ScheduleState(data["schedule"]["state"]),
+                time=time(
+                    data["schedule"]["time"]["hour"], data["schedule"]["time"]["minute"]
+                ),
+            ),
         )
 
     def to_dict(self) -> StoredBackupConfig:
@@ -137,7 +142,7 @@ class BackupConfig:
         *,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         retention: RetentionParametersDict | UndefinedType = UNDEFINED,
-        schedule: ScheduleState | UndefinedType = UNDEFINED,
+        schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
         if create_backup is not UNDEFINED:
@@ -148,7 +153,7 @@ class BackupConfig:
                 self.data.retention = new_retention
                 self.data.retention.apply(self._manager)
         if schedule is not UNDEFINED:
-            new_schedule = BackupSchedule(state=schedule)
+            new_schedule = BackupSchedule(**schedule)
             if new_schedule.to_dict() != self.data.schedule.to_dict():
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
@@ -239,14 +244,29 @@ class RetentionParametersDict(TypedDict, total=False):
     days: int | None
 
 
+class TimeDict(TypedDict):
+    """Represent the time of day."""
+
+    hour: int
+    minute: int
+
+
 class StoredBackupSchedule(TypedDict):
     """Represent the stored backup schedule configuration."""
 
     state: ScheduleState
+    time: TimeDict
+
+
+class ScheduleParametersDict(TypedDict, total=False):
+    """Represent parameters for backup schedule."""
+
+    recurrence: ScheduleState
+    time: time
 
 
 class ScheduleState(StrEnum):
-    """Represent the schedule state."""
+    """Represent the schedule recurrence."""
 
     NEVER = "never"
     DAILY = "daily"
@@ -263,7 +283,8 @@ class ScheduleState(StrEnum):
 class BackupSchedule:
     """Represent the backup schedule."""
 
-    state: ScheduleState = ScheduleState.NEVER
+    recurrence: ScheduleState = ScheduleState.NEVER
+    time: time = time(4, 45)
     cron_event: CronSim | None = field(init=False, default=None)
 
     @callback
@@ -275,15 +296,20 @@ class BackupSchedule:
 
         There are only three possible state types: never, daily, or weekly.
         """
-        if self.state is ScheduleState.NEVER:
+        if self.recurrence is ScheduleState.NEVER:
             self._unschedule_next(manager)
             return
 
-        if self.state is ScheduleState.DAILY:
-            self._schedule_next(CRON_PATTERN_DAILY, manager)
+        if self.recurrence is ScheduleState.DAILY:
+            self._schedule_next(
+                CRON_PATTERN_DAILY.format(m=self.time.minute, h=self.time.hour),
+                manager,
+            )
         else:
             self._schedule_next(
-                CRON_PATTERN_WEEKLY.format(self.state.value),
+                CRON_PATTERN_WEEKLY.format(
+                    m=self.time.minute, h=self.time.hour, d=self.recurrence.value
+                ),
                 manager,
             )
 
@@ -304,7 +330,9 @@ class BackupSchedule:
         if next_time < now:
             # schedule a backup at next daily time once
             # if we missed the last scheduled backup
-            cron_event = CronSim(CRON_PATTERN_DAILY, now)
+            cron_event = CronSim(
+                CRON_PATTERN_DAILY.format(m=self.time.minute, h=self.time.hour), now
+            )
             next_time = next(cron_event)
             # reseed the cron event attribute
             # add a day to the next time to avoid scheduling at the same time again
@@ -342,7 +370,10 @@ class BackupSchedule:
 
     def to_dict(self) -> StoredBackupSchedule:
         """Convert backup schedule to a dict."""
-        return StoredBackupSchedule(state=self.state)
+        return StoredBackupSchedule(
+            state=self.recurrence,
+            time={"hour": self.time.hour, "minute": self.time.minute},
+        )
 
     @callback
     def _unschedule_next(self, manager: BackupManager) -> None:

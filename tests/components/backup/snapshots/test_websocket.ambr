@@ -250,6 +250,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -285,6 +289,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -316,6 +324,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -347,6 +359,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -378,6 +394,10 @@
         }),
         'schedule': dict({
           'state': 'mon',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -409,6 +429,10 @@
         }),
         'schedule': dict({
           'state': 'sat',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -439,6 +463,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -470,6 +498,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -502,11 +534,15 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -533,6 +569,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -564,6 +604,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -596,11 +640,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -627,6 +675,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -658,6 +710,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 6,
+            'minute': 0,
+          }),
         }),
       }),
     }),
@@ -690,11 +746,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 6,
+            'minute': 0,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -721,6 +781,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -752,6 +816,10 @@
         }),
         'schedule': dict({
           'state': 'mon',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -784,11 +852,15 @@
         }),
         'schedule': dict({
           'state': 'mon',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -815,6 +887,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -846,6 +922,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -878,11 +958,15 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -909,6 +993,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -944,6 +1032,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -980,11 +1072,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -1011,6 +1107,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1042,6 +1142,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1074,11 +1178,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -1105,6 +1213,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1136,6 +1248,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1168,11 +1284,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -1199,6 +1319,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1230,6 +1354,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1262,11 +1390,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -1293,6 +1425,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1324,6 +1460,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1356,11 +1496,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -1387,6 +1531,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1418,6 +1566,10 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1450,11 +1602,15 @@
         }),
         'schedule': dict({
           'state': 'daily',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
     'key': 'backup',
-    'minor_version': 1,
+    'minor_version': 2,
     'version': 1,
   })
 # ---
@@ -1481,6 +1637,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1511,6 +1671,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1541,6 +1705,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1571,6 +1739,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1601,6 +1773,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1631,6 +1807,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1661,6 +1841,10 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),
@@ -1691,6 +1875,146 @@
         }),
         'schedule': dict({
           'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command4]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command4].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command5]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command5].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'state': 'never',
+          'time': dict({
+            'hour': 4,
+            'minute': 45,
+          }),
         }),
       }),
     }),

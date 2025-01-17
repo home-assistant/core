@@ -1,5 +1,6 @@
 """Websocket commands for the Backup integration."""
 
+from datetime import time
 from typing import Any
 
 import voluptuous as vol
@@ -326,6 +327,11 @@ async def handle_config_info(
     )
 
 
+def time_from_dict(data: dict[str, int]) -> time:
+    """Convert a dict to a time."""
+    return time(data["hour"], data["minute"])
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -351,7 +357,15 @@ async def handle_config_info(
                 vol.Optional("days"): vol.Any(int, None),
             },
         ),
-        vol.Optional("schedule"): vol.All(str, vol.Coerce(ScheduleState)),
+        vol.Optional("schedule"): vol.Schema(
+            {
+                vol.Optional("recurrence"): vol.All(str, vol.Coerce(ScheduleState)),
+                vol.Optional("time"): vol.All(
+                    vol.Schema({"hour": vol.Range(0, 23), "minute": vol.Range(0, 59)}),
+                    time_from_dict,
+                ),
+            }
+        ),
     }
 )
 @websocket_api.async_response
