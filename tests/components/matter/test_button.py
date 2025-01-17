@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
+from chip.clusters.Objects import NullValue
 from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy import SnapshotAssertion
@@ -90,6 +91,23 @@ async def test_evse_buttons(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test if button entities are created for EVSE commands."""
-    assert hass.states.get("button.evse_enable_charging")
-    assert hass.states.get("button.evse_disable_charging")
+    """Test button for EVSE commands."""
+    await hass.services.async_call(
+        "button",
+        "press",
+        {
+            "entity_id": "button.evse_enable_charging",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.EnergyEvse.Commands.EnableCharging(
+            chargingEnabledUntil=NullValue,
+            minimumChargeCurrent=0,
+            maximumChargeCurrent=0,
+        ),
+        timed_request_timeout_ms=3000,
+    )

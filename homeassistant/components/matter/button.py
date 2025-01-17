@@ -155,7 +155,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterButtonEntityDescription(
             key="EnergyEvseEnableChargingButton",
             translation_key="enable_charging",
-            command=clusters.EnergyEvse.Commands.EnableCharging(
+            command=lambda: clusters.EnergyEvse.Commands.EnableCharging(
                 chargingEnabledUntil=NullValue,
                 minimumChargeCurrent=0,
                 maximumChargeCurrent=0,
@@ -164,6 +164,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterCommandButton,
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
+        value_contains=clusters.EnergyEvse.Commands.EnableCharging.command_id,
         allow_multi=True,
     ),
     MatterDiscoverySchema(
@@ -176,6 +177,7 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterCommandButton,
         required_attributes=(clusters.EnergyEvse.Attributes.AcceptedCommandList,),
+        value_contains=clusters.EnergyEvse.Commands.Disable.command_id,
         allow_multi=True,
     ),
 ]
