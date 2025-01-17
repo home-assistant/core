@@ -359,7 +359,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-        if self._shutdown_requested or scheduled and self.hass.is_stopping:
+        if self._shutdown_requested or (scheduled and self.hass.is_stopping):
             return
 
         if log_timing := self.logger.isEnabledFor(logging.DEBUG):
