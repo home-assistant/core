@@ -72,6 +72,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_HOST] = (
             self._discovery_data[CONF_HOST] if discovery else user_input[CONF_HOST]
         )
+        self._data[CONF_MAC] = (
+            format_mac(self._discovery_data[CONF_MAC]) if discovery else None
+        )
         self._data[CONF_SSL] = user_input[CONF_SSL]
         self._data[CONF_VERIFY_SSL] = user_input[CONF_VERIFY_SSL]
         self._data[CONF_GROUP] = user_input[CONF_GROUP]
