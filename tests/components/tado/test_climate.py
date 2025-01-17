@@ -146,10 +146,10 @@ async def test_heater_set_temperature(
 
     with (
         patch(
-            "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.set_zone_overlay"
+            "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
         ) as mock_set_state,
         patch(
-            "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.get_zone_state",
+            "homeassistant.components.tado.PyTado.interface.api.Tado.get_zone_state",
             return_value={"setting": {"temperature": {"celsius": 22.0}}},
         ),
     ):
