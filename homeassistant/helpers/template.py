@@ -1879,8 +1879,12 @@ def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> boo
 
 def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
     """Test if a state's attribute is a specific value."""
-    attr = state_attr(hass, entity_id, name)
-    return attr is not None and attr == value
+    if (state_obj := _get_state(hass, entity_id)) is not None:
+        attr = state_obj.attributes.get(name, _SENTINEL)
+        if attr is _SENTINEL:
+            return False
+        return bool(attr == value)
+    return False
 
 
 def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:
