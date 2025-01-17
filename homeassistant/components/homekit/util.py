@@ -663,7 +663,7 @@ def get_min_max(value1: float, value2: float) -> tuple[float, float]:
 
     HomeKit will go unavailable if the min and max are reversed
     so we make sure the min is always the min and the max is always the max
-    as any mistakes make in integrations will cause the entire
+    as any mistakes made in integrations will cause the entire
     bridge to go unavailable.
     """
     return min(value1, value2), max(value1, value2)
