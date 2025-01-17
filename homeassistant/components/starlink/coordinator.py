@@ -6,7 +6,6 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Tuple
 from zoneinfo import ZoneInfo
 
 from starlink_grpc import (
@@ -62,7 +61,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             update_interval=timedelta(seconds=5),
         )
 
-    def _get_starlink_cumulative_stats(self) -> Tuple[UsageDict, PowerDict]:
+    def _get_starlink_cumulative_stats(self) -> tuple[UsageDict, PowerDict]:
         """Retrieve Starlink history stats."""
         context = self.channel_context
         history = history_stats(
