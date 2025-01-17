@@ -1765,6 +1765,9 @@ pyHik==0.3.2
 # homeassistant.components.homee
 pyHomee==1.2.0
 
+# homeassistant.components.openhardwaremonitor
+pyOpenHardwareMonitor==0.1.3
+
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
 
