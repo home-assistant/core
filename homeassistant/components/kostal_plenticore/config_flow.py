@@ -33,7 +33,7 @@ async def test_connection(hass: HomeAssistant, data) -> str:
     """
 
     session = async_get_clientsession(hass)
-    async with ApiClient(session, data["host"]) as client:
+    async with ApiClient(session, data[CONF_HOST]) as client:
         await client.login(data[CONF_PASSWORD], service_code=data.get(CONF_SERVICE_CODE))
         hostname_id = await get_hostname_id(client)
         values = await client.get_setting_values("scb:network", hostname_id)
