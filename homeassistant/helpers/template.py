@@ -386,19 +386,19 @@ class RenderInfo:
     """Holds information about a template render."""
 
     __slots__ = (
-        "template",
-        "filter_lifecycle",
-        "filter",
         "_result",
-        "is_static",
-        "exception",
         "all_states",
         "all_states_lifecycle",
         "domains",
         "domains_lifecycle",
         "entities",
-        "rate_limit",
+        "exception",
+        "filter",
+        "filter_lifecycle",
         "has_time",
+        "is_static",
+        "rate_limit",
+        "template",
     )
 
     def __init__(self, template: Template) -> None:
@@ -507,17 +507,17 @@ class Template:
 
     __slots__ = (
         "__weakref__",
-        "template",
+        "_compiled",
+        "_compiled_code",
+        "_exc_info",
+        "_hash_cache",
+        "_limited",
+        "_log_fn",
+        "_renders",
+        "_strict",
         "hass",
         "is_static",
-        "_compiled_code",
-        "_compiled",
-        "_exc_info",
-        "_limited",
-        "_strict",
-        "_log_fn",
-        "_hash_cache",
-        "_renders",
+        "template",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -601,7 +601,7 @@ class Template:
         or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass and self.hass.config.legacy_templates:
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
             return self._parse_result(self.template)
         assert self.hass is not None, "hass variable not set on template"
@@ -630,7 +630,7 @@ class Template:
         self._renders += 1
 
         if self.is_static:
-            if not parse_result or self.hass and self.hass.config.legacy_templates:
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
             return self._parse_result(self.template)
 
@@ -651,7 +651,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if not parse_result or self.hass and self.hass.config.legacy_templates:
+        if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
         return self._parse_result(render_result)
@@ -826,7 +826,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-        if not parse_result or self.hass and self.hass.config.legacy_templates:
+        if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
         return self._parse_result(render_result)
@@ -841,16 +841,16 @@ class Template:
         self.ensure_valid()
 
         assert self.hass is not None, "hass variable not set on template"
-        assert (
-            self._limited is None or self._limited == limited
-        ), "can't change between limited and non limited template"
-        assert (
-            self._strict is None or self._strict == strict
-        ), "can't change between strict and non strict template"
+        assert self._limited is None or self._limited == limited, (
+            "can't change between limited and non limited template"
+        )
+        assert self._strict is None or self._strict == strict, (
+            "can't change between strict and non strict template"
+        )
         assert not (strict and limited), "can't combine strict and limited template"
-        assert (
-            self._log_fn is None or self._log_fn == log_fn
-        ), "can't change custom log function"
+        assert self._log_fn is None or self._log_fn == log_fn, (
+            "can't change custom log function"
+        )
         assert self._compiled_code is not None, "template code was not compiled"
 
         self._limited = limited
@@ -991,7 +991,7 @@ class StateTranslated:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    __slots__ = ("_hass", "_domain")
+    __slots__ = ("_domain", "_hass")
 
     __setitem__ = _readonly
     __delitem__ = _readonly
@@ -1035,7 +1035,7 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id", "_state")
+    __slots__ = ("_collect", "_entity_id", "_hass", "_state")
 
     _state: State
 
@@ -1873,14 +1873,19 @@ def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> boo
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and (
-        state_obj.state == state or isinstance(state, list) and state_obj.state in state
+        state_obj.state == state
+        or (isinstance(state, list) and state_obj.state in state)
     )
 
 
 def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
     """Test if a state's attribute is a specific value."""
-    attr = state_attr(hass, entity_id, name)
-    return attr is not None and attr == value
+    if (state_obj := _get_state(hass, entity_id)) is not None:
+        attr = state_obj.attributes.get(name, _SENTINEL)
+        if attr is _SENTINEL:
+            return False
+        return bool(attr == value)
+    return False
 
 
 def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:

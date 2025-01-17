@@ -48,7 +48,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
     # fetch a list of the heat pumps the entry can access
     try:
-        discovered_heat_pumps = await HeatPumpDiscovery.discover_active(API_URL, token)
+        discovered_heat_pumps = await HeatPumpDiscovery.async_discover_active(
+            API_URL, token
+        )
     except UnauthorizedException as error:
         raise ConfigEntryAuthFailed from error
 

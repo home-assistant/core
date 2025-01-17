@@ -132,7 +132,7 @@ async def test_api_call(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "switch.relayname"},
+            {ATTR_ENTITY_ID: "switch.living_room_relayname"},
             blocking=True,
         )
 

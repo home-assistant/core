@@ -21,7 +21,11 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    MockEntityPlatform,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -116,19 +120,27 @@ def test_deprecated_constants_const(
         "grouping",
     ],
 )
-def test_support_properties(property_suffix: str) -> None:
+def test_support_properties(hass: HomeAssistant, property_suffix: str) -> None:
     """Test support_*** properties explicitly."""
 
     all_features = media_player.MediaPlayerEntityFeature(653887)
     feature = media_player.MediaPlayerEntityFeature[property_suffix.upper()]
 
     entity1 = MediaPlayerEntity()
+    entity1.hass = hass
+    entity1.platform = MockEntityPlatform(hass)
     entity1._attr_supported_features = media_player.MediaPlayerEntityFeature(0)
     entity2 = MediaPlayerEntity()
+    entity2.hass = hass
+    entity2.platform = MockEntityPlatform(hass)
     entity2._attr_supported_features = all_features
     entity3 = MediaPlayerEntity()
+    entity3.hass = hass
+    entity3.platform = MockEntityPlatform(hass)
     entity3._attr_supported_features = feature
     entity4 = MediaPlayerEntity()
+    entity4.hass = hass
+    entity4.platform = MockEntityPlatform(hass)
     entity4._attr_supported_features = all_features - feature
 
     assert getattr(entity1, f"support_{property_suffix}") is False
@@ -448,7 +460,9 @@ async def test_get_async_get_browse_image_quoting(
         mock_browse_image.assert_called_with("album", media_content_id, None)
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockMediaPlayerEntity(MediaPlayerEntity):
@@ -458,6 +472,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockMediaPlayerEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
     assert "MockMediaPlayerEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

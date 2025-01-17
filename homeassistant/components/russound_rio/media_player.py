@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import logging
 from typing import TYPE_CHECKING
 
@@ -57,6 +58,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SEEK
     )
 
     def __init__(
@@ -139,6 +141,21 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         return self._source.cover_art_url
 
     @property
+    def media_duration(self) -> int | None:
+        """Duration of the current media."""
+        return self._source.track_time
+
+    @property
+    def media_position(self) -> int | None:
+        """Position of the current media."""
+        return self._source.play_time
+
+    @property
+    def media_position_updated_at(self) -> dt.datetime:
+        """Last time the media position was updated."""
+        return self._source.position_last_updated
+
+    @property
     def volume_level(self) -> float:
         """Volume level of the media player (0..1).
 
@@ -199,3 +216,8 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
 
         if mute != self.is_volume_muted:
             await self._zone.toggle_mute()
+
+    @command
+    async def async_media_seek(self, position: float) -> None:
+        """Seek to a position in the current media."""
+        await self._zone.set_seek_time(int(position))
