@@ -34,6 +34,8 @@ PLATFORMS: list[Platform] = [
     Platform.UPDATE,
 ]
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 

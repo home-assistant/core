@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from awesomeversion import AwesomeVersion
 from pynecil import (
@@ -26,6 +26,8 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -87,7 +89,9 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         except (CommunicationError, TimeoutError):
             self.device_info = DeviceInfoResponse()
 
-        self.v223_features = AwesomeVersion(self.device_info.build) >= V223
+        self.v223_features = (
+            self.device_info.build and AwesomeVersion(self.device_info.build) >= V223
+        )
 
 
 class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
@@ -98,15 +102,13 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
     ) -> None:
         """Initialize IronOS coordinator."""
         super().__init__(hass, config_entry, device, SCAN_INTERVAL)
+        self.device_info = DeviceInfoResponse()
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
 
         try:
-            # device info is cached and won't be refetched on every
-            # coordinator refresh, only after the device has disconnected
-            # the device info is refetched
-            self.device_info = await self.device.get_device_info()
+            await self._update_device_info()
             return await self.device.get_live_data()
 
         except CommunicationError:
@@ -123,6 +125,53 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
             threshold = self.data.max_tip_temp_ability - 5
             return self.data.live_temp <= threshold
         return False
+
+    async def _update_device_info(self) -> None:
+        """Update device info.
+
+        device info is cached and won't be refetched on every
+        coordinator refresh, only after the device has disconnected
+        the device info is refetched.
+        """
+        build = self.device_info.build
+        self.device_info = await self.device.get_device_info()
+
+        if build != self.device_info.build:
+            device_registry = dr.async_get(self.hass)
+            if TYPE_CHECKING:
+                assert self.config_entry.unique_id
+            device = device_registry.async_get_device(
+                connections={(CONNECTION_BLUETOOTH, self.config_entry.unique_id)}
+            )
+            if device is not None:
+                device_registry.async_update_device(
+                    device_id=device.id,
+                    sw_version=self.device_info.build,
+                    serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
+                )
+
+
+class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
+    """IronOS coordinator for retrieving update information from github."""
+
+    def __init__(self, hass: HomeAssistant, github: IronOSUpdate) -> None:
+        """Initialize IronOS coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=None,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL_GITHUB,
+        )
+        self.github = github
+
+    async def _async_update_data(self) -> LatestRelease:
+        """Fetch data from Github."""
+
+        try:
+            return await self.github.latest_release()
+        except UpdateException as e:
+            raise UpdateFailed("Failed to check for latest IronOS update") from e
 
 
 class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
