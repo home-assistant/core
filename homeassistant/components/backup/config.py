@@ -282,6 +282,7 @@ class BackupSchedule:
     recurrence: ScheduleState = ScheduleState.NEVER
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
+    next_automatic_backup: datetime | None = field(init=False, default=None)
 
     @callback
     def apply(
@@ -365,6 +366,7 @@ class BackupSchedule:
             # not set to avoid all backups running at the same time
             next_time += timedelta(seconds=random.randint(0, BACKUP_START_TIME_JITTER))
         LOGGER.debug("Scheduling next automatic backup at %s", next_time)
+        self.next_automatic_backup = next_time
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
         )
@@ -379,6 +381,7 @@ class BackupSchedule:
     @callback
     def _unschedule_next(self, manager: BackupManager) -> None:
         """Unschedule the next backup."""
+        self.next_automatic_backup = None
         if (remove_next_event := manager.remove_next_backup_event) is not None:
             remove_next_event()
             manager.remove_next_backup_event = None

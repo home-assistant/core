@@ -1220,6 +1220,7 @@ async def test_config_update_errors(
         "time_2",
         "attempted_backup_time",
         "completed_backup_time",
+        "scheduled_backup_time",
         "backup_calls_1",
         "backup_calls_2",
         "call_args",
@@ -1230,10 +1231,11 @@ async def test_config_update_errors(
             # No config update
             [],
             "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-13T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1249,10 +1251,11 @@ async def test_config_update_errors(
                 }
             ],
             "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-13T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1267,10 +1270,11 @@ async def test_config_update_errors(
                 }
             ],
             "2024-11-11T04:45:00+01:00",
-            "2024-11-18T04:45:00+01:00",
-            "2024-11-25T04:45:00+01:00",
-            "2024-11-18T04:45:00+01:00",
-            "2024-11-18T04:45:00+01:00",
+            "2024-11-18T04:55:00+01:00",
+            "2024-11-25T04:55:00+01:00",
+            "2024-11-18T04:55:00+01:00",
+            "2024-11-18T04:55:00+01:00",
+            "2024-11-18T04:55:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1290,6 +1294,7 @@ async def test_config_update_errors(
             "2024-11-11T03:45:00+01:00",
             "2024-11-18T03:45:00+01:00",
             "2024-11-25T03:45:00+01:00",
+            "2024-11-18T03:45:00+01:00",
             "2024-11-18T03:45:00+01:00",
             "2024-11-18T03:45:00+01:00",
             1,
@@ -1313,6 +1318,7 @@ async def test_config_update_errors(
             "2024-11-13T03:45:00+01:00",
             "2024-11-12T03:45:00+01:00",
             "2024-11-12T03:45:00+01:00",
+            "2024-11-12T03:45:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1331,6 +1337,7 @@ async def test_config_update_errors(
             "2034-11-11T13:00:00+01:00",
             "2024-11-11T04:45:00+01:00",
             "2024-11-11T04:45:00+01:00",
+            None,
             0,
             0,
             None,
@@ -1345,10 +1352,11 @@ async def test_config_update_errors(
                 }
             ],
             "2024-10-26T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-13T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1363,10 +1371,11 @@ async def test_config_update_errors(
                 }
             ],
             "2024-10-26T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-13T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
-            "2024-11-12T04:45:00+01:00",  # missed event uses daily schedule once
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",  # missed event uses daily schedule once
+            "2024-11-12T04:55:00+01:00",  # missed event uses daily schedule once
+            "2024-11-12T04:55:00+01:00",
             1,
             1,
             BACKUP_CALL,
@@ -1385,6 +1394,7 @@ async def test_config_update_errors(
             "2034-11-12T12:00:00+01:00",
             "2024-10-26T04:45:00+01:00",
             "2024-10-26T04:45:00+01:00",
+            None,
             0,
             0,
             None,
@@ -1399,10 +1409,11 @@ async def test_config_update_errors(
                 }
             ],
             "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-13T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",  # attempted to create backup but failed
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",  # attempted to create backup but failed
             "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:55:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1417,10 +1428,11 @@ async def test_config_update_errors(
                 }
             ],
             "2024-11-11T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",
-            "2024-11-13T04:45:00+01:00",
-            "2024-11-12T04:45:00+01:00",  # attempted to create backup but failed
+            "2024-11-12T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-12T04:55:00+01:00",  # attempted to create backup but failed
             "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:55:00+01:00",
             1,
             2,
             BACKUP_CALL,
@@ -1428,7 +1440,7 @@ async def test_config_update_errors(
         ),
     ],
 )
-@patch("homeassistant.components.backup.config.BACKUP_START_TIME_JITTER", 0)
+@patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
 async def test_config_schedule_logic(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1441,6 +1453,7 @@ async def test_config_schedule_logic(
     time_2: str,
     attempted_backup_time: str,
     completed_backup_time: str,
+    scheduled_backup_time: str,
     backup_calls_1: int,
     backup_calls_2: int,
     call_args: Any,
@@ -1483,6 +1496,10 @@ async def test_config_schedule_logic(
         await client.send_json_auto_id(command)
         result = await client.receive_json()
         assert result["success"]
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    result = await client.receive_json()
+    assert result["result"]["next_automatic_backup"] == scheduled_backup_time
 
     freezer.move_to(time_1)
     async_fire_time_changed(hass)

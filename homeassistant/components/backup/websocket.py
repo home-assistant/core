@@ -61,6 +61,7 @@ async def handle_info(
             "backups": [backup.as_frontend_json() for backup in backups.values()],
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
         },
     )
 
