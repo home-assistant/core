@@ -359,6 +359,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         )
 
     @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self.zone_name
+
+    @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         return self._tado_zone_data.current_humidity
