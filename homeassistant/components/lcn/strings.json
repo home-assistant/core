@@ -30,8 +30,14 @@
           "acknowledge": "Request acknowledgement from modules"
         },
         "data_description": {
-          "dim_mode": "The number of steps used for dimming outputs.",
-          "acknowledge": "Retry sendig commands if no response is received (increases bus traffic)."
+          "host": "Name of the LCN integration entry.",
+          "ip_address": "IP address or hostname of the PCHK server.",
+          "port": "Port used by the PCHK server.",
+          "username": "Username for authorization on the PCHK server.",
+          "password": "Password for authorization on the PCHK server.",
+          "sk_num_tries": "If you have a segment coupler in your LCN installation, increase this number to at least 3, so all segment couplers are identified correctly.",
+          "dim_mode": "The number of steps used for dimming outputs of all LCN modules.",
+          "acknowledge": "Retry sendig commands if no expected response is received from modules (increases bus traffic)."
         }
       },
       "reconfigure": {
@@ -47,6 +53,11 @@
           "acknowledge": "[%key:component::lcn::config::step::user::data::acknowledge%]"
         },
         "data_description": {
+          "ip_address": "[%key:component::lcn::config::step::user::data_description::ip_address%]",
+          "port": "[%key:component::lcn::config::step::user::data_description::port%]",
+          "username": "[%key:component::lcn::config::step::user::data_description::username%]",
+          "password": "[%key:component::lcn::config::step::user::data_description::password%]",
+          "sk_num_tries": "[%key:component::lcn::config::step::user::data_description::sk_num_tries%]",
           "dim_mode": "[%key:component::lcn::config::step::user::data_description::dim_mode%]",
           "acknowledge": "[%key:component::lcn::config::step::user::data_description::acknowledge%]"
         }
