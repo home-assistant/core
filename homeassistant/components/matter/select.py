@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable
@@ -45,6 +46,9 @@ async def async_setup_entry(
 @dataclass(frozen=True)
 class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescription):
     """Describe Matter select entities."""
+
+    command: Callable[[], Any] | None = None
+    field: str | None = None
 
 
 class MatterSelectEntity(MatterEntity, SelectEntity):
@@ -111,34 +115,32 @@ class MatterModeSelectEntity(MatterSelectEntity):
             self._attr_name = desc
 
 
-class MatterLevelSelectEntity(MatterSelectEntity):
-    """Representation of a select entity from Matter (TemperatureControl) Cluster attribute(s)."""
+class MatterListSelectEntity(MatterSelectEntity):
+    """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
 
     async def async_select_option(self, option: str) -> None:
-        """Change the selected level."""
-        # select the level ID from the label string
-        level_id = self._attr_options.index(option)
+        """Change the selected option."""
+        # select the ID from the label string
+        option_id = self._attr_options.index(option)
+        # field = self.entity_description.field
 
         await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.TemperatureControl.Commands.SetTemperature(
-                targetTemperatureLevel=level_id
-            ),
+            command=self.entity_description.command(targetTemperatureLevel=option_id),
         )
 
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        temperature_level_list = self.get_matter_attribute_value(
+        select_list = self.get_matter_attribute_value(
             self._entity_info.secondary_attribute
         )
-        selected_level = self.get_matter_attribute_value(
+        current_option = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
-
-        self._attr_options = list(temperature_level_list)
-        self._attr_current_option = temperature_level_list[selected_level]
+        self._attr_options = list(select_list)
+        self._attr_current_option = select_list[current_option]
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -289,8 +291,10 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSelectEntityDescription(
             key="TemperatureControlSelectedTemperatureLevel",
             translation_key="temperature_level",
+            command=clusters.TemperatureControl.Commands.SetTemperature,
+            # field=clusters.TemperatureControl.Commands.SetTemperature.targetTemperatureLevel,
         ),
-        entity_class=MatterLevelSelectEntity,
+        entity_class=MatterListSelectEntity,
         required_attributes=(
             clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
             clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
