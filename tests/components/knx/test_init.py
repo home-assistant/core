@@ -268,26 +268,16 @@ async def test_init_connection_handling(
             )
 
 
-@pytest.mark.parametrize(
-    ("state_updater_config"),
-    [True, False],
-)
-async def test_default_state_updater(
+async def _init_switch_and_wait_for_first_state_updater_run(
     hass: HomeAssistant,
     knx: KNXTestKit,
     create_ui_entity: KnxEntityGenerator,
     freezer: FrozenDateTimeFactory,
-    state_updater_config: KNXConfigEntryData,
+    config_entry_data: KNXConfigEntryData,
 ) -> None:
-    """Test default state updater is applied to xknx device instances."""
+    """Return a config entry with default data."""
     config_entry = MockConfigEntry(
-        title="KNX",
-        domain=KNX_DOMAIN,
-        data={
-            **DEFAULT_ENTRY_DATA,
-            CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,  # missing in default data
-            CONF_KNX_STATE_UPDATER: state_updater_config,
-        },
+        title="KNX", domain=KNX_DOMAIN, data=config_entry_data
     )
     knx.mock_config_entry = config_entry
     await knx.setup_integration({})
@@ -314,13 +304,41 @@ async def test_default_state_updater(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
-    if state_updater_config:
-        # state updater reads again after 60 minutes
-        await knx.assert_read("2/2/2")
-        await knx.receive_response("2/2/2", True)
-    else:
-        # state updater does not read again
-        await knx.assert_no_telegram()
+
+
+async def test_default_state_updater_enabled(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test default state updater is applied to xknx device instances."""
+    config_entry = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+        connection_type=CONF_KNX_AUTOMATIC,  # missing in default data
+        state_updater=True,
+    )
+    await _init_switch_and_wait_for_first_state_updater_run(
+        hass, knx, create_ui_entity, freezer, config_entry
+    )
+    await knx.assert_read("2/2/2")
+    await knx.receive_response("2/2/2", True)
+
+
+async def test_default_state_updater_disabled(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test default state updater is applied to xknx device instances."""
+    config_entry = DEFAULT_ENTRY_DATA | KNXConfigEntryData(
+        connection_type=CONF_KNX_AUTOMATIC,  # missing in default data
+        state_updater=False,
+    )
+    await _init_switch_and_wait_for_first_state_updater_run(
+        hass, knx, create_ui_entity, freezer, config_entry
+    )
+    await knx.assert_no_telegram()
 
 
 async def test_async_remove_entry(
