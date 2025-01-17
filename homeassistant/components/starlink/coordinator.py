@@ -70,11 +70,12 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         index = history[0]
         usage, consumption = history[5:7]
         self.history_stats_start = index["end_counter"]
-        if index["samples"] == 0:
-            return self.data.usage, self.data.consumption
-        usage["download_usage"] += self.data.usage["download_usage"]
-        usage["upload_usage"] += self.data.usage["upload_usage"]
-        consumption["total_energy"] += self.data.consumption["total_energy"]
+        if self.data:
+            if index["samples"] == 0:
+                return self.data.usage, self.data.consumption
+            usage["download_usage"] += self.data.usage["download_usage"]
+            usage["upload_usage"] += self.data.usage["upload_usage"]
+            consumption["total_energy"] += self.data.consumption["total_energy"]
         return usage, consumption
 
     def _get_starlink_data(self) -> StarlinkData:
