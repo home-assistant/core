@@ -12,7 +12,7 @@ from homeassistant.const import CONF_BASE, CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, CONF_SERVICE_CODE
+from .const import CONF_SERVICE_CODE, DOMAIN
 from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
