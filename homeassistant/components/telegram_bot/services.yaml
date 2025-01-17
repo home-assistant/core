@@ -699,7 +699,8 @@ set_message_reaction:
       required: true
       example: ["👍"]
       selector:
-        object:
+        text:
+          multiple: true
     is_big:
       required: false
       selector:

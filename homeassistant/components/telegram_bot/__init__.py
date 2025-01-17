@@ -829,7 +829,12 @@ class TelegramNotificationService:
         )
 
     async def set_message_reaction(
-        self, chat_id, reaction, is_big=False, context=None, **kwargs
+        self,
+        chat_id: int,
+        reaction: list[str],
+        is_big: bool = False,
+        context: Context = None,
+        **kwargs,
     ):
         """Set the bot's reaction for a given message."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
