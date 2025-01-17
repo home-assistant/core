@@ -49,7 +49,7 @@ async def test_setup_hass(
     )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -80,7 +80,7 @@ async def test_clear_night(
     )
     aioclient_mock.get(uri, text=api_response_night)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -105,7 +105,7 @@ async def test_clear_night(
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
     """Test properties when no API data available."""
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     with patch(
@@ -193,7 +193,7 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
 
     testdata = [data, data2, data3]
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     with (
@@ -232,7 +232,7 @@ async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant, error: Exception
 ) -> None:
     """Test the refresh weather forecast function."""
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
     now = dt_util.utcnow()
 
@@ -357,7 +357,7 @@ async def test_custom_speed_unit(
     )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -394,7 +394,7 @@ async def test_forecast_services(
     )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -458,7 +458,7 @@ async def test_forecast_services_lack_of_data(
     )
     aioclient_mock.get(uri, text=api_response_lack_data)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -503,7 +503,7 @@ async def test_forecast_service(
     )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
