@@ -109,25 +109,8 @@
       "overheated": {
         "name": "Overheated"
       },
-      "battery_low": {
-        "name": "Battery low"
-      },
       "cloud_connection": {
         "name": "Cloud connection"
-      },
-      "update_available": {
-        "name": "[%key:component::binary_sensor::entity_component::update::name%]",
-        "state": {
-          "off": "[%key:component::binary_sensor::entity_component::update::state::off%]",
-          "on": "[%key:component::binary_sensor::entity_component::update::state::on%]"
-        }
-      },
-      "is_open": {
-        "name": "[%key:component::binary_sensor::entity_component::door::name%]",
-        "state": {
-          "off": "[%key:common::state::closed%]",
-          "on": "[%key:common::state::open%]"
-        }
       },
       "water_alert": {
         "name": "[%key:component::binary_sensor::entity_component::moisture::name%]",
@@ -195,27 +178,6 @@
       "signal_level": {
         "name": "Signal level"
       },
-      "current_firmware_version": {
-        "name": "Current firmware version"
-      },
-      "available_firmware_version": {
-        "name": "Available firmware version"
-      },
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
-      },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
-      },
-      "current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
-      },
-      "humidity": {
-        "name": "[%key:component::sensor::entity_component::humidity::name%]"
-      },
       "device_time": {
         "name": "Device time"
       },
@@ -230,9 +192,6 @@
       },
       "alarm_source": {
         "name": "Alarm source"
-      },
-      "rssi": {
-        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
       }
     },
     "switch": {
@@ -289,6 +248,11 @@
       "tilt_step": {
         "name": "Tilt degrees"
       }
+    }
+  },
+  "device": {
+    "unnamed_device": {
+      "name": "Unnamed {model}"
     }
   },
   "services": {
@@ -397,6 +361,15 @@
     },
     "set_custom_effect": {
       "message": "Error trying to set custom effect {effect}: {exc}"
+    },
+    "unexpected_device": {
+      "message": "Unexpected device found at {host}; expected {expected}, found {found}"
+    },
+    "unsupported_mode": {
+      "message": "Tried to set unsupported mode: {mode}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
     }
   },
   "issues": {

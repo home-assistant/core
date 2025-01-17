@@ -34,6 +34,7 @@ from homeassistant.components.backup import (
     BackupAgentPlatformProtocol,
     Folder,
 )
+from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.backup import LOCATION_CLOUD_BACKUP
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -252,11 +253,11 @@ async def setup_integration(
 class BackupAgentTest(BackupAgent):
     """Test backup agent."""
 
-    domain = "test"
-
-    def __init__(self, name: str) -> None:
+    def __init__(self, name: str, domain: str = "test") -> None:
         """Initialize the backup agent."""
+        self.domain = domain
         self.name = name
+        self.unique_id = name
 
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
@@ -304,7 +305,10 @@ async def _setup_backup_platform(
 @pytest.mark.parametrize(
     ("mounts", "expected_agents"),
     [
-        (MountsInfo(default_backup_mount=None, mounts=[]), ["hassio.local"]),
+        (
+            MountsInfo(default_backup_mount=None, mounts=[]),
+            [BackupAgentTest("local", DOMAIN)],
+        ),
         (
             MountsInfo(
                 default_backup_mount=None,
@@ -321,7 +325,7 @@ async def _setup_backup_platform(
                     )
                 ],
             ),
-            ["hassio.local", "hassio.test"],
+            [BackupAgentTest("local", DOMAIN), BackupAgentTest("test", DOMAIN)],
         ),
         (
             MountsInfo(
@@ -339,7 +343,7 @@ async def _setup_backup_platform(
                     )
                 ],
             ),
-            ["hassio.local"],
+            [BackupAgentTest("local", DOMAIN)],
         ),
     ],
 )
@@ -348,7 +352,7 @@ async def test_agent_info(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
     mounts: MountsInfo,
-    expected_agents: list[str],
+    expected_agents: list[BackupAgent],
 ) -> None:
     """Test backup agent info."""
     client = await hass_ws_client(hass)
@@ -361,7 +365,10 @@ async def test_agent_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": agent_id} for agent_id in expected_agents],
+        "agents": [
+            {"agent_id": agent.agent_id, "name": agent.name}
+            for agent in expected_agents
+        ],
     }
 
 
@@ -673,7 +680,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         "instance_id": ANY,
         "with_automatic_settings": False,
     },
-    folders=None,
+    folders={"ssl"},
     homeassistant_exclude_database=False,
     homeassistant=True,
     location=[None],
@@ -704,7 +711,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_folders": ["media", "share"]},
-            replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share"}),
+            replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share", "ssl"}),
         ),
         (
             {
