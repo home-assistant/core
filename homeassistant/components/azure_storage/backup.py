@@ -19,6 +19,8 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+TIMEOUT = 43200  # 12h
+
 
 async def async_get_backup_agents(
     hass: HomeAssistant,
@@ -66,6 +68,8 @@ def handle_backup_errors[_R, **P](
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError("Error during backup operation") from err
+        except TimeoutError as err:
+            raise BackupAgentError("Timeout during backup operation") from err
 
     return wrapper
 
@@ -88,7 +92,9 @@ class AzureStorageBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        download_stream = await self._client.download_blob(f"{backup_id}.tar")
+        download_stream = await self._client.download_blob(
+            f"{backup_id}.tar", timeout=TIMEOUT
+        )
         return download_stream.chunks()
 
     @handle_backup_errors
@@ -106,9 +112,9 @@ class AzureStorageBackupAgent(BackupAgent):
             "version": 1,
             "folders": json.dumps(backup.folders) if backup.folders else "",
             "addons": json.dumps(backup.addons) if backup.addons else "",
-            "extra_metadata": json.dumps(backup.extra_metadata)
-            if backup.extra_metadata
-            else "",
+            "extra_metadata": (
+                json.dumps(backup.extra_metadata) if backup.extra_metadata else ""
+            ),
         }
 
         # ensure dict is [str, str]
@@ -119,6 +125,7 @@ class AzureStorageBackupAgent(BackupAgent):
             metadata=metadata,
             data=await open_stream(),
             length=backup.size,
+            timeout=TIMEOUT,
         )
 
     @handle_backup_errors

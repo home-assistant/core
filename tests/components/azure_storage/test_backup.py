@@ -174,6 +174,7 @@ async def test_agents_upload(
         metadata=BACKUP_METADATA,
         data=ANY,
         length=ANY,
+        timeout=43200,
     )
 
 
@@ -194,14 +195,23 @@ async def test_agents_download(
     mock_client.download_blob.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (HttpResponseError("Failed to delete backup"), "Error during backup operation"),
+        (TimeoutError(), "Timeout during backup operation"),
+    ],
+)
 async def test_error_wrapper(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    error: str,
 ) -> None:
     """Test the error wrapper."""
-    mock_client.delete_blob.side_effect = HttpResponseError("Failed to delete backup")
+    mock_client.delete_blob.side_effect = side_effect
 
     client = await hass_ws_client(hass)
 
@@ -215,7 +225,5 @@ async def test_error_wrapper(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.title}": "Error during backup operation"
-        }
+        "agent_errors": {f"{DOMAIN}.{mock_config_entry.title}": error}
     }
