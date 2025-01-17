@@ -248,7 +248,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     def _async_update_data(self) -> None:
         """Load tado data."""
         _LOGGER.debug("Updating water_heater platform for zone %d", self.zone_id)
-        self._tado_zone_data = self._tado.data["zone"][self.zone_id]
+        self._tado_zone_data = self.coordinator.data["zone"][self.zone_id]
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
 
     async def _control_heater(
@@ -274,7 +274,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
                 self.zone_name,
                 self.zone_id,
             )
-            await self._tado.reset_zone_overlay(self.zone_id)
+            await self.coordinator.reset_zone_overlay(self.zone_id)
             await self.coordinator.async_request_refresh()
             return
 
@@ -282,18 +282,18 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             _LOGGER.debug(
                 "Switching to OFF for zone %s (%d)", self.zone_name, self.zone_id
             )
-            await self._tado.set_zone_off(
+            await self.coordinator.set_zone_off(
                 self.zone_id, CONST_OVERLAY_MANUAL, TYPE_HOT_WATER
             )
             return
 
         overlay_mode = decide_overlay_mode(
-            coordinator=self._tado,
+            coordinator=self.coordinator,
             duration=duration,
             zone_id=self.zone_id,
         )
         duration = decide_duration(
-            coordinator=self._tado,
+            coordinator=self.coordinator,
             duration=duration,
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,
@@ -305,7 +305,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
             self.zone_id,
             self._target_temp,
         )
-        await self._tado.set_zone_overlay(
+        await self.coordinator.set_zone_overlay(
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,
             temperature=self._target_temp,
