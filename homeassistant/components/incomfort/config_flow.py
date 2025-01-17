@@ -126,7 +126,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm re-authentication with Trafikverket."""
+        """Handle re-authentication and confirmation."""
         errors: dict[str, str] | None = None
 
         if user_input:
