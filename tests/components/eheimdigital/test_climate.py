@@ -11,10 +11,10 @@ from eheimdigital.types import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,

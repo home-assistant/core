@@ -5,23 +5,13 @@ from typing import Any
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.types import EheimDigitalClientError, HeaterMode, HeaterUnit
 
-from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
+from homeassistant.components.climate import (
     PRESET_NONE,
+    ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.eheimdigital import EheimDigitalConfigEntry
-from homeassistant.components.eheimdigital.const import (
-    HEATER_BIO_MODE,
-    HEATER_PRESET_TO_HEATER_MODE,
-    HEATER_SMART_MODE,
-)
-from homeassistant.components.eheimdigital.coordinator import (
-    EheimDigitalUpdateCoordinator,
-)
-from homeassistant.components.eheimdigital.entity import EheimDigitalEntity
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -31,6 +21,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import EheimDigitalConfigEntry
+from .const import HEATER_BIO_MODE, HEATER_PRESET_TO_HEATER_MODE, HEATER_SMART_MODE
+from .coordinator import EheimDigitalUpdateCoordinator
+from .entity import EheimDigitalEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
