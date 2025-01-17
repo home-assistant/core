@@ -143,7 +143,6 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         max_temp,
     ) -> None:
         """Initialize of Tado water heater entity."""
-        self._tado = coordinator
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self.zone_id = zone_id
