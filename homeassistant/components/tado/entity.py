@@ -16,10 +16,6 @@ class TadoCoordinatorEntity(CoordinatorEntity[TadoDataUpdateCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: TadoDataUpdateCoordinator) -> None:
-        """Initialize the Tado entity."""
-        super().__init__(coordinator)
-
 
 class TadoDeviceEntity(TadoCoordinatorEntity):
     """Base implementation for Tado device."""
