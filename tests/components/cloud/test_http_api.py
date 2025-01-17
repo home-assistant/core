@@ -1918,6 +1918,7 @@ async def test_download_support_package(
 
     cloud_client = await hass_client()
     with (
+        patch.object(hass.config, "config_dir", new="config"),
         patch(
             "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
             return_value={

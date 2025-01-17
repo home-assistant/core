@@ -16,7 +16,7 @@
   os_version | 6.12.9
   arch | x86_64
   timezone | US/Pacific
-  config_dir | /home/acosta/dev/homeassistant/core/dev/tests/testing_config
+  config_dir | config
   
   <details><summary>cloud</summary>
   
