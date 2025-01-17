@@ -55,10 +55,14 @@ class TypeHintMatch:
         """Confirm if function should be checked."""
         return (
             self.function_name == node.name
-            or self.has_async_counterpart
-            and node.name == f"async_{self.function_name}"
-            or self.function_name.endswith("*")
-            and node.name.startswith(self.function_name[:-1])
+            or (
+                self.has_async_counterpart
+                and node.name == f"async_{self.function_name}"
+            )
+            or (
+                self.function_name.endswith("*")
+                and node.name.startswith(self.function_name[:-1])
+            )
         )
 
 
@@ -1016,6 +1020,34 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="disable_motion_detection",
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="async_handle_async_webrtc_offer",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                        3: "WebRTCSendMessage",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_on_webrtc_candidate",
+                    arg_types={
+                        1: "str",
+                        2: "RTCIceCandidateInit",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="close_webrtc_session",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="_async_get_webrtc_client_configuration",
+                    return_type="WebRTCClientConfiguration",
                 ),
             ],
         ),
@@ -2970,8 +3002,8 @@ def _is_valid_type(
         isinstance(node, nodes.Subscript)
         and isinstance(node.value, nodes.Name)
         and node.value.name in _KNOWN_GENERIC_TYPES
-        or isinstance(node, nodes.Name)
-        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
+    ) or (
+        isinstance(node, nodes.Name) and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 

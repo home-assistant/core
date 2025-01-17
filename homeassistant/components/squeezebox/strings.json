@@ -43,13 +43,13 @@
         },
         "parameters": {
           "name": "Parameters",
-          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).\n."
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation)."
         }
       }
     },
     "call_query": {
       "name": "Call query",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.\n.",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
       "fields": {
         "command": {
           "name": "Command",

@@ -21,9 +21,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .const import UNIT_MAPPING
+from .const import DOMAIN, UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 # Upstream state to HVACAction
 STATE_TO_ACTION = {
@@ -100,7 +104,13 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         elif hvac_mode is HVACMode.OFF:
             await self._state_feature.set_value(False)
         else:
-            raise ServiceValidationError(f"Tried to set unsupported mode: {hvac_mode}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_mode",
+                translation_placeholders={
+                    "mode": hvac_mode,
+                },
+            )
 
     @async_refresh_after
     async def async_turn_on(self) -> None:

@@ -115,7 +115,7 @@
     'state': '2024-06-24T09:03:11+00:00',
   })
 # ---
-# name: test_states[sensor.my_device_battery_level-entry]
+# name: test_states[sensor.my_device_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -129,7 +129,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_battery_level',
+    'entity_id': 'sensor.my_device_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -141,7 +141,7 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery level',
+    'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -150,16 +150,16 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_states[sensor.my_device_battery_level-state]
+# name: test_states[sensor.my_device_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'my_device Battery level',
+      'friendly_name': 'my_device Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_device_battery_level',
+    'entity_id': 'sensor.my_device_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -6,12 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from pynecil import (
-    CharSetting,
-    CommunicationError,
-    LiveDataResponse,
-    SettingsDataResponse,
-)
+from pynecil import CharSetting, LiveDataResponse, SettingsDataResponse
 
 from homeassistant.components.number import (
     DEFAULT_MAX_VALUE,
@@ -28,11 +23,10 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IronOSConfigEntry
-from .const import DOMAIN, MAX_TEMP, MIN_TEMP
+from .const import MAX_TEMP, MIN_TEMP
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -188,8 +182,8 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
         characteristic=CharSetting.POWER_LIMIT,
         mode=NumberMode.BOX,
         native_min_value=0,
-        native_max_value=12,
-        native_step=0.1,
+        native_max_value=120,
+        native_step=5,
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfPower.WATT,
         entity_registry_enabled_default=False,
@@ -363,16 +357,8 @@ class IronOSNumberEntity(IronOSBaseEntity, NumberEntity):
         """Update the current value."""
         if raw_value_fn := self.entity_description.raw_value_fn:
             value = raw_value_fn(value)
-        try:
-            await self.coordinator.device.write(
-                self.entity_description.characteristic, value
-            )
-        except CommunicationError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="submit_setting_failed",
-            ) from e
-        await self.settings.async_request_refresh()
+
+        await self.settings.write(self.entity_description.characteristic, value)
 
     @property
     def native_value(self) -> float | int | None:

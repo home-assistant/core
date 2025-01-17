@@ -15,6 +15,9 @@
           "port": "The port of the Russound controller."
         }
       },
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
       "reconfigure": {
         "description": "Reconfigure your Russound controller.",
         "data": {
@@ -34,7 +37,7 @@
       "cannot_connect": "[%key:component::russound_rio::common::error_cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "wrong_device": "This Russound controller does not match the existing device id. Please make sure you entered the correct IP address."
+      "wrong_device": "This Russound controller does not match the existing device ID. Please make sure you entered the correct IP address."
     }
   },
   "exceptions": {
