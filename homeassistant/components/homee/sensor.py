@@ -21,11 +21,19 @@ from .const import OPEN_CLOSE_MAP, OPEN_CLOSE_MAP_REVERSED
 from .entity import HomeeEntity, HomeeNodeEntity
 
 
+def get_open_close_value(attribute: HomeeAttribute) -> str | None:
+    """Return the open/close value."""
+    vals = OPEN_CLOSE_MAP if attribute.is_reversed else OPEN_CLOSE_MAP_REVERSED
+    return vals.get(attribute.current_value)
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeSensorEntityDescription(SensorEntityDescription):
     """A class that describes Homee sensor entities."""
 
-    value_fn: Callable[[float, bool | None], str | float | None] = lambda value: value
+    value_fn: Callable[[HomeeAttribute], str | float | None] = (
+        lambda value: value.current_value
+    )
 
 
 SENSOR_DESCRIPTIONS: tuple[HomeeSensorEntityDescription, ...] = (
@@ -144,9 +152,14 @@ SENSOR_DESCRIPTIONS: tuple[HomeeSensorEntityDescription, ...] = (
         key=AttributeType.UP_DOWN,
         translation_key="up_down_sensor",
         device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda value, reversed: OPEN_CLOSE_MAP.get(value)
-        if not reversed
-        else OPEN_CLOSE_MAP_REVERSED.get(value),
+        options=[
+            "open",
+            "closed",
+            "partial",
+            "opening",
+            "closing",
+        ],
+        value_fn=get_open_close_value,
     ),
     HomeeSensorEntityDescription(
         key=AttributeType.UV,
@@ -201,42 +214,25 @@ async def async_setup_entry(
 class HomeeSensor(HomeeEntity, SensorEntity):
     """Representation of a homee sensor."""
 
+    entity_description: HomeeSensorEntityDescription
+
     def __init__(
         self,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
-        sensor_descr: HomeeSensorEntityDescription,
+        description: HomeeSensorEntityDescription,
     ) -> None:
         """Initialize a homee sensor entity."""
         super().__init__(attribute, entry)
-        self.entity_description: HomeeSensorEntityDescription = sensor_descr
-        self._attr_translation_placeholders = {"instance": attribute.instance}
-
-    @property
-    def translation_key(self) -> str | None:
-        """Return the translation key of the sensor entity."""
-        trans_key = self.entity_description.translation_key
-
-        if self._attribute.instance > 0:
-            trans_key = f"{trans_key}_instance"
-
-        return trans_key
+        self.entity_description = description
+        if attribute.instance > 0:
+            self._attr_translation_key = f"{description.translation_key}_instance"
+        self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
     @property
     def native_value(self) -> float | str | None:
         """Return the native value of the sensor."""
-        if self._attribute.type in [
-            AttributeType.UP_DOWN,
-            AttributeType.WINDOW_POSITION,
-        ]:
-            return self.entity_description.value_fn(
-                self._attribute.current_value, self._attribute.is_reversed
-            )
-
-        if self._attribute.unit == "klx":
-            return self._attribute.current_value * 1000
-
-        return self._attribute.current_value
+        return self.entity_description.value_fn(self._attribute)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -255,6 +251,9 @@ class HomeeSensor(HomeeEntity, SensorEntity):
 class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
     """Represents a sensor based on a node's property."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
+
     def __init__(
         self,
         node: HomeeNode,
@@ -266,8 +265,6 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
         self._node = node
         self._attr_unique_id = f"{self._attr_unique_id}-{prop_name}"
         self._prop_name = prop_name
-        self._attr_entity_category = EntityCategory.DIAGNOSTIC
-        self._attr_entity_registry_enabled_default = False
         self._attr_translation_key = f"node_sensor_{prop_name}"
 
     @property
