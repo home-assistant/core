@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
@@ -26,24 +24,15 @@ from .entity import VeSyncBaseEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True, kw_only=True)
-class VeSyncBinarySensorEntityDescription(BinarySensorEntityDescription):
-    """A class that describes custom binary sensor entities."""
-
-    is_on: Callable[[VeSyncBaseDevice], bool]
-
-
-SENSOR_DESCRIPTIONS: tuple[VeSyncBinarySensorEntityDescription, ...] = (
-    VeSyncBinarySensorEntityDescription(
+SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
         key="water_lacks",
         translation_key="water_lacks",
-        is_on=lambda device: device.water_lacks,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    VeSyncBinarySensorEntityDescription(
+    BinarySensorEntityDescription(
         key="details.water_tank_lifted",
         translation_key="water_tank_lifted",
-        is_on=lambda device: device.details["water_tank_lifted"],
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
 )
@@ -89,15 +78,17 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
     def __init__(
         self,
         device: VeSyncBaseDevice,
-        description: VeSyncBinarySensorEntityDescription,
+        description: BinarySensorEntityDescription,
         coordinator: VeSyncDataCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator)
-        self.entity_description: VeSyncBinarySensorEntityDescription = description
+        self.entity_description: BinarySensorEntityDescription = description
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
-        return self.entity_description.is_on(self.device)
+        _LOGGER.debug(rgetattr(self.device, self.entity_description.key))
+        return rgetattr(self.device, self.entity_description.key)
+        # return self.entity_description.is_on(self.device)
