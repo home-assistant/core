@@ -23,7 +23,7 @@ class TankerkoenigCoordinatorEntity(
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(ATTR_ID, station.id)},
-            name=f"{station.brand} {station.street} {station.house_number}",
+            name=f"{station.brand} {station.street if not None else ""} {station.house_number if not None else ""}",
             model=station.brand,
             configuration_url="https://www.tankerkoenig.de",
             entry_type=DeviceEntryType.SERVICE,
