@@ -89,7 +89,6 @@ async def test_form_user_errors(
         result["flow_id"],
         TEST_FULL,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_FULL[CONF_HOST]
@@ -98,19 +97,11 @@ async def test_form_user_errors(
 
 
 @pytest.mark.usefixtures("openwebif_device_mock")
-async def test_duplicate_host(hass: HomeAssistant) -> None:
+async def test_duplicate_host(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that a duplicate host aborts the config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], TEST_FULL
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_FULL[CONF_HOST]
+    mock_config_entry.add_to_hass(hass)
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
