@@ -188,7 +188,6 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
 
-
     def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
