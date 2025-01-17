@@ -99,8 +99,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     async def _async_update_data(self) -> dict[str, dict]:
         """Fetch the latest data from Tado."""
 
-        self.devices = await self._async_update_devices()
-        self.zones = await self._async_update_zones()
+        devices = await self._async_update_devices()
+        zones = await self._async_update_zones()
         home = await self._async_update_home()
 
         self.data["device"] = devices
