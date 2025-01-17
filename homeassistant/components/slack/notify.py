@@ -5,13 +5,13 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-from typing import Any, TypedDict
+from typing import Any, TypedDict, cast
 from urllib.parse import urlparse
 
-from aiohttp import BasicAuth, FormData
+from aiohttp import BasicAuth
 from aiohttp.client_exceptions import ClientError
-from slack import WebClient
 from slack.errors import SlackApiError
+from slack_sdk.web.async_client import AsyncWebClient
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -136,7 +136,7 @@ class SlackNotificationService(BaseNotificationService):
     def __init__(
         self,
         hass: HomeAssistant,
-        client: WebClient,
+        client: AsyncWebClient,
         config: dict[str, str],
     ) -> None:
         """Initialize."""
@@ -160,17 +160,26 @@ class SlackNotificationService(BaseNotificationService):
         parsed_url = urlparse(path)
         filename = os.path.basename(parsed_url.path)
 
-        try:
-            await self._client.files_upload(
-                channels=",".join(targets),
-                file=path,
-                filename=filename,
-                initial_comment=message,
-                title=title or filename,
-                thread_ts=thread_ts or "",
-            )
-        except (SlackApiError, ClientError) as err:
-            _LOGGER.error("Error while uploading file-based message: %r", err)
+        for target in targets:
+            # Resolve channel name to ID
+            channel_id = await self._async_get_channel_id(target)
+            if not channel_id:
+                _LOGGER.error("Skipping file upload for unresolved channel: %s", target)
+                continue
+
+            try:
+                await self._client.files_upload_v2(
+                    channels=[channel_id],
+                    file=path,
+                    filename=filename,
+                    title=title or filename,
+                    initial_comment=message,
+                    thread_ts=thread_ts or "",
+                )
+            except (SlackApiError, ClientError) as err:
+                _LOGGER.error(
+                    "Error while uploading file to channel %s: %r", target, err
+                )
 
     async def _async_send_remote_file_message(
         self,
@@ -183,12 +192,7 @@ class SlackNotificationService(BaseNotificationService):
         username: str | None = None,
         password: str | None = None,
     ) -> None:
-        """Upload a remote file (with message) to Slack.
-
-        Note that we bypass the python-slackclient WebClient and use aiohttp directly,
-        as the former would require us to download the entire remote file into memory
-        first before uploading it to Slack.
-        """
+        """Upload a remote file (with message) to Slack."""
         if not self._hass.config.is_allowed_external_url(url):
             _LOGGER.error("URL is not allowed: %s", url)
             return
@@ -196,36 +200,41 @@ class SlackNotificationService(BaseNotificationService):
         filename = _async_get_filename_from_url(url)
         session = aiohttp_client.async_get_clientsession(self._hass)
 
+        # Fetch the remote file
         kwargs: AuthDictT = {}
-        if username and password is not None:
+        if username and password:
             kwargs = {"auth": BasicAuth(username, password=password)}
 
-        resp = await session.request("get", url, **kwargs)
-
         try:
-            resp.raise_for_status()
+            async with session.get(url, **kwargs) as resp:
+                resp.raise_for_status()
+                file_content = await resp.read()
         except ClientError as err:
             _LOGGER.error("Error while retrieving %s: %r", url, err)
             return
 
-        form_data: FormDataT = {
-            "channels": ",".join(targets),
-            "filename": filename,
-            "initial_comment": message,
-            "title": title or filename,
-            "token": self._client.token,
-        }
+        # Upload to each target channel
+        for target in targets:
+            # Resolve channel name to ID
+            channel_id = await self._async_get_channel_id(target)
+            if not channel_id:
+                _LOGGER.error("Skipping file upload for unresolved channel: %s", target)
+                continue
 
-        if thread_ts:
-            form_data["thread_ts"] = thread_ts
-
-        data = FormData(form_data, charset="utf-8")
-        data.add_field("file", resp.content, filename=filename)
-
-        try:
-            await session.post("https://slack.com/api/files.upload", data=data)
-        except ClientError as err:
-            _LOGGER.error("Error while uploading file message: %r", err)
+            try:
+                # Use files_upload_v2 for remote file upload
+                await self._client.files_upload_v2(
+                    channels=[channel_id],
+                    file=file_content,
+                    filename=filename,
+                    title=title or filename,
+                    initial_comment=message,
+                    thread_ts=thread_ts or "",
+                )
+            except SlackApiError as err:
+                _LOGGER.error(
+                    "Error while uploading remote file to channel %s: %r", target, err
+                )
 
     async def _async_send_text_only_message(
         self,
@@ -327,3 +336,46 @@ class SlackNotificationService(BaseNotificationService):
             title,
             thread_ts=data.get(ATTR_THREAD_TS),
         )
+
+    async def _async_get_channel_id(self, channel_name: str) -> str | None:
+        """Get the Slack channel ID from the channel name.
+
+        This method retrieves the channel ID for a given Slack channel name by
+        querying the Slack API. It handles both public and private channels.
+        Including this so users can  provide channel names instead of IDs.
+
+        Args:
+            channel_name (str): The name of the Slack channel.
+
+        Returns:
+            str | None: The ID of the Slack channel if found, otherwise None.
+
+        Raises:
+            SlackApiError: If there is an error while communicating with the Slack API.
+
+        """
+        try:
+            # Remove # if present
+            channel_name = channel_name.lstrip("#")
+
+            # Get channel list
+            # Multiple types is not working. Tested here: https://api.slack.com/methods/conversations.list/test
+            # response = await self._client.conversations_list(types="public_channel,private_channel")
+            #
+            # Workaround for the types parameter not working
+            channels = []
+            for channel_type in ("public_channel", "private_channel"):
+                response = await self._client.conversations_list(types=channel_type)
+                channels.extend(response["channels"])
+
+            # Find channel ID
+            for channel in channels:
+                if channel["name"] == channel_name:
+                    return cast(str, channel["id"])
+
+            _LOGGER.error("Channel %s not found", channel_name)
+
+        except SlackApiError as err:
+            _LOGGER.error("Error getting channel ID: %r", err)
+
+        return None
