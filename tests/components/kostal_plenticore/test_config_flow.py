@@ -166,6 +166,7 @@ async def test_form_g2(
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
+
 async def test_form_g2_with_service_code(
     hass: HomeAssistant,
     mock_apiclient_class: type[ApiClient],
@@ -210,7 +211,7 @@ async def test_form_g2_with_service_code(
             {
                 "host": "1.1.1.1",
                 "password": "test-password",
-                "service_code": "test-service-code"
+                "service_code": "test-service-code",
             },
         )
         await hass.async_block_till_done()
@@ -218,7 +219,9 @@ async def test_form_g2_with_service_code(
         mock_apiclient_class.assert_called_once_with(ANY, "1.1.1.1")
         mock_apiclient.__aenter__.assert_called_once()
         mock_apiclient.__aexit__.assert_called_once()
-        mock_apiclient.login.assert_called_once_with(key="test-password", service_code="test-service-code")
+        mock_apiclient.login.assert_called_once_with(
+            key="test-password", service_code="test-service-code"
+        )
         mock_apiclient.get_settings.assert_called_once()
         mock_apiclient.get_setting_values.assert_called_once_with(
             "scb:network", "Network:Hostname"
@@ -229,7 +232,7 @@ async def test_form_g2_with_service_code(
     assert result2["data"] == {
         "host": "1.1.1.1",
         "password": "test-password",
-        "service_code": "test-service-code"
+        "service_code": "test-service-code",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
