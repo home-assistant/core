@@ -130,10 +130,12 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        _LOGGER.debug("DHCP discovery: %s", discovery_info)
         self._discovery_data[CONF_HOST] = discovery_info.ip
         self._discovery_data[CONF_MAC] = format_mac(discovery_info.macaddress)
-        self._discovery_data[CONF_NAME] = discovery_info.hostname.upper()
+        self._discovery_data[CONF_NAME] = discovery_info.hostname
+
+        await self.async_set_unique_id(str(discovery_info.hostname.replace("SMA", "")))
+        self._abort_if_unique_id_configured()
 
         return await self.async_step_discovery_confirm()
 
