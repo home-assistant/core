@@ -14,12 +14,12 @@ LOGGER = logging.getLogger(__package__)
 
 SEPARATOR: Final = "#!#!#"
 
-CONF_HOST: Final = 'host'
-CONF_PORT: Final = 'port'
-CONF_USERNAME: Final = 'username'
-CONF_PASSWORD: Final = 'password'
-CONF_PRIVATE_KEY_FILE: Final = 'private_key_file'
-CONF_BACKUP_LOCATION: Final = 'backup_location'
+CONF_HOST: Final = "host"
+CONF_PORT: Final = "port"
+CONF_USERNAME: Final = "username"
+CONF_PASSWORD: Final = "password"
+CONF_PRIVATE_KEY_FILE: Final = "private_key_file"
+CONF_BACKUP_LOCATION: Final = "backup_location"
 
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"

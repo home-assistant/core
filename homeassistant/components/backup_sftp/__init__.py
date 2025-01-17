@@ -20,6 +20,7 @@ from .const import (
 
 type SFTPConfigEntry = ConfigEntry["SFTPConfigEntryData"]
 
+
 @dataclass(kw_only=True)
 class SFTPConfigEntryData:
     """Dataclass holding all config entry data for an SFTP Backup Storage entry."""
@@ -27,29 +28,30 @@ class SFTPConfigEntryData:
     host: str
     port: int = 22
     username: str
-    password: str = ''
-    private_key_file: str = ''
+    password: str = ""
+    private_key_file: str = ""
 
     def client(self):
-        '''Return SSHClient when called.'''
+        """Return SSHClient when called."""
 
         return SSHClient(
-            host = self.host,
-            port = self.port,
-            username = self.username,
-            password = self.password,
-            private_key_file = self.private_key_file
+            host=self.host,
+            port=self.port,
+            username=self.username,
+            password=self.password,
+            private_key_file=self.private_key_file,
         )
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
     """Set up SFTP client from a config entry."""
 
     cfg = SFTPConfigEntryData(
-        host = entry.data[CONF_HOST],
-        port = entry.data[CONF_PORT],
-        username = entry.data[CONF_USERNAME],
-        password = entry.data.get(CONF_PASSWORD),
-        private_key_file = entry.data.get(CONF_PRIVATE_KEY_FILE),
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        username=entry.data[CONF_USERNAME],
+        password=entry.data.get(CONF_PASSWORD),
+        private_key_file=entry.data.get(CONF_PRIVATE_KEY_FILE),
     )
     entry.runtime_data = cfg
 

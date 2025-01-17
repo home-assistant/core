@@ -7,7 +7,6 @@ import json
 import tarfile
 
 from collections.abc import AsyncIterator, Callable, Coroutine
-from tempfile import NamedTemporaryFile
 from typing import Any, Self
 
 from homeassistant.components.backup import (
@@ -21,7 +20,13 @@ from homeassistant.core import HomeAssistant, callback
 
 from . import SFTPConfigEntry
 from .client import SSHClient
-from .const import CONF_BACKUP_LOCATION, DATA_BACKUP_AGENT_LISTENERS, DOMAIN, LOGGER, SEPARATOR
+from .const import (
+    CONF_BACKUP_LOCATION,
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+    LOGGER,
+    SEPARATOR,
+)
 from .util import BufferedAsyncIteratorToSyncStream
 
 
@@ -61,7 +66,9 @@ class SFTPAsyncStreamIterator:
 
     __slots__ = ("_client", "_sftp_file", "_chunk_size")
 
-    def __init__(self, runtime_data: SFTPConfigEntry, file: str, chunk_size: int = 8192) -> None:
+    def __init__(
+        self, runtime_data: SFTPConfigEntry, file: str, chunk_size: int = 8192
+    ) -> None:
         """Initialize the async iterator.
 
         Args:
@@ -69,15 +76,15 @@ class SFTPAsyncStreamIterator:
             chunk_size (int): Size of each chunk to read. Defaults to 8192 bytes.
         """
         client = SSHClient(
-            host = runtime_data.host,
-            port = runtime_data.port,
-            username = runtime_data.username,
-            password = runtime_data.password,
-            private_key_file = runtime_data.private_key_file
+            host=runtime_data.host,
+            port=runtime_data.port,
+            username=runtime_data.username,
+            password=runtime_data.password,
+            private_key_file=runtime_data.private_key_file,
         )
 
         self._client = client
-        self._sftp_file = client.sftp.open(file, 'rb')
+        self._sftp_file = client.sftp.open(file, "rb")
         self._chunk_size = chunk_size
 
     def __aiter__(self) -> Self:
@@ -108,7 +115,9 @@ class SFTPBackupAgent(BackupAgent):
         self._hass = hass
         self.name = entry.title
         self.domain = DOMAIN
-        self._host = f'{self._entry.runtime_data.username}@{self._entry.runtime_data.host}'
+        self._host = (
+            f"{self._entry.runtime_data.username}@{self._entry.runtime_data.host}"
+        )
 
     async def async_download_backup(
         self,
@@ -119,10 +128,10 @@ class SFTPBackupAgent(BackupAgent):
         if not await self.async_get_backup(backup_id):
             raise BackupAgentError("Backup not found")
 
-        file = f'{self._entry.data[CONF_BACKUP_LOCATION]}/{backup_id}.tar'
+        file = f"{self._entry.data[CONF_BACKUP_LOCATION]}/{backup_id}.tar"
         LOGGER.debug("Downloading file: %s", file)
 
-        return SFTPAsyncStreamIterator(runtime_data = self._entry.runtime_data, file = file)
+        return SFTPAsyncStreamIterator(runtime_data=self._entry.runtime_data, file=file)
 
     async def async_upload_backup(
         self,
@@ -132,22 +141,30 @@ class SFTPBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         def upload(ssh: SSHClient, stream: BufferedAsyncIteratorToSyncStream = None):
-            _in, out, err = ssh.exec_command(f'cat - > {file_path}')
+            _in, out, err = ssh.exec_command(f"cat - > {file_path}")
             try:
                 while b := stream.read(8 * 1024 * 1024):
                     _in.write(b)
             except Exception as e:
-                raise BackupAgentError(f'Failed to upload backup to {self._host}:{file_path} due to exception ({type(e).__name__}). {e}') from e
+                raise BackupAgentError(
+                    f"Failed to upload backup to {self._host}:{file_path} due to exception ({type(e).__name__}). {e}"
+                ) from e
             else:
-                LOGGER.debug(f'Backup file successfully uploaded to {self._host}:{file_path}.')
+                LOGGER.debug(
+                    f"Backup file successfully uploaded to {self._host}:{file_path}."
+                )
             finally:
                 _in.close()
-            
+
             ec = out.channel.recv_exit_status()
             if ec > 0:
-                LOGGER.error(f'Failed to upload backup to {file_path}. Received exit code: {ec}. STDERR: {err.read().decode().strip()}')
-                raise BackupAgentError(f'Failed to upload backup to {self._host}:{file_path}. Received exit code: {ec}')
-            
+                LOGGER.error(
+                    f"Failed to upload backup to {file_path}. Received exit code: {ec}. STDERR: {err.read().decode().strip()}"
+                )
+                raise BackupAgentError(
+                    f"Failed to upload backup to {self._host}:{file_path}. Received exit code: {ec}"
+                )
+
         """Upload a backup."""
         # Upload the file with metadata
         file_path = f"{self._entry.data[CONF_BACKUP_LOCATION]}/{backup.backup_id}.tar"
@@ -172,7 +189,7 @@ class SFTPBackupAgent(BackupAgent):
         """Delete file from SFTP Backup Storage."""
 
         sftp = ssh.open_sftp()
-        backup_file = f'{self._entry.data[CONF_BACKUP_LOCATION]}/{backup_id}.tar'
+        backup_file = f"{self._entry.data[CONF_BACKUP_LOCATION]}/{backup_id}.tar"
 
         try:
             sftp.remove(backup_file)
@@ -180,7 +197,9 @@ class SFTPBackupAgent(BackupAgent):
             LOGGER.error("Can not delete backups from location: %s", err)
             raise BackupAgentError(f"Failed to delete backups: {err}") from err
         else:
-            LOGGER.debug(f'Successfully removed backup file at location: {self._host}:{backup_file}')
+            LOGGER.debug(
+                f"Successfully removed backup file at location: {self._host}:{backup_file}"
+            )
 
     async def async_delete_backup(
         self,
@@ -201,17 +220,24 @@ class SFTPBackupAgent(BackupAgent):
         sftp.chdir(self._entry.data[CONF_BACKUP_LOCATION])
 
         for file in sftp.listdir(self._entry.data[CONF_BACKUP_LOCATION]):
-            if file.endswith('_backup.json'):
+            if file.endswith("_backup.json"):
                 file_info = json.load(sftp.open(file))
 
                 if file_info.get("homeassistant_version") is None:
                     continue
                 backup_id = file_info["backup_id"]
-                try: sftp.stat(f'{self._entry.data[CONF_BACKUP_LOCATION]}/{backup_id}.tar')
+                try:
+                    sftp.stat(
+                        f"{self._entry.data[CONF_BACKUP_LOCATION]}/{backup_id}.tar"
+                    )
                 except FileNotFoundError:
-                    LOGGER.debug(f'Found metadata file: {file} but not the actual backup. Attempting to remove the metadata file.')
-                    try: sftp.remove(file)
-                    except: continue
+                    LOGGER.debug(
+                        f"Found metadata file: {file} but not the actual backup. Attempting to remove the metadata file."
+                    )
+                    try:
+                        sftp.remove(file)
+                    except:
+                        continue
 
                 addons: list[AddonInfo] = []
                 if addons_string := file_info.get("addons"):
@@ -231,7 +257,9 @@ class SFTPBackupAgent(BackupAgent):
                         Folder(folder) for folder in folder_string.split(SEPARATOR)
                     ]
 
-                LOGGER.debug(f'Appending backup id: {backup_id} to the list of requested backups. Folders: {folders}')
+                LOGGER.debug(
+                    f"Appending backup id: {backup_id} to the list of requested backups. Folders: {folders}"
+                )
                 backups.append(
                     AgentBackup(
                         backup_id=backup_id,
@@ -250,35 +278,37 @@ class SFTPBackupAgent(BackupAgent):
 
         if not backups:
             LOGGER.debug("No backup files found in remote directory.")
-        
+
         return backups
-    
+
     def _get_backup_info(self, tar: tarfile.TarFile, fileobj: tarfile.TarInfo):
         cfg = json.load(tar.extractfile(fileobj))
-        LOGGER.debug(f'Original contents of backup.json for file {fileobj.tarfile.name}: {cfg}')
-        
-        if cfg['homeassistant']:
-            database_included =  not cfg['homeassistant']['exclude_database']
+        LOGGER.debug(
+            f"Original contents of backup.json for file {fileobj.tarfile.name}: {cfg}"
+        )
+
+        if cfg["homeassistant"]:
+            database_included = not cfg["homeassistant"]["exclude_database"]
             homeassistant_included = True
-            homeassistant_version = cfg['homeassistant']['version']
+            homeassistant_version = cfg["homeassistant"]["version"]
         else:
             database_included = False
             homeassistant_included = False
             homeassistant_version = None
-            
+
         stub = {
-            "backup_id": cfg['slug'],
+            "backup_id": cfg["slug"],
             "database_included": database_included,
-            "date": cfg['date'],
-            "extra_metadata": cfg['extra'],
+            "date": cfg["date"],
+            "extra_metadata": cfg["extra"],
             "homeassistant_included": homeassistant_included,
             "homeassistant_version": homeassistant_version,
-            "name": cfg['name'],
-            "protected": cfg['protected'],
-            "addons": cfg['addons'],
-            "folders": cfg['folders']
+            "name": cfg["name"],
+            "protected": cfg["protected"],
+            "addons": cfg["addons"],
+            "folders": cfg["folders"],
         }
-        
+
         return stub
 
     def _list_backups(self, ssh: SSHClient) -> list[AgentBackup]:
@@ -288,37 +318,50 @@ class SFTPBackupAgent(BackupAgent):
 
         for file in sftp.listdir():
             # Evaluate every file in remote directory that ends with .tar
-            if file.endswith('.tar'):
-                LOGGER.debug(f'Evaluating remote file: {self._host}:{self._entry.data[CONF_BACKUP_LOCATION]}/{file} ...')
+            if file.endswith(".tar"):
+                LOGGER.debug(
+                    f"Evaluating remote file: {self._host}:{self._entry.data[CONF_BACKUP_LOCATION]}/{file} ..."
+                )
 
                 # Opens ./backup.json from backup file, KeyError is raised if
                 # file does not exist in archive (not a valid backup)
                 # and same exception is raised if any values from config files are missing
                 # ...again, indicating that the mentioned .tar file may not be home assistant backup.
-                with tarfile.open(mode='r', fileobj=sftp.open(file)) as tar:
+                with tarfile.open(mode="r", fileobj=sftp.open(file)) as tar:
                     try:
-                        fileobj = tar.getmember('./backup.json')
+                        fileobj = tar.getmember("./backup.json")
                     except KeyError:
                         continue
                     else:
-                        setattr(tar, 'name', f'{self._entry.data[CONF_BACKUP_LOCATION]}/{file}')
+                        setattr(
+                            tar,
+                            "name",
+                            f"{self._entry.data[CONF_BACKUP_LOCATION]}/{file}",
+                        )
                         fileobj.tarfile = tar
                         file_info = self._get_backup_info(tar, fileobj)
 
-                    LOGGER.debug(f'Obtained remote file info for file {self._host}:{file}: {file_info}')
+                    LOGGER.debug(
+                        f"Obtained remote file info for file {self._host}:{file}: {file_info}"
+                    )
 
-                backup_id = file_info['backup_id']
+                backup_id = file_info["backup_id"]
 
                 # Extract size
-                file_info['size'] = sftp.stat(file).st_size
+                file_info["size"] = sftp.stat(file).st_size
 
                 # Extract addons
                 # Turns original addons list into a list of AddonInfo as expected by AgentBackup
-                file_info['addons'] = [ AddonInfo(name=addon['name'], slug=addon['slug'], version=addon['version']) for addon in file_info['addons'] ]
+                file_info["addons"] = [
+                    AddonInfo(
+                        name=addon["name"], slug=addon["slug"], version=addon["version"]
+                    )
+                    for addon in file_info["addons"]
+                ]
 
                 # Extract folders
                 # Turns original folders list into a list of Folder as expected by AgentBackup
-                file_info['folders'] = [ Folder(f) for f in file_info["folders"] ]
+                file_info["folders"] = [Folder(f) for f in file_info["folders"]]
 
                 backups.append(
                     AgentBackup(
@@ -328,14 +371,14 @@ class SFTPBackupAgent(BackupAgent):
                         size=file_info["size"],
                         homeassistant_version=file_info["homeassistant_version"],
                         protected=file_info["protected"],
-                        addons=file_info['addons'],
-                        folders=file_info['folders'],
+                        addons=file_info["addons"],
+                        folders=file_info["folders"],
                         database_included=file_info["database_included"],
                         homeassistant_included=file_info["database_included"],
-                        extra_metadata=file_info['extra_metadata'],
+                        extra_metadata=file_info["extra_metadata"],
                     )
                 )
-                LOGGER.debug(f'Added backup: {backups[-1]} from file: {file}.')
+                LOGGER.debug(f"Added backup: {backups[-1]} from file: {file}.")
 
         return backups
 
@@ -354,7 +397,7 @@ class SFTPBackupAgent(BackupAgent):
 
         for backup in backups:
             if backup.backup_id == backup_id:
-                LOGGER.debug(f'Returning backup id: {backup_id}. {backup}')
+                LOGGER.debug(f"Returning backup id: {backup_id}. {backup}")
                 return backup
 
         return None
