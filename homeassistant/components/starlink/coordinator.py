@@ -52,6 +52,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def __init__(self, hass: HomeAssistant, name: str, url: str) -> None:
         """Initialize an UpdateCoordinator for a group of sensors."""
         self.channel_context = ChannelContext(target=url)
+        self.history_stats_start = None
         self.timezone = ZoneInfo(hass.config.time_zone)
         super().__init__(
             hass,
@@ -60,6 +61,24 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             update_interval=timedelta(seconds=5),
         )
 
+    def _get_starlink_cumulative_stats(self)
+        """Retrieve Starlink history stats."""
+        context = self.channel_context
+        history = history_stats(
+            parse_samples=-1, start=self.history_stats_start, context=context
+        )
+        index = history[0]
+        usage, consumption = history[5:7]
+        self.history_stats_start = index["end_counter"]
+        if self.data is None:
+            return usage, consumption
+        if index["samples"] == 0:
+            return self.data.usage, self.data.consumption
+        usage["download_usage"] += self.data.usage["download_usage"]
+        usage["upload_usage"] += self.data.usage["upload_usage"]
+        consumption["total_energy"] += self.data.consumption["total_energy"]
+        return usage, consumption
+
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
@@ -67,7 +86,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
-        usage, consumption = history_stats(parse_samples=-1, context=context)[5:6]
+        usage, consumption = self._get_starlink_cumulative_stats()
         return StarlinkData(
             location, sleep, status, obstruction, alert, usage, consumption
         )
