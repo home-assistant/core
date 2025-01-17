@@ -7,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
@@ -360,10 +361,7 @@ def time_from_dict(data: dict[str, int]) -> time:
         vol.Optional("schedule"): vol.Schema(
             {
                 vol.Optional("recurrence"): vol.All(str, vol.Coerce(ScheduleState)),
-                vol.Optional("time"): vol.All(
-                    vol.Schema({"hour": vol.Range(0, 23), "minute": vol.Range(0, 59)}),
-                    time_from_dict,
-                ),
+                vol.Optional("time"): vol.Any(cv.time, None),
             }
         ),
     }

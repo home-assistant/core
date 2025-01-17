@@ -250,10 +250,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -289,10 +286,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -324,10 +318,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -359,10 +350,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -394,10 +382,7 @@
         }),
         'schedule': dict({
           'state': 'mon',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -429,10 +414,7 @@
         }),
         'schedule': dict({
           'state': 'sat',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -463,10 +445,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -498,10 +477,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -534,10 +510,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -569,10 +542,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -604,10 +574,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -640,10 +607,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -675,10 +639,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -710,10 +671,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 6,
-            'minute': 0,
-          }),
+          'time': '06:00:00',
         }),
       }),
     }),
@@ -746,10 +704,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 6,
-            'minute': 0,
-          }),
+          'time': '06:00:00',
         }),
       }),
     }),
@@ -781,10 +736,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -816,10 +768,7 @@
         }),
         'schedule': dict({
           'state': 'mon',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -852,10 +801,7 @@
         }),
         'schedule': dict({
           'state': 'mon',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -887,10 +833,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -922,10 +865,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -958,10 +898,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -993,10 +930,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1032,10 +966,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1072,10 +1003,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1107,10 +1035,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1142,10 +1067,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1178,10 +1100,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1213,10 +1132,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1248,10 +1164,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1284,10 +1197,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1319,10 +1229,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1354,10 +1261,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1390,10 +1294,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1425,10 +1326,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1460,10 +1358,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1496,10 +1391,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1531,10 +1423,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1566,10 +1455,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1602,10 +1488,7 @@
         }),
         'schedule': dict({
           'state': 'daily',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1637,10 +1520,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1671,10 +1551,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1705,10 +1582,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1739,10 +1613,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1773,10 +1644,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1807,10 +1675,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1841,10 +1706,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1875,10 +1737,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1909,10 +1768,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1943,10 +1799,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -1977,10 +1830,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),
@@ -2011,10 +1861,7 @@
         }),
         'schedule': dict({
           'state': 'never',
-          'time': dict({
-            'hour': 4,
-            'minute': 45,
-          }),
+          'time': None,
         }),
       }),
     }),

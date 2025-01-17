@@ -49,7 +49,7 @@ class _BackupStore(Store[StoredBackupData]):
         if old_major_version == 1:
             if old_minor_version < 2:
                 # Version 1.2 adds configurable backup time
-                data["config"]["schedule"]["time"] = {"hour": 4, "minute": 45}
+                data["config"]["schedule"]["time"] = None
 
         if old_major_version > 1:
             raise NotImplementedError

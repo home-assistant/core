@@ -71,10 +71,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
             "copies": None,
             "days": None,
         },
-        "schedule": {
-            "state": "never",
-            "time": {"hour": 4, "minute": 45},
-        },
+        "schedule": {"state": "never", "time": None},
     },
 }
 
@@ -927,10 +924,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
-                        "schedule": {
-                            "state": "daily",
-                            "time": {"hour": 4, "minute": 45},
-                        },
+                        "schedule": {"state": "daily", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -955,10 +949,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
-                        "schedule": {
-                            "state": "never",
-                            "time": {"hour": 4, "minute": 45},
-                        },
+                        "schedule": {"state": "never", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -983,10 +974,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
-                        "schedule": {
-                            "state": "never",
-                            "time": {"hour": 4, "minute": 45},
-                        },
+                        "schedule": {"state": "never", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -1011,7 +999,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
-                        "schedule": {"state": "mon", "time": {"hour": 4, "minute": 45}},
+                        "schedule": {"state": "mon", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -1036,7 +1024,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
-                        "schedule": {"state": "sat", "time": {"hour": 4, "minute": 45}},
+                        "schedule": {"state": "sat", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -1077,7 +1065,7 @@ async def test_config_info(
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "schedule": {"recurrence": "daily", "time": {"hour": 6, "minute": 0}},
+            "schedule": {"recurrence": "daily", "time": "06:00"},
         },
         {
             "type": "backup/config/update",
@@ -1295,7 +1283,7 @@ async def test_config_update_errors(
                     "create_backup": {"agent_ids": ["test.test-agent"]},
                     "schedule": {
                         "recurrence": "mon",
-                        "time": {"hour": 3, "minute": 45},
+                        "time": "03:45",
                     },
                 }
             ],
@@ -1316,7 +1304,7 @@ async def test_config_update_errors(
                     "create_backup": {"agent_ids": ["test.test-agent"]},
                     "schedule": {
                         "recurrence": "daily",
-                        "time": {"hour": 3, "minute": 45},
+                        "time": "03:45",
                     },
                 }
             ],
@@ -1475,7 +1463,7 @@ async def test_config_schedule_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": last_completed_automatic_backup,
             "last_completed_automatic_backup": last_completed_automatic_backup,
-            "schedule": {"state": "daily", "time": {"hour": 4, "minute": 45}},
+            "schedule": {"state": "daily", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
@@ -1922,7 +1910,7 @@ async def test_config_retention_copies_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
-            "schedule": {"state": "daily", "time": {"hour": 4, "minute": 45}},
+            "schedule": {"state": "daily", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
@@ -2180,7 +2168,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": None,
-            "schedule": {"state": "daily", "time": {"hour": 4, "minute": 45}},
+            "schedule": {"state": "daily", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
@@ -2601,7 +2589,7 @@ async def test_config_retention_days_logic(
             "retention": {"copies": None, "days": stored_retained_days},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
-            "schedule": {"state": "never", "time": {"hour": 4, "minute": 45}},
+            "schedule": {"state": "never", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
