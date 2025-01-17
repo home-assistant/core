@@ -119,11 +119,12 @@ class LetPotConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if not errors and data_dict is not None:
                 await self.async_set_unique_id(data_dict[CONF_USER_ID])
-                # Abort if the old user and new user are not the same (config entry
-                # account was deleted/new account used same email address).
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                if reauth_entry.unique_id != data_dict[CONF_USER_ID]:
+                    # Abort if the received account is different and already added
+                    self._abort_if_unique_id_configured()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
+                    unique_id=self.unique_id,
                     data_updates=data_dict,
                 )
         return self.async_show_form(
