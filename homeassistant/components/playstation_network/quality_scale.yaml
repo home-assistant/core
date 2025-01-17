@@ -51,7 +51,7 @@ rules:
   exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues:
+  repair-issues: todo
   stale-devices: todo
   # Platinum
   async-dependency: todo
