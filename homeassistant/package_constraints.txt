@@ -29,7 +29,7 @@ ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.0
 dbus-fast==2.29.0
-fnv-hash-fast==1.1.0
+fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
 habluetooth==3.8.0
