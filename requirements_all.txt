@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==28.0.0
+aioesphomeapi==28.0.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -628,7 +628,7 @@ bluetooth-auto-recovery==1.4.2
 # homeassistant.components.ld2410_ble
 # homeassistant.components.led_ble
 # homeassistant.components.private_ble_device
-bluetooth-data-tools==1.20.0
+bluetooth-data-tools==1.22.0
 
 # homeassistant.components.bond
 bond-async==0.2.1
@@ -934,7 +934,7 @@ flux-led==1.1.0
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.1.0
+fnv-hash-fast==1.2.2
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1097,7 +1097,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.8.0
+habluetooth==3.9.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
