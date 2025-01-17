@@ -580,6 +580,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "0015BB*",
     },
     {
+        "domain": "sma",
+        "registered_devices": True,
+    },
+    {
         "domain": "smartthings",
         "hostname": "st*",
         "macaddress": "24FD5B*",
