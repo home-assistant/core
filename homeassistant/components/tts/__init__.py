@@ -1052,10 +1052,8 @@ class TextToSpeechUrlView(HomeAssistantView):
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
-        if (
-            not data.get("engine_id")
-            and not data.get(ATTR_PLATFORM)
-            or not data.get(ATTR_MESSAGE)
+        if (not data.get("engine_id") and not data.get(ATTR_PLATFORM)) or not data.get(
+            ATTR_MESSAGE
         ):
             return self.json_message(
                 "Must specify platform and message", HTTPStatus.BAD_REQUEST

@@ -22,7 +22,7 @@ from functools import cache
 import logging
 from random import randint
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from async_interrupt import interrupt
 from propcache import cached_property
@@ -135,8 +135,6 @@ DISCOVERY_COOLDOWN = 1
 
 ISSUE_UNIQUE_ID_COLLISION = "config_entry_unique_id_collision"
 UNIQUE_ID_COLLISION_TITLE_LIMIT = 5
-
-_DataT = TypeVar("_DataT", default=Any)
 
 
 class ConfigEntryState(Enum):
@@ -312,7 +310,7 @@ def _validate_item(*, disabled_by: ConfigEntryDisabler | Any | None = None) -> N
         )
 
 
-class ConfigEntry(Generic[_DataT]):
+class ConfigEntry[_DataT = Any]:
     """Hold a configuration entry."""
 
     entry_id: str

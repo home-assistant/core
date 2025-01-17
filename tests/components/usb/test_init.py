@@ -1,13 +1,16 @@
 """Tests for the USB Discovery integration."""
 
+import asyncio
+from datetime import timedelta
+import logging
 import os
-import sys
 from typing import Any
 from unittest.mock import MagicMock, Mock, call, patch, sentinel
 
 import pytest
 
 from homeassistant.components import usb
+from homeassistant.components.usb.utils import usb_device_from_port
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -59,10 +62,6 @@ def mock_venv():
         yield
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_observer_discovery(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
 ) -> None:
@@ -83,7 +82,7 @@ async def test_observer_discovery(
 
     async def _mock_monitor_observer_callback(callback):
         await hass.async_add_executor_job(
-            callback, MagicMock(action="create", device_path="/dev/new")
+            callback, MagicMock(action="add", device_path="/dev/new")
         )
 
     def _create_mock_monitor_observer(monitor, callback, name):
@@ -93,6 +92,7 @@ async def test_observer_discovery(
         return mock_observer
 
     with (
+        patch("sys.platform", "linux"),
         patch("pyudev.Context"),
         patch("pyudev.MonitorObserver", new=_create_mock_monitor_observer),
         patch("pyudev.Monitor.filter_by"),
@@ -115,10 +115,65 @@ async def test_observer_discovery(
     assert mock_observer.mock_calls == [call.start(), call.__bool__(), call.stop()]
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
+async def test_polling_discovery(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+) -> None:
+    """Test that polling can discover a device without raising an exception."""
+    new_usb = [{"domain": "test1", "vid": "3039"}]
+    mock_comports_found_device = asyncio.Event()
+
+    def get_comports() -> list:
+        nonlocal mock_comports
+
+        # Only "find" a device after a few invocations
+        if len(mock_comports.mock_calls) < 5:
+            return []
+
+        mock_comports_found_device.set()
+        return [
+            MagicMock(
+                device=slae_sh_device.device,
+                vid=12345,
+                pid=12345,
+                serial_number=slae_sh_device.serial_number,
+                manufacturer=slae_sh_device.manufacturer,
+                description=slae_sh_device.description,
+            )
+        ]
+
+    with (
+        patch("sys.platform", "linux"),
+        patch(
+            "homeassistant.components.usb.USBDiscovery._get_monitor_observer",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.usb.POLLING_MONITOR_SCAN_PERIOD",
+            timedelta(seconds=0.01),
+        ),
+        patch("homeassistant.components.usb.async_get_usb", return_value=new_usb),
+        patch(
+            "homeassistant.components.usb.comports", side_effect=get_comports
+        ) as mock_comports,
+        patch.object(hass.config_entries.flow, "async_init") as mock_config_flow,
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        # Wait until a new device is discovered after a few polling attempts
+        assert len(mock_config_flow.mock_calls) == 0
+        await mock_comports_found_device.wait()
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "test1"
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+
 async def test_removal_by_observer_before_started(
     hass: HomeAssistant, operating_system
 ) -> None:
@@ -671,10 +726,6 @@ async def test_non_matching_discovered_by_scanner_after_started(
     assert len(mock_config_flow.mock_calls) == 0
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_observer_on_wsl_fallback_without_throwing_exception(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
 ) -> None:
@@ -713,10 +764,6 @@ async def test_observer_on_wsl_fallback_without_throwing_exception(
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-@pytest.mark.skipif(
-    not sys.platform.startswith("linux"),
-    reason="Only works on linux",
-)
 async def test_not_discovered_by_observer_before_started_on_docker(
     hass: HomeAssistant, docker
 ) -> None:
@@ -1190,3 +1237,165 @@ def test_deprecated_constants(
         replacement,
         "2026.2",
     )
+
+
+@patch("homeassistant.components.usb.REQUEST_SCAN_COOLDOWN", 0)
+async def test_register_port_event_callback(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the registration of a port event callback."""
+
+    port1 = Mock(
+        device=slae_sh_device.device,
+        vid=12345,
+        pid=12345,
+        serial_number=slae_sh_device.serial_number,
+        manufacturer=slae_sh_device.manufacturer,
+        description=slae_sh_device.description,
+    )
+
+    port2 = Mock(
+        device=conbee_device.device,
+        vid=12346,
+        pid=12346,
+        serial_number=conbee_device.serial_number,
+        manufacturer=conbee_device.manufacturer,
+        description=conbee_device.description,
+    )
+
+    port1_usb = usb_device_from_port(port1)
+    port2_usb = usb_device_from_port(port2)
+
+    ws_client = await hass_ws_client(hass)
+
+    mock_callback1 = Mock()
+    mock_callback2 = Mock()
+
+    # Start off with no ports
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+
+        _cancel1 = usb.async_register_port_event_callback(hass, mock_callback1)
+        cancel2 = usb.async_register_port_event_callback(hass, mock_callback2)
+
+    assert mock_callback1.mock_calls == []
+    assert mock_callback2.mock_calls == []
+
+    # Add two new ports
+    with patch("homeassistant.components.usb.comports", return_value=[port1, port2]):
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+
+    assert mock_callback1.mock_calls == [call({port1_usb, port2_usb}, set())]
+    assert mock_callback2.mock_calls == [call({port1_usb, port2_usb}, set())]
+
+    # Cancel the second callback
+    cancel2()
+    cancel2()
+
+    mock_callback1.reset_mock()
+    mock_callback2.reset_mock()
+
+    # Remove port 2
+    with patch("homeassistant.components.usb.comports", return_value=[port1]):
+        await ws_client.send_json({"id": 2, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert mock_callback1.mock_calls == [call(set(), {port2_usb})]
+    assert mock_callback2.mock_calls == []  # The second callback was unregistered
+
+    mock_callback1.reset_mock()
+    mock_callback2.reset_mock()
+
+    # Keep port 2 removed
+    with patch("homeassistant.components.usb.comports", return_value=[port1]):
+        await ws_client.send_json({"id": 3, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    # Nothing changed so no callback is called
+    assert mock_callback1.mock_calls == []
+    assert mock_callback2.mock_calls == []
+
+    # Unplug one and plug in the other
+    with patch("homeassistant.components.usb.comports", return_value=[port2]):
+        await ws_client.send_json({"id": 4, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    assert mock_callback1.mock_calls == [call({port2_usb}, {port1_usb})]
+    assert mock_callback2.mock_calls == []
+
+
+@patch("homeassistant.components.usb.REQUEST_SCAN_COOLDOWN", 0)
+async def test_register_port_event_callback_failure(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test port event callback failure handling."""
+
+    port1 = Mock(
+        device=slae_sh_device.device,
+        vid=12345,
+        pid=12345,
+        serial_number=slae_sh_device.serial_number,
+        manufacturer=slae_sh_device.manufacturer,
+        description=slae_sh_device.description,
+    )
+
+    port2 = Mock(
+        device=conbee_device.device,
+        vid=12346,
+        pid=12346,
+        serial_number=conbee_device.serial_number,
+        manufacturer=conbee_device.manufacturer,
+        description=conbee_device.description,
+    )
+
+    port1_usb = usb_device_from_port(port1)
+    port2_usb = usb_device_from_port(port2)
+
+    ws_client = await hass_ws_client(hass)
+
+    mock_callback1 = Mock(side_effect=RuntimeError("Failure 1"))
+    mock_callback2 = Mock(side_effect=RuntimeError("Failure 2"))
+
+    # Start off with no ports
+    with (
+        patch("pyudev.Context", side_effect=ImportError),
+        patch("homeassistant.components.usb.comports", return_value=[]),
+    ):
+        assert await async_setup_component(hass, "usb", {"usb": {}})
+
+        usb.async_register_port_event_callback(hass, mock_callback1)
+        usb.async_register_port_event_callback(hass, mock_callback2)
+
+    assert mock_callback1.mock_calls == []
+    assert mock_callback2.mock_calls == []
+
+    # Add two new ports
+    with (
+        patch("homeassistant.components.usb.comports", return_value=[port1, port2]),
+        caplog.at_level(logging.ERROR, logger="homeassistant.components.usb"),
+    ):
+        await ws_client.send_json({"id": 1, "type": "usb/scan"})
+        response = await ws_client.receive_json()
+        assert response["success"]
+        await hass.async_block_till_done()
+
+    # Both were called even though they raised exceptions
+    assert mock_callback1.mock_calls == [call({port1_usb, port2_usb}, set())]
+    assert mock_callback2.mock_calls == [call({port1_usb, port2_usb}, set())]
+
+    assert caplog.text.count("Error in USB port event callback") == 2
+    assert "Failure 1" in caplog.text
+    assert "Failure 2" in caplog.text

@@ -601,7 +601,7 @@ class Template:
         or filter depending on hass or the state machine.
         """
         if self.is_static:
-            if not parse_result or self.hass and self.hass.config.legacy_templates:
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
             return self._parse_result(self.template)
         assert self.hass is not None, "hass variable not set on template"
@@ -630,7 +630,7 @@ class Template:
         self._renders += 1
 
         if self.is_static:
-            if not parse_result or self.hass and self.hass.config.legacy_templates:
+            if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
             return self._parse_result(self.template)
 
@@ -651,7 +651,7 @@ class Template:
 
         render_result = render_result.strip()
 
-        if not parse_result or self.hass and self.hass.config.legacy_templates:
+        if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
         return self._parse_result(render_result)
@@ -826,7 +826,7 @@ class Template:
                 )
             return value if error_value is _SENTINEL else error_value
 
-        if not parse_result or self.hass and self.hass.config.legacy_templates:
+        if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
         return self._parse_result(render_result)
@@ -1873,14 +1873,19 @@ def is_state(hass: HomeAssistant, entity_id: str, state: str | list[str]) -> boo
     """Test if a state is a specific value."""
     state_obj = _get_state(hass, entity_id)
     return state_obj is not None and (
-        state_obj.state == state or isinstance(state, list) and state_obj.state in state
+        state_obj.state == state
+        or (isinstance(state, list) and state_obj.state in state)
     )
 
 
 def is_state_attr(hass: HomeAssistant, entity_id: str, name: str, value: Any) -> bool:
     """Test if a state's attribute is a specific value."""
-    attr = state_attr(hass, entity_id, name)
-    return attr is not None and attr == value
+    if (state_obj := _get_state(hass, entity_id)) is not None:
+        attr = state_obj.attributes.get(name, _SENTINEL)
+        if attr is _SENTINEL:
+            return False
+        return bool(attr == value)
+    return False
 
 
 def state_attr(hass: HomeAssistant, entity_id: str, name: str) -> Any:

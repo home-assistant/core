@@ -285,7 +285,7 @@ aiokef==0.2.16
 aiolifx-effects==0.3.2
 
 # homeassistant.components.lifx
-aiolifx-themes==0.6.2
+aiolifx-themes==0.6.4
 
 # homeassistant.components.lifx
 aiolifx==1.1.2
@@ -732,7 +732,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.28.0
+dbus-fast==2.29.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -815,7 +815,7 @@ ebusdpy==0.0.17
 ecoaliface==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.4
+eheimdigital==1.0.5
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.8.5
@@ -1046,7 +1046,7 @@ goslide-api==0.7.0
 gotailwind==0.3.0
 
 # homeassistant.components.govee_ble
-govee-ble==0.41.0
+govee-ble==0.42.0
 
 # homeassistant.components.govee_light_local
 govee-local-api==1.5.3
@@ -1205,7 +1205,7 @@ igloohome-api==0.0.6
 ihcsdk==2.8.5
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.0.7
+imgw_pib==1.0.9
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.4
@@ -2285,7 +2285,7 @@ pysignalclirestapi==0.3.24
 pyskyqhub==0.1.4
 
 # homeassistant.components.sma
-pysma==0.7.3
+pysma==0.7.5
 
 # homeassistant.components.smappee
 pysmappee==0.2.29
@@ -3100,7 +3100,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.4.7
 
 # homeassistant.components.youless
-youless-api==2.1.2
+youless-api==2.2.0
 
 # homeassistant.components.youtube
 youtubeaio==1.1.5
@@ -3118,7 +3118,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.139.0
+zeroconf==0.140.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
