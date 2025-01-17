@@ -360,7 +360,10 @@ class BackupSchedule:
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error creating automatic backup")
 
-        next_time += timedelta(seconds=random.randint(0, BACKUP_START_TIME_JITTER))
+        if self.time is None:
+            # randomize the start time of the backup by up to 60 minutes if the time is
+            # not set to avoid all backups running at the same time
+            next_time += timedelta(seconds=random.randint(0, BACKUP_START_TIME_JITTER))
         LOGGER.debug("Scheduling next automatic backup at %s", next_time)
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
