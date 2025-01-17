@@ -218,16 +218,16 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
-SERVICES = (
-    SERVICE_EFFECT_COLORLOOP,
-    SERVICE_EFFECT_FLAME,
-    SERVICE_EFFECT_MORPH,
-    SERVICE_EFFECT_MOVE,
-    SERVICE_EFFECT_PULSE,
-    SERVICE_EFFECT_SKY,
-    SERVICE_EFFECT_STOP,
-    SERVICE_PAINT_THEME,
-)
+SERVICES_SCHEMA = {
+    SERVICE_EFFECT_COLORLOOP: LIFX_EFFECT_COLORLOOP_SCHEMA,
+    SERVICE_EFFECT_FLAME: LIFX_EFFECT_FLAME_SCHEMA,
+    SERVICE_EFFECT_MORPH: LIFX_EFFECT_MORPH_SCHEMA,
+    SERVICE_EFFECT_MOVE: LIFX_EFFECT_MOVE_SCHEMA,
+    SERVICE_EFFECT_PULSE: LIFX_EFFECT_PULSE_SCHEMA,
+    SERVICE_EFFECT_SKY: LIFX_EFFECT_SKY_SCHEMA,
+    SERVICE_EFFECT_STOP: LIFX_EFFECT_STOP_SCHEMA,
+    SERVICE_PAINT_THEME: LIFX_PAINT_THEME_SCHEMA,
+}
 
 
 class LIFXManager:
@@ -242,7 +242,7 @@ class LIFXManager:
     @callback
     def async_unload(self) -> None:
         """Release resources."""
-        for service in SERVICES:
+        for service in SERVICES_SCHEMA:
             self.hass.services.async_remove(DOMAIN, service)
 
     @callback
@@ -270,72 +270,20 @@ class LIFXManager:
             if all_referenced:
                 await self.start_effect(all_referenced, service.service, **service.data)
 
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_PULSE,
-            service_handler,
-            schema=LIFX_EFFECT_PULSE_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_COLORLOOP,
-            service_handler,
-            schema=LIFX_EFFECT_COLORLOOP_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_FLAME,
-            service_handler,
-            schema=LIFX_EFFECT_FLAME_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_MORPH,
-            service_handler,
-            schema=LIFX_EFFECT_MORPH_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_MOVE,
-            service_handler,
-            schema=LIFX_EFFECT_MOVE_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_SKY,
-            service_handler,
-            schema=LIFX_EFFECT_SKY_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_EFFECT_STOP,
-            service_handler,
-            schema=LIFX_EFFECT_STOP_SCHEMA,
-        )
-
-        self.hass.services.async_register(
-            DOMAIN,
-            SERVICE_PAINT_THEME,
-            service_handler,
-            schema=LIFX_PAINT_THEME_SCHEMA,
-        )
+        for service, schema in SERVICES_SCHEMA.items():
+            self.hass.services.async_register(
+                DOMAIN, service, service_handler, schema=schema
+            )
 
     @staticmethod
     def build_theme(theme_name: str = "exciting", palette: list | None = None) -> Theme:
         """Either return the predefined theme or build one from the palette."""
-        if palette is not None:
-            theme = Theme()
-            for hsbk in palette:
-                theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
-        else:
-            theme = ThemeLibrary().get_theme(theme_name)
+        if palette is None:
+            return ThemeLibrary().get_theme(theme_name)
 
+        theme = Theme()
+        for hsbk in palette:
+            theme.add_hsbk(hsbk[0], hsbk[1], hsbk[2], hsbk[3])
         return theme
 
     async def _start_effect_flame(
