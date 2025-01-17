@@ -1614,6 +1614,9 @@ panacotta==0.2
 # homeassistant.components.panasonic_viera
 panasonic-viera==0.4.2
 
+# homeassistant.components.backup_sftp
+paramiko==3.5.0
+
 # homeassistant.components.dunehd
 pdunehd==1.3.2
 
