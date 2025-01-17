@@ -116,12 +116,12 @@ async def test_form_validation(
     assert "errors" not in result
 
 
-async def test_reauth_flow(
+async def test_reauth_flow_success(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the re-authentication flow."""
+    """Test the re-authentication flow succeeds."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -135,7 +135,15 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
-    # Simulate a new reauth flow with an authentication issue
+
+async def test_reauth_flow_failure(
+    hass: HomeAssistant,
+    mock_incomfort: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the re-authentication flow fails."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
     mock_incomfort().heaters.side_effect = IncomfortError(
         ClientResponseError(None, None, status=401)
     )
