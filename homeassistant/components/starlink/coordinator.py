@@ -67,7 +67,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
-        usage, consumption = history_stats(parse_samples=-1, context=context)[-2:]
+        usage, consumption = history_stats(parse_samples=-1, context=context)[5:6]
         return StarlinkData(
             location, sleep, status, obstruction, alert, usage, consumption
         )
