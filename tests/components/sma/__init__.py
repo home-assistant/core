@@ -17,6 +17,15 @@ MOCK_USER_INPUT = {
     "password": "password",
 }
 
+MOCK_DHCP_DISCOVERY = {
+    "host": "1.1.1.1",
+    "ssl": True,
+    "verify_ssl": False,
+    "group": "user",
+    "password": "password",
+    "mac": "00:15:bb:00:ab:cd",
+}
+
 
 def _patch_async_setup_entry(return_value=True):
     return patch(

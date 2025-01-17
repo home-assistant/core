@@ -15,7 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import MOCK_DEVICE, MOCK_USER_INPUT, _patch_async_setup_entry
+from . import (
+    MOCK_DEVICE,
+    MOCK_DHCP_DISCOVERY,
+    MOCK_USER_INPUT,
+    _patch_async_setup_entry,
+)
 
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
@@ -124,13 +129,13 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            MOCK_USER_INPUT,
+            MOCK_DHCP_DISCOVERY,
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == MOCK_USER_INPUT["host"]
-    assert result["data"] == MOCK_USER_INPUT
+    assert result["data"] == MOCK_DHCP_DISCOVERY
 
     assert len(mock_setup_entry.mock_calls) == 1
 

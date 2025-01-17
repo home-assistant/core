@@ -72,9 +72,8 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._data[CONF_HOST] = (
             self._discovery_data[CONF_HOST] if discovery else user_input[CONF_HOST]
         )
-        self._data[CONF_MAC] = (
-            format_mac(self._discovery_data[CONF_MAC]) if discovery else None
-        )
+        if discovery:
+            self._data[CONF_MAC] = format_mac(self._discovery_data[CONF_MAC])
         self._data[CONF_SSL] = user_input[CONF_SSL]
         self._data[CONF_VERIFY_SSL] = user_input[CONF_VERIFY_SSL]
         self._data[CONF_GROUP] = user_input[CONF_GROUP]
@@ -160,6 +159,9 @@ class SmaConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST, default=self._data[CONF_HOST]): cv.string,
+                    vol.Optional(
+                        CONF_MAC, default=self._discovery_data[CONF_MAC]
+                    ): cv.string,
                     vol.Optional(CONF_SSL, default=self._data[CONF_SSL]): cv.boolean,
                     vol.Optional(
                         CONF_VERIFY_SSL, default=self._data[CONF_VERIFY_SSL]
