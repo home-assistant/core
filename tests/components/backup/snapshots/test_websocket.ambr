@@ -244,6 +244,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -280,6 +281,7 @@
         }),
         'last_attempted_automatic_backup': '2024-10-26T04:45:00+01:00',
         'last_completed_automatic_backup': '2024-10-26T04:45:00+01:00',
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': 3,
           'days': 7,
@@ -312,6 +314,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -344,6 +347,7 @@
         }),
         'last_attempted_automatic_backup': '2024-10-27T04:45:00+01:00',
         'last_completed_automatic_backup': '2024-10-26T04:45:00+01:00',
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -376,6 +380,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-18T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
@@ -408,6 +413,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-16T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
@@ -439,6 +445,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -471,6 +478,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -536,6 +544,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -568,6 +577,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -633,6 +643,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -665,6 +676,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T06:00:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
@@ -730,6 +742,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -762,6 +775,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-18T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
@@ -827,6 +841,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -859,6 +874,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -924,6 +940,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -960,6 +977,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1029,6 +1047,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1061,6 +1080,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': 3,
           'days': 7,
@@ -1126,6 +1146,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1158,6 +1179,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1223,6 +1245,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1255,6 +1278,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -1320,6 +1344,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1352,6 +1377,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': 7,
@@ -1417,6 +1443,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1449,6 +1476,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
           'copies': 3,
           'days': None,
@@ -1514,6 +1542,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1545,6 +1574,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1576,6 +1606,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1607,6 +1638,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1638,6 +1670,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1669,6 +1702,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1700,6 +1734,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1731,6 +1766,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1762,6 +1798,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1793,6 +1830,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1824,6 +1862,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -1855,6 +1894,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,

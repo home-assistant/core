@@ -324,7 +324,10 @@ async def handle_config_info(
     connection.send_result(
         msg["id"],
         {
-            "config": manager.config.data.to_dict(),
+            "config": manager.config.data.to_dict()
+            | {
+                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup
+            },
         },
     )
 

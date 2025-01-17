@@ -1034,20 +1034,24 @@ async def test_agents_info(
         },
     ],
 )
+@patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
 async def test_config_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     hass_storage: dict[str, Any],
     storage_data: dict[str, Any] | None,
 ) -> None:
     """Test getting backup config info."""
+    client = await hass_ws_client(hass)
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-13T12:01:00+01:00")
+
     hass_storage.update(storage_data)
 
     await setup_backup_integration(hass)
     await hass.async_block_till_done()
-
-    client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
@@ -1126,18 +1130,22 @@ async def test_config_info(
         },
     ],
 )
+@patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
 async def test_config_update(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     command: dict[str, Any],
     hass_storage: dict[str, Any],
 ) -> None:
     """Test updating the backup config."""
+    client = await hass_ws_client(hass)
+    await hass.config.async_set_time_zone("Europe/Amsterdam")
+    freezer.move_to("2024-11-13T12:01:00+01:00")
+
     await setup_backup_integration(hass)
     await hass.async_block_till_done()
-
-    client = await hass_ws_client(hass)
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
@@ -1149,6 +1157,11 @@ async def test_config_update(
 
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
+    await hass.async_block_till_done()
+
+    # Trigger store write
+    freezer.tick(60)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass_storage[DOMAIN] == snapshot
