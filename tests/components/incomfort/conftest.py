@@ -20,12 +20,29 @@ MOCK_CONFIG = {
 }
 
 MOCK_HEATER_STATUS = {
-    "display_code": DisplayCode(126),
+    "display_code": DisplayCode.STANDBY,
     "display_text": "standby",
     "fault_code": None,
     "is_burning": False,
     "is_failed": False,
     "is_pumping": False,
+    "is_tapping": False,
+    "heater_temp": 35.34,
+    "tap_temp": 30.21,
+    "pressure": 1.86,
+    "serial_no": "c0ffeec0ffee",
+    "nodenr": 249,
+    "rf_message_rssi": 30,
+    "rfstatus_cntr": 0,
+}
+
+MOCK_HEATER_STATUS_HEATING = {
+    "display_code": DisplayCode.OPENTHERM,
+    "display_text": "opentherm",
+    "fault_code": None,
+    "is_burning": True,
+    "is_failed": False,
+    "is_pumping": True,
     "is_tapping": False,
     "heater_temp": 35.34,
     "tap_temp": 30.21,

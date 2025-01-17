@@ -66,7 +66,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
-    "securetar==2025.1.2",
+    "securetar==2025.1.3",
     "SQLAlchemy==2.0.36",
     "standard-aifc==3.13.0;python_version>='3.13'",
     "standard-telnetlib==3.13.0;python_version>='3.13'",
@@ -82,7 +82,7 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.139.0"
+    "zeroconf==0.140.1"
 ]
 
 [project.urls]
@@ -754,12 +754,24 @@ select = [
     "RSE", # flake8-raise
     "RUF005", # Consider iterable unpacking instead of concatenation
     "RUF006", # Store a reference to the return value of asyncio.create_task
+    "RUF007", # Prefer itertools.pairwise() over zip() when iterating over successive pairs
+    "RUF008", # Do not use mutable default values for dataclass attributes
     "RUF010", # Use explicit conversion flag
     "RUF013", # PEP 484 prohibits implicit Optional
+    "RUF016", # Slice in indexed access to type {value_type} uses type {index_type} instead of an integer
     "RUF017", # Avoid quadratic list summation
     "RUF018", # Avoid assignment expressions in assert statements
     "RUF019", # Unnecessary key check before dictionary access
-    # "RUF100", # Unused `noqa` directive; temporarily every now and then to clean them up
+    "RUF020", # {never_like} | T is equivalent to T
+    "RUF021", # Parenthesize a and b expressions when chaining and and or together, to make the precedence clear
+    "RUF022", # Sort __all__
+    "RUF024", # Do not pass mutable objects as values to dict.fromkeys
+    "RUF026", # default_factory is a positional-only argument to defaultdict
+    "RUF030", # print() call in assert statement is likely unintentional
+    "RUF033", # __post_init__ method with argument defaults
+    "RUF034", # Useless if-else condition
+    "RUF100", # Unused `noqa` directive
+    "RUF200", # Failed to parse pyproject.toml: {message}
     "S102", # Use of exec detected
     "S103", # bad-file-permissions
     "S108", # hardcoded-temp-file
