@@ -55,6 +55,7 @@ async def test_remove_binary_sensor_entity(
 ) -> None:
     """Test removing a binary_sensor entity."""
     entity_id = "binary_sensor.river_name_station_name_flood_alarm"
+    await init_integration(hass, mock_config_entry)
 
     entity_registry.async_get_or_create(
         BINARY_SENSOR_PLATFORM,
@@ -63,7 +64,5 @@ async def test_remove_binary_sensor_entity(
         suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],
         config_entry=mock_config_entry,
     )
-
-    await init_integration(hass, mock_config_entry)
 
     assert hass.states.get(entity_id) is None
