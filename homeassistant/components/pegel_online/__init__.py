@@ -46,6 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: PegelOnlineConfigEntry
+) -> bool:
     """Unload PEGELONLINE entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
