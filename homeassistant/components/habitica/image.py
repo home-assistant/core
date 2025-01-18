@@ -55,6 +55,9 @@ class HabiticaImage(HabiticaBase, ImageEntity):
         super().__init__(coordinator, self.entity_description)
         ImageEntity.__init__(self, hass)
         self._attr_image_last_updated = dt_util.utcnow()
+        self._current_appearance = UserStyles.from_dict(
+            asdict(self.coordinator.data.user)
+        )
 
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed since last avatar image generation."""
