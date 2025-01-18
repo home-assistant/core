@@ -122,10 +122,10 @@ class Light(HomeAccessory):
 
         if CHAR_COLOR_TEMPERATURE in self.chars:
             min_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
+                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
             )
             max_mireds = color_temperature_kelvin_to_mired(
-                attributes.get(ATTR_MAX_COLOR_TEMP_KELVIN, DEFAULT_MAX_COLOR_TEMP)
+                attributes.get(ATTR_MIN_COLOR_TEMP_KELVIN, DEFAULT_MIN_COLOR_TEMP)
             )
             # Ensure min is less than max
             self.min_mireds, self.max_mireds = get_min_max(min_mireds, max_mireds)
