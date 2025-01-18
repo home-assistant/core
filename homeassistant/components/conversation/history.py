@@ -9,7 +9,7 @@ from typing import Generic, Literal, TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import intent, llm, template
+from homeassistant.helpers import event, intent, llm, template
 from homeassistant.util import dt as dt_util, ulid
 from homeassistant.util.hass_dict import HassKey
 
@@ -35,6 +35,22 @@ async def async_get_chat_history(
     if all_history is None:
         all_history = {}
         hass.data[DATA_CHAT_HISTORY] = all_history
+
+        @callback
+        def history_cleanup(now: datetime) -> None:
+            """Clean up the history."""
+            # We mutate original object because current commands could be
+            # yielding history based on it.
+            for conversation_id, history in list(all_history.items()):
+                if history.last_updated + CONVERSATION_TIMEOUT < now:
+                    del all_history[conversation_id]
+
+        event.async_track_time_interval(
+            hass,
+            history_cleanup,
+            CONVERSATION_TIMEOUT,
+            name="Conversation history cleanup",
+        )
 
     history: ChatHistory | None = None
 
