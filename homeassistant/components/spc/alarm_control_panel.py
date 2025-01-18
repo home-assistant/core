@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_API, SIGNAL_UPDATE_ALARM
+from . import DATA_API, DOMAIN, SIGNAL_UPDATE_ALARM, ConfigEntry
 
 
 def _get_alarm_state(area: Area) -> AlarmControlPanelState | None:
@@ -47,6 +47,14 @@ async def async_setup_platform(
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the SPC alarm control panel from a config entry."""
+    api = hass.data[DOMAIN][entry.entry_id]
+    async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
+
+
 class SpcAlarm(AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
@@ -63,6 +71,7 @@ class SpcAlarm(AlarmControlPanelEntity):
         self._area = area
         self._api = api
         self._attr_name = area.name
+        self._attr_unique_id = area.id
 
     async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""
