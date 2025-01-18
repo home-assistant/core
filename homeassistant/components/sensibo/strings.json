@@ -486,7 +486,7 @@
     },
     "enable_climate_react": {
       "name": "Enable Climate React",
-      "description": "Enables and configures the Climate React mode.",
+      "description": "Enables and configures Climate React.",
       "fields": {
         "high_temperature_threshold": {
           "name": "Threshold high",
