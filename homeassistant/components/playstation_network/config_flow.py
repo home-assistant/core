@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError, PSNAWPException
+from psnawp_api.core.psnawp_exceptions import PSNAWPAuthenticationError, PSNAWPNotFound
 from psnawp_api.models.user import User
 from psnawp_api.psn import PlaystationNetwork
 import voluptuous as vol
@@ -26,16 +26,14 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            npsso = PlaystationNetwork.parse_npsso_token(user_input[CONF_NPSSO])
             try:
-                npsso = PlaystationNetwork.parse_npsso_token(
-                    user_input.get(CONF_NPSSO, "")
-                )
                 psn = PlaystationNetwork(npsso)
                 user: User = await self.hass.async_add_executor_job(psn.get_user)
             except PSNAWPAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except PSNAWPException:
-                errors["base"] = "cannot_connect"
+            except PSNAWPNotFound:
+                errors["base"] = "invalid_account"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
