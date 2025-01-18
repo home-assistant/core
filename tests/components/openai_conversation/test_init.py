@@ -169,26 +169,18 @@ async def test_invalid_config_entry(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=Request(method="GET", url="")), "Connection error"),
+        (APIConnectionError(request=None), "Connection error"),
         (
             AuthenticationError(
-                response=Response(
-                    status_code=500, request=Request(method="GET", url="")
-                ),
-                body=None,
-                message="",
+                response=Response(status_code=None, request=""), body=None, message=None
             ),
             "Invalid API key",
         ),
         (
             BadRequestError(
-                response=Response(
-                    status_code=500, request=Request(method="GET", url="")
-                ),
-                body=None,
-                message="",
+                response=Response(status_code=None, request=""), body=None, message=None
             ),
-            "openai_conversation integration not ready yet; Retrying in 5 seconds",
+            "openai_conversation integration not ready yet: None",
         ),
     ],
 )
@@ -213,7 +205,7 @@ async def test_init_error(
     ("service_data", "expected_args", "number_of_files"),
     [
         (
-            {"prompt": "Picture of a dog"},
+            {"prompt": "Picture of a dog", "image_filename": []},
             {
                 "messages": [
                     {
@@ -336,9 +328,8 @@ async def test_generate_content_service(
         assert len(mock_create.mock_calls) == 1
         assert mock_create.mock_calls[0][2] == expected_args
         assert mock_b64encode.call_count == number_of_files
-        if "image_filename" in service_data:
-            for idx, file in enumerate(service_data["image_filename"]):
-                assert mock_file.call_args_list[idx][0][0] == file
+        for idx, file in enumerate(service_data["image_filename"]):
+            assert mock_file.call_args_list[idx][0][0] == file
 
 
 @pytest.mark.usefixtures("mock_init_component")

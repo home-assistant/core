@@ -50,7 +50,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
 
 
-def encode_image(image_path) -> str:
+def encode_image(image_path: str) -> str:
     """Return base64 version of file contents."""
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
@@ -142,8 +142,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
         response_text: str = ""
-        if response.choices[0].message.content is not None:
-            response_text = response.choices[0].message.content.strip()
+        for response_choice in response.choices:
+            if response_choice.message.content is not None:
+                response_text += response_choice.message.content.strip()
 
         return {"text": response_text}
 
@@ -159,7 +160,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required("prompt"): cv.string,
-                vol.Optional("image_filename", default=list): list,
+                vol.Optional("image_filename", default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
             }
         ),
         supports_response=SupportsResponse.ONLY,
@@ -182,24 +185,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ),
                 vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
                 vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
-            }
-        ),
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GENERATE_CONTENT,
-        send_prompt,
-        schema=vol.Schema(
-            {
-                vol.Required("config_entry"): selector.ConfigEntrySelector(
-                    {
-                        "integration": DOMAIN,
-                    }
-                ),
-                vol.Required("prompt"): cv.string,
-                vol.Optional("image_filename", default=list): list,
             }
         ),
         supports_response=SupportsResponse.ONLY,
