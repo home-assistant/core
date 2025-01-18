@@ -44,7 +44,9 @@ class LcnEntity(Entity):
         return generate_unique_id(
             self.config_entry.entry_id,
             self.address,
-            get_resource(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]),
+            get_resource(
+                self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]
+            ).lower(),
         )
 
     @property
@@ -58,7 +60,7 @@ class LcnEntity(Entity):
 
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=f"{address}.{get_resource(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])}",
+            name=f"{address}.{get_resource(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]).lower()}",
             model=model,
             manufacturer="Issendorff",
             via_device=(
