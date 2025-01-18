@@ -187,7 +187,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Opower sensor."""
 
-    coordinator: OpowerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: OpowerCoordinator = entry.runtime_data
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
     for forecast in forecasts:
