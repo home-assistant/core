@@ -2521,10 +2521,13 @@ async def test_cached_entity_property_override(hass: HomeAssistant) -> None:
 
 
 async def test_entity_report_deprecated_supported_features_values(
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test reporting deprecated supported feature values only happens once."""
     ent = entity.Entity()
+    ent.hass = hass
+    ent.platform = MockEntityPlatform(hass)
 
     class MockEntityFeatures(IntFlag):
         VALUE1 = 1
