@@ -776,7 +776,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "pandora",
     "panel_iframe",
     "peco",
-    "pegel_online",
     "pencom",
     "permobil",
     "persistent_notification",
