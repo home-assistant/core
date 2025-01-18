@@ -95,6 +95,7 @@ class ReolinkHost:
         self.firmware_ch_list: list[int | None] = []
 
         self.starting: bool = True
+        self.privacy_mode: bool | None = None
         self.credential_errors: int = 0
 
         self.webhook_id: str | None = None
@@ -232,6 +233,8 @@ class ReolinkHost:
             self._cancel_tcp_push_check = async_call_later(
                 self._hass, FIRST_TCP_PUSH_TIMEOUT, self._async_check_tcp_push
             )
+
+        self.privacy_mode = self._api.baichuan.privacy_mode()
 
         ch_list: list[int | None] = [None]
         if self._api.is_nvr:
