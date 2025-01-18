@@ -201,13 +201,15 @@ class NMBSLiveBoard(SensorEntity):
     @property
     def name(self) -> str:
         """Return the sensor default name."""
-        return f"Trains in {self._station["standardname"]}"
+        return f"Trains in {self._station['standardname']}"
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID."""
 
-        unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
+        unique_id = (
+            f"{self._station['id']}_{self._station_from['id']}_{self._station_to['id']}"
+        )
         return f"nmbs_live_{unique_id}"
 
     @property
@@ -299,7 +301,7 @@ class NMBSSensor(SensorEntity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID."""
-        unique_id = f"{self._station_from["id"]}_{self._station_to["id"]}"
+        unique_id = f"{self._station_from['id']}_{self._station_to['id']}"
 
         return f"nmbs_connection_{unique_id}"
 
@@ -307,7 +309,7 @@ class NMBSSensor(SensorEntity):
     def name(self) -> str:
         """Return the name of the sensor."""
         if self._name is None:
-            return f"Train from {self._station_from["standardname"]} to {self._station_to["standardname"]}"
+            return f"Train from {self._station_from['standardname']} to {self._station_to['standardname']}"
         return self._name
 
     @property

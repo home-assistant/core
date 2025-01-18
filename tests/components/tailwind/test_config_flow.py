@@ -12,12 +12,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.tailwind.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 

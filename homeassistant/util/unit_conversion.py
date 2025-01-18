@@ -249,11 +249,15 @@ class ElectricPotentialConverter(BaseUnitConverter):
         UnitOfElectricPotential.VOLT: 1,
         UnitOfElectricPotential.MILLIVOLT: 1e3,
         UnitOfElectricPotential.MICROVOLT: 1e6,
+        UnitOfElectricPotential.KILOVOLT: 1 / 1e3,
+        UnitOfElectricPotential.MEGAVOLT: 1 / 1e6,
     }
     VALID_UNITS = {
         UnitOfElectricPotential.VOLT,
         UnitOfElectricPotential.MILLIVOLT,
         UnitOfElectricPotential.MICROVOLT,
+        UnitOfElectricPotential.KILOVOLT,
+        UnitOfElectricPotential.MEGAVOLT,
     }
 
 
