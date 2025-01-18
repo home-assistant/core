@@ -375,13 +375,13 @@
       "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
-      "message": "Rate limit exceeded, try again later"
+      "message": "Rate limit exceeded, try again in {retry_after} seconds"
     },
     "service_call_unallowed": {
       "message": "Unable to complete action, the required conditions are not met"
     },
     "service_call_exception": {
-      "message": "Unable to connect to Habitica, try again later"
+      "message": "Unable to connect to Habitica: {reason}"
     },
     "not_enough_mana": {
       "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."

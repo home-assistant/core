@@ -65,7 +65,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations:
-    status: todo
+    status: done
     comment: translations for UpdateFailed missing
   icon-translations: done
   reconfiguration-flow: todo
