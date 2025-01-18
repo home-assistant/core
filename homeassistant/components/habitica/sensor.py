@@ -44,6 +44,9 @@ from .util import get_attribute_points, get_attributes_total, inventory_list
 _LOGGER = logging.getLogger(__name__)
 
 
+PARALLEL_UPDATES = 1
+
+
 @dataclass(kw_only=True, frozen=True)
 class HabiticaSensorEntityDescription(SensorEntityDescription):
     """Habitica Sensor Description."""
