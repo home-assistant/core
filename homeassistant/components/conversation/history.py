@@ -136,6 +136,17 @@ class ChatHistory(Generic[_NativeT]):
         self.messages.append(message)
 
     @callback
+    def async_add_user_input(self, user_input: ConversationInput) -> None:
+        """Process intent."""
+        self.messages.append(
+            ChatMessage(
+                role="user",
+                agent_id=user_input.agent_id,
+                content=user_input.text,
+            )
+        )
+
+    @callback
     def async_get_messages(self, agent_id: str | None) -> list[ChatMessage[_NativeT]]:
         """Get messages for a specific agent ID."""
         return [
@@ -249,10 +260,4 @@ class ChatHistory(Generic[_NativeT]):
             agent_id=user_input.agent_id,
             content=prompt,
         )
-        self.messages.append(
-            ChatMessage(
-                role="user",
-                agent_id=user_input.agent_id,
-                content=user_input.text,
-            )
-        )
+        self.async_add_user_input(user_input)

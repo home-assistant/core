@@ -58,9 +58,11 @@ from .const import (
     DATA_DEFAULT_ENTITY,
     DEFAULT_EXPOSED_ATTRIBUTES,
     DOMAIN,
+    HOME_ASSISTANT_AGENT,
     ConversationEntityFeature,
 )
 from .entity import ConversationEntity
+from .history import ChatMessage, async_get_chat_history
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
@@ -1346,9 +1348,19 @@ class DefaultAgent(ConversationEntity):
             # No error message on failed match
             return None
 
-        conversation_result = await self._async_process_intent_result(
-            result, user_input
-        )
+        async with async_get_chat_history(self.hass, user_input) as chat_history:
+            chat_history.async_add_user_input(user_input)
+            conversation_result = await self._async_process_intent_result(
+                result, user_input
+            )
+            speech = conversation_result.response.speech
+            chat_history.async_add_message(
+                ChatMessage(
+                    role="assistant",
+                    agent_id=HOME_ASSISTANT_AGENT,
+                    content=speech["plain"]["speech"] if "plain" in speech else "",
+                )
+            )
         return conversation_result.response
 
 
