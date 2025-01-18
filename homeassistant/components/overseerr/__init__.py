@@ -121,12 +121,15 @@ class OverseerrWebhookManager:
             if await self.test_and_set_webhook(url):
                 return
         LOGGER.info("Failed to register Overseerr webhook")
-        if cloud.async_active_subscription(self.hass):
+        if (
+            cloud.async_active_subscription(self.hass)
+            and CONF_CLOUDHOOK_URL not in self.entry.data
+        ):
             LOGGER.info("Trying to register a cloudhook URL")
             url = await _async_cloudhook_generate_url(self.hass, self.entry)
             if await self.test_and_set_webhook(url):
                 return
-        LOGGER.error("Failed to register Overseerr webhook")
+            LOGGER.error("Failed to register Overseerr cloudhook")
 
     async def check_need_change(self) -> bool:
         """Check if webhook needs to be changed."""

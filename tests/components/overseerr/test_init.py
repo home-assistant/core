@@ -300,3 +300,48 @@ async def test_cloudhook_not_needed(
             ][0][0]
             == "http://10.10.10.10:8123/api/webhook/test-webhook-id"
         )
+
+
+async def test_cloudhook_not_connecting(
+    hass: HomeAssistant,
+    mock_cloudhook_config_entry: MockConfigEntry,
+    mock_overseerr_client_needs_change: AsyncMock,
+) -> None:
+    """Test the cloudhook is not registered if Overseerr cannot connect to it."""
+
+    await mock_cloud(hass)
+    await hass.async_block_till_done()
+
+    mock_overseerr_client_needs_change.test_webhook_notification_config.return_value = (
+        False
+    )
+
+    with (
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch("homeassistant.components.cloud.async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_create_cloudhook",
+            return_value="https://hooks.nabu.casa/ABCD",
+        ) as fake_create_cloudhook,
+    ):
+        await setup_integration(hass, mock_cloudhook_config_entry)
+
+        assert cloud.async_active_subscription(hass) is True
+
+        assert (
+            mock_cloudhook_config_entry.data[CONF_CLOUDHOOK_URL]
+            == "https://hooks.nabu.casa/ABCD"
+        )
+
+        assert (
+            len(
+                mock_overseerr_client_needs_change.test_webhook_notification_config.mock_calls
+            )
+            == 2
+        )
+
+        mock_overseerr_client_needs_change.set_webhook_notification_config.assert_not_called()
+
+        assert hass.config_entries.async_entries(DOMAIN)
+        fake_create_cloudhook.assert_not_called()
