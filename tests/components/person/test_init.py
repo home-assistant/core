@@ -132,8 +132,8 @@ async def test_setup_tracker(hass: HomeAssistant, hass_admin_user: MockUser) -> 
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
     assert state.attributes.get(ATTR_DEVICE_TRACKERS) == [DEVICE_TRACKER]
@@ -188,8 +188,8 @@ async def test_setup_two_trackers(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_GPS_ACCURACY) is None
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == user_id
@@ -378,8 +378,8 @@ async def test_load_person_storage(
     state = hass.states.get("person.tracked_person")
     assert state.state == "home"
     assert state.attributes.get(ATTR_ID) == "1234"
-    assert state.attributes.get(ATTR_LATITUDE) is None
-    assert state.attributes.get(ATTR_LONGITUDE) is None
+    assert state.attributes.get(ATTR_LATITUDE) == 32.87336
+    assert state.attributes.get(ATTR_LONGITUDE) == -117.22743
     assert state.attributes.get(ATTR_SOURCE) == DEVICE_TRACKER
     assert state.attributes.get(ATTR_USER_ID) == hass_admin_user.id
 
@@ -742,7 +742,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
         },
     )
 
-    assert len(hass.states.async_entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 3  # Person1, Person2, zone.home
 
     state_1 = hass.states.get("person.person_1")
     state_2 = hass.states.get("person.person_2")
@@ -772,7 +772,7 @@ async def test_reload(hass: HomeAssistant, hass_admin_user: MockUser) -> None:
         )
         await hass.async_block_till_done()
 
-    assert len(hass.states.async_entity_ids()) == 2
+    assert len(hass.states.async_entity_ids()) == 3  # Person1, Person2, zone.home
 
     state_1 = hass.states.get("person.person_1")
     state_2 = hass.states.get("person.person_2")
