@@ -58,7 +58,7 @@ class DefaultEntity(tts.TextToSpeechEntity):
     _attr_default_language = DEFAULT_LANG
 
 
-async def test_default_entity_attributes(hass: HomeAssistant) -> None:
+async def test_default_entity_attributes() -> None:
     """Test default entity attributes."""
     entity = DefaultEntity()
 
