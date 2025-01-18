@@ -24,11 +24,13 @@ from .models import BackupManagerError, Folder
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
 
-# The time of the automatic backup event should be compatible with
-# the time of the recorder's nightly job which runs at 04:12.
-# Run the backup at 04:45.
 CRON_PATTERN_DAILY = "{m} {h} * * *"
 CRON_PATTERN_WEEKLY = "{m} {h} * * {d}"
+
+# The default time for automatic backups is to run at 04:45.
+# This time is chosen to be compatible with the time of the recorder's
+# nightly job which runs at 04:12.
+DEFAULT_BACKUP_TIME = dt.time(4, 45)
 
 # Randomize the start time of the backup by up to 60 minutes to avoid
 # all backups running at the same time.
@@ -297,7 +299,7 @@ class BackupSchedule:
             self._unschedule_next(manager)
             return
 
-        time = self.time if self.time is not None else dt.time(4, 45)
+        time = self.time if self.time is not None else DEFAULT_BACKUP_TIME
         if self.state is ScheduleState.DAILY:
             self._schedule_next(
                 CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour),
@@ -328,7 +330,7 @@ class BackupSchedule:
         if next_time < now:
             # schedule a backup at next daily time once
             # if we missed the last scheduled backup
-            time = self.time if self.time is not None else dt.time(4, 45)
+            time = self.time if self.time is not None else DEFAULT_BACKUP_TIME
             cron_event = CronSim(
                 CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour), now
             )

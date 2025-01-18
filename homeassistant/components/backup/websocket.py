@@ -1,6 +1,5 @@
 """Websocket commands for the Backup integration."""
 
-from datetime import time
 from typing import Any
 
 import voluptuous as vol
@@ -330,11 +329,6 @@ async def handle_config_info(
             },
         },
     )
-
-
-def time_from_dict(data: dict[str, int]) -> time:
-    """Convert a dict to a time."""
-    return time(data["hour"], data["minute"])
 
 
 @websocket_api.require_admin
