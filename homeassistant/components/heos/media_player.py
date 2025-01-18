@@ -136,11 +136,15 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._source_manager = source_manager
         self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
+        model_parts = player.model.split(maxsplit=1)
+        manufacturer = model_parts[0] if len(model_parts) == 2 else "HEOS"
+        model = model_parts[1] if len(model_parts) == 2 else player.model
         self._attr_device_info = DeviceInfo(
-            identifiers={(HEOS_DOMAIN, player.player_id)},
-            manufacturer="HEOS",
-            model=player.model,
+            identifiers={(HEOS_DOMAIN, str(player.player_id))},
+            manufacturer=manufacturer,
+            model=model,
             name=player.name,
+            serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
 
