@@ -1152,6 +1152,8 @@ build.json @home-assistant/supervisor
 /tests/components/ping/ @jpbede
 /homeassistant/components/plaato/ @JohNan
 /tests/components/plaato/ @JohNan
+/homeassistant/components/playstation_network/ @jackjpowell
+/tests/components/playstation_network/ @jackjpowell
 /homeassistant/components/plex/ @jjlawren
 /tests/components/plex/ @jjlawren
 /homeassistant/components/plugwise/ @CoMPaTech @bouwew

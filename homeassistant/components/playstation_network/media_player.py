@@ -6,22 +6,21 @@ import logging
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
-    MediaPlayerEntityDescription,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PlaystationNetworkCoordinator
+from . import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_MAP = {"PS5": "PlayStation 5", "PS4": "PlayStation 4"}
+PARALLEL_UPDATES = 0
 
 
 class PlatformType(StrEnum):
@@ -33,11 +32,11 @@ class PlatformType(StrEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: PlaystationNetworkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Media Player Entity Setup."""
-    coordinator: PlaystationNetworkCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
 
     @callback
     def add_entities() -> None:
@@ -53,9 +52,8 @@ async def async_setup_entry(
             MediaPlayer(coordinator, platform)
             for platform in coordinator.data.registered_platforms
         )
-        remove_listener()
 
-    remove_listener = coordinator.async_add_listener(add_entities)
+    coordinator.async_add_listener(add_entities)
     add_entities()
 
 
@@ -70,30 +68,24 @@ class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerE
     ) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
-
-        self.entity_description = MediaPlayerEntityDescription(
-            key=platform,
-            translation_key="playstation",
-            device_class=MediaPlayerDeviceClass.RECEIVER,
-            name=None,
-            has_entity_name=True,
-        )
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.unique_id}_{self.entity_description.key}"
-        )
+        self._attr_translation_key = "playstation"
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
+        self._attr_name = None
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{platform}"
+        self.key = platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
-            name=PLATFORM_MAP[self.entity_description.key],
+            name=PLATFORM_MAP[self.key],
             manufacturer="Sony Interactive Entertainment",
-            model=PLATFORM_MAP[self.entity_description.key],
+            model=PLATFORM_MAP[self.key],
         )
 
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
         if (
-            self.entity_description.key
-            == self.coordinator.data.platform.get("platform", "")
+            self.key == self.coordinator.data.platform.get("platform", "")
             and self.coordinator.data.platform.get("onlineStatus", "") == "online"
         ):
             if (
@@ -109,9 +101,7 @@ class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerE
         """Media title getter."""
         if self.coordinator.data.title_metadata.get(
             "npTitleId"
-        ) and self.entity_description.key == self.coordinator.data.platform.get(
-            "platform", ""
-        ):
+        ) and self.key == self.coordinator.data.platform.get("platform", ""):
             return self.coordinator.data.title_metadata.get("titleName")
         return None
 
@@ -120,9 +110,7 @@ class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerE
         """Media image url getter."""
         if self.coordinator.data.title_metadata.get(
             "npTitleId"
-        ) and self.entity_description.key == self.coordinator.data.platform.get(
-            "platform", ""
-        ):
+        ) and self.key == self.coordinator.data.platform.get("platform", ""):
             title = self.coordinator.data.title_metadata
             if title.get("format", "") == PlatformType.PS5:
                 return title.get("conceptIconUrl")
@@ -136,6 +124,5 @@ class MediaPlayer(CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerE
         """Is user available on the Playstation Network."""
         return (
             self.coordinator.data.available is True
-            and self.entity_description.key
-            == self.coordinator.data.platform.get("platform", "")
+            and self.key == self.coordinator.data.platform.get("platform", "")
         )
