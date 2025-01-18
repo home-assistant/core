@@ -90,7 +90,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._host.api.session_active and super().available
+        return self._host.api.session_active and not self._host.api.baichuan.privacy_mode() and super().available
 
     @callback
     def _push_callback(self) -> None:
