@@ -70,6 +70,21 @@
           "pm10": "[%key:component::sensor::entity_component::pm10::name%]",
           "pm25": "[%key:component::sensor::entity_component::pm25::name%]"
         }
+      },
+      "pm25_concentration": {
+        "name": "PM2.5 Concentration"
+      },
+      "pm10_concentration": {
+        "name": "PM10 Concentration"
+      },
+      "o3_concentration": {
+        "name": "Ozone Concentration"
+      },
+      "no2_concentration": {
+        "name": "Nitrogen Dioxide Concentration"
+      },
+      "so2_concentration": {
+        "name": "Sulfur Dioxide Concentration"
       }
     }
   }
