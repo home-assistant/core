@@ -71,18 +71,13 @@ async def test_service_load_unload(
     # test with simulated second loaded envoy for COV on envoylist handling
     with (
         patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]),
-        patch.dict(
-            "homeassistant.components.enphase_envoy.services.envoylist",
-            {"4321": "hello world"},
-        ),
     ):
         await setup_integration(hass, config_entry)
         assert config_entry.state is ConfigEntryState.LOADED
 
-        # existing envoylist entry for COV of return in register_coordinator
+        # test COV for services loaded already
         await setup_hass_services(hass)
 
-        # existing envoylist entry for COV of return in unregister_coordinator.
         await hass.config_entries.async_unload(config_entry.entry_id)
         assert config_entry.state is ConfigEntryState.NOT_LOADED
 

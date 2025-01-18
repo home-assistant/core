@@ -7,6 +7,7 @@ import logging
 from pyenphase import Envoy, EnvoyError
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -21,7 +22,7 @@ from homeassistant.helpers import (
 )
 
 from .const import DOMAIN
-from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
+from .coordinator import EnphaseUpdateCoordinator
 
 ATTR_ENVOY = "envoy"
 
@@ -39,22 +40,22 @@ SERVICE_LIST: list[str] = [
 _LOGGER = logging.getLogger(__name__)
 
 
-# keep track of registered envoys
-envoylist: dict[str, EnphaseUpdateCoordinator] = {}
-
-
-def register_coordinator(entry: EnphaseConfigEntry) -> None:
-    """Add envoy coordinator to list for use by services."""
-    entry_envoy: Envoy = entry.runtime_data.envoy
-    if entry_envoy.serial_number:
-        envoylist[entry_envoy.serial_number] = entry.runtime_data
-
-
-def unregister_coordinator(entry: EnphaseConfigEntry) -> None:
-    """Remove envoy coordinator from list for use by services."""
-    entry_envoy: Envoy = entry.runtime_data.envoy
-    if entry_envoy.serial_number:
-        envoylist.pop(entry_envoy.serial_number)
+def _get_coordinator_from_serial(
+    hass: HomeAssistant, serial: str
+) -> EnphaseUpdateCoordinator | None:
+    """Find config entry with envoy serial as unique_id and return coordinator from runtime_data."""
+    if (
+        serial
+        and (
+            config_entry := hass.config_entries.async_entry_for_domain_unique_id(
+                DOMAIN, serial
+            )
+        )
+        and config_entry.state == ConfigEntryState.LOADED
+    ):
+        coordinator: EnphaseUpdateCoordinator = config_entry.runtime_data
+        return coordinator
+    return None
 
 
 def _find_envoy_coordinator(
@@ -69,7 +70,9 @@ def _find_envoy_coordinator(
     identifier = str(call.data.get(ATTR_ENVOY))
     # try if envoy.serial format was passed
     some_parts = identifier.split(".")
-    if len(some_parts) > 1 and (coordinator := envoylist.get(str(some_parts[1]))):
+    if len(some_parts) > 1 and (
+        coordinator := _get_coordinator_from_serial(hass, some_parts[1])
+    ):
         return coordinator
     # from here assume an entity id was passed
     entity_reg = er.async_get(hass)
@@ -82,7 +85,7 @@ def _find_envoy_coordinator(
     ):
         # see if this is the envoy
         if entry_dev.serial_number and (
-            coordinator := envoylist.get(entry_dev.serial_number)
+            coordinator := _get_coordinator_from_serial(hass, entry_dev.serial_number)
         ):
             return coordinator
         # try if some child device entity was passed
@@ -90,9 +93,14 @@ def _find_envoy_coordinator(
             entry_dev.via_device_id
             and (via_device := dev_reg.async_get(entry_dev.via_device_id))
             and via_device.serial_number
-            and (coordinator := envoylist.get(via_device.serial_number))
+            and (
+                coordinator := _get_coordinator_from_serial(
+                    hass, via_device.serial_number
+                )
+            )
         ):
             return coordinator
+
     # too bad, nothing we recognize
     raise ServiceValidationError(
         translation_domain=DOMAIN,

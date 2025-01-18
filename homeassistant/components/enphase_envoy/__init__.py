@@ -20,7 +20,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .services import register_coordinator, setup_hass_services, unregister_coordinator
+from .services import setup_hass_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -79,9 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     # Reload entry when it is updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # make envoy accessible for services
-    register_coordinator(entry)
-
     return True
 
 
@@ -92,7 +89,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Unload a config entry."""
-    unregister_coordinator(entry)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
