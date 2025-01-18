@@ -15,6 +15,8 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .test_common import async_setup_and_enable_all_entities
+
 from tests.common import async_fire_time_changed
 
 
@@ -31,12 +33,13 @@ async def test_setup_platforms(
 
 async def test_coordinator_updates(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_incomfort: MagicMock,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort coordinator is updating."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
     assert state.attributes["current_temperature"] == 21.4
@@ -82,13 +85,14 @@ async def test_coordinator_updates(
 )
 async def test_coordinator_update_fails(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_incomfort: MagicMock,
     freezer: FrozenDateTimeFactory,
     exc: Exception,
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort coordinator update fails."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
     state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == "1.86"
