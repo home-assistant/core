@@ -90,6 +90,14 @@ ROBOT_4_DATA = {
     "isUSBPowerOn": True,
     "USBFaultStatus": "CLEAR",
     "isDFIPartialFull": True,
+    "isLaserDirty": False,
+    "surfaceType": "TILE",
+    "hopperStatus": None,
+    "scoopsSavedCount": 3769,
+    "isHopperRemoved": None,
+    "optimalLitterLevel": 450,
+    "litterLevelPercentage": 0.7,
+    "litterLevelState": "OPTIMAL",
 }
 FEEDER_ROBOT_DATA = {
     "id": 1,
