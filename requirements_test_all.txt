@@ -1245,7 +1245,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.3.2
+nhc==0.3.4
 
 # homeassistant.components.nibe_heatpump
 nibe==2.14.0
@@ -1693,7 +1693,7 @@ pylibrespot-java==0.1.1
 pylitejet==0.6.3
 
 # homeassistant.components.litterrobot
-pylitterbot==2023.5.0
+pylitterbot==2024.0.0
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.23.0
@@ -2296,7 +2296,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.6.3
+teslemetry-stream==0.6.6
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
