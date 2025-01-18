@@ -30,7 +30,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send message. Will help with timeout errors (poor internet connection, etc)s."
+          "description": "Timeout for sending the message in seconds. Will help with timeout errors (poor Internet connection, etc)."
         },
         "keyboard": {
           "name": "Keyboard",
@@ -100,7 +100,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send photo."
+          "description": "Timeout for sending the photo in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -166,7 +166,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send sticker."
+          "description": "Timeout for sending the sticker in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -306,7 +306,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send video."
+          "description": "Timeout for sending the video in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -372,7 +372,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send voice."
+          "description": "Timeout for sending the voice in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -442,7 +442,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send document."
+          "description": "Timeout for sending the document in seconds."
         },
         "keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::keyboard::name%]",
@@ -546,7 +546,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for send poll."
+          "description": "Timeout for sending the poll in seconds."
         },
         "message_tag": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_tag::name%]",
@@ -628,7 +628,7 @@
         },
         "chat_id": {
           "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
-          "description": "ID of the chat where to edit the reply_markup."
+          "description": "ID of the chat where to edit the reply markup."
         },
         "inline_keyboard": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::inline_keyboard::name%]",
@@ -654,7 +654,7 @@
         },
         "timeout": {
           "name": "Read timeout",
-          "description": "Read timeout for sending the answer."
+          "description": "Timeout for sending the answer in seconds."
         }
       }
     },
