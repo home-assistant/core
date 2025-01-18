@@ -522,6 +522,15 @@ async def test_score_task(
         ),
         (
             {
+                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                ATTR_DIRECTION: "up",
+            },
+            ERROR_NOT_AUTHORIZED,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
                 ATTR_TASK: "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b",
                 ATTR_DIRECTION: "up",
             },

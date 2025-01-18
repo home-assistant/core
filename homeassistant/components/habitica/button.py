@@ -3,14 +3,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 from typing import Any
 
 from aiohttp import ClientError
 from habiticalib import (
+    HabiticaCastSkillResponse,
     HabiticaClass,
     HabiticaException,
+    HabiticaStatsResponse,
+    HabiticaUserResponse,
     NotAuthorizedError,
     Skill,
     TaskType,
@@ -31,6 +34,7 @@ from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
+from .util import apply_stats
 
 PARALLEL_UPDATES = 1
 
@@ -330,7 +334,7 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         try:
-            await self.entity_description.press_fn(self.coordinator)
+            response = await self.entity_description.press_fn(self.coordinator)
         except TooManyRequestsError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -347,7 +351,25 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
                 translation_key="service_call_exception",
             ) from e
         else:
-            await self.coordinator.async_request_refresh()
+            if isinstance(response, HabiticaUserResponse):
+                data = replace(self.coordinator.data, user=response.data)
+                self.coordinator.async_set_updated_data(data)
+            if isinstance(response, HabiticaCastSkillResponse):
+                data = replace(self.coordinator.data, user=response.data.user)
+                self.coordinator.async_set_updated_data(data)
+            if isinstance(response, HabiticaStatsResponse):
+                user = apply_stats(self.coordinator.data.user, response.data)
+                data = replace(self.coordinator.data, user=user)
+                self.coordinator.async_set_updated_data(data)
+            if not isinstance(
+                response,
+                (
+                    HabiticaUserResponse,
+                    HabiticaCastSkillResponse,
+                    HabiticaStatsResponse,
+                ),
+            ):
+                await self.coordinator.async_request_refresh()
 
     @property
     def available(self) -> bool:

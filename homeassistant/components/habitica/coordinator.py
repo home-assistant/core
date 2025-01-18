@@ -14,6 +14,7 @@ from habiticalib import (
     ContentData,
     Habitica,
     HabiticaException,
+    HabiticaSleepResponse,
     NotAuthorizedError,
     TaskData,
     TaskFilter,
@@ -119,7 +120,7 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         """Execute an API call."""
 
         try:
-            await func(self)
+            response = await func(self)
         except TooManyRequestsError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -131,7 +132,9 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
                 translation_key="service_call_exception",
             ) from e
         else:
-            await self.async_request_refresh()
+            if isinstance(response, HabiticaSleepResponse):
+                self.data.user.preferences.sleep = response.data
+                self.async_update_listeners()
 
     async def generate_avatar(self, user_styles: UserStyles) -> bytes:
         """Generate Avatar."""

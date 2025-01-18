@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, fields
+from dataclasses import asdict, fields, replace
 import datetime
 from math import floor
 from typing import TYPE_CHECKING
@@ -21,7 +21,7 @@ from dateutil.rrule import (
     YEARLY,
     rrule,
 )
-from habiticalib import ContentData, Frequency, TaskData, UserData
+from habiticalib import ContentData, Frequency, QuestData, StatsUser, TaskData, UserData
 
 from homeassistant.util import dt as dt_util
 
@@ -162,3 +162,23 @@ def inventory_list(
         for k, v in getattr(user.items, item_type, {}).items()
         if k != "Saddle"
     }
+
+
+def apply_stats(user: UserData, data: StatsUser) -> UserData:
+    """Apply stats response to user data."""
+
+    stats = {
+        field: value
+        for field in StatsUser.__annotations__
+        if (value := getattr(data, field)) is not None
+    }
+
+    return replace(user, stats=replace(user.stats, **stats))
+
+
+def apply_quest(user: UserData, data: QuestData) -> None:
+    """Apply quest response to user data."""
+
+    user.party.quest.progress = data.progress
+    user.party.quest.key = data.key
+    user.party.quest.RSVPNeeded = not data.members.get(str(user.id), False)

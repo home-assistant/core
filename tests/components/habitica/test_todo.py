@@ -523,7 +523,7 @@ async def test_delete_completed_todo_items_exception(
         (
             "todo.test_user_dailies",
             "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
-            "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+            "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a",
         ),
     ],
     ids=["todo", "daily"],
