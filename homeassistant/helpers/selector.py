@@ -160,7 +160,7 @@ ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
 )
 
 
-class EntityFilterSelectorConfig(TypedDict, total=False):
+class EntityFilterSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a single entity selector config."""
 
     integration: str
@@ -776,7 +776,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(BaseSelectorConfig, total=False):
+class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
