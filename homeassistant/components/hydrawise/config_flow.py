@@ -77,7 +77,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
         )
 
 
