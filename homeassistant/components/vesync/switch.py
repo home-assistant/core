@@ -106,10 +106,12 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         """Return the entity value to represent the entity state."""
         return self.entity_description.is_on(self.device)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.device.turn_off()
+        await self.hass.async_add_executor_job(self.device.turn_off)
+        await self.coordinator.async_request_refresh()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self.device.turn_on()
+        await self.hass.async_add_executor_job(self.device.turn_on)
+        await self.coordinator.async_request_refresh()
