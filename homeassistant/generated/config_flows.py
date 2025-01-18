@@ -476,6 +476,7 @@ FLOWS = {
         "picnic",
         "ping",
         "plaato",
+        "playstation_network",
         "plex",
         "plugwise",
         "plum_lightpad",
