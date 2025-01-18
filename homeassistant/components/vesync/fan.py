@@ -224,5 +224,5 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.device.turn_off()
+        await self.hass.async_add_executor_job(self.device.turn_off)
         await self.coordinator.async_request_refresh()
