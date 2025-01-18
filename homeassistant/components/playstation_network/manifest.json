@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/playstation_network",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["PSNAWP-HA==2.3.1"]
+  "quality_scale": "bronze",
+  "requirements": ["PSNAWP-HA==2.3.2"]
 }
