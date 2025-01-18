@@ -1,6 +1,7 @@
 """Tests for the humidifier platform."""
 
 from contextlib import nullcontext
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -63,31 +64,35 @@ async def test_humidifier_state(
     assert state.attributes.get(ATTR_HUMIDITY) == 40
 
 
-async def test_invalid_available_modes() -> None:
+async def test_invalid_available_modes(caplog: pytest.LogCaptureFixture) -> None:
     """Test invalid available mode mapping."""
 
-    with patch(
-        "homeassistant.components.vesync.humidifier._LOGGER.warning"
-    ) as mocked_warning:
-        _get_available_modes(["invalid_mode"])
-        mocked_warning.assert_called_once()
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    _get_available_modes(["invalid_mode"])
+
+    assert len(caplog.record_tuples) == 1
+    assert caplog.record_tuples[0][1] == logging.WARNING
+    assert caplog.record_tuples[0][2].startswith("Unknown mode")
 
 
-async def test_valid_available_modes() -> None:
+async def test_valid_available_modes(caplog: pytest.LogCaptureFixture) -> None:
     """Test valid available mode mapping."""
 
-    with patch(
-        "homeassistant.components.vesync.humidifier._LOGGER.warning"
-    ) as mocked_warning:
-        _get_available_modes(
-            [
-                VS_HUMIDIFIER_MODE_AUTO,
-                VS_HUMIDIFIER_MODE_HUMIDITY,
-                VS_HUMIDIFIER_MODE_MANUAL,
-                VS_HUMIDIFIER_MODE_SLEEP,
-            ]
-        )
-        mocked_warning.assert_not_called()
+    caplog.clear()
+    caplog.set_level(logging.WARNING)
+
+    _get_available_modes(
+        [
+            VS_HUMIDIFIER_MODE_AUTO,
+            VS_HUMIDIFIER_MODE_HUMIDITY,
+            VS_HUMIDIFIER_MODE_MANUAL,
+            VS_HUMIDIFIER_MODE_SLEEP,
+        ]
+    )
+
+    assert len(caplog.record_tuples) == 0
 
 
 async def test_set_target_humidity_invalid(
