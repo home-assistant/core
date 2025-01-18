@@ -7,7 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from fnmatch import translate
-from functools import lru_cache
+from functools import lru_cache, partial
 import itertools
 import logging
 import re
@@ -44,11 +44,16 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     discovery_flow,
+)
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -57,6 +62,7 @@ from homeassistant.helpers.event import (
     async_track_state_added_domain,
     async_track_time_interval,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo as _DhcpServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import DHCPMatcher, async_get_dhcp
 
@@ -74,13 +80,11 @@ SCAN_INTERVAL = timedelta(minutes=60)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
-class DhcpServiceInfo(BaseServiceInfo):
-    """Prepared info from dhcp entries."""
-
-    ip: str
-    hostname: str
-    macaddress: str
+_DEPRECATED_DhcpServiceInfo = DeprecatedConstant(
+    _DhcpServiceInfo,
+    "homeassistant.helpers.service_info.dhcp.DhcpServiceInfo",
+    "2026.2",
+)
 
 
 @dataclass(slots=True)
@@ -296,7 +300,7 @@ class WatcherBase:
                 self.hass,
                 domain,
                 {"source": config_entries.SOURCE_DHCP},
-                DhcpServiceInfo(
+                _DhcpServiceInfo(
                     ip=ip_address,
                     hostname=lowercase_hostname,
                     macaddress=mac_address,
@@ -486,3 +490,11 @@ def _memorized_fnmatch(name: str, pattern: str) -> bool:
     since the devices will not change frequently
     """
     return bool(_compile_fnmatch(pattern).match(name))
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

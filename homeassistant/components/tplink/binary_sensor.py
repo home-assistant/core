@@ -8,6 +8,7 @@ from typing import Final, cast
 from kasa import Feature
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
+from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -23,8 +25,11 @@ from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescripti
 class TPLinkBinarySensorEntityDescription(
     BinarySensorEntityDescription, TPLinkFeatureEntityDescription
 ):
-    """Base class for a TPLink feature based sensor entity description."""
+    """Base class for a TPLink feature based binary sensor entity description."""
 
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 BINARY_SENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
@@ -38,11 +43,6 @@ BINARY_SENSOR_DESCRIPTIONS: Final = (
     TPLinkBinarySensorEntityDescription(
         key="cloud_connection",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
-    ),
-    # To be replaced & disabled per default by the upcoming update platform.
-    TPLinkBinarySensorEntityDescription(
-        key="update_available",
-        device_class=BinarySensorDeviceClass.UPDATE,
     ),
     TPLinkBinarySensorEntityDescription(
         key="temperature_warning",
@@ -75,19 +75,30 @@ async def async_setup_entry(
     """Set up sensors."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        hass=hass,
-        device=device,
-        coordinator=parent_coordinator,
-        feature_type=Feature.Type.BinarySensor,
-        entity_class=TPLinkBinarySensorEntity,
-        descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
-        child_coordinators=children_coordinators,
-    )
-    async_add_entities(entities)
+    known_child_device_ids: set[str] = set()
+    first_check = True
+
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.BinarySensor,
+            entity_class=TPLinkBinarySensorEntity,
+            descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_cleanup_deprecated(
+            hass, BINARY_SENSOR_DOMAIN, config_entry.entry_id, entities
+        )
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):
