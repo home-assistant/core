@@ -131,7 +131,20 @@ def _validate_supported_features(supported_features: int | list[str]) -> int:
     return feature_mask
 
 
-ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+BASE_SELECTOR_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Optional("read_only"): bool,
+    }
+)
+
+
+class BaseSelectorConfig(TypedDict, total=False):
+    """Class to common options of all selectors."""
+
+    read_only: bool
+
+
+ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
     {
         # Integration that provided the entity
         vol.Optional("integration"): str,
@@ -763,7 +776,7 @@ class DurationSelector(Selector[DurationSelectorConfig]):
         return cast(dict[str, float], data)
 
 
-class EntitySelectorConfig(EntityFilterSelectorConfig, total=False):
+class EntitySelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent an entity selector config."""
 
     exclude_entities: list[str]
@@ -1142,7 +1155,7 @@ class SelectSelectorMode(StrEnum):
     DROPDOWN = "dropdown"
 
 
-class SelectSelectorConfig(TypedDict, total=False):
+class SelectSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a select selector config."""
 
     options: Required[Sequence[SelectOptionDict] | Sequence[str]]
@@ -1159,7 +1172,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 
     selector_type = "select"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Required("options"): vol.All(vol.Any([str], [select_option])),
             vol.Optional("multiple", default=False): cv.boolean,
@@ -1295,7 +1308,7 @@ class TemplateSelector(Selector[TemplateSelectorConfig]):
         return template.template
 
 
-class TextSelectorConfig(TypedDict, total=False):
+class TextSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a text selector config."""
 
     multiline: bool
@@ -1330,7 +1343,7 @@ class TextSelector(Selector[TextSelectorConfig]):
 
     selector_type = "text"
 
-    CONFIG_SCHEMA = vol.Schema(
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
         {
             vol.Optional("multiline", default=False): bool,
             vol.Optional("prefix"): str,

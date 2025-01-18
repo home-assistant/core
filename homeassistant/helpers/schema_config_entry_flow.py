@@ -216,7 +216,7 @@ class SchemaCommonFlowHandler:
                     )
                     and not (
                         # don't remove read_only keys
-                        key.description and key.description.get("read_only")
+                        data_schema.schema[key].config.get("read_only")
                     )
                 ):
                     # Key not present, delete keys old value (if present) too
