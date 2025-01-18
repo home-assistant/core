@@ -103,7 +103,7 @@ def mock_reauth_entry():
         source=config_entries.SOURCE_REAUTH,
         entry_id="1",
         unique_id="compit_test@example.com",
-        discovery_keys=None,
+        discovery_keys={},
         minor_version=0,
         options={},
     )
