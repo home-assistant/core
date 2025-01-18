@@ -50,6 +50,7 @@ from homeassistant.util import (
     language as language_util,
     ulid as ulid_util,
 )
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.limited_size_dict import LimitedSizeDict
 
 from .audio_enhancer import AudioEnhancer, EnhancedAudioChunk, MicroVadSpeexEnhancer
@@ -90,6 +91,8 @@ ENGINE_LANGUAGE_PAIRS = (
     ("stt_engine", "stt_language"),
     ("tts_engine", "tts_language"),
 )
+
+KEY_ASSIST_PIPELINE: HassKey[PipelineData] = HassKey(DOMAIN)
 
 
 def validate_language(data: dict[str, Any]) -> Any:
@@ -248,7 +251,7 @@ async def async_create_default_pipeline(
     The default pipeline will use the homeassistant conversation agent and the
     specified stt / tts engines.
     """
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_store = pipeline_data.pipeline_store
     pipeline_settings = _async_resolve_default_pipeline_settings(
         hass,
@@ -283,7 +286,7 @@ def _async_get_pipeline_from_conversation_entity(
 @callback
 def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> Pipeline:
     """Get a pipeline by id or the preferred pipeline."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     if pipeline_id is None:
         # A pipeline was not specified, use the preferred one
@@ -306,7 +309,7 @@ def async_get_pipeline(hass: HomeAssistant, pipeline_id: str | None = None) -> P
 @callback
 def async_get_pipelines(hass: HomeAssistant) -> list[Pipeline]:
     """Get all pipelines."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     return list(pipeline_data.pipeline_store.data.values())
 
@@ -329,7 +332,7 @@ async def async_update_pipeline(
     prefer_local_intents: bool | UndefinedType = UNDEFINED,
 ) -> None:
     """Update a pipeline."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
 
     updates: dict[str, Any] = pipeline.to_json()
     updates.pop("id")
@@ -587,7 +590,7 @@ class PipelineRun:
         ):
             raise InvalidPipelineStagesError(self.start_stage, self.end_stage)
 
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         if self.pipeline.id not in pipeline_data.pipeline_debug:
             pipeline_data.pipeline_debug[self.pipeline.id] = LimitedSizeDict(
                 size_limit=STORED_PIPELINE_RUNS
@@ -615,7 +618,7 @@ class PipelineRun:
     def process_event(self, event: PipelineEvent) -> None:
         """Log an event and call listener."""
         self.event_callback(event)
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         if self.id not in pipeline_data.pipeline_debug[self.pipeline.id]:
             # This run has been evicted from the logged pipeline runs already
             return
@@ -650,7 +653,7 @@ class PipelineRun:
             )
         )
 
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         pipeline_data.pipeline_runs.remove_run(self)
 
     async def prepare_wake_word_detection(self) -> None:
@@ -1227,7 +1230,7 @@ class PipelineRun:
             return
 
         # Forward to device audio capture
-        pipeline_data: PipelineData = self.hass.data[DOMAIN]
+        pipeline_data = self.hass.data[KEY_ASSIST_PIPELINE]
         audio_queue = pipeline_data.device_audio_queues.get(self._device_id)
         if audio_queue is None:
             return
@@ -1884,7 +1887,7 @@ class PipelineStore(Store[SerializedPipelineStorageCollection]):
         return old_data
 
 
-@singleton(DOMAIN)
+@singleton(KEY_ASSIST_PIPELINE, async_=True)
 async def async_setup_pipeline_store(hass: HomeAssistant) -> PipelineData:
     """Set up the pipeline storage collection."""
     pipeline_store = PipelineStorageCollection(
