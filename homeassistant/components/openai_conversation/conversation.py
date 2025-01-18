@@ -176,7 +176,7 @@ class OpenAIConversationEntity(
 
         messages: list[ChatCompletionMessageParam] = []
         for message in history.async_get_messages(user_input.agent_id):
-            if message.native is not None:
+            if message.native is not None and message.agent_id == user_input.agent_id:
                 messages.append(message.native)
             else:
                 messages.append(

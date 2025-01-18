@@ -109,6 +109,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serializable_data = cls._serializable_issue_registry_entry(data)
         elif isinstance(data, dict) and "flow_id" in data and "handler" in data:
             serializable_data = cls._serializable_flow_result(data)
+        elif isinstance(data, dict) and set(data) == {"conversation_id", "response"}:
+            serializable_data = cls._serializable_conversation_result(data)
         elif isinstance(data, vol.Schema):
             serializable_data = voluptuous_serialize.convert(data)
         elif isinstance(data, ConfigEntry):
@@ -199,6 +201,11 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     def _serializable_flow_result(cls, data: FlowResult) -> SerializableData:
         """Prepare a Home Assistant flow result for serialization."""
         return FlowResultSnapshot(data | {"flow_id": ANY})
+
+    @classmethod
+    def _serializable_conversation_result(cls, data: dict) -> SerializableData:
+        """Prepare a Home Assistant conversation result for serialization."""
+        return data | {"conversation_id": ANY}
 
     @classmethod
     def _serializable_issue_registry_entry(
