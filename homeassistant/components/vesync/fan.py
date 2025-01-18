@@ -225,3 +225,4 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()
+        self.schedule_update_ha_state()
