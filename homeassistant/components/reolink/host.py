@@ -115,6 +115,7 @@ class ReolinkHost:
         self._long_poll_task: asyncio.Task | None = None
         self._lost_subscription_start: bool = False
         self._lost_subscription: bool = False
+        self.cancel_refresh_privacy_mode: CALLBACK_TYPE | None = None
 
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:

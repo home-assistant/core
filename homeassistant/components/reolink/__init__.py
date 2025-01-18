@@ -203,12 +203,14 @@ async def async_setup_entry(
     async def refresh(*args: Any) -> None:
         """Request refresh of coordinator."""
         await device_coordinator.async_request_refresh()
+        host.cancel_refresh_privacy_mode = None
 
     def async_privacy_mode_change() -> None:
         """Request update when privacy mode is turned off."""
         if host.privacy_mode and not host.api.baichuan.privacy_mode():
             # The privacy mode just turned off, give the API 2 seconds to start
-            config_entry.async_on_unload(async_call_later(hass, 2, refresh))
+            if host.cancel_refresh_privacy_mode is None:
+                host.cancel_refresh_privacy_mode = async_call_later(hass, 2, refresh)
         host.privacy_mode = host.api.baichuan.privacy_mode()
 
     host.api.baichuan.register_callback(
@@ -240,6 +242,8 @@ async def async_unload_entry(
     await host.stop()
 
     host.api.baichuan.unregister_callback("privacy_mode_change")
+    if host.cancel_refresh_privacy_mode is not None:
+        host.cancel_refresh_privacy_mode()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
