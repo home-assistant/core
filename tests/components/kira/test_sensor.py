@@ -36,6 +36,8 @@ def test_kira_sensor_callback(
 
     assert sensor.name == "kira"
 
+    sensor.hass = hass
+
     codeName = "FAKE_CODE"
     deviceName = "FAKE_DEVICE"
     codeTuple = (codeName, deviceName)
