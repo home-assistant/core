@@ -103,7 +103,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         try:
             accounts = await self.api.async_get_accounts()
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting forecasts: %s", err)
+            _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
             id_prefix = "_".join(
