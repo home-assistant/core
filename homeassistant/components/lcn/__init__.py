@@ -28,9 +28,13 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -76,6 +80,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up a connection to PCHK host from a config entry."""
     if config_entry.entry_id in hass.data[DOMAIN]:
         return False
+
+    await async_migrate_entities(hass, config_entry)
 
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
@@ -183,6 +189,29 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
     return True
+
+
+async def async_migrate_entities(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
+    """Migrate entity registry."""
+
+    @callback
+    def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
+        # fix unique entity ids for climate and scene
+        if "." in entity_entry.unique_id:
+            if entity_entry.domain == Platform.CLIMATE:
+                setpoint = entity_entry.unique_id.split(".")[-1]
+                return {
+                    "new_unique_id": entity_entry.unique_id.rsplit("-", 1)[0]
+                    + f"-{setpoint}"
+                }
+            if entity_entry.domain == Platform.SCENE:
+                return {"new_unique_id": entity_entry.unique_id.replace(".", "")}
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:

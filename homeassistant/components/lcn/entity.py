@@ -51,7 +51,9 @@ class LcnEntity(Entity):
         return generate_unique_id(
             self.config_entry.entry_id,
             self.address,
-            get_resource(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]),
+            get_resource(
+                self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA]
+            ).lower(),
         )
 
     async def async_added_to_hass(self) -> None:
