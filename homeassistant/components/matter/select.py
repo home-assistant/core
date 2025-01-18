@@ -127,7 +127,8 @@ class MatterListSelectEntity(MatterSelectEntity):
         await self.matter_client.send_device_command(
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
-            command=self.entity_description.command(targetTemperatureLevel=option_id),
+            #command=self.entity_description.command(targetTemperatureLevel=option_id),
+            command=clusters.TemperatureControl.Commands.SetTemperature(targetTemperatureLevel=option_id),
         )
 
     @callback
