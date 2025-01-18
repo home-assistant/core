@@ -7,7 +7,7 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.playstation_network.config_flow import (
     PSNAWPAuthenticationError,
-    PSNAWPException,
+    PSNAWPNotFound,
 )
 from homeassistant.components.playstation_network.const import CONF_NPSSO, DOMAIN
 from homeassistant.core import HomeAssistant
@@ -55,7 +55,7 @@ async def test_form_success(hass: HomeAssistant, npsso) -> None:
 @pytest.mark.parametrize(
     ("raise_error", "text_error"),
     [
-        (PSNAWPException(), "cannot_connect"),
+        (PSNAWPNotFound(), "invalid_account"),
         (PSNAWPAuthenticationError(), "invalid_auth"),
         (Exception(), "unknown"),
     ],
