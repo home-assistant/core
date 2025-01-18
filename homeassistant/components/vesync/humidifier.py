@@ -101,25 +101,31 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _ha_to_vs_mode_map: dict[str, str] = {}
     _available_modes: list[str] = []
 
-    def _get_vs_mode(self, ha_mode: str) -> str | None:
-        return self._ha_to_vs_mode_map.get(ha_mode)
-
-    @property
-    def available_modes(self) -> list[str]:
-        """Return the available mist modes."""
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the VeSyncHumidifierHA  device."""
+        super().__init__(device, coordinator)
 
         # 2 Vesync humidifier modes (humidity and auto) maps to the HA mode auto.
         # They are on different devices though. We need to map HA mode to the
         # device specific mode when setting it.
 
         # Populate maps once.
-        if not self._available_modes:
-            for vs_mode in self.device.mist_modes:
-                ha_mode = _get_ha_mode(vs_mode)
-                if ha_mode:
-                    self._available_modes.append(ha_mode)
-                    self._ha_to_vs_mode_map[ha_mode] = vs_mode
+        for vs_mode in self.device.mist_modes:
+            ha_mode = _get_ha_mode(vs_mode)
+            if ha_mode:
+                self._available_modes.append(ha_mode)
+                self._ha_to_vs_mode_map[ha_mode] = vs_mode
 
+    def _get_vs_mode(self, ha_mode: str) -> str | None:
+        return self._ha_to_vs_mode_map.get(ha_mode)
+
+    @property
+    def available_modes(self) -> list[str]:
+        """Return the available mist modes."""
         return self._available_modes
 
     @property
