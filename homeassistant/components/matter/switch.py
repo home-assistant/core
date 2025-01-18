@@ -75,7 +75,7 @@ class MatterNumericSwitch(MatterSwitch):
 
     entity_description: MatterNumericSwitchEntityDescription
 
-    async def async_set_native_value(self, value: bool) -> None:
+    async def _async_set_native_value(self, value: bool) -> None:
         """Update the current value."""
         matter_attribute = self._entity_info.primary_attribute
         if value_convert := self.entity_description.ha_to_native_value:
