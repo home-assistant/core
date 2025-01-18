@@ -68,11 +68,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
-        history = history_stats(
+        index, _, _, _, _, usage, consumption, *_ = history_stats(
             parse_samples=-1, start=self.history_stats_start, context=context
         )
-        index = history[0]
-        usage, consumption = history[5:7]
         self.history_stats_start = index["end_counter"]
         if self.data:
             if index["samples"] > 0:
