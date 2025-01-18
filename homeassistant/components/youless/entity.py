@@ -1,12 +1,9 @@
 """The entity for the Youless integration."""
 
-from collections.abc import Callable
-
-from youless_api import YoulessAPI
-
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import YouLessCoordinator
 
 
@@ -14,21 +11,15 @@ class YouLessEntity(CoordinatorEntity[YouLessCoordinator]):
     """Base entity for YouLess."""
 
     def __init__(
-        self,
-        coordinator: YouLessCoordinator,
-        value_func: Callable[[YoulessAPI], float | None],
+        self, coordinator: YouLessCoordinator, device_group: str, device_name: str
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self.device = coordinator.device
-        self.value_func = value_func
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.value_func(self.device)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self.value_func(self.device) is not None
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_group)},
+            manufacturer="YouLess",
+            model=self.device.model,
+            name=device_name,
+            sw_version=self.device.firmware_version,
+        )

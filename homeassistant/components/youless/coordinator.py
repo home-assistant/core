@@ -22,5 +22,4 @@ class YouLessCoordinator(DataUpdateCoordinator[None]):
         self.device = device
 
     async def _async_update_data(self) -> None:
-        self.logger.debug("Updating YouLess data for %s", self.device.mac_address)
         await self.hass.async_add_executor_job(self.device.update)

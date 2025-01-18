@@ -23,8 +23,8 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import DOMAIN
 from .coordinator import YouLessCoordinator
@@ -37,8 +37,6 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
 
     device_group: str
     device_group_name: str
-    friendly_name: str
-    icon: str | None
     value_func: Callable[[YoulessAPI], float | None]
 
 
@@ -47,7 +45,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="water",
         device_group="water",
         device_group_name="Water meter",
-        friendly_name="Water usage",
+        name="Water usage",
         icon="mdi:water",
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -60,7 +58,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="gas",
         device_group="gas",
         device_group_name="Gas meter",
-        friendly_name="Gas usage",
+        name="Gas usage",
         icon="mdi:fire",
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -71,7 +69,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="usage",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Power Usage",
+        name="Power Usage",
         icon="mdi:meter-electric",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -84,7 +82,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="power_low",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Energy low",
+        name="Energy low",
         icon="mdi:transmission-tower-export",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -97,7 +95,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="power_high",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Energy high",
+        name="Energy high",
         icon="mdi:transmission-tower-export",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -110,7 +108,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="power_total",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Energy total",
+        name="Energy total",
         icon="mdi:transmission-tower-export",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -123,7 +121,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_1_power",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 1 power",
+        name="Phase 1 power",
         icon=None,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -134,7 +132,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_1_voltage",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 1 voltage",
+        name="Phase 1 voltage",
         icon=None,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -147,7 +145,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_1_current",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 1 current",
+        name="Phase 1 current",
         icon=None,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -160,7 +158,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_2_power",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 2 power",
+        name="Phase 2 power",
         icon=None,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -171,7 +169,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_2_voltage",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 2 voltage",
+        name="Phase 2 voltage",
         icon=None,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -184,7 +182,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_2_current",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 2 current",
+        name="Phase 2 current",
         icon=None,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -197,7 +195,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_3_power",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 3 power",
+        name="Phase 3 power",
         icon=None,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -208,7 +206,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_3_voltage",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 3 voltage",
+        name="Phase 3 voltage",
         icon=None,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -221,7 +219,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="phase_3_current",
         device_group="power",
         device_group_name="Power usage",
-        friendly_name="Phase 3 current",
+        name="Phase 3 current",
         icon=None,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
@@ -234,7 +232,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="delivery_low",
         device_group="delivery",
         device_group_name="Energy delivery",
-        friendly_name="Energy delivery low",
+        name="Energy delivery low",
         icon="mdi:transmission-tower-import",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -247,7 +245,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="delivery_high",
         device_group="delivery",
         device_group_name="Energy delivery",
-        friendly_name="Energy delivery high",
+        name="Energy delivery high",
         icon="mdi:transmission-tower-import",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -260,7 +258,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="extra_total",
         device_group="extra",
         device_group_name="Extra meter",
-        friendly_name="Extra total",
+        name="Extra total",
         icon="mdi:meter-electric",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -273,7 +271,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         key="extra_usage",
         device_group="extra",
         device_group_name="Extra meter",
-        friendly_name="Extra usage",
+        name="Extra usage",
         icon="mdi:lightning-bolt",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -310,17 +308,16 @@ class YouLessSensor(YouLessEntity, SensorEntity):
         device: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.value_func)
-        self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"
-        self._attr_name = description.friendly_name
-        self._attr_icon = description.icon
-        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
-        self._attr_device_class = description.device_class
-        self._attr_state_class = description.state_class
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{device}_{description.device_group}")},
-            manufacturer="YouLess",
-            model=self.device.model,
-            name=description.device_group_name,
-            sw_version=self.device.firmware_version,
+        super().__init__(
+            coordinator,
+            f"{device}_{description.device_group}",
+            description.device_group_name,
         )
+        self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"
+        self.entity_description = description
+        self.value_func = description.value_func
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.value_func(self.device)

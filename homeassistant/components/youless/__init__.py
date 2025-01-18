@@ -21,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up youless from a config entry."""
     api = YoulessAPI(entry.data[CONF_HOST])
-    _LOGGER.info("Setting up connection to %s", entry.data[CONF_HOST])
 
     try:
         await hass.async_add_executor_job(api.initialize)
