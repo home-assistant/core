@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
+    CONF_RESOURCE,
     CONF_USERNAME,
     Platform,
 )
@@ -155,6 +156,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         if config_entry.minor_version < 2:
             new_data[CONF_ACKNOWLEDGE] = False
 
+    if config_entry.version < 2:
         # update to 2.1  (fix transitions for lights and switches)
         new_entities_data = [*new_data[CONF_ENTITIES]]
         for entity in new_entities_data:
@@ -164,8 +166,15 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 entity[CONF_DOMAIN_DATA][CONF_TRANSITION] /= 1000.0
         new_data[CONF_ENTITIES] = new_entities_data
 
+    if config_entry.version < 3:
+        # update to 3.1 (remove resource parameter)
+        new_entities_data = [*new_data[CONF_ENTITIES]]
+        for entity in new_entities_data:
+            entity.pop(CONF_RESOURCE, None)
+        new_data[CONF_ENTITIES] = new_entities_data
+
     hass.config_entries.async_update_entry(
-        config_entry, data=new_data, minor_version=1, version=2
+        config_entry, data=new_data, minor_version=1, version=3
     )
 
     _LOGGER.debug(
