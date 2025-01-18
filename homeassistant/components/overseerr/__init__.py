@@ -19,14 +19,15 @@ from homeassistant.components.webhook import (
 from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.http import HomeAssistantView
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, JSON_PAYLOAD, LOGGER, REGISTERED_NOTIFICATIONS
+from .const import DOMAIN, EVENT_KEY, JSON_PAYLOAD, LOGGER, REGISTERED_NOTIFICATIONS
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .services import setup_services
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -146,6 +147,7 @@ class OverseerrWebhookManager:
         LOGGER.debug("Received webhook payload: %s", data)
         if data["notification_type"].startswith("MEDIA"):
             await self.entry.runtime_data.async_refresh()
+        async_dispatcher_send(hass, EVENT_KEY, data)
         return HomeAssistantView.json({"message": "ok"})
 
     async def unregister_webhook(self) -> None:

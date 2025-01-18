@@ -1,5 +1,7 @@
 """Constants for VeSync Component."""
 
+from pyvesync.vesyncfan import VeSyncHumid200300S, VeSyncSuperior6000S
+
 DOMAIN = "vesync"
 VS_DISCOVERY = "vesync_discovery_{}"
 SERVICE_UPDATE_DEVS = "update_devices"
@@ -17,13 +19,18 @@ total would be 2880.
 Using 30 seconds interval gives 8640 for 3 devices which
 exceeds the quota of 7700.
 """
-
-VS_SWITCHES = "switches"
-VS_FANS = "fans"
-VS_LIGHTS = "lights"
-VS_SENSORS = "sensors"
+VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+VS_NUMBERS = "numbers"
+
+VS_HUMIDIFIER_MODE_AUTO = "auto"
+VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
+VS_HUMIDIFIER_MODE_MANUAL = "manual"
+VS_HUMIDIFIER_MODE_SLEEP = "sleep"
+
+VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
+"""Humidifier device types"""
 
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
@@ -57,6 +64,7 @@ SKU_TO_BASE_DEVICE = {
     "Core300S": "Core300S",
     "LAP-C301S-WJP": "Core300S",  # Alt ID Model Core300S
     "LAP-C301S-WAAA": "Core300S",  # Alt ID Model Core300S
+    "LAP-C302S-WUSB": "Core300S",  # Alt ID Model Core300S
     "Core400S": "Core400S",
     "LAP-C401S-WJP": "Core400S",  # Alt ID Model Core400S
     "LAP-C401S-WUSR": "Core400S",  # Alt ID Model Core400S

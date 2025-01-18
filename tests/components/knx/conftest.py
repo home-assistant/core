@@ -174,12 +174,12 @@ class KNXTestKit:
             )
 
         telegram = self._outgoing_telegrams.pop(0)
-        assert isinstance(
-            telegram.payload, apci_type
-        ), f"APCI type mismatch in {telegram} - Expected: {apci_type.__name__}"
-        assert (
-            telegram.destination_address == _expected_ga
-        ), f"Group address mismatch in {telegram} - Expected: {group_address}"
+        assert isinstance(telegram.payload, apci_type), (
+            f"APCI type mismatch in {telegram} - Expected: {apci_type.__name__}"
+        )
+        assert telegram.destination_address == _expected_ga, (
+            f"Group address mismatch in {telegram} - Expected: {group_address}"
+        )
         if payload is not None:
             assert (
                 telegram.payload.value.value == payload  # type: ignore[attr-defined]
