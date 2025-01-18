@@ -7,7 +7,11 @@ from datetime import timedelta
 import logging
 
 from reolink_aio.api import RETRY_ATTEMPTS
-from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    CredentialsInvalidError,
+    LoginPrivacyModeError,
+    ReolinkError,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform

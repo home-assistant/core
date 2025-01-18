@@ -90,7 +90,11 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._host.api.session_active and not self._host.api.baichuan.privacy_mode() and super().available
+        return (
+            self._host.api.session_active
+            and not self._host.api.baichuan.privacy_mode()
+            and super().available
+        )
 
     @callback
     def _push_callback(self) -> None:
@@ -112,6 +116,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
             self._host.async_register_update_cmd(cmd_key)
         if cmd_id is not None and self._attr_unique_id is not None:
             self.register_callback(self._attr_unique_id, cmd_id)
+        if self._attr_unique_id is not None:
+            # Privacy mode
+            self.register_callback(f"{self._attr_unique_id}_623", 623)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
@@ -121,6 +128,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
             self._host.async_unregister_update_cmd(cmd_key)
         if cmd_id is not None and self._attr_unique_id is not None:
             self._host.api.baichuan.unregister_callback(self._attr_unique_id)
+        if self._attr_unique_id is not None:
+            # Privacy mode
+            self._host.api.baichuan.unregister_callback(f"{self._attr_unique_id}_623")
 
         await super().async_will_remove_from_hass()
 
