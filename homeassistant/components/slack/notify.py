@@ -38,6 +38,7 @@ from .const import (
     DATA_CLIENT,
     SLACK_DATA,
 )
+from .utils import upload_file_to_slack
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -160,26 +161,23 @@ class SlackNotificationService(BaseNotificationService):
         parsed_url = urlparse(path)
         filename = os.path.basename(parsed_url.path)
 
-        for target in targets:
-            # Resolve channel name to ID
-            channel_id = await self._async_get_channel_id(target)
-            if not channel_id:
-                _LOGGER.error("Skipping file upload for unresolved channel: %s", target)
-                continue
+        channel_ids = [await self._async_get_channel_id(target) for target in targets]
+        channel_ids = [cid for cid in channel_ids if cid]  # Remove None values
 
-            try:
-                await self._client.files_upload_v2(
-                    channels=[channel_id],
-                    file=path,
-                    filename=filename,
-                    title=title or filename,
-                    initial_comment=message,
-                    thread_ts=thread_ts or "",
-                )
-            except (SlackApiError, ClientError) as err:
-                _LOGGER.error(
-                    "Error while uploading file to channel %s: %r", target, err
-                )
+        if not channel_ids:
+            _LOGGER.error("No valid channel IDs resolved for targets: %s", targets)
+            return
+
+        await upload_file_to_slack(
+            client=self._client,
+            channel_ids=channel_ids,
+            file_content=None,
+            file_path=path,
+            filename=filename,
+            title=title,
+            message=message,
+            thread_ts=thread_ts,
+        )
 
     async def _async_send_remote_file_message(
         self,
@@ -213,28 +211,22 @@ class SlackNotificationService(BaseNotificationService):
             _LOGGER.error("Error while retrieving %s: %r", url, err)
             return
 
-        # Upload to each target channel
-        for target in targets:
-            # Resolve channel name to ID
-            channel_id = await self._async_get_channel_id(target)
-            if not channel_id:
-                _LOGGER.error("Skipping file upload for unresolved channel: %s", target)
-                continue
+        channel_ids = [await self._async_get_channel_id(target) for target in targets]
+        channel_ids = [cid for cid in channel_ids if cid]  # Remove None values
 
-            try:
-                # Use files_upload_v2 for remote file upload
-                await self._client.files_upload_v2(
-                    channels=[channel_id],
-                    file=file_content,
-                    filename=filename,
-                    title=title or filename,
-                    initial_comment=message,
-                    thread_ts=thread_ts or "",
-                )
-            except SlackApiError as err:
-                _LOGGER.error(
-                    "Error while uploading remote file to channel %s: %r", target, err
-                )
+        if not channel_ids:
+            _LOGGER.error("No valid channel IDs resolved for targets: %s", targets)
+            return
+
+        await upload_file_to_slack(
+            client=self._client,
+            channel_ids=channel_ids,
+            file_content=file_content,
+            filename=filename,
+            title=title,
+            message=message,
+            thread_ts=thread_ts,
+        )
 
     async def _async_send_text_only_message(
         self,
