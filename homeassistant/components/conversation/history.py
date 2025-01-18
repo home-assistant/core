@@ -7,9 +7,18 @@ from datetime import datetime, timedelta
 import logging
 from typing import Generic, Literal, TypeVar
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HassJob,
+    HassJobType,
+    HomeAssistant,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import event, intent, llm, template
+from homeassistant.helpers import intent, llm, template
+from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, ulid
 from homeassistant.util.hass_dict import HassKey
 
@@ -19,10 +28,61 @@ from .models import ConversationInput, ConversationResult
 DATA_CHAT_HISTORY: HassKey["dict[str, ChatHistory]"] = HassKey(
     "conversation_chat_history"
 )
+DATA_CHAT_HISTORY_CLEANUP: HassKey["HistoryCleanup"] = HassKey(
+    "conversation_chat_history_cleanup"
+)
 
 LOGGER = logging.getLogger(__name__)
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
 _NativeT = TypeVar("_NativeT")
+
+
+class HistoryCleanup:
+    """Helper to clean up the history."""
+
+    unsub: CALLBACK_TYPE | None = None
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the history cleanup."""
+        self.hass = hass
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._on_hass_stop)
+        self.cleanup_job = HassJob(
+            self._cleanup, "conversation_history_cleanup", job_type=HassJobType.Callback
+        )
+
+    @callback
+    def schedule(self) -> None:
+        """Schedule the cleanup."""
+        if self.unsub:
+            return
+        self.unsub = async_call_later(
+            self.hass,
+            CONVERSATION_TIMEOUT.total_seconds() + 1,
+            self.cleanup_job,
+        )
+
+    @callback
+    def _on_hass_stop(self, event: Event) -> None:
+        """Cancel the cleanup on shutdown."""
+        if self.unsub:
+            self.unsub()
+        self.unsub = None
+
+    @callback
+    def _cleanup(self, now: datetime) -> None:
+        """Clean up the history and schedule follow-up if necessary."""
+        self.unsub = None
+        all_history = self.hass.data[DATA_CHAT_HISTORY]
+
+        # We mutate original object because current commands could be
+        # yielding history based on it.
+        for conversation_id, history in list(all_history.items()):
+            if history.last_updated + CONVERSATION_TIMEOUT < now:
+                del all_history[conversation_id]
+
+        # Still conversations left, check again in timeout time.
+        if all_history:
+            self.schedule()
 
 
 @asynccontextmanager
@@ -35,22 +95,7 @@ async def async_get_chat_history(
     if all_history is None:
         all_history = {}
         hass.data[DATA_CHAT_HISTORY] = all_history
-
-        @callback
-        def history_cleanup(now: datetime) -> None:
-            """Clean up the history."""
-            # We mutate original object because current commands could be
-            # yielding history based on it.
-            for conversation_id, history in list(all_history.items()):
-                if history.last_updated + CONVERSATION_TIMEOUT < now:
-                    del all_history[conversation_id]
-
-        event.async_track_time_interval(
-            hass,
-            history_cleanup,
-            CONVERSATION_TIMEOUT,
-            name="Conversation history cleanup",
-        )
+        hass.data[DATA_CHAT_HISTORY_CLEANUP] = HistoryCleanup(hass)
 
     history: ChatHistory | None = None
 
@@ -82,10 +127,24 @@ async def async_get_chat_history(
     else:
         history = ChatHistory(hass, conversation_id)
 
+    message: ChatMessage = ChatMessage(
+        role="user",
+        agent_id=user_input.agent_id,
+        content=user_input.text,
+    )
+    history.async_add_message(message)
+
     yield history
+
+    if history.messages[-1] is message:
+        LOGGER.debug(
+            "History opened but no assistant message was added, ignoring update"
+        )
+        return
 
     history.last_updated = dt_util.utcnow()
     all_history[conversation_id] = history
+    hass.data[DATA_CHAT_HISTORY_CLEANUP].schedule()
 
 
 class ConverseError(HomeAssistantError):
@@ -153,17 +212,6 @@ class ChatHistory(Generic[_NativeT]):
             raise ValueError("Cannot add two assistant or user messages in a row")
 
         self.messages.append(message)
-
-    @callback
-    def async_add_user_input(self, user_input: ConversationInput) -> None:
-        """Process intent."""
-        self.messages.append(
-            ChatMessage(
-                role="user",
-                agent_id=user_input.agent_id,
-                content=user_input.text,
-            )
-        )
 
     @callback
     def async_get_messages(self, agent_id: str | None) -> list[ChatMessage[_NativeT]]:
@@ -283,4 +331,3 @@ class ChatHistory(Generic[_NativeT]):
             agent_id=user_input.agent_id,
             content=prompt,
         )
-        self.async_add_user_input(user_input)

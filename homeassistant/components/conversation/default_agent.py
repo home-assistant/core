@@ -372,7 +372,6 @@ class DefaultAgent(ConversationEntity):
                     intent_result, user_input
                 )
 
-            chat_history.async_add_user_input(user_input)
             speech: str = response.speech.get("plain", {}).get("speech", "")
             chat_history.async_add_message(
                 ChatMessage(

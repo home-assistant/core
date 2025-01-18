@@ -1094,7 +1094,6 @@ class PipelineRun:
                 async with conversation.async_get_chat_history(
                     self.hass, user_input
                 ) as chat_history:
-                    chat_history.async_add_user_input(user_input)
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )

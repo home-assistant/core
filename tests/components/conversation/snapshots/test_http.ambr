@@ -1,4 +1,204 @@
 # serializer version: 1
+# name: test_get_agent_list
+  dict({
+    'agents': list([
+      dict({
+        'id': 'conversation.home_assistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'ar',
+          'bg',
+          'bn',
+          'ca',
+          'cs',
+          'da',
+          'de',
+          'de-CH',
+          'el',
+          'en',
+          'es',
+          'et',
+          'eu',
+          'fa',
+          'fi',
+          'fr',
+          'gl',
+          'he',
+          'hi',
+          'hr',
+          'hu',
+          'id',
+          'is',
+          'it',
+          'ka',
+          'ko',
+          'lb',
+          'lt',
+          'lv',
+          'ml',
+          'mn',
+          'ms',
+          'nb',
+          'ne',
+          'nl',
+          'pl',
+          'pt',
+          'pt-br',
+          'ro',
+          'ru',
+          'sk',
+          'sl',
+          'sr',
+          'sv',
+          'sw',
+          'te',
+          'th',
+          'tr',
+          'uk',
+          'ur',
+          'vi',
+          'zh-cn',
+          'zh-hk',
+          'zh-tw',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+          'smurfish',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.1
+  dict({
+    'agents': list([
+      dict({
+        'id': 'conversation.home_assistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+          'smurfish',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.2
+  dict({
+    'agents': list([
+      dict({
+        'id': 'conversation.home_assistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'en',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.3
+  dict({
+    'agents': list([
+      dict({
+        'id': 'conversation.home_assistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'en',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.4
+  dict({
+    'agents': list([
+      dict({
+        'id': 'conversation.home_assistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'de',
+          'de-CH',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
+# name: test_get_agent_list.5
+  dict({
+    'agents': list([
+      dict({
+        'id': 'conversation.home_assistant',
+        'name': 'Home Assistant',
+        'supported_languages': list([
+          'de-CH',
+          'de',
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry',
+        'name': 'Mock Title',
+        'supported_languages': list([
+        ]),
+      }),
+      dict({
+        'id': 'mock-entry-support-all',
+        'name': 'Mock Title',
+        'supported_languages': '*',
+      }),
+    ]),
+  })
+# ---
 # name: test_http_api_handle_failure
   dict({
     'conversation_id': <ANY>,
@@ -267,5 +467,251 @@
         }),
       }),
     }),
+  })
+# ---
+# name: test_ws_hass_agent_debug
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'my cool light',
+            'value': 'my cool light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+        'match': True,
+        'sentence_template': '<turn> on (<area> <name>|<name> [in <area>])',
+        'slots': dict({
+          'name': 'my cool light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'my cool light',
+            'value': 'my cool light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOff',
+        }),
+        'match': True,
+        'sentence_template': '[<turn>] (<area> <name>|<name> [in <area>]) [to] off',
+        'slots': dict({
+          'name': 'my cool light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+      dict({
+        'details': dict({
+          'area': dict({
+            'name': 'area',
+            'text': 'kitchen',
+            'value': 'kitchen',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': '',
+            'value': 'light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassTurnOn',
+        }),
+        'match': True,
+        'sentence_template': '<turn> on [<all>] <light> <in> <area>',
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+      dict({
+        'details': dict({
+          'area': dict({
+            'name': 'area',
+            'text': 'kitchen',
+            'value': 'kitchen',
+          }),
+          'domain': dict({
+            'name': 'domain',
+            'text': 'lights',
+            'value': 'light',
+          }),
+          'state': dict({
+            'name': 'state',
+            'text': 'on',
+            'value': 'on',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassGetState',
+        }),
+        'match': True,
+        'sentence_template': '[tell me] how many {on_off_domains:domain} (is|are) {on_off_states:state} [<in_area_floor>]',
+        'slots': dict({
+          'area': 'kitchen',
+          'domain': 'lights',
+          'state': 'on',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.kitchen': dict({
+            'matched': False,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_custom_sentence
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'beer_style': dict({
+            'name': 'beer_style',
+            'text': 'lager',
+            'value': 'lager',
+          }),
+        }),
+        'file': 'en/beer.yaml',
+        'intent': dict({
+          'name': 'OrderBeer',
+        }),
+        'match': True,
+        'sentence_template': "[I'd like to ]order a {beer_style} [please]",
+        'slots': dict({
+          'beer_style': 'lager',
+        }),
+        'source': 'custom',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_null_result
+  dict({
+    'results': list([
+      None,
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'brightness': dict({
+            'name': 'brightness',
+            'text': '100',
+            'value': 100,
+          }),
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': True,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'brightness': '100',
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+          'light.demo_1234': dict({
+            'matched': True,
+          }),
+        }),
+        'unmatched_slots': dict({
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_out_of_range.1
+  dict({
+    'results': list([
+      dict({
+        'details': dict({
+          'name': dict({
+            'name': 'name',
+            'text': 'test light',
+            'value': 'test light',
+          }),
+        }),
+        'intent': dict({
+          'name': 'HassLightSet',
+        }),
+        'match': False,
+        'sentence_template': '[<numeric_value_set>] <name> brightness [to] <brightness>',
+        'slots': dict({
+          'name': 'test light',
+        }),
+        'source': 'builtin',
+        'targets': dict({
+        }),
+        'unmatched_slots': dict({
+          'brightness': 1001,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger
+  dict({
+    'trigger_sentences': list([
+      'hello',
+      'hello[ world]',
+    ]),
+  })
+# ---
+# name: test_ws_hass_agent_debug_sentence_trigger.1
+  dict({
+    'results': list([
+      dict({
+        'match': True,
+        'sentence_template': 'hello[ world]',
+        'source': 'trigger',
+      }),
+    ]),
   })
 # ---
