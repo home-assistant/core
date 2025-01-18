@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         username=username,
         password=password,
         time_zone=time_zone,
-        debug=logging.getLogger("pyvesync").level == logging.DEBUG,
+        debug=logging.getLogger("pyvesync.vesync").level == logging.DEBUG,
         redact=True,
     )
 
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     @callback
     def _async_handle_logging_changed(_event: Event) -> None:
         """Handle when the logging level changes."""
-        manager.debug = logging.getLogger("pyvesync").level == logging.DEBUG
+        manager.debug = logging.getLogger("pyvesync.vesync").level == logging.DEBUG
 
     cleanup = hass.bus.async_listen(
         EVENT_LOGGING_CHANGED, _async_handle_logging_changed
