@@ -35,8 +35,7 @@ def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
         isinstance(event.device, rfxtrxmod.LightingDevice)
         and not event.device.known_to_be_dimmable
         and not event.device.known_to_be_rollershutter
-        or isinstance(event.device, rfxtrxmod.RfyDevice)
-    )
+    ) or isinstance(event.device, rfxtrxmod.RfyDevice)
 
 
 async def async_setup_entry(

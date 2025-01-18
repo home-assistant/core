@@ -163,16 +163,16 @@ class LogEntry:
     """Store HA log entries."""
 
     __slots__ = (
+        "count",
+        "exception",
         "first_occurred",
-        "timestamp",
-        "name",
+        "key",
         "level",
         "message",
-        "exception",
+        "name",
         "root_cause",
         "source",
-        "count",
-        "key",
+        "timestamp",
     )
 
     def __init__(
