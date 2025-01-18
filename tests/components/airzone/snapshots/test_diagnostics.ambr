@@ -140,6 +140,7 @@
                 'heatStages': 1,
                 'heatangle': 0,
                 'humidity': 40,
+                'master_zoneID': None,
                 'maxTemp': 30,
                 'minTemp': 15,
                 'mode': 3,

@@ -24,6 +24,7 @@ from .const import DOMAIN
 class VelbusEntity(Entity):
     """Representation of a Velbus entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll: bool = False
 
     def __init__(self, channel: VelbusChannel) -> None:

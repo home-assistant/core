@@ -8,7 +8,6 @@ import logging
 import requests.exceptions
 import upcloud_api
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -23,13 +22,11 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
-from .coordinator import UpCloudDataUpdateCoordinator
+from .coordinator import UpCloudConfigEntry, UpCloudDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
-
-type UpCloudConfigEntry = ConfigEntry[UpCloudDataUpdateCoordinator]
 
 
 def _config_entry_update_signal_name(config_entry: UpCloudConfigEntry) -> str:
@@ -69,6 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
 
     coordinator = UpCloudDataUpdateCoordinator(
         hass,
+        config_entry=entry,
         update_interval=update_interval,
         cloud_manager=manager,
         username=entry.data[CONF_USERNAME],
@@ -94,8 +92,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: UpCloudConfigEntry
-) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpCloudConfigEntry) -> bool:
     """Unload the config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
