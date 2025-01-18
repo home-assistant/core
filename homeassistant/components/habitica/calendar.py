@@ -26,6 +26,8 @@ from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import build_rrule, get_recurrence_rule
 
+PARALLEL_UPDATES = 1
+
 
 class HabiticaCalendar(StrEnum):
     """Habitica calendars."""
