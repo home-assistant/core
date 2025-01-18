@@ -149,11 +149,15 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not success:
             raise HomeAssistantError("An error occurred while turning on.")
 
+        self.schedule_update_ha_state()
+
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = self.device.turn_off()
         if not success:
             raise HomeAssistantError("An error occurred while turning off.")
+
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self) -> bool:
