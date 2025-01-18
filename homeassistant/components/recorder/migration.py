@@ -2147,7 +2147,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2178,7 +2178,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2277,7 +2277,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2299,7 +2299,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(

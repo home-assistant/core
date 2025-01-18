@@ -102,8 +102,7 @@ async def async_setup_entry(
         descriptions = [MOTION_DESCRIPTION]
     elif sensor_type is SensorType.VIBRATION:
         descriptions = [VIBRATION_DESCRIPTION]
-    elif sensor_type is SensorType.BUTTON:
-        button_count = model_info.button_count
+    elif button_count := model_info.button_count:
         descriptions = BUTTON_DESCRIPTIONS[0:button_count]
     else:
         return

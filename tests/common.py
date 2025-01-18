@@ -31,7 +31,6 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa: F401
 import pytest
 from syrupy import SnapshotAssertion
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -113,8 +112,6 @@ from homeassistant.util.yaml import load_yaml_dict, loader as yaml_loader
 from .testing_config.custom_components.test_constant_deprecation import (
     import_deprecated_constant,
 )
-
-_DataT = TypeVar("_DataT", bound=Mapping[str, Any], default=dict[str, Any])
 
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
@@ -1545,7 +1542,7 @@ def mock_platform(
     module_cache[platform_path] = module or Mock()
 
 
-def async_capture_events(
+def async_capture_events[_DataT: Mapping[str, Any] = dict[str, Any]](
     hass: HomeAssistant, event_name: EventType[_DataT] | str
 ) -> list[Event[_DataT]]:
     """Create a helper that captures events."""
