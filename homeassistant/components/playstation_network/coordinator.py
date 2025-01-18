@@ -11,7 +11,6 @@ from psnawp_api.psn import PlaystationNetwork, PlaystationNetworkData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -37,9 +36,8 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
             update_interval=timedelta(seconds=30),
         )
 
-        self.hass = hass
-        self.user: User = user
-        self.psn: PlaystationNetwork = psn
+        self.user = user
+        self.psn = psn
 
     async def _async_update_data(self) -> PlaystationNetworkData:
         """Get the latest data from the PSN."""
@@ -49,13 +47,4 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
             raise UpdateFailed(
                 DOMAIN,
                 "update_failed",
-            ) from error
-
-    async def _async_setup(self) -> None:
-        try:
-            await self.hass.async_add_executor_job(self.psn.validate_connection)
-        except PSNAWPAuthenticationError as error:
-            raise ConfigEntryNotReady(
-                DOMAIN,
-                "not_ready",
             ) from error
