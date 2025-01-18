@@ -81,7 +81,7 @@ async def test_hardware_info(
                     "manufacturer": "Nabu Casa",
                     "description": "SkyConnect v1.0",
                 },
-                "name": "Home Assistant SkyConnect",
+                "name": "Home Assistant SkyConnect (Zigbee)",
                 "url": "https://skyconnect.home-assistant.io/documentation/",
             },
             {
@@ -94,7 +94,7 @@ async def test_hardware_info(
                     "manufacturer": "Nabu Casa",
                     "description": "Home Assistant Connect ZBT-1",
                 },
-                "name": "Home Assistant Connect ZBT-1",
+                "name": "Home Assistant Connect ZBT-1 (Zigbee)",
                 "url": "https://skyconnect.home-assistant.io/documentation/",
             },
         ]

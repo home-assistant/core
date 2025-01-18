@@ -22,7 +22,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOCS_WEB_FLASHER_URL, DOMAIN, HardwareVariant
-from .util import get_hardware_variant, get_usb_service_info
+from .util import create_entry_title, get_hardware_variant, get_usb_service_info
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -177,6 +177,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
         """Finish flashing and update the config entry."""
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
+            title=create_entry_title(self.config_entry, ApplicationType.EZSP),
             data={
                 **self.config_entry.data,
                 "firmware": ApplicationType.EZSP.value,
@@ -212,6 +213,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
+            title=create_entry_title(self.config_entry, self._probed_firmware_type),
             data={
                 **self.config_entry.data,
                 "firmware": self._probed_firmware_type.value,
