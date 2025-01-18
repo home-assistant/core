@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import json
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import openai
 from openai._types import NOT_GIVEN
@@ -152,7 +152,7 @@ class OpenAIConversationEntity(
     async def _async_call_api(
         self,
         user_input: conversation.ConversationInput,
-        history: conversation.ChatHistory,
+        history: conversation.ChatHistory[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
         options = self.entry.options
@@ -174,13 +174,17 @@ class OpenAIConversationEntity(
                 for tool in history.llm_api.tools
             ]
 
-        messages: list[ChatCompletionMessageParam] = [
-            {
-                "role": message.role,
-                "content": message.content,
-            }
-            for message in history.messages
-        ]
+        messages: list[ChatCompletionMessageParam] = []
+        for message in history.async_get_messages(user_input.agent_id):
+            if message.native is not None:
+                messages.append(message.native)
+            else:
+                messages.append(
+                    cast(
+                        ChatCompletionMessageParam,
+                        {"role": message.role, "content": message.content},
+                    )
+                )
 
         LOGGER.debug("Prompt: %s", messages)
         LOGGER.debug("Tools: %s", tools)
@@ -219,17 +223,16 @@ class OpenAIConversationEntity(
 
             LOGGER.debug("Response %s", result)
             response = result.choices[0].message
-
-            if not response.tool_calls:
-                history.async_add_message(
-                    conversation.ChatMessage(
-                        role="system" if response.role == "assistant" else "user",
-                        agent_id=user_input.agent_id,
-                        content=response.content or "",
-                    ),
-                )
-
             messages.append(_message_convert(response))
+
+            history.async_add_message(
+                conversation.ChatMessage(
+                    role="native" if response.tool_calls else response.role,
+                    agent_id=user_input.agent_id,
+                    content=response.content or "",
+                    native=messages[-1],
+                ),
+            )
 
             if not response.tool_calls or not history.llm_api:
                 break
@@ -256,6 +259,14 @@ class OpenAIConversationEntity(
                         role="tool",
                         tool_call_id=tool_call.id,
                         content=json.dumps(tool_response),
+                    )
+                )
+                history.async_add_message(
+                    conversation.ChatMessage(
+                        role="native",
+                        agent_id=user_input.agent_id,
+                        content="",
+                        native=messages[-1],
                     )
                 )
 

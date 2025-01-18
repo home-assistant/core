@@ -5,7 +5,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 import logging
-from typing import Literal
+from typing import Generic, Literal, TypeVar
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
@@ -22,6 +22,7 @@ DATA_CHAT_HISTORY: HassKey["dict[str, ChatHistory]"] = HassKey(
 
 LOGGER = logging.getLogger(__name__)
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
+_NativeT = TypeVar("_NativeT")
 
 
 @asynccontextmanager
@@ -45,6 +46,7 @@ async def async_get_chat_history(
         if history.last_updated + CONVERSATION_TIMEOUT < dt_util.utcnow():
             del all_history[user_input.conversation_id]
             history = None
+            conversation_id = ulid.ulid_now()
         else:
             conversation_id = user_input.conversation_id
 
@@ -90,22 +92,33 @@ class ConverseError(HomeAssistantError):
 
 
 @dataclass
-class ChatMessage:
-    """Base class for chat messages."""
+class ChatMessage(Generic[_NativeT]):
+    """Base class for chat messages.
 
-    role: Literal["system", "user"]
+    When role is native, the content is to be ignored and message
+    is only meant for storing the native object.
+    """
+
+    role: Literal["system", "assistant", "user", "native"]
     agent_id: str | None
     content: str
+    native: _NativeT | None = field(default=None)
+
+    # Validate in post-init that if role is native, there is no content and a native object exists
+    def __post_init__(self) -> None:
+        """Validate native message."""
+        if self.role == "native" and self.native is None:
+            raise ValueError("Native message must have a native object")
 
 
 @dataclass
-class ChatHistory:
+class ChatHistory(Generic[_NativeT]):
     """Class holding all conversation info."""
 
     hass: HomeAssistant
     conversation_id: str
     user_name: str | None = None
-    messages: list = field(
+    messages: list[ChatMessage[_NativeT]] = field(
         default_factory=lambda: [ChatMessage(role="system", agent_id=None, content="")]
     )
     extra_system_prompt: str | None = None
@@ -113,12 +126,23 @@ class ChatHistory:
     last_updated: datetime = field(default_factory=dt_util.utcnow)
 
     @callback
-    def async_add_message(self, message: ChatMessage) -> None:
+    def async_add_message(self, message: ChatMessage[_NativeT]) -> None:
         """Process intent."""
-        if self.messages and self.messages[-1].role == message.role:
-            raise ValueError("Cannot add two messages of the same role in a row")
+        if message.role == "system":
+            raise ValueError("Cannot add system messages to history")
+        if message.role != "native" and self.messages[-1].role == message.role:
+            raise ValueError("Cannot add two assistant or user messages in a row")
 
         self.messages.append(message)
+
+    @callback
+    def async_get_messages(self, agent_id: str | None) -> list[ChatMessage[_NativeT]]:
+        """Get messages for a specific agent ID."""
+        return [
+            message
+            for message in self.messages
+            if message.role != "native" or message.agent_id == agent_id
+        ]
 
     async def async_process_llm_message(
         self,
