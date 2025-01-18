@@ -1,4 +1,4 @@
-"""Model Context Protocol transport portocol for Server Sent Events (SSE).
+"""Model Context Protocol transport protocol for Server Sent Events (SSE).
 
 This registers HTTP endpoints that supports SSE as a transport layer
 for the Model Context Protocol. There are two HTTP endpoints:
@@ -147,7 +147,7 @@ class ModelContextProtocolMessagesView(HomeAssistantView):
         """Process incoming messages for the Model Context Protocol.
 
         The request passes a session ID which is used to identify the original
-        SSE connection. This view parses incoming messagess from the transport
+        SSE connection. This view parses incoming messages from the transport
         layer then writes them to the MCP server stream for the session.
         """
         hass = request.app[KEY_HASS]
