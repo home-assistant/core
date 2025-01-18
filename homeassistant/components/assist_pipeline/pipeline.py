@@ -1062,6 +1062,7 @@ class PipelineRun:
             )
             processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
+            agent_id = user_input.agent_id
             conversation_result: conversation.ConversationResult | None = None
             if user_input.agent_id != conversation.HOME_ASSISTANT_AGENT:
                 # Sentence triggers override conversation agent
@@ -1072,6 +1073,7 @@ class PipelineRun:
                     )
                 ) is not None:
                     # Sentence trigger matched
+                    agent_id = "sentence_trigger"
                     trigger_response = intent.IntentResponse(
                         self.pipeline.conversation_language
                     )
@@ -1087,6 +1089,7 @@ class PipelineRun:
                     )
                 ):
                     # Local intent matched
+                    agent_id = conversation.HOME_ASSISTANT_AGENT
                     conversation_result = conversation.ConversationResult(
                         response=intent_response,
                         conversation_id=user_input.conversation_id,
@@ -1104,6 +1107,26 @@ class PipelineRun:
                     language=user_input.language,
                     agent_id=user_input.agent_id,
                 )
+            else:
+                # async_converse updates history, sentence triggers/local matching does not
+                # so we do it here
+                async with conversation.async_get_chat_history(
+                    self.hass, user_input
+                ) as chat_history:
+                    chat_history.async_add_user_input(user_input)
+                    conversation_result.conversation_id = chat_history.conversation_id
+                    speech: str = conversation_result.response.speech.get(
+                        "plain", {}
+                    ).get("speech", "")
+                    chat_history.async_add_message(
+                        conversation.ChatMessage(
+                            role="assistant",
+                            agent_id=agent_id,
+                            content=speech,
+                            native=conversation_result.response,
+                        )
+                    )
+
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(
@@ -1123,9 +1146,7 @@ class PipelineRun:
             )
         )
 
-        speech: str = conversation_result.response.speech.get("plain", {}).get(
-            "speech", ""
-        )
+        speech = conversation_result.response.speech.get("plain", {}).get("speech", "")
 
         return speech
 
