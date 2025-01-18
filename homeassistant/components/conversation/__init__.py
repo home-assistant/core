@@ -46,6 +46,7 @@ from .const import (
 )
 from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
+from .history import ChatHistory, ChatMessage, ConverseError, async_get_chat_history
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
@@ -54,14 +55,18 @@ __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
+    "ChatHistory",
+    "ChatMessage",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
     "ConversationTraceEventType",
+    "ConverseError",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
+    "async_get_chat_history",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
