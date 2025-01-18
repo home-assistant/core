@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pyezviz.constants import DeviceSwitchType, SoundMode
-from pyezviz.exceptions import HTTPError, PyEzvizError
+from pyezvizapi.constants import DeviceSwitchType, SoundMode
+from pyezvizapi.exceptions import HTTPError, PyEzvizError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
