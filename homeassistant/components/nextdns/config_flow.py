@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
@@ -18,6 +19,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_PROFILE_ID, DOMAIN
 
 AUTH_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_init_nextdns(hass: HomeAssistant, api_key: str) -> NextDns:
@@ -51,7 +54,8 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
             except (ApiError, ClientConnectorError, RetryError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return await self.async_step_profiles()
@@ -111,7 +115,8 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_api_key"
             except (ApiError, ClientConnectorError, RetryError, TimeoutError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
