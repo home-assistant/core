@@ -98,6 +98,12 @@ SWITCHES = (
 )
 
 
+POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key=BSH_POWER_STATE,
+    translation_key="power",
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
@@ -117,7 +123,8 @@ async def async_setup_entry(
                             HomeConnectProgramSwitch(device, program)
                             for program in programs
                         )
-            entities.append(HomeConnectPowerSwitch(device))
+            if BSH_POWER_STATE in device.appliance.status:
+                entities.append(HomeConnectPowerSwitch(device))
             entities.extend(
                 HomeConnectSwitch(device, description)
                 for description in SWITCHES
@@ -310,7 +317,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         """Initialize the entity."""
         super().__init__(
             device,
-            SwitchEntityDescription(key=BSH_POWER_STATE, translation_key="power"),
+            POWER_SWITCH_DESCRIPTION,
         )
         if (
             power_state := device.appliance.status.get(BSH_POWER_STATE, {}).get(
