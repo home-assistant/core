@@ -294,7 +294,7 @@ class HoneywellUSThermostat(ClimateEntity):
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation if supported."""
         if self.hvac_mode == HVACMode.OFF:
-            return None
+            return HVACAction.OFF
         return HW_MODE_TO_HA_HVAC_ACTION.get(self._device.equipment_output_status)
 
     @property

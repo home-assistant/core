@@ -512,7 +512,7 @@
     },
     "get_device_capabilities": {
       "name": "Get device mode capabilities",
-      "description": "Retrieve the device capabilities for a specific device according to api requirements.",
+      "description": "Retrieves the device capabilities for a specific device according to API requirements.",
       "fields": {
         "hvac_mode": {
           "name": "[%key:component::climate::services::set_hvac_mode::fields::hvac_mode::name%]",
@@ -576,7 +576,7 @@
       "message": "Could not perform action for {name} with error {error}"
     },
     "climate_react_not_available": {
-      "message": "Use Sensibo Enable Climate React action once to enable switch or the Sensibo app"
+      "message": "Use Sensibo 'Enable climate react' action once to enable switch or the Sensibo app"
     },
     "auth_error": {
       "message": "Authentication failed, please update your API key"

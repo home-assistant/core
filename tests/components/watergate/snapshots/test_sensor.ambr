@@ -43,7 +43,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2021-01-09T11:59:59+00:00',
+    'state': '2021-01-09T11:59:58+00:00',
   })
 # ---
 # name: test_sensor[sensor.sonic_power_supply_mode-entry]
@@ -501,6 +501,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2021-01-09T11:59:59+00:00',
+    'state': '2021-01-09T11:59:57+00:00',
   })
 # ---

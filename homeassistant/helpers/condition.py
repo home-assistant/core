@@ -884,10 +884,8 @@ def time(
 
         condition_trace_update_result(weekday=weekday, now_weekday=now_weekday)
         if (
-            isinstance(weekday, str)
-            and weekday != now_weekday
-            or now_weekday not in weekday
-        ):
+            isinstance(weekday, str) and weekday != now_weekday
+        ) or now_weekday not in weekday:
             return False
 
     return True
