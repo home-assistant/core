@@ -93,9 +93,13 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
     ) -> list[datetime]:
         """Calculate recurrence dates based on start_date and end_date."""
         if end_date:
-            return recurrences.between(
+            recurrence_dates = recurrences.between(
                 start_date, end_date - timedelta(days=1), inc=True
             )
+            if TYPE_CHECKING:
+                assert isinstance(recurrence_dates, list)
+                assert all(isinstance(date, datetime) for date in recurrence_dates)
+            return recurrence_dates
         # if no end_date is given, return only the next recurrence
         return [recurrences.after(start_date, inc=True)]
 
