@@ -46,7 +46,7 @@
         "name": "[%key:component::sensor::entity_component::current::name%]"
       },
       "current_sensor_instance": {
-        "name": "Current instance"
+        "name": "Current {instance}"
       },
       "dawn_sensor": {
         "name": "Dawn"
@@ -62,6 +62,9 @@
       },
       "relative_humidity_sensor": {
         "name": "Relative Humidity"
+      },
+      "level_sensor": {
+        "name": "Level"
       },
       "link_quality_sensor": {
         "name": "Link Quality"
@@ -130,9 +133,9 @@
       "window_position_sensor": {
         "name": "Window Position",
         "state": {
-          "0": "Closed",
-          "1": "Open",
-          "2": "Tilted"
+          "closed": "Closed",
+          "open": "Open",
+          "tilted": "Tilted"
         }
       }
     }

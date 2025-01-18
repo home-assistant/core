@@ -17,7 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeeConfigEntry, helpers
-from .const import OPEN_CLOSE_MAP, OPEN_CLOSE_MAP_REVERSED
+from .const import (
+    HOMEE_UNIT_TO_HA_UNIT,
+    OPEN_CLOSE_MAP,
+    OPEN_CLOSE_MAP_REVERSED,
+    WINDOW_MAP,
+    WINDOW_MAP_REVERSED,
+)
 from .entity import HomeeEntity, HomeeNodeEntity
 
 
@@ -27,12 +33,28 @@ def get_open_close_value(attribute: HomeeAttribute) -> str | None:
     return vals.get(attribute.current_value)
 
 
+def get_window_value(attribute: HomeeAttribute) -> str | None:
+    """Return the states of a window open sensor."""
+    vals = WINDOW_MAP if not attribute.is_reversed else WINDOW_MAP_REVERSED
+    return vals.get(attribute.current_value)
+
+
+def get_node_prop(prop_name: str, value: int) -> str:
+    """Return the string for a numeric state."""
+    prop_class = {"state": NodeState, "protocol": NodeProtocol}[prop_name]
+
+    return helpers.get_name_for_enum(prop_class, value).lower()
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeSensorEntityDescription(SensorEntityDescription):
     """A class that describes Homee sensor entities."""
 
     value_fn: Callable[[HomeeAttribute], str | float | None] = (
         lambda value: value.current_value
+    )
+    native_unit_of_measurement_fn: Callable[[str], str | None] = (
+        lambda homee_unit: HOMEE_UNIT_TO_HA_UNIT[homee_unit]
     )
 
 
@@ -55,6 +77,9 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         translation_key="brightness_sensor",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda attribute: attribute.current_value * 1000
+        if attribute.unit == "klx"
+        else attribute.current_value,
     ),
     AttributeType.BUTTON_STATE: HomeeSensorEntityDescription(
         key=AttributeType.BUTTON_STATE,
@@ -89,6 +114,12 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         key=AttributeType.DEVICE_TEMPERATURE,
         translation_key="device_temperature_sensor",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.LEVEL: HomeeSensorEntityDescription(
+        key=AttributeType.LEVEL,
+        translation_key="level_sensor",
+        device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.LINK_QUALITY: HomeeSensorEntityDescription(
@@ -183,6 +214,31 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         key=AttributeType.WINDOW_POSITION,
         translation_key="window_position_sensor",
         device_class=SensorDeviceClass.ENUM,
+        options=["closed", "open", "tilted"],
+        value_fn=get_window_value,
+    ),
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeeNodeSensorEntityDescription(SensorEntityDescription):
+    """Describes Homee node sensor entities."""
+
+    value_fn: Callable[[str, int], str] = get_node_prop
+
+
+NODE_SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeNodeSensorEntityDescription] = {
+    "state": HomeeNodeSensorEntityDescription(
+        key="state",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        translation_key="node_sensor_state",
+    ),
+    "protocol": HomeeNodeSensorEntityDescription(
+        key="protocol",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        translation_key="node_sensor_protocol",
     ),
 }
 
@@ -197,8 +253,10 @@ async def async_setup_entry(
     devices: list[HomeeSensor | HomeeNodeSensor] = []
     for node in config_entry.runtime_data.nodes:
         # Node properties that are sensors.
-        props = ["state", "protocol"]
-        devices.extend(HomeeNodeSensor(node, config_entry, item) for item in props)
+        devices.extend(
+            HomeeNodeSensor(node, config_entry, NODE_SENSOR_DESCRIPTIONS[item])
+            for item in ("state", "protocol")
+        )
 
         # Node attributes that are sensors.
         devices.extend(
@@ -237,41 +295,31 @@ class HomeeSensor(HomeeEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of the sensor."""
-        if self._attribute.unit == "n/a":
-            return None
-        if self.translation_key == "uv_sensor":
-            return "UV Index"
-
-        if self._attribute.unit == "klx":
-            return "lx"
-
-        return self._attribute.unit
+        return self.entity_description.native_unit_of_measurement_fn(
+            self._attribute.unit
+        )
 
 
 class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
     """Represents a sensor based on a node's property."""
 
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
+    entity_description: HomeeNodeSensorEntityDescription
 
     def __init__(
         self,
         node: HomeeNode,
         entry: HomeeConfigEntry,
-        prop_name: str,
+        description: HomeeNodeSensorEntityDescription,
     ) -> None:
         """Initialize a homee node sensor entity."""
         super().__init__(node, entry)
+        self.entity_description = description
         self._node = node
-        self._attr_unique_id = f"{self._attr_unique_id}-{prop_name}"
-        self._prop_name = prop_name
-        self._attr_translation_key = f"node_sensor_{prop_name}"
+        self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
     @property
     def native_value(self) -> str:
         """Return the sensors value."""
-        value = getattr(self._node, self._prop_name)
-        att_class = {"state": NodeState, "protocol": NodeProtocol}
+        value = getattr(self._node, self.entity_description.key)
 
-        state = helpers.get_name_for_enum(att_class[self._prop_name], value)
-        return state.lower()
+        return self.entity_description.value_fn(self.entity_description.key, value)
