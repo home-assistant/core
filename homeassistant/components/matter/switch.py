@@ -91,7 +91,7 @@ class MatterNumericSwitch(MatterSwitch):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.async_set_native_value(True)
+        await self._async_set_native_value(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
