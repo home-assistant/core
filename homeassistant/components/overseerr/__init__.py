@@ -67,6 +67,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: OverseerrConfigEntry) -
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+async def async_remove_entry(hass: HomeAssistant, entry: OverseerrConfigEntry) -> None:
+    """Cleanup when entry is removed."""
+    if cloud.async_active_subscription(hass):
+        try:
+            LOGGER.debug(
+                "Removing Overseerr cloudhook (%s)", entry.data[CONF_WEBHOOK_ID]
+            )
+            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+        except cloud.CloudNotAvailable:
+            pass
+
+
 class OverseerrWebhookManager:
     """Overseerr webhook manager."""
 
