@@ -123,6 +123,12 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         """Wait for connection_lost to be called."""
         await self._closed_event.wait()
 
+    def on_hangup(self, call_info: CallInfo):
+        """Handle the end of a call."""
+        _LOGGER.debug("Handling hangup: %s", call_info)
+        device = self.devices.async_get_or_create(call_info)
+        device.set_is_active(False)
+
 
 class PreRecordMessageProtocol(RtpDatagramProtocol):
     """Plays a pre-recorded message on a loop."""
