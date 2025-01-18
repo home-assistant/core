@@ -70,14 +70,6 @@ def _format_tool(
     return ChatCompletionToolParam(type="function", function=tool_spec)
 
 
-# @dataclass
-# class ChatHistory:
-#     """Class holding the chat history."""
-
-#     extra_system_prompt: str | None = None
-#     messages: list[ChatCompletionMessageParam] = field(default_factory=list)
-
-
 def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessageParam:
     """Convert from class to TypedDict."""
     tool_calls: list[ChatCompletionMessageToolCallParam] = []

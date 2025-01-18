@@ -120,17 +120,6 @@ class ChatHistory:
 
         self.messages.append(message)
 
-    @callback
-    def async_process_intent_message(self, user_input: ConversationInput) -> None:
-        """Process intent."""
-        self.messages.append(
-            ChatMessage(
-                role="user",
-                agent_id=user_input.agent_id,
-                content=user_input.text,
-            ),
-        )
-
     async def async_process_llm_message(
         self,
         conversing_domain: str,
@@ -138,7 +127,7 @@ class ChatHistory:
         user_llm_hass_api: str | None = None,
         user_llm_prompt: str | None = None,
     ) -> None:
-        """Process a new message."""
+        """Process an incoming message for an LLM."""
         llm_context = llm.LLMContext(
             platform=conversing_domain,
             context=user_input.context,
