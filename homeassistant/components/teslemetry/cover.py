@@ -288,11 +288,6 @@ class TeslemetryStreamingChargePortEntity(
                 self._async_value_from_stream
             )
         )
-        self.vehicle.config_entry.async_create_background_task(
-            self.hass,
-            self.add_field(Signal.CHARGE_PORT_DOOR_OPEN),
-            f"Adding field {Signal.CHARGE_PORT_DOOR_OPEN} to {self.vehicle.vin}",
-        )
 
     def _async_value_from_stream(self, value: bool | None) -> None:
         """Update the value of the entity."""
@@ -352,11 +347,6 @@ class TeslemetryStreamingFrontTrunkEntity(
         await super().async_added_to_hass()
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_TrunkFront(self._async_value_from_stream)
-        )
-        self.vehicle.config_entry.async_create_background_task(
-            self.hass,
-            self.add_field(Signal.DOOR_STATE),
-            f"Adding field {Signal.DOOR_STATE} to {self.vehicle.vin}",
         )
 
     def _async_value_from_stream(self, value: bool | None) -> None:
@@ -426,11 +416,6 @@ class TeslemetryStreamingRearTrunkEntity(
         await super().async_added_to_hass()
         self.async_on_remove(
             self.vehicle.stream_vehicle.listen_TrunkRear(self._async_value_from_stream)
-        )
-        self.vehicle.config_entry.async_create_background_task(
-            self.hass,
-            self.add_field(Signal.DOOR_STATE),
-            f"Adding field {Signal.DOOR_STATE} to {self.vehicle.vin}",
         )
 
     def _async_value_from_stream(self, value: bool | None) -> None:
