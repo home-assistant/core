@@ -32,7 +32,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "The entity_id of the Evohome zone."
+          "description": "The entity ID of the Evohome zone."
         },
         "setpoint": {
           "name": "Setpoint",
@@ -49,8 +49,8 @@
       "description": "Sets a zone to follow its schedule.",
       "fields": {
         "entity_id": {
-          "name": "Entity",
-          "description": "The entity_id of the zone."
+          "name": "[%key:component::evohome::services::set_zone_override::fields::entity_id::name%]",
+          "description": "[%key:component::evohome::services::set_zone_override::fields::entity_id::description%]"
         }
       }
     }

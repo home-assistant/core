@@ -8,8 +8,9 @@ from dataclasses import dataclass
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
-from teslemetry_stream import TeslemetryStream
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .coordinator import (
@@ -34,12 +35,15 @@ class TeslemetryVehicleData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: VehicleSpecific
+    config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     stream: TeslemetryStream
+    stream_vehicle: TeslemetryStreamVehicle
     vin: str
-    wakelock = asyncio.Lock()
+    firmware: str
     device: DeviceInfo
     remove_listener: Callable
+    wakelock = asyncio.Lock()
 
 
 @dataclass
@@ -47,7 +51,7 @@ class TeslemetryEnergyData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: EnergySpecific
-    live_coordinator: TeslemetryEnergySiteLiveCoordinator
+    live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
