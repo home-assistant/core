@@ -57,7 +57,9 @@ async def test_service_load_unload(
 
     # test with unloaded config entry
     await hass.config_entries.async_unload(config_entry.entry_id)
-    with pytest.raises(ServiceValidationError, match="service_not_found"):
+    with pytest.raises(
+        ServiceValidationError, match="No Envoy found from serial or entity specified"
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_FIRMWARE,
@@ -77,10 +79,10 @@ async def test_service_load_unload(
         await setup_integration(hass, config_entry)
         assert config_entry.state is ConfigEntryState.LOADED
 
-        # existing envoylist entry for COV of return in service setup
-        await setup_hass_services(hass, config_entry)
+        # existing envoylist entry for COV of return in register_coordinator
+        await setup_hass_services(hass)
 
-        # existing envoylist entry for COV of return in service unload.
+        # existing envoylist entry for COV of return in unregister_coordinator.
         await hass.config_entries.async_unload(config_entry.entry_id)
         assert config_entry.state is ConfigEntryState.NOT_LOADED
 

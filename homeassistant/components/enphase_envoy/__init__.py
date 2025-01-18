@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
@@ -19,7 +20,15 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .services import setup_hass_services, unload_hass_services
+from .services import register_coordinator, setup_hass_services, unregister_coordinator
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Enphase Envoy  integration."""
+
+    # setup the enphase_envoy action services
+    await setup_hass_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
@@ -68,8 +77,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     # Reload entry when it is updated.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
-    # setup the nephase_envoy action services
-    await setup_hass_services(hass, entry)
+    # make envoy accessible for services
+    register_coordinator(entry)
 
     return True
 
@@ -81,9 +90,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
     """Unload a config entry."""
-    coordinator = entry.runtime_data
-    coordinator.async_cancel_token_refresh()
-    await unload_hass_services(hass, coordinator.envoy)
+    unregister_coordinator(entry)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

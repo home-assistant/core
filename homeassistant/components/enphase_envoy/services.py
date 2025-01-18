@@ -43,6 +43,20 @@ _LOGGER = logging.getLogger(__name__)
 envoylist: dict[str, EnphaseUpdateCoordinator] = {}
 
 
+def register_coordinator(entry: EnphaseConfigEntry) -> None:
+    """Add envoy coordinator to list for use by services."""
+    entry_envoy: Envoy = entry.runtime_data.envoy
+    if entry_envoy.serial_number:
+        envoylist[entry_envoy.serial_number] = entry.runtime_data
+
+
+def unregister_coordinator(entry: EnphaseConfigEntry) -> None:
+    """Remove envoy coordinator from list for use by services."""
+    entry_envoy: Envoy = entry.runtime_data.envoy
+    if entry_envoy.serial_number:
+        envoylist.pop(entry_envoy.serial_number)
+
+
 def _find_envoy_coordinator(
     hass: HomeAssistant, call: ServiceCall
 ) -> EnphaseUpdateCoordinator:
@@ -90,17 +104,9 @@ def _find_envoy_coordinator(
     )
 
 
-async def setup_hass_services(
-    hass: HomeAssistant, entry: EnphaseConfigEntry
-) -> ServiceResponse:
+async def setup_hass_services(hass: HomeAssistant) -> ServiceResponse:
     """Configure Home Assistant services for Enphase_Envoy."""
 
-    # keep track of all envoy
-    entry_envoy: Envoy = entry.runtime_data.envoy
-    if entry_envoy.serial_number:
-        envoylist[entry_envoy.serial_number] = entry.runtime_data
-
-    # if services are already registered by another envoy don't define again
     if hass.services.async_services_for_domain(DOMAIN):
         return None
 
@@ -140,15 +146,3 @@ async def setup_hass_services(
     )
 
     return None
-
-
-async def unload_hass_services(hass: HomeAssistant, envoy: Envoy) -> None:
-    """Unload services for Enphase Envoy integration."""
-
-    if envoy.serial_number:
-        envoylist.pop(envoy.serial_number)
-    # if there's still another envoy active don't remove services
-    if envoylist:
-        return
-    for service in SERVICE_LIST:
-        hass.services.async_remove(DOMAIN, service)
