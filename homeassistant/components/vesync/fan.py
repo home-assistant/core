@@ -167,12 +167,12 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
         return attr
 
-    def set_percentage(self, percentage: int) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the device."""
         if percentage == 0:
-            self.device.turn_off()
+            await self.hass.async_add_executor_job(self.device.turn_off)
         elif not self.device.is_on:
-            self.device.turn_on()
+            await self.hass.async_add_executor_job(self.device.turn_on)
 
         self.device.manual_mode()
         self.device.change_fan_speed(
@@ -182,9 +182,9 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 )
             )
         )
-        self.schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
 
-    def set_preset_mode(self, preset_mode: str) -> None:
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
         if preset_mode not in VS_FAN_MODE_PRESET_LIST_HA:
             raise ValueError(
@@ -193,22 +193,22 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             )
 
         if not self.device.is_on:
-            self.device.turn_on()
+            await self.hass.async_add_executor_job(self.device.turn_on)
 
         if preset_mode == VS_FAN_MODE_AUTO:
-            self.device.auto_mode()
+            await self.hass.async_add_executor_job(self.device.auto_mode)
         elif preset_mode == VS_FAN_MODE_SLEEP:
-            self.device.sleep_mode()
+            await self.hass.async_add_executor_job(self.device.sleep_mode)
         elif preset_mode == VS_FAN_MODE_PET:
-            self.device.pet_mode()
+            await self.hass.async_add_executor_job(self.device.pet_mode)
         elif preset_mode == VS_FAN_MODE_TURBO:
-            self.device.turbo_mode()
+            await self.hass.async_add_executor_job(self.device.turbo_mode)
         elif preset_mode == VS_FAN_MODE_ADVANCED_SLEEP:
-            self.device.advanced_sleep_mode()
+            await self.hass.async_add_executor_job(self.device.advanced_sleep_mode)
 
-        self.schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
 
-    def turn_on(
+    async def async_turn_on(
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
@@ -216,13 +216,13 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     ) -> None:
         """Turn the device on."""
         if preset_mode:
-            self.set_preset_mode(preset_mode)
+            await self.async_set_preset_mode(preset_mode)
             return
         if percentage is None:
             percentage = 50
-        self.set_percentage(percentage)
+        await self.async_set_percentage(percentage)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()
-        self.schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
