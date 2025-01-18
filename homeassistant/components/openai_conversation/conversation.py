@@ -227,7 +227,7 @@ class OpenAIConversationEntity(
 
             history.async_add_message(
                 conversation.ChatMessage(
-                    role="native" if response.tool_calls else response.role,
+                    role=response.role,
                     agent_id=user_input.agent_id,
                     content=response.content or "",
                     native=messages[-1],
