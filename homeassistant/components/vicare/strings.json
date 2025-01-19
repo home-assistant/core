@@ -65,7 +65,7 @@
         "name": "DHW pump"
       },
       "one_time_charge_status": {
-        "name": "One Time Charge Status"
+        "name": "One-time charge"
       }
     },
     "button": {
