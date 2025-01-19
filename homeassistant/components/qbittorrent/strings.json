@@ -58,6 +58,18 @@
       }
     }
   },
+ "selector": {
+    "torrent_filter": {
+      "options": {
+        "all": "All",
+        "active": "Active",
+        "inactive": "Inactive",
+        "paused": "Paused",
+        "downloading": "Downloading",
+        "seeding": "Seeding"
+      }
+    }
+  }
   "services": {
     "get_torrents": {
       "name": "Get torrents",
@@ -69,7 +81,7 @@
         },
         "torrent_filter": {
           "name": "Torrent filter",
-          "description": "What kind of torrents you want to return, such as `all` or `active`."
+          "description": "What kind of torrents you want to return."
         }
       }
     },
