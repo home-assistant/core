@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeeConfigEntry, helpers
+from . import HomeeConfigEntry
 from .const import (
     HOMEE_UNIT_TO_HA_UNIT,
     OPEN_CLOSE_MAP,
@@ -25,6 +25,7 @@ from .const import (
     WINDOW_MAP_REVERSED,
 )
 from .entity import HomeeEntity, HomeeNodeEntity
+from .helpers import get_name_for_enum
 
 
 def get_open_close_value(attribute: HomeeAttribute) -> str | None:
@@ -37,13 +38,6 @@ def get_window_value(attribute: HomeeAttribute) -> str | None:
     """Return the states of a window open sensor."""
     vals = WINDOW_MAP if not attribute.is_reversed else WINDOW_MAP_REVERSED
     return vals.get(attribute.current_value)
-
-
-def get_node_prop(prop_name: str, value: int) -> str:
-    """Return the string for a numeric state."""
-    prop_class = {"state": NodeState, "protocol": NodeProtocol}[prop_name]
-
-    return helpers.get_name_for_enum(prop_class, value).lower()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -224,23 +218,47 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
 class HomeeNodeSensorEntityDescription(SensorEntityDescription):
     """Describes Homee node sensor entities."""
 
-    value_fn: Callable[[str, int], str] = get_node_prop
+    value_fn: Callable[[HomeeNode], str | None]
 
 
-NODE_SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeNodeSensorEntityDescription] = {
-    "state": HomeeNodeSensorEntityDescription(
+NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
+    HomeeNodeSensorEntityDescription(
         key="state",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "available",
+            "unavailable",
+            "update_in_progress",
+            "waiting_for_attributes",
+            "initializing",
+            "user_interaction_required",
+            "password_required",
+            "host_unavailable",
+            "delete_in_progress",
+            "cosi_connected",
+            "blocked",
+            "waiting_for_wakeup",
+            "remote_node_deleted",
+            "firmware_update_in_progress",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         translation_key="node_sensor_state",
+        value_fn=lambda node: get_name_for_enum(NodeState, node.state),
     ),
-    "protocol": HomeeNodeSensorEntityDescription(
+    HomeeNodeSensorEntityDescription(
         key="protocol",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "zwave",
+            "enocean",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         translation_key="node_sensor_protocol",
+        value_fn=lambda node: get_name_for_enum(NodeProtocol, node.protocol),
     ),
-}
+)
 
 
 async def async_setup_entry(
@@ -254,8 +272,8 @@ async def async_setup_entry(
     for node in config_entry.runtime_data.nodes:
         # Node properties that are sensors.
         devices.extend(
-            HomeeNodeSensor(node, config_entry, NODE_SENSOR_DESCRIPTIONS[item])
-            for item in ("state", "protocol")
+            HomeeNodeSensor(node, config_entry, description)
+            for description in NODE_SENSOR_DESCRIPTIONS
         )
 
         # Node attributes that are sensors.
@@ -285,7 +303,7 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         self.entity_description = description
         if attribute.instance > 0:
             self._attr_translation_key = f"{description.translation_key}_instance"
-        self._attr_translation_placeholders = {"instance": str(attribute.instance)}
+            self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
     @property
     def native_value(self) -> float | str | None:
@@ -318,8 +336,6 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the sensors value."""
-        value = getattr(self._node, self.entity_description.key)
-
-        return self.entity_description.value_fn(self.entity_description.key, value)
+        return self.entity_description.value_fn(self._node)
