@@ -8,7 +8,7 @@ import uuid
 from bring_api.types import BringAuthResponse
 import pytest
 
-from homeassistant.components.bring import DOMAIN
+from homeassistant.components.bring.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -43,6 +43,7 @@ def mock_bring_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.uuid = UUID
+        client.mail = EMAIL
         client.login.return_value = cast(BringAuthResponse, {"name": "Bring"})
         client.load_lists.return_value = load_json_object_fixture("lists.json", DOMAIN)
         client.get_list.return_value = load_json_object_fixture("items.json", DOMAIN)
