@@ -27,6 +27,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    RestoreBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -47,6 +48,7 @@ __all__ = [
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
+    "RestoreBackupEvent",
     "WrittenBackup",
 ]
 
