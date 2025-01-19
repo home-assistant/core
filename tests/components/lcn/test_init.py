@@ -134,6 +134,32 @@ async def test_async_entry_reload_on_host_event_received(
         async_schedule_reload.assert_called_with(entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "replace"),
+    [
+        ("climate.climate1", ("-r1varsetpoint", "-var1.r1varsetpoint")),
+        ("scene.romantic", ("-00", "-0.0")),
+    ],
+)
+@patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
+async def test_unique_id_migrate(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, entry, entity_id, replace
+) -> None:
+    """Test unique id migration."""
+    await init_integration(hass, entry)
+
+    migrated_unique_id = entity_registry.async_get(entity_id).unique_id
+    old_unique_id = migrated_unique_id.replace(*replace)
+
+    entity_registry.async_update_entity(entity_id, new_unique_id=old_unique_id)
+    assert entity_registry.async_get(entity_id).unique_id == old_unique_id
+
+    assert await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get(entity_id).unique_id == migrated_unique_id
+
+
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)
 async def test_migrate_1_1(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test migration config entry."""

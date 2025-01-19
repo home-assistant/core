@@ -136,6 +136,7 @@
         "source": "VAR1",
         "setpoint": "R1VARSETPOINT",
         "lockable": true,
+        "target_value_locked": -1,
         "min_temp": 0.0,
         "max_temp": 40.0,
         "unit_of_measurement": "°C"

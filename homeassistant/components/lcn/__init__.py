@@ -43,6 +43,7 @@ from .const import (
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
+    CONF_TARGET_VALUE_LOCKED,
     CONF_TRANSITION,
     CONNECTION,
     DEVICE_CONNECTIONS,
@@ -173,10 +174,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         new_data[CONF_ENTITIES] = new_entities_data
 
     if config_entry.version < 3:
-        # update to 3.1 (remove resource parameter)
+        # update to 3.1 (remove resource parameter, add climate target lock value parameter)
         new_entities_data = [*new_data[CONF_ENTITIES]]
         for entity in new_entities_data:
             entity.pop(CONF_RESOURCE, None)
+
+            if entity[CONF_DOMAIN] == Platform.CLIMATE:
+                entity[CONF_DOMAIN_DATA][CONF_TARGET_VALUE_LOCKED] = entity[
+                    CONF_DOMAIN_DATA
+                ].get(CONF_TARGET_VALUE_LOCKED, -1)
+
         new_data[CONF_ENTITIES] = new_entities_data
 
     hass.config_entries.async_update_entry(
