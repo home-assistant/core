@@ -138,7 +138,7 @@ async def test_dhcp_flow_simple(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"host": "1.2.3.4"}
+    assert result["data"] == {"host": "192.168.1.12"}
 
 
 async def test_dhcp_flow_wih_auth(
