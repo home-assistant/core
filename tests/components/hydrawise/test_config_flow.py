@@ -164,8 +164,7 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_USERNAME: "asdf@asdf.com", CONF_PASSWORD: "__password__"},
+        result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
     mock_pydrawise.get_user.return_value = user
     await hass.async_block_till_done()

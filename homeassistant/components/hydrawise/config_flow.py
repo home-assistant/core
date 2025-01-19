@@ -87,7 +87,6 @@ async def _authenticate(
     """Authenticate with the Hydrawise API."""
     unique_id = None
     errors: dict[str, str] = {}
-    # Verify that the provided credentials work."""
     auth = pydrawise_auth.Auth(username, password)
     try:
         await auth.token()
@@ -103,11 +102,12 @@ async def _authenticate(
         api = client.Hydrawise(auth, app_id=APP_ID)
         # Don't fetch zones because we don't need them yet.
         user = await api.get_user(fetch_zones=False)
-        unique_id = f"hydrawise-{user.customer_id}"
     except TimeoutError:
         errors["base"] = "timeout_connect"
     except ClientError as ex:
         LOGGER.error("Unable to connect to Hydrawise cloud service: %s", ex)
         errors["base"] = "cannot_connect"
+    else:
+        unique_id = f"hydrawise-{user.customer_id}"
 
     return unique_id, errors
