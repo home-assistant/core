@@ -74,6 +74,8 @@ async def async_setup_entry(
 class FGLairDevice(FGLairEntity, ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
+    _attr_name = None
+
     def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC, hass: HomeAssistant) -> None:
         """Store the representation of the device and set the static attributes."""
         super().__init__(coordinator, device)
