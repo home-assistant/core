@@ -19,6 +19,7 @@ async def test_device_tracker(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the device tracker entities are correct."""
 
@@ -32,6 +33,7 @@ async def test_device_tracker_alt(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the device tracker entities are correct."""
 
@@ -65,11 +67,8 @@ async def test_device_tracker_streaming(
                     "latitude": 3.0,
                     "longitude": 4.0,
                 },
-                Signal.DESTINATION_NAME: "Boca Chica",
-                Signal.ORIGIN_LOCATION: {
-                    "latitude": 5.0,
-                    "longitude": 6.0,
-                },
+                Signal.DESTINATION_NAME: "Home",
+                Signal.ORIGIN_LOCATION: None,
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
         }
