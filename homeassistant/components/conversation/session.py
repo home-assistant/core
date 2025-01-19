@@ -155,7 +155,7 @@ class ConverseError(HomeAssistantError):
         self.conversation_id = conversation_id
         self.response = response
 
-    def as_converstation_result(self) -> ConversationResult:
+    def as_conversation_result(self) -> ConversationResult:
         """Return the error as a conversation result."""
         return ConversationResult(
             response=self.response,
@@ -220,14 +220,14 @@ class ChatSession(Generic[_NativeT]):
             if message.role != "native" or message.agent_id == agent_id
         ]
 
-    async def async_process_llm_message(
+    async def async_update_llm_data(
         self,
         conversing_domain: str,
         user_input: ConversationInput,
         user_llm_hass_api: str | None = None,
         user_llm_prompt: str | None = None,
     ) -> None:
-        """Process an incoming message for an LLM."""
+        """Set the LLM system prompt."""
         llm_context = llm.LLMContext(
             platform=conversing_domain,
             context=user_input.context,

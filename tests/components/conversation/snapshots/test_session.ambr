@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_template_error
+  dict({
+    'conversation_id': '01JHYBX26BWYFDBM3YANJAH6T2',
+    'response': IntentResponse(
+      card=dict({
+      }),
+      error_code=<IntentResponseErrorCode.UNKNOWN: 'unknown'>,
+      failed_results=list([
+      ]),
+      intent=None,
+      intent_targets=list([
+      ]),
+      language='en',
+      matched_states=list([
+      ]),
+      reprompt=dict({
+      }),
+      response_type=<IntentResponseType.ERROR: 'error'>,
+      speech=dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Sorry, I had a problem with my template',
+        }),
+      }),
+      speech_slots=dict({
+      }),
+      success_results=list([
+      ]),
+      unmatched_states=list([
+      ]),
+    ),
+  })
+# ---
+# name: test_unknown_llm_api
+  dict({
+    'conversation_id': '01JHYBX25Q3TQ63HFGX7DK7JMB',
+    'response': IntentResponse(
+      card=dict({
+      }),
+      error_code=<IntentResponseErrorCode.UNKNOWN: 'unknown'>,
+      failed_results=list([
+      ]),
+      intent=None,
+      intent_targets=list([
+      ]),
+      language='en',
+      matched_states=list([
+      ]),
+      reprompt=dict({
+      }),
+      response_type=<IntentResponseType.ERROR: 'error'>,
+      speech=dict({
+        'plain': dict({
+          'extra_data': None,
+          'speech': 'Error preparing LLM API',
+        }),
+      }),
+      speech_slots=dict({
+      }),
+      success_results=list([
+      ]),
+      unmatched_states=list([
+      ]),
+    ),
+  })
+# ---
