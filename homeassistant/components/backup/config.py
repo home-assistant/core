@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 CRON_PATTERN_DAILY = "{m} {h} * * *"
 CRON_PATTERN_WEEKLY = "{m} {h} * * {d}"
 
-# The default time for automatic backups is to run at 04:45.
+# The default time for automatic backups to run is at 04:45.
 # This time is chosen to be compatible with the time of the recorder's
 # nightly job which runs at 04:12.
 DEFAULT_BACKUP_TIME = dt.time(4, 45)
