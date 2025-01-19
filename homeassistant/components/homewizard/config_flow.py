@@ -97,22 +97,23 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         api = HomeWizardEnergyV2(self.ip_address)
         token: str | None = None
+        errors: dict[str, str] | None = None
 
         # Tell device we want a token, user must now press the button within 30 seconds
+        # The first attempt will always fail and raise DisabledError but this opens the window to press the button
         with contextlib.suppress(DisabledError):
             token = await api.get_token("home-assistant")
 
-        if user_input is None:
-            return self.async_show_form(
-                step_id="authorize",
-            )
-
         if token is None:
             errors = {"base": "authorization_failed"}
+
+        if user_input is None or token is None:
+            await api.close()
             return self.async_show_form(step_id="authorize", errors=errors)
 
         # Now we got a token, we can ask for some more info
         device_info = await api.device()
+        await api.close()
 
         data = {
             CONF_IP_ADDRESS: self.ip_address,
