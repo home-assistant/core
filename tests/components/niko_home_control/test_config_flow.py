@@ -36,7 +36,7 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_cannot_connect(hass: HomeAssistant) -> None:
     """Test the cannot connect error."""
 
     result = await hass.config_entries.flow.async_init(
@@ -69,7 +69,7 @@ async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
 
 async def test_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test uniqueness."""
 
@@ -108,9 +108,7 @@ async def test_import_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_cannot_connect(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_import_cannot_connect(hass: HomeAssistant) -> None:
     """Test the cannot connect error."""
 
     with patch(
@@ -126,7 +124,7 @@ async def test_import_cannot_connect(
 
 
 async def test_duplicate_import_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test uniqueness."""
 
@@ -141,14 +139,14 @@ async def test_duplicate_import_entry(
 
 
 async def test_duplicate_reconfigure_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test uniqueness."""
-
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+
     result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: "192.168.0.123"}
     )
@@ -157,12 +155,10 @@ async def test_duplicate_reconfigure_entry(
 
 
 async def test_reconfigure_setup(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -173,13 +169,10 @@ async def test_reconfigure_setup(
 async def test_reconfigure(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -190,25 +183,17 @@ async def test_reconfigure(
         result["flow_id"],
         {CONF_HOST: "192.168.0.122"},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].entry_id != mock_config_entry.entry_id
 
 
 async def test_reconfigure_cannot_connect(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the cannot connect error."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
     with patch(
         "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
         side_effect=Exception,
@@ -218,3 +203,76 @@ async def test_reconfigure_cannot_connect(
             {CONF_HOST: "192.168.0.122"},
         )
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_update_reload_and_abort(
+    hass: HomeAssistant,
+    mock_niko_home_control_connection: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reconfigure flow with update, reload, and abort."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert set(result["data_schema"].schema) == {CONF_HOST}
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.122"},
+    )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+
+
+async def test_async_step_reconfigure_success(
+    hass: HomeAssistant,
+    mock_niko_home_control_connection: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful reconfiguration."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.NikoHomeControlConfigFlow.async_update_reload_and_abort",
+        return_value={"type": FlowResultType.ABORT, "reason": "reconfigured"},
+    ):
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.122"},
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["result"].entry_id != mock_config_entry.entry_id
+
+
+async def test_async_step_reconfigure_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration with connection error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.niko_home_control.config_flow.test_connection",
+        return_value="cannot_connect",
+    ):
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.0.122"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "cannot_connect"}
