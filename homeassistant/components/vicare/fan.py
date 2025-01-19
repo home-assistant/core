@@ -192,7 +192,6 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Return true if the entity is on."""
         return (
             self.percentage is not None and self.percentage > 0
-            # ) or self.preset_mode is not None
         )
 
     def turn_off(self, **kwargs: Any) -> None:
