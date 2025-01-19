@@ -5,7 +5,7 @@ from typing import cast
 from bring_api import BringUserSettingsResponse
 import pytest
 
-from homeassistant.components.bring import DOMAIN
+from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.bring.coordinator import BringData
 from homeassistant.components.bring.util import list_language, sum_attributes
 

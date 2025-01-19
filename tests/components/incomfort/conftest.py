@@ -8,7 +8,6 @@ from incomfortclient import DisplayCode
 import pytest
 
 from homeassistant.components.incomfort.const import DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -81,7 +80,7 @@ def mock_config_entry(
     hass: HomeAssistant,
     mock_entry_data: dict[str, Any],
     mock_entry_options: dict[str, Any],
-) -> ConfigEntry:
+) -> MockConfigEntry:
     """Mock a config entry setup for incomfort integration."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=mock_entry_data, options=mock_entry_options

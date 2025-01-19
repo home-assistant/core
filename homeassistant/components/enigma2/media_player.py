@@ -56,6 +56,7 @@ class Enigma2Device(CoordinatorEntity[Enigma2UpdateCoordinator], MediaPlayerEnti
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.PLAY
     )
 
     def __init__(self, coordinator: Enigma2UpdateCoordinator) -> None:
