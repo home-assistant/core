@@ -42,6 +42,11 @@ class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
         """Return coordinator data for this entity."""
         return self.coordinator.data[self._serial]
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.data["status"] != 2
+
 
 class EzvizBaseEntity(Entity):
     """Generic entity for EZVIZ individual poll entities."""
