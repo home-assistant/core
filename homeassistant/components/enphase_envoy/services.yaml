@@ -1,8 +1,7 @@
-get_firmware:
+get_raw_tariff:
   fields:
-    envoy:
+    config_entry_id:
       required: true
       selector:
-        entity:
+        config_entry:
           integration: enphase_envoy
-          domain: sensor

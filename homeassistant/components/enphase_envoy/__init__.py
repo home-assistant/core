@@ -26,7 +26,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Enphase Envoy  integration."""
+    """Set up Enphase Envoy integration."""
 
     # setup the enphase_envoy action services
     await setup_hass_services(hass)

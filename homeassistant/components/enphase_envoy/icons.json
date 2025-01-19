@@ -1,7 +1,7 @@
 {
   "services": {
-    "get_firmware": {
-      "service": "mdi:download-box-outline"
+    "get_raw_tariff": {
+      "service": "mdi:clipboard-text-clock-outline"
     }
   }
 }

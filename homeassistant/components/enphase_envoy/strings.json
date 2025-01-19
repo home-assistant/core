@@ -392,24 +392,27 @@
     "not_initialized": {
       "message": "{service}: Enphase envoy is not yet initialized"
     },
+    "not_collected": {
+      "message": "{service}: this endpoint is not collected by the Envoy"
+    },
     "envoy_service_error": {
       "message": "Error in Envoy Service: {service} {args}"
     },
     "envoy_service_envoy_not_found": {
-      "message": "No Envoy found from serial or entity specified: {service} {args}"
+      "message": "No Envoy found: {service} {args}"
     },
     "envoy_service_invalid_parameter": {
       "message": "Invalid parameters passed to Envoy service: {service} {args}"
     }
   },
   "services": {
-    "get_firmware": {
-      "name": "Current firmware version",
-      "description": "Read current firmware version from Envoy.",
+    "get_raw_tariff": {
+      "name": "Tariff details",
+      "description": "Full tariff information from cache.",
       "fields": {
-        "envoy": {
+        "config_entry_id": {
           "name": "Select Envoy",
-          "description": "Envoy to get data for. Select an Envoy entity from the entity list. The associated Envoy will be used for the action. In yaml mode you can also use envoy.serialnr where serialnr is the envoy serialnumber."
+          "description": "Envoy to get data for. Select an Envoy from the integration list. In YAML format this is the config entry id of the Envoy."
         }
       }
     }

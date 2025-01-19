@@ -2,20 +2,19 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pyenphase import EnvoyError
+from pyenphase.const import URL_TARIFF
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.enphase_envoy.const import DOMAIN, Platform
 from homeassistant.components.enphase_envoy.services import (
-    ATTR_ENVOY,
-    SERVICE_GET_FIRMWARE,
-    SERVICE_LIST,
+    ATTR_CONFIG_ENTRY_ID,
+    RAW_SERVICE_LIST,
     setup_hass_services,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 
 from . import setup_integration
 
@@ -40,7 +39,7 @@ async def test_has_services(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
-    for service in SERVICE_LIST:
+    for service in RAW_SERVICE_LIST:
         assert hass.services.has_service(DOMAIN, service)
     assert snapshot == list(hass.services.async_services_for_domain(DOMAIN).keys())
 
@@ -57,16 +56,18 @@ async def test_service_load_unload(
 
     # test with unloaded config entry
     await hass.config_entries.async_unload(config_entry.entry_id)
-    with pytest.raises(
-        ServiceValidationError, match="No Envoy found from serial or entity specified"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_GET_FIRMWARE,
-            {ATTR_ENVOY: "envoy.1234"},
-            blocking=True,
-            return_response=True,
-        )
+    for service in RAW_SERVICE_LIST:
+        with pytest.raises(
+            ServiceValidationError,
+            match=f"{service}: Enphase envoy is not yet initialized",
+        ):
+            await hass.services.async_call(
+                DOMAIN,
+                service,
+                {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id},
+                blocking=True,
+                return_response=True,
+            )
 
     # test with simulated second loaded envoy for COV on envoylist handling
     with (
@@ -83,83 +84,58 @@ async def test_service_load_unload(
 
 
 @pytest.mark.parametrize(
-    ("service", "mock_envoy", "firmware", "service_data"),
+    ("service", "mock_envoy"),
     [
         (
-            SERVICE_GET_FIRMWARE,
+            "get_raw_tariff",
             "envoy",
-            "7.6.175",
-            {ATTR_ENVOY: "envoy.1234"},
-        ),
-        (
-            SERVICE_GET_FIRMWARE,
-            "envoy",
-            "7.6.175",
-            {ATTR_ENVOY: "sensor.envoy_1234_current_power_production"},
-        ),
-        (
-            SERVICE_GET_FIRMWARE,
-            "envoy",
-            "7.6.175",
-            {ATTR_ENVOY: "sensor.inverter_1"},
         ),
     ],
     indirect=["mock_envoy"],
 )
-async def test_service_get_firmware(
+async def test_service_get_raw_tariff(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     service: str,
-    firmware: str,
-    service_data: dict[str, str],
 ) -> None:
     """Test service calls for get_firmware service."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    result = await hass.services.async_call(
-        DOMAIN,
-        service,
-        service_data,
-        blocking=True,
-        return_response=True,
-    )
-    assert result["firmware"] == firmware
-    assert result["previous_firmware"] == firmware
-
-    mock_envoy.setup.side_effect = EnvoyError("Test")
+    # mock data has no tariff data in raw
     with pytest.raises(
-        HomeAssistantError,
-        match="Error in Envoy Service: get_firmware Test",
+        ServiceValidationError,
+        match=f"{service}: this endpoint is not collected by the Envoy",
     ):
         await hass.services.async_call(
             DOMAIN,
             service,
-            service_data,
+            {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
 
+    test_pattern = {"tariff": {"currency": {"code": "EUR"}}}
+    mock_envoy.data.raw = {URL_TARIFF: test_pattern}
+    # add tariff data to mock raw
+    result = await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id},
+        blocking=True,
+        return_response=True,
+    )
+    assert result["raw"] == test_pattern
+
 
 @pytest.mark.parametrize(
-    ("service", "mock_envoy", "service_data"),
+    ("service", "mock_envoy"),
     [
         (
-            SERVICE_GET_FIRMWARE,
+            "get_raw_tariff",
             "envoy",
-            {ATTR_ENVOY: "envoy.12345"},
-        ),
-        (
-            SERVICE_GET_FIRMWARE,
-            "envoy",
-            {ATTR_ENVOY: "sensor.envoy_12345_current_power_production"},
-        ),
-        (
-            SERVICE_GET_FIRMWARE,
-            "envoy",
-            {ATTR_ENVOY: "sensor.inverter_11"},
         ),
     ],
     indirect=["mock_envoy"],
@@ -169,7 +145,6 @@ async def test_service_get_firmware_exceptions(
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     service: str,
-    service_data: dict[str, str],
 ) -> None:
     """Test service calls for get_firmware service with faulty service data."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
@@ -178,12 +153,25 @@ async def test_service_get_firmware_exceptions(
 
     with pytest.raises(
         ServiceValidationError,
-        match=f"No Envoy found from serial or entity specified: get_firmware {service_data[ATTR_ENVOY]}",
+        match=f"No Envoy found: get_raw_tariff {'123456789'}",
     ):
         await hass.services.async_call(
             DOMAIN,
             service,
-            service_data,
+            {ATTR_CONFIG_ENTRY_ID: "123456789"},
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_envoy.data.raw = {}
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"{service}: Enphase envoy is not yet initialized",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_CONFIG_ENTRY_ID: config_entry.entry_id},
             blocking=True,
             return_response=True,
         )
