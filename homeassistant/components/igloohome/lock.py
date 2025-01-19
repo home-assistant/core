@@ -1,11 +1,14 @@
 """Implementation of the lock platform."""
 
+from datetime import timedelta
+
+from aiohttp import ClientError
 from igloohome_api import (
     BRIDGE_JOB_LOCK,
     BRIDGE_JOB_UNLOCK,
-    DEVICE_TYPE_BRIDGE,
     DEVICE_TYPE_LOCK,
     Api as IgloohomeApi,
+    ApiException,
     GetDeviceInfoResponse,
 )
 
@@ -15,6 +18,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IgloohomeConfigEntry
 from .entity import IgloohomeBaseEntity
+from .utils import get_linked_bridge
+
+# Scan interval set to allow Lock entity update the bridge linked to it.
+SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
@@ -29,12 +36,12 @@ async def async_setup_entry(
                 api_device_info=device,
                 api=entry.runtime_data.api,
                 bridgeId=str(
-                    __get_linked_bridge(device.deviceId, entry.runtime_data.devices)
+                    get_linked_bridge(device.deviceId, entry.runtime_data.devices)
                 ),
             )
             for device in entry.runtime_data.devices
             if device.type == DEVICE_TYPE_LOCK
-            and __get_linked_bridge(device.deviceId, entry.runtime_data.devices)
+            and get_linked_bridge(device.deviceId, entry.runtime_data.devices)
             is not None
         ),
         update_before_add=True,
@@ -57,35 +64,39 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
             unique_key="lock",
         )
         self._attr_supported_features |= LockEntityFeature.OPEN
-        self.bridgeId = bridgeId
+        self.bridge_id = bridgeId
 
     async def async_lock(self, **kwargs):
         """Lock this lock."""
         await self.api.create_bridge_proxied_job(
-            self.api_device_info.deviceId, self.bridgeId, BRIDGE_JOB_LOCK
+            self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_LOCK
         )
 
     async def async_unlock(self, **kwargs):
         """Unlock this lock."""
         await self.api.create_bridge_proxied_job(
-            self.api_device_info.deviceId, self.bridgeId, BRIDGE_JOB_UNLOCK
+            self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_UNLOCK
         )
 
     async def async_open(self, **kwargs):
         """Open (unlatch) this lock."""
         await self.api.create_bridge_proxied_job(
-            self.api_device_info.deviceId, self.bridgeId, BRIDGE_JOB_UNLOCK
+            self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_UNLOCK
         )
 
-
-def __get_linked_bridge(
-    device_id: str, devices: list[GetDeviceInfoResponse]
-) -> str | None:
-    """Return the ID of the bridge that is linked to the device. None if no bridge is linked."""
-    bridges = (bridge for bridge in devices if bridge.type == DEVICE_TYPE_BRIDGE)
-    for bridge in bridges:
-        if device_id in (
-            linked_device.deviceId for linked_device in bridge.linkedDevices
-        ):
-            return bridge.deviceId
-    return None
+    async def async_update(self) -> None:
+        """Update the bridge linked to this lock."""
+        try:
+            devices = await self.api.get_devices()
+            linked_bridge_id = get_linked_bridge(
+                self.api_device_info.deviceId, devices.payload
+            )
+            if linked_bridge_id is None:
+                self._attr_available = False
+            else:
+                self._attr_available = True
+                self.bridge_id = linked_bridge_id
+        except (ApiException, ClientError):
+            self._attr_available = False
+        else:
+            self._attr_available = True
