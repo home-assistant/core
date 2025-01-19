@@ -1,5 +1,6 @@
 """The Azure Storage integration."""
 
+from aiohttp import ClientTimeout
 from azure.core.exceptions import (
     ClientAuthenticationError,
     HttpResponseError,
@@ -13,7 +14,7 @@ from azure.storage.blob.aio import ContainerClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     CONF_ACCOUNT_NAME,
@@ -30,11 +31,15 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
 ) -> bool:
     """Set up Azure Storage integration."""
+    # set increase aiohttp timeout
+    session = async_create_clientsession(
+        hass, timeout=ClientTimeout(connect=10, total=43200)
+    )
     container_client = ContainerClient(
         account_url=f"https://{entry.data[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",
         container_name=entry.data[CONF_CONTAINER_NAME],
         credential=entry.data[CONF_STORAGE_ACCOUNT_KEY],
-        transport=AioHttpTransport(session=async_get_clientsession(hass)),
+        transport=AioHttpTransport(session=session),
     )
 
     try:
