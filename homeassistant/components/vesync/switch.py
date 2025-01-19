@@ -75,12 +75,10 @@ def _setup_entities(
 ):
     """Check if device is online and add entity."""
     async_add_entities(
-        (
-            VeSyncSwitchEntity(dev, description, coordinator)
-            for dev in devices
-            for description in SENSOR_DESCRIPTIONS
-            if description.exists_fn(dev)
-        ),
+        VeSyncSwitchEntity(dev, description, coordinator)
+        for dev in devices
+        for description in SENSOR_DESCRIPTIONS
+        if description.exists_fn(dev)
     )
 
 
