@@ -119,7 +119,7 @@ def mock_homewizardenergy_v2(
 
         # Authorization flow is used during configuration flow
         client.get_token.return_value = Token.from_dict(
-            load_json_object_fixture("v2/generic/post_user_200_ok.json", DOMAIN)
+            load_json_object_fixture("v2/generic/token.json", DOMAIN)
         ).token
 
         yield client
