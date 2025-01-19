@@ -6,8 +6,6 @@ import logging
 from typing import Any, Final
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -85,6 +83,8 @@ def _setup_entities(
 class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     """VeSync switch entity class."""
 
+    entity_description: VeSyncSwitchEntityDescription
+
     def __init__(
         self,
         device: VeSyncBaseDevice,
@@ -93,10 +93,10 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator)
-        self.entity_description: VeSyncSwitchEntityDescription = description
-        if isinstance(self.device, VeSyncOutlet):
+        self.entity_description = description
+        if is_outlet(self.device):
             self._attr_device_class = SwitchDeviceClass.OUTLET
-        if isinstance(self.device, VeSyncSwitch):
+        if is_wall_switch(self.device):
             self._attr_device_class = SwitchDeviceClass.SWITCH
 
     @property

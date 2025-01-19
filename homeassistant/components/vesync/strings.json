@@ -43,11 +43,6 @@
         "name": "Current voltage"
       }
     },
-    "switch": {
-      "on": {
-        "name": "On"
-      }
-    },
     "number": {
       "mist_level": {
         "name": "Mist level"
