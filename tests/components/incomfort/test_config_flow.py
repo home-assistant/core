@@ -144,19 +144,28 @@ async def test_reauth_flow_failure(
     """Test the re-authentication flow fails."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    mock_incomfort().heaters.side_effect = IncomfortError(
-        ClientResponseError(None, None, status=401)
-    )
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+
+    with patch.object(
+        mock_incomfort(),
+        "heaters",
+        side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "incorrect-password"},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: "new-password"},
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 @pytest.mark.parametrize(
