@@ -138,10 +138,12 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
             return
         # send turn_on command to pyvesync api
         self.device.turn_on()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self.device.turn_off()
+        self.schedule_update_ha_state()
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):
