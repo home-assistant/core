@@ -14,6 +14,7 @@ from igloohome_api import (
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IgloohomeConfigEntry
@@ -68,21 +69,30 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
 
     async def async_lock(self, **kwargs):
         """Lock this lock."""
-        await self.api.create_bridge_proxied_job(
-            self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_LOCK
-        )
+        try:
+            await self.api.create_bridge_proxied_job(
+                self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_LOCK
+            )
+        except (ApiException, ClientError) as err:
+            raise HomeAssistantError from err
 
     async def async_unlock(self, **kwargs):
         """Unlock this lock."""
-        await self.api.create_bridge_proxied_job(
-            self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_UNLOCK
-        )
+        try:
+            await self.api.create_bridge_proxied_job(
+                self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_UNLOCK
+            )
+        except (ApiException, ClientError) as err:
+            raise HomeAssistantError from err
 
     async def async_open(self, **kwargs):
         """Open (unlatch) this lock."""
-        await self.api.create_bridge_proxied_job(
-            self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_UNLOCK
-        )
+        try:
+            await self.api.create_bridge_proxied_job(
+                self.api_device_info.deviceId, self.bridge_id, BRIDGE_JOB_UNLOCK
+            )
+        except (ApiException, ClientError) as err:
+            raise HomeAssistantError from err
 
     async def async_update(self) -> None:
         """Update the bridge linked to this lock."""
