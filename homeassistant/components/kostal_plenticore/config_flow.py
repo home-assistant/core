@@ -73,3 +73,27 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None):
+        """Add reconfigure step to allow to reconfigure a config entry."""
+        errors = {}
+
+        if user_input is not None:
+            try:
+                hostname = await test_connection(self.hass, user_input)
+            except AuthenticationException as ex:
+                errors[CONF_PASSWORD] = "invalid_auth"
+                _LOGGER.error("Error response: %s", ex)
+            except (ClientError, TimeoutError):
+                errors[CONF_HOST] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors[CONF_BASE] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry=self._get_reconfigure_entry(), title=hostname, data=user_input
+                )
+
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+        )
