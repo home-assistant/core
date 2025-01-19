@@ -1016,7 +1016,7 @@ idasen-ha==2.6.3
 ifaddr==0.2.0
 
 # homeassistant.components.igloohome
-igloohome-api==0.0.6
+igloohome-api==0.1.0
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.9

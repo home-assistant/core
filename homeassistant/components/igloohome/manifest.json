@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/igloohome",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["igloohome-api==0.0.6"]
+  "requirements": ["igloohome-api==0.1.0"]
 }
