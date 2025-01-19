@@ -238,34 +238,19 @@ async def test_aliases(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> 
     # test default state of sensor loaded from config
     config_sensor = hass.states.get(f"{DOMAIN}.test_bat")
     assert config_sensor
-    assert config_sensor.state == "unknown"
+    assert config_sensor.state == STATE_UNKNOWN
+    assert config_sensor.attributes["device_class"] == "battery"
 
     # test event for config sensor
-    event_callback(
-        {
-            "id": "test_0000_bat",
-            "sensor": "battery",
-            "value": "low",
-        }
-    )
+    event_callback({"id": "test_0000_bat","sensor": "battery","value": "low"})
     await hass.async_block_till_done()
 
-    # test state of new sensor
-    updated_sensor = hass.states.get(f"{DOMAIN}.test_bat")
-    assert updated_sensor
-    assert updated_sensor.state
+    # test new state of sensor (LOW)
+    assert hass.states.get(f"{DOMAIN}.test_bat").state
 
     # test event for config sensor
-    event_callback(
-        {
-            "id": "test_bat",
-            "sensor": "battery",
-            "value": "ok",
-        }
-    )
+    event_callback({"id": "test_bat","sensor": "battery","value": "ok"})
     await hass.async_block_till_done()
 
-    # test state of new sensor
-    updated_sensor = hass.states.get(f"{DOMAIN}.test_bat")
-    assert updated_sensor
-    assert not updated_sensor.state
+    # test new state of sensor (OK)
+    assert not hass.states.get(f"{DOMAIN}.test_bat").state
