@@ -347,7 +347,7 @@ aiopyarr==23.4.0
 aioqsw==0.4.1
 
 # homeassistant.components.rainforest_raven
-aioraven==0.7.0
+aioraven==0.7.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
@@ -1519,7 +1519,7 @@ numato-gpio==0.13.0
 # homeassistant.components.stream
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==2.2.1
+numpy==2.2.2
 
 # homeassistant.components.nyt_games
 nyt_games==0.4.4
@@ -1890,7 +1890,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2024.12.0
+pydrawise==2025.1.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -2381,7 +2381,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.0.0
+python-homewizard-energy==v8.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2720,7 +2720,7 @@ sisyphus-control==3.1.4
 skyboxremote==0.0.6
 
 # homeassistant.components.slack
-slackclient==2.5.0
+slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
 slixmpp==1.8.5
