@@ -529,7 +529,7 @@ async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
     ("manufacturer", "source"),
     [
         ("test", "test"),
-        ("Raspberry Pi Trading Ltd", "28:CD:C1:11:23:45"),
+        ("Raspberry Pi Trading Ltd (test)", "28:CD:C1:11:23:45"),
     ],
 )
 async def test_remote_scanner_bluetooth_config_entry(
