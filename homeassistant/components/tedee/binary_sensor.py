@@ -51,6 +51,12 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     TedeeBinarySensorEntityDescription(
+        key="auto_pullspring_enabled",
+        translation_key="auto_pullspring_enabled",
+        is_on_fn=lambda lock: lock.is_enabled_auto_pullspring,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    TedeeBinarySensorEntityDescription(
         key="uncalibrated",
         translation_key="uncalibrated",
         is_on_fn=lambda lock: lock.state == TedeeLockState.UNCALIBRATED,

@@ -9,6 +9,7 @@
     "is_charging": false,
     "state_change_result": 0,
     "is_enabled_pullspring": 1,
+    "is_enabled_auto_pullspring": 1,
     "duration_pullspring": 2
   },
   {
@@ -21,6 +22,20 @@
     "is_charging": false,
     "state_change_result": 0,
     "is_enabled_pullspring": 0,
+    "is_enabled_auto_pullspring": 0,
     "duration_pullspring": 0
+  },
+  {
+    "lock_name": "Lock-3E4F",
+    "lock_id": 54321,
+    "lock_type": 4,
+    "state": 2,
+    "battery_level": 70,
+    "is_connected": true,
+    "is_charging": false,
+    "state_change_result": 0,
+    "is_enabled_pullspring": 1,
+    "is_enabled_auto_pullspring": 0,
+    "duration_pullspring": 2
   }
 ]

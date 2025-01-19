@@ -16,7 +16,13 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-BINARY_SENSORS = ("charging", "semi_locked", "pullspring_enabled", "lock_uncalibrated")
+BINARY_SENSORS = (
+    "charging",
+    "semi_locked",
+    "pullspring_enabled",
+    "auto_pullspring_enabled",
+    "lock_uncalibrated",
+)
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

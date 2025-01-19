@@ -106,6 +106,21 @@ async def test_lock_service_calls(
     assert state
     assert state.state == LockState.UNLOCKING
 
+    await hass.services.async_call(
+        LOCK_DOMAIN,
+        SERVICE_OPEN,
+        {
+            ATTR_ENTITY_ID: "lock.lock_3e4f",
+        },
+        blocking=True,
+    )
+
+    assert len(mock_tedee.pull.mock_calls) == 1
+    mock_tedee.pull.assert_called_once_with(54321)
+    state = hass.states.get("lock.lock_3e4f")
+    assert state
+    assert state.state == LockState.OPENING
+
 
 @pytest.mark.usefixtures("init_integration")
 async def test_lock_without_pullspring(

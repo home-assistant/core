@@ -52,6 +52,9 @@
       "pullspring_enabled": {
         "name": "Pullspring enabled"
       },
+      "auto_pullspring_enabled": {
+        "name": "Auto Pullspring enabled"
+      },
       "semi_locked": {
         "name": "Semi locked"
       },
@@ -83,6 +86,9 @@
     },
     "open_failed": {
       "message": "Failed to unlatch the door. Lock {lock_id}"
+    },
+    "pull_failed": {
+      "message": "Failed to unlatch the door via manual pull. Lock {lock_id}"
     }
   }
 }

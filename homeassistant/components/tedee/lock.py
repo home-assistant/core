@@ -127,7 +127,7 @@ class TedeeLockEntity(TedeeEntity, LockEntity):
 
 
 class TedeeLockWithLatchEntity(TedeeLockEntity):
-    """A tedee lock but has pullspring enabled, so it additional features."""
+    """A tedee lock but has pullspring enabled, so it has additional features."""
 
     @property
     def supported_features(self) -> LockEntityFeature:
@@ -137,14 +137,22 @@ class TedeeLockWithLatchEntity(TedeeLockEntity):
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door with pullspring."""
         try:
-            self._lock.state = TedeeLockState.UNLOCKING
-            self.async_write_ha_state()
-
-            await self.coordinator.tedee_client.open(self._lock.lock_id)
-            await self.coordinator.async_request_refresh()
+            if self._lock.is_enabled_auto_pullspring:
+                self._lock.state = TedeeLockState.UNLOCKING
+                self.async_write_ha_state()
+                await self.coordinator.tedee_client.open(self._lock.lock_id)
+            else:
+                self._lock.state = TedeeLockState.PULLING
+                self.async_write_ha_state()
+                await self.coordinator.tedee_client.pull(self._lock.lock_id)
         except (TedeeClientException, Exception) as ex:
+            error_key = (
+                "open_failed"
+                if self._lock.is_enabled_auto_pullspring
+                else "pull_failed"
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="open_failed",
+                translation_key=error_key,
                 translation_placeholders={"lock_id": str(self._lock.lock_id)},
             ) from ex
