@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from aiohttp.client_exceptions import ClientError
+import pytest
 
 from homeassistant.components.pegel_online.const import CONF_STATION, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -27,7 +28,15 @@ MOCK_USER_DATA_STEP1 = {
 
 MOCK_USER_DATA_STEP2 = {CONF_STATION: "70272185-xxxx-xxxx-xxxx-43bea330dcae"}
 
+IGNORED_TRANSLATIONS = [
+    # the forms are self-explaining, no need for data descriptions
+    "component.pegel_online.config.step.user.data_description.location",
+    "component.pegel_online.config.step.user.data_description.radius",
+    "component.pegel_online.config.step.select_station.data_description.station",
+]
 
+
+@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
 async def test_user(hass: HomeAssistant) -> None:
     """Test starting a flow by user."""
     result = await hass.config_entries.flow.async_init(
@@ -63,6 +72,7 @@ async def test_user(hass: HomeAssistant) -> None:
     assert mock_setup_entry.called
 
 
+@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
 async def test_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user with an already configured statioon."""
     mock_config = MockConfigEntry(
@@ -95,6 +105,7 @@ async def test_user_already_configured(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
 async def test_connection_error(hass: HomeAssistant) -> None:
     """Test connection error during user flow."""
     result = await hass.config_entries.flow.async_init(
@@ -140,6 +151,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
     assert mock_setup_entry.called
 
 
+@pytest.mark.parametrize("ignore_translations", [IGNORED_TRANSLATIONS])
 async def test_user_no_stations(hass: HomeAssistant) -> None:
     """Test starting a flow by user which does not find any station."""
     result = await hass.config_entries.flow.async_init(
