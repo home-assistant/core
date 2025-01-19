@@ -690,7 +690,7 @@ async def test_manual_flow_works_with_v2_api_support(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_manual_flow_detecs_failed_user_authorization(
+async def test_manual_flow_detects_failed_user_authorization(
     hass: HomeAssistant,
     mock_homewizardenergy_v2: MagicMock,
     mock_setup_entry: AsyncMock,
