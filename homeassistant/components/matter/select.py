@@ -131,6 +131,7 @@ class MatterListSelectEntity(MatterSelectEntity):
             command=clusters.TemperatureControl.Commands.SetTemperature(
                 targetTemperatureLevel=option_id
             ),
+        )
 
     @callback
     def _update_from_device(self) -> None:
