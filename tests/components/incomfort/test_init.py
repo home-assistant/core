@@ -33,7 +33,6 @@ async def test_setup_platforms(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_updates(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_incomfort: MagicMock,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: ConfigEntry,
@@ -86,7 +85,6 @@ async def test_coordinator_updates(
 )
 async def test_coordinator_update_fails(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_incomfort: MagicMock,
     freezer: FrozenDateTimeFactory,
     exc: Exception,
