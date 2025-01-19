@@ -214,3 +214,58 @@ async def test_restore_state(
     state = hass.states.get(f"{DOMAIN}.test2")
     assert state
     assert state.state == STATE_OFF
+
+
+async def test_aliases(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Validate the response to sensor's alias (with aliases)."""
+    config = {
+        "rflink": {"port": "/dev/ttyABC0"},
+        DOMAIN: {
+            "platform": "rflink",
+            "devices": {
+                "test_bat": {
+                    "name": "test_bat",
+                    "aliases": ["test_0000_bat"],
+                    "device_class": "battery",
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+
+    # test default state of sensor loaded from config
+    config_sensor = hass.states.get(f"{DOMAIN}.test_bat")
+    assert config_sensor
+    assert config_sensor.state == "unknown"
+
+    # test event for config sensor
+    event_callback(
+        {
+            "id": "test_0000_bat",
+            "sensor": "battery",
+            "value": "low",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # test state of new sensor
+    updated_sensor = hass.states.get(f"{DOMAIN}.test_bat")
+    assert updated_sensor
+    assert updated_sensor.state == True
+
+    # test event for config sensor
+    event_callback(
+        {
+            "id": "test_bat",
+            "sensor": "battery",
+            "value": "ok",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # test state of new sensor
+    updated_sensor = hass.states.get(f"{DOMAIN}.test_bat")
+    assert updated_sensor
+    assert updated_sensor.state == False
