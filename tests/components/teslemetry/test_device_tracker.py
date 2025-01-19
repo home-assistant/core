@@ -46,7 +46,6 @@ async def test_device_tracker_alt(
 async def test_device_tracker_streaming(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
