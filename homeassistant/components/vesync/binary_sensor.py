@@ -75,6 +75,8 @@ def _setup_entities(devices, async_add_entities, coordinator):
 class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
     """Vesync binary sensor class."""
 
+    entity_description: BinarySensorEntityDescription
+
     def __init__(
         self,
         device: VeSyncBaseDevice,
@@ -83,7 +85,7 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, coordinator)
-        self.entity_description: BinarySensorEntityDescription = description
+        self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
