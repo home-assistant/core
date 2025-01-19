@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.incomfort.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="rfgateway",
-    ip="1.2.3.4",
+    ip="192.168.1.12",
     macaddress="0004A3DEADFF",
 )
 
@@ -151,16 +151,38 @@ async def test_dhcp_flow_wih_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "dhcp_confirm"
-    # Simulate an auth failed error
+
+    # Simulate a host mismatch error but make sure auth fails the first time
     with patch.object(
         mock_incomfort(),
         "heaters",
         side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "changed", CONF_USERNAME: "admin", CONF_PASSWORD: "wrong-password"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"host": "host_mismatch"}
+
+    # Try again, but now with the correct host, but still with an auth error
+    with patch.object(
+        mock_incomfort(),
+        "heaters",
+        side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG | {CONF_PASSWORD: "wrong-password"}
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
 
     # Resubmit the form with added credentials
     result = await hass.config_entries.flow.async_configure(

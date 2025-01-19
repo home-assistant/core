@@ -10,6 +10,7 @@ from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
@@ -146,6 +147,11 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         if user_input is not None:
             if (
+                self.source == SOURCE_DHCP
+                and user_input[CONF_HOST] != self._discovered_host
+            ):
+                errors = {"host": "host_mismatch"}
+            elif (
                 errors := await async_try_connect_gateway(
                     self.hass,
                     (reconfigure_entry.data | user_input)
