@@ -268,7 +268,7 @@ async def test_unknown_llm_api(
             )
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
-    assert exc_info.value.as_conversation_result() == snapshot
+    assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
 async def test_template_error(
@@ -289,7 +289,7 @@ async def test_template_error(
             )
 
     assert str(exc_info.value) == "Error rendering prompt"
-    assert exc_info.value.as_conversation_result() == snapshot
+    assert exc_info.value.as_conversation_result().as_dict() == snapshot
 
 
 async def test_template_variables(
