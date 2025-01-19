@@ -53,7 +53,7 @@ BACKUP_CALL = call(
 )
 
 DEFAULT_STORAGE_DATA: dict[str, Any] = {
-    "backups": {},
+    "backups": [],
     "config": {
         "create_backup": {
             "agent_ids": [],
@@ -910,7 +910,7 @@ async def test_agents_info(
         {
             "backup": {
                 "data": {
-                    "backups": {},
+                    "backups": [],
                     "config": {
                         "create_backup": {
                             "agent_ids": ["test-agent"],
@@ -934,7 +934,7 @@ async def test_agents_info(
         {
             "backup": {
                 "data": {
-                    "backups": {},
+                    "backups": [],
                     "config": {
                         "create_backup": {
                             "agent_ids": ["test-agent"],
@@ -958,7 +958,7 @@ async def test_agents_info(
         {
             "backup": {
                 "data": {
-                    "backups": {},
+                    "backups": [],
                     "config": {
                         "create_backup": {
                             "agent_ids": ["test-agent"],
@@ -982,7 +982,7 @@ async def test_agents_info(
         {
             "backup": {
                 "data": {
-                    "backups": {},
+                    "backups": [],
                     "config": {
                         "create_backup": {
                             "agent_ids": ["test-agent"],
@@ -1006,7 +1006,7 @@ async def test_agents_info(
         {
             "backup": {
                 "data": {
-                    "backups": {},
+                    "backups": [],
                     "config": {
                         "create_backup": {
                             "agent_ids": ["test-agent"],
@@ -1392,7 +1392,7 @@ async def test_config_schedule_logic(
     """Test config schedule logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
@@ -1838,7 +1838,7 @@ async def test_config_retention_copies_logic(
     """Test config backup retention copies logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -2095,7 +2095,7 @@ async def test_config_retention_copies_logic_manual_backup(
     """Test config backup retention copies logic for manual backup."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -2515,7 +2515,7 @@ async def test_config_retention_days_logic(
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
