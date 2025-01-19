@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 from random import randrange
-from typing import Any
+from typing import Any, TypedDict
 
 import aiohttp
 import tibber
@@ -368,7 +367,7 @@ class TibberSensorElPrice(TibberSensor):
     def __init__(self, tibber_home: tibber.TibberHome) -> None:
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
-        self._last_updated: datetime.datetime | None = None
+        self._last_updated: datetime | None = None
         self._spread_load_constant = randrange(TWENTY_MINUTES)
 
         self._attr_available = False
@@ -384,6 +383,8 @@ class TibberSensorElPrice(TibberSensor):
             "peak": None,
             "off_peak_2": None,
             "intraday_price_ranking": None,
+            "prices_today": [],
+            "prices_tomorrow": [],
         }
         self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
@@ -415,6 +416,25 @@ class TibberSensorElPrice(TibberSensor):
         self._attr_native_value, price_level, self._last_updated, price_rank = res
         self._attr_extra_state_attributes["price_level"] = price_level
         self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
+
+        class PriceItem(TypedDict):
+            time: datetime
+            price: float
+            level: str
+
+        levels = self._tibber_home.price_level
+        prices: list[PriceItem] = [
+            {"time": datetime.fromisoformat(k), "price": price, "level": levels[k]}
+            for (k, price) in self._tibber_home.price_total.items()
+        ]
+        # Prices come from a dict which is not guaranteed to be ordered.
+        prices.sort(key=lambda e: e["time"])
+
+        today = datetime.now().date()
+        prices_today = [p for p in prices if p["time"].date() == today]
+        prices_tomorrow = [p for p in prices if p["time"].date() > today]
+        self._attr_extra_state_attributes["prices_today"] = prices_today
+        self._attr_extra_state_attributes["prices_tomorrow"] = prices_tomorrow
 
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)
