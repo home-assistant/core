@@ -26,12 +26,7 @@ import homeassistant.helpers.event as evt
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    CONF_ALIASES,
-    DATA_ENTITY_LOOKUP,
-    EVENT_KEY_SENSOR,
-    TMP_ENTITY,
-)
+from .const import CONF_ALIASES, DATA_ENTITY_LOOKUP, EVENT_KEY_SENSOR, TMP_ENTITY
 from .entity import RflinkDevice
 from .utils import identify_event_type
 
