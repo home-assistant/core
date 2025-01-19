@@ -533,7 +533,10 @@ async def test_scanner_stops_responding(hass: HomeAssistant) -> None:
     ],
 )
 async def test_remote_scanner_bluetooth_config_entry(
-    hass: HomeAssistant, manufacturer: str, source: str
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    manufacturer: str,
+    source: str,
 ) -> None:
     """Test the remote scanner gets a bluetooth config entry."""
     manager: HomeAssistantBluetoothManager = _get_manager()
@@ -579,8 +582,7 @@ async def test_remote_scanner_bluetooth_config_entry(
     assert adapter_entry is not None
     assert adapter_entry.state is ConfigEntryState.LOADED
 
-    dev_reg = dr.async_get(hass)
-    dev = dev_reg.async_get_device(
+    dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_BLUETOOTH, scanner.source)}
     )
     assert dev is not None
