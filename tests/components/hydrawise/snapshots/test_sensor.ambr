@@ -614,3 +614,195 @@
     'state': '29',
   })
 # ---
+# name: test_disable_advanced_sensors[sensor.zone_one_next_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone_one_next_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next cycle',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_cycle',
+    'unique_id': '5965394_next_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_one_next_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Zone One Next cycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone_one_next_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-04T19:49:57+00:00',
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_one_remaining_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone_one_remaining_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remaining watering time',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'watering_time',
+    'unique_id': '5965394_watering_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_one_remaining_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'friendly_name': 'Zone One Remaining watering time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone_one_remaining_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_two_next_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone_two_next_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next cycle',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'next_cycle',
+    'unique_id': '5965395_next_cycle',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_two_next_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Zone Two Next cycle',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone_two_next_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_two_remaining_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.zone_two_remaining_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remaining watering time',
+    'platform': 'hydrawise',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'watering_time',
+    'unique_id': '5965395_watering_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_disable_advanced_sensors[sensor.zone_two_remaining_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by hydrawise.com',
+      'friendly_name': 'Zone Two Remaining watering time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.zone_two_remaining_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29',
+  })
+# ---

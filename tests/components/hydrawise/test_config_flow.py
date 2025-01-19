@@ -8,7 +8,7 @@ from pydrawise.schema import User
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hydrawise.const import DOMAIN
+from homeassistant.components.hydrawise.const import CONF_ADVANCED_SENSORS, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -207,3 +207,61 @@ async def test_reauth_fails(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_options(hass: HomeAssistant) -> None:
+    """Test updating options."""
+    mock_config_entry = MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "bad-password",
+        },
+        unique_id="hydrawise-12345",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ADVANCED_SENSORS: True},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].options[CONF_ADVANCED_SENSORS]
+
+
+async def test_options_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring options."""
+    mock_config_entry = MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "bad-password",
+        },
+        options={CONF_ADVANCED_SENSORS: True},
+        unique_id="hydrawise-12345",
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.options.get(CONF_ADVANCED_SENSORS)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ADVANCED_SENSORS: False},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert not entries[0].options[CONF_ADVANCED_SENSORS]

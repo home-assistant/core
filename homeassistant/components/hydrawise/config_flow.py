@@ -10,21 +10,35 @@ from pydrawise import auth as pydrawise_auth, client
 from pydrawise.exceptions import NotAuthorizedError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
-from .const import APP_ID, DOMAIN, LOGGER
+from .const import APP_ID, CONF_ADVANCED_SENSORS, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+OPTIONS_SCHEMA = vol.Schema({vol.Required(CONF_ADVANCED_SENSORS): bool})
 
 
 class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hydrawise."""
 
     VERSION = 1
+    MINOR_VERSION = 2
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry[Any]) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -111,3 +125,21 @@ async def _authenticate(
         unique_id = f"hydrawise-{user.customer_id}"
 
     return unique_id, errors
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle Hydrawise options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the Hydrawise options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+            ),
+        )

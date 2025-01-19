@@ -21,7 +21,7 @@ from pydrawise.schema import (
 )
 import pytest
 
-from homeassistant.components.hydrawise.const import DOMAIN
+from homeassistant.components.hydrawise.const import CONF_ADVANCED_SENSORS, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -207,7 +207,19 @@ def mock_config_entry_legacy() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def config_entry_options() -> dict:
+    """Fixture for config entry options."""
+    return {CONF_ADVANCED_SENSORS: False}
+
+
+@pytest.fixture
+def enable_advanced_sensors(config_entry_options):
+    """Fixture to enable advanced sensors."""
+    config_entry_options[CONF_ADVANCED_SENSORS] = True
+
+
+@pytest.fixture
+def mock_config_entry(config_entry_options) -> MockConfigEntry:
     """Mock ConfigEntry."""
     return MockConfigEntry(
         title="Hydrawise",
@@ -216,6 +228,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_USERNAME: "asfd@asdf.com",
             CONF_PASSWORD: "__password__",
         },
+        options=config_entry_options,
         unique_id="hydrawise-customerid",
         version=1,
         minor_version=2,

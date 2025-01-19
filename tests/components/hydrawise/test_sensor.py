@@ -10,6 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.hydrawise.const import (
+    CONF_ADVANCED_SENSORS,
     MAIN_SCAN_INTERVAL,
     WATER_USE_SCAN_INTERVAL,
 )
@@ -28,11 +29,28 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 @pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
 async def test_all_sensors(
     hass: HomeAssistant,
+    enable_advanced_sensors: None,
     mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that all sensors are working."""
+    with patch(
+        "homeassistant.components.hydrawise.PLATFORMS",
+        [Platform.SENSOR],
+    ):
+        config_entry = await mock_add_config_entry()
+        await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+
+
+@pytest.mark.freeze_time("2023-10-01 00:00:00+00:00")
+async def test_disable_advanced_sensors(
+    hass: HomeAssistant,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that we can disable advanced sensors."""
     with patch(
         "homeassistant.components.hydrawise.PLATFORMS",
         [Platform.SENSOR],
@@ -59,6 +77,7 @@ async def test_suspended_state(
 @pytest.mark.freeze_time("2024-11-01 00:00:00+00:00")
 async def test_usage_refresh(
     hass: HomeAssistant,
+    enable_advanced_sensors: None,
     mock_added_config_entry: MockConfigEntry,
     mock_pydrawise: AsyncMock,
     controller_water_use_summary: ControllerWaterUseSummary,
@@ -88,6 +107,7 @@ async def test_no_sensor_and_water_state(
     hass: HomeAssistant,
     controller: Controller,
     controller_water_use_summary: ControllerWaterUseSummary,
+    enable_advanced_sensors: None,
     mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
 ) -> None:
     """Test rain sensor, flow sensor, and water use in the absence of flow and rain sensors."""
@@ -121,6 +141,39 @@ async def test_no_sensor_and_water_state(
     assert sensor.state == "on"
 
 
+async def test_advanced_sensors_are_removed(
+    hass: HomeAssistant,
+    controller: Controller,
+    controller_water_use_summary: ControllerWaterUseSummary,
+    enable_advanced_sensors: None,
+    mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
+) -> None:
+    """Test advanced sensors are removed if the option is disabled."""
+    advanced_sensors = [
+        "sensor.home_controller_daily_active_water_use",
+        "sensor.home_controller_daily_active_watering_time",
+        "sensor.home_controller_daily_inactive_water_use",
+        "sensor.home_controller_daily_total_water_use",
+        "sensor.zone_one_daily_active_water_use",
+        "sensor.zone_one_daily_active_watering_time",
+        "sensor.zone_two_daily_active_water_use",
+        "sensor.zone_two_daily_active_watering_time",
+    ]
+
+    mock_config_entry = await mock_add_config_entry()
+    for sensor in advanced_sensors:
+        assert hass.states.get(sensor) is not None, f"{sensor} was not created"
+
+    # Disable the advanced sensors option, which should remove the existing entities.
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options=mock_config_entry.options | {CONF_ADVANCED_SENSORS: False},
+    )
+    await hass.async_block_till_done()
+    for sensor in advanced_sensors:
+        assert hass.states.get(sensor) is None, f"{sensor} was not removed"
+
+
 @pytest.mark.parametrize(
     ("hydrawise_unit_system", "unit_system", "expected_state"),
     [
@@ -136,6 +189,7 @@ async def test_volume_unit_conversion(
     hydrawise_unit_system: str,
     expected_state: str,
     user: User,
+    enable_advanced_sensors: None,
     mock_add_config_entry: Callable[[], Awaitable[MockConfigEntry]],
 ) -> None:
     """Test volume unit conversion."""

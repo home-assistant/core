@@ -7,9 +7,10 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pydrawise.schema import ControllerWaterUseSummary
+from pydrawise.schema import Controller, ControllerWaterUseSummary
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_PLATFORM,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,11 +18,15 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import HydrawiseUpdateCoordinators
+from .const import CONF_ADVANCED_SENSORS, DOMAIN, LOGGER
+from .coordinator import (
+    HydrawiseUpdateCoordinators,
+    HydrawiseWaterUseDataUpdateCoordinator,
+)
 from .entity import HydrawiseEntity
 
 
@@ -138,41 +143,61 @@ async def async_setup_entry(
     entities: list[HydrawiseSensor] = []
     for controller in coordinators.main.data.controllers.values():
         entities.extend(
-            HydrawiseSensor(coordinators.water_use, description, controller)
-            for description in WATER_USE_CONTROLLER_SENSORS
-        )
-        entities.extend(
-            HydrawiseSensor(
-                coordinators.water_use, description, controller, zone_id=zone.id
-            )
-            for zone in controller.zones
-            for description in WATER_USE_ZONE_SENSORS
-        )
-        entities.extend(
             HydrawiseSensor(coordinators.main, description, controller, zone_id=zone.id)
             for zone in controller.zones
             for description in ZONE_SENSORS
         )
-        if (
-            coordinators.water_use.data.daily_water_summary[controller.id].total_use
-            is not None
-        ):
-            # we have a flow sensor for this controller
-            entities.extend(
-                HydrawiseSensor(coordinators.water_use, description, controller)
-                for description in FLOW_CONTROLLER_SENSORS
-            )
-            entities.extend(
-                HydrawiseSensor(
-                    coordinators.water_use,
-                    description,
-                    controller,
-                    zone_id=zone.id,
-                )
-                for zone in controller.zones
-                for description in FLOW_ZONE_SENSORS
-            )
+        if config_entry.options.get(CONF_ADVANCED_SENSORS):
+            _add_advanced_sensors(entities, coordinators.water_use, controller)
+        else:
+            # Remove any advanced sensor entities that were previously added.
+            entity_registry = er.async_get(hass)
+            for unique_id in _get_advanced_sensor_ids(controller):
+                if entity_id := entity_registry.async_get_entity_id(
+                    SENSOR_PLATFORM, DOMAIN, unique_id
+                ):
+                    LOGGER.debug("Removing advanced sensor: %s", entity_id)
+                    entity_registry.async_remove(entity_id)
+
     async_add_entities(entities)
+
+
+def _get_advanced_sensor_ids(controller: Controller) -> list[str]:
+    return [
+        f"{controller.id}_{description.key}"
+        for description in WATER_USE_CONTROLLER_SENSORS + FLOW_CONTROLLER_SENSORS
+    ] + [
+        f"{zone.id}_{description.key}"
+        for zone in controller.zones
+        for description in WATER_USE_ZONE_SENSORS + FLOW_ZONE_SENSORS
+    ]
+
+
+def _add_advanced_sensors(
+    entities: list[HydrawiseSensor],
+    coordinator: HydrawiseWaterUseDataUpdateCoordinator,
+    controller: Controller,
+) -> None:
+    entities.extend(
+        HydrawiseSensor(coordinator, description, controller)
+        for description in WATER_USE_CONTROLLER_SENSORS
+    )
+    entities.extend(
+        HydrawiseSensor(coordinator, description, controller, zone_id=zone.id)
+        for zone in controller.zones
+        for description in WATER_USE_ZONE_SENSORS
+    )
+    if coordinator.data.daily_water_summary[controller.id].total_use is not None:
+        # we have a flow sensor for this controller
+        entities.extend(
+            HydrawiseSensor(coordinator, description, controller)
+            for description in FLOW_CONTROLLER_SENSORS
+        )
+        entities.extend(
+            HydrawiseSensor(coordinator, description, controller, zone_id=zone.id)
+            for zone in controller.zones
+            for description in FLOW_ZONE_SENSORS
+        )
 
 
 class HydrawiseSensor(HydrawiseEntity, SensorEntity):

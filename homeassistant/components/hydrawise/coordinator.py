@@ -39,6 +39,7 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     """Base class for Hydrawise Data Update Coordinators."""
 
     api: Hydrawise
+    enabled: bool = True
 
 
 class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
@@ -84,16 +85,28 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         hass: HomeAssistant,
         api: Hydrawise,
         main_coordinator: HydrawiseMainDataUpdateCoordinator,
+        enabled: bool = False,
     ) -> None:
         """Initialize HydrawiseWaterUseDataUpdateCoordinator."""
         super().__init__(
             hass,
             LOGGER,
             name=f"{DOMAIN} water use",
-            update_interval=WATER_USE_SCAN_INTERVAL,
         )
         self.api = api
         self._main_coordinator = main_coordinator
+        self.enabled = enabled
+
+    @property
+    def enabled(self) -> bool:
+        """Whether the update coordinator is enabled."""
+        return self._enabled
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        """Enable or disable the update coordinator."""
+        self._enabled = value
+        self.update_interval = WATER_USE_SCAN_INTERVAL if value else None
 
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""

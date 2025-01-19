@@ -28,6 +28,25 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure options for Hydrawise",
+        "data": {
+          "advanced_sensors": "Enable advanced sensors"
+        },
+        "data_description": {
+          "advanced_sensors": "Setting this enables water use and flow sensors. These require additional polling to the Hydrawise and may cause account throttling. Use at your own risk."
+        }
+      }
+    }
+  },
+  "issues": {
+    "advanced_sensors_disabled": {
+      "title": "Some Hydrawise sensors have been removed",
+      "description": "Advanced Hydrawise sensors (water use and water time) have been removed by default. They can be re-added through the integraiton options."
+    }
+  },
   "entity": {
     "binary_sensor": {
       "watering": {

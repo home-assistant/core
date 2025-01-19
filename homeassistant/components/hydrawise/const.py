@@ -25,3 +25,5 @@ SERVICE_SUSPEND = "suspend"
 
 ATTR_DURATION = "duration"
 ATTR_UNTIL = "until"
+
+CONF_ADVANCED_SENSORS = "advanced_sensors"
