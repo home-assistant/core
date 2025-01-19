@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import OpowerCoordinator
+from .coordinator import OpowerConfigEntry, OpowerCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bool:
