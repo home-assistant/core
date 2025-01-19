@@ -335,7 +335,7 @@ async def create_ui_entity(
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> KnxEntityGenerator:
-    """Return a helper to create a KNX entities via WS.
+    """Return a helper to create KNX entities via WS.
 
     The KNX integration must be set up before using the helper.
     """

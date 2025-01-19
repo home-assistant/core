@@ -224,6 +224,7 @@ homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
+homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
