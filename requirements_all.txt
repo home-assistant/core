@@ -1945,7 +1945,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezvizapi==1.0.0.6
+pyezvizapi==1.0.0.7
 
 # homeassistant.components.fibaro
 pyfibaro==0.8.0
