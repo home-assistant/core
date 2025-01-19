@@ -6,9 +6,12 @@ from homeassistant.components import conversation
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.todo import (
     ATTR_ITEM,
+    DOMAIN,
     TodoItemStatus,
+    TodoListEntity,
     intent as todo_intent,
 )
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
@@ -131,5 +134,43 @@ async def test_add_item_intent(
             "test",
             todo_intent.INTENT_LIST_ADD_ITEM,
             {"item": {"value": ""}, "name": {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )
+
+
+async def test_add_item_intent_errors(
+    hass: HomeAssistant,
+    test_entity: TodoListEntity,
+) -> None:
+    """Test errors with the add item intent."""
+    test_entity._attr_name = "List 1"
+    await create_mock_platform(hass, [test_entity])
+
+    # Try to add item in list that does not exist
+    with pytest.raises(intent.MatchFailedError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {
+                ATTR_ITEM: {"value": "wine"},
+                ATTR_NAME: {"value": "This list does not exist"},
+            },
+            assistant=conversation.DOMAIN,
+        )
+
+    # Mock the get_entity method to return None
+    hass.data[DOMAIN].get_entity = lambda entity_id: None
+
+    # Try to add item in a list that exists but get_entity returns None
+    with pytest.raises(intent.IntentHandleError, match="No to-do list: List 1"):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_ADD_ITEM,
+            {
+                ATTR_ITEM: {"value": "wine"},
+                ATTR_NAME: {"value": "List 1"},
+            },
             assistant=conversation.DOMAIN,
         )
