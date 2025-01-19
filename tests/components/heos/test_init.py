@@ -250,6 +250,10 @@ async def test_device_id_migration(
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, 1)}
     )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("Other", 1)}
+    )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert device_registry.async_get_device({("Other", 1)}) is not None
     assert device_registry.async_get_device({(DOMAIN, 1)}) is None
     assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
