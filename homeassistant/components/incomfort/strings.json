@@ -31,6 +31,7 @@
       "not_found": "No Lan2RF gateway found.",
       "timeout_error": "Time out when connection to Lan2RF gateway.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "Unknown error when connection to Lan2RF gateway."
     },
     "error": {
