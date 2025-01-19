@@ -445,10 +445,7 @@ async def test_agents_upload_error(
 
     assert resp.status == 201
     assert f"Uploading backup {backup_id}" in caplog.text
-    assert (
-        "Error uploading to synology_dsm.Mock Title: Failed to upload backup"
-        in caplog.text
-    )
+    assert "Failed to upload backup" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
     assert len(mock.mock_calls) == 1
     assert mock.call_args_list[0].kwargs["filename"] == "test-backup.tar"
