@@ -58,6 +58,21 @@ async def velbus_scan_task(
         raise PlatformNotReady(
             f"Connection error while connecting to Velbus {entry_id}: {ex}"
         ) from ex
+    # create all modules
+    dev_reg = dr.async_get(hass)
+    for module in controller.get_modules().values():
+        dev_reg.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={
+                (DOMAIN, str(module.get_addresses()[0])),
+            },
+            manufacturer="Velleman",
+            model=module.get_type_name(),
+            model_id=str(module.get_type()),
+            name=f"{module.get_name()} ({module.get_type_name()})",
+            sw_version=module.get_sw_version(),
+            serial_number=module.get_serial(),
+        )
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
