@@ -344,7 +344,7 @@ aiopyarr==23.4.0
 aioqsw==0.4.1
 
 # homeassistant.components.rainforest_raven
-aioraven==0.7.0
+aioraven==0.7.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
