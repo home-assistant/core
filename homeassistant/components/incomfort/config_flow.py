@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -42,6 +43,15 @@ CONFIG_SCHEMA = vol.Schema(
         ),
     }
 )
+
+REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -105,6 +115,34 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication and confirmation."""
+        errors: dict[str, str] | None = None
+
+        if user_input:
+            password: str = user_input[CONF_PASSWORD]
+
+            reauth_entry = self._get_reauth_entry()
+            errors = await async_try_connect_gateway(
+                self.hass, reauth_entry.data | {CONF_PASSWORD: password}
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates={CONF_PASSWORD: password}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )
 
 
