@@ -15,8 +15,12 @@
         "title": "Confirm",
         "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?"
       },
-      "reauth_confirm": {
+      "reauth_enable_api": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
+      },
+      "reauth_confirm": {
+        "title": "Re-authenticate",
+        "description": "[%key:component::homewizard::config::step::authorize::description%]"
       },
       "authorize": {
         "title": "Authorize",
@@ -43,7 +47,8 @@
       "device_not_supported": "This device is not supported",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
       "unsupported_api_version": "Detected unsupported API version",
-      "reauth_successful": "Enabling API was successful",
+      "reauth_enable_api_successful": "Enabling API was successful",
+      "reauth_successful": "Authorization successful",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_device": "The configured device is not the same found on this IP address."
     }

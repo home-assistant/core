@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import contextlib
 from typing import Any
 
 from homewizard_energy import (
@@ -135,25 +134,20 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         """Step where we attempt to get a token."""
         assert self.ip_address
 
-        api = HomeWizardEnergyV2(self.ip_address)
-        token: str | None = None
-        errors: dict[str, str] | None = None
-
         # Tell device we want a token, user must now press the button within 30 seconds
-        # The first attempt will always fail and raise DisabledError but this opens the window to press the button
-        with contextlib.suppress(DisabledError):
-            token = await api.get_token("home-assistant")
+        # The first attempt will always fail, but this opens the window to press the button
+        token = await self._async_request_token(self.ip_address)
+        errors: dict[str, str] | None = None
 
         if token is None:
             errors = {"base": "authorization_failed"}
 
         if user_input is None or token is None:
-            await api.close()
             return self.async_show_form(step_id="authorize", errors=errors)
 
         # Now we got a token, we can ask for some more info
-        device_info = await api.device()
-        await api.close()
+        async with HomeWizardEnergyV2(self.ip_address) as api:
+            device_info = await api.device()
 
         data = {
             CONF_IP_ADDRESS: self.ip_address,
@@ -270,12 +264,19 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle re-auth if API was disabled."""
-        return await self.async_step_reauth_confirm()
+        self.ip_address = entry_data[CONF_IP_ADDRESS]
 
-    async def async_step_reauth_confirm(
+        # If token exists, we assume we use the v2 API and that the token has been invalidated
+        if entry_data.get(CONF_TOKEN):
+            return await self.async_step_reauth_confirm()
+
+        # Else we assume we use the v1 API and that the API has been disabled
+        return await self.async_step_reauth_enable_api()
+
+    async def async_step_reauth_enable_api(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Confirm reauth dialog."""
+        """Confirm reauth dialog, where user is asked to re-enable the HomeWizard API."""
         errors: dict[str, str] | None = None
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
@@ -286,7 +287,28 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors = {"base": ex.error_code}
             else:
                 await self.hass.config_entries.async_reload(reauth_entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_abort(reason="reauth_enable_api_successful")
+
+        return self.async_show_form(step_id="reauth_enable_api", errors=errors)
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        errors: dict[str, str] | None = None
+
+        token = await self._async_request_token(self.ip_address)
+
+        if user_input is not None:
+            if token is None:
+                errors = {"base": "authorization_failed"}
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_TOKEN: token,
+                    },
+                )
 
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
 
@@ -373,6 +395,20 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         finally:
             await energy_api.close()
+
+    @staticmethod
+    async def _async_request_token(ip_address: str) -> str | None:
+        """Try to request a token from the device.
+
+        This method is used to request a token from the device,
+        it will return None if the token request failed.
+        """
+
+        async with HomeWizardEnergyV2(ip_address) as api:
+            try:
+                return await api.get_token("home-assistant")
+            except DisabledError:
+                return None
 
 
 class RecoverableError(HomeAssistantError):
