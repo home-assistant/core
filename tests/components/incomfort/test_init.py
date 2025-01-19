@@ -15,11 +15,10 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_common import async_setup_and_enable_all_entities
-
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_platforms(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -31,6 +30,7 @@ async def test_setup_platforms(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_updates(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -39,7 +39,7 @@ async def test_coordinator_updates(
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort coordinator is updating."""
-    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     state = hass.states.get("climate.thermostat_1")
     assert state is not None
     assert state.attributes["current_temperature"] == 21.4
@@ -63,6 +63,7 @@ async def test_coordinator_updates(
     assert state.state == "1.84"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "exc",
     [
@@ -92,7 +93,7 @@ async def test_coordinator_update_fails(
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort coordinator update fails."""
-    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     state = hass.states.get("sensor.boiler_pressure")
     assert state is not None
     assert state.state == "1.86"
@@ -109,6 +110,7 @@ async def test_coordinator_update_fails(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("exc", "config_entry_state"),
     [

@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,11 +10,10 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .test_common import async_setup_and_enable_all_entities
-
 from tests.common import snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.SENSOR])
 async def test_setup_platform(
     hass: HomeAssistant,
@@ -23,5 +23,5 @@ async def test_setup_platform(
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort entities are set up correctly."""
-    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

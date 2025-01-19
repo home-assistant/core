@@ -12,12 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import MOCK_HEATER_STATUS
-from .test_common import async_setup_and_enable_all_entities
 
 from tests.common import snapshot_platform
 
 
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.BINARY_SENSOR])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_platform(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -26,7 +26,7 @@ async def test_setup_platform(
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort entities are set up correctly."""
-    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -46,6 +46,7 @@ async def test_setup_platform(
     ids=["is_failed", "is_pumping", "is_burning", "is_tapping"],
 )
 @patch("homeassistant.components.incomfort.PLATFORMS", [Platform.BINARY_SENSOR])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_binary_sensors_alt(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -54,5 +55,5 @@ async def test_setup_binary_sensors_alt(
     mock_config_entry: ConfigEntry,
 ) -> None:
     """Test the incomfort heater ."""
-    await async_setup_and_enable_all_entities(hass, entity_registry, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
