@@ -26,7 +26,13 @@ import homeassistant.helpers.event as evt
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ALIASES, DATA_ENTITY_LOOKUP, EVENT_KEY_SENSOR, TMP_ENTITY
+from .const import (
+    CONF_ALIASES,
+    DATA_ENTITY_LOOKUP,
+    EVENT_KEY_COMMAND,
+    EVENT_KEY_SENSOR,
+    TMP_ENTITY,
+)
 from .entity import RflinkDevice
 from .utils import identify_event_type
 
@@ -73,6 +79,19 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Rflink platform."""
     async_add_entities(devices_from_config(config))
+
+
+def get_event_value(event):
+    """Look at event to get its value.
+
+    Async friendly.
+    """
+    event_type = identify_event_type(event)
+    if EVENT_KEY_COMMAND in event:
+        return event[EVENT_KEY_COMMAND]
+    if EVENT_KEY_SENSOR in event:
+        return event["value"]
+    return "unknown"
 
 
 class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
@@ -127,8 +146,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
 
     def _handle_event(self, event):
         """Domain specific event handler."""
-        event_type = identify_event_type(event)
-        value = event[event_type]
+        value = get_event_value(event)
         if value in ["on", "allon", "low"]:
             self._state = True
         elif value in ["off", "alloff", "ok"]:
