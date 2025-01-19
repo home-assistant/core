@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
@@ -27,6 +28,7 @@ from homeassistant.helpers.selector import (
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
 from .coordinator import async_connect_gateway
 
+_LOGGER = logging.getLogger(__name__)
 TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -74,7 +76,8 @@ async def async_try_connect_gateway(
         return {"base": "unknown"}
     except TimeoutError:
         return {"base": "timeout_error"}
-    except Exception:  # noqa: BLE001
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
         return {"base": "unknown"}
 
     return None

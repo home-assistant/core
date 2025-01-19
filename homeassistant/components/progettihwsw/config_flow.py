@@ -1,5 +1,6 @@
 """Config flow for ProgettiHWSW Automation integration."""
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 from ProgettiHWSW.ProgettiHWSWAPI import ProgettiHWSWAPI
@@ -10,6 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required("host"): str, vol.Required("port", default=80): int}
@@ -86,7 +89,8 @@ class ProgettiHWSWConfigFlow(ConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 user_input.update(info)
