@@ -132,6 +132,11 @@ async def test_dhcp_flow_simple(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO
     )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "1.2.3.4"}
 
@@ -140,15 +145,20 @@ async def test_dhcp_flow_wih_auth(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_incomfort: MagicMock
 ) -> None:
     """Test dhcp flow for older gateway without authentication needed."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dhcp_confirm"
     # Simulate an auth failed error
     with patch.object(
         mock_incomfort(),
         "heaters",
         side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 

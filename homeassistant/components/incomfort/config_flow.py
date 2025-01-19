@@ -96,6 +96,8 @@ async def async_try_connect_gateway(
 class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow to set up an Intergas InComfort boyler and thermostats."""
 
+    _discovered_host: str
+
     @staticmethod
     @callback
     def async_get_options_flow(
@@ -108,12 +110,28 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Intergas Gateway device."""
-        host = discovery_info.ip
+        self._discovered_host = discovery_info.ip
+        self._async_abort_entries_match({CONF_HOST: self._discovered_host})
         unique_id = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._discovered_host})
 
-        return await self.async_step_user({CONF_HOST: host})
+        return await self.async_step_dhcp_confirm()
+
+    async def async_step_dhcp_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm setup from discovery."""
+        if user_input is not None:
+            return await self.async_step_user(
+                {
+                    CONF_HOST: self._discovered_host,
+                }
+            )
+        return self.async_show_form(
+            step_id="dhcp_confirm",
+            description_placeholders={CONF_HOST: self._discovered_host},
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
