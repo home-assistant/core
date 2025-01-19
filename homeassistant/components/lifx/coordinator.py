@@ -83,7 +83,7 @@ class SkyType(IntEnum):
     CLOUDS = 2
 
 
-class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
+class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
     def __init__(
@@ -456,7 +456,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):  # noqa: PLR0904
             )
             self.active_effect = FirmwareEffect[effect.upper()]
 
-    async def async_set_matrix_effect(  # noqa: PLR0917
+    async def async_set_matrix_effect(
         self,
         effect: str,
         palette: list[tuple[int, int, int, int]] | None = None,

@@ -13,12 +13,14 @@ from voluptuous import MultipleInvalid
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -43,6 +45,7 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ENABLE_PURE_BOOST,
     SERVICE_ENABLE_TIMER,
     SERVICE_FULL_STATE,
+    SERVICE_GET_DEVICE_CAPABILITIES,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
@@ -262,6 +265,95 @@ async def test_climate_swing(
 
     state = hass.states.get("climate.hallway")
     assert "swing_mode" not in state.attributes
+
+
+async def test_climate_horizontal_swing(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Sensibo climate horizontal swing service."""
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "stopped"
+
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].horizontal_swing_modes = [
+        "stopped",
+        "fixedleft",
+        "fixedcenter",
+        "fixedright",
+        "not_in_ha",
+    ]
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_modes_translated = {
+        "stopped": "stopped",
+        "fixedleft": "fixedLeft",
+        "fixedcenter": "fixedCenter",
+        "fixedright": "fixedRight",
+        "not_in_ha": "not_in_ha",
+    }
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Climate horizontal swing mode not_in_ha is not supported by the integration",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "not_in_ha"},
+            blocking=True,
+        )
+
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "fixedleft"},
+        blocking=True,
+    )
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "fixedleft"
+
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "targetTemperature",
+        "swing",
+        "light",
+    ]
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_SWING_HORIZONTAL_MODE: "fixedcenter",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.hallway")
+    assert "swing_horizontal_mode" not in state.attributes
 
 
 async def test_climate_temperatures(
@@ -862,7 +954,7 @@ async def test_climate_climate_react(
                 "light": "on",
             },
             "lowTemperatureThreshold": 5.5,
-            "type": "temperature",
+            "type": "feelsLike",
         },
     }
 
@@ -893,7 +985,7 @@ async def test_climate_climate_react(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_SMART_TYPE: "temperature",
+            ATTR_SMART_TYPE: "feelslike",
         },
         blocking=True,
     )
@@ -901,7 +993,7 @@ async def test_climate_climate_react(
     mock_client.async_get_devices_data.return_value.parsed["ABC999111"].smart_on = True
     mock_client.async_get_devices_data.return_value.parsed[
         "ABC999111"
-    ].smart_type = "temperature"
+    ].smart_type = "feelsLike"
     mock_client.async_get_devices_data.return_value.parsed[
         "ABC999111"
     ].smart_low_temp_threshold = 5.5
@@ -946,7 +1038,7 @@ async def test_climate_climate_react(
         hass.states.get("sensor.hallway_climate_react_high_temperature_threshold").state
         == "30.5"
     )
-    assert hass.states.get("sensor.hallway_climate_react_type").state == "temperature"
+    assert hass.states.get("sensor.hallway_climate_react_type").state == "feelslike"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -1187,3 +1279,33 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"
     assert state.attributes["swing_mode"] == "stopped"
+
+
+async def test_climate_get_device_capabilities(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Sensibo climate Get device capabilitites service."""
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_DEVICE_CAPABILITIES,
+        {ATTR_ENTITY_ID: "climate.hallway", ATTR_HVAC_MODE: "heat"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+    with pytest.raises(
+        ServiceValidationError, match="The entity does not support the chosen mode"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_DEVICE_CAPABILITIES,
+            {ATTR_ENTITY_ID: "climate.hallway", ATTR_HVAC_MODE: "heat_cool"},
+            blocking=True,
+            return_response=True,
+        )

@@ -2,13 +2,13 @@
   "config": {
     "step": {
       "detect": {
-        "title": "Select the path to your ENOcean dongle",
+        "title": "Select the path to your EnOcean dongle",
         "data": {
           "path": "USB dongle path"
         }
       },
       "manual": {
-        "title": "Enter the path to your ENOcean dongle",
+        "title": "Enter the path to your EnOcean dongle",
         "data": {
           "path": "[%key:component::enocean::config::step::detect::data::path%]"
         }

@@ -7266,9 +7266,9 @@ async def test_unique_id_collision_issues(
     mock_setup_entry = AsyncMock(return_value=True)
     for i in range(3):
         mock_integration(
-            hass, MockModule(f"test{i+1}", async_setup_entry=mock_setup_entry)
+            hass, MockModule(f"test{i + 1}", async_setup_entry=mock_setup_entry)
         )
-        mock_platform(hass, f"test{i+1}.config_flow", None)
+        mock_platform(hass, f"test{i + 1}.config_flow", None)
 
     test2_group_1: list[MockConfigEntry] = []
     test2_group_2: list[MockConfigEntry] = []

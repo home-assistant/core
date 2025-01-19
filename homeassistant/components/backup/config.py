@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 from enum import StrEnum
+import random
 from typing import TYPE_CHECKING, Self, TypedDict
 
 from cronsim import CronSim
@@ -27,6 +28,10 @@ if TYPE_CHECKING:
 # Run the backup at 04:45.
 CRON_PATTERN_DAILY = "45 4 * * *"
 CRON_PATTERN_WEEKLY = "45 4 * * {}"
+
+# Randomize the start time of the backup by up to 60 minutes to avoid
+# all backups running at the same time.
+BACKUP_START_TIME_JITTER = 60 * 60
 
 
 class StoredBackupConfig(TypedDict):
@@ -329,6 +334,8 @@ class BackupSchedule:
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected error creating automatic backup")
 
+        next_time += timedelta(seconds=random.randint(0, BACKUP_START_TIME_JITTER))
+        LOGGER.debug("Scheduling next automatic backup at %s", next_time)
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
         )

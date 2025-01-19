@@ -89,6 +89,9 @@
     "timeout": {
       "message": "Timeout waiting on a response: {err}"
     },
+    "unexpected": {
+      "message": "Unexpected Reolink error: {err}"
+    },
     "firmware_install_error": {
       "message": "Error trying to update Reolink firmware: {err}"
     },
@@ -116,10 +119,6 @@
     "firmware_update": {
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
-    },
-    "hdr_switch_deprecated": {
-      "title": "Reolink HDR switch deprecated",
-      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
     },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",

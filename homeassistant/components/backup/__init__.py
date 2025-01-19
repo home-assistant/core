@@ -35,7 +35,6 @@ from .websocket import async_register_websocket_handlers
 __all__ = [
     "AddonInfo",
     "AgentBackup",
-    "ManagerBackup",
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
@@ -46,6 +45,7 @@ __all__ = [
     "Folder",
     "IncorrectPasswordError",
     "LocalBackupAgent",
+    "ManagerBackup",
     "NewBackup",
     "WrittenBackup",
 ]

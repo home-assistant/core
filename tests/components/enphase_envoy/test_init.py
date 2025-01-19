@@ -263,7 +263,7 @@ async def test_config_different_unique_id(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title="Envoy 1234",
-        unique_id=4321,
+        unique_id="4321",
         data={
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Envoy 1234",
@@ -346,8 +346,10 @@ async def test_option_change_reload(
     await setup_integration(hass, config_entry)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
+    # By default neither option is available
+    assert config_entry.options == {}
 
-    # option change will take care of COV of init::async_reload_entry
+    # option change will also take care of COV of init::async_reload_entry
     hass.config_entries.async_update_entry(
         config_entry,
         options={
@@ -355,8 +357,23 @@ async def test_option_change_reload(
             OPTION_DISABLE_KEEP_ALIVE: True,
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
         OPTION_DISABLE_KEEP_ALIVE: True,
+    }
+    # flip em
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+            OPTION_DISABLE_KEEP_ALIVE: False,
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+        OPTION_DISABLE_KEEP_ALIVE: False,
     }

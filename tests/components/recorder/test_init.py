@@ -2655,9 +2655,9 @@ async def test_setup_fails_after_downgrade(
     await hass.async_stop()
     assert instance.engine is None
     assert (
-        f"The database schema version {SCHEMA_VERSION+1} is newer than {SCHEMA_VERSION}"
-        " which is the maximum database schema version supported by the installed "
-        "version of Home Assistant Core"
+        f"The database schema version {SCHEMA_VERSION + 1} is newer "
+        f"than {SCHEMA_VERSION} which is the maximum database schema "
+        "version supported by the installed version of Home Assistant Core"
     ) in caplog.text
 
 

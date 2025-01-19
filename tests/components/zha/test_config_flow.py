@@ -20,9 +20,8 @@ from zigpy.exceptions import NetworkNotFormed
 import zigpy.types
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp, usb, zeroconf
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.components.zha import config_flow, radio_manager
 from homeassistant.components.zha.const import (
     CONF_BAUDRATE,
@@ -43,6 +42,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+)
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -175,7 +179,7 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
                     "network": "ethernet",
                     "board": "esp32-poe",
                     "platform": "ESP32",
-                    "maс": "8c4b14c33c24",
+                    "mac": "8c4b14c33c24",
                     "version": "2023.12.8",
                 },
             ),
@@ -198,7 +202,7 @@ def com_port(device="/dev/ttyUSB1234") -> ListPortInfo:
                     "network": "ethernet",
                     "board": "esp32-poe",
                     "platform": "ESP32",
-                    "maс": "8c4b14c33c24",
+                    "mac": "8c4b14c33c24",
                     "version": "2023.12.8",
                 },
             ),
@@ -429,7 +433,7 @@ async def test_legacy_zeroconf_discovery_confirm_final_abort_if_entries(
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
 async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     """Test usb flow -- radio detected."""
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -475,7 +479,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
 @patch(f"zigpy_zigate.{PROBE_FUNCTION_PATH}", return_value=True)
 async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None:
     """Test zigate usb flow -- radio detected."""
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="0403",
         vid="6015",
@@ -528,7 +532,7 @@ async def test_zigate_discovery_via_usb(probe_mock, hass: HomeAssistant) -> None
 )
 async def test_discovery_via_usb_no_radio(hass: HomeAssistant) -> None:
     """Test usb flow -- no radio detected."""
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/null",
         pid="AAAA",
         vid="AAAA",
@@ -561,7 +565,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
 
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -595,7 +599,7 @@ async def test_discovery_via_usb_path_does_not_change(hass: HomeAssistant) -> No
     )
     entry.add_to_hass(hass)
 
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -634,7 +638,7 @@ async def test_discovery_via_usb_deconz_already_discovered(hass: HomeAssistant) 
         context={"source": SOURCE_SSDP},
     )
     await hass.async_block_till_done()
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -656,7 +660,7 @@ async def test_discovery_via_usb_deconz_already_setup(hass: HomeAssistant) -> No
     """Test usb flow -- deconz setup."""
     MockConfigEntry(domain="deconz", data={}).add_to_hass(hass)
     await hass.async_block_till_done()
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -680,7 +684,7 @@ async def test_discovery_via_usb_deconz_ignored(hass: HomeAssistant) -> None:
         domain="deconz", source=config_entries.SOURCE_IGNORE, data={}
     ).add_to_hass(hass)
     await hass.async_block_till_done()
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -708,7 +712,7 @@ async def test_discovery_via_usb_zha_ignored_updates(hass: HomeAssistant) -> Non
     )
     entry.add_to_hass(hass)
     await hass.async_block_till_done()
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",
@@ -1196,7 +1200,7 @@ async def test_onboarding_auto_formation_new_hardware(
     """Test auto network formation with new hardware during onboarding."""
     mock_app.load_network_info = AsyncMock(side_effect=NetworkNotFormed())
     mock_app.get_device = MagicMock(return_value=MagicMock(spec=zigpy.device.Device))
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyZIGBEE",
         pid="AAAA",
         vid="AAAA",

@@ -36,6 +36,10 @@ class TPLinkCameraEntityDescription(
     """Base class for camera entity description."""
 
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
 CAMERA_DESCRIPTIONS: tuple[TPLinkCameraEntityDescription, ...] = (
     TPLinkCameraEntityDescription(
         key="live_view",

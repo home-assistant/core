@@ -20,6 +20,7 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
 from propcache import cached_property
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -30,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -154,6 +155,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=MODEL_NAMES.get(self.model),
             model_id=self.model,
@@ -371,7 +373,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         try:
             await self.device.update()
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Error fetching data: {err!r}") from err
+            raise UpdateFailed(repr(err)) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -456,7 +458,7 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
                 return
             await self.device.update_shelly()
         except (DeviceConnectionError, MacAddressMismatchError) as err:
-            raise UpdateFailed(f"Error fetching data: {err!r}") from err
+            raise UpdateFailed(repr(err)) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
         else:
@@ -696,6 +698,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
+            async_remove_scanner(self.hass, format_mac(self.mac).upper())
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting

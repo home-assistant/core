@@ -12,6 +12,7 @@ import logging
 from typing import Any, Concatenate, cast
 
 from aiowebostv import WebOsClient, WebOsTvPairError
+import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -21,30 +22,28 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-    ENTITY_MATCH_ALL,
-    ENTITY_MATCH_NONE,
-)
+from homeassistant.const import ATTR_COMMAND, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
+from homeassistant.helpers.typing import VolDictType
 
-from . import update_client_key
+from . import WebOsTvConfigEntry, update_client_key
 from .const import (
+    ATTR_BUTTON,
     ATTR_PAYLOAD,
     ATTR_SOUND_OUTPUT,
     CONF_SOURCES,
-    DATA_CONFIG_ENTRY,
     DOMAIN,
     LIVE_TV_APP_ID,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+    SERVICE_SELECT_SOUND_OUTPUT,
     WEBOSTV_EXCEPTIONS,
 )
 from .triggers.turn_on import async_get_turn_on_trigger
@@ -68,15 +67,35 @@ SUPPORT_WEBOSTV_VOLUME = (
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=10)
+
+BUTTON_SCHEMA: VolDictType = {vol.Required(ATTR_BUTTON): cv.string}
+COMMAND_SCHEMA: VolDictType = {
+    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Optional(ATTR_PAYLOAD): dict,
+}
+SOUND_OUTPUT_SCHEMA: VolDictType = {vol.Required(ATTR_SOUND_OUTPUT): cv.string}
+
+SERVICES = (
+    (SERVICE_BUTTON, BUTTON_SCHEMA, "async_button"),
+    (SERVICE_COMMAND, COMMAND_SCHEMA, "async_command"),
+    (SERVICE_SELECT_SOUND_OUTPUT, SOUND_OUTPUT_SCHEMA, "async_select_sound_output"),
+)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: WebOsTvConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the LG webOS Smart TV platform."""
-    client = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
-    async_add_entities([LgWebOSMediaPlayerEntity(entry, client)])
+    platform = entity_platform.async_get_current_platform()
+
+    for service_name, schema, method in SERVICES:
+        platform.async_register_entity_service(service_name, schema, method)
+
+    async_add_entities([LgWebOSMediaPlayerEntity(entry)])
 
 
 def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
@@ -113,10 +132,10 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, entry: ConfigEntry, client: WebOsClient) -> None:
+    def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the webos device."""
         self._entry = entry
-        self._client = client
+        self._client = entry.runtime_data
         self._attr_assumed_state = True
         self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
@@ -142,10 +161,6 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 )
             )
 
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
-        )
-
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
@@ -164,19 +179,6 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Call disconnect on removal."""
         self._client.unregister_state_update_callback(self.async_handle_state_update)
-
-    async def async_signal_handler(self, data: dict[str, Any]) -> None:
-        """Handle domain-specific signal by calling appropriate method."""
-        if (entity_ids := data[ATTR_ENTITY_ID]) == ENTITY_MATCH_NONE:
-            return
-
-        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
-            params = {
-                key: value
-                for key, value in data.items()
-                if key not in ["entity_id", "method"]
-            }
-            await getattr(self, data["method"])(**params)
 
     async def async_handle_state_update(self, _client: WebOsClient) -> None:
         """Update state from WebOsClient."""
@@ -325,7 +327,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         if self._client.is_connected():
             return
 
-        with suppress(*WEBOSTV_EXCEPTIONS, WebOsTvPairError):
+        with suppress(*WEBOSTV_EXCEPTIONS):
             try:
                 await self._client.connect()
             except WebOsTvPairError:

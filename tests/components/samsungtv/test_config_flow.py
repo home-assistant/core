@@ -33,13 +33,6 @@ from homeassistant.components.samsungtv.const import (
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
 )
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
-    SsdpServiceInfo,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -54,6 +47,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 from homeassistant.setup import async_setup_component
 
 from .const import (

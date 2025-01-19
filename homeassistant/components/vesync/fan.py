@@ -24,11 +24,11 @@ from .const import (
     DOMAIN,
     SKU_TO_BASE_DEVICE,
     VS_COORDINATOR,
+    VS_DEVICES,
     VS_DISCOVERY,
-    VS_FANS,
 )
 from .coordinator import VeSyncDataCoordinator
-from .entity import VeSyncDevice
+from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,10 +74,10 @@ async def async_setup_entry(
         _setup_entities(devices, async_add_entities, coordinator)
 
     config_entry.async_on_unload(
-        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_FANS), discover)
+        async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_FANS], async_add_entities, coordinator)
+    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
 
 
 @callback
@@ -86,21 +86,17 @@ def _setup_entities(
     async_add_entities,
     coordinator: VeSyncDataCoordinator,
 ):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan":
-            entities.append(VeSyncFanHA(dev, coordinator))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
+    """Check if device is fan and add entity."""
+    entities = [
+        VeSyncFanHA(dev, coordinator)
+        for dev in devices
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan"
+    ]
 
     async_add_entities(entities, update_before_add=True)
 
 
-class VeSyncFanHA(VeSyncDevice, FanEntity):
+class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     """Representation of a VeSync fan."""
 
     _attr_supported_features = (
@@ -112,10 +108,17 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
     _attr_name = None
     _attr_translation_key = "vesync"
 
-    def __init__(self, fan, coordinator: VeSyncDataCoordinator) -> None:
+    def __init__(
+        self, fan: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
+    ) -> None:
         """Initialize the VeSync fan device."""
         super().__init__(fan, coordinator)
         self.smartfan = fan
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if device is on."""
+        return self.device.device_status == "on"
 
     @property
     def percentage(self) -> int | None:
@@ -229,3 +232,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         if percentage is None:
             percentage = 50
         self.set_percentage(percentage)
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        self.device.turn_off()
