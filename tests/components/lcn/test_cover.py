@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pypck.inputs import ModStatusOutput, ModStatusRelays
 from pypck.lcn_addr import LcnAddr
-from pypck.lcn_defs import MotorReverseTime, MotorStateModifier
+from pypck.lcn_defs import MotorPositioningMode, MotorReverseTime, MotorStateModifier
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.cover import DOMAIN as DOMAIN_COVER, CoverState
@@ -201,7 +201,9 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motor_relays.assert_awaited_with(0, MotorStateModifier.UP)
+        control_motor_relays.assert_awaited_with(
+            0, MotorStateModifier.UP, MotorPositioningMode.NONE
+        )
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -218,7 +220,9 @@ async def test_relays_open(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motor_relays.assert_awaited_with(0, MotorStateModifier.UP)
+        control_motor_relays.assert_awaited_with(
+            0, MotorStateModifier.UP, MotorPositioningMode.NONE
+        )
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -245,7 +249,9 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motor_relays.assert_awaited_with(0, MotorStateModifier.DOWN)
+        control_motor_relays.assert_awaited_with(
+            0, MotorStateModifier.DOWN, MotorPositioningMode.NONE
+        )
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -262,7 +268,9 @@ async def test_relays_close(hass: HomeAssistant, entry: MockConfigEntry) -> None
             blocking=True,
         )
 
-        control_motor_relays.assert_awaited_with(0, MotorStateModifier.DOWN)
+        control_motor_relays.assert_awaited_with(
+            0, MotorStateModifier.DOWN, MotorPositioningMode.NONE
+        )
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -289,7 +297,9 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motor_relays.assert_awaited_with(0, MotorStateModifier.STOP)
+        control_motor_relays.assert_awaited_with(
+            0, MotorStateModifier.STOP, MotorPositioningMode.NONE
+        )
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
@@ -306,7 +316,9 @@ async def test_relays_stop(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             blocking=True,
         )
 
-        control_motor_relays.assert_awaited_with(0, MotorStateModifier.STOP)
+        control_motor_relays.assert_awaited_with(
+            0, MotorStateModifier.STOP, MotorPositioningMode.NONE
+        )
 
         state = hass.states.get(COVER_RELAYS)
         assert state is not None
