@@ -77,3 +77,8 @@ class EzvizBaseEntity(Entity):
     def data(self) -> dict[str, Any]:
         """Return coordinator data for this entity."""
         return self.coordinator.data[self._serial]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.data["status"] != 2
