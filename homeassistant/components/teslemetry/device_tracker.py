@@ -101,8 +101,8 @@ class TeslemetryPollingDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntit
         description: TeslemetryDeviceTrackerEntityDescription,
     ) -> None:
         """Initialize the device tracker."""
-        super().__init__(vehicle, description.key)
         self.entity_description = description
+        super().__init__(vehicle, description.key)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -135,8 +135,8 @@ class TeslemetryStreamingDeviceTrackerEntity(
         description: TeslemetryDeviceTrackerEntityDescription,
     ) -> None:
         """Initialize the device tracker."""
-        super().__init__(vehicle, description.key)
         self.entity_description = description
+        super().__init__(vehicle, description.key)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -160,17 +160,17 @@ class TeslemetryStreamingDeviceTrackerEntity(
 
     def _location_callback(self, location: TeslaLocation | None) -> None:
         """Update the value of the entity."""
-
         if location is None:
             self._attr_available = False
         else:
             self._attr_available = True
             self._attr_latitude = location.latitude
             self._attr_longitude = location.longitude
+        self.async_write_ha_state()
 
     def _name_callback(self, name: str | None) -> None:
         """Update the value of the entity."""
-
         self._attr_location_name = name
         if self._attr_location_name == "Home":
             self._attr_location_name = STATE_HOME
+        self.async_write_ha_state()

@@ -36,9 +36,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Location',
-      'gps_accuracy': 0,
-      'latitude': -30.222626,
-      'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
@@ -46,7 +43,54 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'unknown',
+  })
+# ---
+# name: test_device_tracker[device_tracker.test_origin-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.test_origin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Origin',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'origin',
+    'unique_id': 'LRW3F7EK4NC700000-origin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_device_tracker[device_tracker.test_origin-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Origin',
+      'source_type': <SourceType.GPS: 'gps'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.test_origin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_device_tracker[device_tracker.test_route-entry]
@@ -86,9 +130,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
-      'gps_accuracy': 0,
-      'latitude': 30.2226265,
-      'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
@@ -96,16 +137,13 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'home',
+    'state': 'unknown',
   })
 # ---
 # name: test_device_tracker_alt[device_tracker.test_location-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Location',
-      'gps_accuracy': 0,
-      'latitude': -30.222626,
-      'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
@@ -113,16 +151,13 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'unknown',
   })
 # ---
 # name: test_device_tracker_alt[device_tracker.test_route-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Route',
-      'gps_accuracy': 0,
-      'latitude': 30.2226265,
-      'longitude': -97.6236871,
       'source_type': <SourceType.GPS: 'gps'>,
     }),
     'context': <ANY>,
@@ -130,6 +165,24 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'not_home',
+    'state': 'unknown',
   })
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_location-restore]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_location-state]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_origin-restore]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_origin-state]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_route-restore]
+  'not_home'
+# ---
+# name: test_device_tracker_streaming[device_tracker.test_route-state]
+  'Boca Chica'
 # ---
