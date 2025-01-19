@@ -114,6 +114,9 @@ async def make_device_data(
         "Plug Mini (US)",
         "Plug Mini (JP)",
     ]:
+        coordinator = await coordinator_for_device(
+            hass, api, device, coordinators_by_id
+        )
         devices_data.sensors.append((device, coordinator))
 
     if isinstance(device, Device) and device.device_type in [
