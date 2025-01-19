@@ -124,7 +124,7 @@ class RflinkBinarySensor(RflinkDevice, BinarySensorEntity, RestoreEntity):
                     self.entity_id
                 )
         await super().async_added_to_hass()
-		# Restore RFLink BinarySensor state
+        # Restore RFLink BinarySensor state
         if (old_state := await self.async_get_last_state()) is not None:
             if self._off_delay is None:
                 self._state = old_state.state == STATE_ON
