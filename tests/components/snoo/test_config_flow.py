@@ -1,6 +1,6 @@
 """Test the Happiest Baby Snoo config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from python_snoo.exceptions import InvalidSnooAuth, SnooAuthException
@@ -13,10 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import create_entry
+from .conftest import MockedSnoo
 
 
 async def test_config_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api: MockedSnoo
 ) -> None:
     """Test we create the entry successfully."""
     result = await hass.config_entries.flow.async_init(
@@ -52,25 +53,27 @@ async def test_config_flow_success(
     ],
 )
 async def test_form_auth_issues(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, bypass_api, exception, error_msg
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    bypass_api: MockedSnoo,
+    exception,
+    error_msg,
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-
-    with patch(
-        "homeassistant.components.snoo.config_flow.Snoo.authorize",
-        side_effect=exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-
+    # Set Authorize to fail.
+    bypass_api.set_auth_error(exception)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    # Reset auth back to the original
+    bypass_api.set_auth_error(None)
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": error_msg}
 

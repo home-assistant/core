@@ -1,6 +1,4 @@
-"""Mock data for Snoo testing."""
-
-from python_snoo.containers import SnooDevice
+"""Snoo constants for testing."""
 
 MOCK_AMAZON_AUTH = {
     # This is a JWT with random values.
@@ -20,18 +18,17 @@ MOCK_AMAZON_AUTH = {
 
 MOCK_SNOO_AUTH = {"expiresIn": 10800, "snoo": {"token": "random_snoo_token"}}
 
-
 MOCK_SNOO_DEVICES = [
-    SnooDevice(
-        serialNumber="random_num",
-        deviceType=1,
-        firmwareVersion="1.0",
-        babyIds=["35235-211235-dfasdf-32523"],
-        name="Test Snoo",
-        presence={},
-        presenceIoT={},
-        awsIoT={},
-        lastSSID={},
-        provisionedAt="random_time",
-    )
+    {
+        "serialNumber": "random_num",
+        "deviceType": 1,
+        "firmwareVersion": 1.0,
+        "babyIds": ["35235-211235-dfasdf-32523"],
+        "name": "Test Snoo",
+        "presence": {},
+        "presenceIoT": {},
+        "awsIoT": {},
+        "lastSSID": {},
+        "provisionedAt": "random_time",
+    }
 ]
