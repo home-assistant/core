@@ -117,7 +117,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             if (
                 errors := await async_try_connect_gateway(
                     self.hass,
-                    reconfigure_entry.data | user_input
+                    (reconfigure_entry.data | user_input)
                     if is_reconfigure
                     else user_input,
                 )
@@ -161,6 +161,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )
+
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

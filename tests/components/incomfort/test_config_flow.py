@@ -221,6 +221,7 @@ async def test_reconfigure_flow_failure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
+
 @pytest.mark.parametrize(
     ("user_input", "legacy_setpoint_status"),
     [
