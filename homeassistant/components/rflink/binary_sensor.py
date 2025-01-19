@@ -87,9 +87,9 @@ def get_event_value(event):
     Async friendly.
     """
     event_type = identify_event_type(event)
-    if EVENT_KEY_COMMAND == event_type:
+    if event_type == EVENT_KEY_COMMAND:
         return event[EVENT_KEY_COMMAND]
-    if EVENT_KEY_SENSOR == event_type:
+    if event_type == EVENT_KEY_SENSOR:
         return event["value"]
     return "unknown"
 
