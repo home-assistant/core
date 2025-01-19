@@ -154,7 +154,7 @@ async def async_enable_server_logging_if_needed(
     LOGGER.info("Enabling zwave-js-server logging")
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
-    ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
+    ) > LIB_LOGGER.getEffectiveLevel():
         entry_data = entry.runtime_data
         entry_data[DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
         await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
