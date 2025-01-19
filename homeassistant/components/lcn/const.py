@@ -56,7 +56,7 @@ CONF_SCENES = "scenes"
 CONF_REGISTER = "register"
 CONF_OUTPUTS = "outputs"
 CONF_REVERSE_TIME = "reverse_time"
-CONF_POSITION_MODE = "position_mode"
+CONF_POSITIONING_MODE = "positioning_mode"
 
 DIM_MODES = ["STEPS50", "STEPS200"]
 
@@ -236,4 +236,6 @@ TIME_UNITS = [
     "D",
 ]
 
-MOTOR_REVERSE_TIME = ["RT70", "RT600", "RT1200"]
+MOTOR_REVERSE_TIMES = ["RT70", "RT600", "RT1200"]
+
+MOTOR_POSITIONING_MODES = ["NONE", "BS4"]

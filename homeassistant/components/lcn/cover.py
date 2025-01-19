@@ -22,7 +22,7 @@ from .const import (
     ADD_ENTITIES_CALLBACKS,
     CONF_DOMAIN_DATA,
     CONF_MOTOR,
-    CONF_POSITION_MODE,
+    CONF_POSITIONING_MODE,
     CONF_REVERSE_TIME,
     DOMAIN,
 )
@@ -43,13 +43,10 @@ def add_lcn_entities(
         if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
             entities.append(LcnOutputsCover(entity_config, config_entry))
         else:  # in RELAYS
-            # position_mode = entity_config[CONF_DOMAIN_DATA].get(
-            #     CONF_POSITION_MODE, pypck.lcn_defs.MotorPositionMode.NONE.value
-            # )
-            position_mode = entity_config[CONF_DOMAIN_DATA].get(
-                CONF_POSITION_MODE, pypck.lcn_defs.MotorPositionMode.BS4.value
+            positioning_mode = entity_config[CONF_DOMAIN_DATA].get(
+                CONF_POSITIONING_MODE, pypck.lcn_defs.MotorPositioningMode.NONE.value
             )
-            if position_mode == pypck.lcn_defs.MotorPositionMode.BS4.value:
+            if positioning_mode == pypck.lcn_defs.MotorPositioningMode.BS4.value:
                 entities.append(LcnRelayCoverBS4(entity_config, config_entry))
             else:  # "NONE"
                 entities.append(LcnRelayCover(entity_config, config_entry))
@@ -194,7 +191,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
-    position_mode = pypck.lcn_defs.MotorPositionMode.NONE
+    positioning_mode = pypck.lcn_defs.MotorPositioningMode.NONE
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN cover."""
@@ -213,7 +210,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         await super().async_added_to_hass()
         if not self.device_connection.is_group:
             await self.device_connection.activate_status_request_handler(
-                self.motor, self.position_mode
+                self.motor, self.positioning_mode
             )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -227,7 +224,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         if not await self.device_connection.control_motor_relays(
             self.motor.value,
             pypck.lcn_defs.MotorStateModifier.DOWN,
-            self.position_mode,
+            self.positioning_mode,
         ):
             return
         self._attr_is_opening = False
@@ -237,7 +234,9 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if not await self.device_connection.control_motor_relays(
-            self.motor.value, pypck.lcn_defs.MotorStateModifier.UP, self.position_mode
+            self.motor.value,
+            pypck.lcn_defs.MotorStateModifier.UP,
+            self.positioning_mode,
         ):
             return
         self._attr_is_closed = False
@@ -250,7 +249,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         if not await self.device_connection.control_motor_relays(
             self.motor.value,
             pypck.lcn_defs.MotorStateModifier.STOP,
-            self.position_mode,
+            self.positioning_mode,
         ):
             return
         self._attr_is_closing = False
@@ -263,7 +262,7 @@ class LcnRelayCover(LcnEntity, CoverEntity):
             self._attr_is_opening = input_obj.is_opening(self.motor.value)
             self._attr_is_closing = input_obj.is_closing(self.motor.value)
 
-            if self.position_mode == pypck.lcn_defs.MotorPositionMode.NONE:
+            if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.NONE:
                 self._attr_is_closed = input_obj.is_assumed_closed(self.motor.value)
             self.async_write_ha_state()
 
@@ -277,13 +276,13 @@ class LcnRelayCoverBS4(LcnRelayCover):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
-    position_mode = pypck.lcn_defs.MotorPositionMode.BS4
+    positioning_mode = pypck.lcn_defs.MotorPositioningMode.BS4
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         if not await self.device_connection.control_motor_relays_position(
-            self.motor.value, 100 - position, mode=self.position_mode
+            self.motor.value, 100 - position, mode=self.positioning_mode
         ):
             return
         self._attr_is_closed = (self._attr_current_cover_position == 0) & (
