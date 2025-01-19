@@ -43,6 +43,6 @@ def is_outlet(device: VeSyncBaseDevice) -> bool:
 
 
 def is_wall_switch(device: VeSyncBaseDevice) -> bool:
-    """Check if the device represents a wall switch."""
+    """Check if the device represents a wall switch, note this doessn't include dimming switches."""
 
     return isinstance(device, VeSyncWallSwitch)
