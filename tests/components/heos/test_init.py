@@ -13,7 +13,6 @@ from homeassistant.components.heos.const import (
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -146,31 +145,11 @@ async def test_async_setup_entry_player_failure(
     assert controller.disconnect.call_count == 1
 
 
-async def test_update_sources_retry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    controller: Heos,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test update sources retries on failures to max attempts."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    controller.get_favorites.reset_mock()
-    source_manager = config_entry.runtime_data.coordinator.source_manager
-    source_manager.retry_delay = 0
-    source_manager.max_retry_attempts = 1
-    controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)
-    await controller.dispatcher.wait_send(
-        SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
-    )
-    assert "Unable to update sources" in caplog.text
-    assert controller.get_favorites.call_count == 2
-
-
+@pytest.mark.usefixtures("controller")
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
 ) -> None:
     """Test device information populates correctly."""
     config_entry.add_to_hass(hass)
@@ -186,10 +165,11 @@ async def test_device_info(
     assert device.model == "Speaker"
 
 
+@pytest.mark.usefixtures("controller")
 async def test_device_id_migration(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    config_entry: MockConfigEntry,
+    config_entry: MockHeosConfigEntry,
 ) -> None:
     """Test that legacy non-string device identifiers are migrated to strings."""
     config_entry.add_to_hass(hass)

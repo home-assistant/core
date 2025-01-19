@@ -185,13 +185,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         for old_id, new_id in updated_player_ids.items():
             # update device registry
             entry = device_registry.async_get_device(
-                identifiers={(DOMAIN, old_id)}  # type: ignore[arg-type]  # Fix in the future
+                identifiers={(DOMAIN, str(old_id))}
             )
-            new_identifiers = {(DOMAIN, new_id)}
+            new_identifiers = {(DOMAIN, str(new_id))}
             if entry:
                 device_registry.async_update_device(
                     entry.id,
-                    new_identifiers=new_identifiers,  # type: ignore[arg-type]  # Fix in the future
+                    new_identifiers=new_identifiers,
                 )
                 _LOGGER.debug(
                     "Updated device %s identifiers to %s", entry.id, new_identifiers
