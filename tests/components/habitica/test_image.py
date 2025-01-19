@@ -22,7 +22,7 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture(autouse=True)
 def image_only() -> Generator[None]:
-    """Enable only the switch platform."""
+    """Enable only the image platform."""
     with patch(
         "homeassistant.components.habitica.PLATFORMS",
         [Platform.IMAGE],
