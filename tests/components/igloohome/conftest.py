@@ -34,6 +34,17 @@ GET_DEVICE_INFO_RESPONSE_BRIDGE_LINKED_LOCK = GetDeviceInfoResponse(
     batteryLevel=None,
 )
 
+GET_DEVICE_INFO_RESPONSE_BRIDGE_NO_LINKED_DEVICE = GetDeviceInfoResponse(
+    id="001",
+    type="Bridge",
+    deviceId="EB1X04eeeeee",
+    deviceName="Home Bridge",
+    pairedAt="2024-11-09T12:19:25+00:00",
+    homeId=[],
+    linkedDevices=[],
+    batteryLevel=None,
+)
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
