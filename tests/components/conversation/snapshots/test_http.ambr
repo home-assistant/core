@@ -201,7 +201,7 @@
 # ---
 # name: test_http_api_handle_failure
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -221,7 +221,7 @@
 # ---
 # name: test_http_api_no_match
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -241,7 +241,7 @@
 # ---
 # name: test_http_api_unexpected_failure
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -261,7 +261,7 @@
 # ---
 # name: test_http_processing_intent[None]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -291,7 +291,7 @@
 # ---
 # name: test_http_processing_intent[conversation.home_assistant]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -321,7 +321,7 @@
 # ---
 # name: test_http_processing_intent[homeassistant]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -351,7 +351,7 @@
 # ---
 # name: test_ws_api[payload0]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -371,7 +371,7 @@
 # ---
 # name: test_ws_api[payload1]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -391,7 +391,7 @@
 # ---
 # name: test_ws_api[payload2]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -411,7 +411,7 @@
 # ---
 # name: test_ws_api[payload3]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -431,7 +431,7 @@
 # ---
 # name: test_ws_api[payload4]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
@@ -451,7 +451,7 @@
 # ---
 # name: test_ws_api[payload5]
   dict({
-    'conversation_id': None,
+    'conversation_id': <ANY>,
     'response': dict({
       'card': dict({
       }),
