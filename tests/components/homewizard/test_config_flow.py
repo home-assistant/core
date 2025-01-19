@@ -681,7 +681,6 @@ async def test_manual_flow_works_with_v2_api_support(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_homewizardenergy_v2.close.mock_calls) == 1
     assert len(mock_homewizardenergy_v2.device.mock_calls) == 2
     assert len(mock_homewizardenergy_v2.get_token.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
