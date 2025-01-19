@@ -163,11 +163,54 @@ async def test_reauth(
     [result] = flows
     assert result["step_id"] == "reauth_confirm"
 
+    mock_pydrawise.get_user.return_value = user
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
-    mock_pydrawise.get_user.return_value = user
     await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_fails(
+    hass: HomeAssistant, mock_auth: AsyncMock, mock_pydrawise: AsyncMock, user: User
+) -> None:
+    """Test that the reauth flow handles API errors."""
+    mock_config_entry = MockConfigEntry(
+        title="Hydrawise",
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "asdf@asdf.com",
+            CONF_PASSWORD: "bad-password",
+        },
+        unique_id="hydrawise-12345",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    mock_config_entry.async_start_reauth(hass)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    [result] = flows
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_auth.token.side_effect = NotAuthorizedError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "__password__"}
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    mock_auth.token.reset_mock(side_effect=True)
+    mock_pydrawise.get_user.return_value = user
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "__password__"}
+    )
+    await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reauth_successful"
