@@ -125,8 +125,8 @@ def player_fixture(quick_selects):
         player = HeosPlayer(
             player_id=i,
             name="Test Player" if i == 1 else f"Test Player {i}",
-            model="Test Model",
-            serial="",
+            model="HEOS Drive HS2" if i == 1 else "Speaker",
+            serial="123456",
             version="1.0.0",
             line_out=LineOutLevelType.VARIABLE,
             is_muted=False,

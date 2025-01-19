@@ -7,6 +7,7 @@ import pytest
 import serial.tools.list_ports
 from velbusaio.exceptions import VelbusConnectionFailed
 
+
 from homeassistant.components import usb
 from homeassistant.components.velbus.const import CONF_TLS, DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
@@ -19,12 +20,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import PORT_SERIAL, PORT_TCP
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = usb.UsbServiceInfo(
+DISCOVERY_INFO = UsbServiceInfo(
     device=PORT_SERIAL,
     pid="10CF",
     vid="0B1B",

@@ -16,7 +16,7 @@ from bring_api.types import BringItemsResponse, BringList, BringUserSettingsResp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -51,7 +51,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
-        except BringAuthException as e:
+        except BringAuthException:
             # try to recover by refreshing access token, otherwise
             # initiate reauth flow
             try:
@@ -64,9 +64,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                     translation_key="setup_authentication_exception",
                     translation_placeholders={CONF_EMAIL: self.bring.mail},
                 ) from exc
-            raise UpdateFailed(
-                "Authentication failed but re-authentication was successful, trying again later"
-            ) from e
+            return self.data
 
         list_dict: dict[str, BringData] = {}
         for lst in lists_response["lists"]:
@@ -88,13 +86,22 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
     async def _async_setup(self) -> None:
         """Set up coordinator."""
 
-        await self.async_refresh_user_settings()
-
-    async def async_refresh_user_settings(self) -> None:
-        """Refresh user settings."""
         try:
+            await self.bring.login()
             self.user_settings = await self.bring.get_all_user_settings()
-        except (BringAuthException, BringRequestException, BringParseException) as e:
-            raise UpdateFailed(
-                "Unable to connect and retrieve user settings from bring"
+        except BringRequestException as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
+        except BringParseException as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
+        except BringAuthException as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: self.bring.mail},
             ) from e
