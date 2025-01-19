@@ -40,9 +40,11 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Reauthorization for v2 API token revocation needs to be implemented.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done
@@ -69,14 +71,11 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
+  reconfiguration-flow: done
+  repair-issues:
     status: todo
     comment: |
-      Reauthorization for v2 API token revocation is not implemented.
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration does not raise any repairable issues.
+      Rejected token should trigger reconfiguration/repair issue
   stale-devices:
     status: exempt
     comment: |
