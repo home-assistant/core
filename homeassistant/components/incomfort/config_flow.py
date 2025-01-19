@@ -111,9 +111,6 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         host = discovery_info.ip
         unique_id = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         return await self.async_step_user({CONF_HOST: host})
