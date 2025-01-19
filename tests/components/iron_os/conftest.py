@@ -159,9 +159,10 @@ def mock_ironosupdate() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_pynecil() -> Generator[AsyncMock]:
     """Mock Pynecil library."""
-    with patch(
-        "homeassistant.components.iron_os.Pynecil", autospec=True
-    ) as mock_client:
+    with (
+        patch("homeassistant.components.iron_os.Pynecil", autospec=True) as mock_client,
+        patch("homeassistant.components.iron_os.config_flow.Pynecil", new=mock_client),
+    ):
         client = mock_client.return_value
 
         client.get_device_info.return_value = DeviceInfoResponse(
