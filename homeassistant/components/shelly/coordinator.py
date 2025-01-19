@@ -38,7 +38,10 @@ from .bluetooth import async_connect_scanner
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    ATTR_COMPONENT,
+    ATTR_DATA,
     ATTR_DEVICE,
+    ATTR_EVENT,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     CONF_BLE_SCANNER_MODE,
@@ -47,6 +50,7 @@ from .const import (
     DUAL_MODE_LIGHT_MODELS,
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
+    EVENT_SHELLY_SCRIPT,
     INPUTS_EVENTS_DICT,
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
@@ -582,6 +586,20 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
             for event_callback in self._event_listeners:
                 event_callback(event)
+
+            # Events published by scripts on the device will be published on the event bus
+            component = event.get("component")
+            if type(component) is str and component.startswith("script"):
+                self.hass.bus.async_fire(
+                    EVENT_SHELLY_SCRIPT,
+                    {
+                        ATTR_DEVICE_ID: self.device_id,
+                        ATTR_DEVICE: self.device.hostname,
+                        ATTR_COMPONENT: event.get("component"),
+                        ATTR_EVENT: event.get("event"),
+                        ATTR_DATA: event.get("data"),
+                    },
+                )
 
             if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()
