@@ -300,7 +300,7 @@ aiooncue==0.3.7
 aioopenexchangerates==0.6.8
 
 # homeassistant.components.nmap_tracker
-aiooui==0.1.8
+aiooui==0.1.9
 
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1
