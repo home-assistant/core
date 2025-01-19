@@ -140,34 +140,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_device_tracker_alt[device_tracker.test_location-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Location',
-      'source_type': <SourceType.GPS: 'gps'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'device_tracker.test_location',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_device_tracker_alt[device_tracker.test_route-statealt]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Route',
-      'source_type': <SourceType.GPS: 'gps'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'device_tracker.test_route',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_device_tracker_streaming[device_tracker.test_location-restore]
   'not_home'
 # ---

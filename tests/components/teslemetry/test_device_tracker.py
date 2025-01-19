@@ -26,6 +26,7 @@ async def test_device_tracker(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_device_tracker_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
