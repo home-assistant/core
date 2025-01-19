@@ -3,6 +3,7 @@
   "name": "Intergas InComfort/Intouch Lan2RF gateway",
   "codeowners": ["@jbouwh"],
   "config_flow": true,
+  "dhcp": [{ "hostname": "rfgateway", "macaddress": "0004A3*" }],
   "documentation": "https://www.home-assistant.io/integrations/incomfort",
   "iot_class": "local_polling",
   "loggers": ["incomfortclient"],

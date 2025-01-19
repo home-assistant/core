@@ -254,6 +254,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "002674*",
     },
     {
+        "domain": "incomfort",
+        "hostname": "rfgateway",
+        "macaddress": "0004A3*",
+    },
+    {
         "domain": "insteon",
         "macaddress": "000EF3*",
     },

@@ -18,6 +18,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
     BooleanSelectorConfig,
@@ -25,6 +26,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
 from .coordinator import async_connect_gateway
@@ -101,6 +103,20 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> InComfortOptionsFlowHandler:
         """Get the options flow for this handler."""
         return InComfortOptionsFlowHandler()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Prepare configuration for a DHCP discovered Intergas Gateway device."""
+        host = discovery_info.ip
+        unique_id = format_mac(discovery_info.macaddress)
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
+
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        return await self.async_step_user({CONF_HOST: host})
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
