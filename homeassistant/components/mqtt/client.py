@@ -659,6 +659,9 @@ class MQTT:
                     self.conf[CONF_BROKER],
                     self.conf.get(CONF_PORT, DEFAULT_PORT),
                     self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
+                    "", # bind_address default
+                    0, # bind_port default
+                    True, # clean_start
                 )
         except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
