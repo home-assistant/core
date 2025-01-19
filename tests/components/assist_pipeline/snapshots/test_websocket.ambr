@@ -42,7 +42,7 @@
 # name: test_audio_pipeline.4
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
@@ -125,7 +125,7 @@
 # name: test_audio_pipeline_debug.4
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
@@ -220,7 +220,7 @@
 # name: test_audio_pipeline_with_enhancements.4
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
@@ -325,7 +325,7 @@
 # name: test_audio_pipeline_with_wake_word_no_timeout.6
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
@@ -585,7 +585,7 @@
 # name: test_pipeline_empty_tts_output.2
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
@@ -698,7 +698,7 @@
 # name: test_text_only_pipeline[extra_msg0].2
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
@@ -744,7 +744,7 @@
 # name: test_text_only_pipeline[extra_msg1].2
   dict({
     'intent_output': dict({
-      'conversation_id': None,
+      'conversation_id': <ANY>,
       'response': dict({
         'card': dict({
         }),
