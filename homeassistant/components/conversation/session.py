@@ -103,13 +103,7 @@ async def async_get_chat_session(
         conversation_id = ulid.ulid_now()
 
     elif history := all_history.get(user_input.conversation_id):
-        # Expire if it's an old conversation
-        if history.last_updated + CONVERSATION_TIMEOUT < dt_util.utcnow():
-            del all_history[user_input.conversation_id]
-            history = None
-            conversation_id = ulid.ulid_now()
-        else:
-            conversation_id = user_input.conversation_id
+        conversation_id = user_input.conversation_id
 
     else:
         # Conversation IDs are ULIDs. We generate a new one if not provided.

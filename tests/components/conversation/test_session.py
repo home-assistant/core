@@ -66,6 +66,7 @@ async def test_cleanup(
     async with session.async_get_chat_session(
         hass, mock_conversation_input
     ) as chat_session:
+        assert len(chat_session.messages) == 2
         conversation_id = chat_session.conversation_id
 
     # Generate session entry.
@@ -83,12 +84,14 @@ async def test_cleanup(
                 content="Hey!",
             )
         )
+        assert len(chat_session.messages) == 3
 
     # Reuse conversation ID to ensure we can chat with same session
     mock_conversation_input.conversation_id = conversation_id
     async with session.async_get_chat_session(
         hass, mock_conversation_input
     ) as chat_session:
+        assert len(chat_session.messages) == 4
         assert chat_session.conversation_id == conversation_id
 
     async_fire_time_changed(
@@ -100,6 +103,7 @@ async def test_cleanup(
         hass, mock_conversation_input
     ) as chat_session:
         assert chat_session.conversation_id != conversation_id
+        assert len(chat_session.messages) == 2
 
 
 async def test_message_filtering(
