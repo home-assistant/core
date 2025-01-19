@@ -75,7 +75,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
     ) -> None:
         """Initialize an EHEIM Digital thermocontrol climate entity."""
         super().__init__(coordinator, device)
-        self._attr_unique_id = f"{self._device_address}"
+        self._attr_unique_id = self._device_address
         self._async_update_attrs()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
