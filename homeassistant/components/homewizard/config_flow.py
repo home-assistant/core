@@ -53,7 +53,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-
         errors: dict[str, str] | None = None
         if user_input is not None:
             try:
