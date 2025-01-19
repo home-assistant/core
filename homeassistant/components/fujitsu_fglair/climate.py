@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import FGLairConfigEntry
 from .coordinator import FGLairCoordinator
@@ -65,7 +66,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     async_add_entities(
-        FGLairDevice(entry.runtime_data, device)
+        FGLairDevice(entry.runtime_data, device, hass)
         for device in entry.runtime_data.data.values()
     )
 
@@ -73,16 +74,19 @@ async def async_setup_entry(
 class FGLairDevice(FGLairEntity, ClimateEntity):
     """Represent a Fujitsu HVAC device."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_precision = PRECISION_HALVES
-    _attr_target_temperature_step = 0.5
-    _attr_name = None
-
-    def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC) -> None:
+    def __init__(self, coordinator: FGLairCoordinator, device: FujitsuHVAC, hass: HomeAssistant) -> None:
         """Store the representation of the device and set the static attributes."""
         super().__init__(coordinator, device)
 
+        self.hass = hass
         self._attr_unique_id = device.device_serial_number
+
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_target_temperature_step = 1
+        else:
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_target_temperature_step = 0.5
 
         self._attr_supported_features = (
             ClimateEntityFeature.TARGET_TEMPERATURE
@@ -96,6 +100,7 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
             Capability.SWING_VERTICAL
         ):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+
         self._set_attr()
 
     @property
@@ -122,11 +127,31 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
         """Set target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+            temperature = round(TemperatureConverter.convert(temperature, UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS) * 2) / 2
         await self.device.async_set_set_temp(temperature)
         await self.coordinator.async_request_refresh()
 
     def _set_attr(self) -> None:
+        """Set dynamic attributes based on current configuration."""
         if self.coordinator_context in self.coordinator.data:
+            # Convert temperature range dynamically
+            if self.hass.config.units.temperature_unit == UnitOfTemperature.FAHRENHEIT:
+                self._attr_min_temp = round(TemperatureConverter.convert(self.device.temperature_range[0], UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT))
+                self._attr_max_temp = round(TemperatureConverter.convert(self.device.temperature_range[1], UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT))
+                self._attr_current_temperature = round(TemperatureConverter.convert(self.device.sensed_temp, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT))
+                self._attr_target_temperature = round(TemperatureConverter.convert(self.device.set_temp, UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT))
+                self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+                self._attr_target_temperature_step = 1
+            else:
+                self._attr_min_temp = self.device.temperature_range[0]
+                self._attr_max_temp = self.device.temperature_range[1]
+                self._attr_current_temperature = self.device.sensed_temp
+                self._attr_target_temperature = self.device.set_temp
+                self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+                self._attr_target_temperature_step = 0.5
+
+            # Other attributes
             self._attr_fan_mode = FUJI_TO_HA_FAN.get(self.device.fan_speed)
             self._attr_fan_modes = [
                 FUJI_TO_HA_FAN[mode]
@@ -145,10 +170,6 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
                 for mode in self.device.supported_swing_modes
                 if mode in FUJI_TO_HA_SWING
             ]
-            self._attr_min_temp = self.device.temperature_range[0]
-            self._attr_max_temp = self.device.temperature_range[1]
-            self._attr_current_temperature = self.device.sensed_temp
-            self._attr_target_temperature = self.device.set_temp
 
     def _handle_coordinator_update(self) -> None:
         self._set_attr()
