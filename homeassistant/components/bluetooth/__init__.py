@@ -22,6 +22,7 @@ from bluetooth_adapters import (
     adapter_model,
     adapter_unique_name,
     get_adapters,
+    get_manufacturer_from_mac,
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
@@ -333,15 +334,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         address = entry.unique_id
         assert address is not None
         assert source_entry is not None
+        source_domain = entry.data[CONF_SOURCE_DOMAIN]
+        if mac_manufacturer := await get_manufacturer_from_mac(address):
+            manufacturer = f"{mac_manufacturer} ({source_domain})"
+        else:
+            manufacturer = source_domain
+        details = AdapterDetails(
+            address=address,
+            product=entry.data.get(CONF_SOURCE_MODEL),
+            manufacturer=manufacturer,
+        )
         await async_update_device(
             hass,
             entry,
             source_entry.title,
-            AdapterDetails(
-                address=address,
-                product=entry.data.get(CONF_SOURCE_MODEL),
-                manufacturer=entry.data[CONF_SOURCE_DOMAIN],
-            ),
+            details,
         )
         return True
     manager = _get_manager(hass)
