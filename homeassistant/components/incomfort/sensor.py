@@ -41,6 +41,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         value_key="pressure",
+        entity_registry_enabled_default=False,
     ),
     IncomfortSensorEntityDescription(
         key="cv_temp",
@@ -49,6 +50,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_pumping",
         value_key="heater_temp",
+        entity_registry_enabled_default=False,
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
@@ -58,6 +60,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
         value_key="tap_temp",
+        entity_registry_enabled_default=False,
     ),
 )
 

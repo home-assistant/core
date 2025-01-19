@@ -18,6 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_platforms(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -29,6 +30,7 @@ async def test_setup_platforms(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_updates(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -60,6 +62,7 @@ async def test_coordinator_updates(
     assert state.state == "1.84"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "exc",
     [
@@ -105,6 +108,7 @@ async def test_coordinator_update_fails(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("exc", "config_entry_state"),
     [
