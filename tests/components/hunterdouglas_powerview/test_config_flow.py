@@ -368,6 +368,7 @@ async def test_migrate_entry(
         version=1,
         minor_version=1,
     )
+    entry.add_to_hass(hass)
 
     # Add entries with int unique_id
     entity_registry.async_get_or_create(
@@ -387,7 +388,6 @@ async def test_migrate_entry(
     assert entry.version == 1
     assert entry.minor_version == 1
 
-    entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 

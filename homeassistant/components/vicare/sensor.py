@@ -49,7 +49,7 @@ from .const import (
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
-    filter_states,
+    filter_state,
     get_burners,
     get_circuits,
     get_compressors,
@@ -797,7 +797,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "production"],
-        value_getter=lambda api: filter_states(api.getPhotovoltaicStatus()),
+        value_getter=lambda api: filter_state(api.getPhotovoltaicStatus()),
     ),
     ViCareSensorEntityDescription(
         key="room_temperature",
@@ -816,7 +816,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ventilation_level",
         translation_key="ventilation_level",
-        value_getter=lambda api: _filter_states(api.getVentilationLevel().lower()),
+        value_getter=lambda api: filter_state(api.getVentilationLevel().lower()),
         device_class=SensorDeviceClass.ENUM,
         options=["standby", "levelone", "leveltwo", "levelthree", "levelfour"],
     ),

@@ -130,6 +130,6 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
     return []
 
 
-def filter_states(state: str) -> str | None:
+def filter_state(state: str) -> str | None:
     """Return the state if not 'nothing' or 'unknown'."""
     return None if state in ("nothing", "unknown") else state

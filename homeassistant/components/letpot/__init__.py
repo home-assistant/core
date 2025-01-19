@@ -12,7 +12,7 @@ from letpot.models import AuthenticationInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -57,12 +57,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
                 },
             )
         except LetPotAuthenticationException as exc:
-            raise ConfigEntryError from exc
+            raise ConfigEntryAuthFailed from exc
 
     try:
         devices = await client.get_devices()
     except LetPotAuthenticationException as exc:
-        raise ConfigEntryError from exc
+        raise ConfigEntryAuthFailed from exc
     except LetPotException as exc:
         raise ConfigEntryNotReady from exc
 
