@@ -53,7 +53,7 @@ BACKUP_CALL = call(
 )
 
 DEFAULT_STORAGE_DATA: dict[str, Any] = {
-    "backups": {},
+    "backups": [],
     "config": {
         "create_backup": {
             "agent_ids": [],
@@ -906,95 +906,125 @@ async def test_agents_info(
 @pytest.mark.parametrize(
     "storage_data",
     [
-        None,
+        {},
         {
-            "backups": {},
-            "config": {
-                "create_backup": {
-                    "agent_ids": ["test-agent"],
-                    "include_addons": ["test-addon"],
-                    "include_all_addons": True,
-                    "include_database": True,
-                    "include_folders": ["media"],
-                    "name": "test-name",
-                    "password": "test-password",
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": ["test-addon"],
+                            "include_all_addons": True,
+                            "include_database": True,
+                            "include_folders": ["media"],
+                            "name": "test-name",
+                            "password": "test-password",
+                        },
+                        "retention": {"copies": 3, "days": 7},
+                        "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "schedule": {"state": "daily"},
+                    },
                 },
-                "retention": {"copies": 3, "days": 7},
-                "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
-                "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
-                "schedule": {"state": "daily"},
+                "key": DOMAIN,
+                "version": 1,
             },
         },
         {
-            "backups": {},
-            "config": {
-                "create_backup": {
-                    "agent_ids": ["test-agent"],
-                    "include_addons": None,
-                    "include_all_addons": False,
-                    "include_database": False,
-                    "include_folders": None,
-                    "name": None,
-                    "password": None,
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": 3, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {"state": "never"},
+                    },
                 },
-                "retention": {"copies": 3, "days": None},
-                "last_attempted_automatic_backup": None,
-                "last_completed_automatic_backup": None,
-                "schedule": {"state": "never"},
+                "key": DOMAIN,
+                "version": 1,
             },
         },
         {
-            "backups": {},
-            "config": {
-                "create_backup": {
-                    "agent_ids": ["test-agent"],
-                    "include_addons": None,
-                    "include_all_addons": False,
-                    "include_database": False,
-                    "include_folders": None,
-                    "name": None,
-                    "password": None,
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": 7},
+                        "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
+                        "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
+                        "schedule": {"state": "never"},
+                    },
                 },
-                "retention": {"copies": None, "days": 7},
-                "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
-                "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
-                "schedule": {"state": "never"},
+                "key": DOMAIN,
+                "version": 1,
             },
         },
         {
-            "backups": {},
-            "config": {
-                "create_backup": {
-                    "agent_ids": ["test-agent"],
-                    "include_addons": None,
-                    "include_all_addons": False,
-                    "include_database": False,
-                    "include_folders": None,
-                    "name": None,
-                    "password": None,
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {"state": "mon"},
+                    },
                 },
-                "retention": {"copies": None, "days": None},
-                "last_attempted_automatic_backup": None,
-                "last_completed_automatic_backup": None,
-                "schedule": {"state": "mon"},
+                "key": DOMAIN,
+                "version": 1,
             },
         },
         {
-            "backups": {},
-            "config": {
-                "create_backup": {
-                    "agent_ids": ["test-agent"],
-                    "include_addons": None,
-                    "include_all_addons": False,
-                    "include_database": False,
-                    "include_folders": None,
-                    "name": None,
-                    "password": None,
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {"state": "sat"},
+                    },
                 },
-                "retention": {"copies": None, "days": None},
-                "last_attempted_automatic_backup": None,
-                "last_completed_automatic_backup": None,
-                "schedule": {"state": "sat"},
+                "key": DOMAIN,
+                "version": 1,
             },
         },
     ],
@@ -1007,11 +1037,7 @@ async def test_config_info(
     storage_data: dict[str, Any] | None,
 ) -> None:
     """Test getting backup config info."""
-    hass_storage[DOMAIN] = {
-        "data": storage_data,
-        "key": DOMAIN,
-        "version": 1,
-    }
+    hass_storage.update(storage_data)
 
     await setup_backup_integration(hass)
     await hass.async_block_till_done()
@@ -1366,7 +1392,7 @@ async def test_config_schedule_logic(
     """Test config schedule logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
@@ -1812,7 +1838,7 @@ async def test_config_retention_copies_logic(
     """Test config backup retention copies logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -2069,7 +2095,7 @@ async def test_config_retention_copies_logic_manual_backup(
     """Test config backup retention copies logic for manual backup."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],
@@ -2489,7 +2515,7 @@ async def test_config_retention_days_logic(
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
     storage_data = {
-        "backups": {},
+        "backups": [],
         "config": {
             "create_backup": {
                 "agent_ids": ["test-agent"],

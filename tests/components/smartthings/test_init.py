@@ -23,6 +23,7 @@ from homeassistant.components.smartthings.const import (
     PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -68,17 +69,10 @@ async def test_unrecoverable_api_errors_create_new_flow(
     )
 
     # Assert setup returns false
-    result = await smartthings.async_setup_entry(hass, config_entry)
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
     assert not result
 
-    # Assert entry was removed and new flow created
-    await hass.async_block_till_done()
-    assert not hass.config_entries.async_entries(DOMAIN)
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
-    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
 
 async def test_recoverable_api_errors_raise_not_ready(

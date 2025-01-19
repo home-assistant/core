@@ -227,7 +227,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[None]
+# name: test_config_info[storage_data0]
   dict({
     'id': 1,
     'result': dict({

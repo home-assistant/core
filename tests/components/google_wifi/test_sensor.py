@@ -12,7 +12,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import (
+    MockEntityPlatform,
+    assert_setup_component,
+    async_fire_time_changed,
+)
 
 NAME = "foo"
 
@@ -111,11 +115,12 @@ def fake_delay(hass: HomeAssistant, ha_delay: int) -> None:
     async_fire_time_changed(hass, shifted_time)
 
 
-def test_name(requests_mock: requests_mock.Mocker) -> None:
+def test_name(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test the name."""
     api, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
     for value in sensor_dict.values():
         sensor = value["sensor"]
+        sensor.platform = MockEntityPlatform(hass)
         test_name = value["name"]
         assert test_name == sensor.name
 

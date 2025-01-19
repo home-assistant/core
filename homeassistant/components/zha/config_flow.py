@@ -14,7 +14,7 @@ from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant.components import onboarding, usb, zeroconf
+from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.components.homeassistant_hardware import silabs_multiprotocol_addon
@@ -35,6 +35,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.selector import FileSelector, FileSelectorConfig
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_BAUDRATE, CONF_FLOW_CONTROL, CONF_RADIO_TYPE, DOMAIN
@@ -586,9 +588,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_NAME: self._title},
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -623,7 +623,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 
@@ -649,7 +649,7 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             fallback_title = name.split("._", 1)[0]
             title = discovery_info.properties.get("name", fallback_title)
 
-            discovery_info = zeroconf.ZeroconfServiceInfo(
+            discovery_info = ZeroconfServiceInfo(
                 ip_address=discovery_info.ip_address,
                 ip_addresses=discovery_info.ip_addresses,
                 port=port,
