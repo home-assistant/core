@@ -71,13 +71,17 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
+  reconfiguration-flow: done
+  repair-issues:
     status: todo
     comment: |
+<<<<<<< HEAD
       Reauthorization for v2 API token revocation is not implemented.
   repair-issues:
     status: todo
     comment: |
+=======
+>>>>>>> 7c33e4c9e30 (Update quality_scale)
       Rejected token should trigger reconfiguration/repair issue
   stale-devices:
     status: exempt
