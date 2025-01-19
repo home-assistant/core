@@ -163,20 +163,20 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def update(self) -> None:
         """Update state of fan."""
+        level: str | None = None
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
                     self._api.getActiveMode()
                 )
 
-            level: str | None = None
             with suppress(PyViCareNotSupportedFeatureError):
                 level = filter_state(self._api.getVentilationLevel())
             if level is not None and level in ORDERED_NAMED_FAN_SPEEDS:
                 self._attr_percentage = ordered_list_item_to_percentage(
                     ORDERED_NAMED_FAN_SPEEDS, VentilationProgram(level)
                 )
-            else:  # e.g. "standby"
+            else:
                 self._attr_percentage = 0
         except RequestConnectionError:
             _LOGGER.error("Unable to retrieve data from ViCare server")
