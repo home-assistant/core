@@ -253,7 +253,7 @@ async def test_aliases(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> 
     # test state of new sensor
     updated_sensor = hass.states.get(f"{DOMAIN}.test_bat")
     assert updated_sensor
-    assert updated_sensor.state == True
+    assert updated_sensor.state
 
     # test event for config sensor
     event_callback(
@@ -268,4 +268,4 @@ async def test_aliases(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -> 
     # test state of new sensor
     updated_sensor = hass.states.get(f"{DOMAIN}.test_bat")
     assert updated_sensor
-    assert updated_sensor.state == False
+    assert not updated_sensor.state
