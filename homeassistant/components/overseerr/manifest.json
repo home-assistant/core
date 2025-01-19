@@ -1,6 +1,7 @@
 {
   "domain": "overseerr",
   "name": "Overseerr",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["http", "webhook"],

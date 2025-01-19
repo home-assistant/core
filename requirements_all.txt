@@ -2720,7 +2720,7 @@ sisyphus-control==3.1.4
 skyboxremote==0.0.6
 
 # homeassistant.components.slack
-slackclient==2.5.0
+slack_sdk==3.33.4
 
 # homeassistant.components.xmpp
 slixmpp==1.8.5
