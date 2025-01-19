@@ -21,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.event as evt
 from homeassistant.helpers.restore_state import RestoreEntity
