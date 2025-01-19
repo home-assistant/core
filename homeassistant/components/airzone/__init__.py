@@ -5,7 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairzone.const import AZD_MAC, AZD_WEBSERVER, DEFAULT_SYSTEM_ID
+from aioairzone.const import (
+    AZD_FIRMWARE,
+    AZD_FULL_NAME,
+    AZD_MAC,
+    AZD_MODEL,
+    AZD_WEBSERVER,
+    DEFAULT_SYSTEM_ID,
+)
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +24,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -87,6 +95,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
     await _async_migrate_unique_ids(hass, entry, coordinator)
 
     entry.runtime_data = coordinator
+
+    device_registry = dr.async_get(hass)
+
+    ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
+    if ws_data is not None:
+        mac = ws_data.get(AZD_MAC, "")
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+            manufacturer=MANUFACTURER,
+            model=ws_data.get(AZD_MODEL),
+            name=ws_data.get(AZD_FULL_NAME),
+            sw_version=ws_data.get(AZD_FIRMWARE),
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

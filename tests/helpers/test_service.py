@@ -122,6 +122,8 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         floor_id="test-floor",
         icon=None,
         picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
     )
     area_in_floor_a = ar.AreaEntry(
         id="area-a",
@@ -130,6 +132,8 @@ def floor_area_mock(hass: HomeAssistant) -> None:
         floor_id="floor-a",
         icon=None,
         picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
     )
     mock_area_registry(
         hass,
@@ -284,6 +288,8 @@ def label_mock(hass: HomeAssistant) -> None:
         icon=None,
         labels={"label_area"},
         picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
     )
     area_without_labels = ar.AreaEntry(
         id="area-no-labels",
@@ -293,6 +299,8 @@ def label_mock(hass: HomeAssistant) -> None:
         icon=None,
         labels=set(),
         picture=None,
+        temperature_entity_id=None,
+        humidity_entity_id=None,
     )
     mock_area_registry(
         hass,

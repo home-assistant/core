@@ -107,7 +107,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, entry: MockConfigEntry) ->
             blocking=True,
         )
 
-        lock_regulator.assert_awaited_with(0, True)
+        lock_regulator.assert_awaited_with(0, True, -1)
 
         state = hass.states.get("climate.climate1")
         assert state is not None
@@ -124,7 +124,7 @@ async def test_set_hvac_mode_off(hass: HomeAssistant, entry: MockConfigEntry) ->
             blocking=True,
         )
 
-        lock_regulator.assert_awaited_with(0, True)
+        lock_regulator.assert_awaited_with(0, True, -1)
 
         state = hass.states.get("climate.climate1")
         assert state is not None

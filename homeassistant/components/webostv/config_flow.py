@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 from aiowebostv import WebOsTvPairError
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -19,6 +18,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from . import async_control_connect
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
@@ -89,7 +93,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="pairing", errors=errors)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         assert discovery_info.ssdp_location
@@ -97,10 +101,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         assert host
         self._host = host
         self._name = discovery_info.upnp.get(
-            ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
+            ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
         ).replace("[LG]", "LG")
 
-        uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        uuid = discovery_info.upnp[ATTR_UPNP_UDN]
         assert uuid
         uuid = uuid.removeprefix("uuid:")
         await self.async_set_unique_id(uuid)

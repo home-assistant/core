@@ -361,6 +361,8 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
 class TPLinkLightEffectEntity(TPLinkLightEntity):
     """Representation of a TPLink Smart Light Strip."""
 
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+
     def __init__(
         self,
         device: Device,
@@ -372,8 +374,6 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         """Initialize the light strip."""
         self._effect_module = effect_module
         super().__init__(device, coordinator, light_module=light_module)
-
-    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     @callback
     def _async_update_attrs(self) -> bool:

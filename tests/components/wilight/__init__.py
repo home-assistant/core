@@ -3,18 +3,18 @@
 from pywilight.const import DOMAIN
 
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_MODEL_NUMBER,
-    ATTR_UPNP_SERIAL,
-)
 from homeassistant.components.wilight.config_flow import (
     CONF_MODEL_NAME,
     CONF_SERIAL_NUMBER,
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_SERIAL,
+)
 
 from tests.common import MockConfigEntry
 

@@ -25,8 +25,8 @@
       "user": {
         "title": "Habitica - Gamify your life",
         "menu_options": {
-          "login": "Login to Habitica",
-          "advanced": "Login to other instances"
+          "login": "Log in to Habitica",
+          "advanced": "Log in to other instances"
         },
         "description": "![Habiticans]({habiticans}) Connect your Habitica account to keep track of your adventurer's stats, progress, and manage your to-dos and daily tasks.\n\n[Don't have a Habitica account? Sign up here.]({signup})"
       },
@@ -375,13 +375,13 @@
       "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
-      "message": "Rate limit exceeded, try again later"
+      "message": "Rate limit exceeded, try again in {retry_after} seconds"
     },
     "service_call_unallowed": {
       "message": "Unable to complete action, the required conditions are not met"
     },
     "service_call_exception": {
-      "message": "Unable to connect to Habitica, try again later"
+      "message": "Unable to connect to Habitica: {reason}"
     },
     "not_enough_mana": {
       "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
@@ -421,6 +421,10 @@
     }
   },
   "issues": {
+    "deprecated_entity": {
+      "title": "The Habitica {name} entity is deprecated",
+      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
+    },
     "deprecated_api_call": {
       "title": "The Habitica action habitica.api_call is deprecated",
       "description": "The Habitica action `habitica.api_call` is deprecated and will be removed in Home Assistant 2025.5.0.\n\nPlease update your automations and scripts to use other Habitica actions and entities."

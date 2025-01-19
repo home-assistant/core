@@ -11,11 +11,14 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+)
 
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 

@@ -1191,6 +1191,8 @@ build.json @home-assistant/supervisor
 /tests/components/pyload/ @tr4nt0r
 /homeassistant/components/qbittorrent/ @geoffreylagaisse @finder39
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
+/homeassistant/components/qbus/ @Qbus-iot @thomasddn
+/tests/components/qbus/ @Qbus-iot @thomasddn
 /homeassistant/components/qingping/ @bdraco
 /tests/components/qingping/ @bdraco
 /homeassistant/components/qld_bushfire/ @exxamalte
@@ -1287,6 +1289,7 @@ build.json @home-assistant/supervisor
 /tests/components/ruckus_unleashed/ @lanrat @ms264556 @gabe565
 /homeassistant/components/russound_rio/ @noahhusby
 /tests/components/russound_rio/ @noahhusby
+/homeassistant/components/russound_rnet/ @noahhusby
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
@@ -1380,8 +1383,8 @@ build.json @home-assistant/supervisor
 /tests/components/slide_local/ @dontinelli
 /homeassistant/components/slimproto/ @marcelveldt
 /tests/components/slimproto/ @marcelveldt
-/homeassistant/components/sma/ @kellerza @rklomp
-/tests/components/sma/ @kellerza @rklomp
+/homeassistant/components/sma/ @kellerza @rklomp @erwindouna
+/tests/components/sma/ @kellerza @rklomp @erwindouna
 /homeassistant/components/smappee/ @bsmappee
 /tests/components/smappee/ @bsmappee
 /homeassistant/components/smart_meter_texas/ @grahamwetzler
@@ -1627,15 +1630,15 @@ build.json @home-assistant/supervisor
 /tests/components/valve/ @home-assistant/core
 /homeassistant/components/velbus/ @Cereal2nd @brefra
 /tests/components/velbus/ @Cereal2nd @brefra
-/homeassistant/components/velux/ @Julius2342 @DeerMaximum
-/tests/components/velux/ @Julius2342 @DeerMaximum
+/homeassistant/components/velux/ @Julius2342 @DeerMaximum @pawlizio
+/tests/components/velux/ @Julius2342 @DeerMaximum @pawlizio
 /homeassistant/components/venstar/ @garbled1 @jhollowe
 /tests/components/venstar/ @garbled1 @jhollowe
 /homeassistant/components/versasense/ @imstevenxyz
 /homeassistant/components/version/ @ludeeus
 /tests/components/version/ @ludeeus
-/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
-/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja
+/homeassistant/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
+/tests/components/vesync/ @markperdue @webdjoe @thegardenmonkey @cdnninja @iprak
 /homeassistant/components/vicare/ @CFenner
 /tests/components/vicare/ @CFenner
 /homeassistant/components/vilfo/ @ManneW
