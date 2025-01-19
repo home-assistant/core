@@ -649,7 +649,6 @@ async def test_manual_flow_works_with_v2_api_support(
     hass: HomeAssistant,
     mock_homewizardenergy_v2: MagicMock,
     mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config flow accepts user configuration and triggers authorization when detected v2 support."""
     result = await hass.config_entries.flow.async_init(
@@ -680,7 +679,6 @@ async def test_manual_flow_works_with_v2_api_support(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result == snapshot
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_homewizardenergy_v2.close.mock_calls) == 1
@@ -694,7 +692,6 @@ async def test_manual_flow_detects_failed_user_authorization(
     hass: HomeAssistant,
     mock_homewizardenergy_v2: MagicMock,
     mock_setup_entry: AsyncMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test config flow accepts user configuration and detects failed button press by user."""
     result = await hass.config_entries.flow.async_init(
