@@ -19,6 +19,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -217,3 +218,42 @@ async def test_update_sources_retry(
     while "Unable to update sources" not in caplog.text:
         await asyncio.sleep(0.1)
     assert controller.get_favorites.call_count == 2
+
+
+async def test_device_info(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test device information populates correctly."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    device = device_registry.async_get_device({(DOMAIN, "1")})
+    assert device.manufacturer == "HEOS"
+    assert device.model == "Drive HS2"
+    assert device.name == "Test Player"
+    assert device.serial_number == "123456"
+    assert device.sw_version == "1.0.0"
+    device = device_registry.async_get_device({(DOMAIN, "2")})
+    assert device.manufacturer == "HEOS"
+    assert device.model == "Speaker"
+
+
+async def test_device_id_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that legacy non-string device identifiers are migrated to strings."""
+    config_entry.add_to_hass(hass)
+    # Create a device with a legacy identifier
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, 1)}
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("Other", 1)}
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert device_registry.async_get_device({("Other", 1)}) is not None
+    assert device_registry.async_get_device({(DOMAIN, 1)}) is None
+    assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
