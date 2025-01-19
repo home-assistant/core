@@ -69,7 +69,7 @@
         "seeding": "Seeding"
       }
     }
-  }
+  },
   "services": {
     "get_torrents": {
       "name": "Get torrents",
