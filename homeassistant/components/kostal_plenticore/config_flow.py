@@ -95,5 +95,5 @@ class KostalPlenticoreConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="reconfigure", data_schema=DATA_SCHEMA, errors=errors
         )
