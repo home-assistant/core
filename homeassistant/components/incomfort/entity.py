@@ -26,4 +26,5 @@ class IncomfortBoilerEntity(IncomfortEntity):
             identifiers={(DOMAIN, heater.serial_no)},
             manufacturer="Intergas",
             name="Boiler",
+            serial_number=heater.serial_no,
         )
