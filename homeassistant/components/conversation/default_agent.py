@@ -61,8 +61,8 @@ from .const import (
     ConversationEntityFeature,
 )
 from .entity import ConversationEntity
-from .history import ChatMessage, async_get_chat_history
 from .models import ConversationInput, ConversationResult
+from .session import ChatMessage, async_get_chat_session
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
@@ -348,7 +348,7 @@ class DefaultAgent(ConversationEntity):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         response: intent.IntentResponse | None = None
-        async with async_get_chat_history(self.hass, user_input) as chat_history:
+        async with async_get_chat_session(self.hass, user_input) as chat_session:
             # Check if a trigger matched
             if trigger_result := await self.async_recognize_sentence_trigger(
                 user_input
@@ -373,7 +373,7 @@ class DefaultAgent(ConversationEntity):
                 )
 
             speech: str = response.speech.get("plain", {}).get("speech", "")
-            chat_history.async_add_message(
+            chat_session.async_add_message(
                 ChatMessage(
                     role="assistant",
                     agent_id=user_input.agent_id,
@@ -383,7 +383,7 @@ class DefaultAgent(ConversationEntity):
             )
 
             return ConversationResult(
-                response=response, conversation_id=chat_history.conversation_id
+                response=response, conversation_id=chat_session.conversation_id
             )
 
     async def _async_process_intent_result(

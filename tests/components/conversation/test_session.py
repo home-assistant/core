@@ -1,4 +1,4 @@
-"""Test the conversation history."""
+"""Test the conversation session."""
 
 from collections.abc import Generator
 from datetime import timedelta
@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components.conversation import ConversationInput, history
+from homeassistant.components.conversation import ConversationInput, session
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -38,7 +38,7 @@ def mock_ulid() -> Generator[Mock]:
     ("start_id", "given_id"),
     [
         (None, "mock-ulid"),
-        # This ULID is not known to history
+        # This ULID is not known as a session
         ("01JHXE0952TSJCFJZ869AW6HMD", "mock-ulid"),
         ("not-a-ulid", "not-a-ulid"),
     ],
@@ -52,87 +52,87 @@ async def test_conversation_id(
 ) -> None:
     """Test conversation ID generation."""
     mock_conversation_input.conversation_id = start_id
-    async with history.async_get_chat_history(
+    async with session.async_get_chat_session(
         hass, mock_conversation_input
-    ) as chat_history:
-        assert chat_history.conversation_id == given_id
+    ) as chat_session:
+        assert chat_session.conversation_id == given_id
 
 
 async def test_cleanup(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
 ) -> None:
-    """Mock cleanup of the conversation history."""
-    async with history.async_get_chat_history(
+    """Mock cleanup of the conversation session."""
+    async with session.async_get_chat_session(
         hass, mock_conversation_input
-    ) as chat_history:
-        conversation_id = chat_history.conversation_id
+    ) as chat_session:
+        conversation_id = chat_session.conversation_id
 
-    # Generate history entry.
-    async with history.async_get_chat_history(
+    # Generate session entry.
+    async with session.async_get_chat_session(
         hass, mock_conversation_input
-    ) as chat_history:
-        # Because we didn't add a message to the history in the last block,
+    ) as chat_session:
+        # Because we didn't add a message to the session in the last block,
         # the conversation was not be persisted and we get a new ID
-        assert chat_history.conversation_id != conversation_id
-        conversation_id = chat_history.conversation_id
-        chat_history.async_add_message(
-            history.ChatMessage(
+        assert chat_session.conversation_id != conversation_id
+        conversation_id = chat_session.conversation_id
+        chat_session.async_add_message(
+            session.ChatMessage(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
             )
         )
 
-    # Reuse conversation ID to ensure we can chat with same history
+    # Reuse conversation ID to ensure we can chat with same session
     mock_conversation_input.conversation_id = conversation_id
-    async with history.async_get_chat_history(
+    async with session.async_get_chat_session(
         hass, mock_conversation_input
-    ) as chat_history:
-        assert chat_history.conversation_id == conversation_id
+    ) as chat_session:
+        assert chat_session.conversation_id == conversation_id
 
     async_fire_time_changed(
-        hass, dt_util.utcnow() + history.CONVERSATION_TIMEOUT + timedelta(seconds=1)
+        hass, dt_util.utcnow() + session.CONVERSATION_TIMEOUT + timedelta(seconds=1)
     )
 
     # It should be cleaned up now and we start a new conversation
-    async with history.async_get_chat_history(
+    async with session.async_get_chat_session(
         hass, mock_conversation_input
-    ) as chat_history:
-        assert chat_history.conversation_id != conversation_id
+    ) as chat_session:
+        assert chat_session.conversation_id != conversation_id
 
 
 async def test_message_filtering(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test filtering of messages."""
-    async with history.async_get_chat_history(
+    async with session.async_get_chat_session(
         hass, mock_conversation_input
-    ) as chat_history:
-        messages = chat_history.async_get_messages(agent_id=None)
+    ) as chat_session:
+        messages = chat_session.async_get_messages(agent_id=None)
         assert len(messages) == 2
-        assert messages[0] == history.ChatMessage(
+        assert messages[0] == session.ChatMessage(
             role="system",
             agent_id=None,
             content="",
         )
-        assert messages[1] == history.ChatMessage(
+        assert messages[1] == session.ChatMessage(
             role="user",
             agent_id=mock_conversation_input.agent_id,
             content=mock_conversation_input.text,
         )
         # Cannot add a second user message in a row
         with pytest.raises(ValueError):
-            chat_history.async_add_message(
-                history.ChatMessage(
+            chat_session.async_add_message(
+                session.ChatMessage(
                     role="user",
                     agent_id="mock-agent-id",
                     content="Hey!",
                 )
             )
 
-        chat_history.async_add_message(
-            history.ChatMessage(
+        chat_session.async_add_message(
+            session.ChatMessage(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
@@ -140,28 +140,28 @@ async def test_message_filtering(
             )
         )
         # Different agent, will be filtered out.
-        chat_history.async_add_message(
-            history.ChatMessage(
+        chat_session.async_add_message(
+            session.ChatMessage(
                 role="native", agent_id="another-mock-agent-id", content="", native=1
             )
         )
-        chat_history.async_add_message(
-            history.ChatMessage(
+        chat_session.async_add_message(
+            session.ChatMessage(
                 role="native", agent_id="mock-agent-id", content="", native=1
             )
         )
 
-    assert len(chat_history.messages) == 5
+    assert len(chat_session.messages) == 5
 
-    messages = chat_history.async_get_messages(agent_id="mock-agent-id")
+    messages = chat_session.async_get_messages(agent_id="mock-agent-id")
     assert len(messages) == 4
 
-    assert messages[2] == history.ChatMessage(
+    assert messages[2] == session.ChatMessage(
         role="assistant",
         agent_id="mock-agent-id",
         content="Hey!",
         native="assistant-reply-native",
     )
-    assert messages[3] == history.ChatMessage(
+    assert messages[3] == session.ChatMessage(
         role="native", agent_id="mock-agent-id", content="", native=1
     )

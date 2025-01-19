@@ -25,11 +25,11 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
-DATA_CHAT_HISTORY: HassKey["dict[str, ChatHistory]"] = HassKey(
-    "conversation_chat_history"
+DATA_CHAT_HISTORY: HassKey["dict[str, ChatSession]"] = HassKey(
+    "conversation_chat_session"
 )
-DATA_CHAT_HISTORY_CLEANUP: HassKey["HistoryCleanup"] = HassKey(
-    "conversation_chat_history_cleanup"
+DATA_CHAT_HISTORY_CLEANUP: HassKey["SessionCleanup"] = HassKey(
+    "conversation_chat_session_cleanup"
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ CONVERSATION_TIMEOUT = timedelta(minutes=5)
 _NativeT = TypeVar("_NativeT")
 
 
-class HistoryCleanup:
+class SessionCleanup:
     """Helper to clean up the history."""
 
     unsub: CALLBACK_TYPE | None = None
@@ -86,18 +86,18 @@ class HistoryCleanup:
 
 
 @asynccontextmanager
-async def async_get_chat_history(
+async def async_get_chat_session(
     hass: HomeAssistant,
     user_input: ConversationInput,
-) -> AsyncGenerator["ChatHistory"]:
-    """Return chat history."""
+) -> AsyncGenerator["ChatSession"]:
+    """Return chat session."""
     all_history = hass.data.get(DATA_CHAT_HISTORY)
     if all_history is None:
         all_history = {}
         hass.data[DATA_CHAT_HISTORY] = all_history
-        hass.data[DATA_CHAT_HISTORY_CLEANUP] = HistoryCleanup(hass)
+        hass.data[DATA_CHAT_HISTORY_CLEANUP] = SessionCleanup(hass)
 
-    history: ChatHistory | None = None
+    history: ChatSession | None = None
 
     if user_input.conversation_id is None:
         conversation_id = ulid.ulid_now()
@@ -125,7 +125,7 @@ async def async_get_chat_history(
     if history:
         history = replace(history, messages=history.messages.copy())
     else:
-        history = ChatHistory(hass, conversation_id)
+        history = ChatSession(hass, conversation_id)
 
     message: ChatMessage = ChatMessage(
         role="user",
@@ -190,8 +190,8 @@ class ChatMessage(Generic[_NativeT]):
 
 
 @dataclass
-class ChatHistory(Generic[_NativeT]):
-    """Class holding all conversation info."""
+class ChatSession(Generic[_NativeT]):
+    """Class holding all information for a specific conversation."""
 
     hass: HomeAssistant
     conversation_id: str

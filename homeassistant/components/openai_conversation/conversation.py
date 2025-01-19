@@ -105,7 +105,6 @@ class OpenAIConversationEntity(
     def __init__(self, entry: OpenAIConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        # self.history: dict[str, ChatHistory] = {}
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -144,21 +143,21 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        async with conversation.async_get_chat_history(
+        async with conversation.async_get_chat_session(
             self.hass, user_input
-        ) as history:
-            return await self._async_call_api(user_input, history)
+        ) as session:
+            return await self._async_call_api(user_input, session)
 
     async def _async_call_api(
         self,
         user_input: conversation.ConversationInput,
-        history: conversation.ChatHistory[ChatCompletionMessageParam],
+        session: conversation.ChatSession[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
         options = self.entry.options
 
         try:
-            await history.async_process_llm_message(
+            await session.async_process_llm_message(
                 DOMAIN,
                 user_input,
                 options.get(CONF_LLM_HASS_API),
@@ -168,14 +167,14 @@ class OpenAIConversationEntity(
             return err.as_converstation_result()
 
         tools: list[ChatCompletionToolParam] | None = None
-        if history.llm_api:
+        if session.llm_api:
             tools = [
-                _format_tool(tool, history.llm_api.custom_serializer)
-                for tool in history.llm_api.tools
+                _format_tool(tool, session.llm_api.custom_serializer)
+                for tool in session.llm_api.tools
             ]
 
         messages: list[ChatCompletionMessageParam] = []
-        for message in history.async_get_messages(user_input.agent_id):
+        for message in session.async_get_messages(user_input.agent_id):
             if message.native is not None and message.agent_id == user_input.agent_id:
                 messages.append(message.native)
             else:
@@ -191,8 +190,8 @@ class OpenAIConversationEntity(
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL,
             {
-                "messages": history.messages,
-                "tools": history.llm_api.tools if history.llm_api else None,
+                "messages": session.messages,
+                "tools": session.llm_api.tools if session.llm_api else None,
             },
         )
 
@@ -208,7 +207,7 @@ class OpenAIConversationEntity(
                     max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
                     top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                     temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                    user=history.conversation_id,
+                    user=session.conversation_id,
                 )
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)
@@ -218,14 +217,14 @@ class OpenAIConversationEntity(
                     "Sorry, I had a problem talking to OpenAI",
                 )
                 return conversation.ConversationResult(
-                    response=intent_response, conversation_id=history.conversation_id
+                    response=intent_response, conversation_id=session.conversation_id
                 )
 
             LOGGER.debug("Response %s", result)
             response = result.choices[0].message
             messages.append(_message_convert(response))
 
-            history.async_add_message(
+            session.async_add_message(
                 conversation.ChatMessage(
                     role=response.role,
                     agent_id=user_input.agent_id,
@@ -234,7 +233,7 @@ class OpenAIConversationEntity(
                 ),
             )
 
-            if not response.tool_calls or not history.llm_api:
+            if not response.tool_calls or not session.llm_api:
                 break
 
             for tool_call in response.tool_calls:
@@ -247,7 +246,7 @@ class OpenAIConversationEntity(
                 )
 
                 try:
-                    tool_response = await history.llm_api.async_call_tool(tool_input)
+                    tool_response = await session.llm_api.async_call_tool(tool_input)
                 except (HomeAssistantError, vol.Invalid) as e:
                     tool_response = {"error": type(e).__name__}
                     if str(e):
@@ -261,7 +260,7 @@ class OpenAIConversationEntity(
                         content=json.dumps(tool_response),
                     )
                 )
-                history.async_add_message(
+                session.async_add_message(
                     conversation.ChatMessage(
                         role="native",
                         agent_id=user_input.agent_id,
@@ -273,7 +272,7 @@ class OpenAIConversationEntity(
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response.content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=history.conversation_id
+            response=intent_response, conversation_id=session.conversation_id
         )
 
     async def _async_entry_update_listener(

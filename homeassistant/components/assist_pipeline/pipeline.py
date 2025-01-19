@@ -1091,13 +1091,13 @@ class PipelineRun:
 
             # It was already handled, create response and add to chat history
             if intent_response is not None:
-                async with conversation.async_get_chat_history(
+                async with conversation.async_get_chat_session(
                     self.hass, user_input
-                ) as chat_history:
+                ) as chat_session:
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    chat_history.async_add_message(
+                    chat_session.async_add_message(
                         conversation.ChatMessage(
                             role="assistant",
                             agent_id=agent_id,
@@ -1107,7 +1107,7 @@ class PipelineRun:
                     )
                     conversation_result = conversation.ConversationResult(
                         response=intent_response,
-                        conversation_id=chat_history.conversation_id,
+                        conversation_id=chat_session.conversation_id,
                     )
 
             else:
