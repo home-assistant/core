@@ -43,11 +43,6 @@ class VelbusEntity(Entity):
             sw_version=channel.get_module_sw_version(),
             serial_number=channel.get_module_serial(),
         )
-        if self._channel.is_sub_device():
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                self._module_adress,
-            )
         serial = channel.get_module_serial() or self._module_adress
         self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
