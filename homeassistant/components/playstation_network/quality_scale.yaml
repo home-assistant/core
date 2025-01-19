@@ -1,28 +1,40 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: Integration has no actions
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: Integration has no actions
+
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  entity-event-setup: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not register events.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: done
+  unique-config-entry:
+    done
 
-  # Silver
-  action-exceptions: done
+    # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration has no actions
   config-entry-unloading: done
-  docs-configuration-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration has no configuration options
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
