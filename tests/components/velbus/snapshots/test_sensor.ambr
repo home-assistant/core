@@ -38,7 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Input ButtonCounter',
+      'friendly_name': 'Living room ButtonCounter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'W',
     }),
@@ -89,7 +89,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Input ButtonCounter-counter',
+      'friendly_name': 'Living room ButtonCounter-counter',
       'icon': 'mdi:counter',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'kWh',

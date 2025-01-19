@@ -53,9 +53,7 @@ class VelbusEntity(Entity):
 
     def _get_identifier(self) -> str:
         """Return the identifier of the entity."""
-        if not self._channel.is_sub_device():
-            return self._module_adress
-        return f"{self._module_adress}-{self._channel.get_channel_number()}"
+        return self._module_adress
 
     async def async_added_to_hass(self) -> None:
         """Add listener for state changes."""

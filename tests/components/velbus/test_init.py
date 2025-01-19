@@ -151,12 +151,3 @@ async def test_device_registry(
         device_registry, config_entry.entry_id
     )
     assert device_entries == snapshot
-
-    device_parent = device_registry.async_get_device(identifiers={(DOMAIN, "88")})
-    assert device_parent.via_device_id is None
-
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "88-9")})
-    assert device.via_device_id == device_parent.id
-
-    device_no_sub = device_registry.async_get_device(identifiers={(DOMAIN, "2")})
-    assert device_no_sub.via_device_id is None
