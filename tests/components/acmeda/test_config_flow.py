@@ -49,7 +49,7 @@ async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-@pytest.mark.usesfixtures("mock_hub_run")
+@pytest.mark.usefixtures("mock_hub_run")
 async def test_show_form_one_hub(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that a config is created when one hub discovered."""
 
@@ -94,7 +94,7 @@ async def test_show_form_two_hubs(hass: HomeAssistant, mock_hub_discover) -> Non
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-@pytest.mark.usesfixtures("mock_hub_run")
+@pytest.mark.usefixtures("mock_hub_run")
 async def test_create_second_entry(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that a config is created when a second hub is discovered."""
 

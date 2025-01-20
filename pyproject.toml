@@ -769,6 +769,7 @@ select = [
     "RUF024", # Do not pass mutable objects as values to dict.fromkeys
     "RUF026", # default_factory is a positional-only argument to defaultdict
     "RUF030", # print() call in assert statement is likely unintentional
+    "RUF032", # Decimal() called with float literal argument
     "RUF033", # __post_init__ method with argument defaults
     "RUF034", # Useless if-else condition
     "RUF100", # Unused `noqa` directive
