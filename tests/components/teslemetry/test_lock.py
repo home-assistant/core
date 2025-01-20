@@ -33,6 +33,20 @@ async def test_lock(
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
 
+async def test_lock_alt(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+) -> None:
+    """Tests that the lock entities are correct."""
+
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    entry = await setup_platform(hass, [Platform.LOCK])
+    assert_entities(hass, entry.entry_id, entity_registry, snapshot)
+
+
 async def test_lock_services(
     hass: HomeAssistant,
 ) -> None:
@@ -110,7 +124,7 @@ async def test_lock_streaming(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
-                Signal.LOCKED: False,
+                Signal.LOCKED: True,
                 Signal.CHARGE_PORT_LATCH: "ChargePortLatchEngaged",
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
@@ -126,4 +140,27 @@ async def test_lock_streaming(
         "lock.test_charge_cable_lock",
     ):
         state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+        assert state.state == snapshot(name=f"{entity_id}-locked")
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.LOCKED: False,
+                Signal.CHARGE_PORT_LATCH: "ChargePortLatchDisengaged",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.LOCK])
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "lock.test_lock",
+        "lock.test_charge_cable_lock",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=f"{entity_id}-unlocked")
