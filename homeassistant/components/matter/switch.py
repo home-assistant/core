@@ -79,7 +79,7 @@ class MatterNumericSwitch(MatterSwitch):
         """Update the current value."""
         matter_attribute = self._entity_info.primary_attribute
         if value_convert := self.entity_description.ha_to_native_value:
-            sendvalue = value_convert(value)
+            send_value = value_convert(value)
         await self.matter_client.write_attribute(
             node_id=self._endpoint.node.node_id,
             attribute_path=create_attribute_path_from_attribute(
