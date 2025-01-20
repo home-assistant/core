@@ -656,3 +656,14 @@ def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bo
     old_state = event_data["old_state"]
     new_state = event_data["new_state"]
     return bool(new_state and old_state and new_state.state == old_state.state)
+
+
+def get_min_max(value1: float, value2: float) -> tuple[float, float]:
+    """Return the minimum and maximum of two values.
+
+    HomeKit will go unavailable if the min and max are reversed
+    so we make sure the min is always the min and the max is always the max
+    as any mistakes made in integrations will cause the entire
+    bridge to go unavailable.
+    """
+    return min(value1, value2), max(value1, value2)
