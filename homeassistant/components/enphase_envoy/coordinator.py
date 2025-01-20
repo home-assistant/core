@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
 STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
 NOTIFICATION_ID = "enphase_envoy_notification"
-FIRMWARE_REFRESH_INTERVAL = timedelta(seconds=90)
+FIRMWARE_REFRESH_INTERVAL = timedelta(hours=4)
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -436,6 +436,20 @@ async def test_coordinator_firmware_refresh(
         envoy = config_entry.runtime_data.envoy
         assert envoy.firmware == "9.9.9999"
 
+
+@respx.mock
+async def test_coordinator_firmware_refresh_with_envoy_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator scheduled firmware check."""
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
     caplog.set_level(logging.DEBUG)
     logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
         logging.DEBUG
