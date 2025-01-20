@@ -74,7 +74,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryNumberVehicleEntityDescription, ...] = (
         device_class=NumberDeviceClass.CURRENT,
         mode=NumberMode.AUTO,
         max_key="charge_state_charge_current_request_max",
-        func=lambda api, value: api.set_charging_amps(int(value)),
+        func=lambda api, value: api.set_charging_amps(value),
         scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
         value_listener=lambda x, y: x.listen_ChargeCurrentRequest(y),
         max_listener=lambda x, y: x.listen_ChargeCurrentRequestMax(y),
@@ -246,11 +246,15 @@ class TeslemetryStreamingNumberEntity(
 
         # Add listeners
         self.async_on_remove(
-            self.entity_description.value_listener(self.api, self._value_callback)
+            self.entity_description.value_listener(
+                self.vehicle.stream_vehicle, self._value_callback
+            )
         )
         if self.entity_description.max_listener:
             self.async_on_remove(
-                self.entity_description.max_listener(self.api, self._max_callback)
+                self.entity_description.max_listener(
+                    self.vehicle.stream_vehicle, self._max_callback
+                )
             )
 
     def _value_callback(self, value: int | None) -> None:

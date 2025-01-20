@@ -32,6 +32,19 @@ async def setup_platform(hass: HomeAssistant, platforms: list[Platform] | None =
     return mock_entry
 
 
+async def reload_platform(
+    hass: HomeAssistant, entry: MockConfigEntry, platforms: list[Platform] | None = None
+):
+    """Reload the Teslemetry platform."""
+
+    if platforms is None:
+        await hass.config_entries.async_reload(entry.entry_id)
+    else:
+        with patch("homeassistant.components.teslemetry.PLATFORMS", platforms):
+            await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 def assert_entities(
     hass: HomeAssistant,
     entry_id: str,
