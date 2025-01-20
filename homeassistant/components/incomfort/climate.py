@@ -68,19 +68,13 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
         self._legacy_setpoint_status = legacy_setpoint_status
 
         self._attr_unique_id = f"{heater.serial_no}_{room.room_no}"
-        if coordinator.unique_id:
-            self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._attr_unique_id)},
-                manufacturer="Intergas",
-                name=f"Thermostat {room.room_no}",
-                via_device=(DOMAIN, coordinator.unique_id),
-            )
-            return
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer="Intergas",
             name=f"Thermostat {room.room_no}",
         )
+        if coordinator.unique_id:
+            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

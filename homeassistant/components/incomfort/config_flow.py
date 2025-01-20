@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -112,8 +113,22 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Prepare configuration for a DHCP discovered Intergas Gateway device."""
         self._discovered_host = discovery_info.ip
-        self._async_abort_entries_match({CONF_HOST: self._discovered_host})
+        # In case we have an existing entry with the same host
+        # we update the entry with the unique_id for the gateway, and abort the flow
         unique_id = format_mac(discovery_info.macaddress)
+        existing_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.unique_id is None
+            and entry.data.get(CONF_HOST) == self._discovered_host
+        ]
+        if existing_entries:
+            self.hass.config_entries.async_update_entry(
+                existing_entries[0], unique_id=unique_id
+            )
+            self.hass.config_entries.async_schedule_reload(existing_entries[0].entry_id)
+            raise AbortFlow("already_configured")
+
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._discovered_host})
 
