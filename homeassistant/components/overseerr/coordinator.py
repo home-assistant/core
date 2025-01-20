@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from python_overseerr import OverseerrClient, RequestCount
 from python_overseerr.exceptions import OverseerrConnectionError
+from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
@@ -30,13 +31,17 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
             config_entry=entry,
             update_interval=timedelta(minutes=5),
         )
+        host = entry.data[CONF_HOST]
+        port = entry.data[CONF_PORT]
+        ssl = entry.data[CONF_SSL]
         self.client = OverseerrClient(
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
+            host,
+            port,
             entry.data[CONF_API_KEY],
-            ssl=entry.data[CONF_SSL],
+            ssl=ssl,
             session=async_get_clientsession(hass),
         )
+        self.url = URL.build(host=host, port=port, scheme="https" if ssl else "http")
 
     async def _async_update_data(self) -> RequestCount:
         """Fetch data from API endpoint."""
