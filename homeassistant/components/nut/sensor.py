@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import asdict, dataclass
 import logging
-from operator import methodcaller
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -33,7 +31,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -63,8 +60,6 @@ _LOGGER = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class NutSensorEntityDescription(SensorEntityDescription):
     """Describes Nut sensor entity."""
-
-    ambient_threshold_value_fn: Callable[[StateType], StateType] | None = None
 
 
 SENSOR_TYPES: Final[dict[str, NutSensorEntityDescription]] = {
@@ -954,7 +949,6 @@ SENSOR_TYPES: Final[dict[str, NutSensorEntityDescription]] = {
         translation_key="ambient_humidity_status",
         device_class=SensorDeviceClass.ENUM,
         options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
-        ambient_threshold_value_fn=methodcaller("lower"),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "ambient.temperature": NutSensorEntityDescription(
@@ -970,7 +964,6 @@ SENSOR_TYPES: Final[dict[str, NutSensorEntityDescription]] = {
         translation_key="ambient_temperature_status",
         device_class=SensorDeviceClass.ENUM,
         options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
-        ambient_threshold_value_fn=methodcaller("lower"),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "watts": NutSensorEntityDescription(
