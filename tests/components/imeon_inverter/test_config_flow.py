@@ -2,6 +2,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.imeon_inverter.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
@@ -17,17 +19,10 @@ TEST_USER_INPUT = {
     CONF_PASSWORD: "password",
 }
 
-TEST_ADDRESS = "192.168.200.1"
 
-
-async def test_form(hass: HomeAssistant) -> None:
-    """Test we get the form."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
+@pytest.fixture
+def mock_login_async_setup_entry():
+    """Fixture for mocking login and async_setup_entry."""
     with (
         patch(
             "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
@@ -36,17 +31,28 @@ async def test_form(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.imeon_inverter.async_setup_entry",
             return_value=True,
-        ) as mock_setup_entry,
+        ) as mock,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_INPUT
-        )
-        await hass.async_block_till_done()
+        yield mock
+
+
+async def test_form(hass: HomeAssistant, mock_login_async_setup_entry) -> None:
+    """Test we get the form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_ADDRESS
+    assert result2["title"] == TEST_USER_INPUT[CONF_ADDRESS]
     assert result2["data"] == TEST_USER_INPUT
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert mock_login_async_setup_entry.call_count == 1
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -143,7 +149,7 @@ async def test_form_already_exists(hass: HomeAssistant) -> None:
     """Test that a flow with an existing host aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_ADDRESS,
+        unique_id=TEST_USER_INPUT[CONF_ADDRESS],
         data=TEST_USER_INPUT,
     )
 
@@ -155,7 +161,7 @@ async def test_form_already_exists(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
-        return_value=TEST_ADDRESS,
+        return_value=TEST_USER_INPUT[CONF_ADDRESS],
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
