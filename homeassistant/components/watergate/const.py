@@ -4,4 +4,4 @@ DOMAIN = "watergate"
 
 MANUFACTURER = "Watergate"
 
-AUTO_SHUT_OFF_EVENT_NAME = "watergate_auto_shut_off"
+AUTO_SHUT_OFF_EVENT_NAME = "watergate_{}"

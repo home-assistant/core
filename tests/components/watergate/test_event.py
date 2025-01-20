@@ -35,12 +35,19 @@ async def test_event(
     await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
 
 
-@pytest.mark.parametrize(("event_type"), [("volume_threshold"), ("duration_threshold")])
+@pytest.mark.parametrize(
+    ("entity_id", "event_type"),
+    [
+        ("sonic_volume_auto_shut_off", "volume_threshold"),
+        ("sonic_duration_auto_shut_off", "duration_threshold"),
+    ],
+)
 async def test_auto_shut_off_webhook(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     mock_entry: MockConfigEntry,
     mock_watergate_client: Generator[AsyncMock],
+    entity_id: str,
     event_type: str,
 ) -> None:
     """Test if water flow webhook is handled correctly."""
@@ -50,7 +57,7 @@ async def test_auto_shut_off_webhook(
         state = hass.states.get(entity_id)
         assert state.state == str(expected_state)
 
-    assert_state("event.sonic_auto_shut_off", "unknown")
+    assert_state("event." + entity_id, "unknown")
 
     telemetry_change_data = {
         "type": "auto-shut-off-report",
@@ -72,6 +79,6 @@ async def test_auto_shut_off_webhook(
         attributes = hass.states.get(entity_id).attributes
         assert attributes.get(attribute) == expected_attribute
 
-    assert_extra_state("event.sonic_auto_shut_off", "event_type", event_type)
-    assert_extra_state("event.sonic_auto_shut_off", "volume", 1500)
-    assert_extra_state("event.sonic_auto_shut_off", "duration", 30)
+    assert_extra_state("event." + entity_id, "event_type", event_type)
+    assert_extra_state("event." + entity_id, "volume", 1500)
+    assert_extra_state("event." + entity_id, "duration", 30)

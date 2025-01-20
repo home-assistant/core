@@ -20,14 +20,37 @@
   },
   "entity": {
     "event": {
-      "auto_shut_off": {
-        "name": "Auto shut-off",
+      "auto_shut_off_volume": {
+        "name": "Volume Auto shut-off",
         "state_attributes": {
           "event_type": {
             "state": {
               "volume_threshold": "Volume",
               "duration_threshold": "Duration"
             }
+          },
+          "volume": {
+            "name": "Volume"
+          },
+          "duration": {
+            "name": "Duration"
+          }
+        }
+      },
+      "auto_shut_off_duration": {
+        "name": "Duration Auto shut-off",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "volume_threshold": "Volume",
+              "duration_threshold": "Duration"
+            }
+          },
+          "volume": {
+            "name": "Volume"
+          },
+          "duration": {
+            "name": "Duration"
           }
         }
       }

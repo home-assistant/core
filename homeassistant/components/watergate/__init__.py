@@ -18,6 +18,7 @@ from homeassistant.components.webhook import (
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import AUTO_SHUT_OFF_EVENT_NAME, DOMAIN
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
@@ -123,13 +124,8 @@ def get_webhook_handler(
         elif body_type == WEBHOOK_POWER_SUPPLY_CHANGED_TYPE:
             coordinator_data.state.power_supply = data.supply
         elif body_type == WEBHOOK_AUTO_SHUT_OFF:
-            hass.bus.async_fire(
-                AUTO_SHUT_OFF_EVENT_NAME,
-                {
-                    "type": data.type,
-                    "duration": data.duration,
-                    "volume": data.volume,
-                },
+            async_dispatcher_send(
+                hass, AUTO_SHUT_OFF_EVENT_NAME.format(data.type.lower()), data
             )
 
         coordinator.async_set_updated_data(coordinator_data)

@@ -1,9 +1,11 @@
 """Module contains the AutoShutOffEvent class for handling auto shut off events."""
 
+from watergate_local_api.models.auto_shut_off_report import AutoShutOffReport
+
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import WatergateConfigEntry
 from .const import AUTO_SHUT_OFF_EVENT_NAME
@@ -13,8 +15,20 @@ from .entity import WatergateEntity
 VOLUME_AUTO_SHUT_OFF = "volume_threshold"
 DURATION_AUTO_SHUT_OFF = "duration_threshold"
 
+
 DESCRIPTIONS: list[EventEntityDescription] = [
-    EventEntityDescription(translation_key="auto_shut_off", key="auto_shut_off")
+    EventEntityDescription(
+        translation_key="auto_shut_off_volume",
+        key="auto_shut_off_volume",
+        event_types=[VOLUME_AUTO_SHUT_OFF],
+        icon="mdi:water",
+    ),
+    EventEntityDescription(
+        translation_key="auto_shut_off_duration",
+        key="auto_shut_off_duration",
+        event_types=[DURATION_AUTO_SHUT_OFF],
+        icon="mdi:timelapse",
+    ),
 ]
 
 PARALLEL_UPDATES = 0
@@ -37,9 +51,9 @@ async def async_setup_entry(
 class AutoShutOffEvent(WatergateEntity, EventEntity):
     """Event for Auto Shut Off."""
 
-    entity_description: EventEntityDescription
+    _attr_has_entity_name = True
 
-    _attr_event_types = [VOLUME_AUTO_SHUT_OFF, DURATION_AUTO_SHUT_OFF]
+    entity_description: EventEntityDescription
 
     def __init__(
         self,
@@ -54,15 +68,21 @@ class AutoShutOffEvent(WatergateEntity, EventEntity):
         """Register the callback for event handling when the entity is added."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.hass.bus.async_listen(
-                AUTO_SHUT_OFF_EVENT_NAME, self._async_handle_event
+            async_dispatcher_connect(
+                self.hass,
+                AUTO_SHUT_OFF_EVENT_NAME.format(self.event_types[0]),
+                self._async_handle_event,
             )
         )
 
     @callback
-    def _async_handle_event(self, event: Event[dict[str, StateType]]) -> None:
+    def _async_handle_event(self, event: AutoShutOffReport) -> None:
         self._trigger_event(
-            str(event.data["type"]).lower(),
-            {"volume": event.data["volume"], "duration": event.data["duration"]},
+            event.type.lower(),
+            {"volume": event.volume, "duration": event.duration},
         )
+        self._attr_extra_state_attributes = {
+            "volume": event.volume,
+            "duration": event.duration,
+        }
         self.async_write_ha_state()
