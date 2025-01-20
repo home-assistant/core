@@ -1,6 +1,6 @@
 """Tests for the Heos config flow module."""
 
-from pyheos import CommandAuthenticationError, CommandFailedError, HeosError
+from pyheos import CommandAuthenticationError, CommandFailedError, Heos, HeosError
 import pytest
 
 from homeassistant.components import heos
@@ -14,7 +14,9 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from tests.common import MockConfigEntry
 
 
-async def test_flow_aborts_already_setup(hass: HomeAssistant, config_entry) -> None:
+async def test_flow_aborts_already_setup(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
     """Test flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)
 
@@ -36,7 +38,9 @@ async def test_no_host_shows_form(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
 
 
-async def test_cannot_connect_shows_error_form(hass: HomeAssistant, controller) -> None:
+async def test_cannot_connect_shows_error_form(
+    hass: HomeAssistant, controller: Heos
+) -> None:
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
@@ -49,7 +53,9 @@ async def test_cannot_connect_shows_error_form(hass: HomeAssistant, controller) 
     assert controller.disconnect.call_count == 1
 
 
-async def test_create_entry_when_host_valid(hass: HomeAssistant, controller) -> None:
+async def test_create_entry_when_host_valid(
+    hass: HomeAssistant, controller: Heos
+) -> None:
     """Test result type is create entry when host is valid."""
     data = {CONF_HOST: "127.0.0.1"}
 
@@ -65,7 +71,7 @@ async def test_create_entry_when_host_valid(hass: HomeAssistant, controller) -> 
 
 
 async def test_create_entry_when_friendly_name_valid(
-    hass: HomeAssistant, controller
+    hass: HomeAssistant, controller: Heos
 ) -> None:
     """Test result type is create entry when friendly name is valid."""
     hass.data[DOMAIN] = {"Office (127.0.0.1)": "127.0.0.1"}
@@ -86,7 +92,6 @@ async def test_create_entry_when_friendly_name_valid(
 
 async def test_discovery_shows_create_form(
     hass: HomeAssistant,
-    controller,
     discovery_data: SsdpServiceInfo,
     discovery_data_bedroom: SsdpServiceInfo,
 ) -> None:
@@ -113,7 +118,7 @@ async def test_discovery_shows_create_form(
 
 
 async def test_discovery_flow_aborts_already_setup(
-    hass: HomeAssistant, controller, discovery_data: SsdpServiceInfo, config_entry
+    hass: HomeAssistant, discovery_data: SsdpServiceInfo, config_entry: MockConfigEntry
 ) -> None:
     """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)
@@ -127,7 +132,7 @@ async def test_discovery_flow_aborts_already_setup(
 
 
 async def test_reconfigure_validates_and_updates_config(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Test reconfigure validates host and successfully updates."""
     config_entry.add_to_hass(hass)
@@ -157,7 +162,7 @@ async def test_reconfigure_validates_and_updates_config(
 
 
 async def test_reconfigure_cannot_connect_recovers(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Test reconfigure cannot connect and recovers."""
     controller.connect.side_effect = HeosError()
@@ -209,8 +214,8 @@ async def test_reconfigure_cannot_connect_recovers(
 )
 async def test_options_flow_signs_in(
     hass: HomeAssistant,
-    config_entry,
-    controller,
+    config_entry: MockConfigEntry,
+    controller: Heos,
     error: HeosError,
     expected_error_key: str,
 ) -> None:
@@ -250,7 +255,7 @@ async def test_options_flow_signs_in(
 
 
 async def test_options_flow_signs_out(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Test options flow signs-out when credentials cleared."""
     config_entry.add_to_hass(hass)
@@ -294,8 +299,8 @@ async def test_options_flow_signs_out(
 )
 async def test_options_flow_missing_one_param_recovers(
     hass: HomeAssistant,
-    config_entry,
-    controller,
+    config_entry: MockConfigEntry,
+    controller: Heos,
     user_input: dict[str, str],
     expected_errors: dict[str, str],
 ) -> None:
@@ -343,7 +348,7 @@ async def test_options_flow_missing_one_param_recovers(
 async def test_reauth_signs_in_aborts(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    controller,
+    controller: Heos,
     error: HeosError,
     expected_error_key: str,
 ) -> None:
@@ -381,7 +386,9 @@ async def test_reauth_signs_in_aborts(
     assert result["type"] is FlowResultType.ABORT
 
 
-async def test_reauth_signs_out(hass: HomeAssistant, config_entry, controller) -> None:
+async def test_reauth_signs_out(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
     """Test reauth flow signs-out when credentials cleared and aborts."""
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -425,8 +432,8 @@ async def test_reauth_signs_out(hass: HomeAssistant, config_entry, controller) -
 )
 async def test_reauth_flow_missing_one_param_recovers(
     hass: HomeAssistant,
-    config_entry,
-    controller,
+    config_entry: MockConfigEntry,
+    controller: Heos,
     user_input: dict[str, str],
     expected_errors: dict[str, str],
 ) -> None:

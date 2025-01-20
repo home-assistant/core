@@ -70,8 +70,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("controller")
 async def test_state_attributes(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Tests the state attributes."""
     config_entry.add_to_hass(hass)
