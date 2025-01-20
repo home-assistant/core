@@ -2297,8 +2297,8 @@ async def test_restore_backup(
             "state": RestoreBackupState.CORE_RESTART,
         }
 
-        # Note: The core restart is not tested here, in real
-        # the three following events are not sent.
+        # Note: The core restart is not tested here, in reality the following events
+        # are not sent because the core restart closes the WS connection.
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
