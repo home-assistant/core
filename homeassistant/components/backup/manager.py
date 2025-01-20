@@ -298,6 +298,7 @@ class BackupManager:
 
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = IdleEvent()
+        self.last_non_idle_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
 
     async def async_setup(self) -> None:
@@ -1041,6 +1042,8 @@ class BackupManager:
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
+        if not isinstance(event, IdleEvent):
+            self.last_non_idle_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 

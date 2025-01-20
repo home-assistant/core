@@ -144,13 +144,17 @@ class DownloadBackupView(HomeAssistantView):
 
 
 class UploadBackupView(HomeAssistantView):
-    """Generate backup view."""
+    """Upload backup view."""
 
     url = "/api/backup/upload"
     name = "api:backup:upload"
 
     @require_admin
     async def post(self, request: Request) -> Response:
+        """Upload a backup file."""
+        return await self._post(request)
+
+    async def _post(self, request: Request) -> Response:
         """Upload a backup file."""
         try:
             agent_ids = request.query.getall("agent_id")
