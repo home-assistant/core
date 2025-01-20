@@ -7,6 +7,13 @@
           "password": "[%key:common::config_flow::data::password%]",
           "service_code": "Service Code"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "service_code": "Service Code"
+        }
       }
     },
     "error": {
