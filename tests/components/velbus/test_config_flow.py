@@ -92,6 +92,39 @@ async def test_user_network_succes(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("controller")
+async def test_user_network_succes_tls(hass: HomeAssistant) -> None:
+    """Test user network config."""
+    # inttial menu show
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result
+    assert result.get("flow_id")
+    assert result.get("type") is FlowResultType.MENU
+    assert result.get("step_id") == "user"
+    assert result.get("menu_options") == ["network", "usbselect"]
+    # select the network option
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "network"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    # fill in the network form
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {
+            CONF_TLS: "yes",
+            CONF_HOST: "velbus",
+            CONF_PORT: 6000,
+            CONF_PASSWORD: "password",
+        },
+    )
+    assert result
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == "Velbus Network"
+
+
+@pytest.mark.usefixtures("controller")
 @patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_user_usb_succes(hass: HomeAssistant) -> None:
     """Test user usb step."""
@@ -112,28 +145,6 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Velbus USB"
-
-
-# @pytest.mark.usefixtures("controller_connection_failed")
-# async def test_user_fail(hass: HomeAssistant) -> None:
-#    """Test user config."""
-#    result = await hass.config_entries.flow.async_init(
-#        DOMAIN,
-#        context={"source": SOURCE_USER},
-#        data={CONF_NAME: "Velbus Test Serial", CONF_PORT: PORT_SERIAL},
-#    )
-#    assert result
-#    assert result.get("type") is FlowResultType.FORM
-#    assert result.get("errors") == {CONF_PORT: "cannot_connect"}
-#
-#    result = await hass.config_entries.flow.async_init(
-#        DOMAIN,
-#        context={"source": SOURCE_USER},
-#        data={CONF_NAME: "Velbus Test TCP", CONF_PORT: PORT_TCP},
-#    )
-#    assert result
-#    assert result.get("type") is FlowResultType.FORM
-#    assert result.get("errors") == {CONF_PORT: "cannot_connect"}
 
 
 @pytest.mark.usefixtures("config_entry")
