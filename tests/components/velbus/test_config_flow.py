@@ -151,6 +151,9 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
     assert result
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Velbus USB"
+    data = result.get("data")
+    assert data
+    assert data[CONF_PORT] == PORT_SERIAL
 
 
 @pytest.mark.usefixtures("controller")
