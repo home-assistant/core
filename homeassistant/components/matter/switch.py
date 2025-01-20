@@ -86,7 +86,7 @@ class MatterNumericSwitch(MatterSwitch):
                 self._endpoint.endpoint_id,
                 matter_attribute,
             ),
-            value=sendvalue,
+            value=send_value,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
