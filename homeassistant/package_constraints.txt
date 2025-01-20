@@ -32,7 +32,7 @@ dbus-fast==2.30.2
 fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.9.0
+habluetooth==3.9.2
 hass-nabucasa==0.88.1
 hassil==2.1.0
 home-assistant-bluetooth==1.13.0

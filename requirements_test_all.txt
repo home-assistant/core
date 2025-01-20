@@ -938,7 +938,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.9.0
+habluetooth==3.9.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -2305,7 +2305,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.10.0
+thermopro-ble==0.10.1
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.2
