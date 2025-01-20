@@ -2305,7 +2305,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.10.0
+thermopro-ble==0.10.1
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.2
