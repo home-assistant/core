@@ -124,11 +124,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm setup from discovery."""
         if user_input is not None:
-            return await self.async_step_user(
-                {
-                    CONF_HOST: self._discovered_host,
-                }
-            )
+            return await self.async_step_user({CONF_HOST: self._discovered_host})
         return self.async_show_form(
             step_id="dhcp_confirm",
             description_placeholders={CONF_HOST: self._discovered_host},

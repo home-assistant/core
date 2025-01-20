@@ -22,6 +22,15 @@ class IncomfortBoilerEntity(IncomfortEntity):
         """Initialize the boiler entity."""
         super().__init__(coordinator)
         self._heater = heater
+        if coordinator.unique_id:
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, heater.serial_no)},
+                manufacturer="Intergas",
+                name="Boiler",
+                serial_number=heater.serial_no,
+                via_device=(DOMAIN, coordinator.unique_id),
+            )
+            return
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.serial_no)},
             manufacturer="Intergas",

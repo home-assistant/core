@@ -50,8 +50,11 @@ async def async_connect_gateway(
 class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
     """Data coordinator for InComfort entities."""
 
-    def __init__(self, hass: HomeAssistant, incomfort_data: InComfortData) -> None:
+    def __init__(
+        self, hass: HomeAssistant, incomfort_data: InComfortData, unique_id: str | None
+    ) -> None:
         """Initialize coordinator."""
+        self.unique_id = unique_id
         super().__init__(
             hass,
             _LOGGER,
