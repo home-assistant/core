@@ -398,7 +398,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.2
+aiowebostv==0.5.0
 
 # homeassistant.components.withings
 aiowithings==3.1.4
@@ -497,7 +497,7 @@ av==13.1.0
 axis==64
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.4
+ayla-iot-unofficial==1.4.5
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -1963,7 +1963,7 @@ python-opensky==1.0.1
 python-otbr-api==2.7.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.5.0
+python-overseerr==0.6.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2391,7 +2391,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.1.0
+velbus-aio==2025.1.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
