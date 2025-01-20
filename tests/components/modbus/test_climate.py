@@ -58,6 +58,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_OFF_VALUE,
     CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -377,6 +378,29 @@ async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> N
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
                     CONF_HVAC_ONOFF_REGISTER: 11,
+                }
+            ],
+        },
+    ],
+)
+async def test_config_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for On/Off coil."""
+    state = hass.states.get(ENTITY_ID)
+    assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 11,
                     CONF_HVAC_ON_VALUE: 0xAA,
                     CONF_HVAC_OFF_VALUE: 0xFF,
                 }
@@ -405,6 +429,45 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
     await hass.async_block_till_done()
 
     mock_modbus.write_register.assert_called_with(11, 0xFF, slave=10)
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_COIL: 11,
+                }
+            ],
+        },
+    ],
+)
+async def test_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for On/Off coil values."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_coil.assert_called_with(11, 1, slave=10)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_coil.assert_called_with(11, 0, slave=10)
 
 
 @pytest.mark.parametrize(
