@@ -12,12 +12,20 @@
         "data": {
           "currency": "Currency",
           "areas": "Areas"
+        },
+        "data_description": {
+          "currency": "Select currency to display prices in, EUR is the base currency.",
+          "areas": "Areas to display prices for according to Nordpool market areas."
         }
       },
       "reconfigure": {
         "data": {
           "currency": "[%key:component::nordpool::config::step::user::data::currency%]",
           "areas": "[%key:component::nordpool::config::step::user::data::areas%]"
+        },
+        "data_description": {
+          "currency": "[%key:component::nordpool::config::step::user::data_description::currency%]",
+          "areas": "[%key:component::nordpool::config::step::user::data_description::areas%]"
         }
       }
     }
@@ -42,6 +50,28 @@
       "next_price": {
         "name": "Next price"
       },
+      "lowest_price": {
+        "name": "Lowest price",
+        "state_attributes": {
+          "start": {
+            "name": "Start time"
+          },
+          "end": {
+            "name": "End time"
+          }
+        }
+      },
+      "highest_price": {
+        "name": "Highest price",
+        "state_attributes": {
+          "start": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::start::name%]"
+          },
+          "end": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::end::name%]"
+          }
+        }
+      },
       "block_average": {
         "name": "{block} average"
       },
@@ -60,6 +90,50 @@
       "daily_average": {
         "name": "Daily average"
       }
+    }
+  },
+  "services": {
+    "get_prices_for_date": {
+      "name": "Get prices for date",
+      "description": "Retrieve the prices for a specific date.",
+      "fields": {
+        "config_entry": {
+          "name": "Select Nord Pool configuration entry",
+          "description": "Choose the configuration entry."
+        },
+        "date": {
+          "name": "Date",
+          "description": "Only dates two months in the past and one day in the future is allowed."
+        },
+        "areas": {
+          "name": "Areas",
+          "description": "One or multiple areas to get prices for. If left empty it will use the areas already configured."
+        },
+        "currency": {
+          "name": "Currency",
+          "description": "Currency to get prices in. If left empty it will use the currency already configured."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "initial_update_failed": {
+      "message": "Initial update failed on startup with error {error}"
+    },
+    "entry_not_found": {
+      "message": "The Nord Pool integration is not configured in Home Assistant."
+    },
+    "entry_not_loaded": {
+      "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
+    },
+    "authentication_error": {
+      "message": "There was an authentication error as you tried to retrieve data too far in the past."
+    },
+    "empty_response": {
+      "message": "Nord Pool has not posted market prices for the provided date."
+    },
+    "connection_error": {
+      "message": "There was a connection error connecting to the API. Try again later."
     }
   }
 }

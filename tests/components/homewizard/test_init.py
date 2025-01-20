@@ -25,7 +25,7 @@ async def test_load_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(mock_homewizardenergy.device.mock_calls) == 1
+    assert len(mock_homewizardenergy.combined.mock_calls) == 1
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -39,7 +39,7 @@ async def test_load_failed_host_unavailable(
     mock_homewizardenergy: MagicMock,
 ) -> None:
     """Test setup handles unreachable host."""
-    mock_homewizardenergy.device.side_effect = TimeoutError()
+    mock_homewizardenergy.combined.side_effect = TimeoutError()
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -53,7 +53,7 @@ async def test_load_detect_api_disabled(
     mock_homewizardenergy: MagicMock,
 ) -> None:
     """Test setup detects disabled API."""
-    mock_homewizardenergy.device.side_effect = DisabledError()
+    mock_homewizardenergy.combined.side_effect = DisabledError()
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -115,7 +115,7 @@ async def test_disablederror_reloads_integration(
     assert len(flows) == 0
 
     # Simulate DisabledError and wait for next update
-    mock_homewizardenergy.device.side_effect = DisabledError()
+    mock_homewizardenergy.combined.side_effect = DisabledError()
 
     freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)

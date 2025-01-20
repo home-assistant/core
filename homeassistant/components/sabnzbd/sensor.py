@@ -10,16 +10,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DOMAIN, SabnzbdUpdateCoordinator
-from .const import DEFAULT_NAME
+from .coordinator import SabnzbdConfigEntry
+from .entity import SabnzbdEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -114,59 +111,22 @@ SENSOR_TYPES: tuple[SabnzbdSensorEntityDescription, ...] = (
     ),
 )
 
-OLD_SENSOR_KEYS = [
-    "current_status",
-    "speed",
-    "queue_size",
-    "queue_remaining",
-    "disk_size",
-    "disk_free",
-    "queue_count",
-    "day_size",
-    "week_size",
-    "month_size",
-    "total_size",
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SabnzbdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Sabnzbd sensor entry."""
+    coordinator = config_entry.runtime_data
 
-    entry_id = config_entry.entry_id
-    coordinator: SabnzbdUpdateCoordinator = hass.data[DOMAIN][entry_id]
-
-    async_add_entities(
-        [SabnzbdSensor(coordinator, sensor, entry_id) for sensor in SENSOR_TYPES]
-    )
+    async_add_entities([SabnzbdSensor(coordinator, sensor) for sensor in SENSOR_TYPES])
 
 
-class SabnzbdSensor(CoordinatorEntity[SabnzbdUpdateCoordinator], SensorEntity):
+class SabnzbdSensor(SabnzbdEntity, SensorEntity):
     """Representation of an SABnzbd sensor."""
 
     entity_description: SabnzbdSensorEntityDescription
-    _attr_should_poll = False
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: SabnzbdUpdateCoordinator,
-        description: SabnzbdSensorEntityDescription,
-        entry_id,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._attr_unique_id = f"{entry_id}_{description.key}"
-        self.entity_description = description
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, entry_id)},
-            name=DEFAULT_NAME,
-        )
 
     @property
     def native_value(self) -> StateType:

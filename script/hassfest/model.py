@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import IntEnum
 import json
 import pathlib
 from typing import Any, Literal
@@ -29,10 +30,14 @@ class Config:
     root: pathlib.Path
     action: Literal["validate", "generate"]
     requirements: bool
-    core_integrations_path: pathlib.Path
+    core_integrations_path: pathlib.Path = field(init=False)
     errors: list[Error] = field(default_factory=list)
     cache: dict[str, Any] = field(default_factory=dict)
     plugins: set[str] = field(default_factory=set)
+
+    def __post_init__(self) -> None:
+        """Post init."""
+        self.core_integrations_path = self.root / "homeassistant/components"
 
     def add_error(self, *args: Any, **kwargs: Any) -> None:
         """Add an error."""
@@ -230,3 +235,12 @@ class Integration:
 
         self._manifest = manifest
         self.manifest_path = manifest_path
+
+
+class ScaledQualityScaleTiers(IntEnum):
+    """Supported manifest quality scales."""
+
+    BRONZE = 1
+    SILVER = 2
+    GOLD = 3
+    PLATINUM = 4

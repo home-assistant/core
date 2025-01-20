@@ -24,6 +24,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import DEVICE_UPDATE_INTERVAL
+from .const import DOMAIN
 from .entity import (
     ReolinkChannelCoordinatorEntity,
     ReolinkChannelEntityDescription,
@@ -32,6 +33,7 @@ from .entity import (
 )
 from .util import ReolinkConfigEntry, ReolinkData
 
+PARALLEL_UPDATES = 0
 RESUME_AFTER_INSTALL = 15
 POLL_AFTER_INSTALL = 120
 POLL_PROGRESS = 2
@@ -195,7 +197,9 @@ class ReolinkUpdateBaseEntity(
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
             raise HomeAssistantError(
-                f"Error trying to update Reolink firmware: {err}"
+                translation_domain=DOMAIN,
+                translation_key="firmware_install_error",
+                translation_placeholders={"err": str(err)},
             ) from err
         finally:
             self.async_write_ha_state()
@@ -212,7 +216,7 @@ class ReolinkUpdateBaseEntity(
         self._reolink_data.device_coordinator.update_interval = None
         self._reolink_data.device_coordinator.async_set_updated_data(None)
 
-    async def _resume_update_coordinator(self, *args) -> None:
+    async def _resume_update_coordinator(self, *args: Any) -> None:
         """Resume updating the states using the data update coordinator (after reboots)."""
         self._reolink_data.device_coordinator.update_interval = DEVICE_UPDATE_INTERVAL
         try:
@@ -220,7 +224,7 @@ class ReolinkUpdateBaseEntity(
         finally:
             self._cancel_resume = None
 
-    async def _async_update_progress(self, *args) -> None:
+    async def _async_update_progress(self, *args: Any) -> None:
         """Request update."""
         self.async_write_ha_state()
         if self._installing:
@@ -228,7 +232,7 @@ class ReolinkUpdateBaseEntity(
                 self.hass, POLL_PROGRESS, self._async_update_progress
             )
 
-    async def _async_update_future(self, *args) -> None:
+    async def _async_update_future(self, *args: Any) -> None:
         """Request update."""
         try:
             await self.async_update()

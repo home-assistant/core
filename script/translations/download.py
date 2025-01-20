@@ -7,10 +7,11 @@ import json
 from pathlib import Path
 import re
 import subprocess
+from typing import Any
 
 from .const import CLI_2_DOCKER_IMAGE, CORE_PROJECT_ID, INTEGRATIONS_DIR
 from .error import ExitApp
-from .util import get_lokalise_token, load_json_from_path
+from .util import flatten_translations, get_lokalise_token, load_json_from_path
 
 FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 DOWNLOAD_DIR = Path("build/translations-download").absolute()
@@ -103,7 +104,15 @@ def save_language_translations(lang, translations):
                     f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
                 )
                 continue
+            if not (
+                Path("homeassistant") / "components" / component / "strings.json"
+            ).exists():
+                print(
+                    f"Skipping {lang} for {component}, as the integration doesn't have a strings.json file."
+                )
+                continue
             path.parent.mkdir(parents=True, exist_ok=True)
+            base_translations = pick_keys(component, base_translations)
             save_json(path, base_translations)
 
         if "platform" not in component_translations:
@@ -129,6 +138,32 @@ def delete_old_translations():
     """Delete old translations."""
     for fil in INTEGRATIONS_DIR.glob("*/translations/*"):
         fil.unlink()
+
+
+def get_current_keys(component: str) -> dict[str, Any]:
+    """Get the current keys for a component."""
+    strings_path = Path("homeassistant") / "components" / component / "strings.json"
+    return load_json_from_path(strings_path)
+
+
+def pick_keys(component: str, translations: dict[str, Any]) -> dict[str, Any]:
+    """Pick the keys that are in the current strings."""
+    flat_translations = flatten_translations(translations)
+    flat_current_keys = flatten_translations(get_current_keys(component))
+    flatten_result = {}
+    for key in flat_current_keys:
+        if key in flat_translations:
+            flatten_result[key] = flat_translations[key]
+    result = {}
+    for key, value in flatten_result.items():
+        parts = key.split("::")
+        d = result
+        for part in parts[:-1]:
+            if part not in d:
+                d[part] = {}
+            d = d[part]
+        d[parts[-1]] = value
+    return result
 
 
 def run():

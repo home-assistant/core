@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 
 from pexpect import pxssh
 import voluptuous as vol
@@ -101,11 +100,11 @@ class CiscoDeviceScanner(DeviceScanner):
 
         return False
 
-    def _get_arp_data(self):
+    def _get_arp_data(self) -> str | None:
         """Open connection to the router and get arp entries."""
 
         try:
-            cisco_ssh = pxssh.pxssh()
+            cisco_ssh: pxssh.pxssh[str] = pxssh.pxssh(encoding="uft-8")
             cisco_ssh.login(
                 self.host,
                 self.username,
@@ -115,12 +114,11 @@ class CiscoDeviceScanner(DeviceScanner):
             )
 
             # Find the hostname
-            initial_line = cisco_ssh.before.decode("utf-8").splitlines()
+            initial_line = (cisco_ssh.before or "").splitlines()
             router_hostname = initial_line[len(initial_line) - 1]
             router_hostname += "#"
             # Set the discovered hostname as prompt
-            regex_expression = f"(?i)^{router_hostname}".encode()
-            cisco_ssh.PROMPT = re.compile(regex_expression, re.MULTILINE)
+            cisco_ssh.PROMPT = f"(?i)^{router_hostname}"
             # Allow full arp table to print at once
             cisco_ssh.sendline("terminal length 0")
             cisco_ssh.prompt(1)
@@ -128,13 +126,11 @@ class CiscoDeviceScanner(DeviceScanner):
             cisco_ssh.sendline("show ip arp")
             cisco_ssh.prompt(1)
 
-            devices_result = cisco_ssh.before
-
-            return devices_result.decode("utf-8")
         except pxssh.ExceptionPxssh as px_e:
             _LOGGER.error("Failed to login via pxssh: %s", px_e)
+            return None
 
-        return None
+        return cisco_ssh.before
 
 
 def _parse_cisco_mac_address(cisco_hardware_addr):

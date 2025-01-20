@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.elgato.const import DOMAIN, SERVICE_IDENTIFY
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
@@ -74,7 +74,7 @@ async def test_light_change_state_temperature(
         {
             ATTR_ENTITY_ID: "light.frenck",
             ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_TEMP: 100,
+            ATTR_COLOR_TEMP_KELVIN: 10000,
         },
         blocking=True,
     )

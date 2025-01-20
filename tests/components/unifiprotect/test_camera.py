@@ -9,12 +9,12 @@ from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from uiprotect.exceptions import NvrError
 from uiprotect.websocket import WebsocketState
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     CameraEntityFeature,
     CameraState,
     CameraWebRTCProvider,
-    RTCIceCandidate,
     StreamType,
     WebRTCSendMessage,
     async_get_image,
@@ -77,7 +77,7 @@ class MockWebRTCProvider(CameraWebRTCProvider):
         """Handle the WebRTC offer and return the answer via the provided callback."""
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Handle the WebRTC candidate."""
 
@@ -236,15 +236,15 @@ async def test_basic_setup(
 ) -> None:
     """Test working setup of unifiprotect entry."""
 
-    camera_high_only = camera_all.copy()
-    camera_high_only.channels = [c.copy() for c in camera_all.channels]
+    camera_high_only = camera_all.model_copy()
+    camera_high_only.channels = [c.model_copy() for c in camera_all.channels]
     camera_high_only.name = "Test Camera 1"
     camera_high_only.channels[0].is_rtsp_enabled = True
     camera_high_only.channels[1].is_rtsp_enabled = False
     camera_high_only.channels[2].is_rtsp_enabled = False
 
-    camera_medium_only = camera_all.copy()
-    camera_medium_only.channels = [c.copy() for c in camera_all.channels]
+    camera_medium_only = camera_all.model_copy()
+    camera_medium_only.channels = [c.model_copy() for c in camera_all.channels]
     camera_medium_only.name = "Test Camera 2"
     camera_medium_only.channels[0].is_rtsp_enabled = False
     camera_medium_only.channels[1].is_rtsp_enabled = True
@@ -252,8 +252,8 @@ async def test_basic_setup(
 
     camera_all.name = "Test Camera 3"
 
-    camera_no_channels = camera_all.copy()
-    camera_no_channels.channels = [c.copy() for c in camera_all.channels]
+    camera_no_channels = camera_all.model_copy()
+    camera_no_channels.channels = [c.model_copy() for c in camera_all.channels]
     camera_no_channels.name = "Test Camera 4"
     camera_no_channels.channels[0].is_rtsp_enabled = False
     camera_no_channels.channels[1].is_rtsp_enabled = False
@@ -337,8 +337,8 @@ async def test_webrtc_support(
     camera_all: ProtectCamera,
 ) -> None:
     """Test webrtc support is available."""
-    camera_high_only = camera_all.copy()
-    camera_high_only.channels = [c.copy() for c in camera_all.channels]
+    camera_high_only = camera_all.model_copy()
+    camera_high_only.channels = [c.model_copy() for c in camera_all.channels]
     camera_high_only.name = "Test Camera 1"
     camera_high_only.channels[0].is_rtsp_enabled = True
     camera_high_only.channels[1].is_rtsp_enabled = False
@@ -355,7 +355,7 @@ async def test_adopt(
 ) -> None:
     """Test setting up camera with no camera channels."""
 
-    camera1 = camera.copy()
+    camera1 = camera.model_copy()
     camera1.channels = []
 
     await init_entry(hass, ufp, [camera1])
@@ -450,7 +450,7 @@ async def test_camera_interval_update(
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_recording = True
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
@@ -527,10 +527,10 @@ async def test_camera_ws_update(
     state = hass.states.get(entity_id)
     assert state and state.state == "idle"
 
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.is_recording = True
 
-    no_camera = camera.copy()
+    no_camera = camera.model_copy()
     no_camera.is_adopted = False
 
     ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
@@ -563,7 +563,7 @@ async def test_camera_ws_update_offline(
     assert state and state.state == "idle"
 
     # camera goes offline
-    new_camera = camera.copy()
+    new_camera = camera.model_copy()
     new_camera.state = StateType.DISCONNECTED
 
     mock_msg = Mock()
@@ -601,7 +601,7 @@ async def test_camera_enable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.__fields__["set_motion_detection"] = Mock(final=False)
+    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(
@@ -623,7 +623,7 @@ async def test_camera_disable_motion(
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
     entity_id = "camera.test_camera_high_resolution_channel"
 
-    camera.__fields__["set_motion_detection"] = Mock(final=False)
+    camera.__pydantic_fields__["set_motion_detection"] = Mock(final=False, frozen=False)
     camera.set_motion_detection = AsyncMock()
 
     await hass.services.async_call(

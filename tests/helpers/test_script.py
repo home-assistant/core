@@ -4118,6 +4118,14 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"label_id": "label_sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4135,6 +4143,7 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         "label_if_then",
         "label_if_else",
         "label_parallel",
+        "label_sequence",
     }
     # Test we cache results.
     assert script_obj.referenced_labels is script_obj.referenced_labels
@@ -4220,6 +4229,14 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"floor_id": "floor_sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4236,6 +4253,7 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         "floor_if_then",
         "floor_if_else",
         "floor_parallel",
+        "floor_sequence",
     }
     # Test we cache results.
     assert script_obj.referenced_floors is script_obj.referenced_floors
@@ -4321,6 +4339,14 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"area_id": "area_sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4337,6 +4363,7 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         "area_if_then",
         "area_if_else",
         "area_parallel",
+        "area_sequence",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -4437,6 +4464,14 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"entity_id": "light.sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4456,6 +4491,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.if_then",
         "light.if_else",
         "light.parallel",
+        "light.sequence",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -4554,6 +4590,14 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "target": {"device_id": "sequence-device"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4575,6 +4619,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "if-then",
         "if-else",
         "parallel-device",
+        "sequence-device",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices
@@ -5630,6 +5675,91 @@ async def test_stop_action_subscript(
         },
         expected_script_execution=script_execution,
     )
+
+
+@pytest.mark.parametrize(
+    ("var", "response"),
+    [(1, "If: Then"), (2, "Testing 123")],
+)
+async def test_stop_action_response_variables(
+    hass: HomeAssistant,
+    var: int,
+    response: str,
+) -> None:
+    """Test setting stop response_variable in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"output": {"value": "Testing 123"}}},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": [
+                    {"variables": {"output": {"value": "If: Then"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+            },
+            {"stop": "In the name of love", "response_variable": "output"},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.service_response == {"value": response}
+
+
+@pytest.mark.parametrize(
+    ("var", "if_result", "choice", "response"),
+    [(1, True, "then", "If: Then"), (2, False, "else", "If: Else")],
+)
+async def test_stop_action_nested_response_variables(
+    hass: HomeAssistant,
+    var: int,
+    if_result: bool,
+    choice: str,
+    response: str,
+) -> None:
+    """Test setting stop response_variable in a subscript."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"variables": {"output": {"value": "Testing 123"}}},
+            {
+                "if": {
+                    "condition": "template",
+                    "value_template": "{{ var == 1 }}",
+                },
+                "then": [
+                    {"variables": {"output": {"value": "If: Then"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+                "else": [
+                    {"variables": {"output": {"value": "If: Else"}}},
+                    {"stop": "In the name of love", "response_variable": "output"},
+                ],
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    run_vars = MappingProxyType({"var": var})
+    result = await script_obj.async_run(run_vars, context=Context())
+    assert result.service_response == {"value": response}
+
+    expected_trace = {
+        "0": [
+            {
+                "variables": {"var": var, "output": {"value": "Testing 123"}},
+            }
+        ],
+        "1": [{"result": {"choice": choice}}],
+        "1/if": [{"result": {"result": if_result}}],
+        "1/if/condition/0": [{"result": {"result": var == 1, "entities": []}}],
+        f"1/{choice}/0": [{"variables": {"output": {"value": response}}}],
+        f"1/{choice}/1": [{"result": {"stop": "In the name of love", "error": False}}],
+    }
+    assert_action_trace(expected_trace)
 
 
 async def test_stop_action_with_error(

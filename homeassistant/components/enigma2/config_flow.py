@@ -133,7 +133,8 @@ class Enigma2ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             errors = {"base": "unknown"}
         else:
-            await self.async_set_unique_id(about["info"]["ifaces"][0]["mac"])
+            unique_id = about["info"]["ifaces"][0]["mac"] or self.unique_id
+            await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
         return errors

@@ -166,7 +166,7 @@ class Segment:
                 self.hls_playlist_parts.append(
                     f"#EXT-X-PART:DURATION={part.duration:.3f},URI="
                     f'"./segment/{self.sequence}.{part_num}.m4s"'
-                    f'{",INDEPENDENT=YES" if part.has_keyframe else ""}'
+                    f"{',INDEPENDENT=YES' if part.has_keyframe else ''}"
                 )
         if self.complete:
             # Construct the final playlist_template. The placeholder will share a

@@ -72,5 +72,10 @@
         "name": "Inverter status"
       }
     }
+  },
+  "exceptions": {
+    "inverter_error": {
+      "message": "Inverter returned an error"
+    }
   }
 }

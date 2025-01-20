@@ -11,6 +11,7 @@ from homeassistant.components.siren import (
     SirenEntityDescription,
     SirenEntityFeature,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -41,6 +42,14 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
     "sp": (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,
+        ),
+    ),
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SirenEntityDescription(
+            key=DPCode.ALARM_SWITCH,
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
 }

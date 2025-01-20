@@ -6,7 +6,7 @@ from collections.abc import Sequence
 import logging
 from typing import Any
 
-from kasa import Device, DeviceType, LightState, Module
+from kasa import Device, DeviceType, KasaException, LightState, Module
 from kasa.interfaces import Light, LightEffect
 from kasa.iot import IotDevice
 import voluptuous as vol
@@ -24,14 +24,20 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from . import TPLinkConfigEntry, legacy_device_id
+from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkEntity, async_refresh_after
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -200,14 +206,13 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         # If _attr_name is None the entity name will be the device name
         self._attr_name = None if parent is None else device.alias
         modes: set[ColorMode] = {ColorMode.ONOFF}
-        if light_module.is_variable_color_temp:
+        if color_temp_feat := light_module.get_feature("color_temp"):
             modes.add(ColorMode.COLOR_TEMP)
-            temp_range = light_module.valid_temperature_range
-            self._attr_min_color_temp_kelvin = temp_range.min
-            self._attr_max_color_temp_kelvin = temp_range.max
-        if light_module.is_color:
+            self._attr_min_color_temp_kelvin = color_temp_feat.minimum_value
+            self._attr_max_color_temp_kelvin = color_temp_feat.maximum_value
+        if light_module.has_feature("hsv"):
             modes.add(ColorMode.HS)
-        if light_module.is_dimmable:
+        if light_module.has_feature("brightness"):
             modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(modes)
         if len(self._attr_supported_color_modes) == 1:
@@ -270,15 +275,17 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
         self, color_temp: float, brightness: int | None, transition: int | None
     ) -> None:
         light_module = self._light_module
-        valid_temperature_range = light_module.valid_temperature_range
+        color_temp_feat = light_module.get_feature("color_temp")
+        assert color_temp_feat
+
         requested_color_temp = round(color_temp)
         # Clamp color temp to valid range
         # since if the light in a group we will
         # get requests for color temps for the range
         # of the group and not the light
         clamped_color_temp = min(
-            valid_temperature_range.max,
-            max(valid_temperature_range.min, requested_color_temp),
+            color_temp_feat.maximum_value,
+            max(color_temp_feat.minimum_value, requested_color_temp),
         )
         await light_module.set_color_temp(
             clamped_color_temp,
@@ -325,17 +332,20 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
             # The light supports only a single color mode, return it
             return self._fixed_color_mode
 
-        # The light supports both color temp and color, determine which on is active
-        if self._light_module.is_variable_color_temp and self._light_module.color_temp:
+        # The light supports both color temp and color, determine which one is active
+        if (
+            self._light_module.has_feature("color_temp")
+            and self._light_module.color_temp
+        ):
             return ColorMode.COLOR_TEMP
         return ColorMode.HS
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         light_module = self._light_module
         self._attr_is_on = light_module.state.light_on is True
-        if light_module.is_dimmable:
+        if light_module.has_feature("brightness"):
             self._attr_brightness = round((light_module.brightness * 255.0) / 100.0)
         color_mode = self._determine_color_mode()
         self._attr_color_mode = color_mode
@@ -345,9 +355,13 @@ class TPLinkLightEntity(CoordinatedTPLinkEntity, LightEntity):
             hue, saturation, _ = light_module.hsv
             self._attr_hs_color = hue, saturation
 
+        return True
+
 
 class TPLinkLightEffectEntity(TPLinkLightEntity):
     """Representation of a TPLink Smart Light Strip."""
+
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     def __init__(
         self,
@@ -361,10 +375,8 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         self._effect_module = effect_module
         super().__init__(device, coordinator, light_module=light_module)
 
-    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
-
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         super()._async_update_attrs()
         effect_module = self._effect_module
@@ -377,6 +389,7 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             self._attr_effect_list = effect_list
         else:
             self._attr_effect_list = None
+        return True
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -451,7 +464,17 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
         if transition_range:
             effect["transition_range"] = transition_range
             effect["transition"] = 0
-        await self._effect_module.set_custom_effect(effect)
+        try:
+            await self._effect_module.set_custom_effect(effect)
+        except KasaException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_custom_effect",
+                translation_placeholders={
+                    "effect": str(effect),
+                    "exc": str(ex),
+                },
+            ) from ex
 
     async def async_set_sequence_effect(
         self,
@@ -473,4 +496,14 @@ class TPLinkLightEffectEntity(TPLinkLightEntity):
             "spread": spread,
             "direction": direction,
         }
-        await self._effect_module.set_custom_effect(effect)
+        try:
+            await self._effect_module.set_custom_effect(effect)
+        except KasaException as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_custom_effect",
+                translation_placeholders={
+                    "effect": str(effect),
+                    "exc": str(ex),
+                },
+            ) from ex

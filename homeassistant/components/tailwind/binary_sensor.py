@@ -16,8 +16,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
-from .typing import TailwindConfigEntry
 
 
 @dataclass(kw_only=True, frozen=True)

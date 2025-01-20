@@ -1,10 +1,12 @@
 """Platform for Husqvarna Automower base entity."""
 
+from __future__ import annotations
+
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from aioautomower.exceptions import ApiException
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -52,18 +54,17 @@ def _work_area_translation_key(work_area_id: int, key: str) -> str:
     return f"work_area_{key}"
 
 
-def handle_sending_exception(
+type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], Coroutine[Any, Any, _R]]
+
+
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     poll_after_sending: bool = False,
-) -> Callable[
-    [Callable[..., Awaitable[Any]]], Callable[..., Coroutine[Any, Any, None]]
-]:
+) -> Callable[[_FuncType[_Entity, _P, Any]], _FuncType[_Entity, _P, None]]:
     """Handle exceptions while sending a command and optionally refresh coordinator."""
 
-    def decorator(
-        func: Callable[..., Awaitable[Any]],
-    ) -> Callable[..., Coroutine[Any, Any, None]]:
+    def decorator(func: _FuncType[_Entity, _P, Any]) -> _FuncType[_Entity, _P, None]:
         @functools.wraps(func)
-        async def wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
+        async def wrapper(self: _Entity, *args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
                 await func(self, *args, **kwargs)
             except ApiException as exception:
@@ -133,7 +134,7 @@ class AutomowerControlEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaAvailableEntity(AutomowerAvailableEntity):
-    """Base entity for work work areas."""
+    """Base entity for work areas."""
 
     def __init__(
         self,
@@ -164,4 +165,4 @@ class WorkAreaAvailableEntity(AutomowerAvailableEntity):
 
 
 class WorkAreaControlEntity(WorkAreaAvailableEntity, AutomowerControlEntity):
-    """Base entity work work areas with control function."""
+    """Base entity for work areas with control function."""

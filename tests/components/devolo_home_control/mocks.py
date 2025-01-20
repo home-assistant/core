@@ -70,6 +70,18 @@ class MultiLevelSensorPropertyMock(MultiLevelSensorProperty):
         self._logger = MagicMock()
 
 
+class BrightnessSensorPropertyMock(MultiLevelSensorProperty):
+    """devolo Home Control brightness sensor mock."""
+
+    def __init__(self, **kwargs: Any) -> None:  # pylint: disable=super-init-not-called
+        """Initialize the mock."""
+        self.element_uid = "Test"
+        self.sensor_type = "light"
+        self._unit = "%"
+        self._value = 20
+        self._logger = MagicMock()
+
+
 class MultiLevelSwitchPropertyMock(MultiLevelSwitchProperty):
     """devolo Home Control multi level switch mock."""
 
@@ -138,7 +150,18 @@ class BinarySensorMockOverload(DeviceMock):
         """Initialize the mock."""
         super().__init__()
         self.binary_sensor_property = {"Overload": BinarySensorPropertyMock()}
-        self.binary_sensor_property["Overload"].sensor_type = "overload"
+        self.binary_sensor_property["Overload"].sub_type = "overload"
+
+
+class BrightnessSensorMock(DeviceMock):
+    """devolo Home Control brightness sensor device mock."""
+
+    def __init__(self) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.multi_level_sensor_property = {
+            "devolo.MultiLevelSensor:Test": BrightnessSensorPropertyMock()
+        }
 
 
 class ClimateMock(DeviceMock):
@@ -270,6 +293,19 @@ class HomeControlMockBinarySensor(HomeControlMock):
         self.devices = {
             "Test": BinarySensorMock(),
             "Overload": BinarySensorMockOverload(),
+        }
+        self.publisher = Publisher(self.devices.keys())
+        self.publisher.unregister = MagicMock()
+
+
+class HomeControlMockBrightness(HomeControlMock):
+    """devolo Home Control gateway mock with brightness devices."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        """Initialize the mock."""
+        super().__init__()
+        self.devices = {
+            "Test": BrightnessSensorMock(),
         }
         self.publisher = Publisher(self.devices.keys())
         self.publisher.unregister = MagicMock()

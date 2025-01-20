@@ -15,22 +15,16 @@ import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.climate import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation import (
-    ConversationTraceEventType,
-    async_conversation_trace_append,
-)
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
-from homeassistant.components.script import ATTR_VARIABLES, DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
     ATTR_DOMAIN,
-    ATTR_ENTITY_ID,
     ATTR_SERVICE,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
-    SERVICE_TURN_ON,
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
@@ -87,7 +81,7 @@ def _async_get_apis(hass: HomeAssistant) -> dict[str, API]:
 
 
 @callback
-def async_register_api(hass: HomeAssistant, api: API) -> None:
+def async_register_api(hass: HomeAssistant, api: API) -> Callable[[], None]:
     """Register an API to be exposed to LLMs."""
     apis = _async_get_apis(hass)
 
@@ -95,6 +89,13 @@ def async_register_api(hass: HomeAssistant, api: API) -> None:
         raise HomeAssistantError(f"API {api.id} is already registered")
 
     apis[api.id] = api
+
+    @callback
+    def unregister() -> None:
+        """Unregister the API."""
+        apis.pop(api.id)
+
+    return unregister
 
 
 async def async_get_api(
@@ -166,6 +167,12 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.conversation import (
+            ConversationTraceEventType,
+            async_conversation_trace_append,
+        )
+
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
@@ -416,9 +423,7 @@ class AssistAPI(API):
                 ):
                     continue
 
-                script_tool = ScriptTool(self.hass, state.entity_id)
-                if script_tool.parameters.schema:
-                    tools.append(script_tool)
+                tools.append(ScriptTool(self.hass, state.entity_id))
 
         return tools
 
@@ -449,17 +454,13 @@ def _get_exposed_entities(
     entities = {}
 
     for state in hass.states.async_all():
-        if not async_should_expose(hass, assistant, state.entity_id):
+        if (
+            not async_should_expose(hass, assistant, state.entity_id)
+            or state.domain == SCRIPT_DOMAIN
+        ):
             continue
 
         description: str | None = None
-        if state.domain == SCRIPT_DOMAIN:
-            description, parameters = _get_cached_script_parameters(
-                hass, state.entity_id
-            )
-            if parameters.schema:  # Only list scripts without input fields here
-                continue
-
         entity_entry = entity_registry.async_get(state.entity_id)
         names = [state.name]
         area_names = []
@@ -702,10 +703,9 @@ class ScriptTool(Tool):
         script_entity_id: str,
     ) -> None:
         """Init the class."""
-        self.name = split_entity_id(script_entity_id)[1]
+        self._object_id = self.name = split_entity_id(script_entity_id)[1]
         if self.name[0].isdigit():
             self.name = "_" + self.name
-        self._entity_id = script_entity_id
 
         self.description, self.parameters = _get_cached_script_parameters(
             hass, script_entity_id
@@ -745,14 +745,13 @@ class ScriptTool(Tool):
                     floor = list(intent.find_floors(floor, floor_reg))[0].floor_id
                     tool_input.tool_args[field] = floor
 
-        await hass.services.async_call(
+        result = await hass.services.async_call(
             SCRIPT_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: self._entity_id,
-                ATTR_VARIABLES: tool_input.tool_args,
-            },
+            self._object_id,
+            tool_input.tool_args,
             context=llm_context.context,
+            blocking=True,
+            return_response=True,
         )
 
-        return {"success": True}
+        return {"success": True, "result": result}

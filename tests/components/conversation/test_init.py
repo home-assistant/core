@@ -236,12 +236,17 @@ async def test_prepare_agent(
     assert len(mock_prepare.mock_calls) == 1
 
 
-async def test_async_handle_sentence_triggers(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("response_template", "expected_response"),
+    [("response {{ trigger.device_id }}", "response 1234"), ("", "")],
+)
+async def test_async_handle_sentence_triggers(
+    hass: HomeAssistant, response_template: str, expected_response: str
+) -> None:
     """Test handling sentence triggers with async_handle_sentence_triggers."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "conversation", {})
 
-    response_template = "response {{ trigger.device_id }}"
     assert await async_setup_component(
         hass,
         "automation",
@@ -260,7 +265,6 @@ async def test_async_handle_sentence_triggers(hass: HomeAssistant) -> None:
 
     # Device id will be available in response template
     device_id = "1234"
-    expected_response = f"response {device_id}"
     actual_response = await async_handle_sentence_triggers(
         hass,
         ConversationInput(

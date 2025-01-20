@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from calendar import timegm
 from datetime import datetime
+import html
 from logging import getLogger
 from time import gmtime, struct_time
 from typing import TYPE_CHECKING
@@ -13,6 +14,7 @@ import feedparser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -100,9 +102,14 @@ class FeedReaderCoordinator(
 
     async def async_setup(self) -> None:
         """Set up the feed manager."""
-        feed = await self._async_fetch_feed()
+        try:
+            feed = await self._async_fetch_feed()
+        except UpdateFailed as err:
+            raise ConfigEntryNotReady from err
+
         self.logger.debug("Feed data fetched from %s : %s", self.url, feed["feed"])
-        self.feed_author = feed["feed"].get("author")
+        if feed_author := feed["feed"].get("author"):
+            self.feed_author = html.unescape(feed_author)
         self.feed_version = feedparser.api.SUPPORTED_VERSIONS.get(feed["version"])
         self._feed = feed
 

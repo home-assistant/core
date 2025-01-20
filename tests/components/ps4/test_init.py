@@ -29,7 +29,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import location
 
@@ -79,8 +79,6 @@ MOCK_DEVICE_VERSION_1 = {
 }
 
 MOCK_DATA_VERSION_1 = {CONF_TOKEN: MOCK_CREDS, "devices": [MOCK_DEVICE_VERSION_1]}
-
-MOCK_DEVICE_ID = "somedeviceid"
 
 MOCK_ENTRY_VERSION_1 = MockConfigEntry(
     domain=DOMAIN, data=MOCK_DATA_VERSION_1, entry_id=MOCK_ENTRY_ID, version=1
@@ -141,20 +139,26 @@ async def test_creating_entry_sets_up_media_player(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_entry_migrate(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that config flow entry is migrated correctly."""
     # Start with the config entry at Version 1.
     manager = hass.config_entries
     mock_entry = MOCK_ENTRY_VERSION_1
     mock_entry.add_to_manager(manager)
+    mock_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
     mock_entity_id = f"media_player.ps4_{MOCK_UNIQUE_ID}"
     mock_e_entry = entity_registry.async_get_or_create(
         "media_player",
         "ps4",
         MOCK_UNIQUE_ID,
         config_entry=mock_entry,
-        device_id=MOCK_DEVICE_ID,
+        device_id=mock_device_entry.id,
     )
     assert len(entity_registry.entities) == 1
     assert mock_e_entry.entity_id == mock_entity_id
@@ -180,7 +184,7 @@ async def test_config_flow_entry_migrate(
 
     # Test that entity_id remains the same.
     assert mock_entity.entity_id == mock_entity_id
-    assert mock_entity.device_id == MOCK_DEVICE_ID
+    assert mock_entity.device_id == mock_device_entry.id
 
     # Test that last four of credentials is appended to the unique_id.
     assert mock_entity.unique_id == f"{MOCK_UNIQUE_ID}_{MOCK_CREDS[-4:]}"
