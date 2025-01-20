@@ -398,7 +398,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.2
+aiowebostv==0.5.0
 
 # homeassistant.components.withings
 aiowithings==3.1.4
@@ -634,7 +634,7 @@ dbus-fast==2.30.2
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==10.1.0
+deebot-client==11.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -938,7 +938,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.9.0
+habluetooth==3.9.2
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -2305,7 +2305,7 @@ tessie-api==0.1.1
 thermobeacon-ble==0.7.0
 
 # homeassistant.components.thermopro
-thermopro-ble==0.10.0
+thermopro-ble==0.10.1
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.2
@@ -2391,7 +2391,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.1.0
+velbus-aio==2025.1.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -2501,7 +2501,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2024.12.23
+yt-dlp[default]==2025.01.15
 
 # homeassistant.components.zamg
 zamg==0.3.6

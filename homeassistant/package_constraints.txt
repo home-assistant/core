@@ -32,7 +32,7 @@ dbus-fast==2.30.2
 fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.9.0
+habluetooth==3.9.2
 hass-nabucasa==0.88.1
 hassil==2.1.0
 home-assistant-bluetooth==1.13.0
@@ -67,7 +67,7 @@ standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.2.0
 urllib3>=1.26.5,<2
-uv==0.5.18
+uv==0.5.21
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
