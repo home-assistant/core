@@ -848,11 +848,6 @@ async def test_async_initiate_backup_non_agent_upload_error(
     exception: Exception,
 ) -> None:
     """Test an unknown or writer upload error during backup generation."""
-    hass_storage[DOMAIN] = {
-        "data": {},
-        "key": DOMAIN,
-        "version": 1,
-    }
     agent_ids = [LOCAL_AGENT_ID, "test.remote"]
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[])
@@ -944,7 +939,7 @@ async def test_async_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
-    assert not hass_storage[DOMAIN]["data"]
+    assert DOMAIN not in hass_storage
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -1724,11 +1719,6 @@ async def test_receive_backup_non_agent_upload_error(
     exception: Exception,
 ) -> None:
     """Test non agent upload error during backup receive."""
-    hass_storage[DOMAIN] = {
-        "data": {},
-        "key": DOMAIN,
-        "version": 1,
-    }
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[])
 
@@ -1814,7 +1804,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {"manager_state": BackupManagerState.IDLE}
 
-    assert not hass_storage[DOMAIN]["data"]
+    assert DOMAIN not in hass_storage
     assert resp.status == 500
     assert open_mock.call_count == 1
     assert move_mock.call_count == 0
