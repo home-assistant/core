@@ -104,10 +104,6 @@ class OneDriveBackupAgent(BackupAgent):
         self._entry = entry
         self._items = entry.runtime_data.items
         self._folder_id = entry.runtime_data.backup_folder_id
-        self._anonymous_auth_adapter = GraphRequestAdapter(
-            auth_provider=AnonymousAuthenticationProvider(),
-            client=get_async_client(hass),
-        )
         self.name = entry.title
 
     @handle_backup_errors
@@ -159,9 +155,14 @@ class OneDriveBackupAgent(BackupAgent):
                 translation_domain=DOMAIN, translation_key="backup_no_upload_session"
             )
 
+        adapter = GraphRequestAdapter(
+            auth_provider=AnonymousAuthenticationProvider(),
+            client=get_async_client(self._hass),
+        )
+
         task = LargeFileUploadTask(
             upload_session=upload_session,
-            request_adapter=self._anonymous_auth_adapter,
+            request_adapter=adapter,
             stream=await self._async_iterator_to_bytesio(await open_stream()),
             max_chunk_size=320 * 1024,
         )
