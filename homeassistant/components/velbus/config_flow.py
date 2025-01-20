@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
-from homeassistant.util import slugify
 
 from .const import CONF_TLS, DOMAIN
 
