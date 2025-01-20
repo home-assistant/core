@@ -66,6 +66,14 @@
         "name": "Dismiss all notifications"
       }
     },
+    "number": {
+      "brightness": {
+        "name": "Brightness"
+      },
+      "volume": {
+        "name": "Volume"
+      }
+    },
     "sensor": {
       "rssi": {
         "name": "Wi-Fi signal"
