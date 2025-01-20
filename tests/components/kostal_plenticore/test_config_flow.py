@@ -86,7 +86,7 @@ async def test_form_g1(
         mock_apiclient_class.assert_called_once_with(ANY, "1.1.1.1")
         mock_apiclient.__aenter__.assert_called_once()
         mock_apiclient.__aexit__.assert_called_once()
-        mock_apiclient.login.assert_called_once_with("test-password")
+        mock_apiclient.login.assert_called_once_with("test-password", service_code=None)
         mock_apiclient.get_settings.assert_called_once()
         mock_apiclient.get_setting_values.assert_called_once_with(
             "scb:network", "Hostname"
@@ -152,7 +152,7 @@ async def test_form_g2(
         mock_apiclient_class.assert_called_once_with(ANY, "1.1.1.1")
         mock_apiclient.__aenter__.assert_called_once()
         mock_apiclient.__aexit__.assert_called_once()
-        mock_apiclient.login.assert_called_once_with("test-password")
+        mock_apiclient.login.assert_called_once_with("test-password", service_code=None)
         mock_apiclient.get_settings.assert_called_once()
         mock_apiclient.get_setting_values.assert_called_once_with(
             "scb:network", "Network:Hostname"
@@ -220,7 +220,7 @@ async def test_form_g2_with_service_code(
         mock_apiclient.__aenter__.assert_called_once()
         mock_apiclient.__aexit__.assert_called_once()
         mock_apiclient.login.assert_called_once_with(
-            key="test-password", service_code="test-service-code"
+            "test-password", service_code="test-service-code"
         )
         mock_apiclient.get_settings.assert_called_once()
         mock_apiclient.get_setting_values.assert_called_once_with(
