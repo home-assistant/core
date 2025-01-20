@@ -33,11 +33,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up select platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerSelectEntity(mower_id, coordinator)
-        for mower_id in coordinator.data
-        if coordinator.data[mower_id].capabilities.headlights
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerSelectEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+            if coordinator.data[mower_id].capabilities.headlights
+        )
+
+    _async_add_new_devices(set(coordinator.data))
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
 
 
 class AutomowerSelectEntity(AutomowerControlEntity, SelectEntity):

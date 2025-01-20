@@ -172,7 +172,7 @@ class SnmpScanner(DeviceScanner):
                 _LOGGER.error(
                     "SNMP error: %s at %s",
                     errstatus.prettyPrint(),
-                    errindex and res[int(errindex) - 1][0] or "?",
+                    (errindex and res[int(errindex) - 1][0]) or "?",
                 )
                 return None
 

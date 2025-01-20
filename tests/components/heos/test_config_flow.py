@@ -1,14 +1,15 @@
 """Tests for the Heos config flow module."""
 
-from pyheos import CommandFailedError, HeosError
+from pyheos import CommandAuthenticationError, CommandFailedError, HeosError
 import pytest
 
-from homeassistant.components import heos, ssdp
+from homeassistant.components import heos
 from homeassistant.components.heos.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -86,8 +87,8 @@ async def test_create_entry_when_friendly_name_valid(
 async def test_discovery_shows_create_form(
     hass: HomeAssistant,
     controller,
-    discovery_data: ssdp.SsdpServiceInfo,
-    discovery_data_bedroom: ssdp.SsdpServiceInfo,
+    discovery_data: SsdpServiceInfo,
+    discovery_data_bedroom: SsdpServiceInfo,
 ) -> None:
     """Test discovery shows form to confirm setup."""
 
@@ -112,7 +113,7 @@ async def test_discovery_shows_create_form(
 
 
 async def test_discovery_flow_aborts_already_setup(
-    hass: HomeAssistant, controller, discovery_data: ssdp.SsdpServiceInfo, config_entry
+    hass: HomeAssistant, controller, discovery_data: SsdpServiceInfo, config_entry
 ) -> None:
     """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)
@@ -199,14 +200,9 @@ async def test_reconfigure_cannot_connect_recovers(
     ("error", "expected_error_key"),
     [
         (
-            CommandFailedError("sign_in", "Invalid credentials", 6),
+            CommandAuthenticationError("sign_in", "Invalid credentials", 6),
             "invalid_auth",
         ),
-        (
-            CommandFailedError("sign_in", "User not logged in", 8),
-            "invalid_auth",
-        ),
-        (CommandFailedError("sign_in", "user not found", 10), "invalid_auth"),
         (CommandFailedError("sign_in", "System error", 12), "unknown"),
         (HeosError(), "unknown"),
     ],
@@ -337,14 +333,9 @@ async def test_options_flow_missing_one_param_recovers(
     ("error", "expected_error_key"),
     [
         (
-            CommandFailedError("sign_in", "Invalid credentials", 6),
+            CommandAuthenticationError("sign_in", "Invalid credentials", 6),
             "invalid_auth",
         ),
-        (
-            CommandFailedError("sign_in", "User not logged in", 8),
-            "invalid_auth",
-        ),
-        (CommandFailedError("sign_in", "user not found", 10), "invalid_auth"),
         (CommandFailedError("sign_in", "System error", 12), "unknown"),
         (HeosError(), "unknown"),
     ],

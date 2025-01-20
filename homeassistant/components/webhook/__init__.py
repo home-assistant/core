@@ -97,14 +97,16 @@ def async_generate_url(
 ) -> str:
     """Generate the full URL for a webhook_id."""
     return (
-        f"{get_url(
-            hass,
-            allow_internal=allow_internal,
-            allow_external=allow_external,
-            allow_cloud=False,
-            allow_ip=allow_ip,
-            prefer_external=prefer_external,
-        )}"
+        f"{
+            get_url(
+                hass,
+                allow_internal=allow_internal,
+                allow_external=allow_external,
+                allow_cloud=False,
+                allow_ip=allow_ip,
+                prefer_external=prefer_external,
+            )
+        }"
         f"{async_generate_path(webhook_id)}"
     )
 

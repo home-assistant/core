@@ -3,11 +3,13 @@
 from copy import deepcopy
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyownet import protocol
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onewire.const import DOMAIN
+from homeassistant.components.onewire.onewirehub import _DEVICE_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -17,7 +19,7 @@ from homeassistant.setup import async_setup_component
 from . import setup_owproxy_mock_devices
 from .const import MOCK_OWPROXY_DEVICES
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -100,6 +102,31 @@ async def test_registry(
     assert device_entries
     for device_entry in device_entries:
         assert device_entry == snapshot(name=f"{device_entry.name}-entry")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_registry_delayed(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    owproxy: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test device are correctly registered."""
+    setup_owproxy_mock_devices(owproxy, [])
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert not dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+
+    setup_owproxy_mock_devices(owproxy, ["1F.111111111111"])
+    freezer.tick(_DEVICE_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 2
+    )
 
 
 @patch("homeassistant.components.onewire._PLATFORMS", [Platform.SENSOR])
