@@ -1,10 +1,10 @@
 {
   "entity": {
     "sensor": {
-      "link_quality_sensor": {
+      "link_quality": {
         "default": "mdi:signal"
       },
-      "window_position_sensor": {
+      "window_position": {
         "default": "mdi:window-closed"
       }
     }

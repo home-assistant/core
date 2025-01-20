@@ -27,114 +27,111 @@
   },
   "entity": {
     "sensor": {
-      "battery_sensor": {
+      "battery": {
         "name": "[%key:component::sensor::entity_component::battery::name%]"
       },
-      "brightness_sensor": {
+      "brightness": {
         "name": "[%key:component::sensor::entity_component::illuminance::name%]"
       },
-      "brightness_sensor_instance": {
+      "brightness_instance": {
         "name": "Illuminance {instance}"
       },
-      "button_state_sensor": {
-        "name": "Button State"
+      "button_state": {
+        "name": "Button state"
       },
-      "button_state_sensor_instance": {
-        "name": "Button State {instance}"
+      "button_state_instance": {
+        "name": "Button state {instance}"
       },
-      "current_sensor": {
+      "current": {
         "name": "[%key:component::sensor::entity_component::current::name%]"
       },
-      "current_sensor_instance": {
+      "current_instance": {
         "name": "Current {instance}"
       },
-      "dawn_sensor": {
+      "dawn": {
         "name": "Dawn"
       },
-      "device_temperature_sensor": {
-        "name": "Device Temperature"
+      "device_temperature": {
+        "name": "Device temperature"
       },
-      "energy_sensor": {
+      "energy": {
         "name": "[%key:component::sensor::entity_component::energy::name%]"
       },
-      "energy_sensor_instance": {
+      "energy_instance": {
         "name": "Energy {instance}"
       },
-      "relative_humidity_sensor": {
-        "name": "Relative Humidity"
+      "relative_humidity": {
+        "name": "Humidity"
       },
-      "level_sensor": {
+      "level": {
         "name": "Level"
       },
-      "link_quality_sensor": {
-        "name": "Link Quality"
+      "link_quality": {
+        "name": "Link quality"
       },
-      "node_sensor_protocol": {
-        "name": "Node Protocol"
+      "node_state": {
+        "name": "Node state"
       },
-      "node_sensor_state": {
-        "name": "Node State"
-      },
-      "position_sensor": {
+      "position": {
         "name": "Position"
       },
-      "power_sensor": {
+      "power": {
         "name": "[%key:component::sensor::entity_component::power::name%]"
       },
-      "power_sensor_instance": {
+      "power_instance": {
         "name": "Power {instance}"
       },
-      "rainfall_hour_sensor": {
-        "name": "Rainfall Last Hour"
+      "rainfall_hour": {
+        "name": "Rainfall last hour"
       },
-      "rainfall_day_sensor": {
-        "name": "Rainfall Today"
+      "rainfall_day": {
+        "name": "Rainfall today"
       },
-      "temperature_sensor": {
+      "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
-      "total_current_sensor": {
-        "name": "Total Current"
+      "total_current": {
+        "name": "Total current"
       },
-      "total_energy_sensor": {
-        "name": "Total Energy"
+      "total_energy": {
+        "name": "Total energy"
       },
-      "total_power_sensor": {
-        "name": "Total Power"
+      "total_power": {
+        "name": "Total power"
       },
-      "total_voltage_sensor": {
-        "name": "Total Voltage"
+      "total_voltage": {
+        "name": "Total voltage"
       },
-      "up_down_sensor": {
+      "up_down": {
         "name": "State",
         "state": {
-          "open": "Open",
-          "closed": "Closed",
-          "partial": "Partially Open",
+          "open": "[%key:common::state::open%]",
+          "closed": "[%key:common::state::closed%]",
+          "partial": "Partially open",
           "opening": "Opening",
           "closing": "Closing"
         }
       },
-      "uv_sensor": {
+      "uv": {
         "name": "Ultraviolet"
       },
-      "valve_position_sensor": {
-        "name": "Valve Position"
+      "valve_position": {
+        "name": "Valve position"
       },
-      "voltage_sensor": {
+      "voltage": {
         "name": "[%key:component::sensor::entity_component::voltage::name%]"
       },
-      "voltage_sensor_instance": {
+      "voltage_instance": {
         "name": "Voltage {instance}"
       },
-      "wind_speed_sensor": {
+      "wind_speed": {
         "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
       },
-      "window_position_sensor": {
-        "name": "Window Position",
+      "window_position": {
+        "name": "Window position",
         "state": {
-          "closed": "Closed",
-          "open": "Open",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
           "tilted": "Tilted"
         }
       }
