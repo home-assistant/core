@@ -248,11 +248,6 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
     ),
     HomeeNodeSensorEntityDescription(
         key="protocol",
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "zwave",
-            "enocean",
-        ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         translation_key="node_sensor_protocol",
