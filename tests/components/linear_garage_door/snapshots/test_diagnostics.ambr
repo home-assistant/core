@@ -73,6 +73,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'test-site-name',
       'unique_id': None,
       'version': 1,
