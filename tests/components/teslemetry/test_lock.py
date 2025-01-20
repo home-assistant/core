@@ -110,7 +110,7 @@ async def test_lock_streaming(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
-                Signal.LOCKED: True,
+                Signal.LOCKED: False,
                 Signal.CHARGE_PORT_LATCH: "ChargePortLatchEngaged",
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
