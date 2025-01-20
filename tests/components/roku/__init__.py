@@ -3,7 +3,10 @@
 from ipaddress import ip_address
 
 from homeassistant.components import ssdp, zeroconf
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_SERIAL
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+)
 
 NAME = "Roku 3"
 NAME_ROKUTV = '58" Onn Roku TV'

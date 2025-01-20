@@ -23,12 +23,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-def _get_mock_tado_api(getMe=None) -> MagicMock:
+def _get_mock_tado_api(get_me=None) -> MagicMock:
     mock_tado = MagicMock()
-    if isinstance(getMe, Exception):
-        type(mock_tado).getMe = MagicMock(side_effect=getMe)
+    if isinstance(get_me, Exception):
+        type(mock_tado).get_me = MagicMock(side_effect=get_me)
     else:
-        type(mock_tado).getMe = MagicMock(return_value=getMe)
+        type(mock_tado).get_me = MagicMock(return_value=get_me)
     return mock_tado
 
 
@@ -61,7 +61,7 @@ async def test_form_exceptions(
     assert result["errors"] == {"base": error}
 
     # Test a retry to recover, upon failure
-    mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
+    mock_tado_api = _get_mock_tado_api(get_me={"homes": [{"id": 1, "name": "myhome"}]})
 
     with (
         patch(
@@ -131,7 +131,7 @@ async def test_create_entry(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
+    mock_tado_api = _get_mock_tado_api(get_me={"homes": [{"id": 1, "name": "myhome"}]})
 
     with (
         patch(
@@ -166,7 +166,9 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     response_mock = MagicMock()
     type(response_mock).status_code = HTTPStatus.UNAUTHORIZED
-    mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
+    mock_tado_api = _get_mock_tado_api(
+        get_me=requests.HTTPError(response=response_mock)
+    )
 
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
@@ -189,7 +191,9 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     response_mock = MagicMock()
     type(response_mock).status_code = HTTPStatus.INTERNAL_SERVER_ERROR
-    mock_tado_api = _get_mock_tado_api(getMe=requests.HTTPError(response=response_mock))
+    mock_tado_api = _get_mock_tado_api(
+        get_me=requests.HTTPError(response=response_mock)
+    )
 
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
@@ -210,7 +214,7 @@ async def test_no_homes(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_tado_api = _get_mock_tado_api(getMe={"homes": []})
+    mock_tado_api = _get_mock_tado_api(get_me={"homes": []})
 
     with patch(
         "homeassistant.components.tado.config_flow.Tado",
@@ -314,7 +318,7 @@ async def test_reconfigure_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_tado_api = _get_mock_tado_api(getMe={"homes": [{"id": 1, "name": "myhome"}]})
+    mock_tado_api = _get_mock_tado_api(get_me={"homes": [{"id": 1, "name": "myhome"}]})
     with (
         patch(
             "homeassistant.components.tado.config_flow.Tado",

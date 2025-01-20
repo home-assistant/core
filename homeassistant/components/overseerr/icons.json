@@ -23,5 +23,10 @@
         "default": "mdi:message-bulleted"
       }
     }
+  },
+  "services": {
+    "get_requests": {
+      "service": "mdi:multimedia"
+    }
   }
 }
