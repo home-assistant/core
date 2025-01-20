@@ -27,12 +27,6 @@
   },
   "entity": {
     "sensor": {
-      "battery": {
-        "name": "[%key:component::sensor::entity_component::battery::name%]"
-      },
-      "brightness": {
-        "name": "[%key:component::sensor::entity_component::illuminance::name%]"
-      },
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },
@@ -41,9 +35,6 @@
       },
       "button_state_instance": {
         "name": "Button state {instance}"
-      },
-      "current": {
-        "name": "[%key:component::sensor::entity_component::current::name%]"
       },
       "current_instance": {
         "name": "Current {instance}"
@@ -54,14 +45,8 @@
       "device_temperature": {
         "name": "Device temperature"
       },
-      "energy": {
-        "name": "[%key:component::sensor::entity_component::energy::name%]"
-      },
       "energy_instance": {
         "name": "Energy {instance}"
-      },
-      "relative_humidity": {
-        "name": "Humidity"
       },
       "level": {
         "name": "Level"
@@ -75,9 +60,6 @@
       "position": {
         "name": "Position"
       },
-      "power": {
-        "name": "[%key:component::sensor::entity_component::power::name%]"
-      },
       "power_instance": {
         "name": "Power {instance}"
       },
@@ -86,9 +68,6 @@
       },
       "rainfall_day": {
         "name": "Rainfall today"
-      },
-      "temperature": {
-        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "total_current": {
         "name": "Total current"
@@ -118,14 +97,8 @@
       "valve_position": {
         "name": "Valve position"
       },
-      "voltage": {
-        "name": "[%key:component::sensor::entity_component::voltage::name%]"
-      },
       "voltage_instance": {
         "name": "Voltage {instance}"
-      },
-      "wind_speed": {
-        "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
       },
       "window_position": {
         "name": "Window position",

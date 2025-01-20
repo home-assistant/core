@@ -143,7 +143,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     ),
     AttributeType.RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
         key=AttributeType.RELATIVE_HUMIDITY,
-        translation_key="relative_humidity",
+        translation_key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
