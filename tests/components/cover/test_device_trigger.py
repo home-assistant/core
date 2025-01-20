@@ -766,10 +766,7 @@ async def test_if_fires_on_position(
         ]
     ) == sorted(
         [
-            (
-                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
-                " - None"
-            ),
+            f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]
@@ -925,10 +922,7 @@ async def test_if_fires_on_tilt_position(
         ]
     ) == sorted(
         [
-            (
-                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
-                " - None"
-            ),
+            f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]

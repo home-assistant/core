@@ -417,20 +417,3 @@ def test_deprecated_constants(
     import_and_test_deprecated_constant_enum(
         caplog, lock, enum, constant_prefix, remove_in_version
     )
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockLockEntity(lock.LockEntity):
-        _attr_supported_features = 1
-
-    entity = MockLockEntity()
-    assert entity.supported_features is lock.LockEntityFeature(1)
-    assert "MockLockEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "LockEntityFeature.OPEN" in caplog.text
-    caplog.clear()
-    assert entity.supported_features is lock.LockEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text

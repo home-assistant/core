@@ -6,7 +6,7 @@ https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/d
 import ast
 
 from script.hassfest import ast_parse_module
-from script.hassfest.model import Integration
+from script.hassfest.model import Config, Integration
 
 DIAGNOSTICS_FUNCTIONS = {
     "async_get_config_entry_diagnostics",
@@ -22,7 +22,9 @@ def _has_diagnostics_function(module: ast.Module) -> bool:
     )
 
 
-def validate(integration: Integration) -> list[str] | None:
+def validate(
+    config: Config, integration: Integration, *, rules_done: set[str]
+) -> list[str] | None:
     """Validate that the integration implements diagnostics."""
 
     diagnostics_file = integration.path / "diagnostics.py"

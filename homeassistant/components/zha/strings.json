@@ -586,6 +586,12 @@
       },
       "preheat_status": {
         "name": "Pre-heat status"
+      },
+      "open_window_detection_status": {
+        "name": "Open window detection status"
+      },
+      "window_detection": {
+        "name": "Open window detection"
       }
     },
     "button": {
@@ -822,6 +828,63 @@
       },
       "approach_distance": {
         "name": "Approach distance"
+      },
+      "fixed_load_demand": {
+        "name": "Fixed load demand"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_inactive_brightness": {
+        "name": "Display inactive brightness"
+      },
+      "display_activity_timeout": {
+        "name": "Display activity timeout"
+      },
+      "open_window_detection_threshold": {
+        "name": "Open window detection threshold"
+      },
+      "open_window_event_duration": {
+        "name": "Open window event duration"
+      },
+      "open_window_detection_guard_period": {
+        "name": "Open window detection guard period"
+      },
+      "fallback_timeout": {
+        "name": "Fallback timeout"
+      },
+      "boost_amount": {
+        "name": "Boost amount"
+      },
+      "ambient_sensor_correction": {
+        "name": "Ambient sensor correction"
+      },
+      "external_sensor_correction": {
+        "name": "External sensor correction"
+      },
+      "move_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "detection_distance_min": {
+        "name": "Minimum range"
+      },
+      "detection_distance_max": {
+        "name": "Maximum range"
+      },
+      "presence_sensitivity": {
+        "name": "Presence sensitivity"
+      },
+      "presence_timeout": {
+        "name": "Fade time"
+      },
+      "regulator_set_point": {
+        "name": "Regulator set point"
+      },
+      "detection_delay": {
+        "name": "Detection delay"
+      },
+      "fading_time": {
+        "name": "Fading time"
       }
     },
     "select": {
@@ -926,6 +989,45 @@
       },
       "external_trigger_mode": {
         "name": "External trigger mode"
+      },
+      "local_temperature_source": {
+        "name": "Local temperature source"
+      },
+      "control_type": {
+        "name": "Control type"
+      },
+      "thermostat_application": {
+        "name": "Thermostat application"
+      },
+      "heating_fuel": {
+        "name": "Heating fuel"
+      },
+      "heat_transfer_medium": {
+        "name": "Heat transfer medium"
+      },
+      "heating_emitter_type": {
+        "name": "Heating emitter type"
+      },
+      "external_temperature_sensor_type": {
+        "name": "External temperature sensor type"
+      },
+      "preset_mode": {
+        "name": "Preset mode"
+      },
+      "sensor_mode": {
+        "name": "Sensor mode"
+      },
+      "thermostat_mode": {
+        "name": "Thermostat mode"
+      },
+      "regulator_period": {
+        "name": "Regulator period"
+      },
+      "click_mode": {
+        "name": "Click mode"
+      },
+      "operation_mode": {
+        "name": "Operation mode"
       }
     },
     "sensor": {
@@ -1132,6 +1234,18 @@
       },
       "motion_distance": {
         "name": "Motion distance"
+      },
+      "control_status": {
+        "name": "Control status"
+      },
+      "distance": {
+        "name": "Target distance"
+      },
+      "local_temperature_floor": {
+        "name": "Floor temperature"
+      },
+      "self_test": {
+        "name": "Self test result"
       }
     },
     "switch": {
@@ -1257,6 +1371,9 @@
       },
       "enable_siren": {
         "name": "Enable siren"
+      },
+      "find_switch": {
+        "name": "Distance switch"
       }
     }
   }

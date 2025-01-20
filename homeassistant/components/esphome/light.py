@@ -414,11 +414,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         self._attr_supported_color_modes = supported
         self._attr_effect_list = static_info.effects
-        self._attr_min_mireds = round(static_info.min_mireds)
-        self._attr_max_mireds = round(static_info.max_mireds)
-        if ColorMode.COLOR_TEMP in supported:
-            self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
-            self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+        self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+        self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
 
 
 async_setup_entry = partial(

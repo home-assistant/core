@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["pyaprilaire"],
-  "requirements": ["pyaprilaire==0.7.4"]
+  "requirements": ["pyaprilaire==0.7.7"]
 }

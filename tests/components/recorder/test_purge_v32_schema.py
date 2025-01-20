@@ -1027,7 +1027,7 @@ async def test_purge_can_mix_legacy_and_new_format(
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(
-            recorder_mock.get_session, "states", "ix_states_event_id"
+            recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
         recorder_mock.use_legacy_events_index = True
 
@@ -1178,7 +1178,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(
-            recorder_mock.get_session, "states", "ix_states_event_id"
+            recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
         recorder_mock.use_legacy_events_index = True
 

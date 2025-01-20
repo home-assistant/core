@@ -1,0 +1,326 @@
+# serializer version: 1
+# name: test_binary_sensor_states[binary_sensor.gotham_city_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Alarm',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm',
+    'unique_id': '123456-7890-1234-has_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'Gotham City Alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_connectivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_connectivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-connection_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_connectivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Gotham City Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_connectivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_connectivity_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_connectivity_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'Connectivity',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-connection_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_connectivity_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'Gotham City Connectivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_connectivity_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_extern_adjustment_climate_system_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_extern_adjustment_climate_system_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Extern. adjust\xadment climate system 1',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'elect_add',
+    'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43161',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_extern_adjustment_climate_system_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gotham City Extern. adjust\xadment climate system 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_extern_adjustment_climate_system_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_extern_adjustment_climate_system_1_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_extern_adjustment_climate_system_1_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Extern. adjust\xadment climate system 1',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'elect_add',
+    'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-43161',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_extern_adjustment_climate_system_1_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gotham City Extern. adjust\xadment climate system 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_extern_adjustment_climate_system_1_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_pump_heating_medium_gp1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_pump_heating_medium_gp1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pump: Heating medium (GP1)',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49995',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_pump_heating_medium_gp1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gotham City Pump: Heating medium (GP1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_pump_heating_medium_gp1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_pump_heating_medium_gp1_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gotham_city_pump_heating_medium_gp1_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pump: Heating medium (GP1)',
+    'platform': 'myuplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-49995',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_states[binary_sensor.gotham_city_pump_heating_medium_gp1_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gotham City Pump: Heating medium (GP1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gotham_city_pump_heating_medium_gp1_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
