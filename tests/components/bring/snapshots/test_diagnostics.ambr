@@ -2,6 +2,82 @@
 # name: test_diagnostics
   dict({
     'b4776778-7f6c-496e-951b-92a35d3db0dd': dict({
+      'activity': dict({
+        'timeline': list([
+          dict({
+            'content': dict({
+              'items': list([
+              ]),
+              'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+              'purchase': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Gurke',
+                  'specification': '',
+                  'uuid': '658a3770-1a03-4ee0-94a6-10362a642377',
+                }),
+              ]),
+              'recently': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Milch',
+                  'specification': '',
+                  'uuid': '1ed22d3d-f19b-4530-a518-19872da3fd3e',
+                }),
+              ]),
+              'sessionDate': '2025-01-01T03:09:33.036000+00:00',
+              'uuid': '673594a9-f92d-4cb6-adf1-d2f7a83207a4',
+            }),
+            'type': 'LIST_ITEMS_CHANGED',
+          }),
+          dict({
+            'content': dict({
+              'items': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Joghurt',
+                  'specification': '',
+                  'uuid': '66a633a2-ae09-47bf-8845-3c0198480544',
+                }),
+              ]),
+              'publicUserUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+              'purchase': list([
+              ]),
+              'recently': list([
+              ]),
+              'sessionDate': '2025-01-01T02:54:57.656000+00:00',
+              'uuid': '9a16635c-dea2-4e00-904a-c5034f9cfecf',
+            }),
+            'type': 'LIST_ITEMS_ADDED',
+          }),
+          dict({
+            'content': dict({
+              'items': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Tofu',
+                  'specification': '',
+                  'uuid': '2ba8ddb6-01c6-4b0b-a89d-f3da6b291528',
+                }),
+              ]),
+              'publicUserUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+              'purchase': list([
+              ]),
+              'recently': list([
+              ]),
+              'sessionDate': '2025-01-01T03:09:12.380000+00:00',
+              'uuid': '303dedf6-d4b2-4d25-a8cd-1c7967b84fcb',
+            }),
+            'type': 'LIST_ITEMS_REMOVED',
+          }),
+        ]),
+        'timestamp': '2025-01-01T03:09:33.036000+00:00',
+        'totalEvents': 3,
+      }),
       'content': dict({
         'items': dict({
           'purchase': list([
@@ -54,8 +130,118 @@
         'name': 'Baumarkt',
         'theme': 'ch.publisheria.bring.theme.home',
       }),
+      'users': dict({
+        'users': list([
+          dict({
+            'country': 'DE',
+            'email': 'test-email',
+            'language': 'de',
+            'name': 'Bring',
+            'photoPath': '',
+            'plusTryOut': False,
+            'publicUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+            'pushEnabled': True,
+          }),
+          dict({
+            'country': 'US',
+            'email': 'EMAIL',
+            'language': 'en',
+            'name': 'NAME',
+            'photoPath': '',
+            'plusTryOut': False,
+            'publicUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+            'pushEnabled': True,
+          }),
+          dict({
+            'country': 'US',
+            'email': '',
+            'language': 'en',
+            'name': '',
+            'photoPath': '',
+            'plusTryOut': False,
+            'publicUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+            'pushEnabled': True,
+          }),
+        ]),
+      }),
     }),
     'e542eef6-dba7-4c31-a52c-29e6ab9d83a5': dict({
+      'activity': dict({
+        'timeline': list([
+          dict({
+            'content': dict({
+              'items': list([
+              ]),
+              'publicUserUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+              'purchase': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Gurke',
+                  'specification': '',
+                  'uuid': '658a3770-1a03-4ee0-94a6-10362a642377',
+                }),
+              ]),
+              'recently': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Milch',
+                  'specification': '',
+                  'uuid': '1ed22d3d-f19b-4530-a518-19872da3fd3e',
+                }),
+              ]),
+              'sessionDate': '2025-01-01T03:09:33.036000+00:00',
+              'uuid': '673594a9-f92d-4cb6-adf1-d2f7a83207a4',
+            }),
+            'type': 'LIST_ITEMS_CHANGED',
+          }),
+          dict({
+            'content': dict({
+              'items': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Joghurt',
+                  'specification': '',
+                  'uuid': '66a633a2-ae09-47bf-8845-3c0198480544',
+                }),
+              ]),
+              'publicUserUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+              'purchase': list([
+              ]),
+              'recently': list([
+              ]),
+              'sessionDate': '2025-01-01T02:54:57.656000+00:00',
+              'uuid': '9a16635c-dea2-4e00-904a-c5034f9cfecf',
+            }),
+            'type': 'LIST_ITEMS_ADDED',
+          }),
+          dict({
+            'content': dict({
+              'items': list([
+                dict({
+                  'attributes': list([
+                  ]),
+                  'itemId': 'Tofu',
+                  'specification': '',
+                  'uuid': '2ba8ddb6-01c6-4b0b-a89d-f3da6b291528',
+                }),
+              ]),
+              'publicUserUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+              'purchase': list([
+              ]),
+              'recently': list([
+              ]),
+              'sessionDate': '2025-01-01T03:09:12.380000+00:00',
+              'uuid': '303dedf6-d4b2-4d25-a8cd-1c7967b84fcb',
+            }),
+            'type': 'LIST_ITEMS_REMOVED',
+          }),
+        ]),
+        'timestamp': '2025-01-01T03:09:33.036000+00:00',
+        'totalEvents': 3,
+      }),
       'content': dict({
         'items': dict({
           'purchase': list([
@@ -107,6 +293,40 @@
         'listUuid': 'e542eef6-dba7-4c31-a52c-29e6ab9d83a5',
         'name': 'Einkauf',
         'theme': 'ch.publisheria.bring.theme.home',
+      }),
+      'users': dict({
+        'users': list([
+          dict({
+            'country': 'DE',
+            'email': 'test-email',
+            'language': 'de',
+            'name': 'Bring',
+            'photoPath': '',
+            'plusTryOut': False,
+            'publicUuid': '9a21fdfc-63a4-441a-afc1-ef3030605a9d',
+            'pushEnabled': True,
+          }),
+          dict({
+            'country': 'US',
+            'email': 'EMAIL',
+            'language': 'en',
+            'name': 'NAME',
+            'photoPath': '',
+            'plusTryOut': False,
+            'publicUuid': '73af455f-c158-4004-a5e0-79f4f8a6d4bd',
+            'pushEnabled': True,
+          }),
+          dict({
+            'country': 'US',
+            'email': '',
+            'language': 'en',
+            'name': '',
+            'photoPath': '',
+            'plusTryOut': False,
+            'publicUuid': '7d5e9d08-877a-4c36-8740-a9bf74ec690a',
+            'pushEnabled': True,
+          }),
+        ]),
       }),
     }),
   })

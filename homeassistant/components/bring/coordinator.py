@@ -35,6 +35,8 @@ class BringData(DataClassORJSONMixin):
 
     lst: BringList
     content: BringItemsResponse
+    activity: BringActivityResponse
+    users: BringUsersResponse
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -83,6 +85,8 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 continue
             try:
                 items = await self.bring.get_list(lst.listUuid)
+                activity = await self.bring.get_activity(lst.listUuid)
+                users = await self.bring.get_list_users(lst.listUuid)
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"
@@ -90,7 +94,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
             else:
-                list_dict[lst.listUuid] = BringData(lst, items)
+                list_dict[lst.listUuid] = BringData(lst, items, activity, users)
 
         return list_dict
 
