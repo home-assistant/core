@@ -81,6 +81,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
+    # Migrate non-string device identifiers.
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        for domain, player_id in device.identifiers:
+            if domain == DOMAIN and not isinstance(player_id, str):
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, str(player_id))}
+                )
+            break
+
     host = entry.data[CONF_HOST]
     credentials: Credentials | None = None
     if entry.options:
@@ -221,13 +233,13 @@ class ControllerManager:
             # update device registry
             assert self._device_registry is not None
             entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, old_id)}  # type: ignore[arg-type]  # Fix in the future
+                identifiers={(DOMAIN, str(old_id))}
             )
-            new_identifiers = {(DOMAIN, new_id)}
+            new_identifiers = {(DOMAIN, str(new_id))}
             if entry:
                 self._device_registry.async_update_device(
                     entry.id,
-                    new_identifiers=new_identifiers,  # type: ignore[arg-type]  # Fix in the future
+                    new_identifiers=new_identifiers,
                 )
                 _LOGGER.debug(
                     "Updated device %s identifiers to %s", entry.id, new_identifiers
