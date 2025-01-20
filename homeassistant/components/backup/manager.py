@@ -1033,10 +1033,12 @@ class BackupManager:
             validate_password_stream(reader, password)
         except backup_util.IncorrectPassword as err:
             raise IncorrectPasswordError from err
-        except backup_util.UnsuppertedSecureTarVersion as err:
+        except backup_util.UnsupportedSecureTarVersion as err:
             raise DecryptOnDowloadNotSupported from err
         except backup_util.DecryptError as err:
             raise BackupManagerError(str(err)) from err
+        finally:
+            reader.close()
 
 
 class KnownBackups:

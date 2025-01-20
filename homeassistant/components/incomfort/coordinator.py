@@ -66,10 +66,10 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
             for heater in self.incomfort_data.heaters:
                 await heater.update()
         except TimeoutError as exc:
-            raise UpdateFailed from exc
+            raise UpdateFailed("Timeout error") from exc
         except IncomfortError as exc:
             if isinstance(exc.message, ClientResponseError):
                 if exc.message.status == 401:
                     raise ConfigEntryError("Incorrect credentials") from exc
-            raise UpdateFailed from exc
+            raise UpdateFailed(exc.message) from exc
         return self.incomfort_data

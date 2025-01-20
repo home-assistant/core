@@ -186,7 +186,7 @@
     'type': 'result',
   })
 # ---
-# name: test_can_decrypt_on_download[backup.local-ed1608a9-hunter2]
+# name: test_can_decrypt_on_download[backup.local-c0cb53bd-hunter2]
   dict({
     'id': 1,
     'result': None,
@@ -194,7 +194,7 @@
     'type': 'result',
   })
 # ---
-# name: test_can_decrypt_on_download[backup.local-ed1608a9-wrong_password]
+# name: test_can_decrypt_on_download[backup.local-c0cb53bd-wrong_password]
   dict({
     'error': dict({
       'code': 'password_incorrect',
@@ -216,7 +216,7 @@
     'type': 'result',
   })
 # ---
-# name: test_can_decrypt_on_download[no_such_agent-ed1608a9-hunter2]
+# name: test_can_decrypt_on_download[no_such_agent-c0cb53bd-hunter2]
   dict({
     'error': dict({
       'code': 'home_assistant_error',
@@ -227,7 +227,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[None]
+# name: test_config_info[storage_data0]
   dict({
     'id': 1,
     'result': dict({
