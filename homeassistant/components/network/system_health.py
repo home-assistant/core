@@ -18,22 +18,22 @@ def async_register(
 
 
 def _format_ips(ips: list[IPv4ConfiguredAddress] | list[IPv6ConfiguredAddress]) -> str:
-    return ", ".join([f"{ip["address"]}/{ip["network_prefix"]!s}" for ip in ips])
+    return ", ".join([f"{ip['address']}/{ip['network_prefix']!s}" for ip in ips])
 
 
 def _get_adapter_ipv4_addresses(adapter: Adapter) -> str:
-    return f"{adapter["name"]} ({_format_ips(adapter["ipv4"])})"
+    return f"{adapter['name']} ({_format_ips(adapter['ipv4'])})"
 
 
 def _get_adapter_ipv6_addresses(adapter: Adapter) -> str:
-    return f"{adapter["name"]} ({_format_ips(adapter["ipv6"])})"
+    return f"{adapter['name']} ({_format_ips(adapter['ipv6'])})"
 
 
 def _get_adapter_info(adapter: Adapter) -> str:
     state = "enabled" if adapter["enabled"] else "disabled"
     default = ", default" if adapter["default"] else ""
     auto = ", auto" if adapter["auto"] else ""
-    return f"{adapter["name"]} ({state}{default}{auto})"
+    return f"{adapter['name']} ({state}{default}{auto})"
 
 
 async def _async_get_announce_addresses(hass: HomeAssistant) -> str:
