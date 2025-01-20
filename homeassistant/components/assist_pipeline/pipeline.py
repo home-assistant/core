@@ -623,6 +623,7 @@ class PipelineRun:
             # This run has been evicted from the logged pipeline runs already
             return
         pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
+        self.hass.bus.async_fire("assist_pipeline_event", event)
 
     def start(self, device_id: str | None) -> None:
         """Emit run start event."""
