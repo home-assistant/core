@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 import dataclasses
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from decimal import Decimal
 import logging
 from typing import Any, Final
@@ -44,6 +45,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
+MAX_AGE = 300
 _LOGGER = logging.getLogger(__name__)
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,
@@ -372,7 +374,25 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
         if self.ecowitt.value is not None:
             return super().available
         if self.restored_last_reported:
-            return (
-                self.restored_last_reported + timedelta(minutes=5)
-            ) > dt_util.utcnow()
-        return False
+            age = dt_util.utcnow() - self.restored_last_reported
+            if age.seconds > MAX_AGE:
+                return False
+            if age.seconds < MAX_AGE:
+                self.hass.async_create_background_task(
+                    self.check_availability(), self.entity_id
+                )
+                return True
+        return True
+
+    async def check_availability(self) -> None:
+        """Return whether the state is based on actual reading from device."""
+        self._attr_available = True
+        age = dt_util.utcnow() - self.restored_last_reported
+        _LOGGER.debug("age: %s", age.seconds)
+        _LOGGER.debug("self.restored_last_reported: %s", self.restored_last_reported)
+        await asyncio.sleep(MAX_AGE - age.seconds)
+        new_age = dt_util.utcnow() - self.restored_last_reported
+        _LOGGER.debug("schlafen vorbei, new age: %s", new_age.seconds)
+        if new_age.seconds > MAX_AGE:
+            _LOGGER.debug("Sensor %s is not available", self.entity_id)
+            self._attr_available = False
