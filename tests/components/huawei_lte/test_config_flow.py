@@ -13,7 +13,6 @@ import requests_mock
 from requests_mock import ANY
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.huawei_lte.const import CONF_UNAUTHENTICATED_MODE, DOMAIN
 from homeassistant.const import (
     CONF_NAME,
@@ -25,6 +24,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -267,8 +278,8 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "text": "<response><devicename>Mock device</devicename></response>",
             },
             {
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
-                ssdp.ATTR_UPNP_SERIAL: "00000000",
+                ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
+                ATTR_UPNP_SERIAL: "00000000",
             },
             {
                 "type": FlowResultType.FORM,
@@ -283,8 +294,8 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
                 "text": "<error><code>100002</code><message/></error>",
             },
             {
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
-                # No ssdp.ATTR_UPNP_SERIAL
+                ATTR_UPNP_FRIENDLY_NAME: "Mobile Wi-Fi",
+                # No ATTR_UPNP_SERIAL
             },
             {
                 "type": FlowResultType.FORM,
@@ -322,18 +333,18 @@ async def test_ssdp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context=context,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="upnp:rootdevice",
             ssdp_location=f"{url}:60957/rootDesc.xml",
             upnp={
-                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
-                ssdp.ATTR_UPNP_MANUFACTURER: "Huawei",
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
-                ssdp.ATTR_UPNP_MODEL_NAME: "Huawei router",
-                ssdp.ATTR_UPNP_MODEL_NUMBER: "12345678",
-                ssdp.ATTR_UPNP_PRESENTATION_URL: url,
-                ssdp.ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+                ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+                ATTR_UPNP_MANUFACTURER: "Huawei",
+                ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
+                ATTR_UPNP_MODEL_NAME: "Huawei router",
+                ATTR_UPNP_MODEL_NUMBER: "12345678",
+                ATTR_UPNP_PRESENTATION_URL: url,
+                ATTR_UPNP_UDN: "uuid:XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
                 **upnp_data,
             },
         ),
