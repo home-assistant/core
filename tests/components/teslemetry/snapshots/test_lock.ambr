@@ -93,3 +93,9 @@
     'state': 'unlocked',
   })
 # ---
+# name: test_lock_streaming[lock.test_charge_cable_lock-state]
+  'locked'
+# ---
+# name: test_lock_streaming[lock.test_lock-state]
+  'locked'
+# ---
