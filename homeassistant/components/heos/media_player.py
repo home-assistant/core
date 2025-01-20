@@ -100,7 +100,7 @@ type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, None]]
 def catch_action_error[**_P](
     action: str,
 ) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
-    """Return decorator that caches errors and raises HomeAssistantError."""
+    """Return decorator that catches errors and raises HomeAssistantError."""
 
     def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
         @wraps(func)
