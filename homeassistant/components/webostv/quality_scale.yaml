@@ -77,6 +77,4 @@ rules:
   inject-websession:
     status: todo
     comment: need to check if it is needed for websockets or migrate to aiohttp
-  strict-typing:
-    status: todo
-    comment: aiowebostv is not fully typed
+  strict-typing: done
