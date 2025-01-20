@@ -23,9 +23,7 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: Actions currently only log and instead should raise exceptions.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -50,11 +48,7 @@ rules:
       4. Recommend using snapshot in test_state_attributes.
       5. Find a way to avoid using internal dispatcher in test_updates_from_connection_event.
   # Gold
-  devices:
-    status: todo
-    comment: |
-      The integraiton creates devices, but needs to stringify the id for the device identifier and
-      also migrate the device.
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: todo

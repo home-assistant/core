@@ -29,6 +29,7 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -96,10 +97,10 @@ type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
 type _ReturnFuncType[**_P] = Callable[_P, Coroutine[Any, Any, None]]
 
 
-def log_command_error[**_P](
-    command: str,
+def catch_action_error[**_P](
+    action: str,
 ) -> Callable[[_FuncType[_P]], _ReturnFuncType[_P]]:
-    """Return decorator that logs command failure."""
+    """Return decorator that catches errors and raises HomeAssistantError."""
 
     def decorator(func: _FuncType[_P]) -> _ReturnFuncType[_P]:
         @wraps(func)
@@ -107,7 +108,11 @@ def log_command_error[**_P](
             try:
                 await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
-                _LOGGER.error("Unable to %s: %s", command, ex)
+                raise HomeAssistantError(
+                    translation_domain=HEOS_DOMAIN,
+                    translation_key="action_error",
+                    translation_placeholders={"action": action, "error": str(ex)},
+                ) from ex
 
         return wrapper
 
@@ -136,11 +141,15 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self._source_manager = source_manager
         self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
+        model_parts = player.model.split(maxsplit=1)
+        manufacturer = model_parts[0] if len(model_parts) == 2 else "HEOS"
+        model = model_parts[1] if len(model_parts) == 2 else player.model
         self._attr_device_info = DeviceInfo(
-            identifiers={(HEOS_DOMAIN, player.player_id)},
-            manufacturer="HEOS",
-            model=player.model,
+            identifiers={(HEOS_DOMAIN, str(player.player_id))},
+            manufacturer=manufacturer,
+            model=model,
             name=player.name,
+            serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
 
@@ -170,49 +179,49 @@ class HeosMediaPlayer(MediaPlayerEntity):
         )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
 
-    @log_command_error("clear playlist")
+    @catch_action_error("clear playlist")
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._player.clear_queue()
 
-    @log_command_error("join_players")
+    @catch_action_error("join players")
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         await self._group_manager.async_join_players(
-            self._player.player_id, self.entity_id, group_members
+            self._player.player_id, group_members
         )
 
-    @log_command_error("pause")
+    @catch_action_error("pause")
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._player.pause()
 
-    @log_command_error("play")
+    @catch_action_error("play")
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._player.play()
 
-    @log_command_error("move to previous track")
+    @catch_action_error("move to previous track")
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._player.play_previous()
 
-    @log_command_error("move to next track")
+    @catch_action_error("move to next track")
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._player.play_next()
 
-    @log_command_error("stop")
+    @catch_action_error("stop")
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._player.stop()
 
-    @log_command_error("set mute")
+    @catch_action_error("set mute")
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._player.set_mute(mute)
 
-    @log_command_error("play media")
+    @catch_action_error("play media")
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -277,17 +286,17 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
         raise ValueError(f"Unsupported media type '{media_type}'")
 
-    @log_command_error("select source")
+    @catch_action_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._source_manager.play_source(source, self._player)
 
-    @log_command_error("set shuffle")
+    @catch_action_error("set shuffle")
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
         await self._player.set_play_mode(self._player.repeat, shuffle)
 
-    @log_command_error("set volume level")
+    @catch_action_error("set volume level")
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
@@ -300,12 +309,10 @@ class HeosMediaPlayer(MediaPlayerEntity):
             ior, current_support, BASE_SUPPORTED_FEATURES
         )
 
-    @log_command_error("unjoin_player")
+    @catch_action_error("unjoin player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self._group_manager.async_unjoin_player(
-            self._player.player_id, self.entity_id
-        )
+        await self._group_manager.async_unjoin_player(self._player.player_id)
 
     @property
     def available(self) -> bool:
