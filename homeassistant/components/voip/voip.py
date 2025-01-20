@@ -110,6 +110,14 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         self.sip_port = local_endpoint.port
         self._closed_event = asyncio.Event()
 
+    def on_call(self, call_info: CallInfo):
+        """Set up state when starting a call."""
+        device = self.devices.async_get_or_create(call_info)
+        if device is not None:
+            device.current_call = call_info
+
+        super().on_call(call_info)
+
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
         device = self.devices.async_get_or_create(call_info)
@@ -128,6 +136,7 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         _LOGGER.debug("Handling hangup: %s", call_info)
         device = self.devices.async_get_or_create(call_info)
         device.set_is_active(False)
+        device.current_call = None
 
 
 class PreRecordMessageProtocol(RtpDatagramProtocol):

@@ -22,6 +22,7 @@ class VoIPDevice:
     voip_id: str
     device_id: str
     is_active: bool = False
+    current_call: CallInfo | None = None
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
     protocol: VoipDatagramProtocol | None = None
 
