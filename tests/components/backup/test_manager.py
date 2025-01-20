@@ -274,6 +274,7 @@ async def test_async_initiate_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -519,6 +520,7 @@ async def test_async_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id(
@@ -613,6 +615,7 @@ async def test_async_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await hass.async_block_till_done()
@@ -880,6 +883,7 @@ async def test_async_initiate_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -990,6 +994,7 @@ async def test_async_initiate_backup_with_task_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1094,6 +1099,7 @@ async def test_initiate_backup_file_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1614,6 +1620,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id(
@@ -1691,6 +1698,7 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await hass.async_block_till_done()
@@ -1751,6 +1759,7 @@ async def test_receive_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1871,6 +1880,7 @@ async def test_receive_backup_file_write_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1979,6 +1989,7 @@ async def test_receive_backup_read_tar_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -2146,6 +2157,7 @@ async def test_receive_backup_file_read_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
