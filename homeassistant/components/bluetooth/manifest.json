@@ -10,7 +10,8 @@
     "btsocket",
     "bleak_retry_connector",
     "bluetooth_adapters",
-    "bluetooth_auto_recovery"
+    "bluetooth_auto_recovery",
+    "habluetooth"
   ],
   "quality_scale": "internal",
   "requirements": [
