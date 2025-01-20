@@ -16,7 +16,7 @@
           "port": "[%key:common::config_flow::data::port%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "TCP/IP configuration, in case you use velser, velbus-tcp or any other velbus to TCP/IP interface."
+        "description": "TCP/IP configuration, in case you use a Signum, velserv, velbus-tcp or any other velbus to TCP/IP interface."
       },
       "usbselect": {
         "title": "USB configuration",

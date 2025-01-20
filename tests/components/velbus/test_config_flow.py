@@ -7,22 +7,14 @@ import pytest
 import serial.tools.list_ports
 from velbusaio.exceptions import VelbusConnectionFailed
 
-
-from homeassistant.components import usb
 from homeassistant.components.velbus.const import CONF_TLS, DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SOURCE,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import PORT_SERIAL, PORT_TCP
+from .const import PORT_SERIAL
 
 from tests.common import MockConfigEntry
 
@@ -35,6 +27,8 @@ DISCOVERY_INFO = UsbServiceInfo(
     manufacturer="Velleman",
 )
 
+USB_DEV = "/dev/ttyACME100 - Some serial port, s/n: 1234 - Virtual serial port"
+
 
 def com_port():
     """Mock of a serial port."""
@@ -44,16 +38,6 @@ def com_port():
     port.device = PORT_SERIAL
     port.description = "Some serial port"
     return port
-
-
-# @pytest.fixture(name="controller")
-# def mock_controller() -> Generator[MagicMock]:
-#    """Mock a successful velbus controller."""
-#    with patch(
-#        "homeassistant.components.velbus.config_flow.velbusaio.controller.Velbus",
-#        autospec=True,
-#    ) as controller:
-#        yield controller
 
 
 @pytest.fixture(autouse=True)
@@ -122,7 +106,7 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: PORT_SERIAL,
+            CONF_PORT: USB_DEV,
         },
     )
     assert result
@@ -153,12 +137,19 @@ async def test_user_usb_succes(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("config_entry")
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
 async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if Velbus is already setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus test"},
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        {"next_step_id": "usbselect"},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PORT: USB_DEV},
     )
     assert result
     assert result.get("type") is FlowResultType.ABORT
@@ -210,7 +201,7 @@ async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_PORT: PORT_SERIAL,
+            CONF_PORT: USB_DEV,
         },
     )
     assert result
