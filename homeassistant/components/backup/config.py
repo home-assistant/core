@@ -81,6 +81,7 @@ class BackupConfigData:
             time = dt_util.parse_time(time_str)
         else:
             time = None
+        days = [Day(day) for day in data["schedule"]["days"]]
 
         return cls(
             create_backup=CreateBackupConfig(
@@ -99,7 +100,7 @@ class BackupConfigData:
                 days=retention["days"],
             ),
             schedule=BackupSchedule(
-                state=ScheduleState(data["schedule"]["state"]), time=time
+                days=days, state=ScheduleState(data["schedule"]["state"]), time=time
             ),
         )
 
@@ -252,6 +253,7 @@ class RetentionParametersDict(TypedDict, total=False):
 class StoredBackupSchedule(TypedDict):
     """Represent the stored backup schedule configuration."""
 
+    days: list[Day]
     state: ScheduleState
     time: str | None
 
@@ -259,8 +261,21 @@ class StoredBackupSchedule(TypedDict):
 class ScheduleParametersDict(TypedDict, total=False):
     """Represent parameters for backup schedule."""
 
+    days: list[Day]
     state: ScheduleState
     time: dt.time | None
+
+
+class Day(StrEnum):
+    """Represent the day(s) in a custom schedule state."""
+
+    MONDAY = "mon"
+    TUESDAY = "tue"
+    WEDNESDAY = "wed"
+    THURSDAY = "thu"
+    FRIDAY = "fri"
+    SATURDAY = "sat"
+    SUNDAY = "sun"
 
 
 class ScheduleState(StrEnum):
@@ -268,6 +283,7 @@ class ScheduleState(StrEnum):
 
     NEVER = "never"
     DAILY = "daily"
+    CUSTOM = "custom"
     MONDAY = "mon"
     TUESDAY = "tue"
     WEDNESDAY = "wed"
@@ -281,6 +297,7 @@ class ScheduleState(StrEnum):
 class BackupSchedule:
     """Represent the backup schedule."""
 
+    days: list[Day] = field(default_factory=list)
     state: ScheduleState = ScheduleState.NEVER
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
@@ -295,7 +312,9 @@ class BackupSchedule:
 
         There are only three possible state types: never, daily, or weekly.
         """
-        if self.state is ScheduleState.NEVER:
+        if self.state is ScheduleState.NEVER or (
+            self.state is ScheduleState.CUSTOM and not self.days
+        ):
             self._unschedule_next(manager)
             return
 
@@ -303,6 +322,15 @@ class BackupSchedule:
         if self.state is ScheduleState.DAILY:
             self._schedule_next(
                 CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour),
+                manager,
+            )
+        elif self.state is ScheduleState.CUSTOM:
+            self._schedule_next(
+                CRON_PATTERN_WEEKLY.format(
+                    m=time.minute,
+                    h=time.hour,
+                    d=",".join(day.value for day in self.days),
+                ),
                 manager,
             )
         else:
@@ -376,6 +404,7 @@ class BackupSchedule:
     def to_dict(self) -> StoredBackupSchedule:
         """Convert backup schedule to a dict."""
         return StoredBackupSchedule(
+            days=self.days,
             state=self.state,
             time=self.time.isoformat() if self.time else None,
         )

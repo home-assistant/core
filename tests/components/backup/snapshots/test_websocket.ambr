@@ -250,6 +250,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -287,6 +289,8 @@
           'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -320,6 +324,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -353,6 +359,8 @@
           'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -386,6 +394,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'mon',
           'time': None,
         }),
@@ -419,7 +429,46 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'sat',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_info[storage_data6]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-17T04:55:00+01:00',
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+            'mon',
+            'sun',
+          ]),
+          'state': 'custom',
           'time': None,
         }),
       }),
@@ -451,6 +500,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -484,6 +535,8 @@
           'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -517,6 +570,8 @@
           'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -550,6 +605,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -579,10 +636,12 @@
         'last_completed_automatic_backup': None,
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
-          'copies': None,
-          'days': 7,
+          'copies': 3,
+          'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -612,10 +671,117 @@
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'retention': dict({
+          'copies': 3,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'daily',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 2,
+    'version': 1,
+  })
+# ---
+# name: test_config_update[command11]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command11].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
+        'retention': dict({
           'copies': None,
           'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'daily',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command11].2
+  dict({
+    'data': dict({
+      'backups': list([
+      ]),
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': 7,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -649,6 +815,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -682,6 +850,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': '06:00:00',
         }),
@@ -715,6 +885,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': '06:00:00',
         }),
@@ -748,6 +920,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -781,6 +955,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'mon',
           'time': None,
         }),
@@ -814,6 +990,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'mon',
           'time': None,
         }),
@@ -847,6 +1025,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -880,6 +1060,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -913,6 +1095,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -946,6 +1130,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -964,26 +1150,26 @@
           'agent_ids': list([
             'test-agent',
           ]),
-          'include_addons': list([
-            'test-addon',
-          ]),
+          'include_addons': None,
           'include_all_addons': False,
           'include_database': True,
-          'include_folders': list([
-            'media',
-          ]),
-          'name': 'test-name',
-          'password': 'test-password',
+          'include_folders': None,
+          'name': None,
+          'password': None,
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
-        'next_automatic_backup': '2024-11-14T04:55:00+01:00',
+        'next_automatic_backup': '2024-11-17T04:55:00+01:00',
         'retention': dict({
           'copies': None,
           'days': None,
         }),
         'schedule': dict({
-          'state': 'daily',
+          'days': list([
+            'mon',
+            'sun',
+          ]),
+          'state': 'custom',
           'time': None,
         }),
       }),
@@ -1002,16 +1188,12 @@
           'agent_ids': list([
             'test-agent',
           ]),
-          'include_addons': list([
-            'test-addon',
-          ]),
+          'include_addons': None,
           'include_all_addons': False,
           'include_database': True,
-          'include_folders': list([
-            'media',
-          ]),
-          'name': 'test-name',
-          'password': 'test-password',
+          'include_folders': None,
+          'name': None,
+          'password': None,
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
@@ -1020,7 +1202,11 @@
           'days': None,
         }),
         'schedule': dict({
-          'state': 'daily',
+          'days': list([
+            'mon',
+            'sun',
+          ]),
+          'state': 'custom',
           'time': None,
         }),
       }),
@@ -1053,6 +1239,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1071,21 +1259,27 @@
           'agent_ids': list([
             'test-agent',
           ]),
-          'include_addons': None,
+          'include_addons': list([
+            'test-addon',
+          ]),
           'include_all_addons': False,
           'include_database': True,
-          'include_folders': None,
-          'name': None,
-          'password': None,
+          'include_folders': list([
+            'media',
+          ]),
+          'name': 'test-name',
+          'password': 'test-password',
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
-          'copies': 3,
-          'days': 7,
+          'copies': None,
+          'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1105,20 +1299,26 @@
           'agent_ids': list([
             'test-agent',
           ]),
-          'include_addons': None,
+          'include_addons': list([
+            'test-addon',
+          ]),
           'include_all_addons': False,
           'include_database': True,
-          'include_folders': None,
-          'name': None,
-          'password': None,
+          'include_folders': list([
+            'media',
+          ]),
+          'name': 'test-name',
+          'password': 'test-password',
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'retention': dict({
-          'copies': 3,
-          'days': 7,
+          'copies': None,
+          'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1152,6 +1352,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1181,10 +1383,12 @@
         'last_completed_automatic_backup': None,
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
-          'copies': None,
-          'days': None,
+          'copies': 3,
+          'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1214,10 +1418,12 @@
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'retention': dict({
-          'copies': None,
-          'days': None,
+          'copies': 3,
+          'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1251,6 +1457,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1280,10 +1488,12 @@
         'last_completed_automatic_backup': None,
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
-          'copies': 3,
+          'copies': None,
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1313,10 +1523,12 @@
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'retention': dict({
-          'copies': 3,
+          'copies': None,
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1350,6 +1562,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1379,10 +1593,12 @@
         'last_completed_automatic_backup': None,
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
-          'copies': None,
-          'days': 7,
+          'copies': 3,
+          'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1412,10 +1628,12 @@
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'retention': dict({
-          'copies': None,
-          'days': 7,
+          'copies': 3,
+          'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1449,6 +1667,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1478,10 +1698,12 @@
         'last_completed_automatic_backup': None,
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
         'retention': dict({
-          'copies': 3,
-          'days': None,
+          'copies': None,
+          'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1511,10 +1733,12 @@
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
         'retention': dict({
-          'copies': 3,
-          'days': None,
+          'copies': None,
+          'days': 7,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'daily',
           'time': None,
         }),
@@ -1548,6 +1772,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1580,6 +1806,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1612,6 +1840,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1644,6 +1874,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1676,6 +1908,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1708,6 +1942,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1740,6 +1976,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1772,6 +2010,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1804,6 +2044,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1836,6 +2078,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1868,6 +2112,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
@@ -1900,6 +2146,144 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command6]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command6].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command7]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command7].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),

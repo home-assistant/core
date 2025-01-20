@@ -8,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .config import ScheduleState
+from .config import Day, ScheduleState
 from .const import DATA_MANAGER, LOGGER
 from .manager import (
     DecryptOnDowloadNotSupported,
@@ -358,6 +358,9 @@ async def handle_config_info(
         ),
         vol.Optional("schedule"): vol.Schema(
             {
+                vol.Optional("days"): vol.Any(
+                    vol.All([vol.Coerce(Day)], vol.Unique()),
+                ),
                 vol.Optional("state"): vol.All(str, vol.Coerce(ScheduleState)),
                 vol.Optional("time"): vol.Any(cv.time, None),
             }

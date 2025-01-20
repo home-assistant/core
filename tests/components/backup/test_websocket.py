@@ -71,7 +71,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
             "copies": None,
             "days": None,
         },
-        "schedule": {"state": "never", "time": None},
+        "schedule": {"days": [], "state": "never", "time": None},
     },
 }
 
@@ -924,7 +924,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-26T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
-                        "schedule": {"state": "daily", "time": None},
+                        "schedule": {"days": [], "state": "daily", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -949,7 +949,7 @@ async def test_agents_info(
                         "retention": {"copies": 3, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
-                        "schedule": {"state": "never", "time": None},
+                        "schedule": {"days": [], "state": "never", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -974,7 +974,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": 7},
                         "last_attempted_automatic_backup": "2024-10-27T04:45:00+01:00",
                         "last_completed_automatic_backup": "2024-10-26T04:45:00+01:00",
-                        "schedule": {"state": "never", "time": None},
+                        "schedule": {"days": [], "state": "never", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -999,7 +999,7 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
-                        "schedule": {"state": "mon", "time": None},
+                        "schedule": {"days": [], "state": "mon", "time": None},
                     },
                 },
                 "key": DOMAIN,
@@ -1024,7 +1024,36 @@ async def test_agents_info(
                         "retention": {"copies": None, "days": None},
                         "last_attempted_automatic_backup": None,
                         "last_completed_automatic_backup": None,
-                        "schedule": {"state": "sat", "time": None},
+                        "schedule": {"days": [], "state": "sat", "time": None},
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": ["mon", "sun"],
+                            "state": "custom",
+                            "time": None,
+                        },
                     },
                 },
                 "key": DOMAIN,
@@ -1080,6 +1109,11 @@ async def test_config_info(
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": {"state": "never"},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": {"days": ["mon", "sun"], "state": "custom"},
         },
         {
             "type": "backup/config/update",
@@ -1185,6 +1219,16 @@ async def test_config_update(
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
             "schedule": {"time": "early"},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": {"days": "mon"},
+        },
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["test-agent"]},
+            "schedule": {"days": ["fun"]},
         },
         {
             "type": "backup/config/update",
@@ -1336,7 +1380,45 @@ async def test_config_update_errors(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test.test-agent"]},
+                    "schedule": {"days": ["wed", "fri"], "state": "custom"},
+                }
+            ],
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-15T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            "2024-11-13T04:55:00+01:00",
+            1,
+            2,
+            BACKUP_CALL,
+            None,
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "create_backup": {"agent_ids": ["test.test-agent"]},
                     "schedule": {"state": "never"},
+                }
+            ],
+            "2024-11-11T04:45:00+01:00",
+            "2034-11-11T12:00:00+01:00",  # ten years later and still no backups
+            "2034-11-11T13:00:00+01:00",
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-11T04:45:00+01:00",
+            None,
+            0,
+            0,
+            None,
+            None,
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "create_backup": {"agent_ids": ["test.test-agent"]},
+                    "schedule": {"days": [], "state": "custom"},
                 }
             ],
             "2024-11-11T04:45:00+01:00",
@@ -1483,7 +1565,7 @@ async def test_config_schedule_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": last_completed_automatic_backup,
             "last_completed_automatic_backup": last_completed_automatic_backup,
-            "schedule": {"state": "daily", "time": None},
+            "schedule": {"days": [], "state": "daily", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
@@ -1934,7 +2016,7 @@ async def test_config_retention_copies_logic(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
-            "schedule": {"state": "daily", "time": None},
+            "schedule": {"days": [], "state": "daily", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
@@ -2192,7 +2274,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "retention": {"copies": None, "days": None},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": None,
-            "schedule": {"state": "daily", "time": None},
+            "schedule": {"days": [], "state": "daily", "time": None},
         },
     }
     hass_storage[DOMAIN] = {
@@ -2613,7 +2695,7 @@ async def test_config_retention_days_logic(
             "retention": {"copies": None, "days": stored_retained_days},
             "last_attempted_automatic_backup": None,
             "last_completed_automatic_backup": last_backup_time,
-            "schedule": {"state": "never", "time": None},
+            "schedule": {"days": [], "state": "never", "time": None},
         },
     }
     hass_storage[DOMAIN] = {

@@ -28,6 +28,8 @@
           'days': None,
         }),
         'schedule': dict({
+          'days': list([
+          ]),
           'state': 'never',
           'time': None,
         }),
