@@ -979,7 +979,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "swisscom",
     "switch_as_x",
     "switchbee",
-    "switchbot",
     "switchbot_cloud",
     "switcher_kis",
     "switchmate",
