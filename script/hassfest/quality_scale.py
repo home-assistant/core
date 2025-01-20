@@ -707,7 +707,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nextdns",
     "nfandroidtv",
     "nibe_heatpump",
-    "nice_go",
     "nightscout",
     "niko_home_control",
     "nilu",
