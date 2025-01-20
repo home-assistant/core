@@ -41,7 +41,7 @@
         },
         "data_description": {
           "username": "SwitchBot account username/email",
-          "password": "SwitchBot account password"
+          "password": "The password of your SwitchBot account"
         }
       },
       "encrypted_choose_method": {
