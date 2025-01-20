@@ -1,5 +1,6 @@
 """Global fixtures for Roborock integration."""
 
+from collections.abc import Generator
 from copy import deepcopy
 from unittest.mock import patch
 
@@ -14,7 +15,7 @@ from homeassistant.components.roborock.const import (
     CONF_USER_DATA,
     DOMAIN,
 )
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -167,13 +168,21 @@ def mock_roborock_entry(hass: HomeAssistant) -> MockConfigEntry:
     return mock_entry
 
 
+@pytest.fixture(name="platforms")
+def mock_platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return []
+
+
 @pytest.fixture
 async def setup_entry(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
-) -> MockConfigEntry:
+    platforms: list[Platform],
+) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    return mock_roborock_entry
+    with patch("homeassistant.components.roborock.PLATFORMS", platforms):
+        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        yield mock_roborock_entry

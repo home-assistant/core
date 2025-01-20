@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from reolink_aio.exceptions import (
     ApiError,
@@ -82,21 +82,18 @@ def get_device_uid_and_ch(
         ch = int(device_uid[1][5:])
         is_chime = True
     else:
-        ch = host.api.channel_for_uid(device_uid[1])
+        device_uid_part = "_".join(device_uid[1:])
+        ch = host.api.channel_for_uid(device_uid_part)
     return (device_uid, ch, is_chime)
 
 
-T = TypeVar("T")
-P = ParamSpec("P")
-
-
 # Decorators
-def raise_translated_error(
-    func: Callable[P, Awaitable[T]],
-) -> Callable[P, Coroutine[Any, Any, T]]:
+def raise_translated_error[**P, R](
+    func: Callable[P, Awaitable[R]],
+) -> Callable[P, Coroutine[Any, Any, R]]:
     """Wrap a reolink-aio function to translate any potential errors."""
 
-    async def decorator_raise_translated_error(*args: P.args, **kwargs: P.kwargs) -> T:
+    async def decorator_raise_translated_error(*args: P.args, **kwargs: P.kwargs) -> R:
         """Try a reolink-aio function and translate any potential errors."""
         try:
             return await func(*args, **kwargs)
@@ -167,6 +164,10 @@ def raise_translated_error(
                 translation_placeholders={"err": str(err)},
             ) from err
         except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unexpected",
+                translation_placeholders={"err": str(err)},
+            ) from err
 
     return decorator_raise_translated_error

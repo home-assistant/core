@@ -205,14 +205,6 @@ async def setup_device_v1(
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client, home_data_rooms
     )
-    # Verify we can communicate locally - if we can't, switch to cloud api
-    await coordinator.verify_api()
-    coordinator.api.is_available = True
-    try:
-        await coordinator.get_maps()
-    except RoborockException as err:
-        _LOGGER.warning("Failed to get map data")
-        _LOGGER.debug(err)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:

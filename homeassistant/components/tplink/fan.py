@@ -1,13 +1,17 @@
 """Support for TPLink Fan devices."""
 
+from dataclasses import dataclass
 import logging
 import math
 from typing import Any
 
 from kasa import Device, Module
-from kasa.interfaces import Fan as FanInterface
 
-from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.components.fan import (
+    FanEntity,
+    FanEntityDescription,
+    FanEntityFeature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
@@ -18,9 +22,30 @@ from homeassistant.util.scaling import int_states_in_range
 
 from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkModuleEntity,
+    TPLinkModuleEntityDescription,
+    async_refresh_after,
+)
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class TPLinkFanEntityDescription(FanEntityDescription, TPLinkModuleEntityDescription):
+    """Base class for fan entity description."""
+
+
+FAN_DESCRIPTIONS: tuple[TPLinkFanEntityDescription, ...] = (
+    TPLinkFanEntityDescription(
+        key="fan",
+        exists_fn=lambda dev, _: Module.Fan in dev.modules,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -32,30 +57,31 @@ async def async_setup_entry(
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
-    entities: list[CoordinatedTPLinkEntity] = []
-    if Module.Fan in device.modules:
-        entities.append(
-            TPLinkFanEntity(
-                device, parent_coordinator, fan_module=device.modules[Module.Fan]
-            )
+
+    known_child_device_ids: set[str] = set()
+    first_check = True
+
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            entity_class=TPLinkFanEntity,
+            descriptions=FAN_DESCRIPTIONS,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
         )
-    entities.extend(
-        TPLinkFanEntity(
-            child,
-            parent_coordinator,
-            fan_module=child.modules[Module.Fan],
-            parent=device,
-        )
-        for child in device.children
-        if Module.Fan in child.modules
-    )
-    async_add_entities(entities)
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 SPEED_RANGE = (1, 4)  # off is not included
 
 
-class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
+class TPLinkFanEntity(CoordinatedTPLinkModuleEntity, FanEntity):
     """Representation of a fan for a TPLink Fan device."""
 
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
@@ -65,19 +91,19 @@ class TPLinkFanEntity(CoordinatedTPLinkEntity, FanEntity):
         | FanEntityFeature.TURN_ON
     )
 
+    entity_description: TPLinkFanEntityDescription
+
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
-        fan_module: FanInterface,
+        description: TPLinkFanEntityDescription,
+        *,
         parent: Device | None = None,
     ) -> None:
         """Initialize the fan."""
-        self.fan_module = fan_module
-        # If _attr_name is None the entity name will be the device name
-        self._attr_name = None if parent is None else device.alias
-
-        super().__init__(device, coordinator, parent=parent)
+        super().__init__(device, coordinator, description, parent=parent)
+        self.fan_module = device.modules[Module.Fan]
 
     @async_refresh_after
     async def async_turn_on(

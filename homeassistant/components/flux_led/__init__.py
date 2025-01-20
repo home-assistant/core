@@ -133,7 +133,7 @@ async def _async_migrate_unique_ids(hass: HomeAssistant, entry: ConfigEntry) -> 
             and mac_matches_by_one(entity_mac, unique_id)
         ):
             # Old format {dhcp_mac}....., New format {discovery_mac}....
-            new_unique_id = f"{unique_id}{entity_unique_id[len(unique_id):]}"
+            new_unique_id = f"{unique_id}{entity_unique_id[len(unique_id) :]}"
         else:
             return None
         _LOGGER.debug(

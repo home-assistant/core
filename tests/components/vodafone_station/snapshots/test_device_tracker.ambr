@@ -1,0 +1,50 @@
+# serializer version: 1
+# name: test_all_entities[device_tracker.vodafone_station_xx_xx_xx_xx_xx_xx-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'device_tracker',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'device_tracker.vodafone_station_xx_xx_xx_xx_xx_xx',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'vodafone_station',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_tracker',
+    'unique_id': 'xx:xx:xx:xx:xx:xx',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[device_tracker.vodafone_station_xx_xx_xx_xx_xx_xx-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'host_name': 'WifiDevice0',
+      'ip': '192.168.1.10',
+      'mac': 'xx:xx:xx:xx:xx:xx',
+      'source_type': <SourceType.ROUTER: 'router'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'device_tracker.vodafone_station_xx_xx_xx_xx_xx_xx',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---

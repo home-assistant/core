@@ -18,7 +18,7 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 FAN_SILENT: Final = "silent"
 FAN_HIGH: Final = "high"
 FAN_AUTO: Final = "auto"
-FAN_MODES: Final = [FAN_SILENT, "1", "2", "3", "4", "5", FAN_HIGH, FAN_AUTO]
+FAN_MODES: Final = ["0", "1", "2", "3", "4", "5", FAN_HIGH, FAN_AUTO]
 
 STATUS_TO_HA: Final[dict[StateType, str]] = {
     0: "off",

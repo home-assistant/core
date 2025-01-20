@@ -488,10 +488,7 @@ class ZWaveServices:
             )
         if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
             _LOGGER.warning(
-                (
-                    "The following nodes do not have endpoint %x and will be "
-                    "skipped: %s"
-                ),
+                "The following nodes do not have endpoint %x and will be skipped: %s",
                 endpoint,
                 nodes_without_endpoints,
             )

@@ -7,7 +7,7 @@ import pytest
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN
+from homeassistant.const import SERVICE_SELECT_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -15,6 +15,12 @@ from homeassistant.setup import async_setup_component
 from .mock_data import MULTI_MAP_LIST, PROP
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.SELECT]
 
 
 @pytest.mark.parametrize(

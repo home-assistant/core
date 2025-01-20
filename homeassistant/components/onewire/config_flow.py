@@ -5,18 +5,16 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from pyownet import protocol
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     DEFAULT_HOST,
@@ -29,7 +27,7 @@ from .const import (
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
 )
-from .onewirehub import CannotConnect, OneWireHub
+from .onewirehub import OneWireConfigEntry
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -43,11 +41,11 @@ async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], errors: dict[str, str]
 ) -> None:
     """Validate the user input allows us to connect."""
-
-    hub = OneWireHub(hass)
     try:
-        await hub.connect(data[CONF_HOST], data[CONF_PORT])
-    except CannotConnect:
+        await hass.async_add_executor_job(
+            protocol.proxy, data[CONF_HOST], data[CONF_PORT]
+        )
+    except protocol.ConnError:
         errors["base"] = "cannot_connect"
 
 
@@ -55,6 +53,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle 1-Wire config flow."""
 
     VERSION = 1
+    _discovery_data: dict[str, Any]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,8 +61,9 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle 1-Wire config flow start."""
         errors: dict[str, str] = {}
         if user_input:
-            # Prevent duplicate entries (host+port)
-            self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
 
             await validate_input(self.hass, user_input, errors)
             if not errors:
@@ -77,10 +77,83 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle 1-Wire reconfiguration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
+
+            await validate_input(self.hass, user_input, errors)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, reconfigure_entry.data | (user_input or {})
+            ),
+            description_placeholders={"name": reconfigure_entry.title},
+            errors=errors,
+        )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle hassio discovery."""
+        await self._async_handle_discovery_without_unique_id()
+
+        self._discovery_data = {
+            "title": discovery_info.config["addon"],
+            CONF_HOST: discovery_info.config[CONF_HOST],
+            CONF_PORT: discovery_info.config[CONF_PORT],
+        }
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        await self._async_handle_discovery_without_unique_id()
+
+        self._discovery_data = {
+            "title": discovery_info.name,
+            CONF_HOST: discovery_info.hostname,
+            CONF_PORT: discovery_info.port,
+        }
+        return await self.async_step_discovery_confirm()
+
+    async def async_step_discovery_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            data = {
+                CONF_HOST: self._discovery_data[CONF_HOST],
+                CONF_PORT: self._discovery_data[CONF_PORT],
+            }
+            await validate_input(self.hass, data, errors)
+            if not errors:
+                return self.async_create_entry(
+                    title=self._discovery_data["title"], data=data
+                )
+
+        return self.async_show_form(
+            step_id="discovery_confirm",
+            errors=errors,
+        )
+
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: OneWireConfigEntry,
     ) -> OnewireOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnewireOptionsFlowHandler(config_entry)
@@ -104,7 +177,7 @@ class OnewireOptionsFlowHandler(OptionsFlow):
     current_device: str
     """Friendly name of the currently selected device."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: OneWireConfigEntry) -> None:
         """Initialize options flow."""
         self.options = deepcopy(dict(config_entry.options))
 
