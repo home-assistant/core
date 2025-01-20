@@ -50,7 +50,12 @@ class _BackupStore(Store[StoredBackupData]):
             if old_minor_version < 2:
                 # Version 1.2 adds configurable backup time and custom days
                 data["config"]["schedule"]["time"] = None
-                data["config"]["schedule"]["days"] = []
+                if (state := data["config"]["schedule"]["state"]) in ("daily", "never"):
+                    data["config"]["schedule"]["days"] = []
+                    data["config"]["schedule"]["recurrence"] = state
+                else:
+                    data["config"]["schedule"]["days"] = [state]
+                    data["config"]["schedule"]["recurrence"] = "custom_days"
 
         if old_major_version > 1:
             raise NotImplementedError

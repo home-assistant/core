@@ -30,6 +30,7 @@
         'schedule': dict({
           'days': list([
           ]),
+          'recurrence': 'never',
           'state': 'never',
           'time': None,
         }),

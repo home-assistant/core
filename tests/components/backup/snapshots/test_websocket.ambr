@@ -252,7 +252,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -290,8 +290,15 @@
         }),
         'schedule': dict({
           'days': list([
+            'mon',
+            'tue',
+            'wed',
+            'thu',
+            'fri',
+            'sat',
+            'sun',
           ]),
-          'state': 'daily',
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -326,7 +333,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -361,7 +368,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -395,8 +402,9 @@
         }),
         'schedule': dict({
           'days': list([
+            'mon',
           ]),
-          'state': 'mon',
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -423,7 +431,7 @@
         }),
         'last_attempted_automatic_backup': None,
         'last_completed_automatic_backup': None,
-        'next_automatic_backup': '2024-11-16T04:55:00+01:00',
+        'next_automatic_backup': None,
         'retention': dict({
           'copies': None,
           'days': None,
@@ -431,7 +439,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'sat',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -468,7 +476,7 @@
             'mon',
             'sun',
           ]),
-          'state': 'custom_days',
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -502,7 +510,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -537,7 +545,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -572,6 +580,7 @@
         'schedule': dict({
           'days': list([
           ]),
+          'recurrence': 'never',
           'state': 'never',
           'time': None,
         }),
@@ -607,7 +616,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -642,7 +651,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -677,7 +686,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -712,7 +722,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -747,7 +757,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -782,7 +792,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -817,7 +828,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -852,7 +863,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': '06:00:00',
         }),
       }),
@@ -887,7 +898,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': '06:00:00',
         }),
       }),
@@ -922,7 +934,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -956,8 +968,9 @@
         }),
         'schedule': dict({
           'days': list([
+            'mon',
           ]),
-          'state': 'mon',
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -991,8 +1004,10 @@
         }),
         'schedule': dict({
           'days': list([
+            'mon',
           ]),
-          'state': 'mon',
+          'recurrence': 'custom_days',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1027,7 +1042,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1062,7 +1077,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1097,6 +1112,7 @@
         'schedule': dict({
           'days': list([
           ]),
+          'recurrence': 'never',
           'state': 'never',
           'time': None,
         }),
@@ -1132,7 +1148,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1169,7 +1185,7 @@
             'mon',
             'sun',
           ]),
-          'state': 'custom_days',
+          'recurrence': 'custom_days',
           'time': None,
         }),
       }),
@@ -1206,7 +1222,8 @@
             'mon',
             'sun',
           ]),
-          'state': 'custom_days',
+          'recurrence': 'custom_days',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1241,7 +1258,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1280,7 +1297,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -1319,7 +1336,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1354,7 +1372,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1389,7 +1407,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -1424,7 +1442,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1459,7 +1478,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1494,7 +1513,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -1529,7 +1548,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1564,7 +1584,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1599,7 +1619,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -1634,7 +1654,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1669,7 +1690,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1704,7 +1725,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
           'time': None,
         }),
       }),
@@ -1739,7 +1760,8 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'daily',
+          'recurrence': 'daily',
+          'state': 'never',
           'time': None,
         }),
       }),
@@ -1774,7 +1796,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1808,7 +1830,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1842,7 +1864,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1876,7 +1898,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1910,7 +1932,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1944,7 +1966,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -1978,7 +2000,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2012,7 +2034,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2046,7 +2068,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2080,7 +2102,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2114,7 +2136,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2148,7 +2170,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2182,7 +2204,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2216,7 +2238,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2250,7 +2272,7 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
           'time': None,
         }),
       }),
@@ -2284,7 +2306,75 @@
         'schedule': dict({
           'days': list([
           ]),
-          'state': 'never',
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command8]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command8].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
           'time': None,
         }),
       }),
