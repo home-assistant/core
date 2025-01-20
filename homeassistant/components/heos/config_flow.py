@@ -8,7 +8,6 @@ from urllib.parse import urlparse
 from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -18,6 +17,10 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
 from .const import DOMAIN
 
@@ -107,16 +110,14 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         return HeosOptionsFlowHandler()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Heos device."""
         # Store discovered host
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
         hostname = urlparse(discovery_info.ssdp_location).hostname
-        friendly_name = (
-            f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
-        )
+        friendly_name = f"{discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
         self.hass.data.setdefault(DOMAIN, {})
         self.hass.data[DOMAIN][friendly_name] = hostname
         await self.async_set_unique_id(DOMAIN)

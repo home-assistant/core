@@ -46,21 +46,18 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_is_on = self.coordinator.data.get("power") == PowerState.ON.value
-        self.async_write_ha_state()
 
 
 class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot switch provider by a remote."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
 
 
 class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
@@ -72,13 +69,11 @@ class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
 class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot relay switch."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
-        self.async_write_ha_state()
 
 
 @callback
