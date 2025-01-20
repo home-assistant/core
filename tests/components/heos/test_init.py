@@ -4,7 +4,14 @@ import asyncio
 from typing import cast
 from unittest.mock import Mock, patch
 
-from pyheos import CommandFailedError, HeosError, SignalHeosEvent, SignalType, const
+from pyheos import (
+    CommandFailedError,
+    Heos,
+    HeosError,
+    SignalHeosEvent,
+    SignalType,
+    const,
+)
 import pytest
 
 from homeassistant.components.heos import (
@@ -20,37 +27,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
 
-async def test_async_setup_returns_true(
-    hass: HomeAssistant, config_entry, config
-) -> None:
-    """Test component setup from config."""
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0] == config_entry
-
-
-async def test_async_setup_no_config_returns_true(
-    hass: HomeAssistant, config_entry
-) -> None:
-    """Test component setup from entry only."""
-    config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert entries[0] == config_entry
-
-
 async def test_async_setup_entry_loads_platforms(
-    hass: HomeAssistant, config_entry, controller, input_sources, favorites
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: Heos,
 ) -> None:
     """Test load connects to heos, retrieves players, and loads platforms."""
     config_entry.add_to_hass(hass)
@@ -69,17 +53,11 @@ async def test_async_setup_entry_loads_platforms(
 
 
 async def test_async_setup_entry_with_options_loads_platforms(
-    hass: HomeAssistant,
-    config_entry_options,
-    config,
-    controller,
-    input_sources,
-    favorites,
+    hass: HomeAssistant, config_entry_options: MockConfigEntry, controller: Heos
 ) -> None:
     """Test load connects to heos with options, retrieves players, and loads platforms."""
     config_entry_options.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry_options.entry_id)
 
     # Assert options passed and methods called
     assert config_entry_options.state is ConfigEntryState.LOADED
@@ -111,8 +89,7 @@ async def test_async_setup_entry_auth_failure_starts_reauth(
 
     controller.connect.side_effect = connect_send_auth_failure
 
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(config_entry_options.entry_id)
 
     # Assert entry loaded and reauth flow started
     assert controller.connect.call_count == 1
@@ -126,9 +103,8 @@ async def test_async_setup_entry_auth_failure_starts_reauth(
 
 async def test_async_setup_entry_not_signed_in_loads_platforms(
     hass: HomeAssistant,
-    config_entry,
-    controller,
-    input_sources,
+    config_entry: MockConfigEntry,
+    controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup does not retrieve favorites when not logged in."""
@@ -153,7 +129,7 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
 
 
 async def test_async_setup_entry_connect_failure(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Connection failure raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
@@ -167,7 +143,7 @@ async def test_async_setup_entry_connect_failure(
 
 
 async def test_async_setup_entry_player_failure(
-    hass: HomeAssistant, config_entry, controller
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Failure to retrieve players/sources raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
@@ -180,7 +156,7 @@ async def test_async_setup_entry_player_failure(
     controller.disconnect.reset_mock()
 
 
-async def test_unload_entry(hass: HomeAssistant, config_entry, controller) -> None:
+async def test_unload_entry(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test entries are unloaded correctly."""
     controller_manager = Mock(ControllerManager)
     config_entry.runtime_data = HeosRuntimeData(controller_manager, None, None, {})
@@ -197,14 +173,13 @@ async def test_unload_entry(hass: HomeAssistant, config_entry, controller) -> No
 
 async def test_update_sources_retry(
     hass: HomeAssistant,
-    config_entry,
-    config,
-    controller,
+    config_entry: MockConfigEntry,
+    controller: Heos,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update sources retries on failures to max attempts."""
     config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, config)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.get_favorites.reset_mock()
     controller.get_input_sources.reset_mock()
     source_manager = config_entry.runtime_data.source_manager
