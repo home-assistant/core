@@ -69,7 +69,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         super().__init__(coordinator)
 
         self._host = reolink_data.host
-        self._attr_unique_id: str = f"{self._host.unique_id}_{self.entity_description.key}"
+        self._attr_unique_id: str = (
+            f"{self._host.unique_id}_{self.entity_description.key}"
+        )
 
         http_s = "https" if self._host.api.use_https else "http"
         self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
