@@ -2,35 +2,45 @@
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
 
-from homeconnect.api import HomeConnectAppliance, HomeConnectError
+from aiohomeconnect.client import Client as HomeConnectClient
+from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import HomeConnectConfigEntry, _get_appliance
-from .api import HomeConnectDevice
+from .const import DOMAIN
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 
 
-def _generate_appliance_diagnostics(appliance: HomeConnectAppliance) -> dict[str, Any]:
-    try:
-        programs = appliance.get_programs_available()
-    except HomeConnectError:
-        programs = None
+async def _generate_appliance_diagnostics(
+    client: HomeConnectClient, appliance: HomeConnectApplianceData
+) -> dict[str, Any]:
+    program_keys = None
+    with contextlib.suppress(HomeConnectError):
+        # Using get_available_programs serializes the response, and any
+        # programs not in the enum are set to Program.UNKNOWN.
+        # That's why here  we fetch the programs with a raw response so we can
+        # get the actual program keys and the user can suggest the addition
+        # of the missing programs to the enum to the aiohomeconnect library.
+        program_response = await client._auth.request(  # noqa: SLF001
+            "GET",
+            f"/homeappliances/{appliance.info.ha_id}/programs/available",
+        )
+        if not program_response.is_error:
+            program_keys = [
+                program["key"]
+                for program in program_response.json()["data"]["programs"]
+            ]
     return {
-        "connected": appliance.connected,
-        "status": appliance.status,
-        "programs": programs,
-    }
-
-
-def _generate_entry_diagnostics(
-    devices: list[HomeConnectDevice],
-) -> dict[str, dict[str, Any]]:
-    return {
-        device.appliance.haId: _generate_appliance_diagnostics(device.appliance)
-        for device in devices
+        **appliance.info.to_dict(),
+        "status": {key.value: status.value for key, status in appliance.status.items()},
+        "settings": {
+            key.value: setting.value for key, setting in appliance.settings.items()
+        },
+        "programs": program_keys,
     }
 
 
@@ -38,14 +48,23 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    return await hass.async_add_executor_job(
-        _generate_entry_diagnostics, entry.runtime_data.devices
-    )
+    return {
+        appliance.info.ha_id: await _generate_appliance_diagnostics(
+            entry.runtime_data.client, appliance
+        )
+        for appliance in entry.runtime_data.data.values()
+    }
 
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: HomeConnectConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    appliance = _get_appliance(hass, device_entry=device, entry=entry)
-    return await hass.async_add_executor_job(_generate_appliance_diagnostics, appliance)
+    ha_id = next(
+        (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
+        None,
+    )
+    assert ha_id, "No Home Connect identifier found"
+    return await _generate_appliance_diagnostics(
+        entry.runtime_data.client, entry.runtime_data.data[ha_id]
+    )

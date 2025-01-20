@@ -1,14 +1,15 @@
 """Test diagnostics for Home Connect."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import MagicMock, Mock
+import re
+from unittest.mock import AsyncMock, MagicMock
 
-from homeconnect.api import HomeConnectError
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.home_connect.diagnostics import (
+    HomeConnectError,
     async_get_config_entry_diagnostics,
     async_get_device_diagnostics,
 )
@@ -16,43 +17,56 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import get_all_appliances
-
 from tests.common import MockConfigEntry
 
+HA_ID_REGEX = re.compile(r"/homeappliances/(?P<ha_id>[^/]+)/programs/available")
 
-@pytest.mark.usefixtures("bypass_throttle")
+
+def set_side_effect_to_client(client: MagicMock) -> None:
+    """Set side effect to client auth request to obtaint the programs."""
+
+    async def side_effect(*args, **kwargs):
+        ha_id = HA_ID_REGEX.match(args[1]).group("ha_id")
+        response = MagicMock()
+        response.json.return_value = {
+            "data": (await client.get_available_programs(ha_id)).to_dict()
+        }
+        response.is_error = False
+        return response
+
+    client._auth.request.side_effect = side_effect
+
+
 async def test_async_get_config_entry_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
-    get_appliances: MagicMock,
+    client: MagicMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test config entry diagnostics."""
-    get_appliances.side_effect = get_all_appliances
+    set_side_effect_to_client(client)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
+    assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
     assert await async_get_config_entry_diagnostics(hass, config_entry) == snapshot
 
 
-@pytest.mark.usefixtures("bypass_throttle")
 async def test_async_get_device_diagnostics(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
-    get_appliances: MagicMock,
+    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device config entry diagnostics."""
-    get_appliances.side_effect = get_all_appliances
+    set_side_effect_to_client(client)
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
+    assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
     device = device_registry.async_get_or_create(
@@ -63,66 +77,32 @@ async def test_async_get_device_diagnostics(
     assert await async_get_device_diagnostics(hass, config_entry, device) == snapshot
 
 
-@pytest.mark.usefixtures("bypass_throttle")
-async def test_async_device_diagnostics_not_found(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
-    setup_credentials: None,
-    get_appliances: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test device config entry diagnostics."""
-    get_appliances.side_effect = get_all_appliances
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "Random-Device-ID")},
-    )
-
-    with pytest.raises(ValueError):
-        await async_get_device_diagnostics(hass, config_entry, device)
-
-
 @pytest.mark.parametrize(
-    ("api_error", "expected_connection_status"),
+    "request_side_effect",
     [
-        (HomeConnectError(), "unknown"),
-        (
-            HomeConnectError(
-                {
-                    "key": "SDK.Error.HomeAppliance.Connection.Initialization.Failed",
-                }
-            ),
-            "offline",
-        ),
+        AsyncMock(side_effect=HomeConnectError()),
+        AsyncMock(is_error=True),
     ],
 )
-@pytest.mark.usefixtures("bypass_throttle")
 async def test_async_device_diagnostics_api_error(
-    api_error: HomeConnectError,
-    expected_connection_status: str,
+    request_side_effect: AsyncMock,
+    appliance_ha_id: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    integration_setup: Callable[[], Awaitable[bool]],
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
-    get_appliances: MagicMock,
-    appliance: Mock,
+    client_with_exception: MagicMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test device config entry diagnostics."""
-    appliance.get_programs_available.side_effect = api_error
-    get_appliances.return_value = [appliance]
+    """Test that the device diagnostics are generated even if an API error occurs."""
+    client_with_exception._auth.request = request_side_effect
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup()
+    assert await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
 
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, appliance.haId)},
+        identifiers={(DOMAIN, appliance_ha_id)},
     )
 
     diagnostics = await async_get_device_diagnostics(hass, config_entry, device)

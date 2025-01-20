@@ -1,0 +1,298 @@
+"""Test for Home Connect coordinator."""
+
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from aiohomeconnect.model import (
+    ArrayOfEvents,
+    ArrayOfSettings,
+    ArrayOfStatus,
+    Event,
+    EventKey,
+    EventMessage,
+    EventType,
+)
+from aiohomeconnect.model.error import (
+    EventStreamInterruptedError,
+    HomeConnectApiError,
+    HomeConnectError,
+    HomeConnectRequestError,
+)
+import pytest
+
+from homeassistant.components.home_connect.coordinator import HomeConnectCoordinator
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+
+from tests.common import MockConfigEntry
+
+
+async def test_coordinator_update(
+    hass: HomeAssistant,
+    client: MagicMock,
+) -> None:
+    """Test that the coordinator can update."""
+    config_entry = MockConfigEntry(
+        state=ConfigEntryState.SETUP_IN_PROGRESS,
+    )
+    coordinator = HomeConnectCoordinator(hass, config_entry, client)
+
+    assert not coordinator.data
+    await coordinator.async_config_entry_first_refresh()
+
+    assert coordinator.data
+
+
+async def test_coordinator_update_failing_get_appliances(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+) -> None:
+    """Test that the coordinator raises ConfigEntryNotReady when it fails to get appliances."""
+    config_entry = MockConfigEntry(
+        state=ConfigEntryState.SETUP_IN_PROGRESS,
+    )
+    client_with_exception.get_home_appliances.return_value = None
+    client_with_exception.get_home_appliances.side_effect = HomeConnectError()
+    coordinator = HomeConnectCoordinator(hass, config_entry, client_with_exception)
+
+    with pytest.raises(ConfigEntryNotReady):
+        await coordinator.async_config_entry_first_refresh()
+
+
+async def test_coordinator_update_failing_get_settings_status(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+) -> None:
+    """Test that although is not possible to get settings and status, the coordinator is still able to update.
+
+    This is for cases where some appliances are reachable and some are not in the same configuration entry.
+    """
+    config_entry = MockConfigEntry(
+        state=ConfigEntryState.SETUP_IN_PROGRESS,
+    )
+    # Get home appliances does pass at client_with_exception.get_home_appliances mock, so no need to mock it again
+    coordinator = HomeConnectCoordinator(hass, config_entry, client_with_exception)
+
+    await coordinator.async_config_entry_first_refresh()
+
+    assert coordinator.data
+
+
+@pytest.mark.parametrize(
+    ("event_type", "event_key"),
+    [
+        (EventType.STATUS, EventKey.BSH_COMMON_STATUS_DOOR_STATE),
+        (EventType.NOTIFY, EventKey.BSH_COMMON_SETTING_POWER_STATE),
+        (EventType.EVENT, EventKey.BSH_COMMON_STATUS_OPERATION_STATE),
+    ],
+)
+async def test_even_listener(
+    event_type: EventType,
+    event_key: EventKey,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test that the event listener works."""
+    coordinator = HomeConnectCoordinator(hass, config_entry, client)
+    await coordinator.async_refresh()
+    await coordinator.start_event_listener()
+
+    listener = AsyncMock()
+    coordinator.add_home_appliances_event_listener(appliance_ha_id, event_key, listener)
+
+    event = Event(
+        event_key,
+        0,
+        "",
+        "",
+        "some value",
+    )
+    event_message = EventMessage(
+        appliance_ha_id,
+        event_type,
+        ArrayOfEvents(
+            [event],
+        ),
+    )
+    await client.add_events([event_message])
+    await hass.async_block_till_done()
+
+    listener.assert_awaited_once_with(event)
+
+    coordinator.delete_home_appliances_event_listener(
+        appliance_ha_id, event_key, listener
+    )
+    await client.add_events([event_message])
+    await hass.async_block_till_done()
+
+    listener.assert_awaited_once()
+    assert coordinator._home_appliances_event_listeners == {}
+
+
+@pytest.mark.parametrize(
+    ("event_type", "event_key"),
+    [
+        (EventType.STATUS, EventKey.UNKNOWN),
+        (EventType.NOTIFY, EventKey.UNKNOWN),
+        (EventType.EVENT, EventKey.UNKNOWN),
+    ],
+)
+async def test_even_listener_ignore_unknowns(
+    event_type: EventType,
+    event_key: EventKey,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test that the event listener works."""
+    coordinator = HomeConnectCoordinator(hass, config_entry, client)
+    await coordinator.async_refresh()
+    await coordinator.start_event_listener()
+
+    listener = AsyncMock()
+    coordinator.add_home_appliances_event_listener(appliance_ha_id, event_key, listener)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                event_type,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            event_key,
+                            0,
+                            "",
+                            "",
+                            "some value",
+                        )
+                    ],
+                ),
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+
+    listener.assert_not_awaited()
+
+
+async def tests_receive_setting_and_status_for_first_time_at_events(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test that the event listener is capable of receiving settings and status for the first time."""
+    client.get_setting = AsyncMock(return_value=ArrayOfSettings([]))
+    client.get_status = AsyncMock(return_value=ArrayOfStatus([]))
+    coordinator = HomeConnectCoordinator(hass, config_entry, client)
+    await coordinator.async_refresh()
+    await coordinator.start_event_listener()
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL,
+                            0,
+                            "",
+                            "",
+                            "some value",
+                        )
+                    ],
+                ),
+            ),
+            EventMessage(
+                appliance_ha_id,
+                EventType.STATUS,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+                            0,
+                            "",
+                            "",
+                            "some value",
+                        )
+                    ],
+                ),
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert len(config_entry._background_tasks) == 1
+
+
+async def test_event_listener_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client_with_exception: MagicMock,
+) -> None:
+    """Test that the event listener is resilient to interruptions."""
+    coordinator = HomeConnectCoordinator(hass, config_entry, client_with_exception)
+    client_with_exception.stream_all_events = MagicMock(
+        side_effect=HomeConnectApiError("error.key", "error description")
+    )
+    await coordinator.start_event_listener()
+    await hass.async_block_till_done()
+
+    assert not config_entry._background_tasks
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [HomeConnectRequestError(), EventStreamInterruptedError()],
+)
+@patch(
+    "homeassistant.components.home_connect.coordinator.EVENT_STREAM_RECONNECT_DELAY", 0
+)
+async def test_event_listener_resilience(
+    exception: HomeConnectError,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test that the event listener is resilient to interruptions."""
+    coordinator = HomeConnectCoordinator(hass, config_entry, client)
+    await coordinator.async_refresh()
+
+    client.stream_all_events = MagicMock(
+        side_effect=[exception, client.stream_all_events()]
+    )
+    await coordinator.start_event_listener()
+    await hass.async_block_till_done()
+
+    assert len(config_entry._background_tasks) == 1
+
+    event_key = EventKey.BSH_COMMON_STATUS_DOOR_STATE
+    listener = AsyncMock()
+    coordinator.add_home_appliances_event_listener(appliance_ha_id, event_key, listener)
+
+    event = Event(
+        event_key,
+        0,
+        "",
+        "",
+        "some value",
+    )
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.STATUS,
+                ArrayOfEvents(
+                    [event],
+                ),
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    listener.assert_awaited_once_with(event)

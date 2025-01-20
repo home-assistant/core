@@ -2,31 +2,33 @@
 
 from datetime import time
 import logging
+from typing import cast
 
-from homeconnect.api import HomeConnectError
+from aiohomeconnect.model import Event, SettingKey
+from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
 from .const import (
-    ATTR_VALUE,
     DOMAIN,
     SVE_TRANSLATION_KEY_SET_SETTING,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
+from .coordinator import HomeConnectConfigEntry
 from .entity import HomeConnectEntity
+from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
 
 TIME_ENTITIES = (
     TimeEntityDescription(
-        key="BSH.Common.Setting.AlarmClock",
+        key=SettingKey.BSH_COMMON_ALARM_CLOCK,
         translation_key="alarm_clock",
     ),
 )
@@ -39,16 +41,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
 
-    def get_entities() -> list[HomeConnectTimeEntity]:
-        """Get a list of entities."""
-        return [
-            HomeConnectTimeEntity(device, description)
+    async_add_entities(
+        [
+            HomeConnectTimeEntity(entry.runtime_data, appliance, description)
             for description in TIME_ENTITIES
-            for device in entry.runtime_data.devices
-            if description.key in device.appliance.status
-        ]
-
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+            for appliance in entry.runtime_data.data.values()
+            if description.key in appliance.settings
+        ],
+        True,
+    )
 
 
 def seconds_to_time(seconds: int) -> time:
@@ -75,10 +76,10 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
             self.entity_id,
         )
         try:
-            await self.hass.async_add_executor_job(
-                self.device.appliance.set_setting,
-                self.bsh_key,
-                time_to_seconds(value),
+            await self.coordinator.client.set_setting(
+                self.appliance.info.ha_id,
+                setting_key=SettingKey(self.bsh_key),
+                value=time_to_seconds(value),
             )
         except HomeConnectError as err:
             raise HomeAssistantError(
@@ -92,16 +93,18 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 },
             ) from err
 
+    async def _async_event_update_listener(self, event: Event) -> None:
+        """Update status when an event for the entity is received."""
+        seconds = event.value
+        self.set_native_value(cast(int, seconds))
+        self.async_write_ha_state()
+
     async def async_update(self) -> None:
         """Update the Time setting status."""
-        data = self.device.appliance.status.get(self.bsh_key)
-        if data is None:
-            _LOGGER.error("No value for %s", self.bsh_key)
-            self._attr_native_value = None
-            return
-        seconds = data.get(ATTR_VALUE, None)
-        if seconds is not None:
-            self._attr_native_value = seconds_to_time(seconds)
-        else:
-            self._attr_native_value = None
+        data = self.appliance.settings[SettingKey(self.bsh_key)]
+        self.set_native_value(data.value)
+
+    def set_native_value(self, seconds: int) -> None:
+        """Set the value of the entity."""
+        self._attr_native_value = seconds_to_time(seconds)
         _LOGGER.debug("Updated, new value: %s", self._attr_native_value)

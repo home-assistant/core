@@ -1,9 +1,11 @@
 """Provides a sensor for Home Connect."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import cast
+
+from aiohomeconnect.model import Event, EventKey, StatusKey
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,24 +19,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
-from . import HomeConnectConfigEntry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
-    ATTR_VALUE,
-    BSH_DOOR_STATE,
-    BSH_OPERATION_STATE,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
-    COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
-    COFFEE_EVENT_DRIP_TRAY_FULL,
-    COFFEE_EVENT_WATER_TANK_EMPTY,
-    DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
-    DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
-    REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
-    REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
-    REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
 )
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +35,9 @@ EVENT_OPTIONS = ["confirmed", "off", "present"]
 
 
 @dataclass(frozen=True, kw_only=True)
-class HomeConnectSensorEntityDescription(SensorEntityDescription):
+class HomeConnectSensorEntityDescription(
+    SensorEntityDescription,
+):
     """Entity Description class for sensors."""
 
     default_value: str | None = None
@@ -53,7 +46,7 @@ class HomeConnectSensorEntityDescription(SensorEntityDescription):
 
 BSH_PROGRAM_SENSORS = (
     HomeConnectSensorEntityDescription(
-        key="BSH.Common.Option.RemainingProgramTime",
+        key=EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME,
         device_class=SensorDeviceClass.TIMESTAMP,
         translation_key="program_finish_time",
         appliance_types=(
@@ -68,13 +61,13 @@ BSH_PROGRAM_SENSORS = (
         ),
     ),
     HomeConnectSensorEntityDescription(
-        key="BSH.Common.Option.Duration",
+        key=EventKey.BSH_COMMON_OPTION_DURATION,
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         appliance_types=("Oven",),
     ),
     HomeConnectSensorEntityDescription(
-        key="BSH.Common.Option.ProgramProgress",
+        key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
         native_unit_of_measurement=PERCENTAGE,
         translation_key="program_progress",
         appliance_types=APPLIANCES_WITH_PROGRAMS,
@@ -83,7 +76,7 @@ BSH_PROGRAM_SENSORS = (
 
 SENSORS = (
     HomeConnectSensorEntityDescription(
-        key=BSH_OPERATION_STATE,
+        key=StatusKey.BSH_COMMON_OPERATION_STATE,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "inactive",
@@ -99,7 +92,7 @@ SENSORS = (
         translation_key="operation_state",
     ),
     HomeConnectSensorEntityDescription(
-        key=BSH_DOOR_STATE,
+        key=StatusKey.BSH_COMMON_DOOR_STATE,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "closed",
@@ -109,59 +102,59 @@ SENSORS = (
         translation_key="door",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffee",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_COFFEE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterPowderCoffee",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_POWDER_COFFEE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="powder_coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWater",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_WATER,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_water_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotWaterCups",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_WATER_CUPS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_water_cups_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterHotMilk",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_MILK,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterFrothyMilk",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_FROTHY_MILK,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="frothy_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterMilk",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_MILK,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="milk_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterCoffeeAndMilk",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_COFFEE_AND_MILK,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="coffee_and_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CoffeeMaker.Status.BeverageCounterRistrettoEspresso",
+        key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_RISTRETTO_ESPRESSO,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="ristretto_espresso_counter",
     ),
     HomeConnectSensorEntityDescription(
-        key="BSH.Common.Status.BatteryLevel",
+        key=StatusKey.BSH_COMMON_BATTERY_LEVEL,
         device_class=SensorDeviceClass.BATTERY,
         translation_key="battery_level",
     ),
     HomeConnectSensorEntityDescription(
-        key="BSH.Common.Status.Video.CameraState",
+        key=StatusKey.BSH_COMMON_VIDEO_CAMERA_STATE,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "disabled",
@@ -175,7 +168,7 @@ SENSORS = (
         translation_key="camera_state",
     ),
     HomeConnectSensorEntityDescription(
-        key="ConsumerProducts.CleaningRobot.Status.LastSelectedMap",
+        key=StatusKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_LAST_SELECTED_MAP,
         device_class=SensorDeviceClass.ENUM,
         options=[
             "tempmap",
@@ -189,7 +182,7 @@ SENSORS = (
 
 EVENT_SENSORS = (
     HomeConnectSensorEntityDescription(
-        key=REFRIGERATION_EVENT_DOOR_ALARM_FREEZER,
+        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -197,7 +190,7 @@ EVENT_SENSORS = (
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
-        key=REFRIGERATION_EVENT_DOOR_ALARM_REFRIGERATOR,
+        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_REFRIGERATOR,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -205,7 +198,7 @@ EVENT_SENSORS = (
         appliance_types=("FridgeFreezer", "Refrigerator"),
     ),
     HomeConnectSensorEntityDescription(
-        key=REFRIGERATION_EVENT_TEMP_ALARM_FREEZER,
+        key=EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_TEMPERATURE_ALARM_FREEZER,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -213,7 +206,7 @@ EVENT_SENSORS = (
         appliance_types=("FridgeFreezer", "Freezer"),
     ),
     HomeConnectSensorEntityDescription(
-        key=COFFEE_EVENT_BEAN_CONTAINER_EMPTY,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -221,7 +214,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=COFFEE_EVENT_WATER_TANK_EMPTY,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_WATER_TANK_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -229,7 +222,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=COFFEE_EVENT_DRIP_TRAY_FULL,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_DRIP_TRAY_FULL,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -237,7 +230,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -245,7 +238,7 @@ EVENT_SENSORS = (
         appliance_types=("Dishwasher",),
     ),
     HomeConnectSensorEntityDescription(
-        key=DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
+        key=EventKey.DISHCARE_DISHWASHER_EVENT_RINSE_AID_NEARLY_EMPTY,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -262,33 +255,39 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
 
-    def get_entities() -> list[SensorEntity]:
+    async def get_entities_for_appliance(
+        appliance: HomeConnectApplianceData,
+    ) -> list[SensorEntity]:
         """Get a list of entities."""
         entities: list[SensorEntity] = []
-        for device in entry.runtime_data.devices:
-            entities.extend(
-                HomeConnectSensor(
-                    device,
-                    description,
-                )
-                for description in EVENT_SENSORS
-                if description.appliance_types
-                and device.appliance.type in description.appliance_types
+        entities.extend(
+            HomeConnectEventSensor(
+                entry.runtime_data,
+                appliance,
+                description,
             )
-            entities.extend(
-                HomeConnectProgramSensor(device, desc)
-                for desc in BSH_PROGRAM_SENSORS
-                if desc.appliance_types
-                and device.appliance.type in desc.appliance_types
-            )
-            entities.extend(
-                HomeConnectSensor(device, description)
-                for description in SENSORS
-                if description.key in device.appliance.status
-            )
+            for description in EVENT_SENSORS
+            if description.appliance_types
+            and appliance.info.type in description.appliance_types
+        )
+        entities.extend(
+            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
+            for desc in BSH_PROGRAM_SENSORS
+            if desc.appliance_types and appliance.info.type in desc.appliance_types
+        )
+        entities.extend(
+            HomeConnectSensor(entry.runtime_data, appliance, description)
+            for description in SENSORS
+            if description.key in appliance.status
+        )
         return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+    entities = [
+        entity
+        for appliance in entry.runtime_data.data.values()
+        for entity in await get_entities_for_appliance(appliance)
+    ]
+    async_add_entities(entities, True)
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
@@ -296,43 +295,29 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     entity_description: HomeConnectSensorEntityDescription
 
+    async def _async_event_update_listener(self, event: Event) -> None:
+        """Update status when an event for the entity is received."""
+        self.set_native_value(event.value)
+        self.async_write_ha_state()
+
     async def async_update(self) -> None:
         """Update the sensor's status."""
-        appliance_status = self.device.appliance.status
-        if (
-            self.bsh_key not in appliance_status
-            or ATTR_VALUE not in appliance_status[self.bsh_key]
-        ):
-            self._attr_native_value = self.entity_description.default_value
-            _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
-            return
-        status = appliance_status[self.bsh_key]
+        self.set_native_value(self.appliance.status[StatusKey(self.bsh_key)].value)
+
+    def set_native_value(self, status: str | float) -> None:
+        """Set the value of the sensor."""
         match self.device_class:
             case SensorDeviceClass.TIMESTAMP:
-                if ATTR_VALUE not in status:
-                    self._attr_native_value = None
-                elif (
-                    self._attr_native_value is not None
-                    and isinstance(self._attr_native_value, datetime)
-                    and self._attr_native_value < dt_util.utcnow()
-                ):
-                    # if the date is supposed to be in the future but we're
-                    # already past it, set state to None.
-                    self._attr_native_value = None
-                else:
-                    seconds = float(status[ATTR_VALUE])
-                    self._attr_native_value = dt_util.utcnow() + timedelta(
-                        seconds=seconds
-                    )
+                self._attr_native_value = dt_util.utcnow() + timedelta(
+                    seconds=float(status)
+                )
             case SensorDeviceClass.ENUM:
                 # Value comes back as an enum, we only really care about the
                 # last part, so split it off
                 # https://developer.home-connect.com/docs/status/operation_state
-                self._attr_native_value = slugify(
-                    cast(str, status.get(ATTR_VALUE)).split(".")[-1]
-                )
+                self._attr_native_value = slugify(cast(str, status).split(".")[-1])
             case _:
-                self._attr_native_value = status.get(ATTR_VALUE)
+                self._attr_native_value = status
         _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
 
 
@@ -340,6 +325,29 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     """Sensor class for Home Connect sensors that reports information related to the running program."""
 
     program_running: bool = False
+
+    async def async_added_to_hass(self) -> None:
+        """Register listener."""
+        await super().async_added_to_hass()
+        self.coordinator.add_home_appliances_event_listener(
+            self.appliance.info.ha_id,
+            EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
+            self._async_event_update_operation_state_listener,
+        )
+
+    async def _async_event_update_operation_state_listener(self, _: Event) -> None:
+        """Update status when an event for the entity is received."""
+        self.program_running = (
+            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        ) is not None and status.value in [
+            BSH_OPERATION_STATE_RUN,
+            BSH_OPERATION_STATE_PAUSE,
+            BSH_OPERATION_STATE_FINISHED,
+        ]
+        if not self.program_running:
+            # reset the value when the program is not running, paused or finished
+            self._attr_native_value = None
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
@@ -350,18 +358,14 @@ class HomeConnectProgramSensor(HomeConnectSensor):
 
     async def async_update(self) -> None:
         """Update the sensor's status."""
-        self.program_running = (
-            BSH_OPERATION_STATE in (appliance_status := self.device.appliance.status)
-            and ATTR_VALUE in appliance_status[BSH_OPERATION_STATE]
-            and appliance_status[BSH_OPERATION_STATE][ATTR_VALUE]
-            in [
-                BSH_OPERATION_STATE_RUN,
-                BSH_OPERATION_STATE_PAUSE,
-                BSH_OPERATION_STATE_FINISHED,
-            ]
-        )
-        if self.program_running:
-            await super().async_update()
-        else:
-            # reset the value when the program is not running, paused or finished
-            self._attr_native_value = None
+        # Program sensors value is not fetchable from the status endpoint,
+        # so we can only wait for the event to update the value.
+
+
+class HomeConnectEventSensor(HomeConnectSensor):
+    """Sensor class for Home Connect events."""
+
+    async def async_update(self) -> None:
+        """Update the sensor's status."""
+        if not self._attr_native_value:
+            self._attr_native_value = self.entity_description.default_value
