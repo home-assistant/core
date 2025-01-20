@@ -120,12 +120,12 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return self.device.config["auto_target_humidity"]
+        return self.device.auto_humidity
 
     @property
     def mode(self) -> str | None:
         """Get the current preset mode."""
-        return _get_ha_mode(self.device.details["mode"])
+        return _get_ha_mode(self.device.mode)
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""

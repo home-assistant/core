@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usesfixtures("mock_hub_run")
+@pytest.mark.usefixtures("mock_hub_run")
 async def test_cover_id_migration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
