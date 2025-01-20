@@ -132,8 +132,8 @@ async def test_number_streaming(
 
     # Assert the entities restored their values
     for entity_id in (
-        "lock.test_charge_current",
-        "lock.test_charge_limit",
+        "number.test_charge_current",
+        "number.test_charge_limit",
     ):
         state = hass.states.get(entity_id)
         assert state.state == snapshot(name=f"{entity_id}-state")
