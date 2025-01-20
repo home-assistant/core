@@ -1051,7 +1051,7 @@ async def test_agents_info(
                         "last_completed_automatic_backup": None,
                         "schedule": {
                             "days": ["mon", "sun"],
-                            "state": "custom",
+                            "state": "custom_days",
                             "time": None,
                         },
                     },
@@ -1113,7 +1113,7 @@ async def test_config_info(
         {
             "type": "backup/config/update",
             "create_backup": {"agent_ids": ["test-agent"]},
-            "schedule": {"days": ["mon", "sun"], "state": "custom"},
+            "schedule": {"days": ["mon", "sun"], "state": "custom_days"},
         },
         {
             "type": "backup/config/update",
@@ -1380,7 +1380,7 @@ async def test_config_update_errors(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test.test-agent"]},
-                    "schedule": {"days": ["wed", "fri"], "state": "custom"},
+                    "schedule": {"days": ["wed", "fri"], "state": "custom_days"},
                 }
             ],
             "2024-11-11T04:45:00+01:00",
@@ -1418,7 +1418,7 @@ async def test_config_update_errors(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test.test-agent"]},
-                    "schedule": {"days": [], "state": "custom"},
+                    "schedule": {"days": [], "state": "custom_days"},
                 }
             ],
             "2024-11-11T04:45:00+01:00",

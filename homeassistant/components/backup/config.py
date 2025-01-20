@@ -283,7 +283,7 @@ class ScheduleState(StrEnum):
 
     NEVER = "never"
     DAILY = "daily"
-    CUSTOM = "custom"
+    CUSTOM_DAYS = "custom_days"
     MONDAY = "mon"
     TUESDAY = "tue"
     WEDNESDAY = "wed"
@@ -313,7 +313,7 @@ class BackupSchedule:
         There are only three possible state types: never, daily, or weekly.
         """
         if self.state is ScheduleState.NEVER or (
-            self.state is ScheduleState.CUSTOM and not self.days
+            self.state is ScheduleState.CUSTOM_DAYS and not self.days
         ):
             self._unschedule_next(manager)
             return
@@ -324,7 +324,7 @@ class BackupSchedule:
                 CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour),
                 manager,
             )
-        elif self.state is ScheduleState.CUSTOM:
+        elif self.state is ScheduleState.CUSTOM_DAYS:
             self._schedule_next(
                 CRON_PATTERN_WEEKLY.format(
                     m=time.minute,
