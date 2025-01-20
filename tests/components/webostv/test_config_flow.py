@@ -4,12 +4,16 @@ from aiowebostv import WebOsTvPairError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN, LIVE_TV_APP_ID
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from . import setup_webostv
 from .const import (
@@ -26,13 +30,13 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 MOCK_USER_CONFIG = {CONF_HOST: HOST}
 
-MOCK_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
+MOCK_DISCOVERY_INFO = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"http://{HOST}",
     upnp={
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: f"[LG] webOS TV {TV_MODEL}",
-        ssdp.ATTR_UPNP_UDN: f"uuid:{FAKE_UUID}",
+        ATTR_UPNP_FRIENDLY_NAME: f"[LG] webOS TV {TV_MODEL}",
+        ATTR_UPNP_UDN: f"uuid:{FAKE_UUID}",
     },
 )
 
@@ -239,8 +243,8 @@ async def test_ssdp_in_progress(hass: HomeAssistant, client) -> None:
 
 async def test_form_abort_uuid_configured(hass: HomeAssistant, client) -> None:
     """Test abort if uuid is already configured, verify host update."""
-    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:])
-    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
+    entry = await setup_webostv(hass, MOCK_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN][5:])
+    assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ATTR_UPNP_UDN][5:]
     assert entry.data[CONF_HOST] == HOST
 
     result = await hass.config_entries.flow.async_init(
