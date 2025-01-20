@@ -78,8 +78,8 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         """Return fallback flag to Smart Schedule."""
         return self._fallback
 
-    async def _async_setup(self) -> None:
-        """Set up and load initial data."""
+    async def _async_update_data(self) -> dict[str, dict]:
+        """Fetch the (initial) latest data from Tado."""
 
         try:
             _LOGGER.debug("Preloading home data")
@@ -95,9 +95,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         tado_home = tado_home_call["homes"][0]
         self.home_id = tado_home["id"]
         self.home_name = tado_home["name"]
-
-    async def _async_update_data(self) -> dict[str, dict]:
-        """Fetch the latest data from Tado."""
 
         devices = await self._async_update_devices()
         zones = await self._async_update_zones()
@@ -390,5 +387,5 @@ class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                     mobile_device_id,
                 )
 
-        self.data = mapped_mobile_devices
+        self.data["mobile_device"] = mapped_mobile_devices
         return self.data
