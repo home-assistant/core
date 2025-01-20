@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: done
-    comment: platform native ones and get_firmware service.
+    comment: platform native ones and get_raw_tariff in services.
   appropriate-polling:
     status: done
     comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
