@@ -453,7 +453,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.logger.debug(
                     "Finished fetching %s data in %.3f seconds (success: %s)",
                     self.name,
-                    monotonic() - start,  # pylint: disable=possibly-used-before-assignment
+                    monotonic() - start,
                     self.last_update_success,
                 )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
