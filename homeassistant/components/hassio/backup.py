@@ -29,6 +29,7 @@ from homeassistant.components.backup import (
     Folder,
     IncorrectPasswordError,
     NewBackup,
+    RestoreBackupEvent,
     WrittenBackup,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -275,7 +276,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup_id: str | None = None
 
         @callback
-        def on_progress(data: Mapping[str, Any]) -> None:
+        def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             nonlocal backup_id
             if data.get("done") is True:
@@ -283,7 +284,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 backup_complete.set()
 
         try:
-            unsub = self._async_listen_job_events(backup.job_id, on_progress)
+            unsub = self._async_listen_job_events(backup.job_id, on_job_progress)
             await backup_complete.wait()
         finally:
             unsub()
@@ -374,6 +375,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup_id: str,
         *,
         agent_id: str,
+        on_progress: Callable[[RestoreBackupEvent], None],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         password: str | None,
         restore_addons: list[str] | None,
@@ -437,13 +439,13 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         restore_complete = asyncio.Event()
 
         @callback
-        def on_progress(data: Mapping[str, Any]) -> None:
+        def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             if data.get("done") is True:
                 restore_complete.set()
 
         try:
-            unsub = self._async_listen_job_events(job.job_id, on_progress)
+            unsub = self._async_listen_job_events(job.job_id, on_job_progress)
             await restore_complete.wait()
         finally:
             unsub()
