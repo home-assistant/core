@@ -1606,7 +1606,7 @@ ovoenergy==2.0.0
 p1monitor==3.1.0
 
 # homeassistant.components.mqtt
-paho-mqtt==1.6.1
+paho-mqtt==2.1.0
 
 # homeassistant.components.panasonic_bluray
 panacotta==0.2
@@ -2439,7 +2439,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.8.4
+#python-roborock==2.8.4
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2623,7 +2623,7 @@ rokuecp==0.19.3
 romy==0.0.10
 
 # homeassistant.components.roomba
-roombapy==1.8.1
+#roombapy==1.8.1
 
 # homeassistant.components.roon
 roonapi==0.1.6
