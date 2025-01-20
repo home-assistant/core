@@ -8,7 +8,6 @@ import logging
 import math
 from typing import Any, Final
 
-# Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
 import voluptuous as vol
 

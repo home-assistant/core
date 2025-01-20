@@ -24,13 +24,17 @@
     "event": {
       "last_media_event": {
         "name": "Last media event",
-        "state": {
-          "pending": "Pending",
-          "approved": "Approved",
-          "available": "Available",
-          "failed": "Failed",
-          "declined": "Declined",
-          "auto_approved": "Auto-approved"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "pending": "Pending",
+              "approved": "Approved",
+              "available": "Available",
+              "failed": "Failed",
+              "declined": "Declined",
+              "auto_approved": "Auto-approved"
+            }
+          }
         }
       }
     },
