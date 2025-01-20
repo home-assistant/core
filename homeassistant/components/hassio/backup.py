@@ -227,11 +227,12 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             include_addons_set = supervisor_backups.AddonSet.ALL
         elif include_addons:
             include_addons_set = set(include_addons)
-        include_folders_set = (
-            {supervisor_backups.Folder(folder) for folder in include_folders}
-            if include_folders
-            else None
-        )
+        include_folders_set = {
+            supervisor_backups.Folder(folder) for folder in include_folders or []
+        }
+        # Always include SSL if Home Assistant is included
+        if include_homeassistant:
+            include_folders_set.add(supervisor_backups.Folder.SSL)
 
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
