@@ -6,11 +6,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import dhcp
 from homeassistant.components.dlink.const import CONF_USE_LEGACY_PROTOCOL, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -29,13 +29,13 @@ CONF_DHCP_DATA = {
 
 CONF_DATA = CONF_DHCP_DATA | {CONF_HOST: HOST}
 
-CONF_DHCP_FLOW = dhcp.DhcpServiceInfo(
+CONF_DHCP_FLOW = DhcpServiceInfo(
     ip=HOST,
     macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
 )
 
-CONF_DHCP_FLOW_NEW_IP = dhcp.DhcpServiceInfo(
+CONF_DHCP_FLOW_NEW_IP = DhcpServiceInfo(
     ip="5.6.7.8",
     macaddress=DHCP_FORMATTED_MAC,
     hostname="dsp-w215",
