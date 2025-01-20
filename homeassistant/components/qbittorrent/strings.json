@@ -58,15 +58,15 @@
       }
     }
   },
- "selector": {
+  "selector": {
     "torrent_filter": {
       "options": {
-        "all": "All",
         "active": "Active",
         "inactive": "Inactive",
         "paused": "Paused",
-        "downloading": "Downloading",
-        "seeding": "Seeding"
+        "all": "All",
+        "seeding": "Seeding",
+        "started": "Started"
       }
     }
   },
