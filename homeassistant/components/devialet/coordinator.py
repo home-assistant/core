@@ -19,6 +19,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 class DevialetCoordinator(DataUpdateCoordinator[None]):
     """Devialet update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, client: DevialetApi, entry: ConfigEntry
     ) -> None:
@@ -28,17 +30,16 @@ class DevialetCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+            config_entry=entry,
         )
         self.client = client
-        self.entry = entry
-        self.hass = hass
 
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self.client.async_update()
 
         if await self.client.async_search_allowed():
-            self.entry.async_create_background_task(
+            self.config_entry.async_create_background_task(
                 hass=self.hass,
                 target=self.client.async_discover_upnp_device(),
                 name=f"{DOMAIN}_UPnP_Discovery",

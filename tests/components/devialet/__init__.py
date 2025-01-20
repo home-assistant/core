@@ -119,15 +119,6 @@ def mock_playing(aioclient_mock: AiohttpClientMocker) -> None:
     )
 
 
-# def mock_upnp(aioclient_mock: AiohttpClientMocker) -> None:
-#     """Mock the Devialet UPnP connection for Home Assistant."""
-#     aioclient_mock.get(
-#         "http://0.0.0.0:0",
-#         text=load_fixture("current_position.json", DOMAIN),
-#         headers={"Content-Type": CONTENT_TYPE_JSON},
-#     )
-
-
 async def setup_integration(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
