@@ -127,18 +127,20 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         # In case we have an existing entry with the same host
         # we update the entry with the unique_id for the gateway, and abort the flow
         unique_id = format_mac(discovery_info.macaddress)
-        existing_entries = [
+        existing_entries_without_unique_id = [
             entry
             for entry in self._async_current_entries(include_ignore=False)
             if entry.unique_id is None
             and entry.data.get(CONF_HOST) == self._discovered_host
-            and entry.state == ConfigEntryState.LOADED
+            and entry.state is ConfigEntryState.LOADED
         ]
-        if existing_entries:
+        if existing_entries_without_unique_id:
             self.hass.config_entries.async_update_entry(
-                existing_entries[0], unique_id=unique_id
+                existing_entries_without_unique_id[0], unique_id=unique_id
             )
-            self.hass.config_entries.async_schedule_reload(existing_entries[0].entry_id)
+            self.hass.config_entries.async_schedule_reload(
+                existing_entries_without_unique_id[0].entry_id
+            )
             raise AbortFlow("already_configured")
 
         await self.async_set_unique_id(unique_id)
