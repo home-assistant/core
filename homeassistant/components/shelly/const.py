@@ -118,6 +118,9 @@ EVENT_SHELLY_CLICK: Final = "shelly.click"
 
 # Script events for RPC devices
 EVENT_SHELLY_SCRIPT: Final = "shelly.script_event"
+SHELLY_EMIT_EVENT_PATTERN: Final = re.compile(
+    r"(?:Shelly\s*\.\s*emitEvent\s*\(\s*[\"'`])(\w*)"
+)
 
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"

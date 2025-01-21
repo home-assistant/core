@@ -32,6 +32,7 @@ from .utils import (
     get_device_entry_gen,
     get_rpc_entity_name,
     get_rpc_key_instances,
+    get_rpc_script_event_types,
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
@@ -68,6 +69,11 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
         config, status, key
     ),
 )
+SCRIPT_EVENT: Final = ShellyRpcEventDescription(
+    key="script",
+    translation_key="script",
+    device_class=None,
+)
 
 
 async def async_setup_entry(
@@ -95,6 +101,18 @@ async def async_setup_entry(
                 async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
             else:
                 entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
+
+        script_instances = get_rpc_key_instances(
+            coordinator.device.status, SCRIPT_EVENT.key
+        )
+        for script in script_instances:
+            event_types = await get_rpc_script_event_types(
+                coordinator.device, int(script.split(":")[-1])
+            )
+            entities.append(
+                ShellyRpcEvent(coordinator, script, SCRIPT_EVENT, event_types)
+            )
+
     else:
         coordinator = config_entry.runtime_data.block
         if TYPE_CHECKING:
@@ -167,6 +185,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         description: ShellyRpcEventDescription,
+        event_types: list[str] | None = None,
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
@@ -178,16 +197,25 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description
 
+        if event_types is not None:
+            self._attr_event_types = event_types
+
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.async_subscribe_input_events(self._async_handle_event)
-        )
+
+        if self.entity_description.key == RPC_EVENT.key:
+            self.async_on_remove(
+                self.coordinator.async_subscribe_input_events(self._async_handle_event)
+            )
+        elif self.entity_description.key == SCRIPT_EVENT.key:
+            self.async_on_remove(
+                self.coordinator.async_subscribe_script_event(self._async_handle_event)
+            )
 
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
         if event["id"] == self.input_index:
-            self._trigger_event(event["event"])
+            self._trigger_event(event["event"], event.get("data"))
             self.async_write_ha_state()

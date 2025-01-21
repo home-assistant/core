@@ -38,10 +38,7 @@ from .bluetooth import async_connect_scanner
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
-    ATTR_COMPONENT,
-    ATTR_DATA,
     ATTR_DEVICE,
-    ATTR_EVENT,
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     CONF_BLE_SCANNER_MODE,
@@ -50,7 +47,6 @@ from .const import (
     DUAL_MODE_LIGHT_MODELS,
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
-    EVENT_SHELLY_SCRIPT,
     INPUTS_EVENTS_DICT,
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
@@ -489,6 +485,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._script_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -554,6 +551,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return _unsubscribe
 
     @callback
+    def async_subscribe_script_event(
+        self, script_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscript to script events."""
+
+        def _unsubscribe() -> None:
+            self._script_event_listeners.remove(script_event_callback)
+
+        self._script_event_listeners.append(script_event_callback)
+
+        return _unsubscribe
+
+    @callback
     def async_subscribe_events(
         self, event_callback: Callable[[dict[str, Any]], None]
     ) -> CALLBACK_TYPE:
@@ -590,16 +600,8 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             # Events published by scripts on the device will be published on the event bus
             component = event.get("component")
             if type(component) is str and component.startswith("script"):
-                self.hass.bus.async_fire(
-                    EVENT_SHELLY_SCRIPT,
-                    {
-                        ATTR_DEVICE_ID: self.device_id,
-                        ATTR_DEVICE: self.device.hostname,
-                        ATTR_COMPONENT: event.get("component"),
-                        ATTR_EVENT: event.get("event"),
-                        ATTR_DATA: event.get("data"),
-                    },
-                )
+                for event_callback in self._script_event_listeners:
+                    event_callback(event)
 
             if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()
