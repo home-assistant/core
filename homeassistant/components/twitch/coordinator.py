@@ -78,6 +78,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
             )
         if not (user := await first(self.twitch.get_users())):
             raise UpdateFailed("Logged in user not found")
+        self.users.append(user)
         self.current_user = user
 
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
@@ -104,16 +105,17 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         for channel in self.users:
             followers = await self.twitch.get_channel_followers(channel.id)
             stream = streams.get(channel.id)
-            follow = follows.get(channel.id)
+            follow = follows.get(channel.id) if channel.id != self.current_user.id else None
             sub: UserSubscription | None = None
-            try:
-                sub = await self.twitch.check_user_subscription(
-                    user_id=self.current_user.id, broadcaster_id=channel.id
-                )
-            except TwitchResourceNotFound:
-                LOGGER.debug("User is not subscribed to %s", channel.display_name)
-            except TwitchAPIException as exc:
-                LOGGER.error("Error response on check_user_subscription: %s", exc)
+            if channel.id != self.current_user.id:
+                try:
+                    sub = await self.twitch.check_user_subscription(
+                        user_id=self.current_user.id, broadcaster_id=channel.id
+                    )
+                except TwitchResourceNotFound:
+                    LOGGER.debug("User is not subscribed to %s", channel.display_name)
+                except TwitchAPIException as exc:
+                    LOGGER.error("Error response on check_user_subscription: %s", exc)
 
             data[channel.id] = TwitchUpdate(
                 channel.display_name,
@@ -124,10 +126,10 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 stream.started_at if stream else None,
                 stream.thumbnail_url.replace("-{width}x{height}", "") if stream else None,
                 channel.profile_image_url,
-                bool(sub),
+                bool(sub) if channel.id != self.current_user.id else None,
                 sub.is_gift if sub else None,
                 {"1000": 1, "2000": 2, "3000": 3}.get(sub.tier) if sub else None,
-                bool(follow),
+                bool(follow) if follow else (channel.id == self.current_user.id),
                 follow.followed_at if follow else None,
                 stream.viewer_count if stream else None,
             )
