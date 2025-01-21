@@ -40,7 +40,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "SwitchBot account username",
+          "username": "The username of your SwitchBot account",
           "password": "The password of your SwitchBot account"
         }
       },
