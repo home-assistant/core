@@ -133,4 +133,4 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 follow.followed_at if follow else None,
                 stream.viewer_count if stream else None,
             )
-        return data
+        return data 
