@@ -13,7 +13,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,

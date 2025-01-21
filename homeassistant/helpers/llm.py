@@ -15,10 +15,6 @@ import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.climate import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation import (
-    ConversationTraceEventType,
-    async_conversation_trace_append,
-)
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
@@ -171,6 +167,12 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.conversation import (
+            ConversationTraceEventType,
+            async_conversation_trace_append,
+        )
+
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},

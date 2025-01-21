@@ -13,11 +13,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -59,7 +60,7 @@ async def test_discovery_flow_works(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             port=80,
@@ -105,7 +106,7 @@ async def test_discovery_flow_during_onboarding(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             port=80,
@@ -142,7 +143,7 @@ async def test_discovery_flow_during_onboarding_disabled_api(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             port=80,
@@ -186,7 +187,7 @@ async def test_discovery_disabled_api(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             port=80,
@@ -221,7 +222,7 @@ async def test_discovery_missing_data_in_service_info(hass: HomeAssistant) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             port=80,
@@ -247,7 +248,7 @@ async def test_discovery_invalid_api(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             port=80,
@@ -279,7 +280,7 @@ async def test_dhcp_discovery_updates_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.0.0.127",
             hostname="HW-p1meter-aabbcc",
             macaddress="5c2fafabcdef",
@@ -309,7 +310,7 @@ async def test_dhcp_discovery_updates_entry_fails(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.0.0.127",
             hostname="HW-p1meter-aabbcc",
             macaddress="5c2fafabcdef",
@@ -331,7 +332,7 @@ async def test_dhcp_discovery_ignores_unknown(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="127.0.0.1",
             hostname="HW-p1meter-aabbcc",
             macaddress="5c2fafabcdef",
@@ -381,7 +382,7 @@ async def test_discovery_flow_updates_new_ip(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.0.0.127"),
             ip_addresses=[ip_address("1.0.0.127")],
             port=80,
