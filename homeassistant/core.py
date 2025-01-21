@@ -41,7 +41,7 @@ from typing import (
     overload,
 )
 
-from propcache import cached_property, under_cached_property
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 
 from . import util
