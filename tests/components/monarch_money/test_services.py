@@ -1,6 +1,9 @@
 """Test services."""
 
+import json
 from unittest.mock import AsyncMock
+
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.monarch_money.const import (
     DOMAIN,
@@ -40,6 +43,7 @@ async def test_get_holdings(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test holding services."""
     await setup_integration(hass, mock_config_entry)
@@ -52,10 +56,9 @@ async def test_get_holdings(
         return_response=True,
     )
 
-    assert response["sensor.rando_brokerage_brokerage_balance"] == (
-        '{"CMF":{"quantity":101,"totalValue":202.0,"type":"ETF","percentage":1.3,"name":"iShares S&P CA AMT-Free Municipal Bd",'
-        '"sharePrice":2.0,"sharePriceUpdate":"2024-02-16T21:00:04.365428+00:00"},"GOOG":{"quantity":100,"totalValue":10000.0,'
-        '"type":"Stock","percentage":65.8,"name":"Google Inc.","sharePrice":100.0,"sharePriceUpdate":"2024-02-16T21:05:46.879464+00:00"},'
-        '"CUR:USD":{"quantity":5000,"totalValue":5000.0,"type":"Cash","percentage":32.9,"name":"U S Dollar","sharePrice":1,'
-        '"sharePriceUpdate":null}}'
-    )
+    assert response == snapshot
+
+    # Test the structure contains expected keys for one holding as a sanity check
+    holdings_data = json.loads(response["sensor.rando_brokerage_brokerage_balance"])
+    assert "CMF" in holdings_data
+    assert "quantity" in holdings_data["CMF"]
