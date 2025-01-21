@@ -12,7 +12,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
           "username": "Installer or Enphase Cloud username",
-          "password": "blank or Enphase Cloud password"
+          "password": "Blank or Enphase Cloud password"
         }
       },
       "reconfigure": {
