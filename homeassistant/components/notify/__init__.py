@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from typing import Any, final, override
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 import homeassistant.components.persistent_notification as pn

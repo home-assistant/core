@@ -3,6 +3,7 @@
   "result": {
     "result": {
       "humidity": 35,
+      "mist_level": 6,
       "mist_virtual_level": 6,
       "mode": "manual",
       "water_lacks": true,

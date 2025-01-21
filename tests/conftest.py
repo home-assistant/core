@@ -33,6 +33,7 @@ import bcrypt
 import freezegun
 import multidict
 import pytest
+import pytest_asyncio
 import pytest_socket
 import requests_mock
 import respx
@@ -43,7 +44,7 @@ from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder  # noqa: F401, isort:skip
+from . import patch_recorder
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -1233,8 +1234,8 @@ def disable_translations_once(
     translations_once.start()
 
 
-@pytest.fixture(autouse=True, scope="session")
-def mock_zeroconf_resolver() -> Generator[_patch]:
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
     patcher = patch(
         "homeassistant.helpers.aiohttp_client._async_make_resolver",

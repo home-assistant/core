@@ -388,9 +388,9 @@ def get_entities(
     onewire_hub: OneWireHub,
     devices: list[OWDeviceDescription],
     options: MappingProxyType[str, Any],
-) -> list[OneWireSensor]:
+) -> list[OneWireSensorEntity]:
     """Get a list of entities."""
-    entities: list[OneWireSensor] = []
+    entities: list[OneWireSensorEntity] = []
     for device in devices:
         family = device.family
         device_type = device.type
@@ -445,7 +445,7 @@ def get_entities(
                     )
                     continue
             entities.append(
-                OneWireSensor(
+                OneWireSensorEntity(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
@@ -456,7 +456,7 @@ def get_entities(
     return entities
 
 
-class OneWireSensor(OneWireEntity, SensorEntity):
+class OneWireSensorEntity(OneWireEntity, SensorEntity):
     """Implementation of a 1-Wire sensor."""
 
     entity_description: OneWireSensorEntityDescription
