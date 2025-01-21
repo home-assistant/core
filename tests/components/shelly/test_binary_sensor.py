@@ -12,7 +12,6 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAI
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -388,7 +387,7 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
 )
 async def test_rpc_device_virtual_binary_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     name: str | None,
@@ -423,7 +422,7 @@ async def test_rpc_device_virtual_binary_sensor(
 
 async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -457,7 +456,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
 
 async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
@@ -483,7 +482,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
 async def test_blu_trv_binary_sensor_entity(
     hass: HomeAssistant,
     mock_blu_trv: Mock,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test BLU TRV binary sensor entity."""
