@@ -32,13 +32,14 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN, CONF_PRIVACY
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
     ReolinkWebhookException,
     UserNotAdmin,
 )
+from .store import ReolinkStore
 
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
@@ -64,9 +65,12 @@ class ReolinkHost:
         hass: HomeAssistant,
         config: Mapping[str, Any],
         options: Mapping[str, Any],
+        config_entry_id: str | None = None,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
+        self._config_entry_id = config_entry_id
+        self._config = config
         self._unique_id: str = ""
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
@@ -150,6 +154,13 @@ class ReolinkHost:
                 f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
             )
 
+        store: ReolinkStore | None = None
+        if self._config_entry_id is not None:
+            store = ReolinkStore(self._hass, self._config_entry_id)
+            if self._config.get(CONF_PRIVACY):
+                data = await store.async_load()
+                self._api.set_raw_host_data(data)
+
         await self._api.get_host_data()
 
         if self._api.mac_address is None:
@@ -160,6 +171,13 @@ class ReolinkHost:
                 f"User '{self._api.username}' has authorization level "
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
+
+        self.privacy_mode = self._api.baichuan.privacy_mode()
+
+        if store is not None and self._api.supported(None, "privacy_mode") and not self.privacy_mode:
+            # save the raw host data for next reload in case privacy mode is enabled
+            data = self._api.get_raw_host_data()
+            await store.async_store(data)
 
         onvif_supported = self._api.supported(None, "ONVIF")
         self._onvif_push_supported = onvif_supported
@@ -234,8 +252,6 @@ class ReolinkHost:
             self._cancel_tcp_push_check = async_call_later(
                 self._hass, FIRST_TCP_PUSH_TIMEOUT, self._async_check_tcp_push
             )
-
-        self.privacy_mode = self._api.baichuan.privacy_mode()
 
         ch_list: list[int | None] = [None]
         if self._api.is_nvr:
