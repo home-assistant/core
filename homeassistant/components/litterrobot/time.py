@@ -19,17 +19,12 @@ from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
-@dataclass(frozen=True)
-class RequiredKeysMixin(Generic[_RobotT]):
-    """A class that describes robot time entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_RobotT]):
+    """A class that describes robot time entities."""
 
     value_fn: Callable[[_RobotT], time | None]
     set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
-
-
-@dataclass(frozen=True)
-class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_RobotT]):
-    """A class that describes robot time entities."""
 
 
 def _as_local_time(start: datetime | None) -> time | None:
