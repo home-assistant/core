@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -107,34 +108,71 @@ class BasePlatform(Entity):
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
+        self._update_lock = asyncio.Lock()
 
     @abstractmethod
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Virtual function to be overwritten."""
+
+    async def async_update(self, now: datetime | None = None) -> None:
+        """Update the entity state."""
+        async with self._update_lock:
+            await self._async_update()
+
+    async def _async_update_and_write_state(self) -> None:
+        """Update the entity state and write it to the state machine."""
+        await self.async_update()
+        self.async_write_ha_state()
+
+    async def _async_update_if_not_in_progress(
+        self, now: datetime | None = None
+    ) -> None:
+        """Update the entity state if not already in progress."""
+        if self._update_lock.locked():
+            _LOGGER.debug("Update for entity %s is already in progress", self.name)
+            return
+        await self._async_update_and_write_state()
 
     @callback
     def async_run(self) -> None:
         """Remote start entity."""
-        self.async_hold(update=False)
-        self._cancel_call = async_call_later(
-            self.hass, timedelta(milliseconds=100), self.async_update
-        )
+        self._async_cancel_update_polling()
+        self._async_schedule_future_update(0.1)
         if self._scan_interval > 0:
             self._cancel_timer = async_track_time_interval(
-                self.hass, self.async_update, timedelta(seconds=self._scan_interval)
+                self.hass,
+                self._async_update_if_not_in_progress,
+                timedelta(seconds=self._scan_interval),
             )
         self._attr_available = True
         self.async_write_ha_state()
 
     @callback
-    def async_hold(self, update: bool = True) -> None:
-        """Remote stop entity."""
+    def _async_schedule_future_update(self, delay: float) -> None:
+        """Schedule an update in the future."""
+        self._async_cancel_future_pending_update()
+        self._cancel_call = async_call_later(
+            self.hass, delay, self._async_update_if_not_in_progress
+        )
+
+    @callback
+    def _async_cancel_future_pending_update(self) -> None:
+        """Cancel a future pending update."""
         if self._cancel_call:
             self._cancel_call()
             self._cancel_call = None
+
+    def _async_cancel_update_polling(self) -> None:
+        """Cancel the polling."""
         if self._cancel_timer:
             self._cancel_timer()
             self._cancel_timer = None
+
+    @callback
+    def async_hold(self, update: bool = True) -> None:
+        """Remote stop entity."""
+        self._async_cancel_future_pending_update()
+        self._async_cancel_update_polling()
         if update:
             self._attr_available = False
             self.async_write_ha_state()
@@ -312,6 +350,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                 self._attr_is_on = True
             elif state.state == STATE_OFF:
                 self._attr_is_on = False
+        await super().async_added_to_hass()
 
     async def async_turn(self, command: int) -> None:
         """Evaluate switch result."""
@@ -330,21 +369,21 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             return
 
         if self._verify_delay:
-            async_call_later(self.hass, self._verify_delay, self.async_update)
-        else:
-            await self.async_update()
+            self._async_schedule_future_update(self._verify_delay)
+            return
+
+        await self._async_update_and_write_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set switch off."""
         await self.async_turn(self._command_off)
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update the entity state."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
         if not self._verify_active:
             self._attr_available = True
-            self.async_write_ha_state()
             return
 
         # do not allow multiple active calls to the same platform
@@ -357,7 +396,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
         self._call_active = False
         if result is None:
             self._attr_available = False
-            self.async_write_ha_state()
             return
 
         self._attr_available = True
@@ -379,4 +417,3 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
                     self._verify_address,
                     value,
                 )
-        self.async_write_ha_state()
