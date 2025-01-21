@@ -3,9 +3,10 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_MOTION
+from aioshelly.const import MODEL_BLU_GATEWAY_GEN3, MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
@@ -477,3 +478,22 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
 
     entry = entity_registry.async_get(entity_id)
     assert not entry
+
+
+async def test_blu_trv_binary_sensor_entity(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test BLU TRV binary sensor entity."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    for entity in ("calibration",):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.trv_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")

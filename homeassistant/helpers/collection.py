@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
@@ -126,7 +126,7 @@ class CollectionEntity(Entity):
         """Handle updated configuration."""
 
 
-class ObservableCollection[_ItemT](ABC):
+class ObservableCollection[_ItemT]:
     """Base collection type that can be observed."""
 
     def __init__(self, id_manager: IDManager | None) -> None:
