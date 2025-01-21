@@ -497,7 +497,7 @@ av==13.1.0
 axis==64
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.4
+ayla-iot-unofficial==1.4.5
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -651,7 +651,7 @@ demetriek==1.2.0
 denonavr==1.0.1
 
 # homeassistant.components.devialet
-devialet==1.4.5
+devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.3
@@ -966,7 +966,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.64
+holidays==0.65
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250109.0
@@ -1101,7 +1101,7 @@ led-ble==1.1.1
 lektricowifi==0.0.43
 
 # homeassistant.components.letpot
-letpot==0.2.0
+letpot==0.3.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -1963,7 +1963,7 @@ python-opensky==1.0.1
 python-otbr-api==2.7.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.5.0
+python-overseerr==0.6.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0

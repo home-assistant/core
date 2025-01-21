@@ -44,7 +44,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
