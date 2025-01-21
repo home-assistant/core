@@ -718,11 +718,11 @@ async def test_manual_flow_detects_failed_user_authorization(
     assert result["step_id"] == "authorize"
     assert result["errors"] == {"base": "authorization_failed"}
 
-<<<<<<< HEAD
     # Restore normal functionality
     mock_homewizardenergy_v2.device.side_effect = None
-=======
->>>>>>> eea4695f8dc (Fix tests)
+    
+    # Restore normal functionality 
+    mock_homewizardenergy_v2.device.side_effect = None
     mock_homewizardenergy_v2.get_token.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
