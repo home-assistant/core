@@ -169,13 +169,12 @@ class BasePlatform(Entity):
             self._cancel_timer = None
 
     @callback
-    def async_hold(self, update: bool = True) -> None:
+    def async_hold(self) -> None:
         """Remote stop entity."""
         self._async_cancel_future_pending_update()
         self._async_cancel_update_polling()
-        if update:
-            self._attr_available = False
-            self.async_write_ha_state()
+        self._attr_available = False
+        self.async_write_ha_state()
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
