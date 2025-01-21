@@ -16,7 +16,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries, data_entry_flow, loader
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
@@ -41,6 +40,7 @@ from homeassistant.helpers import entity_registry as er, frame, issue_registry a
 from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -2645,9 +2645,7 @@ async def test_unique_id_from_discovery_in_setup_retry(
 
         VERSION = 1
 
-        async def async_step_dhcp(
-            self, discovery_info: dhcp.DhcpServiceInfo
-        ) -> FlowResult:
+        async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
             """Test dhcp step."""
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
@@ -2683,7 +2681,7 @@ async def test_unique_id_from_discovery_in_setup_retry(
         discovery_result = await manager.flow.async_init(
             "comp",
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="any",
                 ip=host,
                 macaddress=unique_id,
@@ -7266,9 +7264,9 @@ async def test_unique_id_collision_issues(
     mock_setup_entry = AsyncMock(return_value=True)
     for i in range(3):
         mock_integration(
-            hass, MockModule(f"test{i+1}", async_setup_entry=mock_setup_entry)
+            hass, MockModule(f"test{i + 1}", async_setup_entry=mock_setup_entry)
         )
-        mock_platform(hass, f"test{i+1}.config_flow", None)
+        mock_platform(hass, f"test{i + 1}.config_flow", None)
 
     test2_group_1: list[MockConfigEntry] = []
     test2_group_2: list[MockConfigEntry] = []

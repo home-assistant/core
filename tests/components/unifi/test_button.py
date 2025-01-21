@@ -262,7 +262,7 @@ async def test_device_button_entities(
             WLAN_REGENERATE_PASSWORD,
             "button.ssid_1_regenerate_password",
             "put",
-            f"/rest/wlanconf/{WLAN_REGENERATE_PASSWORD[0]["_id"]}",
+            f"/rest/wlanconf/{WLAN_REGENERATE_PASSWORD[0]['_id']}",
             {
                 "json": {"data": "password changed successfully", "meta": {"rc": "ok"}},
                 "headers": {"content-type": CONTENT_TYPE_JSON},

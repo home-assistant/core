@@ -460,7 +460,7 @@ class TimestampValidator:
         if packet.dts is None:
             if self._missing_dts >= MAX_MISSING_DTS:  # type: ignore[unreachable]
                 raise StreamWorkerError(
-                    f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
+                    f"No dts in {MAX_MISSING_DTS + 1} consecutive packets"
                 )
             self._missing_dts += 1
             return False

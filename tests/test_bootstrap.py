@@ -1392,9 +1392,13 @@ async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
     assert process.returncode == 0
     decoded_stdout = stdout.decode()
 
+    disallowed_integrations = bootstrap.STAGE_1_INTEGRATIONS.copy()
+    # zeroconf is a top level dep now
+    disallowed_integrations.remove("zeroconf")
+
     # Ensure no stage1 integrations have been imported
     # as a side effect of importing the pre-imports
-    for integration in bootstrap.STAGE_1_INTEGRATIONS:
+    for integration in disallowed_integrations:
         assert f"homeassistant.components.{integration}" not in decoded_stdout
 
 

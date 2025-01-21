@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.model0_boiler_temperature-entry]
+# name: test_all_heating_entities[sensor.model0_boiler_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_boiler_temperature-state]
+# name: test_all_heating_entities[sensor.model0_boiler_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -50,7 +50,7 @@
     'state': '63',
   })
 # ---
-# name: test_all_entities[sensor.model0_burner_hours-entry]
+# name: test_all_heating_entities[sensor.model0_burner_hours-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -85,7 +85,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_burner_hours-state]
+# name: test_all_heating_entities[sensor.model0_burner_hours-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Burner hours',
@@ -100,7 +100,7 @@
     'state': '18726.3',
   })
 # ---
-# name: test_all_entities[sensor.model0_burner_modulation-entry]
+# name: test_all_heating_entities[sensor.model0_burner_modulation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +135,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_all_entities[sensor.model0_burner_modulation-state]
+# name: test_all_heating_entities[sensor.model0_burner_modulation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Burner modulation',
@@ -150,7 +150,7 @@
     'state': '0',
   })
 # ---
-# name: test_all_entities[sensor.model0_burner_starts-entry]
+# name: test_all_heating_entities[sensor.model0_burner_starts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -185,7 +185,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.model0_burner_starts-state]
+# name: test_all_heating_entities[sensor.model0_burner_starts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 Burner starts',
@@ -199,7 +199,7 @@
     'state': '14315',
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_this_month-entry]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_month-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -234,7 +234,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_this_month-state]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_month-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption this month',
@@ -248,7 +248,7 @@
     'state': '805',
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_this_week-entry]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -283,7 +283,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_this_week-state]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption this week',
@@ -297,7 +297,7 @@
     'state': '84',
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_this_year-entry]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_year-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -332,7 +332,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_this_year-state]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_this_year-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption this year',
@@ -346,7 +346,7 @@
     'state': '8203',
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_today-entry]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -381,7 +381,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_gas_consumption_today-state]
+# name: test_all_heating_entities[sensor.model0_dhw_gas_consumption_today-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'model0 DHW gas consumption today',
@@ -395,7 +395,7 @@
     'state': '22',
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_max_temperature-entry]
+# name: test_all_heating_entities[sensor.model0_dhw_max_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -430,7 +430,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_max_temperature-state]
+# name: test_all_heating_entities[sensor.model0_dhw_max_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -446,7 +446,7 @@
     'state': '60',
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_min_temperature-entry]
+# name: test_all_heating_entities[sensor.model0_dhw_min_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -481,7 +481,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_dhw_min_temperature-state]
+# name: test_all_heating_entities[sensor.model0_dhw_min_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -497,407 +497,7 @@
     'state': '10',
   })
 # ---
-# name: test_all_entities[sensor.model0_energy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_energy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Energy',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power consumption this month',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this month',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[sensor.model0_energy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'model0 Energy',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_energy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '7.843',
-  })
-# ---
-# name: test_all_entities[sensor.model0_electricity_consumption_this_year-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_electricity_consumption_this_year',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumption this year',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_consumption_this_year',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this year',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[sensor.model0_electricity_consumption_this_year-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'model0 Electricity consumption this year',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_electricity_consumption_this_year',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '207.106',
-  })
-# ---
-# name: test_all_entities[sensor.model0_electricity_consumption_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_electricity_consumption_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
-    'original_name': 'Electricity consumption today',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'power_consumption_today',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption today',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-  })
-# ---
-# name: test_all_entities[sensor.model0_electricity_consumption_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'energy',
-      'friendly_name': 'model0 Electricity consumption today',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_electricity_consumption_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.219',
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_this_month-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_heating_gas_consumption_this_month',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Heating gas consumption this month',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_consumption_heating_this_month',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_month',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_this_month-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Heating gas consumption this month',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_heating_gas_consumption_this_month',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_this_week-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_heating_gas_consumption_this_week',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Heating gas consumption this week',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_consumption_heating_this_week',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_week',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_this_week-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Heating gas consumption this week',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_heating_gas_consumption_this_week',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_this_year-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_heating_gas_consumption_this_year',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Heating gas consumption this year',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_consumption_heating_this_year',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_year',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_this_year-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Heating gas consumption this year',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_heating_gas_consumption_this_year',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30946',
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_today-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_heating_gas_consumption_today',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Heating gas consumption today',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas_consumption_heating_today',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_today',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.model0_heating_gas_consumption_today-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'model0 Heating gas consumption today',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_heating_gas_consumption_today',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0',
-  })
-# ---
-# name: test_all_entities[sensor.model0_outside_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_outside_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Outside temperature',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'outside_temperature',
-    'unique_id': 'gateway0_deviceSerialVitodens300W-outside_temperature',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_all_entities[sensor.model0_outside_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'model0 Outside temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_outside_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.8',
-  })
-# ---
-# name: test_all_entities[sensor.model0_electricity_consumption_this_week-entry]
+# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_week-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -932,7 +532,7 @@
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_electricity_consumption_this_week-state]
+# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_week-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -948,7 +548,407 @@
     'state': '0.829',
   })
 # ---
-# name: test_all_entities[sensor.model0_supply_temperature-entry]
+# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_year-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_electricity_consumption_this_year',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumption this year',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_consumption_this_year',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this year',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_electricity_consumption_this_year-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Electricity consumption this year',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_electricity_consumption_this_year',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '207.106',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_electricity_consumption_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_electricity_consumption_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Electricity consumption today',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_consumption_today',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption today',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_electricity_consumption_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Electricity consumption today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_electricity_consumption_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.219',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Energy',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power consumption this month',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-power consumption this month',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'model0 Energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '7.843',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_month-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_gas_consumption_this_month',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating gas consumption this month',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_consumption_heating_this_month',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_month',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_month-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Heating gas consumption this month',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_gas_consumption_this_month',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_week-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_gas_consumption_this_week',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating gas consumption this week',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_consumption_heating_this_week',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_week',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_week-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Heating gas consumption this week',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_gas_consumption_this_week',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_year-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_gas_consumption_this_year',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating gas consumption this year',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_consumption_heating_this_year',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_this_year',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_this_year-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Heating gas consumption this year',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_gas_consumption_this_year',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30946',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_heating_gas_consumption_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating gas consumption today',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'gas_consumption_heating_today',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-gas_consumption_heating_today',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_heating_gas_consumption_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'model0 Heating gas consumption today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_heating_gas_consumption_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_outside_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_outside_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Outside temperature',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'outside_temperature',
+    'unique_id': 'gateway0_deviceSerialVitodens300W-outside_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_outside_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'model0 Outside temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_outside_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.8',
+  })
+# ---
+# name: test_all_heating_entities[sensor.model0_supply_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -983,7 +983,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_supply_temperature-state]
+# name: test_all_heating_entities[sensor.model0_supply_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -999,7 +999,7 @@
     'state': '63',
   })
 # ---
-# name: test_all_entities[sensor.model0_supply_temperature_2-entry]
+# name: test_all_heating_entities[sensor.model0_supply_temperature_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1034,7 +1034,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_all_entities[sensor.model0_supply_temperature_2-state]
+# name: test_all_heating_entities[sensor.model0_supply_temperature_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1048,6 +1048,132 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.5',
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_ventilation_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'levelone',
+        'leveltwo',
+        'levelthree',
+        'levelfour',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_ventilation_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Ventilation level',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_level',
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_level',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_ventilation_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'model0 Ventilation level',
+      'options': list([
+        'standby',
+        'levelone',
+        'leveltwo',
+        'levelthree',
+        'levelfour',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_ventilation_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'levelone',
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'permanent',
+        'schedule',
+        'sensordriven',
+        'silent',
+        'forcedlevelfour',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_ventilation_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Ventilation reason',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_reason',
+    'unique_id': 'gateway0_deviceSerialViAir300F-ventilation_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'model0 Ventilation reason',
+      'options': list([
+        'standby',
+        'permanent',
+        'schedule',
+        'sensordriven',
+        'silent',
+        'forcedlevelfour',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_ventilation_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'permanent',
   })
 # ---
 # name: test_room_sensors[sensor.model0_humidity-entry]
