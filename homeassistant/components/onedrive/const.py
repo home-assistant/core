@@ -14,7 +14,8 @@ OAUTH2_AUTHORIZE: Final = (
 OAUTH2_TOKEN: Final = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
 
 OAUTH_SCOPES: Final = [
-    "https://graph.microsoft.com/files.readwrite.AppFolder",
+    "Files.ReadWrite.AppFolder",
+    "Files.Read",
     "offline_access",
     "openid",
 ]
