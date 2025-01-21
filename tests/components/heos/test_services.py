@@ -81,7 +81,6 @@ async def test_sign_in_unknown_error(
     assert "Unable to sign in" in caplog.text
 
 
-@pytest.mark.usefixtures("controller")
 async def test_sign_in_not_loaded_raises(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
