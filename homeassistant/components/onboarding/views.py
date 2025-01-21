@@ -18,10 +18,10 @@ from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
 from homeassistant.components.backup import (
-    DATA_MANAGER as BACKUP_MANAGER,
     BackupManager,
     Folder,
     IncorrectPasswordError,
+    async_get_manager as async_get_backup_manager,
     http as backup_http,
 )
 from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
@@ -353,7 +353,7 @@ def with_backup_manager[
             raise HTTPUnauthorized
 
         try:
-            manager = request.app[KEY_HASS].data[BACKUP_MANAGER]
+            manager = async_get_backup_manager(request.app[KEY_HASS])
         except KeyError:
             return self.json(
                 {"error": "backup_disabled"},
