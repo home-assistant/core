@@ -31,6 +31,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerState,
 )
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -89,7 +90,7 @@ SERVICE_TO_DATA = {
     SERVICE_MEDIA_NEXT_TRACK: [{}],
     SERVICE_PLAY_MEDIA: [
         {
-            "media_content_id": "https://home-assistant.io/test.mp3",
+            "media_content_id": "media-source://sourced_media/abc123",
             "media_content_type": "music",
         },
     ],
@@ -278,18 +279,6 @@ async def test_device_shutdown(
     with patch("devialet.DevialetApi.upnp_available", return_value=True):
         entry = await setup_integration(hass, aioclient_mock)
 
-        # with patch("devialet.DevialetApi.is_available", return_value=False):
-        #     test = await hass.data["entity_registry"]
-        #     piet = test
-
-        # assert entry.entry_id in hass.data[DOMAIN]
-        # assert entry.state is ConfigEntryState.LOADED
-
-        # await hass.config_entries.async_reload(entry.entry_id)
-        # state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
-        # assert state.state == STATE_UNAVAILABLE
-        # assert state.name == NAME
-
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -323,6 +312,10 @@ async def test_media_player_services(
     with (
         patch("devialet.DevialetApi.upnp_available", return_value=True),
         patch("devialet.DevialetApi.async_play_url_source"),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia("https://home-assistant.io/test.mp3", "music"),
+        ),
     ):
         entry = await setup_integration(
             hass, aioclient_mock, state=MediaPlayerState.PLAYING
