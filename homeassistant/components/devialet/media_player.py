@@ -145,8 +145,8 @@ class DevialetMediaPlayerEntity(
         if not self.coordinator.client.available_operations:
             return features  # No extra features available
 
-        for option in self.coordinator.client.available_operations:
-            features |= DEVIALET_TO_HA_FEATURE_MAP.get(option, 0)
+        for operation in self.coordinator.client.available_operations:
+            features |= DEVIALET_TO_HA_FEATURE_MAP.get(operation, 0)
         return features
 
     @property
