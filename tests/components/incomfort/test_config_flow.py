@@ -39,7 +39,9 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_entry_already_configured(hass: HomeAssistant) -> None:
+async def test_entry_already_configured(
+    hass: HomeAssistant, mock_incomfort: MagicMock
+) -> None:
     """Test aborting if the entry is already configured."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
@@ -166,6 +168,58 @@ async def test_reauth_flow_failure(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_incomfort: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the re-configure flow succeeds."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG | {CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_failure(
+    hass: HomeAssistant,
+    mock_incomfort: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the re-configure flow fails."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    with patch.object(
+        mock_incomfort(),
+        "heaters",
+        side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONFIG | {CONF_PASSWORD: "wrong-password"},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_CONFIG | {CONF_PASSWORD: "new-password"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(

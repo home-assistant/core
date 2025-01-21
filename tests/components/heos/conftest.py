@@ -24,7 +24,6 @@ from pyheos import (
 import pytest
 import pytest_asyncio
 
-from homeassistant.components import ssdp
 from homeassistant.components.heos import (
     CONF_PASSWORD,
     DOMAIN,
@@ -34,6 +33,16 @@ from homeassistant.components.heos import (
     SourceManager,
 )
 from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -111,12 +120,6 @@ def controller_fixture(
         yield mock_heos
 
 
-@pytest.fixture(name="config")
-def config_fixture():
-    """Create hass config fixture."""
-    return {DOMAIN: {CONF_HOST: "127.0.0.1"}}
-
-
 @pytest.fixture(name="players")
 def player_fixture(quick_selects):
     """Create two mock HeosPlayers."""
@@ -125,8 +128,8 @@ def player_fixture(quick_selects):
         player = HeosPlayer(
             player_id=i,
             name="Test Player" if i == 1 else f"Test Player {i}",
-            model="Test Model",
-            serial="",
+            model="HEOS Drive HS2" if i == 1 else "Speaker",
+            serial="123456",
             version="1.0.0",
             line_out=LineOutLevelType.VARIABLE,
             is_muted=False,
@@ -236,18 +239,18 @@ async def dispatcher_fixture() -> Dispatcher:
 @pytest.fixture(name="discovery_data")
 def discovery_data_fixture() -> dict:
     """Return mock discovery data for testing."""
-    return ssdp.SsdpServiceInfo(
+    return SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
         upnp={
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
-            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
-            ssdp.ATTR_UPNP_SERIAL: None,
-            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ATTR_UPNP_FRIENDLY_NAME: "Office",
+            ATTR_UPNP_MANUFACTURER: "Denon",
+            ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ATTR_UPNP_SERIAL: None,
+            ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
         },
     )
 
@@ -255,18 +258,18 @@ def discovery_data_fixture() -> dict:
 @pytest.fixture(name="discovery_data_bedroom")
 def discovery_data_fixture_bedroom() -> dict:
     """Return mock discovery data for testing."""
-    return ssdp.SsdpServiceInfo(
+    return SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="http://127.0.0.2:60006/upnp/desc/aios_device/aios_device.xml",
         upnp={
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
-            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
-            ssdp.ATTR_UPNP_SERIAL: None,
-            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
+            ATTR_UPNP_MANUFACTURER: "Denon",
+            ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ATTR_UPNP_SERIAL: None,
+            ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
         },
     )
 
@@ -300,12 +303,12 @@ def playlists_fixture() -> Sequence[MediaItem]:
 
 
 @pytest.fixture(name="change_data")
-def change_data_fixture() -> dict:
+def change_data_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult()
 
 
 @pytest.fixture(name="change_data_mapped_ids")
-def change_data_mapped_ids_fixture() -> dict:
+def change_data_mapped_ids_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult(updated_player_ids={1: 101})

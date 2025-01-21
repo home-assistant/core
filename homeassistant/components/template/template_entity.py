@@ -8,7 +8,7 @@ import itertools
 import logging
 from typing import Any, cast
 
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT

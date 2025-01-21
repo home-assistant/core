@@ -10,6 +10,7 @@ from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -106,15 +107,31 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] | None = None
+        data_schema: vol.Schema = CONFIG_SCHEMA
+        if is_reconfigure := (self.source == SOURCE_RECONFIGURE):
+            reconfigure_entry = self._get_reconfigure_entry()
+            data_schema = self.add_suggested_values_to_schema(
+                data_schema, reconfigure_entry.data
+            )
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             if (
-                errors := await async_try_connect_gateway(self.hass, user_input)
+                errors := await async_try_connect_gateway(
+                    self.hass,
+                    (reconfigure_entry.data | user_input)
+                    if is_reconfigure
+                    else user_input,
+                )
             ) is None:
+                if is_reconfigure:
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry, data_updates=user_input
+                    )
+                self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
                 return self.async_create_entry(title=TITLE, data=user_input)
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def async_step_reauth(
@@ -144,6 +161,12 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=REAUTH_SCHEMA, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration flow."""
+        return await self.async_step_user()
 
 
 class InComfortOptionsFlowHandler(OptionsFlow):
