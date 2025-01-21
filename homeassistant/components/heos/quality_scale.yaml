@@ -37,7 +37,9 @@ rules:
     status: todo
     comment: Needs to be set to 0. The underlying library handles parallel updates.
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: done
+    comment: 99% test coverage
   # Gold
   devices: done
   diagnostics: todo
