@@ -98,9 +98,9 @@ class BasePlatform(Entity):
         def get_optional_numeric_config(config_name: str) -> int | float | None:
             if (val := entry.get(config_name)) is None:
                 return None
-            assert isinstance(
-                val, (float, int)
-            ), f"Expected float or int but {config_name} was {type(val)}"
+            assert isinstance(val, (float, int)), (
+                f"Expected float or int but {config_name} was {type(val)}"
+            )
             return val
 
         self._min_value = get_optional_numeric_config(CONF_MIN_VALUE)

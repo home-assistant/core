@@ -16,6 +16,8 @@ from . import HabiticaConfigEntry
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 
+PARALLEL_UPDATES = 1
+
 
 class HabiticaImageEntity(StrEnum):
     """Image entities."""

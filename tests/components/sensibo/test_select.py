@@ -16,7 +16,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -63,7 +63,7 @@ async def test_select_set_option(
     """Test the Sensibo select service."""
 
     mock_client.async_get_devices_data.return_value.parsed[
-        "ABC999111"
+        "AAZZAAZZ"
     ].active_features = [
         "timestamp",
         "on",
@@ -97,13 +97,11 @@ async def test_select_set_option(
     assert state.state == "on"
 
     mock_client.async_get_devices_data.return_value.parsed[
-        "ABC999111"
+        "AAZZAAZZ"
     ].active_features = [
         "timestamp",
         "on",
         "mode",
-        "targetTemperature",
-        "horizontalSwing",
         "light",
     ]
 
@@ -141,6 +139,21 @@ async def test_select_set_option(
 
     state = hass.states.get("select.kitchen_light")
     assert state.state == "dim"
+
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+    ]
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("select.kitchen_light")
+    assert state.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
