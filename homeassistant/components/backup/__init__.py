@@ -21,10 +21,13 @@ from .manager import (
     BackupManager,
     BackupPlatformProtocol,
     BackupReaderWriter,
+    BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    RestoreBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -33,16 +36,19 @@ from .websocket import async_register_websocket_handlers
 __all__ = [
     "AddonInfo",
     "AgentBackup",
-    "ManagerBackup",
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
+    "BackupReaderWriterError",
     "CreateBackupEvent",
     "Folder",
+    "IncorrectPasswordError",
     "LocalBackupAgent",
+    "ManagerBackup",
     "NewBackup",
+    "RestoreBackupEvent",
     "WrittenBackup",
 ]
 

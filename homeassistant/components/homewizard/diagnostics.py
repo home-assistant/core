@@ -13,11 +13,12 @@ from . import HomeWizardConfigEntry
 
 TO_REDACT = {
     CONF_IP_ADDRESS,
-    "serial",
-    "wifi_ssid",
-    "unique_meter_id",
-    "unique_id",
     "gas_unique_id",
+    "id",
+    "serial",
+    "unique_id",
+    "unique_meter_id",
+    "wifi_ssid",
 }
 
 
@@ -27,23 +28,10 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     data = entry.runtime_data.data
 
-    state: dict[str, Any] | None = None
-    if data.state:
-        state = asdict(data.state)
-
-    system: dict[str, Any] | None = None
-    if data.system:
-        system = asdict(data.system)
-
     return async_redact_data(
         {
             "entry": async_redact_data(entry.data, TO_REDACT),
-            "data": {
-                "device": asdict(data.device),
-                "data": asdict(data.data),
-                "state": state,
-                "system": system,
-            },
+            "data": asdict(data),
         },
         TO_REDACT,
     )

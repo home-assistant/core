@@ -52,6 +52,7 @@ from homeassistant.util.event_type import EventType
 from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
+    DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
     LAST_REPORTED_SCHEMA_VERSION,
@@ -61,7 +62,6 @@ from .const import (
     MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
-    SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -230,12 +230,9 @@ class Recorder(threading.Thread):
         self._dialect_name: SupportedDialect | None = None
         self.enabled = True
 
-        # For safety we default to the lowest value for max_bind_vars
-        # of all the DB types (SQLITE_MAX_BIND_VARS).
-        #
         # We update the value once we connect to the DB
         # and determine what is actually supported.
-        self.max_bind_vars = SQLITE_MAX_BIND_VARS
+        self.max_bind_vars = DEFAULT_MAX_BIND_VARS
 
     @property
     def backlog(self) -> int:
@@ -712,12 +709,24 @@ class Recorder(threading.Thread):
         setup_result = self._setup_recorder()
 
         if not setup_result:
+            _LOGGER.error("Recorder setup failed, recorder shutting down")
             # Give up if we could not connect
             return
 
         schema_status = migration.validate_db_schema(self.hass, self, self.get_session)
         if schema_status is None:
             # Give up if we could not validate the schema
+            _LOGGER.error("Failed to validate schema, recorder shutting down")
+            return
+        if schema_status.current_version > SCHEMA_VERSION:
+            _LOGGER.error(
+                "The database schema version %s is newer than %s which is the maximum "
+                "database schema version supported by the installed version of "
+                "Home Assistant Core, either upgrade Home Assistant Core or restore "
+                "the database from a backup compatible with this version",
+                schema_status.current_version,
+                SCHEMA_VERSION,
+            )
             return
         self.schema_version = schema_status.current_version
 

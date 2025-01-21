@@ -89,7 +89,7 @@ from .helpers import (
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
-from .helpers.system_info import async_get_system_info, is_official_image
+from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
     # _setup_started is marked as protected to make it clear
@@ -106,6 +106,7 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
     # Ensure anyio backend is imported to avoid it being imported in the event loop

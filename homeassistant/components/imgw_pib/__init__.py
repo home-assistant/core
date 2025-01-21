@@ -9,16 +9,18 @@ from aiohttp import ClientError
 from imgw_pib import ImgwPib
 from imgw_pib.exceptions import ApiError
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_STATION_ID
+from .const import CONF_STATION_ID, DOMAIN
 from .coordinator import ImgwPibDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,13 +44,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImgwPibConfigEntry) -> b
 
     try:
         imgwpib = await ImgwPib.create(
-            client_session, hydrological_station_id=station_id
+            client_session,
+            hydrological_station_id=station_id,
+            hydrological_details=False,
         )
     except (ClientError, TimeoutError, ApiError) as err:
         raise ConfigEntryNotReady from err
 
     coordinator = ImgwPibDataUpdateCoordinator(hass, imgwpib, station_id)
     await coordinator.async_config_entry_first_refresh()
+
+    # Remove binary_sensor entities for which the endpoint has been blocked by IMGW-PIB API
+    entity_reg = er.async_get(hass)
+    for key in ("flood_warning", "flood_alarm"):
+        if entity_id := entity_reg.async_get_entity_id(
+            BINARY_SENSOR_PLATFORM, DOMAIN, f"{coordinator.station_id}_{key}"
+        ):
+            entity_reg.async_remove(entity_id)
 
     entry.runtime_data = ImgwPibData(coordinator)
 

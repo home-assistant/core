@@ -58,8 +58,8 @@ class LazyState(State):
         self.attr_cache = attr_cache
         self.context = EMPTY_CONTEXT
 
-    @cached_property  # type: ignore[override]
-    def attributes(self) -> dict[str, Any]:
+    @cached_property
+    def attributes(self) -> dict[str, Any]:  # type: ignore[override]
         """State attributes."""
         return decode_attributes_from_source(
             getattr(self._row, "attributes", None), self.attr_cache
