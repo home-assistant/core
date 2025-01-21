@@ -1389,7 +1389,7 @@ async def test_reload_automation_when_blueprint_changes(
                 return_value=config,
             ),
             patch(
-                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict",
                 autospec=True,
                 return_value=blueprint_config,
             ),
