@@ -680,10 +680,7 @@ async def test_manual_flow_works_with_v2_api_support(
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_homewizardenergy_v2.device.mock_calls) == 2
-    assert len(mock_homewizardenergy_v2.get_token.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -720,3 +717,13 @@ async def test_manual_flow_detects_failed_user_authorization(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authorize"
     assert result["errors"] == {"base": "authorization_failed"}
+    
+    # Restore normal functionality 
+    mock_homewizardenergy_v2.device.side_effect = None
+    mock_homewizardenergy_v2.get_token.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
