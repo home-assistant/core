@@ -30,12 +30,6 @@
       "brightness_instance": {
         "name": "Illuminance {instance}"
       },
-      "button_state": {
-        "name": "Button state"
-      },
-      "button_state_instance": {
-        "name": "Button state {instance}"
-      },
       "current_instance": {
         "name": "Current {instance}"
       },
