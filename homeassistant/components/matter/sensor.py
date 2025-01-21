@@ -237,8 +237,6 @@ DISCOVERY_SCHEMAS = [
             key="PowerSourceBatReplacementDescription",
             translation_key="battery_replacement_description",
             native_unit_of_measurement=None,
-            # Some manufacturers returns an empty string
-            measurement_to_ha=lambda x: x if x != "" else "invalid",
             device_class=None,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -246,6 +244,8 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PowerSource.Attributes.BatReplacementDescription,
         ),
+        # Some manufacturers returns an empty string
+        value_is_not="",
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
