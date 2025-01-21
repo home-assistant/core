@@ -227,6 +227,11 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-import-constant-alias",
             "Used when a constant should be imported as an alias",
         ),
+        "W7427": (
+            "`%s` should be import using `from %s import %s as %s`",
+            "hass-alias-import",
+            "Used when an alias import should be imported with from ... import ... as ...",
+        ),
     }
     options = ()
 
@@ -247,7 +252,7 @@ class HassImportsFormatChecker(BaseChecker):
         """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
-        for module, _alias in node.names:
+        for module, alias in node.names:
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
@@ -255,14 +260,24 @@ class HassImportsFormatChecker(BaseChecker):
                 module.startswith("homeassistant.components.")
                 and len(module.split(".")) > 3
             ):
-                if (
+                if not (
                     self.current_package.startswith("tests.components.")
                     and self.current_package.split(".")[2] == module.split(".")[2]
                 ):
                     # Ignore check if the component being tested matches
                     # the component being imported from
+                    self.add_message("hass-component-root-import", node=node)
                     continue
-                self.add_message("hass-component-root-import", node=node)
+            if alias and "." in module:
+                # Prefer from ... import ... as ...
+                # over import ... as ...
+                prefix, _delimiter, imported_module = module.rpartition(".")
+                self.add_message(
+                    "hass-alias-import",
+                    node=node,
+                    args=(imported_module, prefix, imported_module, alias),
+                )
+                continue
 
     def _visit_importfrom_relative(
         self, current_package: str, node: nodes.ImportFrom

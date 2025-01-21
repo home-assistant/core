@@ -186,7 +186,7 @@ def test_good_root_import(
     )
     imports_checker.visit_module(node.parent)
 
-    with assert_no_messages(linter):
+    with assert_no_messages(linter, ignore_codes=["hass-alias-import"]):
         if import_node.startswith("import"):
             imports_checker.visit_import(node)
         if import_node.startswith("from"):
@@ -368,3 +368,44 @@ def test_domain_alias(
             imports_checker.visit_import(import_node)
         else:
             imports_checker.visit_importfrom(import_node)
+
+
+def test_import_as(linter: UnittestLinter, imports_checker: BaseChecker) -> None:
+    """Prefer `from x.y import z as my_z` over `import x.y.z as my_z`."""
+
+    module_name = "pylint_test"
+
+    import_nodes = astroid.extract_node(
+        "import foo #@\n"
+        "import foo as my_foo #@\n"
+        "import foo.bar #@\n"
+        "import foo.bar as my_bar #@\n"
+        "import foo.local.bar #@\n"
+        "import foo.local.bar as my_bar #@\n",
+        module_name,
+    )
+    imports_checker.visit_module(import_nodes[0].parent)
+
+    expected_messages = [
+        pylint.testutils.MessageTest(
+            msg_id="hass-alias-import",
+            node=import_nodes[3],
+            args=("bar", "foo", "bar", "my_bar"),
+            line=4,
+            col_offset=0,
+            end_line=4,
+            end_col_offset=24,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-alias-import",
+            node=import_nodes[5],
+            args=("bar", "foo.local", "bar", "my_bar"),
+            line=6,
+            col_offset=0,
+            end_line=6,
+            end_col_offset=30,
+        ),
+    ]
+    with assert_adds_messages(linter, *expected_messages):
+        for import_node in import_nodes:
+            imports_checker.visit_import(import_node)
