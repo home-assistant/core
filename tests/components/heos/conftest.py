@@ -91,7 +91,7 @@ async def controller_fixture(
     new_mock = Mock(return_value=mock_heos)
     mock_heos.new_mock = new_mock
     with (
-        patch("homeassistant.components.heos.Heos", new=new_mock),
+        patch("homeassistant.components.heos.coordinator.Heos", new=new_mock),
         patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
     ):
         yield mock_heos
