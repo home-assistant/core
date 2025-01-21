@@ -156,6 +156,7 @@ async def test_if_fires_using_at_input_datetime(
     )
 
 
+@pytest.mark.parametrize(("hour"), [0, 5])
 @pytest.mark.parametrize(
     ("has_date", "has_time"), [(True, True), (False, True), (True, False)]
 )
@@ -175,6 +176,7 @@ async def test_if_fires_using_at_input_datetime_with_offset(
     has_time: bool,
     offset: str,
     delta: timedelta,
+    hour: int,
 ) -> None:
     """Test for firing at input_datetime."""
     await async_setup_component(
@@ -185,7 +187,7 @@ async def test_if_fires_using_at_input_datetime_with_offset(
     now = dt_util.now()
 
     start_dt = now.replace(
-        hour=5 if has_time else 0, minute=0, second=0, microsecond=0
+        hour=hour if has_time else 0, minute=0, second=0, microsecond=0
     ) + timedelta(2)
     trigger_dt = start_dt + delta
 
