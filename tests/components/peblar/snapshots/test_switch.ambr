@@ -1,0 +1,47 @@
+# serializer version: 1
+# name: test_entities[switch][switch.peblar_ev_charger_force_single_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.peblar_ev_charger_force_single_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Force single phase',
+    'platform': 'peblar',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'force_single_phase',
+    'unique_id': '23-45-A4O-MOF_force_single_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[switch][switch.peblar_ev_charger_force_single_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Peblar EV Charger Force single phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.peblar_ev_charger_force_single_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

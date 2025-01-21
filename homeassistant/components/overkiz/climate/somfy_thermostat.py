@@ -57,15 +57,11 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_hvac_modes = [*HVAC_MODES_TO_OVERKIZ]
     _attr_preset_modes = [*PRESET_MODES_TO_OVERKIZ]
     _attr_translation_key = DOMAIN
-    _enable_turn_on_off_backwards_compatibility = False
 
     # Both min and max temp values have been retrieved from the Somfy Application.
     _attr_min_temp = 15.0
@@ -83,11 +79,12 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
-        return OVERKIZ_TO_HVAC_MODES[
-            cast(
-                str, self.executor.select_state(OverkizState.CORE_DEROGATION_ACTIVATION)
-            )
-        ]
+        if derogation_activation := self.executor.select_state(
+            OverkizState.CORE_DEROGATION_ACTIVATION
+        ):
+            return OVERKIZ_TO_HVAC_MODES[cast(str, derogation_activation)]
+
+        return HVACMode.AUTO
 
     @property
     def preset_mode(self) -> str:
@@ -97,9 +94,10 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
         else:
             state_key = OverkizState.SOMFY_THERMOSTAT_DEROGATION_HEATING_MODE
 
-        state = cast(str, self.executor.select_state(state_key))
+        if state := self.executor.select_state(state_key):
+            return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(cast(str, state))]
 
-        return OVERKIZ_TO_PRESET_MODES[OverkizCommandParam(state)]
+        return PRESET_NONE
 
     @property
     def current_temperature(self) -> float | None:

@@ -26,7 +26,7 @@ async def test_device_and_entity_migration(
         Fixture({"type:boiler"}, "vicare/dummy-device-no-serial.json"),
     ]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
     ):
         mock_config_entry.add_to_hass(hass)

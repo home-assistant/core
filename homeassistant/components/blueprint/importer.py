@@ -136,7 +136,7 @@ def _extract_blueprint_from_community_topic(
         )
 
     return ImportedBlueprint(
-        f'{post["username"]}/{topic["slug"]}', block_content, blueprint
+        f"{post['username']}/{topic['slug']}", block_content, blueprint
     )
 
 
@@ -173,8 +173,7 @@ async def fetch_blueprint_from_github_url(
 
     parsed_import_url = yarl.URL(import_url)
     suggested_filename = f"{parsed_import_url.parts[1]}/{parsed_import_url.parts[-1]}"
-    if suggested_filename.endswith(".yaml"):
-        suggested_filename = suggested_filename[:-5]
+    suggested_filename = suggested_filename.removesuffix(".yaml")
 
     return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
 

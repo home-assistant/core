@@ -86,7 +86,7 @@ class YaleDoorBatterySensor(YaleEntity, BinarySensorEntity):
     ) -> None:
         """Initiate Yale door battery Sensor."""
         super().__init__(coordinator, data)
-        self._attr_unique_id = f"{data["address"]}-battery"
+        self._attr_unique_id = f"{data['address']}-battery"
 
     @property
     def is_on(self) -> bool:
@@ -108,7 +108,9 @@ class YaleProblemSensor(YaleAlarmEntity, BinarySensorEntity):
         """Initiate Yale Problem Sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.entry.entry_id}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
+        )
 
     @property
     def is_on(self) -> bool:

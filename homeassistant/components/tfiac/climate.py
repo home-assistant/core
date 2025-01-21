@@ -88,7 +88,6 @@ class TfiacClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hass, client):
         """Init class."""

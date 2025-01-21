@@ -647,6 +647,22 @@ class Entity(
             f".{self.translation_key}.name"
         )
 
+    @cached_property
+    def _unit_of_measurement_translation_key(self) -> str | None:
+        """Return translation key for unit of measurement."""
+        if self.translation_key is None:
+            return None
+        if self.platform is None:
+            raise ValueError(
+                f"Entity {type(self)} cannot have a translation key for "
+                "unit of measurement before being added to the entity platform"
+            )
+        platform = self.platform
+        return (
+            f"component.{platform.platform_name}.entity.{platform.domain}"
+            f".{self.translation_key}.unit_of_measurement"
+        )
+
     def _substitute_name_placeholders(self, name: str) -> str:
         """Substitute placeholders in entity name."""
         try:
@@ -1012,7 +1028,7 @@ class Entity(
             return STATE_UNAVAILABLE
         if (state := self.state) is None:
             return STATE_UNKNOWN
-        if type(state) is str:  # noqa: E721
+        if type(state) is str:
             # fast path for strings
             return state
         if isinstance(state, float):
@@ -1464,9 +1480,9 @@ class Entity(
 
         if self.registry_entry is not None:
             # This is an assert as it should never happen, but helps in tests
-            assert (
-                not self.registry_entry.disabled_by
-            ), f"Entity '{self.entity_id}' is being added while it's disabled"
+            assert not self.registry_entry.disabled_by, (
+                f"Entity '{self.entity_id}' is being added while it's disabled"
+            )
 
             self.async_on_remove(
                 async_track_entity_registry_updated_event(

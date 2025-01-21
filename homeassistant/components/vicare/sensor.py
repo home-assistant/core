@@ -25,7 +25,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -40,8 +39,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    DEVICE_LIST,
-    DOMAIN,
     VICARE_CUBIC_METER,
     VICARE_KW,
     VICARE_KWH,
@@ -50,8 +47,9 @@ from .const import (
     VICARE_WH,
 )
 from .entity import ViCareEntity
-from .types import ViCareDevice, ViCareRequiredKeysMixin
+from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
+    filter_state,
     get_burners,
     get_circuits,
     get_compressors,
@@ -799,7 +797,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "production"],
-        value_getter=lambda api: _filter_pv_states(api.getPhotovoltaicStatus()),
+        value_getter=lambda api: filter_state(api.getPhotovoltaicStatus()),
     ),
     ViCareSensorEntityDescription(
         key="room_temperature",
@@ -814,6 +812,29 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_level",
+        translation_key="ventilation_level",
+        value_getter=lambda api: filter_state(api.getVentilationLevel().lower()),
+        device_class=SensorDeviceClass.ENUM,
+        options=["standby", "levelone", "leveltwo", "levelthree", "levelfour"],
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_reason",
+        translation_key="ventilation_reason",
+        value_getter=lambda api: api.getVentilationReason().lower(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "standby",
+            "permanent",
+            "schedule",
+            "sensordriven",
+            "silent",
+            "forcedlevelfour",
+        ],
     ),
 )
 
@@ -923,10 +944,6 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
 )
 
 
-def _filter_pv_states(state: str) -> str | None:
-    return None if state in ("nothing", "unknown") else state
-
-
 def _build_entities(
     device_list: list[ViCareDevice],
 ) -> list[ViCareSensor]:
@@ -968,16 +985,14 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ViCareConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
-    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_list,
+            config_entry.runtime_data.devices,
         ),
         # run update to have device_class set depending on unit_of_measurement
         True,

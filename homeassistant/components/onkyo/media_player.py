@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import cache
 import logging
 from typing import Any, Literal
 
@@ -19,6 +20,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -111,6 +113,7 @@ AUDIO_INFORMATION_MAPPING = [
     "precision_quartz_lock_system",
     "auto_phase_control_delay",
     "auto_phase_control_phase",
+    "upmix_mode",
 ]
 
 VIDEO_INFORMATION_MAPPING = [
@@ -123,13 +126,21 @@ VIDEO_INFORMATION_MAPPING = [
     "output_color_schema",
     "output_color_depth",
     "picture_mode",
+    "input_hdr",
 ]
 ISSUE_URL_PLACEHOLDER = "/config/integrations/dashboard/add?domain=onkyo"
 
-type InputLibValue = str | tuple[str, ...]
+type LibValue = str | tuple[str, ...]
 
 
-def _input_lib_cmds(zone: str) -> dict[InputSource, InputLibValue]:
+def _get_single_lib_value(value: LibValue) -> str:
+    if isinstance(value, str):
+        return value
+    return value[0]
+
+
+@cache
+def _input_source_lib_mappings(zone: str) -> dict[InputSource, LibValue]:
     match zone:
         case "main":
             cmds = PYEISCP_COMMANDS["main"]["SLI"]
@@ -140,7 +151,7 @@ def _input_lib_cmds(zone: str) -> dict[InputSource, InputLibValue]:
         case "zone4":
             cmds = PYEISCP_COMMANDS["zone4"]["SL4"]
 
-    result: dict[InputSource, InputLibValue] = {}
+    result: dict[InputSource, LibValue] = {}
     for k, v in cmds["values"].items():
         try:
             source = InputSource(k)
@@ -149,6 +160,11 @@ def _input_lib_cmds(zone: str) -> dict[InputSource, InputLibValue]:
         result[source] = v["name"]
 
     return result
+
+
+@cache
+def _rev_input_source_lib_mappings(zone: str) -> dict[LibValue, InputSource]:
+    return {value: key for key, value in _input_source_lib_mappings(zone).items()}
 
 
 async def async_setup_platform(
@@ -162,7 +178,7 @@ async def async_setup_platform(
 
     source_mapping: dict[str, InputSource] = {}
     for zone in ZONES:
-        for source, source_lib in _input_lib_cmds(zone).items():
+        for source, source_lib in _input_source_lib_mappings(zone).items():
             if isinstance(source_lib, str):
                 source_mapping.setdefault(source_lib, source)
             else:
@@ -351,14 +367,18 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._volume_resolution = volume_resolution
         self._max_volume = max_volume
 
-        self._name_mapping = sources
-        self._reverse_name_mapping = {value: key for key, value in sources.items()}
-        self._lib_mapping = _input_lib_cmds(zone)
-        self._reverse_lib_mapping = {
-            value: key for key, value in self._lib_mapping.items()
+        self._source_lib_mapping = _input_source_lib_mappings(zone)
+        self._rev_source_lib_mapping = _rev_input_source_lib_mappings(zone)
+        self._source_mapping = {
+            key: value
+            for key, value in sources.items()
+            if key in self._source_lib_mapping
+        }
+        self._rev_source_mapping = {
+            value: key for key, value in self._source_mapping.items()
         }
 
-        self._attr_source_list = list(sources.values())
+        self._attr_source_list = list(self._rev_source_mapping)
         self._attr_extra_state_attributes = {}
 
     async def async_added_to_hass(self) -> None:
@@ -407,7 +427,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """
         # HA_VOL * (MAX VOL / 100) * VOL_RESOLUTION
         self._update_receiver(
-            "volume", int(volume * (self._max_volume / 100) * self._volume_resolution)
+            "volume", round(volume * (self._max_volume / 100) * self._volume_resolution)
         )
 
     async def async_volume_up(self) -> None:
@@ -427,12 +447,18 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if self.source_list and source in self.source_list:
-            source_lib = self._lib_mapping[self._reverse_name_mapping[source]]
-            if isinstance(source_lib, str):
-                source_lib_single = source_lib
-            else:
-                source_lib_single = source_lib[0]
+        if not self.source_list or source not in self.source_list:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_source",
+                translation_placeholders={
+                    "invalid_source": source,
+                    "entity_id": self.entity_id,
+                },
+            )
+
+        source_lib = self._source_lib_mapping[self._rev_source_mapping[source]]
+        source_lib_single = _get_single_lib_value(source_lib)
         self._update_receiver(
             "input-selector" if self._zone == "main" else "selector", source_lib_single
         )
@@ -446,7 +472,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     ) -> None:
         """Play radio station by preset number."""
         if self.source is not None:
-            source = self._reverse_name_mapping[self.source]
+            source = self._rev_source_mapping[self.source]
             if media_type.lower() == "radio" and source in DEFAULT_PLAYABLE_SOURCES:
                 self._update_receiver("preset", media_id)
 
@@ -518,15 +544,17 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self.async_write_ha_state()
 
     @callback
-    def _parse_source(self, source_lib: InputLibValue) -> None:
-        source = self._reverse_lib_mapping[source_lib]
-        if source in self._name_mapping:
-            self._attr_source = self._name_mapping[source]
+    def _parse_source(self, source_lib: LibValue) -> None:
+        source = self._rev_source_lib_mapping[source_lib]
+        if source in self._source_mapping:
+            self._attr_source = self._source_mapping[source]
             return
 
         source_meaning = source.value_meaning
         _LOGGER.error(
-            'Input source "%s" not in source list: %s', source_meaning, self.entity_id
+            'Input source "%s" is invalid for entity: %s',
+            source_meaning,
+            self.entity_id,
         )
         self._attr_source = source_meaning
 

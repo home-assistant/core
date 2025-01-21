@@ -1,21 +1,62 @@
 {
   "devices": {
-    "1346fbd8498d4dbcab7e18d51b771f3d": {
+    "06aecb3d00354375924f50c47af36bd2": {
       "active_preset": "no_frost",
+      "climate_mode": "off",
+      "dev_class": "climate",
+      "model": "ThermoZone",
+      "name": "Slaapkamer",
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+      "sensors": {
+        "temperature": 24.2
+      },
+      "thermostat": {
+        "lower_bound": 0.0,
+        "resolution": 0.01,
+        "setpoint": 13.0,
+        "upper_bound": 99.9
+      },
+      "thermostats": {
+        "primary": ["1346fbd8498d4dbcab7e18d51b771f3d"],
+        "secondary": ["356b65335e274d769c338223e7af9c33"]
+      },
+      "vendor": "Plugwise"
+    },
+    "13228dab8ce04617af318a2888b3c548": {
+      "active_preset": "home",
+      "climate_mode": "heat",
+      "control_state": "idle",
+      "dev_class": "climate",
+      "model": "ThermoZone",
+      "name": "Woonkamer",
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+      "sensors": {
+        "temperature": 27.4
+      },
+      "thermostat": {
+        "lower_bound": 4.0,
+        "resolution": 0.01,
+        "setpoint": 9.0,
+        "upper_bound": 30.0
+      },
+      "thermostats": {
+        "primary": ["f61f1a2535f54f52ad006a3d18e459ca"],
+        "secondary": ["833de10f269c4deab58fb9df69901b4e"]
+      },
+      "vendor": "Plugwise"
+    },
+    "1346fbd8498d4dbcab7e18d51b771f3d": {
       "available": true,
       "binary_sensors": {
         "low_battery": false
       },
-      "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "06aecb3d00354375924f50c47af36bd2",
-      "mode": "off",
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Slaapkamer",
-      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 92,
         "setpoint": 13.0,
@@ -27,18 +68,12 @@
         "setpoint": 0.0,
         "upper_bound": 2.0
       },
-      "thermostat": {
-        "lower_bound": 0.0,
-        "resolution": 0.01,
-        "setpoint": 13.0,
-        "upper_bound": 99.9
-      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A03"
     },
     "1da4d325838e4ad8aac12177214505c9": {
       "available": true,
-      "dev_class": "thermo_sensor",
+      "dev_class": "thermostatic_radiator_valve",
       "firmware": "2020-11-04T01:00:00+01:00",
       "hardware": "1",
       "location": "d58fec52899f4f1c92e4f8fad6d8c48c",
@@ -62,7 +97,7 @@
     },
     "356b65335e274d769c338223e7af9c33": {
       "available": true,
-      "dev_class": "thermo_sensor",
+      "dev_class": "thermostatic_radiator_valve",
       "firmware": "2020-11-04T01:00:00+01:00",
       "hardware": "1",
       "location": "06aecb3d00354375924f50c47af36bd2",
@@ -102,21 +137,17 @@
       "zigbee_mac_address": "ABCD012345670A06"
     },
     "6f3e9d7084214c21b9dfa46f6eeb8700": {
-      "active_preset": "home",
       "available": true,
       "binary_sensors": {
         "low_battery": false
       },
-      "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "d27aede973b54be484f6842d1b2802ad",
-      "mode": "heat",
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Kinderkamer",
-      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 79,
         "setpoint": 13.0,
@@ -128,18 +159,12 @@
         "setpoint": 0.0,
         "upper_bound": 2.0
       },
-      "thermostat": {
-        "lower_bound": 0.0,
-        "resolution": 0.01,
-        "setpoint": 13.0,
-        "upper_bound": 99.9
-      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A02"
     },
     "833de10f269c4deab58fb9df69901b4e": {
       "available": true,
-      "dev_class": "thermo_sensor",
+      "dev_class": "thermostatic_radiator_valve",
       "firmware": "2020-11-04T01:00:00+01:00",
       "hardware": "1",
       "location": "13228dab8ce04617af318a2888b3c548",
@@ -162,21 +187,17 @@
       "zigbee_mac_address": "ABCD012345670A09"
     },
     "a6abc6a129ee499c88a4d420cc413b47": {
-      "active_preset": "home",
       "available": true,
       "binary_sensors": {
         "low_battery": false
       },
-      "control_state": "off",
       "dev_class": "zone_thermostat",
       "firmware": "2016-10-27T02:00:00+02:00",
       "hardware": "255",
       "location": "d58fec52899f4f1c92e4f8fad6d8c48c",
-      "mode": "heat",
       "model": "Lisa",
       "model_id": "158-01",
       "name": "Logeerkamer",
-      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 80,
         "setpoint": 13.0,
@@ -187,12 +208,6 @@
         "resolution": 0.1,
         "setpoint": 0.0,
         "upper_bound": 2.0
-      },
-      "thermostat": {
-        "lower_bound": 0.0,
-        "resolution": 0.01,
-        "setpoint": 13.0,
-        "upper_bound": 99.9
       },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A01"
@@ -219,9 +234,32 @@
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670101"
     },
+    "d27aede973b54be484f6842d1b2802ad": {
+      "active_preset": "home",
+      "climate_mode": "heat",
+      "control_state": "idle",
+      "dev_class": "climate",
+      "model": "ThermoZone",
+      "name": "Kinderkamer",
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+      "sensors": {
+        "temperature": 30.0
+      },
+      "thermostat": {
+        "lower_bound": 0.0,
+        "resolution": 0.01,
+        "setpoint": 13.0,
+        "upper_bound": 99.9
+      },
+      "thermostats": {
+        "primary": ["6f3e9d7084214c21b9dfa46f6eeb8700"],
+        "secondary": ["d4496250d0e942cfa7aea3476e9070d5"]
+      },
+      "vendor": "Plugwise"
+    },
     "d4496250d0e942cfa7aea3476e9070d5": {
       "available": true,
-      "dev_class": "thermo_sensor",
+      "dev_class": "thermostatic_radiator_valve",
       "firmware": "2020-11-04T01:00:00+01:00",
       "hardware": "1",
       "location": "d27aede973b54be484f6842d1b2802ad",
@@ -242,6 +280,29 @@
       },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A04"
+    },
+    "d58fec52899f4f1c92e4f8fad6d8c48c": {
+      "active_preset": "home",
+      "climate_mode": "heat",
+      "control_state": "idle",
+      "dev_class": "climate",
+      "model": "ThermoZone",
+      "name": "Logeerkamer",
+      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
+      "sensors": {
+        "temperature": 30.0
+      },
+      "thermostat": {
+        "lower_bound": 0.0,
+        "resolution": 0.01,
+        "setpoint": 13.0,
+        "upper_bound": 99.9
+      },
+      "thermostats": {
+        "primary": ["a6abc6a129ee499c88a4d420cc413b47"],
+        "secondary": ["1da4d325838e4ad8aac12177214505c9"]
+      },
+      "vendor": "Plugwise"
     },
     "e4684553153b44afbef2200885f379dc": {
       "available": true,
@@ -280,21 +341,17 @@
       "vendor": "Remeha B.V."
     },
     "f61f1a2535f54f52ad006a3d18e459ca": {
-      "active_preset": "home",
       "available": true,
       "binary_sensors": {
         "low_battery": false
       },
-      "control_state": "off",
       "dev_class": "zone_thermometer",
       "firmware": "2020-09-01T02:00:00+02:00",
       "hardware": "1",
       "location": "13228dab8ce04617af318a2888b3c548",
-      "mode": "heat",
       "model": "Jip",
       "model_id": "168-01",
       "name": "Woonkamer",
-      "preset_modes": ["home", "asleep", "away", "vacation", "no_frost"],
       "sensors": {
         "battery": 100,
         "humidity": 56.2,
@@ -307,12 +364,6 @@
         "setpoint": 0.0,
         "upper_bound": 2.0
       },
-      "thermostat": {
-        "lower_bound": 4.0,
-        "resolution": 0.01,
-        "setpoint": 9.0,
-        "upper_bound": 30.0
-      },
       "vendor": "Plugwise",
       "zigbee_mac_address": "ABCD012345670A08"
     }
@@ -321,7 +372,7 @@
     "cooling_present": false,
     "gateway_id": "b5c2386c6f6342669e50fe49dd05b188",
     "heater_id": "e4684553153b44afbef2200885f379dc",
-    "item_count": 228,
+    "item_count": 244,
     "notifications": {},
     "reboot": true,
     "smile_name": "Adam"

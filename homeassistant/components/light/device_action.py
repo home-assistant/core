@@ -27,14 +27,13 @@ from . import (
     ATTR_BRIGHTNESS_PCT,
     ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_FLASH,
-    DOMAIN,
     FLASH_SHORT,
     VALID_BRIGHTNESS_PCT,
     VALID_FLASH,
-    LightEntityFeature,
     brightness_supported,
     get_supported_color_modes,
 )
+from .const import DOMAIN, LightEntityFeature
 
 # mypy: disallow-any-generics
 

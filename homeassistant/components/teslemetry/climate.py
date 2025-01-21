@@ -74,7 +74,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -97,9 +96,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         value = self.get("climate_state_is_climate_on")
-        if value is None:
-            self._attr_hvac_mode = None
-        elif value:
+        if value:
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         else:
             self._attr_hvac_mode = HVACMode.OFF
@@ -209,7 +206,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
     _attr_max_temp = COP_LEVELS["High"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
+
     _attr_entity_registry_enabled_default = False
 
     def __init__(
