@@ -525,7 +525,7 @@ bimmer-connected[china]==0.17.2
 bleak-esphome==2.0.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.7.0
+bleak-retry-connector==3.8.0
 
 # homeassistant.components.bluetooth
 bleak==0.22.3
@@ -651,7 +651,7 @@ demetriek==1.2.0
 denonavr==1.0.1
 
 # homeassistant.components.devialet
-devialet==1.4.5
+devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.3
@@ -938,7 +938,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.9.2
+habluetooth==3.10.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -966,7 +966,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.64
+holidays==0.65
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250109.0
@@ -1101,7 +1101,7 @@ led-ble==1.1.1
 lektricowifi==0.0.43
 
 # homeassistant.components.letpot
-letpot==0.2.0
+letpot==0.3.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -1926,7 +1926,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.1.0
+python-homewizard-energy==v8.1.1
 
 # homeassistant.components.izone
 python-izone==1.2.9
