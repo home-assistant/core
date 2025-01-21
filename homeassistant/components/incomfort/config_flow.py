@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -121,6 +122,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             for entry in self._async_current_entries(include_ignore=False)
             if entry.unique_id is None
             and entry.data.get(CONF_HOST) == self._discovered_host
+            and entry.state == ConfigEntryState.LOADED
         ]
         if existing_entries:
             self.hass.config_entries.async_update_entry(

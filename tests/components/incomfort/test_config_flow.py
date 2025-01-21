@@ -8,7 +8,7 @@ from incomfortclient import IncomfortError, InvalidHeaterList
 import pytest
 
 from homeassistant.components.incomfort.const import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -22,6 +22,12 @@ from tests.common import MockConfigEntry
 DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="rfgateway",
     ip="192.168.1.12",
+    macaddress="0004A3DEADFF",
+)
+
+DHCP_SERVICE_INFO_ALT = DhcpServiceInfo(
+    hostname="rfgateway",
+    ip="192.168.1.99",
     macaddress="0004A3DEADFF",
 )
 
@@ -146,14 +152,13 @@ async def test_dhcp_flow_simple(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {"host": "192.168.1.12"}
 
-    entry_id = result["result"].entry_id
+    config_entry: ConfigEntry = result["result"]
+    entry_id = config_entry.entry_id
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # Check the gateway device is discovered
-    gateway_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, dr.format_mac(DHCP_SERVICE_INFO.macaddress))}
-    )
+    gateway_device = device_registry.async_get_device(identifiers={(DOMAIN, entry_id)})
     assert gateway_device is not None
     assert gateway_device.name == "RFGateway"
     assert gateway_device.manufacturer == "Intergas"
@@ -172,6 +177,15 @@ async def test_dhcp_flow_simple(
     assert climate_device is not None
     assert climate_device.via_device_id == gateway_device.id
 
+    # Check the host is dynamically updated
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO_ALT
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == DHCP_SERVICE_INFO_ALT.ip
+
 
 async def test_dhcp_flow_migrates_existing_entry_without_unique_id(
     hass: HomeAssistant,
@@ -180,6 +194,7 @@ async def test_dhcp_flow_migrates_existing_entry_without_unique_id(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test dhcp flow migrates an existing entry without unique_id."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_SERVICE_INFO
     )
@@ -188,8 +203,9 @@ async def test_dhcp_flow_migrates_existing_entry_without_unique_id(
     assert result["reason"] == "already_configured"
 
     # Check the gateway device is discovered after a reload
+    # And has updated connections
     gateway_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, dr.format_mac(DHCP_SERVICE_INFO.macaddress))}
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert gateway_device is not None
     assert gateway_device.name == "RFGateway"
