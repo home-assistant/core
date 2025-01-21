@@ -373,7 +373,7 @@ class BackupInfoView(BackupOnboardingView):
 
     @with_backup_manager
     async def get(self, manager: BackupManager, request: web.Request) -> web.Response:
-        """Return the onboarding status."""
+        """Return backup info."""
         backups, _ = await manager.async_get_backups()
         return self.json(
             {
@@ -385,14 +385,14 @@ class BackupInfoView(BackupOnboardingView):
 
 
 class RestoreBackupView(BackupOnboardingView):
-    """Upload backup view."""
+    """Restore backup view."""
 
     url = "/api/onboarding/backup/restore"
     name = "api:onboarding:backup:restore"
 
     @with_backup_manager
     async def post(self, manager: BackupManager, request: web.Request) -> web.Response:
-        """Upload a backup file."""
+        """Restore a backup."""
         try:
             agent_id = request.query.getone("agent_id")
         except KeyError:
