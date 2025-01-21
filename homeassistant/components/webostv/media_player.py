@@ -196,7 +196,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         self._attr_volume_level = None
         if self._client.volume is not None:
-            self._attr_volume_level = cast(float, self._client.volume / 100.0)
+            self._attr_volume_level = self._client.volume / 100.0
 
         self._attr_source = self._current_source
         self._attr_source_list = sorted(self._source_list)
@@ -240,13 +240,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         )
 
         self._attr_assumed_state = True
-        if (
-            self._client.is_on
-            and self._client.media_state is not None
-            and self._client.media_state.get("foregroundAppInfo") is not None
-        ):
+        if self._client.is_on and self._client.media_state:
             self._attr_assumed_state = False
-            for entry in self._client.media_state.get("foregroundAppInfo"):
+            for entry in self._client.media_state:
                 if entry.get("playState") == "playing":
                     self._attr_state = MediaPlayerState.PLAYING
                 elif entry.get("playState") == "paused":
@@ -254,7 +250,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
                 elif entry.get("playState") == "unloaded":
                     self._attr_state = MediaPlayerState.IDLE
 
-        if self._client.system_info is not None or self.state != MediaPlayerState.OFF:
+        if self.state != MediaPlayerState.OFF:
             maj_v = self._client.software_info.get("major_ver")
             min_v = self._client.software_info.get("minor_ver")
             if maj_v and min_v:
@@ -406,7 +402,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         """Play a piece of media."""
         _LOGGER.debug("Call play media type <%s>, Id <%s>", media_type, media_id)
 
-        if media_type == MediaType.CHANNEL:
+        if media_type == MediaType.CHANNEL and self._client.channels:
             _LOGGER.debug("Searching channel")
             partial_match_channel_id = None
             perfect_match_channel_id = None

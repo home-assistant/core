@@ -18,7 +18,7 @@ from typing import Any, Final, final
 
 from aiohttp import hdrs, web
 import attr
-from propcache import cached_property, under_cached_property
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit, RTCIceServer
 
