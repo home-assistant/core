@@ -40,13 +40,7 @@ rules:
   test-coverage:
     status: todo
     comment: |
-      1. Integration has >95% coverage, however tests need to be updated to not patch internals.
-      2. test_async_setup_entry_connect_failure and test_async_setup_entry_player_failure -> Instead of
-         calling async_setup_entry directly, rather use hass.config_entries.async_setup and then assert
-         the config_entry.state is what we expect.
-      3. test_unload_entry -> We should use hass.config_entries.async_unload and assert the entry state
-      4. Recommend using snapshot in test_state_attributes.
-      5. Find a way to avoid using internal dispatcher in test_updates_from_connection_event.
+      Integration has > 99% coverage, tests need to be updated to avoid using internal dispatcher and use snapshots for testing state attributes.
   # Gold
   devices: done
   diagnostics: todo
