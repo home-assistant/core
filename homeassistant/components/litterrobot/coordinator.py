@@ -1,15 +1,15 @@
-"""A wrapper 'hub' for the Litter-Robot API."""
+"""The Litter-Robot coordinator."""
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Generator
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pylitterbot import Account, FeederRobot, LitterRobot
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -20,29 +20,33 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-UPDATE_INTERVAL_SECONDS = 60 * 5
+UPDATE_INTERVAL = timedelta(minutes=5)
+
+type LitterRobotConfigEntry = ConfigEntry[LitterRobotDataUpdateCoordinator]
 
 
-class LitterRobotHub:
-    """A Litter-Robot hub wrapper class."""
+class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
+    """The Litter-Robot data update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, data: Mapping[str, Any]) -> None:
-        """Initialize the Litter-Robot hub."""
-        self._data = data
-        self.account = Account(websession=async_get_clientsession(hass))
+    config_entry: LitterRobotConfigEntry
 
-        async def _async_update_data() -> bool:
-            """Update all device states from the Litter-Robot API."""
-            await self.account.refresh_robots()
-            return True
-
-        self.coordinator = DataUpdateCoordinator(
+    def __init__(
+        self, hass: HomeAssistant, config_entry: LitterRobotConfigEntry
+    ) -> None:
+        """Initialize the Litter-Robot data update coordinator."""
+        super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_method=_async_update_data,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL_SECONDS),
+            update_interval=UPDATE_INTERVAL,
         )
+
+        self.account = Account(websession=async_get_clientsession(hass))
+
+    async def _async_update_data(self) -> None:
+        """Update all device states from the Litter-Robot API."""
+        await self.account.refresh_robots()
 
     async def login(
         self, load_robots: bool = False, subscribe_for_updates: bool = False
@@ -50,8 +54,8 @@ class LitterRobotHub:
         """Login to Litter-Robot."""
         try:
             await self.account.connect(
-                username=self._data[CONF_USERNAME],
-                password=self._data[CONF_PASSWORD],
+                username=self.config_entry.data[CONF_USERNAME],
+                password=self.config_entry.data[CONF_PASSWORD],
                 load_robots=load_robots,
                 subscribe_for_updates=subscribe_for_updates,
             )

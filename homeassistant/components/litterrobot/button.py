@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
@@ -51,14 +51,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        LitterRobotButtonEntity(robot=robot, hub=hub, description=description)
-        for robot in hub.account.robots
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotButtonEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
         for robot_type, description in ROBOT_BUTTON_MAP.items()
         if isinstance(robot, robot_type)
-    ]
-    async_add_entities(entities)
+    )
 
 
 class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
@@ -69,4 +70,4 @@ class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)
-        self.coordinator.async_set_updated_data(True)
+        self.coordinator.async_set_updated_data(None)

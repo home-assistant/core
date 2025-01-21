@@ -117,7 +117,7 @@ def mock_account_with_side_effects() -> MagicMock:
 async def setup_integration(
     hass: HomeAssistant, mock_account: MagicMock, platform_domain: str | None = None
 ) -> MockConfigEntry:
-    """Load a Litter-Robot platform with the provided hub."""
+    """Load a Litter-Robot platform with the provided coordinator."""
     entry = MockConfigEntry(
         domain=litterrobot.DOMAIN,
         data=CONFIG[litterrobot.DOMAIN],
@@ -126,7 +126,7 @@ async def setup_integration(
 
     with (
         patch(
-            "homeassistant.components.litterrobot.hub.Account",
+            "homeassistant.components.litterrobot.coordinator.Account",
             return_value=mock_account,
         ),
         patch(
