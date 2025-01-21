@@ -18,15 +18,14 @@ from pyheos import (
     const,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
-from homeassistant.components.heos import media_player
 from homeassistant.components.heos.const import DOMAIN, SIGNAL_HEOS_UPDATED
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ARTIST,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
@@ -34,7 +33,6 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
@@ -43,13 +41,10 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
-    MediaPlayerEntityFeature,
     MediaType,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -72,42 +67,20 @@ from tests.common import MockConfigEntry
 
 @pytest.mark.usefixtures("controller")
 async def test_state_attributes(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
     """Tests the state attributes."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     state = hass.states.get("media_player.test_player")
-    assert state.state == STATE_IDLE
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == 0.25
-    assert not state.attributes[ATTR_MEDIA_VOLUME_MUTED]
-    assert state.attributes[ATTR_MEDIA_CONTENT_ID] == "1"
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert ATTR_MEDIA_DURATION not in state.attributes
-    assert ATTR_MEDIA_POSITION not in state.attributes
-    assert state.attributes[ATTR_MEDIA_TITLE] == "Song"
-    assert state.attributes[ATTR_MEDIA_ARTIST] == "Artist"
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Album"
-    assert not state.attributes[ATTR_MEDIA_SHUFFLE]
-    assert state.attributes["media_album_id"] == 1
-    assert state.attributes["media_queue_id"] == 1
-    assert state.attributes["media_source_id"] == 1
-    assert state.attributes["media_station"] == "Station Name"
-    assert state.attributes["media_type"] == "Station"
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Player"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == MediaPlayerEntityFeature.PLAY
-        | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.STOP
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | media_player.BASE_SUPPORTED_FEATURES
-    )
-    assert ATTR_INPUT_SOURCE not in state.attributes
-    assert (
-        state.attributes[ATTR_INPUT_SOURCE_LIST]
-        == config_entry.runtime_data.source_manager.source_list
+    assert state == snapshot(
+        exclude=props(
+            "entity_picture_local",
+            "context",
+            "last_changed",
+            "last_reported",
+            "last_updated",
+        )
     )
 
 
