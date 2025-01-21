@@ -57,7 +57,7 @@ class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     # the callback's argument will be the index of the selected list value
     command: Callable[[int], ClusterCommand]
     # list attribute: the attribute descriptor to get the list of values (= list of strings)
-    list_attribute: ClusterAttributeDescriptor
+    list_attribute: type[ClusterAttributeDescriptor]
 
 
 class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
