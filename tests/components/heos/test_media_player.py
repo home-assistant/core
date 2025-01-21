@@ -65,7 +65,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("controller")
 async def test_state_attributes(
     hass: HomeAssistant, config_entry: MockConfigEntry, snapshot: SnapshotAssertion
 ) -> None:
@@ -750,7 +749,6 @@ async def test_select_input_source(
     assert state.attributes[ATTR_INPUT_SOURCE] == input_source.name
 
 
-@pytest.mark.usefixtures("controller")
 async def test_select_input_unknown_raises(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -797,7 +795,6 @@ async def test_select_input_command_error(
     player.play_input_source.assert_called_once_with(input_source.media_id)
 
 
-@pytest.mark.usefixtures("controller")
 async def test_unload_config_entry(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
@@ -1026,7 +1023,6 @@ async def test_play_media_favorite_error(
     assert player.play_preset_station.call_count == 0
 
 
-@pytest.mark.usefixtures("controller")
 async def test_play_media_invalid_type(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
