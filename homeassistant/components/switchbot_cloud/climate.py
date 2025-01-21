@@ -160,7 +160,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
         )
         new_power_state = "on" if hvac_mode != HVACMode.OFF else "off"
         command = f"{int(new_temperature)},{new_mode},{new_fan_speed},{new_power_state}"
-        _LOGGER.debug("Sending command: %s", command)
+        _LOGGER.debug("Sending command to %s: %s", self._attr_unique_id, command)
         await self.send_api_command(
             AirConditionerCommands.SET_ALL,
             parameters=command,
