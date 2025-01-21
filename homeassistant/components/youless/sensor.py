@@ -50,9 +50,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        value_func=lambda device: device.water_meter.value
-        if device.water_meter
-        else None,
+        value_func=(
+            lambda device: device.water_meter.value if device.water_meter else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="gas",
@@ -87,9 +87,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_func=lambda device: device.power_meter.low.value
-        if device.power_meter
-        else None,
+        value_func=(
+            lambda device: device.power_meter.low.value if device.power_meter else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="power_high",
@@ -100,9 +100,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_func=lambda device: device.power_meter.high.value
-        if device.power_meter
-        else None,
+        value_func=(
+            lambda device: device.power_meter.high.value if device.power_meter else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="power_total",
@@ -113,9 +113,11 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_func=lambda device: device.power_meter.total.value
-        if device.power_meter
-        else None,
+        value_func=(
+            lambda device: device.power_meter.total.value
+            if device.power_meter
+            else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="phase_1_power",
@@ -137,9 +139,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_func=lambda device: device.phase1.voltage.value
-        if device.phase1
-        else None,
+        value_func=(
+            lambda device: device.phase1.voltage.value if device.phase1 else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="phase_1_current",
@@ -150,9 +152,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_func=lambda device: device.phase1.current.value
-        if device.phase1
-        else None,
+        value_func=(
+            lambda device: device.phase1.current.value if device.phase1 else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="phase_2_power",
@@ -174,9 +176,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_func=lambda device: device.phase2.voltage.value
-        if device.phase2
-        else None,
+        value_func=(
+            lambda device: device.phase2.voltage.value if device.phase2 else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="phase_2_current",
@@ -187,9 +189,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_func=lambda device: device.phase2.current.value
-        if device.phase1
-        else None,
+        value_func=(
+            lambda device: device.phase2.current.value if device.phase1 else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="phase_3_power",
@@ -211,9 +213,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-        value_func=lambda device: device.phase3.voltage.value
-        if device.phase3
-        else None,
+        value_func=(
+            lambda device: device.phase3.voltage.value if device.phase3 else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="phase_3_current",
@@ -224,9 +226,9 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
-        value_func=lambda device: device.phase3.current.value
-        if device.phase1
-        else None,
+        value_func=(
+            lambda device: device.phase3.current.value if device.phase1 else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="delivery_low",
@@ -237,9 +239,11 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_func=lambda device: device.delivery_meter.low.value
-        if device.delivery_meter
-        else None,
+        value_func=(
+            lambda device: device.delivery_meter.low.value
+            if device.delivery_meter
+            else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="delivery_high",
@@ -250,9 +254,11 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_func=lambda device: device.delivery_meter.high.value
-        if device.delivery_meter
-        else None,
+        value_func=(
+            lambda device: device.delivery_meter.high.value
+            if device.delivery_meter
+            else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="extra_total",
@@ -263,9 +269,11 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_func=lambda device: device.extra_meter.total.value
-        if device.extra_meter
-        else None,
+        value_func=(
+            lambda device: device.extra_meter.total.value
+            if device.extra_meter
+            else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="extra_usage",
@@ -276,9 +284,11 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_func=lambda device: device.extra_meter.usage.value
-        if device.extra_meter
-        else None,
+        value_func=(
+            lambda device: device.extra_meter.usage.value
+            if device.extra_meter
+            else None
+        ),
     ),
 )
 
@@ -292,14 +302,18 @@ async def async_setup_entry(
     if (device := entry.data[CONF_DEVICE]) is None:
         device = entry.entry_id
 
-    entities = [
-        YouLessSensor(coordinator, description, device) for description in SENSOR_TYPES
-    ]
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            YouLessSensor(coordinator, description, device)
+            for description in SENSOR_TYPES
+        ]
+    )
 
 
 class YouLessSensor(YouLessEntity, SensorEntity):
     """Representation of a Sensor."""
+
+    entity_description: YouLessSensorEntityDescription
 
     def __init__(
         self,
@@ -315,9 +329,8 @@ class YouLessSensor(YouLessEntity, SensorEntity):
         )
         self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"
         self.entity_description = description
-        self.value_func = description.value_func
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.value_func(self.device)
+        return self.entity_description.value_func(self.device)
