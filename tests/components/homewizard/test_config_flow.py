@@ -486,12 +486,12 @@ async def test_reauth_flow(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "reauth_enable_api"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == "reauth_enable_api_successful"
 
 
 async def test_reauth_error(
@@ -506,7 +506,7 @@ async def test_reauth_error(
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "reauth_enable_api"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 

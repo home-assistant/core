@@ -83,7 +83,7 @@ async def test_load_detect_api_disabled(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
 
     assert "context" in flow
@@ -147,5 +147,5 @@ async def test_disablederror_reloads_integration(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
