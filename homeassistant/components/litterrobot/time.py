@@ -37,8 +37,11 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     translation_key="sleep_mode_start_time",
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda robot: _as_local_time(robot.sleep_mode_start_time),
-    set_fn=lambda robot, value: robot.set_sleep_mode(
-        robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.get_default_time_zone())
+    set_fn=(
+        lambda robot, value: robot.set_sleep_mode(
+            robot.sleep_mode_enabled,
+            value.replace(tzinfo=dt_util.get_default_time_zone()),
+        )
     ),
 )
 
