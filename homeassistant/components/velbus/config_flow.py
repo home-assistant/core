@@ -76,15 +76,16 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="network",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_TLS, default=user_input[CONF_TLS]): vol.In(
-                        ["yes", "no"]
-                    ),
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
-                    vol.Optional(CONF_PASSWORD, default=user_input[CONF_PASSWORD]): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_TLS): vol.In(["yes", "no"]),
+                        vol.Required(CONF_HOST): str,
+                        vol.Required(CONF_PORT): int,
+                        vol.Optional(CONF_PASSWORD): str,
+                    }
+                ),
+                suggested_values=user_input,
             ),
             errors=self._errors,
         )
@@ -112,12 +113,9 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="usbselect",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): vol.In(
-                        list_of_ports
-                    )
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema({vol.Required(CONF_PORT): vol.In(list_of_ports)}),
+                suggested_values=user_input,
             ),
             errors=self._errors,
         )
