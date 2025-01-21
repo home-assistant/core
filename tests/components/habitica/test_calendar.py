@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
+from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -31,8 +32,8 @@ async def set_tz(hass: HomeAssistant) -> None:
     await hass.config.async_set_time_zone("Europe/Berlin")
 
 
-@pytest.mark.usefixtures("mock_habitica")
-@pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")
+@pytest.mark.usefixtures("habitica")
+@freeze_time("2024-09-20T22:00:00.000Z")
 async def test_calendar_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -70,8 +71,7 @@ async def test_calendar_platform(
         "date range in the past",
     ],
 )
-@pytest.mark.freeze_time("2024-09-20T22:00:00.000Z")
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_api_events(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

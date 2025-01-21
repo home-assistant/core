@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
+from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -32,6 +33,7 @@ import bcrypt
 import freezegun
 import multidict
 import pytest
+import pytest_asyncio
 import pytest_socket
 import requests_mock
 import respx
@@ -42,7 +44,7 @@ from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder  # noqa: F401, isort:skip
+from . import patch_recorder
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -88,7 +90,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, location
+from homeassistant.util import dt as dt_util, location as location_util
 from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
@@ -248,7 +250,9 @@ def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
 
 
 # Guard a few functions that would make network connections
-location.async_detect_location_info = check_real(location.async_detect_location_info)
+location_util.async_detect_location_info = check_real(
+    location_util.async_detect_location_info
+)
 
 
 @pytest.fixture(name="caplog")
@@ -411,7 +415,9 @@ def verify_cleanup(
 
     try:
         # Verify respx.mock has been cleaned up
-        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        assert not respx.mock.routes, (
+            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        )
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
@@ -579,7 +585,7 @@ async def hass(
             exceptions.append(
                 Exception(
                     "Received exception handler without exception, "
-                    f"but with message: {context["message"]}"
+                    f"but with message: {context['message']}"
                 )
             )
         orig_exception_handler(loop, context)
@@ -923,7 +929,13 @@ def fail_on_log_exception(
 
 @pytest.fixture
 def mqtt_config_entry_data() -> dict[str, Any] | None:
-    """Fixture to allow overriding MQTT config."""
+    """Fixture to allow overriding MQTT entry data."""
+    return None
+
+
+@pytest.fixture
+def mqtt_config_entry_options() -> dict[str, Any] | None:
+    """Fixture to allow overriding MQTT entry options."""
     return None
 
 
@@ -1000,6 +1012,7 @@ async def mqtt_mock(
     mock_hass_config: None,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient]:
     """Fixture to mock MQTT component."""
@@ -1011,6 +1024,7 @@ async def _mqtt_mock_entry(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
@@ -1018,17 +1032,19 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # pylint: disable=import-outside-toplevel
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {},
-        }
+        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+    if mqtt_config_entry_options is None:
+        mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
         data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
         domain=mqtt.DOMAIN,
         title="MQTT",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -1044,7 +1060,6 @@ async def _mqtt_mock_entry(
 
         # Assert that MQTT is setup
         assert real_mqtt_instance is not None, "MQTT was not setup correctly"
-        mock_mqtt_instance.conf = real_mqtt_instance.conf  # For diagnostics
         mock_mqtt_instance._mqttc = mqtt_client_mock
 
         # connected set to True to get a more realistic behavior when subscribing
@@ -1139,6 +1154,7 @@ async def mqtt_mock_entry(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Set up an MQTT config entry."""
 
@@ -1155,7 +1171,7 @@ async def mqtt_mock_entry(
         return await mqtt_mock_entry(_async_setup_config_entry)
 
     async with _mqtt_mock_entry(
-        hass, mqtt_client_mock, mqtt_config_entry_data
+        hass, mqtt_client_mock, mqtt_config_entry_data, mqtt_config_entry_options
     ) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
@@ -1218,6 +1234,30 @@ def disable_translations_once(
     translations_once.stop()
     yield
     translations_once.start()
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
+    """Mock out the zeroconf resolver."""
+    patcher = patch(
+        "homeassistant.helpers.aiohttp_client._async_make_resolver",
+        return_value=AsyncResolver(),
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_mock_zeroconf_resolver(
+    mock_zeroconf_resolver: _patch,
+) -> Generator[None]:
+    """Disable the zeroconf resolver."""
+    mock_zeroconf_resolver.stop()
+    yield
+    mock_zeroconf_resolver.start()
 
 
 @pytest.fixture
