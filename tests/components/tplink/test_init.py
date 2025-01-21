@@ -1007,8 +1007,8 @@ async def test_automatic_feature_device_addition_and_removal(
         ),
         pytest.param(
             "climate",
-            [],
-            ["state", "thermostat_mode", "temperature", "target_temperature"],
+            [Module.Thermostat],
+            ["temperature", "target_temperature"],
             None,
             DeviceType.Thermostat,
             id="climate",
