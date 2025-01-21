@@ -37,8 +37,15 @@ rules:
     status: todo
     comment: |
       set `PARALLEL_UPDATES` in lock.py
-  reauthentication-flow: todo
-  test-coverage: todo
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Consider using snapshots for fixating all the entities a device creates.
+      E.g., reconfiguring device encryption key or password
+  test-coverage:
+    status: todo
+    comment: |
+      To be completed.
 
   # Gold
   devices: done
@@ -50,7 +57,7 @@ rules:
   discovery:
     status: done
     comment: |
-      TODO: Device type scan filtering is applied to only show devices that are actually supported.
+      Can be improved: Device type scan filtering is applied to only show devices that are actually supported.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
