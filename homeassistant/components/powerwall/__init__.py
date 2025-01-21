@@ -14,6 +14,7 @@ from tesla_powerwall import (
     Powerwall,
     PowerwallUnreachableError,
 )
+from yarl import URL
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
@@ -43,6 +44,9 @@ API_CHANGED_ERROR_BODY = (
     "already the newest consider reporting this issue.\nSee logs for more information"
 )
 API_CHANGED_TITLE = "Unknown powerwall software version"
+
+CONFIG_ENTRY_COOKIE = "cookie"
+AUTH_COOKIE_KEY = "AuthCookie"
 
 
 class PowerwallDataManager:
@@ -122,8 +126,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
     password: str | None = entry.data.get(CONF_PASSWORD)
+
+    cookie_jar: CookieJar = CookieJar(unsafe=True)
+    # Try to reuse the auth cookie
+    auth_cookie_value: str | None = entry.data.get(CONFIG_ENTRY_COOKIE)
+    if auth_cookie_value:
+        cookie_jar.update_cookies(
+            {AUTH_COOKIE_KEY: auth_cookie_value},
+            URL("http://" + entry.data[CONF_IP_ADDRESS]),
+        )
+        # Removing the password will skip authentication, since we're using pre-existing cookie
+        password = None
+
     http_session = async_create_clientsession(
-        hass, verify_ssl=False, cookie_jar=CookieJar(unsafe=True)
+        hass, verify_ssl=False, cookie_jar=cookie_jar
     )
 
     async with AsyncExitStack() as stack:
@@ -134,6 +150,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             base_info = await _login_and_fetch_base_info(
                 power_wall, ip_address, password
             )
+
+            # Save the auth cookie
+            for cookie in http_session.cookie_jar:
+                if cookie.key == AUTH_COOKIE_KEY:
+                    hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, CONFIG_ENTRY_COOKIE: cookie.value}
+                    )
 
             # Cancel closing power_wall on success
             stack.pop_all()
@@ -147,7 +170,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             )
             return False
         except AccessDeniedError as err:
-            _LOGGER.debug("Authentication failed", exc_info=err)
+            hass.config_entries.async_update_entry(
+                entry, data={**entry.data, CONFIG_ENTRY_COOKIE: None}
+            )
             raise ConfigEntryAuthFailed from err
         except ApiError as err:
             raise ConfigEntryNotReady from err
