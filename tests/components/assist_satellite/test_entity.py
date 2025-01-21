@@ -163,21 +163,32 @@ async def test_new_pipeline_cancels_pipeline(
         (
             {"message": "Hello"},
             AssistSatelliteAnnouncement(
-                "Hello", "https://www.home-assistant.io/resolved.mp3", "tts"
+                message="Hello",
+                media_id="https://www.home-assistant.io/resolved.mp3",
+                original_media_id="media-source://bla",
+                media_id_source="tts",
             ),
         ),
         (
             {
                 "message": "Hello",
-                "media_id": "media-source://bla",
+                "media_id": "media-source://given",
             },
             AssistSatelliteAnnouncement(
-                "Hello", "https://www.home-assistant.io/resolved.mp3", "media_id"
+                message="Hello",
+                media_id="https://www.home-assistant.io/resolved.mp3",
+                original_media_id="media-source://given",
+                media_id_source="media_id",
             ),
         ),
         (
             {"media_id": "http://example.com/bla.mp3"},
-            AssistSatelliteAnnouncement("", "http://example.com/bla.mp3", "url"),
+            AssistSatelliteAnnouncement(
+                message="",
+                media_id="http://example.com/bla.mp3",
+                original_media_id="http://example.com/bla.mp3",
+                media_id_source="url",
+            ),
         ),
     ],
 )
