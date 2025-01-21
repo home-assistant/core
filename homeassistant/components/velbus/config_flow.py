@@ -69,11 +69,10 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             if await self._test_connection():
                 return self._create_device()
         else:
-            user_input = {}
-            user_input[CONF_TLS] = "yes"
-            user_input[CONF_HOST] = ""
-            user_input[CONF_PORT] = 27015
-            user_input[CONF_PASSWORD] = ""
+            user_input = {
+                CONF_TLS: "yes",
+                CONF_PORT: 27015,
+            }
 
         return self.async_show_form(
             step_id="network",
