@@ -102,7 +102,7 @@ class BackupConfigData:
             schedule=BackupSchedule(
                 days=days,
                 recurrence=ScheduleRecurrence(data["schedule"]["recurrence"]),
-                state=ScheduleState(data["schedule"]["state"]),
+                state=ScheduleState(data["schedule"].get("state", ScheduleState.NEVER)),
                 time=time,
             ),
         )
