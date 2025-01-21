@@ -46,7 +46,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      Not possible to discover these devices.
+      No network discovery.
   discovery:
     status: done
     comment: |
