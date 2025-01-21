@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.onkyo import InputSource
 from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 from homeassistant.components.onkyo.const import (
@@ -18,6 +17,10 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
 from . import (
     create_config_entry_from_info,
@@ -95,9 +98,9 @@ async def test_ssdp_discovery_already_configured(
     )
     config_entry.add_to_hass(hass)
 
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
         ssdp_st="mock_st",
@@ -232,9 +235,9 @@ async def test_ssdp_discovery_success(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
     """Test SSDP discovery with valid host."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
         ssdp_st="mock_st",
@@ -261,9 +264,9 @@ async def test_ssdp_discovery_success(
 
 async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
     """Test SSDP discovery with host info error."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -286,9 +289,9 @@ async def test_ssdp_discovery_host_none_info(
     hass: HomeAssistant, stub_mock_discovery
 ) -> None:
     """Test SSDP discovery with host info error."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -307,9 +310,9 @@ async def test_ssdp_discovery_no_location(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
     """Test SSDP discovery with no location."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location=None,
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -328,9 +331,9 @@ async def test_ssdp_discovery_no_host(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
     """Test SSDP discovery with no host."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
