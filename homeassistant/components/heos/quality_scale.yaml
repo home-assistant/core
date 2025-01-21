@@ -37,10 +37,7 @@ rules:
     status: todo
     comment: Needs to be set to 0. The underlying library handles parallel updates.
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: |
-      Integration has > 99% coverage, tests need to be updated to avoid using internal dispatcher and use snapshots for testing state attributes.
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: todo
