@@ -28,10 +28,10 @@ MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2025.2"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -647,6 +647,8 @@ class UnitOfElectricPotential(StrEnum):
     MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
+    KILOVOLT = "kV"
+    MEGAVOLT = "MV"
 
 
 # Degree units

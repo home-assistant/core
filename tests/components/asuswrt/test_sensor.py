@@ -82,6 +82,7 @@ def _setup_entry(hass: HomeAssistant, config, sensors, unique_id=None):
         options={CONF_CONSIDER_HOME: 60},
         unique_id=unique_id,
     )
+    config_entry.add_to_hass(hass)
 
     # init variable
     obj_prefix = slugify(HOST)
@@ -130,8 +131,6 @@ async def _test_sensors(
             config_entry=config_entry,
             disabled_by=None,
         )
-
-    config_entry.add_to_hass(hass)
 
     # initial devices setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)

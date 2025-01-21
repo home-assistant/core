@@ -24,11 +24,11 @@ PARALLEL_UPDATES = 0
 class TeslemetryButtonEntityDescription(ButtonEntityDescription):
     """Describes a Teslemetry Button entity."""
 
-    func: Callable[[TeslemetryButtonEntity], Awaitable[Any]] | None = None
+    func: Callable[[TeslemetryButtonEntity], Awaitable[Any]]
 
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
-    TeslemetryButtonEntityDescription(key="wake"),  # Every button runs wakeup
+    TeslemetryButtonEntityDescription(key="wake", func=lambda self: self.api.wake_up()),
     TeslemetryButtonEntityDescription(
         key="flash_lights", func=lambda self: self.api.flash_lights()
     ),
@@ -85,6 +85,4 @@ class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.wake_up_if_asleep()
-        if self.entity_description.func:
-            await handle_vehicle_command(self.entity_description.func(self))
+        await handle_vehicle_command(self.entity_description.func(self))
