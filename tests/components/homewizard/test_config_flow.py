@@ -717,8 +717,8 @@ async def test_manual_flow_detects_failed_user_authorization(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authorize"
     assert result["errors"] == {"base": "authorization_failed"}
-    
-    # Restore normal functionality 
+
+    # Restore normal functionality
     mock_homewizardenergy_v2.device.side_effect = None
     mock_homewizardenergy_v2.get_token.side_effect = None
 
