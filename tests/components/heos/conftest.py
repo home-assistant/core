@@ -23,8 +23,8 @@ from pyheos import (
 import pytest
 import pytest_asyncio
 
-from homeassistant.components.heos import CONF_PASSWORD, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_USERNAME
+from homeassistant.components.heos import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_DEVICE_TYPE,
     ATTR_UPNP_FRIENDLY_NAME,
