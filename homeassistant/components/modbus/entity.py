@@ -119,7 +119,7 @@ class BasePlatform(Entity):
         async with self._update_lock:
             await self._async_update()
 
-    async def _async_update_and_write_state(self) -> None:
+    async def _async_update_write_state(self) -> None:
         """Update the entity state and write it to the state machine."""
         await self.async_update()
         self.async_write_ha_state()
@@ -131,7 +131,7 @@ class BasePlatform(Entity):
         if self._update_lock.locked():
             _LOGGER.debug("Update for entity %s is already in progress", self.name)
             return
-        await self._async_update_and_write_state()
+        await self._async_update_write_state()
 
     @callback
     def async_run(self) -> None:
@@ -371,7 +371,7 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
             self._async_schedule_future_update(self._verify_delay)
             return
 
-        await self._async_update_and_write_state()
+        await self._async_update_write_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set switch off."""

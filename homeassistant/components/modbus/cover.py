@@ -116,7 +116,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._write_address, self._state_open, self._write_type
         )
         self._attr_available = result is not None
-        await self._async_update_and_write_state()
+        await self._async_update_write_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -124,7 +124,7 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
             self._slave, self._write_address, self._state_closed, self._write_type
         )
         self._attr_available = result is not None
-        await self._async_update_and_write_state()
+        await self._async_update_write_state()
 
     async def _async_update(self) -> None:
         """Update the state of the cover."""
