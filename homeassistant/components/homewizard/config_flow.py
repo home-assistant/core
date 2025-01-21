@@ -406,11 +406,14 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         it will return None if the token request failed.
         """
 
-        async with HomeWizardEnergyV2(ip_address) as api:
-            try:
-                return await api.get_token("home-assistant")
-            except DisabledError:
-                return None
+        api = HomeWizardEnergyV2(ip_address)
+
+        try:
+            return await api.get_token("home-assistant")
+        except DisabledError:
+            return None
+        finally:
+            await api.close()
 
 
 class RecoverableError(HomeAssistantError):
