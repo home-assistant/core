@@ -7,13 +7,10 @@ import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from httpx import Response
-from msgraph.generated.models.drive import Drive
 from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_collection_response import (
     DriveItemCollectionResponse,
 )
-from msgraph.generated.models.identity import Identity
-from msgraph.generated.models.identity_set import IdentitySet
 from msgraph.generated.models.upload_session import UploadSession
 import pytest
 
@@ -73,17 +70,27 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_drive() -> Generator[Drive]:
-    """Return a mocked Drive."""
-    drive = Drive(
-        owner=IdentitySet(user=Identity(display_name="John Doe")),
-    )
-    drive.id = "mock_drive_id"
-    return drive
+def mock_adapter() -> Generator[MagicMock]:
+    """Return a mocked GraphAdapter."""
+    with (
+        patch(
+            "homeassistant.components.onedrive.config_flow.GraphRequestAdapter",
+            autospec=True,
+        ) as mock_adapter,
+    ):
+        adapter = mock_adapter.return_value
+        adapter.get_http_response_message.return_value = Response(
+            status_code=200,
+            json={
+                "parentReference": {"driveId": "mock_drive_id"},
+                "shared": {"owner": {"user": {"displayName": "John Doe"}}},
+            },
+        )
+        yield adapter
 
 
 @pytest.fixture(autouse=True)
-def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
+def mock_graph_client(mock_adapter: MagicMock) -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     with (
         patch(
@@ -96,7 +103,8 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         ),
     ):
         client = graph_client.return_value
-        client.me.drive.get = AsyncMock(return_value=mock_drive)
+
+        client.request_adapter = mock_adapter
 
         drives = client.drives.by_drive_id.return_value
         drives.special.by_drive_item_id.return_value.get = AsyncMock(
@@ -125,7 +133,6 @@ def mock_graph_client(mock_drive: Drive) -> Generator[MagicMock]:
         drive_items.content.get = AsyncMock(
             return_value=Response(status_code=200, content=generate_bytes())
         )
-        # drive_items.content.get = ContentRequestBuilder("dummy", {})
 
         yield client
 

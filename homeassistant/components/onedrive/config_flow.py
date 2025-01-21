@@ -6,6 +6,8 @@ from typing import Any, cast
 
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
+from kiota_abstractions.method import Method
+from kiota_abstractions.request_information import RequestInformation
 from msgraph import GraphRequestAdapter, GraphServiceClient
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
@@ -52,9 +54,23 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             scopes=OAUTH_SCOPES,
         )
 
+        # need to get adapter from client, as client changes it
+        request_adapter = cast(GraphRequestAdapter, graph_client.request_adapter)
+
+        request_info = RequestInformation(
+            method=Method.GET,
+            url_template="{+baseurl}/me/drive/special/approot",
+            path_parameters={},
+        )
+        parent_span = request_adapter.start_tracing_span(request_info, "get_approot")
+
         # get the OneDrive id
+        # use low level methods, to avoid files.read permissions
+        # which would be required by drives.me.get()
         try:
-            drive = await graph_client.me.drive.get()
+            response = await request_adapter.get_http_response_message(
+                request_info=request_info, parent_span=parent_span
+            )
         except APIError:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -62,10 +78,9 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        if drive is None or not drive.id:
-            return self.async_abort(reason="no_drive")
+        drive = response.json()
 
-        await self.async_set_unique_id(drive.id)
+        await self.async_set_unique_id(drive["parentReference"]["driveId"])
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
@@ -79,11 +94,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        title = (
-            f"{drive.owner.user.display_name}'s OneDrive"
-            if (drive.owner and drive.owner.user and drive.owner.user.display_name)
-            else DOMAIN
-        )
+        title = f"{drive['shared']['owner']['user']['displayName']}'s OneDrive"
         return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(

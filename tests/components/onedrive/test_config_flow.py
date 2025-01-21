@@ -3,8 +3,8 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
+from httpx import Response
 from kiota_abstractions.api_error import APIError
-from msgraph.generated.models.drive import Drive
 import pytest
 
 from homeassistant import config_entries, setup
@@ -107,24 +107,6 @@ async def test_full_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_no_drive_in_account(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_drive: Drive,
-) -> None:
-    """Test no drive in account."""
-
-    mock_drive.id = None
-
-    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_drive"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
     (
         "exception",
@@ -139,13 +121,13 @@ async def test_flow_errors(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_graph_client: MagicMock,
+    mock_adapter: MagicMock,
     exception: Exception,
     error: str,
 ) -> None:
     """Test errors during flow."""
 
-    mock_graph_client.me.drive.get = AsyncMock(side_effect=exception)
+    mock_adapter.get_http_response_message.side_effect = exception
 
     result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -204,10 +186,16 @@ async def test_reauth_flow_id_changed(
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_drive: Drive,
+    mock_adapter: MagicMock,
 ) -> None:
     """Test that the reauth flow fails on a different drive id."""
-    mock_drive.id = "other-drive-id"
+    mock_adapter.get_http_response_message.return_value = Response(
+        status_code=200,
+        json={
+            "parentReference": {"driveId": "other_drive_id"},
+        },
+    )
+
     await setup_integration(hass, mock_config_entry)
 
     result = await mock_config_entry.start_reauth_flow(hass)

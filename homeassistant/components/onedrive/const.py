@@ -15,7 +15,6 @@ OAUTH2_TOKEN: Final = "https://login.microsoftonline.com/consumers/oauth2/v2.0/t
 
 OAUTH_SCOPES: Final = [
     "Files.ReadWrite.AppFolder",
-    "Files.Read",
     "offline_access",
     "openid",
 ]
