@@ -4,10 +4,10 @@
     "step": {
       "user": {
         "data": {
-          "address": "Device address"
+          "address": "MAC address"
         },
         "data_description": {
-          "address": "The address of the device"
+          "address": "The Bluetooth MAC address of your SwitchBot device"
         }
       },
       "confirm": {
@@ -19,7 +19,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "password": "The password for the device"
+          "password": "The password required for the Bot device access"
         }
       },
       "encrypted_key": {
