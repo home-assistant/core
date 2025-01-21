@@ -314,6 +314,8 @@ class BackupSchedule:
 
     days: list[Day] = field(default_factory=list)
     recurrence: ScheduleRecurrence = ScheduleRecurrence.NEVER
+    # Although no longer used, state is kept for backwards compatibility.
+    # It can be removed in HA Core 2025.8.
     state: ScheduleState = ScheduleState.NEVER
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
