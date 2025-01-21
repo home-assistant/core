@@ -376,12 +376,18 @@ def test_import_as(linter: UnittestLinter, imports_checker: BaseChecker) -> None
     module_name = "pylint_test"
 
     import_nodes = astroid.extract_node(
-        "import foo #@\n"
-        "import foo as my_foo #@\n"
-        "import foo.bar #@\n"
-        "import foo.bar as my_bar #@\n"
-        "import foo.local.bar #@\n"
-        "import foo.local.bar as my_bar #@\n",
+        """
+        import foo #@
+        import foo as my_foo #@
+        import foo.bar #@
+        import foo.bar as my_bar #@
+        import foo.local.bar #@
+        import foo.local.bar as my_bar #@
+        import homeassistant.bar #@
+        import homeassistant.bar as my_bar #@
+        import homeassistant.local.bar #@
+        import homeassistant.local.bar as my_bar #@
+        """,
         module_name,
     )
     imports_checker.visit_module(import_nodes[0].parent)
@@ -389,21 +395,21 @@ def test_import_as(linter: UnittestLinter, imports_checker: BaseChecker) -> None
     expected_messages = [
         pylint.testutils.MessageTest(
             msg_id="hass-alias-import",
-            node=import_nodes[3],
-            args=("bar", "foo", "bar", "my_bar"),
-            line=4,
+            node=import_nodes[7],
+            args=("bar", "homeassistant", "bar", "my_bar"),
+            line=9,
             col_offset=0,
-            end_line=4,
-            end_col_offset=24,
+            end_line=9,
+            end_col_offset=34,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-alias-import",
-            node=import_nodes[5],
-            args=("bar", "foo.local", "bar", "my_bar"),
-            line=6,
+            node=import_nodes[9],
+            args=("bar", "homeassistant.local", "bar", "my_bar"),
+            line=11,
             col_offset=0,
-            end_line=6,
-            end_col_offset=30,
+            end_line=11,
+            end_col_offset=40,
         ),
     ]
     with assert_adds_messages(linter, *expected_messages):

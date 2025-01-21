@@ -271,7 +271,7 @@ class HassImportsFormatChecker(BaseChecker):
                 continue
 
             # Prefer `from ... import ... as ...` over `import ... as ...`
-            if alias and "." in module:
+            if alias and module.startswith("homeassistant."):
                 prefix, _delimiter, imported_module = module.rpartition(".")
                 self.add_message(
                     "hass-alias-import",
