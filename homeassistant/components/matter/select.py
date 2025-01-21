@@ -49,7 +49,7 @@ class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescrip
     """Describe Matter select entities."""
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
