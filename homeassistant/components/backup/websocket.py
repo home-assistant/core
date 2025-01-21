@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 
 from .config import ScheduleState
 from .const import DATA_MANAGER, LOGGER
@@ -59,6 +60,7 @@ async def handle_info(
             "backups": [backup.as_frontend_json() for backup in backups.values()],
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
         },
     )
 
@@ -321,7 +323,10 @@ async def handle_config_info(
     connection.send_result(
         msg["id"],
         {
-            "config": manager.config.data.to_dict(),
+            "config": manager.config.data.to_dict()
+            | {
+                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup
+            },
         },
     )
 
@@ -351,7 +356,12 @@ async def handle_config_info(
                 vol.Optional("days"): vol.Any(int, None),
             },
         ),
-        vol.Optional("schedule"): vol.All(str, vol.Coerce(ScheduleState)),
+        vol.Optional("schedule"): vol.Schema(
+            {
+                vol.Optional("state"): vol.All(str, vol.Coerce(ScheduleState)),
+                vol.Optional("time"): vol.Any(cv.time, None),
+            }
+        ),
     }
 )
 @websocket_api.async_response
