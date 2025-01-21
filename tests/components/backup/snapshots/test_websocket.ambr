@@ -285,7 +285,7 @@
         'last_attempted_automatic_backup': '2024-10-26T04:45:00+01:00',
         'last_completed_automatic_backup': '2024-10-26T04:45:00+01:00',
         'next_automatic_backup': '2024-11-14T04:55:00+01:00',
-        'next_automatic_backup_additional': True,
+        'next_automatic_backup_additional': False,
         'retention': dict({
           'copies': 3,
           'days': 7,
