@@ -12,8 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, loader, runner
-import homeassistant.config as config_util
+from homeassistant import bootstrap, config as config_util, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
