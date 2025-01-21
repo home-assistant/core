@@ -1,4 +1,13 @@
 rules:
+  # Adjust platform files for consistent flow:
+  #   [entity description classes]
+  #   [entity descriptions]
+  #   [async_setup_entry]
+  #   [entity classes])
+  # Remove RequiredKeyMixins and add kw_only to classes
+  # Wrap multiline lambdas in parenthesis
+  # Extend entity description in switch.py to use value_fn instead of getattr
+  # Deprecate extra state attributes in vacuum.py
   # Bronze
   action-setup:
     status: todo
@@ -13,7 +22,14 @@ rules:
     status: todo
     comment: |
       hub.py should be renamed to coordinator.py and updated accordingly
-  config-flow-test-coverage: done
+      Also should not need to return bool (never used)
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      Fix stale title and docstring
+      Replace litterrobot.DOMAIN references to DOMAIN (after correctly importing)
+      Make sure every test ends in either ABORT or CREATE_ENTRY
+      so we also test that the flow is able to recover
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -22,7 +38,9 @@ rules:
   docs-high-level-description: done
   docs-installation-instructions: todo
   docs-removal-instructions: todo
-  entity-event-setup: done
+  entity-event-setup:
+    status: todo
+    comment: Do we need to subscribe to both the coordinator and robot itself?
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -42,14 +60,20 @@ rules:
   log-when-unavailable: todo
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: |
+      Move big data objects from common.py into JSON fixtures and oad them when needed.
+      Other fields can be moved to const.py. Consider snapshots and testing data updates
 
   # Gold
-  devices: todo
+  devices:
+    status: done
+    comment: Currently uses the device_info property, could be moved to _attr_device_info
   diagnostics: todo
   discovery-update-info:
-    status: todo
-    comment: Is this needed for cloud-based credentials?
+    status: done
+    comment: The integration is cloud-based
   discovery:
     status: todo
     comment: Need to validate discovery
@@ -66,9 +90,13 @@ rules:
   entity-disabled-by-default:
     status: todo
     comment: Check if we should disable any entities by default
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: Make sure all translated states are in sentence case
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: BRIGHTNESS_LEVEL_ICON_MAP should be migrated to icons.json
   reconfiguration-flow: todo
   repair-issues:
     status: done
