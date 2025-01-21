@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
+from functools import partial
 import logging
 import math
 from typing import Any
@@ -38,6 +39,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     Event,
@@ -46,11 +48,11 @@ from homeassistant.core import (
     State,
     callback,
 )
-from homeassistant.exceptions import ConditionError
-from homeassistant.helpers import condition, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
+    async_call_later,
     async_track_state_change_event,
     async_track_time_interval,
 )
@@ -61,12 +63,12 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictT
 from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
+    CONF_DUR_COOLDOWN,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
-    CONF_MAX_DUTY,
+    CONF_MAX_DUR,
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
-    CONF_MIN_DUTY,
     CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
@@ -95,10 +97,10 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
         vol.Required(CONF_HEATER): cv.entity_id,
         vol.Required(CONF_SENSOR): cv.entity_id,
         vol.Optional(CONF_AC_MODE): cv.boolean,
-        vol.Optional(CONF_MAX_DUTY): cv.positive_time_period,
         vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_MIN_DUR): cv.positive_time_period,
-        vol.Optional(CONF_MIN_DUTY): cv.positive_time_period,
+        vol.Optional(CONF_MAX_DUR): cv.positive_time_period,
+        vol.Optional(CONF_DUR_COOLDOWN): cv.positive_time_period,
         vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
@@ -168,8 +170,10 @@ async def _async_setup_config(
     target_temp: float | None = config.get(CONF_TARGET_TEMP)
     ac_mode: bool | None = config.get(CONF_AC_MODE)
     min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
-    min_duty_duration: timedelta | None = config.get(CONF_MIN_DUTY)
-    max_duty_duration: timedelta | None = config.get(CONF_MAX_DUTY)
+    # how do we ensure `max_cycle_duration` is greater than `min_cycle_duration`?
+    max_cycle_duration: timedelta | None = config.get(CONF_MAX_DUR)
+    # for backwards compat, `cycle_cooldown` should be set to `min_cycle_duration`
+    cycle_cooldown: timedelta | None = config.get(CONF_DUR_COOLDOWN)
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
     keep_alive: timedelta | None = config.get(CONF_KEEP_ALIVE)
@@ -193,8 +197,8 @@ async def _async_setup_config(
                 target_temp,
                 ac_mode,
                 min_cycle_duration,
-                min_duty_duration,
-                max_duty_duration,
+                max_cycle_duration,
+                cycle_cooldown,
                 cold_tolerance,
                 hot_tolerance,
                 keep_alive,
@@ -225,8 +229,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         target_temp: float | None,
         ac_mode: bool | None,
         min_cycle_duration: timedelta | None,
-        min_duty_duration: timedelta | None,
-        max_duty_duration: timedelta | None,
+        max_cycle_duration: timedelta | None,
+        cycle_cooldown: timedelta | None,
         cold_tolerance: float,
         hot_tolerance: float,
         keep_alive: timedelta | None,
@@ -246,10 +250,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             heater_entity_id,
         )
         self.ac_mode = ac_mode
-        self.min_cycle_duration = min_cycle_duration
+        self.min_cycle_duration = min_cycle_duration or timedelta()
+        self.max_cycle_duration = max_cycle_duration
+        self.cycle_cooldown = cycle_cooldown or timedelta()
         self._cold_tolerance = cold_tolerance
-        self.min_duty_duration = min_duty_duration
-        self.max_duty_duration = max_duty_duration
+        self._cycle_timer = datetime.now()
+        self._max_cycle_callback: CALLBACK_TYPE | None = None
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._hvac_mode = initial_hvac_mode
@@ -505,16 +511,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self, time: datetime | None = None, force: bool = False
     ) -> None:
         """Check if we need to turn heating on or off."""
-        # @todo can we see if there's time remaining on a timer?
-        # if self._is_device_active:
-        #   if self.min_duty_duration is not None: # timer has NOT completed
-        #     return
-        #   if self.max_duty_duration is None: # timer has completed
-        #     await self._async_heater_turn_off()
-        #     return
-        # else:
-        #   if self.duty_cooldown is not None: # timer has NOT completed
-        #     return
         async with self._temp_lock:
             if not self._active and None not in (
                 self._cur_temp,
@@ -533,51 +529,65 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             if not self._active or self._hvac_mode == HVACMode.OFF:
                 return
 
-            # If the `force` argument is True, we
-            # ignore `min_cycle_duration`.
-            # If the `time` argument is not none, we were invoked for
-            # keep-alive purposes, and `min_cycle_duration` is irrelevant.
-            if not force and time is None and self.min_cycle_duration:
-                if self._is_device_active:
-                    current_state = STATE_ON
-                else:
-                    current_state = HVACMode.OFF
-                try:
-                    long_enough = condition.state(
-                        self.hass,
-                        self.heater_entity_id,
-                        current_state,
-                        self.min_cycle_duration,
-                    )
-                except ConditionError:
-                    long_enough = False
-
-                if not long_enough:
-                    return
+            if force and time is not None and self.max_cycle_duration:
+                # We were invoked due to `max_duty_duration`, so turn off
+                _LOGGER.debug(
+                    "Turning off heater %s due to max cycle time of %s",
+                    self.heater_entity_id,
+                    self.max_cycle_duration,
+                )
+                await self._async_heater_turn_off()
+                return
 
             assert self._cur_temp is not None and self._target_temp is not None
             too_cold = self._target_temp >= self._cur_temp + self._cold_tolerance
             too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
+            now = datetime.now()
+
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
-                    _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
-                    await self._async_heater_turn_off()
+                    # Make sure it's past the `min_cycle_duration` before turning off
+                    if self._cycle_timer + self.min_cycle_duration <= now:
+                        _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
+                        await self._async_heater_turn_off()
+                    else:
+                        _LOGGER.debug(
+                            "Checking again at %s",
+                            self._cycle_timer + self.min_cycle_duration,
+                        )
+                        async_call_later(
+                            self.hass,
+                            now - self._cycle_timer + self.min_cycle_duration,
+                            self._async_control_heating,
+                        )
                 elif time is not None:
-                    # The time argument is passed only in keep-alive case
+                    # This is a keep-alive call, so ensure it's on
                     _LOGGER.debug(
                         "Keep-alive - Turning on heater heater %s",
                         self.heater_entity_id,
                     )
-                    await self._async_heater_turn_on()
+                    await self._async_heater_turn_on(keepalive=True)
             elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
-                _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
-                await self._async_heater_turn_on()
+                # Make sure it's past the `cycle_cooldown` before turning on
+                if self._cycle_timer + self.cycle_cooldown <= now:
+                    _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
+                    await self._async_heater_turn_on()
+                else:
+                    _LOGGER.debug(
+                        "Checking again at %s",
+                        self._cycle_timer + self.cycle_cooldown,
+                    )
+                    async_call_later(
+                        self.hass,
+                        now - self._cycle_timer + self.cycle_cooldown,
+                        self._async_control_heating,
+                    )
             elif time is not None:
-                # The time argument is passed only in keep-alive case
+                # This is a keep-alive call, so ensure it's off
                 _LOGGER.debug(
                     "Keep-alive - Turning off heater %s", self.heater_entity_id
                 )
-                await self._async_heater_turn_off()
+                await self._async_heater_turn_off(keepalive=True)
 
     @property
     def _is_device_active(self) -> bool | None:
@@ -587,23 +597,37 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
 
         return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
 
-    async def _async_heater_turn_on(self) -> None:
+    async def _async_heater_turn_on(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
         )
-        # @todo begin timers for self.min_duty_duration, self.max_duty_duration
-        # @todo end timer for self.duty_cooldown
+        if not keepalive:
+            self._cycle_timer = datetime.now()
+            if self.max_cycle_duration is not None:
+                _LOGGER.debug(
+                    "Calling _async_control_heating at %s",
+                    self._cycle_timer + self.max_cycle_duration,
+                )
+                self._max_cycle_callback = async_call_later(
+                    self.hass,
+                    self.max_cycle_duration,
+                    partial(self._async_control_heating, force=True),
+                )
 
-    async def _async_heater_turn_off(self) -> None:
+    async def _async_heater_turn_off(self, keepalive: bool = False) -> None:
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )
-        # @todo begin timer for self.duty_cooldown
-        # @todo end timers for self.min_duty_duration, self.max_duty_duration
+        if not keepalive:
+            self._cycle_timer = datetime.now()
+            # Cancel `_max_cycle_callback` if it's set
+            if self._max_cycle_callback:
+                self._max_cycle_callback()
+                self._max_cycle_callback = None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
