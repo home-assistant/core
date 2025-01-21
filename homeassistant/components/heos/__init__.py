@@ -28,7 +28,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -80,6 +84,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     # For backwards compat
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
+
+    # Migrate non-string device identifiers.
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        for domain, player_id in device.identifiers:
+            if domain == DOMAIN and not isinstance(player_id, str):
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, str(player_id))}
+                )
+            break
 
     host = entry.data[CONF_HOST]
     credentials: Credentials | None = None
@@ -221,13 +237,13 @@ class ControllerManager:
             # update device registry
             assert self._device_registry is not None
             entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, old_id)}  # type: ignore[arg-type]  # Fix in the future
+                identifiers={(DOMAIN, str(old_id))}
             )
-            new_identifiers = {(DOMAIN, new_id)}
+            new_identifiers = {(DOMAIN, str(new_id))}
             if entry:
                 self._device_registry.async_update_device(
                     entry.id,
-                    new_identifiers=new_identifiers,  # type: ignore[arg-type]  # Fix in the future
+                    new_identifiers=new_identifiers,
                 )
                 _LOGGER.debug(
                     "Updated device %s identifiers to %s", entry.id, new_identifiers
@@ -294,7 +310,7 @@ class GroupManager:
         return group_info_by_entity_id
 
     async def async_join_players(
-        self, leader_id: int, leader_entity_id: str, member_entity_ids: list[str]
+        self, leader_id: int, member_entity_ids: list[str]
     ) -> None:
         """Create a group a group leader and member players."""
         # Resolve HEOS player_id for each member entity_id
@@ -308,26 +324,11 @@ class GroupManager:
                 )
             member_ids.append(member_id)
 
-        try:
-            await self.controller.create_group(leader_id, member_ids)
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to group %s with %s: %s",
-                leader_entity_id,
-                member_entity_ids,
-                err,
-            )
+        await self.controller.create_group(leader_id, member_ids)
 
-    async def async_unjoin_player(self, player_id: int, player_entity_id: str):
+    async def async_unjoin_player(self, player_id: int):
         """Remove `player_entity_id` from any group."""
-        try:
-            await self.controller.create_group(player_id, [])
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to ungroup %s: %s",
-                player_entity_id,
-                err,
-            )
+        await self.controller.create_group(player_id, [])
 
     async def async_update_groups(self) -> None:
         """Update the group membership from the controller."""
@@ -437,7 +438,11 @@ class SourceManager:
             await player.play_input_source(input_source.media_id)
             return
 
-        _LOGGER.error("Unknown source: %s", source)
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_source",
+            translation_placeholders={"source": source},
+        )
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""

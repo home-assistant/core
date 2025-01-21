@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import async_control_connect
+from . import WebOsTvConfigEntry, async_control_connect
 from .const import DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
 
 
@@ -56,7 +56,9 @@ def async_get_client_by_device_entry(
     Raises ValueError if client is not found.
     """
     for config_entry_id in device.config_entries:
-        entry = hass.config_entries.async_get_entry(config_entry_id)
+        entry: WebOsTvConfigEntry | None = hass.config_entries.async_get_entry(
+            config_entry_id
+        )
         if entry and entry.domain == DOMAIN:
             if entry.state is ConfigEntryState.LOADED:
                 return entry.runtime_data
