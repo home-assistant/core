@@ -8,7 +8,6 @@ from dbus_fast.aio import message_bus
 import habluetooth.util as habluetooth_utils
 import pytest
 
-# pylint: disable-next=no-name-in-module
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 
@@ -319,6 +318,7 @@ def register_hci0_scanner(hass: HomeAssistant) -> Generator[None]:
     cancel = bluetooth.async_register_scanner(hass, hci0_scanner)
     yield
     cancel()
+    bluetooth.async_remove_scanner(hass, hci0_scanner.source)
 
 
 @pytest.fixture
@@ -328,3 +328,4 @@ def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
     cancel = bluetooth.async_register_scanner(hass, hci1_scanner)
     yield
     cancel()
+    bluetooth.async_remove_scanner(hass, hci1_scanner.source)

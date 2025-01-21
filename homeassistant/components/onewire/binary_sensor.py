@@ -122,9 +122,9 @@ async def async_setup_entry(
 
 def get_entities(
     onewire_hub: OneWireHub, devices: list[OWDeviceDescription]
-) -> list[OneWireBinarySensor]:
+) -> list[OneWireBinarySensorEntity]:
     """Get a list of entities."""
-    entities: list[OneWireBinarySensor] = []
+    entities: list[OneWireBinarySensorEntity] = []
     for device in devices:
         family = device.family
         device_id = device.id
@@ -140,7 +140,7 @@ def get_entities(
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
             entities.append(
-                OneWireBinarySensor(
+                OneWireBinarySensorEntity(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
@@ -152,7 +152,7 @@ def get_entities(
     return entities
 
 
-class OneWireBinarySensor(OneWireEntity, BinarySensorEntity):
+class OneWireBinarySensorEntity(OneWireEntity, BinarySensorEntity):
     """Implementation of a 1-Wire binary sensor."""
 
     entity_description: OneWireBinarySensorEntityDescription
