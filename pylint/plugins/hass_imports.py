@@ -256,21 +256,22 @@ class HassImportsFormatChecker(BaseChecker):
             if module.startswith(f"{self.current_package}."):
                 self.add_message("hass-relative-import", node=node)
                 continue
+
+            # Disable imports from component sub-modules
             if (
                 module.startswith("homeassistant.components.")
                 and len(module.split(".")) > 3
-            ):
-                if not (
+                # Unless from tests for the same component
+                and not (
                     self.current_package.startswith("tests.components.")
                     and self.current_package.split(".")[2] == module.split(".")[2]
-                ):
-                    # Ignore check if the component being tested matches
-                    # the component being imported from
-                    self.add_message("hass-component-root-import", node=node)
-                    continue
+                )
+            ):
+                self.add_message("hass-component-root-import", node=node)
+                continue
+
+            # Prefer `from ... import ... as ...` over `import ... as ...`
             if alias and "." in module:
-                # Prefer from ... import ... as ...
-                # over import ... as ...
                 prefix, _delimiter, imported_module = module.rpartition(".")
                 self.add_message(
                     "hass-alias-import",
