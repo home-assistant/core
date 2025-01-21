@@ -339,7 +339,6 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
     ) -> None:
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
-        self._device = device
         self._attribute = attribute
         self.entity_description = SENSOR_TYPES[attribute]
         self._attr_unique_id = f"{self._mac}-{attribute}"
@@ -348,7 +347,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return self._device.get(self._attribute) is not None
+        return super().available and self._device.get(self._attribute) is not None
 
     @property
     def native_value(self):
