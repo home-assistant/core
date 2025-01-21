@@ -228,7 +228,7 @@ class HassImportsFormatChecker(BaseChecker):
             "Used when a constant should be imported as an alias",
         ),
         "W7427": (
-            "`%s` should be import using `from %s import %s as %s`",
+            "`%s` should be imported using `from %s import %s as %s`",
             "hass-alias-import",
             "Used when an alias import should be imported with from ... import ... as ...",
         ),
