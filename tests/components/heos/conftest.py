@@ -120,12 +120,6 @@ def controller_fixture(
         yield mock_heos
 
 
-@pytest.fixture(name="config")
-def config_fixture():
-    """Create hass config fixture."""
-    return {DOMAIN: {CONF_HOST: "127.0.0.1"}}
-
-
 @pytest.fixture(name="players")
 def player_fixture(quick_selects):
     """Create two mock HeosPlayers."""
@@ -309,12 +303,12 @@ def playlists_fixture() -> Sequence[MediaItem]:
 
 
 @pytest.fixture(name="change_data")
-def change_data_fixture() -> dict:
+def change_data_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult()
 
 
 @pytest.fixture(name="change_data_mapped_ids")
-def change_data_mapped_ids_fixture() -> dict:
+def change_data_mapped_ids_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult(updated_player_ids={1: 101})
