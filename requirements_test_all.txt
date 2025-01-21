@@ -1291,7 +1291,7 @@ odp-amsterdam==6.0.2
 ohme==1.2.3
 
 # homeassistant.components.ollama
-ollama==0.4.5
+ollama==0.4.7
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5
