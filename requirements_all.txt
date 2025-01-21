@@ -416,7 +416,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.4.2
+aiowebostv==0.5.0
 
 # homeassistant.components.withings
 aiowithings==3.1.4
@@ -548,7 +548,7 @@ av==13.1.0
 axis==64
 
 # homeassistant.components.fujitsu_fglair
-ayla-iot-unofficial==1.4.4
+ayla-iot-unofficial==1.4.5
 
 # homeassistant.components.azure_event_hub
 azure-eventhub==5.11.1
@@ -744,7 +744,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==10.1.0
+deebot-client==11.0.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -761,7 +761,7 @@ demetriek==1.2.0
 denonavr==1.0.1
 
 # homeassistant.components.devialet
-devialet==1.4.5
+devialet==1.5.7
 
 # homeassistant.components.devolo_home_control
 devolo-home-control-api==0.18.3
@@ -1137,7 +1137,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.64
+holidays==0.65
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250109.0
@@ -1302,7 +1302,7 @@ led-ble==1.1.1
 lektricowifi==0.0.43
 
 # homeassistant.components.letpot
-letpot==0.2.0
+letpot==0.3.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -2427,7 +2427,7 @@ python-opensky==1.0.1
 python-otbr-api==2.7.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.5.0
+python-overseerr==0.6.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2975,7 +2975,7 @@ vallox-websocket-api==5.3.0
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.1.0
+velbus-aio==2025.1.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
@@ -3106,7 +3106,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2024.12.23
+yt-dlp[default]==2025.01.15
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
