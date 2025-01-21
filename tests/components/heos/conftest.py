@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Sequence
+from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyheos import (
@@ -66,8 +66,8 @@ def config_entry_options_fixture() -> MockConfigEntry:
 async def controller_fixture(
     players: dict[int, HeosPlayer],
     favorites: dict[int, MediaItem],
-    input_sources: Sequence[MediaItem],
-    playlists: Sequence[MediaItem],
+    input_sources: list[MediaItem],
+    playlists: list[MediaItem],
     change_data: PlayerUpdateResult,
     group: dict[int, HeosGroup],
 ) -> AsyncIterator[Heos]:
@@ -191,7 +191,7 @@ def favorites_fixture() -> dict[int, MediaItem]:
 
 
 @pytest.fixture(name="input_sources")
-def input_sources_fixture() -> Sequence[MediaItem]:
+def input_sources_fixture() -> list[MediaItem]:
     """Create a set of input sources for testing."""
     source = MediaItem(
         source_id=1,
@@ -258,7 +258,7 @@ def quick_selects_fixture() -> dict[int, str]:
 
 
 @pytest.fixture(name="playlists")
-def playlists_fixture() -> Sequence[MediaItem]:
+def playlists_fixture() -> list[MediaItem]:
     """Create favorites fixture."""
     playlist = MediaItem(
         source_id=const.MUSIC_SOURCE_PLAYLISTS,
