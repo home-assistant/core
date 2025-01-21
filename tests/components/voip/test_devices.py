@@ -27,7 +27,7 @@ async def test_device_registry_info(
         identifiers={(DOMAIN, call_info.caller_endpoint.uri)}
     )
     assert device is not None
-    assert device.name == call_info.caller_endpoint.uri
+    assert device.name == call_info.caller_endpoint.host
     assert device.manufacturer == "Grandstream"
     assert device.model == "HT801"
     assert device.sw_version == "1.0.17.5"
@@ -71,13 +71,13 @@ async def test_remove_device_registry_entry(
 ) -> None:
     """Test removing a device registry entry."""
     assert voip_device.voip_id in voip_devices.devices
-    assert hass.states.get("switch.sip_192_168_1_210_5060_allow_calls") is not None
+    assert hass.states.get("switch.192_168_1_210_allow_calls") is not None
 
     device_registry.async_remove_device(voip_device.device_id)
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.sip_192_168_1_210_5060_allow_calls") is None
+    assert hass.states.get("switch.192_168_1_210_allow_calls") is None
     assert voip_device.voip_id not in voip_devices.devices
 
 
@@ -120,7 +120,7 @@ async def test_device_registry_migration(
     assert device is not None
     assert device.id == legacy_dev_reg_entry.id
     assert device.identifiers == {(DOMAIN, new_id)}
-    assert device.name == new_id
+    assert device.name == call_info.caller_endpoint.host
     assert device.manufacturer == "Grandstream"
     assert device.model == "HT801"
     assert device.sw_version == "1.0.17.5"

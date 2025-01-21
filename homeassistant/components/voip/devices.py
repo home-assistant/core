@@ -177,7 +177,7 @@ class VoIPDevices:
         device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, voip_id)},
-            name=voip_id,
+            name=call_info.caller_endpoint.host,
             manufacturer=manuf,
             model=model,
             sw_version=fw_version,
