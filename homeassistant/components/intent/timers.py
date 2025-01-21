@@ -21,7 +21,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     intent,
 )
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from .const import TIMER_DATA
 
@@ -261,7 +261,7 @@ class TimerManager:
         if seconds is not None:
             total_seconds += seconds
 
-        timer_id = ulid.ulid_now()
+        timer_id = ulid_util.ulid_now()
         created_at = time.monotonic_ns()
         timer = TimerInfo(
             id=timer_id,
