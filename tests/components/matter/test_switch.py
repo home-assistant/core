@@ -114,12 +114,12 @@ async def test_power_switch(hass: HomeAssistant, matter_node: MatterNode) -> Non
 
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
-async def test_eve_thermo_child_lock(
+async def test_numeric_switch(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test switch entity works for Eve Thermo Child lock attribute."""
+    """Test numeric switch entity is discovered and working using an Eve Thermo fixture ."""
     state = hass.states.get("switch.eve_thermo_child_lock")
     assert state
     assert state.state == "off"
