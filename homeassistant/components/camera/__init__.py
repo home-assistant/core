@@ -523,7 +523,7 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is int:  # noqa: E721
+        if type(features) is int:
             new_features = CameraEntityFeature(features)
             self._report_deprecated_supported_features_values(new_features)
             return new_features

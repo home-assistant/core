@@ -1,0 +1,35 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config': dict({
+      'host': '192.168.1.12',
+      'password': '**REDACTED**',
+      'username': 'admin',
+    }),
+    'gateway': dict({
+      'heater_0': dict({
+        'display_code': 126,
+        'display_text': 'standby',
+        'fault_code': None,
+        'heater_temp': 35.34,
+        'is_burning': False,
+        'is_failed': False,
+        'is_pumping': False,
+        'is_tapping': False,
+        'nodenr': 249,
+        'pressure': 1.86,
+        'rf_message_rssi': 30,
+        'rfstatus_cntr': 0,
+        'rooms': dict({
+          '0': dict({
+            'override': 18.0,
+            'room_temp': 21.42,
+            'setpoint': 18.0,
+          }),
+        }),
+        'serial_no': 'c0ffeec0ffee',
+        'tap_temp': 30.21,
+      }),
+    }),
+  })
+# ---
