@@ -358,7 +358,7 @@ async def test_dhcp_discovery_aborts_for_v2_api(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.0.0.127",
             hostname="HW-p1meter-aabbcc",
             macaddress="5c2fafabcdef",
