@@ -116,24 +116,41 @@ async def test_async_setup_entry_connect_failure(
     config_entry.add_to_hass(hass)
     controller.connect.side_effect = HeosError()
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
-    controller.connect.reset_mock()
-    controller.disconnect.reset_mock()
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_player_failure(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
-    """Failure to retrieve players/sources raises ConfigEntryNotReady."""
+    """Failure to retrieve players raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
     controller.get_players.side_effect = HeosError()
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
-    controller.connect.reset_mock()
-    controller.disconnect.reset_mock()
+    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_favorites_failure(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Failure to retrieve favorites loads."""
+    config_entry.add_to_hass(hass)
+    controller.get_favorites.side_effect = HeosError()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_async_setup_entry_inputs_failure(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Failure to retrieve inputs loads."""
+    config_entry.add_to_hass(hass)
+    controller.get_input_sources.side_effect = HeosError()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state == ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
