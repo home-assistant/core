@@ -114,7 +114,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
     # OptionsFlow only
-    state_updater: bool
+    state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
     #   Integration only (not forwarded to xknx)
     telegram_log_size: int  # not required

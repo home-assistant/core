@@ -310,7 +310,7 @@
       "fields": {
         "group_members": {
           "name": "Group members",
-          "description": "The players which will be synced with the playback specified in `target`."
+          "description": "The players which will be synced with the playback specified in 'Targets'."
         }
       }
     },
