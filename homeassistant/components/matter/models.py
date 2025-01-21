@@ -59,11 +59,6 @@ class MatterEntityInfo:
         """Return Primary Attribute belonging to the entity."""
         return self.attributes_to_watch[0]
 
-    @property
-    def secondary_attribute(self) -> type[ClusterAttributeDescriptor]:
-        """Return Secondary Attribute belonging to the entity."""
-        return self.attributes_to_watch[1]
-
 
 @dataclass
 class MatterDiscoverySchema:
