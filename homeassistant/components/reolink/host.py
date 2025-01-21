@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_PROTOCOL,
-    CONF_PRIVACY,
     CONF_USERNAME,
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -33,7 +32,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_USE_HTTPS, DOMAIN, CONF_PRIVACY
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
