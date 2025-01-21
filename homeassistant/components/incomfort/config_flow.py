@@ -10,7 +10,6 @@ from incomfortclient import IncomfortError, InvalidHeaterList
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     ConfigEntry,
     ConfigEntryState,
@@ -41,6 +40,17 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT)
         ),
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
+    }
+)
+
+DHCP_CONFIG_SCHEMA = vol.Schema(
+    {
         vol.Optional(CONF_USERNAME): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="admin")
         ),
@@ -141,9 +151,30 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm setup from discovery."""
         if user_input is not None:
-            return await self.async_step_user({CONF_HOST: self._discovered_host})
+            return await self.async_step_dhcp_auth({CONF_HOST: self._discovered_host})
         return self.async_show_form(
             step_id="dhcp_confirm",
+            description_placeholders={CONF_HOST: self._discovered_host},
+        )
+
+    async def async_step_dhcp_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial set up via DHCP."""
+        errors: dict[str, str] | None = None
+        data_schema: vol.Schema = DHCP_CONFIG_SCHEMA
+        if user_input is not None:
+            user_input[CONF_HOST] = self._discovered_host
+            if (
+                errors := await async_try_connect_gateway(self.hass, user_input)
+            ) is None:
+                return self.async_create_entry(title=TITLE, data=user_input)
+            data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
+
+        return self.async_show_form(
+            step_id="dhcp_auth",
+            data_schema=data_schema,
+            errors=errors,
             description_placeholders={CONF_HOST: self._discovered_host},
         )
 
@@ -160,11 +191,6 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         if user_input is not None:
             if (
-                self.source == SOURCE_DHCP
-                and user_input[CONF_HOST] != self._discovered_host
-            ):
-                errors = {"host": "host_mismatch"}
-            elif (
                 errors := await async_try_connect_gateway(
                     self.hass,
                     (reconfigure_entry.data | user_input)
