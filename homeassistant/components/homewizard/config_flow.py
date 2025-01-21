@@ -140,13 +140,13 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
 
         if token is None:
-            errors = {"base": "authorization_failed"}
+            if user_input is not None:
+                errors = {"base": "authorization_failed"}
 
-        if user_input is None or token is None:
             return self.async_show_form(step_id="authorize", errors=errors)
 
         # Now we got a token, we can ask for some more info
-        async with HomeWizardEnergyV2(self.ip_address) as api:
+        async with HomeWizardEnergyV2(self.ip_address, token=token) as api:
             device_info = await api.device()
 
         data = {
@@ -295,6 +295,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
+        assert self.ip_address
+
         errors: dict[str, str] | None = None
 
         token = await self._async_request_token(self.ip_address)
