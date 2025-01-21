@@ -41,6 +41,8 @@ from homeassistant.util.dt import utcnow
 from . import GroupManager, HeosConfigEntry, SourceManager
 from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
 
+PARALLEL_UPDATES = 0
+
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_SET
