@@ -106,12 +106,12 @@ async def test_attribute_select_entities(
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
-async def test_level_select_entities(
+async def test_list_select_entities(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test select entities are created for the TemperatureControl cluster attributes."""
+    """Test ListSelect entities are discovered and working from a laundrywasher fixture."""
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state
     assert state.state == "Colors"
