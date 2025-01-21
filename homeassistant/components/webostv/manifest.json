@@ -6,7 +6,9 @@
   "documentation": "https://www.home-assistant.io/integrations/webostv",
   "iot_class": "local_push",
   "loggers": ["aiowebostv"],
-  "requirements": ["aiowebostv==0.5.0"],
+  "requirements": [
+    "git+https://github.com/home-assistant-libs/aiowebostv.git@aiohttp#aiowebostv==0.6.0"
+  ],
   "ssdp": [
     {
       "st": "urn:lge-com:service:webos-second-screen:1"
