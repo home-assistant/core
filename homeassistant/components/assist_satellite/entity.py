@@ -97,7 +97,7 @@ class AssistSatelliteAnnouncement:
     """Media ID to be played."""
 
     original_media_id: str
-    """Internal media ID to be played."""
+    """The raw media ID before processing."""
 
     media_id_source: Literal["url", "media_id", "tts"]
     """Source of the media ID."""
