@@ -1,4 +1,4 @@
-"""Test ViCare fan."""
+"""Test ViCare utils."""
 
 import pytest
 

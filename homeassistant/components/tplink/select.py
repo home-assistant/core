@@ -7,11 +7,16 @@ from typing import Final, cast
 
 from kasa import Device, Feature
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectEntity,
+    SelectEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
+from .deprecate import async_cleanup_deprecated
 from .entity import (
     CoordinatedTPLinkFeatureEntity,
     TPLinkDataUpdateCoordinator,
@@ -24,8 +29,12 @@ from .entity import (
 class TPLinkSelectEntityDescription(
     SelectEntityDescription, TPLinkFeatureEntityDescription
 ):
-    """Base class for a TPLink feature based sensor entity description."""
+    """Base class for a TPLink feature based select entity description."""
 
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 SELECT_DESCRIPTIONS: Final = [
     TPLinkSelectEntityDescription(
@@ -47,22 +56,30 @@ async def async_setup_entry(
     config_entry: TPLinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up sensors."""
+    """Set up select entities."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
+    known_child_device_ids: set[str] = set()
+    first_check = True
 
-    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        hass=hass,
-        device=device,
-        coordinator=parent_coordinator,
-        feature_type=Feature.Type.Choice,
-        entity_class=TPLinkSelectEntity,
-        descriptions=SELECT_DESCRIPTIONS_MAP,
-        child_coordinators=children_coordinators,
-    )
-    async_add_entities(entities)
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.Choice,
+            entity_class=TPLinkSelectEntity,
+            descriptions=SELECT_DESCRIPTIONS_MAP,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_cleanup_deprecated(hass, SELECT_DOMAIN, config_entry.entry_id, entities)
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):

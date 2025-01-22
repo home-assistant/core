@@ -89,5 +89,22 @@
       "name": "Sign out",
       "description": "Signs out of the HEOS account."
     }
+  },
+  "exceptions": {
+    "action_error": {
+      "message": "Unable to {action}: {error}"
+    },
+    "integration_not_loaded": {
+      "message": "The HEOS integration is not loaded"
+    },
+    "unknown_source": {
+      "message": "Unknown source: {source}"
+    }
+  },
+  "issues": {
+    "sign_in_out_deprecated": {
+      "title": "HEOS Actions Deprecated",
+      "description": "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release. Enter your HEOS Account credentials in the configuration options and the integration will manage authentication automatically."
+    }
   }
 }

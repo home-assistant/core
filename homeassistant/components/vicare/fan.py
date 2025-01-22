@@ -149,20 +149,17 @@ class ViCareFan(ViCareEntity, FanEntity):
 
     def update(self) -> None:
         """Update state of fan."""
-        ventilation_level: str | None = None
+        level: str | None = None
         try:
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_preset_mode = VentilationMode.from_vicare_mode(
                     self._api.getActiveVentilationMode()
                 )
             with suppress(PyViCareNotSupportedFeatureError):
-                ventilation_level = filter_state(self._api.getVentilationLevel())
-            if (
-                ventilation_level is not None
-                and ventilation_level in ORDERED_NAMED_FAN_SPEEDS
-            ):
+                level = filter_state(self._api.getVentilationLevel())
+            if level is not None and level in ORDERED_NAMED_FAN_SPEEDS:
                 self._attr_percentage = ordered_list_item_to_percentage(
-                    ORDERED_NAMED_FAN_SPEEDS, VentilationProgram(ventilation_level)
+                    ORDERED_NAMED_FAN_SPEEDS, VentilationProgram(level)
                 )
             else:
                 self._attr_percentage = 0

@@ -813,6 +813,29 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
     ),
+    ViCareSensorEntityDescription(
+        key="ventilation_level",
+        translation_key="ventilation_level",
+        value_getter=lambda api: filter_state(api.getVentilationLevel().lower()),
+        device_class=SensorDeviceClass.ENUM,
+        options=["standby", "levelone", "leveltwo", "levelthree", "levelfour"],
+    ),
+    ViCareSensorEntityDescription(
+        key="ventilation_reason",
+        translation_key="ventilation_reason",
+        value_getter=lambda api: api.getVentilationReason().lower(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "standby",
+            "permanent",
+            "schedule",
+            "sensordriven",
+            "silent",
+            "forcedlevelfour",
+        ],
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
