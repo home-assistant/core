@@ -2276,7 +2276,9 @@ async def test_cleanup_startup(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
+async def test_cleanup_entity_registry_change(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we run a cleanup when entity registry changes.
 
     Don't pre-load the registries as the debouncer will then not be waiting for
@@ -2284,7 +2286,13 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
     """
     await dr.async_load(hass)
     await er.async_load(hass)
+    dev_reg = dr.async_get(hass)
     ent_reg = er.async_get(hass)
+
+    entry = dev_reg.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
 
     with patch(
         "homeassistant.helpers.device_registry.Debouncer.async_schedule_call"
@@ -2299,7 +2307,7 @@ async def test_cleanup_entity_registry_change(hass: HomeAssistant) -> None:
         assert len(mock_call.mock_calls) == 0
 
         # Device ID update triggers
-        ent_reg.async_get_or_create("light", "hue", "e1", device_id="bla")
+        ent_reg.async_get_or_create("light", "hue", "e1", device_id=entry.id)
         await hass.async_block_till_done()
         assert len(mock_call.mock_calls) == 1
 

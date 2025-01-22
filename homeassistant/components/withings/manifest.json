@@ -5,6 +5,11 @@
   "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials", "http", "webhook"],
+  "dhcp": [
+    {
+      "macaddress": "0024E4*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/withings",
   "iot_class": "cloud_push",
   "loggers": ["aiowithings"],

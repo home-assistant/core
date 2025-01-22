@@ -20,11 +20,13 @@ class WatergateEntity(CoordinatorEntity[WatergateDataCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._api_client = coordinator.api
-        self._attr_unique_id = f"{coordinator.data.serial_number}.{entity_name}"
+        self._attr_unique_id = f"{coordinator.data.state.serial_number}.{entity_name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.serial_number)},
+            identifiers={(DOMAIN, coordinator.data.state.serial_number)},
             name="Sonic",
-            serial_number=coordinator.data.serial_number,
+            serial_number=coordinator.data.state.serial_number,
             manufacturer=MANUFACTURER,
-            sw_version=coordinator.data.firmware_version if coordinator.data else None,
+            sw_version=(
+                coordinator.data.state.firmware_version if coordinator.data else None
+            ),
         )

@@ -26,7 +26,6 @@ from homeassistant.components.light import (
     DOMAIN,
     ColorMode,
     LightEntity,
-    LightEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -157,7 +156,7 @@ class MockLight(MockToggleEntity, LightEntity):
 
     _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
-    supported_features = LightEntityFeature(0)
+    supported_features = 0
 
     brightness = None
     color_temp_kelvin = None

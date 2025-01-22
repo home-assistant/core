@@ -17,13 +17,20 @@ _VALID_EXCEPTIONS = {
 
 def _get_exception_name(expression: ast.expr) -> str:
     """Get the name of the exception being raised."""
+    if expression is None:
+        # Bare raise
+        return None
+
     if isinstance(expression, ast.Name):
+        # Raise Exception
         return expression.id
 
     if isinstance(expression, ast.Call):
+        # Raise Exception()
         return _get_exception_name(expression.func)
 
     if isinstance(expression, ast.Attribute):
+        # Raise namespace.???
         return _get_exception_name(expression.value)
 
     raise AssertionError(

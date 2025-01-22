@@ -11,18 +11,15 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      The data_description fields in translations are missing.
+  config-flow: done
   dependency-transparency: done
   docs-actions:
     status: exempt
     comment: |
       This integration does not provide additional actions.
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -41,9 +38,9 @@ rules:
     comment: |
       This integration does not require authentication.
   parallel-updates: done
-  test-coverage: todo
+  test-coverage: done
   integration-owner: done
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
     comment: |
@@ -60,21 +57,30 @@ rules:
     status: exempt
     comment: |
       This integration doesn't have enough / noisy entities that warrant being disabled by default.
-  discovery: todo
+  discovery: done
   stale-devices: todo
   diagnostics: done
   exception-translations: done
-  icon-translations: todo
-  reconfiguration-flow: todo
+  icon-translations:
+    status: exempt
+    comment: |
+      There are no entities that require icons.
+  reconfiguration-flow: done
   dynamic-devices: todo
-  discovery-update-info: todo
-  repair-issues: done
-  docs-use-cases: todo
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
+  docs-data-update: done
+  docs-known-limitations:
+    status: exempt
+    comment: |
+      There are no known limitations beyond the push API delay noted in Troubleshooting.
+  docs-troubleshooting: done
   docs-examples: todo
 
   # Platinum

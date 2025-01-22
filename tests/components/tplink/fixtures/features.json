@@ -44,6 +44,26 @@
     "type": "Switch",
     "category": "Config"
   },
+  "motion_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "person_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "tamper_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
+  "baby_cry_detection": {
+    "value": true,
+    "type": "Switch",
+    "category": "Primary"
+  },
   "current_consumption": {
     "value": 5.23,
     "type": "Sensor",
@@ -267,7 +287,9 @@
   "target_temperature": {
     "value": false,
     "type": "Number",
-    "category": "Primary"
+    "category": "Primary",
+    "minimum_value": 5,
+    "maximum_value": 30
   },
   "fan_speed_level": {
     "value": 2,
@@ -318,5 +340,35 @@
     "type": "Sensor",
     "category": "Info",
     "value": "2024-06-24 10:03:11.046643+01:00"
+  },
+  "pan_left": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "pan_right": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "pan_step": {
+    "value": 10,
+    "type": "Number",
+    "category": "Config"
+  },
+  "tilt_up": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "tilt_down": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "tilt_step": {
+    "value": 10,
+    "type": "Number",
+    "category": "Config"
   }
 }

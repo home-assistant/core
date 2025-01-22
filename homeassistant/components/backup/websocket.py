@@ -6,10 +6,15 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 
-from .config import ScheduleState
+from .config import Day, ScheduleRecurrence
 from .const import DATA_MANAGER, LOGGER
-from .manager import ManagerStateEvent
+from .manager import (
+    DecryptOnDowloadNotSupported,
+    IncorrectPasswordError,
+    ManagerStateEvent,
+)
 from .models import Folder
 
 
@@ -24,8 +29,9 @@ def async_register_websocket_handlers(hass: HomeAssistant, with_hassio: bool) ->
 
     websocket_api.async_register_command(hass, handle_details)
     websocket_api.async_register_command(hass, handle_info)
+    websocket_api.async_register_command(hass, handle_can_decrypt_on_download)
     websocket_api.async_register_command(hass, handle_create)
-    websocket_api.async_register_command(hass, handle_create_with_strategy_settings)
+    websocket_api.async_register_command(hass, handle_create_with_automatic_settings)
     websocket_api.async_register_command(hass, handle_delete)
     websocket_api.async_register_command(hass, handle_restore)
     websocket_api.async_register_command(hass, handle_subscribe_events)
@@ -51,9 +57,11 @@ async def handle_info(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backups": list(backups.values()),
-            "last_attempted_strategy_backup": manager.config.data.last_attempted_strategy_backup,
-            "last_completed_strategy_backup": manager.config.data.last_completed_strategy_backup,
+            "backups": [backup.as_frontend_json() for backup in backups.values()],
+            "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
+            "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+            "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
         },
     )
 
@@ -81,7 +89,7 @@ async def handle_details(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backup": backup,
+            "backup": backup.as_frontend_json() if backup else None,
         },
     )
 
@@ -131,16 +139,52 @@ async def handle_restore(
     msg: dict[str, Any],
 ) -> None:
     """Restore a backup."""
-    await hass.data[DATA_MANAGER].async_restore_backup(
-        msg["backup_id"],
-        agent_id=msg["agent_id"],
-        password=msg.get("password"),
-        restore_addons=msg.get("restore_addons"),
-        restore_database=msg["restore_database"],
-        restore_folders=msg.get("restore_folders"),
-        restore_homeassistant=msg["restore_homeassistant"],
-    )
-    connection.send_result(msg["id"])
+    try:
+        await hass.data[DATA_MANAGER].async_restore_backup(
+            msg["backup_id"],
+            agent_id=msg["agent_id"],
+            password=msg.get("password"),
+            restore_addons=msg.get("restore_addons"),
+            restore_database=msg["restore_database"],
+            restore_folders=msg.get("restore_folders"),
+            restore_homeassistant=msg["restore_homeassistant"],
+        )
+    except IncorrectPasswordError:
+        connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
+    else:
+        connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "backup/can_decrypt_on_download",
+        vol.Required("backup_id"): str,
+        vol.Required("agent_id"): str,
+        vol.Required("password"): str,
+    }
+)
+@websocket_api.async_response
+async def handle_can_decrypt_on_download(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Check if the supplied password is correct."""
+    try:
+        await hass.data[DATA_MANAGER].async_can_decrypt_on_download(
+            msg["backup_id"],
+            agent_id=msg["agent_id"],
+            password=msg.get("password"),
+        )
+    except IncorrectPasswordError:
+        connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
+    except DecryptOnDowloadNotSupported:
+        connection.send_error(
+            msg["id"], "decrypt_not_supported", "Decrypt on download not supported"
+        )
+    else:
+        connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
@@ -181,11 +225,11 @@ async def handle_create(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "backup/generate_with_strategy_settings",
+        vol.Required("type"): "backup/generate_with_automatic_settings",
     }
 )
 @websocket_api.async_response
-async def handle_create_with_strategy_settings(
+async def handle_create_with_automatic_settings(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -202,7 +246,7 @@ async def handle_create_with_strategy_settings(
         include_homeassistant=True,  # always include HA
         name=config_data.create_backup.name,
         password=config_data.create_backup.password,
-        with_strategy_settings=True,
+        with_automatic_settings=True,
     )
     connection.send_result(msg["id"], backup)
 
@@ -277,10 +321,18 @@ async def handle_config_info(
 ) -> None:
     """Send the stored backup config."""
     manager = hass.data[DATA_MANAGER]
+    config = manager.config.data.to_dict()
+    # Remove state from schedule, it's not needed in the frontend
+    # mypy doesn't like deleting from TypedDict, ignore it
+    del config["schedule"]["state"]  # type: ignore[misc]
     connection.send_result(
         msg["id"],
         {
-            "config": manager.config.data.to_dict(),
+            "config": config
+            | {
+                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+                "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
+            }
         },
     )
 
@@ -291,11 +343,15 @@ async def handle_config_info(
         vol.Required("type"): "backup/config/update",
         vol.Optional("create_backup"): vol.Schema(
             {
-                vol.Optional("agent_ids"): vol.All(list[str]),
-                vol.Optional("include_addons"): vol.Any(list[str], None),
+                vol.Optional("agent_ids"): vol.All([str], vol.Unique()),
+                vol.Optional("include_addons"): vol.Any(
+                    vol.All([str], vol.Unique()), None
+                ),
                 vol.Optional("include_all_addons"): bool,
                 vol.Optional("include_database"): bool,
-                vol.Optional("include_folders"): vol.Any([vol.Coerce(Folder)], None),
+                vol.Optional("include_folders"): vol.Any(
+                    vol.All([vol.Coerce(Folder)], vol.Unique()), None
+                ),
                 vol.Optional("name"): vol.Any(str, None),
                 vol.Optional("password"): vol.Any(str, None),
             },
@@ -306,7 +362,17 @@ async def handle_config_info(
                 vol.Optional("days"): vol.Any(int, None),
             },
         ),
-        vol.Optional("schedule"): vol.All(str, vol.Coerce(ScheduleState)),
+        vol.Optional("schedule"): vol.Schema(
+            {
+                vol.Optional("days"): vol.Any(
+                    vol.All([vol.Coerce(Day)], vol.Unique()),
+                ),
+                vol.Optional("recurrence"): vol.All(
+                    str, vol.Coerce(ScheduleRecurrence)
+                ),
+                vol.Optional("time"): vol.Any(cv.time, None),
+            }
+        ),
     }
 )
 @websocket_api.async_response
