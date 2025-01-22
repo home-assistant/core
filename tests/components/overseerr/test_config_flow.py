@@ -226,3 +226,77 @@ async def test_reauth_flow_errors(
     assert result["reason"] == "reauth_successful"
 
     assert mock_config_entry.data[CONF_API_KEY] == "new-test-key"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://overseerr2.test", CONF_API_KEY: "new-key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data == {
+        CONF_HOST: "overseerr2.test",
+        CONF_PORT: 80,
+        CONF_SSL: False,
+        CONF_API_KEY: "new-key",
+        CONF_WEBHOOK_ID: WEBHOOK_ID,
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (OverseerrAuthenticationError, "invalid_auth"),
+        (OverseerrConnectionError, "cannot_connect"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reconfigure flow errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_overseerr_client.get_request_count.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://overseerr2.test", CONF_API_KEY: "new-key"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    mock_overseerr_client.get_request_count.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_URL: "http://overseerr2.test", CONF_API_KEY: "new-key"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
