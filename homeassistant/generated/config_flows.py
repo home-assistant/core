@@ -91,6 +91,7 @@ FLOWS = {
         "bond",
         "bosch_shc",
         "braviatv",
+        "briiv",
         "bring",
         "broadlink",
         "brother",

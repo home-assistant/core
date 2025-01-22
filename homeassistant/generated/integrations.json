@@ -763,6 +763,12 @@
       "integration_type": "virtual",
       "supported_by": "motion_blinds"
     },
+    "briiv": {
+      "name": "Briiv",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "bring": {
       "name": "Bring!",
       "integration_type": "service",

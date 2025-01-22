@@ -1,0 +1,14 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "description": "Set up your Briiv Air Purifier UDP listener",
+        "title": "Briiv Air Purifier"
+      }
+    }
+  }
+}
