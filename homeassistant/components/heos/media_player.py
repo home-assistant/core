@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
-import logging
 from operator import ior
 from typing import Any
 
@@ -14,6 +13,7 @@ from pyheos import (
     HeosError,
     HeosPlayer,
     PlayState,
+    RepeatType,
     const as heos_const,
 )
 
@@ -26,6 +26,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.core import HomeAssistant
@@ -48,7 +49,6 @@ BASE_SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
-    | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.GROUPING
@@ -78,7 +78,12 @@ HA_HEOS_ENQUEUE_MAP = {
     MediaPlayerEnqueue.PLAY: AddCriteriaType.PLAY_NOW,
 }
 
-_LOGGER = logging.getLogger(__name__)
+HEOS_HA_REPEAT_TYPE_MAP = {
+    RepeatType.OFF: RepeatMode.OFF,
+    RepeatType.ON_ALL: RepeatMode.ALL,
+    RepeatType.ON_ONE: RepeatMode.ONE,
+}
+HA_HEOS_REPEAT_TYPE_MAP = {v: k for k, v in HEOS_HA_REPEAT_TYPE_MAP.items()}
 
 
 async def async_setup_entry(
@@ -293,6 +298,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Select input source."""
         await self._source_manager.play_source(source, self._player)
 
+    @catch_action_error("set repeat")
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        await self._player.set_play_mode(
+            HA_HEOS_REPEAT_TYPE_MAP[repeat], self._player.shuffle
+        )
+
     @catch_action_error("set shuffle")
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
@@ -305,11 +317,17 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self) -> None:
         """Update supported features of the player."""
+        self._attr_repeat = HEOS_HA_REPEAT_TYPE_MAP[self._player.repeat]
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._attr_supported_features = reduce(
             ior, current_support, BASE_SUPPORTED_FEATURES
         )
+        if self.support_next_track and self.support_previous_track:
+            self._attr_supported_features |= (
+                MediaPlayerEntityFeature.REPEAT_SET
+                | MediaPlayerEntityFeature.SHUFFLE_SET
+            )
 
     @catch_action_error("unjoin player")
     async def async_unjoin_player(self) -> None:
