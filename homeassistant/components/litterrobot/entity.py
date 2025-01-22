@@ -34,12 +34,13 @@ class LitterRobotEntity(
         super().__init__(coordinator)
         self.robot = robot
         self.entity_description = description
-        self._attr_unique_id = f"{self.robot.serial}-{description.key}"
+        self._attr_unique_id = f"{robot.serial}-{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, robot.serial)},
             manufacturer="Whisker",
             model=robot.model,
             name=robot.name,
+            serial_number=robot.serial,
             sw_version=getattr(robot, "firmware", None),
         )
 
