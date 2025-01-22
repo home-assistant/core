@@ -5,6 +5,7 @@ from datetime import timedelta
 import time
 from unittest.mock import ANY, patch
 
+from bleak_retry_connector import Allocations
 from freezegun import freeze_time
 import pytest
 
@@ -12,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
 from . import (
+    _get_manager,
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_source,
@@ -114,3 +116,76 @@ async def test_subscribe_advertisements(
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {"remove": [{"address": "44:44:33:11:23:12"}]}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_subscribe_connection_allocations(
+    hass: HomeAssistant,
+    register_hci0_scanner: None,
+    register_hci1_scanner: None,
+    register_non_connectable_scanner: None,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_connection_allocations."""
+    address = "44:44:33:11:23:12"
+
+    switchbot_device_signal_100 = generate_ble_device(
+        address, "wohand_signal_100", rssi=-100
+    )
+    switchbot_adv_signal_100 = generate_advertisement_data(
+        local_name="wohand_signal_100", service_uuids=[]
+    )
+    inject_advertisement_with_source(
+        hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"
+    )
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_connection_allocations",
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["success"]
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+
+    assert response["event"] == [
+        {"allocated": [], "free": 0, "slots": 0, "source": "AA:BB:CC:DD:EE:FF"}
+    ]
+
+    manager = _get_manager()
+    manager.async_on_allocation_changed(
+        Allocations(
+            adapter="hci1",  # Will be translated to source
+            slots=5,
+            free=4,
+            allocated=["AA:BB:CC:DD:EE:EE"],
+        )
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == [
+        {
+            "allocated": ["AA:BB:CC:DD:EE:EE"],
+            "free": 4,
+            "slots": 5,
+            "source": "AA:BB:CC:DD:EE:11",
+        }
+    ]
+    manager.async_on_allocation_changed(
+        Allocations(
+            adapter="hci1",  # Will be translated to source
+            slots=5,
+            free=5,
+            allocated=[],
+        )
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == [
+        {"allocated": [], "free": 5, "slots": 5, "source": "AA:BB:CC:DD:EE:11"}
+    ]
