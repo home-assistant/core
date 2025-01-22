@@ -60,6 +60,7 @@ async def test_bluetooth_discovery(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Bot EEFF"
+    assert result["context"]["title_placeholders"]["name"] == "Bot EEFF"
     assert result["data"] == {
         CONF_ADDRESS: "AA:BB:CC:DD:EE:FF",
         CONF_SENSOR_TYPE: "bot",

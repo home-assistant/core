@@ -108,10 +108,8 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
             # Source is not connectable but the model is connectable
             return self.async_abort(reason="not_supported")
         self._discovered_adv = parsed
-        data = parsed.data
         self.context["title_placeholders"] = {
-            "name": data["modelFriendlyName"],
-            "address": short_address(discovery_info.address),
+            "name": name_from_discovery(parsed),
         }
         if model_name in ENCRYPTED_MODELS:
             return await self.async_step_encrypted_choose_method()
