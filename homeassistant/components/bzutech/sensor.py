@@ -31,7 +31,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import CONF_CHIPID, CONF_ENDPOINT, CONF_SENSORPORT, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPE: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(

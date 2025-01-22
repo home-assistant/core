@@ -7,6 +7,7 @@ from bzutech import BzuTech
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 
@@ -17,7 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BZUTech from a config entry."""
     bzu_api = BzuTech(entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
     if not await bzu_api.start():
-        return False
+        raise ConfigEntryNotReady("Invalid authentication")
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = bzu_api
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
