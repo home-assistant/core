@@ -131,7 +131,7 @@ def catch_action_error[**_P](
     return decorator
 
 
-class HeosMediaPlayer(MediaPlayerEntity, CoordinatorEntity[HeosCoordinator]):
+class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     """The HEOS player."""
 
     _attr_media_content_type = MediaType.MUSIC
