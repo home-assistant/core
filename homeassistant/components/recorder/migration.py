@@ -1976,6 +1976,17 @@ class _SchemaVersion47Migrator(_SchemaVersionMigrator, target_version=47):
         )
 
 
+class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # https://github.com/home-assistant/core/issues/134002
+        # If the system has unmigrated states rows, we need to
+        # ensure they are migrated now so the new optimized
+        # queries can be used. For most systems, this should
+        # be very fast and nothing will be migrated.
+        _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
+
+
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
     hass: HomeAssistant,
     instance: Recorder,
@@ -2062,10 +2073,7 @@ def _wipe_old_string_time_columns(
         session.execute(text("UPDATE events set time_fired=NULL LIMIT 100000;"))
         session.commit()
         session.execute(
-            text(
-                "UPDATE states set last_updated=NULL, last_changed=NULL "
-                " LIMIT 100000;"
-            )
+            text("UPDATE states set last_updated=NULL, last_changed=NULL LIMIT 100000;")
         )
         session.commit()
     elif engine.dialect.name == SupportedDialect.POSTGRESQL:
@@ -2109,7 +2117,8 @@ def _migrate_columns_to_timestamp(
             connection.execute(
                 text(
                     'UPDATE events set time_fired_ts=strftime("%s",time_fired) + '
-                    "cast(substr(time_fired,-7) AS FLOAT);"
+                    "cast(substr(time_fired,-7) AS FLOAT) "
+                    "WHERE time_fired_ts is NULL;"
                 )
             )
             connection.execute(
@@ -2117,7 +2126,8 @@ def _migrate_columns_to_timestamp(
                     'UPDATE states set last_updated_ts=strftime("%s",last_updated) + '
                     "cast(substr(last_updated,-7) AS FLOAT), "
                     'last_changed_ts=strftime("%s",last_changed) + '
-                    "cast(substr(last_changed,-7) AS FLOAT);"
+                    "cast(substr(last_changed,-7) AS FLOAT) "
+                    " WHERE last_updated_ts is NULL;"
                 )
             )
     elif engine.dialect.name == SupportedDialect.MYSQL:
@@ -2137,7 +2147,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2168,7 +2178,7 @@ def _migrate_columns_to_timestamp(
                     )
                 )
         result = None
-        while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+        while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
@@ -2267,7 +2277,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2289,7 +2299,7 @@ def _migrate_statistics_columns_to_timestamp(
         # updated all rows in the table until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
-            while result is None or result.rowcount > 0:  # type: ignore[unreachable]
+            while result is None or result.rowcount > 0:
                 with session_scope(session=session_maker()) as session:
                     result = session.connection().execute(
                         text(
@@ -2440,7 +2450,7 @@ class BaseMigration(ABC):
         self.migration_changes = migration_changes
 
     @abstractmethod
-    def migrate_data(self, instance: Recorder) -> bool:
+    def migrate_data(self, instance: Recorder, /) -> bool:
         """Migrate some data, return True if migration is completed."""
 
     def _migrate_data(self, instance: Recorder) -> bool:
@@ -2742,9 +2752,9 @@ class EventTypeIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_event_type in missing_db_event_types:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_event_type.event_type is not None
-                        ), "event_type should never be None"
+                        assert db_event_type.event_type is not None, (
+                            "event_type should never be None"
+                        )
                         event_type_to_id[db_event_type.event_type] = (
                             db_event_type.event_type_id
                         )
@@ -2820,9 +2830,9 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                     for db_states_metadata in missing_states_metadata:
                         # We cannot add the assigned ids to the event_type_manager
                         # because the commit could get rolled back
-                        assert (
-                            db_states_metadata.entity_id is not None
-                        ), "entity_id should never be None"
+                        assert db_states_metadata.entity_id is not None, (
+                            "entity_id should never be None"
+                        )
                         entity_id_to_metadata_id[db_states_metadata.entity_id] = (
                             db_states_metadata.metadata_id
                         )

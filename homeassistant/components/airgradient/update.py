@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant

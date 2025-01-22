@@ -67,7 +67,7 @@ def short_address(address: str) -> str:
 
 def name_from_discovery(discovery: SwitchBotAdvertisement) -> str:
     """Get the name from a discovery."""
-    return f'{discovery.data["modelFriendlyName"]} {short_address(discovery.address)}'
+    return f"{discovery.data['modelFriendlyName']} {short_address(discovery.address)}"
 
 
 class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):

@@ -79,13 +79,6 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
         """Return the state of the cleaner."""
         return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
-    @property
-    def status(self) -> str:
-        """Return the status of the cleaner."""
-        return (
-            f"{self.robot.status.text}{' (Sleeping)' if self.robot.is_sleeping else ''}"
-        )
-
     async def async_start(self) -> None:
         """Start a clean cycle."""
         await self.robot.set_power_status(True)
@@ -121,13 +114,3 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
             )
             .timetz()
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return device specific state attributes."""
-        return {
-            "is_sleeping": self.robot.is_sleeping,
-            "sleep_mode_enabled": self.robot.sleep_mode_enabled,
-            "power_status": self.robot.power_status,
-            "status": self.status,
-        }

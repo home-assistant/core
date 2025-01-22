@@ -50,7 +50,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[GS012345_current_coffee_temperature-entry]
+# name: test_sensors[sensor.gs012345_current_coffee_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -88,7 +88,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[GS012345_current_coffee_temperature-sensor]
+# name: test_sensors[sensor.gs012345_current_coffee_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -104,7 +104,7 @@
     'state': '96.5',
   })
 # ---
-# name: test_sensors[GS012345_current_steam_temperature-entry]
+# name: test_sensors[sensor.gs012345_current_steam_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -142,7 +142,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[GS012345_current_steam_temperature-sensor]
+# name: test_sensors[sensor.gs012345_current_steam_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -158,7 +158,7 @@
     'state': '123.800003051758',
   })
 # ---
-# name: test_sensors[GS012345_shot_timer-entry]
+# name: test_sensors[sensor.gs012345_shot_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -193,7 +193,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensors[GS012345_shot_timer-sensor]
+# name: test_sensors[sensor.gs012345_shot_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -209,7 +209,7 @@
     'state': '0',
   })
 # ---
-# name: test_sensors[GS012345_total_coffees_made-entry]
+# name: test_sensors[sensor.gs012345_total_coffees_made-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -244,7 +244,7 @@
     'unit_of_measurement': 'drinks',
   })
 # ---
-# name: test_sensors[GS012345_total_coffees_made-sensor]
+# name: test_sensors[sensor.gs012345_total_coffees_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Total coffees made',
@@ -259,7 +259,7 @@
     'state': '1047',
   })
 # ---
-# name: test_sensors[GS012345_total_flushes_made-entry]
+# name: test_sensors[sensor.gs012345_total_flushes_made-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -294,7 +294,7 @@
     'unit_of_measurement': 'drinks',
   })
 # ---
-# name: test_sensors[GS012345_total_flushes_made-sensor]
+# name: test_sensors[sensor.gs012345_total_flushes_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Total flushes made',

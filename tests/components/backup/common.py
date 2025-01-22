@@ -166,3 +166,15 @@ async def setup_backup_integration(
                 agent._loaded_backups = True
 
         return result
+
+
+async def setup_backup_platform(
+    hass: HomeAssistant,
+    *,
+    domain: str,
+    platform: Any,
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, f"{domain}.backup", platform)
+    assert await async_setup_component(hass, domain, {})
+    await hass.async_block_till_done()
