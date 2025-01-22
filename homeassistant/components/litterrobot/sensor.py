@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Generic, cast
+from typing import Any, Generic
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, Robot
 
@@ -34,34 +34,12 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
     return "mdi:gauge-low"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RobotSensorEntityDescription(SensorEntityDescription, Generic[_RobotT]):
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
-    should_report: Callable[[_RobotT], bool] = lambda _: True
-
-
-class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
-    """Litter-Robot sensor entity."""
-
-    entity_description: RobotSensorEntityDescription[_RobotT]
-
-    @property
-    def native_value(self) -> float | datetime | str | None:
-        """Return the state."""
-        if self.entity_description.should_report(self.robot):
-            if isinstance(val := getattr(self.robot, self.entity_description.key), str):
-                return val.lower()
-            return cast(float | datetime | None, val)
-        return None
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if (icon := self.entity_description.icon_fn(self.state)) is not None:
-            return icon
-        return super().icon
+    value_fn: Callable[[_RobotT], float | datetime | str | None]
 
 
 ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
@@ -72,24 +50,34 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.waste_drawer_level,
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="sleep_mode_start_time",
             translation_key="sleep_mode_start_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            should_report=lambda robot: robot.sleep_mode_enabled,
+            value_fn=(
+                lambda robot: robot.sleep_mode_start_time
+                if robot.sleep_mode_enabled
+                else None
+            ),
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="sleep_mode_end_time",
             translation_key="sleep_mode_end_time",
             device_class=SensorDeviceClass.TIMESTAMP,
-            should_report=lambda robot: robot.sleep_mode_enabled,
+            value_fn=(
+                lambda robot: robot.sleep_mode_end_time
+                if robot.sleep_mode_enabled
+                else None
+            ),
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="last_seen",
             translation_key="last_seen",
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.last_seen,
         ),
         RobotSensorEntityDescription[LitterRobot](
             key="status_code",
@@ -123,6 +111,9 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
                 "sdf",
                 "spf",
             ],
+            value_fn=(
+                lambda robot: status.lower() if (status := robot.status_code) else None
+            ),
         ),
     ],
     LitterRobot4: [
@@ -132,6 +123,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.litter_level,
         ),
         RobotSensorEntityDescription[LitterRobot4](
             key="pet_weight",
@@ -139,6 +131,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             native_unit_of_measurement=UnitOfMass.POUNDS,
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.pet_weight,
         ),
     ],
     FeederRobot: [
@@ -148,6 +141,7 @@ ROBOT_SENSOR_MAP: dict[type[Robot], list[RobotSensorEntityDescription]] = {
             native_unit_of_measurement=PERCENTAGE,
             icon_fn=lambda state: icon_for_gauge_level(state, 10),
             state_class=SensorStateClass.MEASUREMENT,
+            value_fn=lambda robot: robot.food_level,
         )
     ],
 }
@@ -169,3 +163,21 @@ async def async_setup_entry(
         if isinstance(robot, robot_type)
         for description in entity_descriptions
     )
+
+
+class LitterRobotSensorEntity(LitterRobotEntity[_RobotT], SensorEntity):
+    """Litter-Robot sensor entity."""
+
+    entity_description: RobotSensorEntityDescription[_RobotT]
+
+    @property
+    def native_value(self) -> float | datetime | str | None:
+        """Return the state."""
+        return self.entity_description.value_fn(self.robot)
+
+    @property
+    def icon(self) -> str | None:
+        """Return the icon to use in the frontend, if any."""
+        if (icon := self.entity_description.icon_fn(self.state)) is not None:
+            return icon
+        return super().icon
