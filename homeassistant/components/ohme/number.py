@@ -9,6 +9,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.const import PERCENTAGE
 
 from . import OhmeConfigEntry
 from .const import DOMAIN
@@ -34,6 +35,7 @@ NUMBER_DESCRIPTION = [
         native_min_value=0,
         native_max_value=100,
         native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
     ),
 ]
 
