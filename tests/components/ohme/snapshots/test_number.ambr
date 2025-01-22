@@ -52,6 +52,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': "<MagicMock name='OhmeApiClient().target_soc' id='140599695548032'>",
+    'state': '50',
   })
 # ---
