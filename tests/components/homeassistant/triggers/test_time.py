@@ -156,7 +156,7 @@ async def test_if_fires_using_at_input_datetime(
     )
 
 
-@pytest.mark.parametrize(("hour"), [0, 5])
+@pytest.mark.parametrize(("hour"), [0, 5, 23])
 @pytest.mark.parametrize(
     ("has_date", "has_time"), [(True, True), (False, True), (True, False)]
 )
@@ -166,6 +166,7 @@ async def test_if_fires_using_at_input_datetime(
         ("00:00:10", timedelta(seconds=10)),
         ("-00:00:10", timedelta(seconds=-10)),
         ({"minutes": 5}, timedelta(minutes=5)),
+        ("01:00:10", timedelta(hours=1, seconds=10)),
     ],
 )
 async def test_if_fires_using_at_input_datetime_with_offset(
