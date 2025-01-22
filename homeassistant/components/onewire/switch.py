@@ -182,9 +182,9 @@ async def async_setup_entry(
 
 def get_entities(
     onewire_hub: OneWireHub, devices: list[OWDeviceDescription]
-) -> list[OneWireSwitch]:
+) -> list[OneWireSwitchEntity]:
     """Get a list of entities."""
-    entities: list[OneWireSwitch] = []
+    entities: list[OneWireSwitchEntity] = []
 
     for device in devices:
         family = device.family
@@ -204,7 +204,7 @@ def get_entities(
         for description in get_sensor_types(device_sub_type)[family]:
             device_file = os.path.join(os.path.split(device.path)[0], description.key)
             entities.append(
-                OneWireSwitch(
+                OneWireSwitchEntity(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
@@ -216,7 +216,7 @@ def get_entities(
     return entities
 
 
-class OneWireSwitch(OneWireEntity, SwitchEntity):
+class OneWireSwitchEntity(OneWireEntity, SwitchEntity):
     """Implementation of a 1-Wire switch."""
 
     entity_description: OneWireSwitchEntityDescription

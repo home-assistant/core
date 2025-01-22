@@ -4224,7 +4224,7 @@
     "nmbs": {
       "name": "NMBS",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "no_ip": {
@@ -4980,6 +4980,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "qbus": {
+      "name": "Qbus",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "qingping": {
       "name": "Qingping",

@@ -9,6 +9,9 @@ install:
       selector:
         text:
     backup:
+      filter:
+        supported_features:
+          - update.UpdateEntityFeature.BACKUP
       required: false
       selector:
         boolean:
