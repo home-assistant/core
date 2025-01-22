@@ -28,6 +28,7 @@ OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 OHM_ID = "id"
 
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up OpenHardwareMonitor from a config entry."""
     data_handler = OpenHardwareMonitorDataHandler(entry, hass)
@@ -39,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
@@ -56,6 +58,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 title=str(config_entry.title),
             )
     return True
+
 
 class OpenHardwareMonitorDataHandler:
     """Class used to pull data from OHM and create sensors."""
@@ -80,9 +83,8 @@ class OpenHardwareMonitorDataHandler:
         """Get data from OHM remote server."""
         session = async_get_clientsession(self._hass)
         api = OpenHardwareMonitorAPI(
-            self._config.get(CONF_HOST),
-            self._config.get(CONF_PORT),
-            session=session)
+            self._config.get(CONF_HOST), self._config.get(CONF_PORT), session=session
+        )
         self.data = await api.get_data()
 
     async def initialize(self):
@@ -99,7 +101,7 @@ class OpenHardwareMonitorDataHandler:
         result = devices.copy()
 
         id = str(json[OHM_ID])
-        if id == '1' and self._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL) > 1:
+        if id == "1" and self._config.get(GROUP_DEVICES_PER_DEPTH_LEVEL) > 1:
             # Create the 'Computer' device here, if should group in multiple devices
             host = self._config[CONF_HOST]
             port = self._config[CONF_PORT]
@@ -138,8 +140,9 @@ class OpenHardwareMonitorDataHandler:
         child_names.append(json[OHM_NAME])
         fullname = " ".join(child_names)
 
-        dev = OpenHardwareMonitorDevice(self, fullname, path, unit_of_measurement, id, child_names, json)
+        dev = OpenHardwareMonitorDevice(
+            self, fullname, path, unit_of_measurement, id, child_names, json
+        )
 
         result.append(dev)
         return result
- 

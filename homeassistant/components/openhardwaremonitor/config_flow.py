@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import *
 
+
 class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenHardwareMonitor."""
 
@@ -19,9 +20,11 @@ class OpenHardwareMonitorConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         data_schema = vol.Schema(
-            {vol.Required(CONF_HOST): cv.string, 
-             vol.Optional(CONF_PORT, default=8085): cv.port,
-             vol.Optional(GROUP_DEVICES_PER_DEPTH_LEVEL, default=2): int}
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=8085): cv.port,
+                vol.Optional(GROUP_DEVICES_PER_DEPTH_LEVEL, default=2): int,
+            }
         )
         if user_input is None:
             return self.async_show_form(data_schema=data_schema)

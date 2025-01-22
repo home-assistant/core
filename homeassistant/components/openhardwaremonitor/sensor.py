@@ -42,6 +42,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
 )
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -52,6 +53,7 @@ async def async_setup_entry(
     if entities is None:
         raise PlatformNotReady
     async_add_entities(entities, True)
+
 
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
@@ -79,29 +81,28 @@ class OpenHardwareMonitorDevice(SensorEntity):
         if groupDevicesPerDepthLevel == 1:
             # Computer device
             self._attr_device_info = DeviceInfo(
-                identifiers= {(DOMAIN, f"{host}:{port}")},
-                name = str(child_names[0]),
-                manufacturer = "Computer",
+                identifiers={(DOMAIN, f"{host}:{port}")},
+                name=str(child_names[0]),
+                manufacturer="Computer",
             )
             return
         elif groupDevicesPerDepthLevel == 2:
             manufacturer = "Hardware"
         else:
             manufacturer = "Group"
-        
+
         model = ""
         if groupDevicesPerDepthLevel == 2:
             model = child_names[1]
-        
+
         # Hardware or Group device
         self._attr_device_info = DeviceInfo(
-            identifiers= {(DOMAIN, deviceName)},
+            identifiers={(DOMAIN, deviceName)},
             via_device=(DOMAIN, f"{host}:{port}"),
-            name = str(deviceName),
-            manufacturer = manufacturer,
-            model = model,
+            name=str(deviceName),
+            manufacturer=manufacturer,
+            model=model,
         )
-
 
     @property
     def name(self):
@@ -137,7 +138,7 @@ class OpenHardwareMonitorDevice(SensorEntity):
 
     async def async_update(self) -> None:
         """Update the device from a new JSON object."""
-        #self._data.update()
+        # self._data.update()
         await self._data.async_update()
 
         array = self._data.data[OHM_CHILDREN]
