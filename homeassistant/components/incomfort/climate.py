@@ -108,7 +108,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature: float = kwargs[ATTR_TEMPERATURE]
         await self._room.set_override(temperature)
         await self.coordinator.async_refresh()
 

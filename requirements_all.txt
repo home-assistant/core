@@ -1208,7 +1208,7 @@ ihcsdk==2.8.5
 imgw_pib==1.0.9
 
 # homeassistant.components.incomfort
-incomfort-client==0.6.4
+incomfort-client==0.6.7
 
 # homeassistant.components.influxdb
 influxdb-client==1.24.0
