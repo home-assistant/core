@@ -17,6 +17,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "The provided URL is not a valid host."
     }
   },
@@ -65,6 +66,9 @@
   "exceptions": {
     "connection_error": {
       "message": "Error connecting to the Overseerr instance: {error}"
+    },
+    "auth_error": {
+      "message": "Invalid API key."
     },
     "not_loaded": {
       "message": "{target} is not loaded."

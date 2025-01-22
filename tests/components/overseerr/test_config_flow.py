@@ -3,7 +3,10 @@
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_overseerr.exceptions import OverseerrConnectionError
+from python_overseerr.exceptions import (
+    OverseerrAuthenticationError,
+    OverseerrConnectionError,
+)
 
 from homeassistant.components.overseerr.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -61,13 +64,22 @@ async def test_full_flow(
     }
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (OverseerrAuthenticationError, "invalid_auth"),
+        (OverseerrConnectionError, "cannot_connect"),
+    ],
+)
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
     mock_setup_entry: AsyncMock,
+    exception: Exception,
+    error: str,
 ) -> None:
     """Test flow errors."""
-    mock_overseerr_client.get_request_count.side_effect = OverseerrConnectionError()
+    mock_overseerr_client.get_request_count.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -82,7 +94,7 @@ async def test_flow_errors(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": error}
 
     mock_overseerr_client.get_request_count.side_effect = None
 
