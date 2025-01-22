@@ -12,7 +12,12 @@ import pytest
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 
-from . import HCI0_SOURCE_ADDRESS, HCI1_SOURCE_ADDRESS, FakeScanner
+from . import (
+    HCI0_SOURCE_ADDRESS,
+    HCI1_SOURCE_ADDRESS,
+    NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
+    FakeScanner,
+)
 
 
 @pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
@@ -338,7 +343,7 @@ def register_hci1_scanner(hass: HomeAssistant) -> Generator[None]:
 def register_non_connectable_scanner(hass: HomeAssistant) -> Generator[None]:
     """Register an non connectable remote scanner."""
     remote_scanner = BaseHaRemoteScanner(
-        "AA:BB:CC:DD:EE:FF", "non connectable", None, False
+        NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS, "non connectable", None, False
     )
     cancel = bluetooth.async_register_scanner(hass, remote_scanner)
     yield

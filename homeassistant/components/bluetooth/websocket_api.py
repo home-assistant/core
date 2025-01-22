@@ -166,7 +166,7 @@ async def ws_subscribe_connection_allocations(
     source = msg.get("source")
     manager = _get_manager(hass)
     if source and not manager.async_scanner_by_source(source):
-        websocket_api.error_message(ws_msg_id, "invalid_source", "Invalid source")
+        connection.send_error(ws_msg_id, "invalid_source", "Invalid source")
         return
 
     def _async_allocations_changed(allocations: HaBluetoothSlotAllocations) -> None:
