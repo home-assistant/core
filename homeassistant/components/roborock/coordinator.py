@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     """Class to manage fetching data from the API."""
 
-    config_entry: RoborockConfigEntry
+    config_entry: ConfigEntry
 
     def __init__(
         self,
