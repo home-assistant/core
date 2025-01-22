@@ -19,6 +19,23 @@
       "ct_current": {
         "default": "mdi:gauge"
       }
+    },
+    "switch": {
+      "lock_buttons": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-open"
+        }
+      },
+      "require_approval": {
+        "default": "mdi:check-decagram"
+      },
+      "sleep_when_inactive": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off"
+        }
+      }
     }
   },
   "services": {

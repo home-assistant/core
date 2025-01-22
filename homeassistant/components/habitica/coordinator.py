@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from io import BytesIO
 import logging
 from typing import Any
 
@@ -18,6 +19,7 @@ from habiticalib import (
     TaskFilter,
     TooManyRequestsError,
     UserData,
+    UserStyles,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -83,11 +85,19 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
 
         if not self.config_entry.data.get(CONF_NAME):
@@ -106,8 +116,18 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         except TooManyRequestsError:
             _LOGGER.debug("Rate limit exceeded, will try again later")
             return self.data
-        except (HabiticaException, ClientError) as e:
-            raise UpdateFailed(f"Unable to connect to Habitica: {e}") from e
+        except HabiticaException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
+            ) from e
         else:
             return HabiticaData(user=user, tasks=tasks + completed_todos)
 
@@ -122,11 +142,29 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": e.error.message},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             await self.async_request_refresh()
+
+    async def generate_avatar(self, user_styles: UserStyles) -> bytes:
+        """Generate Avatar."""
+
+        avatar = BytesIO()
+        await self.habitica.generate_avatar(
+            fp=avatar, user_styles=user_styles, fmt="PNG"
+        )
+
+        return avatar.getvalue()

@@ -161,6 +161,9 @@
       },
       "altitude": {
         "name": "Altitude above Sea Level"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     },
     "light": {
@@ -199,6 +202,9 @@
       },
       "temperature_level": {
         "name": "Temperature level"
+      },
+      "temperature_display_mode": {
+        "name": "Temperature display mode"
       }
     },
     "sensor": {
@@ -259,6 +265,9 @@
       },
       "power": {
         "name": "Power"
+      },
+      "child_lock": {
+        "name": "Child lock"
       }
     },
     "vacuum": {

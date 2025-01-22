@@ -38,6 +38,9 @@
       }
     },
     "button": {
+      "reset": {
+        "name": "Reset"
+      },
       "reset_waste_drawer": {
         "name": "Reset waste drawer"
       },

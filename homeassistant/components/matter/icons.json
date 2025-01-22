@@ -62,6 +62,18 @@
       },
       "valve_position": {
         "default": "mdi:valve"
+      },
+      "battery_replacement_description": {
+        "default": "mdi:battery-sync-outline"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-off"
+        }
       }
     }
   }

@@ -50,6 +50,37 @@ async def create_server(
 
     server = Server("home-assistant")
 
+    @server.list_prompts()  # type: ignore[no-untyped-call, misc]
+    async def handle_list_prompts() -> list[types.Prompt]:
+        llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+        return [
+            types.Prompt(
+                name=llm_api.api.name,
+                description=f"Default prompt for the Home Assistant LLM API {llm_api.api.name}",
+            )
+        ]
+
+    @server.get_prompt()  # type: ignore[no-untyped-call, misc]
+    async def handle_get_prompt(
+        name: str, arguments: dict[str, str] | None
+    ) -> types.GetPromptResult:
+        llm_api = await llm.async_get_api(hass, llm_api_id, llm_context)
+        if name != llm_api.api.name:
+            raise ValueError(f"Unknown prompt: {name}")
+
+        return types.GetPromptResult(
+            description=f"Default prompt for the Home Assistant LLM API {llm_api.api.name}",
+            messages=[
+                types.PromptMessage(
+                    role="assistant",
+                    content=types.TextContent(
+                        type="text",
+                        text=llm_api.api_prompt,
+                    ),
+                )
+            ],
+        )
+
     @server.list_tools()  # type: ignore[no-untyped-call, misc]
     async def list_tools() -> list[types.Tool]:
         """List available time tools."""

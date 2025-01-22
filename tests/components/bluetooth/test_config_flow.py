@@ -6,15 +6,22 @@ from bluetooth_adapters import DEFAULT_ADDRESS, AdapterDetails
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth import HaBluetoothConnector
 from homeassistant.components.bluetooth.const import (
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
+    CONF_SOURCE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
+
+from . import FakeRemoteScanner, MockBleakClient, _get_manager
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -450,6 +457,36 @@ async def test_options_flow_enabled_linux(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+@pytest.mark.usefixtures(
+    "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
+async def test_options_flow_remote_adapter(hass: HomeAssistant) -> None:
+    """Test options are not available for remote adapters."""
+    source_entry = MockConfigEntry(
+        domain="test",
+    )
+    source_entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: "BB:BB:BB:BB:BB:BB",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: source_entry.entry_id,
+        },
+        options={},
+        unique_id="BB:BB:BB:BB:BB:BB",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "remote_adapters_not_supported"
+
+
 @pytest.mark.usefixtures("one_adapter")
 async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> None:
     """Test we give a hint that the adapter is ignored."""
@@ -467,3 +504,49 @@ async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_adapters"
     assert result["description_placeholders"] == {"ignored_adapters": "1"}
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter(
+    hass: HomeAssistant,
+) -> None:
+    """Test remote adapter configuration via integration discovery."""
+    entry = MockConfigEntry(domain="test")
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+    manager = _get_manager()
+    cancel_scanner = manager.async_register_scanner(scanner)
+
+    entry.add_to_hass(hass)
+    with (
+        patch("homeassistant.components.bluetooth.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data={
+                CONF_SOURCE: scanner.source,
+                CONF_SOURCE_DOMAIN: "test",
+                CONF_SOURCE_MODEL: "test",
+                CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            },
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "esp32"
+    assert result["data"] == {
+        CONF_SOURCE: scanner.source,
+        CONF_SOURCE_DOMAIN: "test",
+        CONF_SOURCE_MODEL: "test",
+        CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    cancel_scanner()
+    await hass.async_block_till_done()
