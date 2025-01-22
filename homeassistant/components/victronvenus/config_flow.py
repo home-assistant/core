@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 from urllib.parse import urlparse
 
+from victronvenusclient import (
+    CannotConnectError,
+    Hub as VictronVenusHub,
+    InvalidAuthError,
+)
 import voluptuous as vol
 
-from homeassistant.components.ssdp import SsdpServiceInfo
 from homeassistant.config_entries import ConfigFlow as HaConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -17,6 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_INSTALLATION_ID,
@@ -26,7 +32,6 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
-from .victronvenus_hub import CannotConnect, InvalidAuth, VictronVenusHub
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -36,6 +41,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PASSWORD): str,
         vol.Required(CONF_SSL): bool,
     }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_USERNAME): str, vol.Optional(CONF_PASSWORD): str}
 )
 
 
@@ -54,7 +63,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     ssl: bool = data.get(CONF_SSL, False)
     port = data.get(CONF_PORT, DEFAULT_PORT)
 
-    hub = VictronVenusHub(hass, hostname, port, username, password, serial, ssl)
+    hub = VictronVenusHub(hostname, port, username, password, ssl, serial)
+
     return await hub.verify_connection_details()
 
 
@@ -71,6 +81,45 @@ class ConfigFlow(HaConfigFlow, domain=DOMAIN):
         self.friendlyName: str | None = None
         self.modelName: str | None = None
 
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data = self._get_reauth_entry().data.copy()
+            data[CONF_USERNAME] = user_input.get(CONF_USERNAME, None)
+            data[CONF_PASSWORD] = user_input.get(CONF_PASSWORD, None)
+
+            try:
+                installation_id = await validate_input(self.hass, data)
+                data[CONF_INSTALLATION_ID] = installation_id
+
+            except CannotConnectError:
+                errors["base"] = "cannot_connect"
+            except InvalidAuthError:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except  # noqa: BLE001
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+        )
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -81,9 +130,9 @@ class ConfigFlow(HaConfigFlow, domain=DOMAIN):
             try:
                 installation_id = await validate_input(self.hass, data)
                 data[CONF_INSTALLATION_ID] = installation_id
-            except CannotConnect:
+            except CannotConnectError:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidAuthError:
                 errors["base"] = "invalid_auth"
             except Exception:  # pylint: disable=broad-except  # noqa: BLE001
                 errors["base"] = "unknown"
@@ -138,7 +187,7 @@ class ConfigFlow(HaConfigFlow, domain=DOMAIN):
             await validate_input(
                 self.hass, {CONF_HOST: self.hostname, CONF_SERIAL: self.serial}
             )
-        except InvalidAuth:
+        except InvalidAuthError:
             return await self.async_step_user()
         else:
             return self.async_create_entry(

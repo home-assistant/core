@@ -23,7 +23,7 @@
 
   "entity": {
     "sensor": {
-      "grid_phases": {
+      "system_grid_phases": {
         "name": "Grid phases"
       },
       "grid_voltage_lx": {
@@ -83,6 +83,24 @@
       "battery_capacity": {
         "name": "Battery capacity"
       },
+      "inverter_input_power_lx": {
+        "name": "Inverter input power on {phase}"
+      },
+      "inverter_input_frequency_lx": {
+        "name": "Inverter input frequency on {phase}"
+      },
+      "inverter_input_apparent_power_lx": {
+        "name": "Inverter input apparent power on {phase}"
+      },
+      "inverter_output_power_lx": {
+        "name": "Inverter output power on {phase}"
+      },
+      "inverter_output_frequency_lx": {
+        "name": "Inverter output frequency on {phase}"
+      },
+      "inverter_output_apparent_power_lx": {
+        "name": "Inverter output apparent power on {phase}"
+      },
       "battery_installed_capacity": {
         "name": "Battery installed capacity"
       },
@@ -92,10 +110,10 @@
       "battery_charged_energy": {
         "name": "Battery charged energy"
       },
-      "ac_loads_lx": {
+      "system_ac_loads_lx": {
         "name": "AC loads on {phase}"
       },
-      "critical_loads_lx": {
+      "system_critical_loads_lx": {
         "name": "Critical loads on {phase}"
       }
     }

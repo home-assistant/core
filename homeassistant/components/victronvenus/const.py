@@ -6,8 +6,6 @@ CONF_SERIAL = "serial"
 
 DOMAIN = "victronvenus"
 
-TOPIC_INSTALLATION_ID = "N/+/system/0/Serial"
-
 DEVICE_MESSAGE = "device"
 SENSOR_MESSAGE = "sensor"
 

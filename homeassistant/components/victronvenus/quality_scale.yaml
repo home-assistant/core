@@ -1,0 +1,41 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide any service actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not depend on polling.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide any service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      This integration does not subscribe to Home Assistant events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.
+  unique-config-entry:
+    status: exempt
+    comment: |
+      This integration is in development and requires a manifest for debugging purposes.

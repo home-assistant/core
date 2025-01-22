@@ -7,7 +7,8 @@
   "documentation": "https://www.home-assistant.io/integrations/victronvenus",
   "homekit": {},
   "iot_class": "local_push",
-  "requirements": ["gmqtt==0.6.16"],
+  "quality_scale": "bronze",
+  "requirements": ["gmqtt==0.6.16", "victronvenusclient==0.1.2"],
   "ssdp": [
     {
       "manufacturer": "Victron Energy",

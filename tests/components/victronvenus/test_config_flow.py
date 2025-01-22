@@ -2,8 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+from victronvenusclient import CannotConnectError, InvalidAuthError
+
 from homeassistant import config_entries
-from homeassistant.components.victronvenus.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.victronvenus.const import (
     CONF_INSTALLATION_ID,
     CONF_SERIAL,
@@ -68,7 +69,7 @@ async def test_form_invalid_auth(
 
     with patch(
         "homeassistant.components.victronvenus.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        side_effect=InvalidAuthError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -126,7 +127,7 @@ async def test_form_cannot_connect(
 
     with patch(
         "homeassistant.components.victronvenus.config_flow.validate_input",
-        side_effect=CannotConnect,
+        side_effect=CannotConnectError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
