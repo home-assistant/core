@@ -32,6 +32,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    ATTR_SLAVE,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -79,7 +80,11 @@ class BasePlatform(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 1)
+        self._slave = (
+            entry.get(CONF_SLAVE)
+            if entry.get(CONF_SLAVE) is not None
+            else entry.get(CONF_DEVICE_ADDRESS, 1)
+        )
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
@@ -87,6 +92,7 @@ class BasePlatform(Entity):
         self._call_active = False
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
+        self._attr_extra_state_attributes = {ATTR_SLAVE: self._slave}
 
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
