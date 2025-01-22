@@ -172,7 +172,6 @@ async def _async_setup_config(
     min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
     # how do we ensure `max_cycle_duration` is greater than `min_cycle_duration`?
     max_cycle_duration: timedelta | None = config.get(CONF_MAX_DUR)
-    # for backwards compat, `cycle_cooldown` should be set to `min_cycle_duration`
     cycle_cooldown: timedelta | None = config.get(CONF_DUR_COOLDOWN)
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
     hot_tolerance: float = config[CONF_HOT_TOLERANCE]
@@ -552,7 +551,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         await self._async_heater_turn_off()
                     else:
                         _LOGGER.debug(
-                            "Checking again at %s",
+                            "Minimum cycle time not reached, check again at %s",
                             self._cycle_timer + self.min_cycle_duration,
                         )
                         async_call_later(
@@ -574,7 +573,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     await self._async_heater_turn_on()
                 else:
                     _LOGGER.debug(
-                        "Checking again at %s",
+                        "Cooldown time not reached, check again at %s",
                         self._cycle_timer + self.cycle_cooldown,
                     )
                     async_call_later(
@@ -605,11 +604,15 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if not keepalive:
             self._cycle_timer = datetime.now()
-            if self.max_cycle_duration is not None:
+            if self.max_cycle_duration:
                 _LOGGER.debug(
-                    "Calling _async_control_heating at %s",
+                    "Scheduling maximum run-time shut-off for %s",
                     self._cycle_timer + self.max_cycle_duration,
                 )
+                if self._max_cycle_callback:
+                    _LOGGER.debug("Cancelling previous scheduled shut-off")
+                    self._max_cycle_callback()
+                    self._max_cycle_callback = None
                 self._max_cycle_callback = async_call_later(
                     self.hass,
                     self.max_cycle_duration,
@@ -624,8 +627,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if not keepalive:
             self._cycle_timer = datetime.now()
-            # Cancel `_max_cycle_callback` if it's set
             if self._max_cycle_callback:
+                _LOGGER.debug("Cancelling scheduled shut-off")
                 self._max_cycle_callback()
                 self._max_cycle_callback = None
 
