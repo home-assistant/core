@@ -151,44 +151,6 @@ async def ws_subscribe_advertisements(
     ).async_start()
 
 
-class _ConnnectionsSubscription:
-    """Class to hold and manage the connection subscription data."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        connection: websocket_api.ActiveConnection,
-        ws_msg_id: int,
-        source: str | None,
-    ) -> None:
-        """Initialize the subscription data."""
-        self.hass = hass
-        self.source = source
-        self.ws_msg_id = ws_msg_id
-        self.connection = connection
-
-    @callback
-    def async_start(self) -> None:
-        """Start the subscription."""
-        connection = self.connection
-        manager = _get_manager(self.hass)
-        connection.subscriptions[self.ws_msg_id] = (
-            manager.async_register_allocation_callback(
-                self._async_allocations_changed, self.source
-            )
-        )
-        self.connection.send_message(
-            json_bytes(websocket_api.result_message(self.ws_msg_id))
-        )
-        if current_allocations := manager.async_current_allocations(self.source):
-            self._async_allocations_changed(current_allocations)
-
-    def _async_allocations_changed(self, allocations: Allocations) -> None:
-        self.connection.send_message(
-            json_bytes(websocket_api.event_message(self.ws_msg_id, allocations))
-        )
-
-
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "bluetooth/subscribe_connection_allocations",
@@ -200,4 +162,21 @@ async def ws_subscribe_connections(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe advertisements websocket command."""
-    _ConnnectionsSubscription(hass, connection, msg["id"], msg["source"]).async_start()
+    ws_msg_id = msg["id"]
+    source = msg.get("source")
+    manager = _get_manager(hass)
+    if source and not manager.async_scanner_by_source(source):
+        websocket_api.error_message(ws_msg_id, "invalid_source", "Invalid source")
+        return
+
+    def _async_allocations_changed(allocations: Allocations) -> None:
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, allocations))
+        )
+
+    connection.subscriptions[ws_msg_id] = manager.async_register_allocation_callback(
+        _async_allocations_changed, source
+    )
+    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
+    if current_allocations := manager.async_current_allocations(source):
+        _async_allocations_changed(current_allocations)
