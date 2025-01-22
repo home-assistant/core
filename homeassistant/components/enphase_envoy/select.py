@@ -118,9 +118,9 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
     key="storage_mode",
     translation_key="storage_mode",
     options=STORAGE_MODE_OPTIONS,
-    value_fn=lambda storage_settings: None
-    if not storage_settings.mode
-    else STORAGE_MODE_MAP[storage_settings.mode],
+    value_fn=lambda storage_settings: (
+        None if not storage_settings.mode else STORAGE_MODE_MAP[storage_settings.mode]
+    ),
     update_fn=lambda envoy, value: envoy.set_storage_mode(
         REVERSE_STORAGE_MODE_MAP[value]
     ),
