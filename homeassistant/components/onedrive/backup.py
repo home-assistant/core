@@ -13,7 +13,10 @@ from typing import Any, Concatenate, cast
 from httpx import Response
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import AnonymousAuthenticationProvider
+from kiota_abstractions.headers_collection import HeadersCollection
+from kiota_abstractions.method import Method
 from kiota_abstractions.native_response_handler import NativeResponseHandler
+from kiota_abstractions.request_information import RequestInformation
 from kiota_http.middleware.options import ResponseHandlerOption
 from msgraph import GraphRequestAdapter
 from msgraph.generated.drives.item.items.item.content.content_request_builder import (
@@ -29,7 +32,7 @@ from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_uploadable_properties import (
     DriveItemUploadableProperties,
 )
-from msgraph_core.tasks import LargeFileUploadTask
+from msgraph_core.models import LargeFileUploadSession
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -161,23 +164,43 @@ class OneDriveBackupAgent(BackupAgent):
             client=get_async_client(self._hass),
         )
 
-        task = LargeFileUploadTask(
-            upload_session=upload_session,
-            request_adapter=adapter,
-            stream=await self._async_iterator_to_bytesio(await open_stream()),
-            max_chunk_size=320 * 1024,
-        )
+        CHUNK_SIZE = 320 * 1024
+        start = 0
+        end = 0
+        buffer: bytes = []
+        info = RequestInformation()
+        info.url = upload_session.upload_url
+        info.http_method = Method.PUT
 
-        def progress_callback(uploaded_byte_range: tuple[int, int]) -> None:
-            _LOGGER.debug(
-                "Uploaded %s bytes of %s bytes of backup %s",
-                uploaded_byte_range[0],
-                backup.size,
-                backup.name,
-            )
+        async def async_upload(
+            start: int, end: int, total_size: int, chunk_data: bytes
+        ) -> None:
+            info.headers = HeadersCollection()
+            info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
+            info.headers.try_add("Content-Length", str(len(chunk_data)))
+            info.headers.try_add("Content-Type", "application/octet-stream")
+            _LOGGER.debug(info.headers.get_all())
+            info.set_stream_content(bytes(chunk_data))
+            await adapter.send_async(info, LargeFileUploadSession, {})
 
-        await task.upload(progress_callback)
-        _LOGGER.debug("Backup %s uploaded", backup.name)
+        async for chunk in await open_stream():
+            buffer += chunk
+
+            # get at least the required chunk size
+            if len(buffer) < CHUNK_SIZE:
+                continue
+
+            while len(buffer) >= CHUNK_SIZE:
+                chunk_data = buffer[:CHUNK_SIZE]
+                buffer = buffer[CHUNK_SIZE:]
+                end = start + len(chunk_data) - 1
+                await async_upload(start, end, backup.size, chunk_data)
+                start += len(chunk_data)
+
+        # upload the remaining bytes
+        if buffer:
+            _LOGGER.debug("Last chunk")
+            await async_upload(start, backup.size - 1, backup.size, buffer)
 
         # store metadata in description
         backup_dict = backup.as_dict()
