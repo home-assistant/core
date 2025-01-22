@@ -21,15 +21,18 @@ class VoIPDevice:
 
     voip_id: str
     device_id: str
-    is_active: bool = False
     current_call: CallInfo | None = None
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
     protocol: VoipDatagramProtocol | None = None
 
+    def is_active(self) -> bool:
+        """Get active state."""
+        return self.current_call is not None
+
     @callback
-    def set_is_active(self, active: bool) -> None:
+    def set_is_active(self, call_info: CallInfo | None) -> None:
         """Set active state."""
-        self.is_active = active
+        self.current_call = call_info
         for listener in self.update_listeners:
             listener(self)
 

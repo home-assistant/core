@@ -277,7 +277,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         _LOGGER.debug("Starting pipeline")
 
         self.async_set_context(Context(user_id=self.config_entry.data["user"]))
-        self.voip_device.set_is_active(True)
 
         async def stt_stream():
             while True:
@@ -316,7 +315,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop audio stream
             await self._audio_queue.put(None)
 
-            self.voip_device.set_is_active(False)
             self._run_pipeline_task = None
             _LOGGER.debug("Pipeline finished")
 
@@ -324,7 +322,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         _LOGGER.debug("Starting announce pipeline with media_id=%s", media_id)
 
         self.async_set_context(Context(user_id=self.config_entry.data["user"]))
-        self.voip_device.set_is_active(True)
 
         async def stt_stream():
             while True:
@@ -363,7 +360,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop audio stream
             await self._audio_queue.put(None)
 
-            self.voip_device.set_is_active(False)
             self._run_pipeline_task = None
             _LOGGER.debug("Announce pipeline finished")
 

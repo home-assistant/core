@@ -113,8 +113,8 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
     def on_call(self, call_info: CallInfo):
         """Set up state when starting a call."""
         device = self.devices.async_get_or_create(call_info)
-        if device is not None:
-            device.current_call = call_info
+        device.set_is_active(call_info)
+        _LOGGER.debug("Set call [%s] on device [%s]", call_info, device)
 
         super().on_call(call_info)
 
@@ -135,8 +135,7 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         """Handle the end of a call."""
         _LOGGER.debug("Handling hangup: %s", call_info)
         device = self.devices.async_get_or_create(call_info)
-        device.set_is_active(False)
-        device.current_call = None
+        device.set_is_active(None)
 
 
 class PreRecordMessageProtocol(RtpDatagramProtocol):

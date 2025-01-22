@@ -92,5 +92,5 @@ class VoIPCallInProgress(VoIPEntity, BinarySensorEntity):
     @callback
     def _is_active_changed(self, device: VoIPDevice) -> None:
         """Call when active state changed."""
-        self._attr_is_on = self.voip_device.is_active
+        self._attr_is_on = self.voip_device.is_active()
         self.async_write_ha_state()
