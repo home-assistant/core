@@ -81,12 +81,12 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
+              "standby": "[%key:common::state::standby%]",
               "permanent": "Permanent",
               "ventilation": "Schedule",
-              "standby": "[%key:common::state::standby%]",
-              "standard": "Minimal",
-              "sensor_driven": "Sensor",
-              "sensor_override": "Schedule with sensor-override"
+              "sensor_driven": "Sensor-driven",
+              "sensor_override": "Schedule with sensor-override",
+              "standard": "Minimal"
             }
           }
         }
