@@ -12,7 +12,6 @@ from aioairzone.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.airzone.config_flow import short_mac
 from homeassistant.components.airzone.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
@@ -20,6 +19,7 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .util import (
     CONFIG,
@@ -32,7 +32,7 @@ from .util import (
 
 from tests.common import MockConfigEntry
 
-DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="airzone",
     ip="192.168.1.100",
     macaddress=dr.format_mac("E84F25000000").replace(":", ""),

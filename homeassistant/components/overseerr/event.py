@@ -55,6 +55,8 @@ async def async_setup_entry(
 class OverseerrEvent(OverseerrEntity, EventEntity):
     """Defines a Overseerr event entity."""
 
+    entity_description: OverseerrEventEntityDescription
+
     def __init__(
         self,
         coordinator: OverseerrCoordinator,
@@ -76,7 +78,11 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
         """Handle incoming event."""
         event_type = event["notification_type"].lower()
         if event_type.split("_")[0] == self.entity_description.key:
-            self._trigger_event(event_type[6:], event)
+            self._attr_entity_picture = event.get("image")
+            self._trigger_event(
+                event_type[6:],
+                parse_event(event, self.entity_description.nullable_fields),
+            )
             self.async_write_ha_state()
 
     @callback
@@ -94,6 +100,17 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
 def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, Any]:
     """Parse event."""
     event.pop("notification_type")
+    event.pop("image")
     for field in nullable_fields:
         event.pop(field)
+    if (media := event.get("media")) is not None:
+        for field in ("status", "status4k"):
+            media[field] = media[field].lower()
+        for field in ("tmdb_id", "tvdb_id"):
+            if (value := media.get(field)) != "":
+                media[field] = int(value)
+            else:
+                media[field] = None
+    if (request := event.get("request")) is not None:
+        request["request_id"] = int(request["request_id"])
     return event

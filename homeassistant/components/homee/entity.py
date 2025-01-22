@@ -1,6 +1,6 @@
 """Base Entities for Homee integration."""
 
-from pyHomee.const import AttributeType, NodeProfile, NodeState
+from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -9,6 +9,56 @@ from homeassistant.helpers.entity import Entity
 from . import HomeeConfigEntry
 from .const import DOMAIN
 from .helpers import get_name_for_enum
+
+
+class HomeeEntity(Entity):
+    """Represents a Homee entity consisting of a single HomeeAttribute."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(self, attribute: HomeeAttribute, entry: HomeeConfigEntry) -> None:
+        """Initialize the wrapper using a HomeeAttribute and target entity."""
+        self._attribute = attribute
+        self._attr_unique_id = (
+            f"{entry.runtime_data.settings.uid}-{attribute.node_id}-{attribute.id}"
+        )
+        self._entry = entry
+        self._attr_device_info = DeviceInfo(
+            identifiers={
+                (DOMAIN, f"{entry.runtime_data.settings.uid}-{attribute.node_id}")
+            }
+        )
+
+        self._host_connected = entry.runtime_data.connected
+
+    async def async_added_to_hass(self) -> None:
+        """Add the homee attribute entity to home assistant."""
+        self.async_on_remove(
+            self._attribute.add_on_changed_listener(self._on_node_updated)
+        )
+        self.async_on_remove(
+            await self._entry.runtime_data.add_connection_listener(
+                self._on_connection_changed
+            )
+        )
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the underlying node."""
+        return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
+
+    async def async_update(self) -> None:
+        """Update entity from homee."""
+        homee = self._entry.runtime_data
+        await homee.update_attribute(self._attribute.node_id, self._attribute.id)
+
+    def _on_node_updated(self, attribute: HomeeAttribute) -> None:
+        self.schedule_update_ha_state()
+
+    async def _on_connection_changed(self, connected: bool) -> None:
+        self._host_connected = connected
+        self.schedule_update_ha_state()
 
 
 class HomeeNodeEntity(Entity):
@@ -20,7 +70,7 @@ class HomeeNodeEntity(Entity):
     def __init__(self, node: HomeeNode, entry: HomeeConfigEntry) -> None:
         """Initialize the wrapper using a HomeeNode and target entity."""
         self._node = node
-        self._attr_unique_id = f"{entry.runtime_data.settings.uid}-{node.id}"
+        self._attr_unique_id = f"{entry.unique_id}-{node.id}"
         self._entry = entry
 
         self._attr_device_info = DeviceInfo(
@@ -39,6 +89,23 @@ class HomeeNodeEntity(Entity):
             await self._entry.runtime_data.add_connection_listener(
                 self._on_connection_changed
             )
+        )
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        # Homee hub has id -1, but is identified only by the UID.
+        if self._node.id == -1:
+            return DeviceInfo(
+                identifiers={(DOMAIN, self._entry.runtime_data.settings.uid)},
+            )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, f"{self._entry.unique_id}-{self._node.id}")},
+            name=self._node.name,
+            model=get_name_for_enum(NodeProfile, self._node.profile),
+            sw_version=self._get_software_version(),
+            via_device=(DOMAIN, self._entry.runtime_data.settings.uid),
         )
 
     @property

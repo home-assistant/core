@@ -1,11 +1,13 @@
 """Conversation history."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 import logging
-from typing import Generic, Literal, TypeVar
+from typing import Literal
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
@@ -19,22 +21,21 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util, ulid
+from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
-DATA_CHAT_HISTORY: HassKey["dict[str, ChatSession]"] = HassKey(
+DATA_CHAT_HISTORY: HassKey[dict[str, ChatSession]] = HassKey(
     "conversation_chat_session"
 )
-DATA_CHAT_HISTORY_CLEANUP: HassKey["SessionCleanup"] = HassKey(
+DATA_CHAT_HISTORY_CLEANUP: HassKey[SessionCleanup] = HassKey(
     "conversation_chat_session_cleanup"
 )
 
 LOGGER = logging.getLogger(__name__)
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
-_NativeT = TypeVar("_NativeT")
 
 
 class SessionCleanup:
@@ -89,7 +90,7 @@ class SessionCleanup:
 async def async_get_chat_session(
     hass: HomeAssistant,
     user_input: ConversationInput,
-) -> AsyncGenerator["ChatSession"]:
+) -> AsyncGenerator[ChatSession]:
     """Return chat session."""
     all_history = hass.data.get(DATA_CHAT_HISTORY)
     if all_history is None:
@@ -100,7 +101,7 @@ async def async_get_chat_session(
     history: ChatSession | None = None
 
     if user_input.conversation_id is None:
-        conversation_id = ulid.ulid_now()
+        conversation_id = ulid_util.ulid_now()
 
     elif history := all_history.get(user_input.conversation_id):
         conversation_id = user_input.conversation_id
@@ -111,8 +112,8 @@ async def async_get_chat_session(
         # a new conversation was started. If the user picks their own, they
         # want to track a conversation and we respect it.
         try:
-            ulid.ulid_to_bytes(user_input.conversation_id)
-            conversation_id = ulid.ulid_now()
+            ulid_util.ulid_to_bytes(user_input.conversation_id)
+            conversation_id = ulid_util.ulid_now()
         except ValueError:
             conversation_id = user_input.conversation_id
 
@@ -155,7 +156,7 @@ class ConverseError(HomeAssistantError):
         self.conversation_id = conversation_id
         self.response = response
 
-    def as_converstation_result(self) -> ConversationResult:
+    def as_conversation_result(self) -> ConversationResult:
         """Return the error as a conversation result."""
         return ConversationResult(
             response=self.response,
@@ -164,7 +165,7 @@ class ConverseError(HomeAssistantError):
 
 
 @dataclass
-class ChatMessage(Generic[_NativeT]):
+class ChatMessage[_NativeT]:
     """Base class for chat messages.
 
     When role is native, the content is to be ignored and message
@@ -184,7 +185,7 @@ class ChatMessage(Generic[_NativeT]):
 
 
 @dataclass
-class ChatSession(Generic[_NativeT]):
+class ChatSession[_NativeT]:
     """Class holding all information for a specific conversation."""
 
     hass: HomeAssistant
@@ -220,14 +221,14 @@ class ChatSession(Generic[_NativeT]):
             if message.role != "native" or message.agent_id == agent_id
         ]
 
-    async def async_process_llm_message(
+    async def async_update_llm_data(
         self,
         conversing_domain: str,
         user_input: ConversationInput,
         user_llm_hass_api: str | None = None,
         user_llm_prompt: str | None = None,
     ) -> None:
-        """Process an incoming message for an LLM."""
+        """Set the LLM system prompt."""
         llm_context = llm.LLMContext(
             platform=conversing_domain,
             context=user_input.context,

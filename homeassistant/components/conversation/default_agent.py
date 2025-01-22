@@ -1350,14 +1350,25 @@ class DefaultAgent(ConversationEntity):
         """Try to match sentence against registered intents and return response.
 
         Only performs strict matching with exposed entities and exact wording.
-        Returns None if no match occurred.
+        Returns None if no match or a matching error occurred.
         """
         result = await self.async_recognize_intent(user_input, strict_intents_only=True)
         if not isinstance(result, RecognizeResult):
             # No error message on failed match
             return None
 
-        return await self._async_process_intent_result(result, user_input)
+        response = await self._async_process_intent_result(result, user_input)
+        if (
+            response.response_type == intent.IntentResponseType.ERROR
+            and response.error_code
+            not in (
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                intent.IntentResponseErrorCode.UNKNOWN,
+            )
+        ):
+            # We ignore no matching errors
+            return None
+        return response
 
 
 def _make_error_result(

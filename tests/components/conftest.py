@@ -41,7 +41,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
 
@@ -642,7 +642,7 @@ def ignore_translations() -> str | list[str]:
 def _get_integration_quality_scale(integration: str) -> dict[str, Any]:
     """Get the quality scale for an integration."""
     try:
-        return yaml.load_yaml_dict(
+        return yaml_util.load_yaml_dict(
             f"homeassistant/components/{integration}/quality_scale.yaml"
         ).get("rules", {})
     except FileNotFoundError:

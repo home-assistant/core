@@ -820,15 +820,15 @@ async def test_update_media_state(hass: HomeAssistant, client) -> None:
     """Test updating media state."""
     await setup_webostv(hass)
 
-    client.media_state = {"foregroundAppInfo": [{"playState": "playing"}]}
+    client.media_state = [{"playState": "playing"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
 
-    client.media_state = {"foregroundAppInfo": [{"playState": "paused"}]}
+    client.media_state = [{"playState": "paused"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
 
-    client.media_state = {"foregroundAppInfo": [{"playState": "unloaded"}]}
+    client.media_state = [{"playState": "unloaded"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
 
