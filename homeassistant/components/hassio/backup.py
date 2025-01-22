@@ -490,7 +490,10 @@ async def _default_agent(client: SupervisorClient) -> str:
 
 
 async def backup_addon_before_update(
-    hass: HomeAssistant, addon: str, addon_name: str | None
+    hass: HomeAssistant,
+    addon: str,
+    addon_name: str | None,
+    installed_version: str | None,
 ) -> None:
     """Prepare for updating an add-on."""
     backup_manager = hass.data[DATA_MANAGER]
@@ -510,7 +513,7 @@ async def backup_addon_before_update(
             include_database=False,
             include_folders=None,
             include_homeassistant=False,
-            name=f"{addon_name or addon} {HAVERSION}",
+            name=f"{addon_name or addon} {installed_version or '<unknown>'}",
             password=password,
         )
     except BackupManagerError as err:

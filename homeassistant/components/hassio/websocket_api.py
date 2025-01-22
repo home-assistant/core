@@ -26,6 +26,7 @@ from .const import (
     ATTR_SESSION_DATA_USER_ID,
     ATTR_SLUG,
     ATTR_TIMEOUT,
+    ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
     EVENT_SUPERVISOR_EVENT,
@@ -159,12 +160,14 @@ async def websocket_update_addon(
 ) -> None:
     """Websocket handler to update an addon."""
     addon_name: str | None = None
+    addon_version: str | None = None
     addons: list = (get_supervisor_info(hass) or {}).get("addons", [])
     for addon in addons:
         if addon[ATTR_SLUG] == msg["addon"]:
             addon_name = addon[ATTR_NAME]
+            addon_version = addon[ATTR_VERSION]
             break
-    await update_addon(hass, msg["addon"], msg["backup"], addon_name)
+    await update_addon(hass, msg["addon"], msg["backup"], addon_name, addon_version)
     connection.send_result(msg[WS_ID])
 
 

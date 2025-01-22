@@ -164,7 +164,9 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
-        await update_addon(self.hass, self._addon_slug, backup, self.title)
+        await update_addon(
+            self.hass, self._addon_slug, backup, self.title, self.installed_version
+        )
         await self.coordinator.force_info_update_supervisor()
 
 
@@ -309,7 +311,11 @@ async def _default_agent(client: SupervisorClient) -> str:
 
 
 async def update_addon(
-    hass: HomeAssistant, addon: str, backup: bool, addon_name: str | None
+    hass: HomeAssistant,
+    addon: str,
+    backup: bool,
+    addon_name: str | None,
+    installed_version: str | None,
 ) -> None:
     """Update an addon.
 
@@ -321,7 +327,7 @@ async def update_addon(
         # pylint: disable-next=import-outside-toplevel
         from .backup import backup_addon_before_update
 
-        await backup_addon_before_update(hass, addon, addon_name)
+        await backup_addon_before_update(hass, addon, addon_name, installed_version)
 
     try:
         await client.store.update_addon(addon, StoreAddonUpdate(backup=False))
