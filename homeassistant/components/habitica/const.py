@@ -1,6 +1,6 @@
 """Constants for the habitica integration."""
 
-from homeassistant.const import CONF_PATH
+from homeassistant.const import APPLICATION_NAME, CONF_PATH, __version__
 
 CONF_API_USER = "api_user"
 
@@ -31,6 +31,11 @@ ATTR_TASK = "task"
 ATTR_DIRECTION = "direction"
 ATTR_TARGET = "target"
 ATTR_ITEM = "item"
+ATTR_TYPE = "type"
+ATTR_PRIORITY = "priority"
+ATTR_TAG = "tag"
+ATTR_KEYWORD = "keyword"
+
 SERVICE_CAST_SKILL = "cast_skill"
 SERVICE_START_QUEST = "start_quest"
 SERVICE_ACCEPT_QUEST = "accept_quest"
@@ -38,15 +43,17 @@ SERVICE_CANCEL_QUEST = "cancel_quest"
 SERVICE_ABORT_QUEST = "abort_quest"
 SERVICE_REJECT_QUEST = "reject_quest"
 SERVICE_LEAVE_QUEST = "leave_quest"
+SERVICE_GET_TASKS = "get_tasks"
+
 SERVICE_SCORE_HABIT = "score_habit"
 SERVICE_SCORE_REWARD = "score_reward"
 
 SERVICE_TRANSFORMATION = "transformation"
 
 
-WARRIOR = "warrior"
-ROGUE = "rogue"
-HEALER = "healer"
-MAGE = "wizard"
-
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
+X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"
+
+SECTION_REAUTH_LOGIN = "reauth_login"
+SECTION_REAUTH_API_KEY = "reauth_api_key"
+SECTION_DANGER_ZONE = "danger_zone"

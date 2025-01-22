@@ -55,7 +55,7 @@ async def test_coordinator(
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert mock_data.call_count == 4
+        assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
 
@@ -69,7 +69,7 @@ async def test_coordinator(
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert mock_data.call_count == 4
+        assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         assert "Authentication error" in caplog.text
@@ -84,7 +84,8 @@ async def test_coordinator(
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert mock_data.call_count == 4
+        # Empty responses does not raise
+        assert mock_data.call_count == 3
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         assert "Empty response" in caplog.text
@@ -99,7 +100,7 @@ async def test_coordinator(
         freezer.tick(timedelta(hours=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
-        assert mock_data.call_count == 4
+        assert mock_data.call_count == 1
         state = hass.states.get("sensor.nord_pool_se3_current_price")
         assert state.state == STATE_UNAVAILABLE
         assert "Response error" in caplog.text

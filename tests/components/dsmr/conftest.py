@@ -45,9 +45,9 @@ def dsmr_connection_fixture() -> Generator[tuple[MagicMock, MagicMock, MagicMock
 
 
 @pytest.fixture
-def rfxtrx_dsmr_connection_fixture() -> (
-    Generator[tuple[MagicMock, MagicMock, MagicMock]]
-):
+def rfxtrx_dsmr_connection_fixture() -> Generator[
+    tuple[MagicMock, MagicMock, MagicMock]
+]:
     """Fixture that mocks RFXtrx connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -73,9 +73,9 @@ def rfxtrx_dsmr_connection_fixture() -> (
 
 
 @pytest.fixture
-def dsmr_connection_send_validate_fixture() -> (
-    Generator[tuple[MagicMock, MagicMock, MagicMock]]
-):
+def dsmr_connection_send_validate_fixture() -> Generator[
+    tuple[MagicMock, MagicMock, MagicMock]
+]:
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)
@@ -156,9 +156,9 @@ def dsmr_connection_send_validate_fixture() -> (
 
 
 @pytest.fixture
-def rfxtrx_dsmr_connection_send_validate_fixture() -> (
-    Generator[tuple[MagicMock, MagicMock, MagicMock]]
-):
+def rfxtrx_dsmr_connection_send_validate_fixture() -> Generator[
+    tuple[MagicMock, MagicMock, MagicMock]
+]:
     """Fixture that mocks serial connection."""
 
     transport = MagicMock(spec=asyncio.Transport)

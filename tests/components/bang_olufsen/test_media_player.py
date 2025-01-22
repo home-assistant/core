@@ -528,7 +528,7 @@ async def test_async_update_beolink_listener(
     snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_config_entry_2: MockConfigEntry,
+    mock_config_entry_core: MockConfigEntry,
 ) -> None:
     """Test _async_update_beolink as a listener."""
 
@@ -540,8 +540,8 @@ async def test_async_update_beolink_listener(
     )
 
     # Add another entity
-    mock_config_entry_2.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_2.entry_id)
+    mock_config_entry_core.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
 
     # Runs _async_update_beolink
     playback_metadata_callback(
@@ -1386,7 +1386,7 @@ async def test_async_join_players(
     snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_config_entry_2: MockConfigEntry,
+    mock_config_entry_core: MockConfigEntry,
     group_members: list[str],
     expand_count: int,
     join_count: int,
@@ -1401,8 +1401,8 @@ async def test_async_join_players(
     )
 
     # Add another entity
-    mock_config_entry_2.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_2.entry_id)
+    mock_config_entry_core.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
 
     # Set the source to a beolink expandable source
     source_change_callback(TEST_SOURCE)
@@ -1453,7 +1453,7 @@ async def test_async_join_players_invalid(
     snapshot: SnapshotAssertion,
     mock_mozart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_config_entry_2: MockConfigEntry,
+    mock_config_entry_core: MockConfigEntry,
     source: Source,
     group_members: list[str],
     expected_result: AbstractContextManager,
@@ -1468,8 +1468,8 @@ async def test_async_join_players_invalid(
         mock_mozart_client.get_source_change_notifications.call_args[0][0]
     )
 
-    mock_config_entry_2.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry_2.entry_id)
+    mock_config_entry_core.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_core.entry_id)
 
     source_change_callback(source)
 

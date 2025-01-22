@@ -44,6 +44,7 @@ DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
+UPDATE_INTERVAL_LOCAL: Final = timedelta(seconds=5)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)
 
 PLATFORMS: list[Platform] = [
@@ -101,6 +102,7 @@ OVERKIZ_DEVICE_TO_PLATFORM: dict[UIClass | UIWidget, Platform | None] = {
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.DOMESTIC_HOT_WATER_PRODUCTION: Platform.WATER_HEATER,  # widgetName, uiClass is WaterHeatingSystem (not supported)
     UIWidget.DOMESTIC_HOT_WATER_TANK: Platform.SWITCH,  # widgetName, uiClass is WaterHeatingSystem (not supported)
+    UIWidget.EVO_HOME_CONTROLLER: Platform.CLIMATE,  # widgetName, uiClass is EvoHome (not supported)
     UIWidget.HITACHI_AIR_TO_AIR_HEAT_PUMP: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.HITACHI_AIR_TO_WATER_HEATING_ZONE: Platform.CLIMATE,  # widgetName, uiClass is HeatingSystem (not supported)
     UIWidget.HITACHI_DHW: Platform.WATER_HEATER,  # widgetName, uiClass is HitachiHeatingSystem (not supported)

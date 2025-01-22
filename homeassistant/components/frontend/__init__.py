@@ -11,7 +11,7 @@ from typing import Any, TypedDict
 
 from aiohttp import hdrs, web, web_urldispatcher
 import jinja2
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 from yarl import URL
 

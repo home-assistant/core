@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -45,15 +45,15 @@ __all__ = [
     "ATTR_OPTION",
     "ATTR_OPTIONS",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
-    "SelectEntity",
-    "SelectEntityDescription",
+    "PLATFORM_SCHEMA_BASE",
     "SERVICE_SELECT_FIRST",
     "SERVICE_SELECT_LAST",
     "SERVICE_SELECT_NEXT",
     "SERVICE_SELECT_OPTION",
     "SERVICE_SELECT_PREVIOUS",
+    "SelectEntity",
+    "SelectEntityDescription",
 ]
 
 # mypy: disallow-any-generics

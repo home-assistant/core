@@ -19,7 +19,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Identify button."""
-    if entry.runtime_data.supports_identify():
+    if entry.runtime_data.data.device.supports_identify():
         async_add_entities([HomeWizardIdentifyButton(entry.runtime_data)])
 
 

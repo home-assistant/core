@@ -262,13 +262,13 @@ async def test_remove_privacy_zone(
 
 
 @pytest.mark.asyncio
-async def test_get_doorbell_user(
+async def get_user_keyring_info(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
 ) -> None:
-    """Test get_doorbell_user service."""
+    """Test get_user_keyring_info service."""
 
     ulp_user = Mock(full_name="Test User", status="active", ulp_id="user_ulp_id")
     keyring = Mock(
@@ -315,3 +315,30 @@ async def test_get_doorbell_user(
             },
         ],
     }
+
+
+async def test_get_user_keyring_info_no_users(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Test get_user_keyring_info service with no users."""
+
+    ufp.api.bootstrap.ulp_users.as_list = Mock(return_value=[])
+    ufp.api.bootstrap.keyrings.as_list = Mock(return_value=[])
+
+    await init_entry(hass, ufp, [doorbell])
+
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+
+    with pytest.raises(
+        HomeAssistantError, match="No users found, please check Protect permissions."
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_USER_KEYRING_INFO,
+            {ATTR_DEVICE_ID: camera_entry.device_id},
+            blocking=True,
+            return_response=True,
+        )

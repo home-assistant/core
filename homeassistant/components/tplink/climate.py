@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from kasa import Device, DeviceType
+from kasa import Device
 from kasa.smart.modules.temperaturecontrol import ThermostatState
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -21,9 +23,17 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .const import UNIT_MAPPING
+from .const import DOMAIN, UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkModuleEntity,
+    TPLinkModuleEntityDescription,
+    async_refresh_after,
+)
+
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
 
 # Upstream state to HVACAction
 STATE_TO_ACTION = {
@@ -36,6 +46,21 @@ STATE_TO_ACTION = {
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True, kw_only=True)
+class TPLinkClimateEntityDescription(
+    ClimateEntityDescription, TPLinkModuleEntityDescription
+):
+    """Base class for climate entity description."""
+
+
+CLIMATE_DESCRIPTIONS: tuple[TPLinkClimateEntityDescription, ...] = (
+    TPLinkClimateEntityDescription(
+        key="climate",
+        exists_fn=lambda dev, _: dev.device_type is Device.Type.Thermostat,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
@@ -46,15 +71,27 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    # As there are no standalone thermostats, we just iterate over the children.
-    async_add_entities(
-        TPLinkClimateEntity(child, parent_coordinator, parent=device)
-        for child in device.children
-        if child.device_type is DeviceType.Thermostat
-    )
+    known_child_device_ids: set[str] = set()
+    first_check = True
+
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            entity_class=TPLinkClimateEntity,
+            descriptions=CLIMATE_DESCRIPTIONS,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
-class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
+class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
     """Representation of a TPLink thermostat."""
 
     _attr_name = None
@@ -66,16 +103,20 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_precision = PRECISION_TENTHS
 
+    entity_description: TPLinkClimateEntityDescription
+
     # This disables the warning for async_turn_{on,off}, can be removed later.
 
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        description: TPLinkClimateEntityDescription,
         *,
         parent: Device,
     ) -> None:
         """Initialize the climate entity."""
+        super().__init__(device, coordinator, description, parent=parent)
         self._state_feature = device.features["state"]
         self._mode_feature = device.features["thermostat_mode"]
         self._temp_feature = device.features["temperature"]
@@ -84,8 +125,6 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         self._attr_min_temp = self._target_feature.minimum_value
         self._attr_max_temp = self._target_feature.maximum_value
         self._attr_temperature_unit = UNIT_MAPPING[cast(str, self._temp_feature.unit)]
-
-        super().__init__(device, coordinator, parent=parent)
 
     @async_refresh_after
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -100,7 +139,13 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         elif hvac_mode is HVACMode.OFF:
             await self._state_feature.set_value(False)
         else:
-            raise ServiceValidationError(f"Tried to set unsupported mode: {hvac_mode}")
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_mode",
+                translation_placeholders={
+                    "mode": hvac_mode,
+                },
+            )
 
     @async_refresh_after
     async def async_turn_on(self) -> None:
@@ -113,7 +158,7 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
         await self._state_feature.set_value(False)
 
     @callback
-    def _async_update_attrs(self) -> None:
+    def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_current_temperature = cast(float | None, self._temp_feature.value)
         self._attr_target_temperature = cast(float | None, self._target_feature.value)
@@ -131,11 +176,12 @@ class TPLinkClimateEntity(CoordinatedTPLinkEntity, ClimateEntity):
                 self._mode_feature.value,
             )
             self._attr_hvac_action = HVACAction.OFF
-            return
+            return True
 
         self._attr_hvac_action = STATE_TO_ACTION[
             cast(ThermostatState, self._mode_feature.value)
         ]
+        return True
 
     def _get_unique_id(self) -> str:
         """Return unique id."""
