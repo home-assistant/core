@@ -912,7 +912,15 @@ voluptuous = "vol"
 "homeassistant.helpers.floor_registry" = "fr"
 "homeassistant.helpers.issue_registry" = "ir"
 "homeassistant.helpers.label_registry" = "lr"
+"homeassistant.util.color" = "color_util"
 "homeassistant.util.dt" = "dt_util"
+"homeassistant.util.json" = "json_util"
+"homeassistant.util.location" = "location_util"
+"homeassistant.util.logging" = "logging_util"
+"homeassistant.util.network" = "network_util"
+"homeassistant.util.ulid" = "ulid_util"
+"homeassistant.util.uuid" = "uuid_util"
+"homeassistant.util.yaml" = "yaml_util"
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
@@ -951,4 +959,4 @@ split-on-trailing-comma = false
 max-complexity = 25
 
 [tool.ruff.lint.pydocstyle]
-property-decorators = ["propcache.cached_property"]
+property-decorators = ["propcache.api.cached_property"]

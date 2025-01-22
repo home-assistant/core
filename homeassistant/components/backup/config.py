@@ -81,6 +81,7 @@ class BackupConfigData:
             time = dt_util.parse_time(time_str)
         else:
             time = None
+        days = [Day(day) for day in data["schedule"]["days"]]
 
         return cls(
             create_backup=CreateBackupConfig(
@@ -99,7 +100,10 @@ class BackupConfigData:
                 days=retention["days"],
             ),
             schedule=BackupSchedule(
-                state=ScheduleState(data["schedule"]["state"]), time=time
+                days=days,
+                recurrence=ScheduleRecurrence(data["schedule"]["recurrence"]),
+                state=ScheduleState(data["schedule"].get("state", ScheduleState.NEVER)),
+                time=time,
             ),
         )
 
@@ -252,6 +256,8 @@ class RetentionParametersDict(TypedDict, total=False):
 class StoredBackupSchedule(TypedDict):
     """Represent the stored backup schedule configuration."""
 
+    days: list[Day]
+    recurrence: ScheduleRecurrence
     state: ScheduleState
     time: str | None
 
@@ -259,12 +265,37 @@ class StoredBackupSchedule(TypedDict):
 class ScheduleParametersDict(TypedDict, total=False):
     """Represent parameters for backup schedule."""
 
+    days: list[Day]
+    recurrence: ScheduleRecurrence
     state: ScheduleState
     time: dt.time | None
 
 
-class ScheduleState(StrEnum):
+class Day(StrEnum):
+    """Represent the day(s) in a custom schedule recurrence."""
+
+    MONDAY = "mon"
+    TUESDAY = "tue"
+    WEDNESDAY = "wed"
+    THURSDAY = "thu"
+    FRIDAY = "fri"
+    SATURDAY = "sat"
+    SUNDAY = "sun"
+
+
+class ScheduleRecurrence(StrEnum):
     """Represent the schedule recurrence."""
+
+    NEVER = "never"
+    DAILY = "daily"
+    CUSTOM_DAYS = "custom_days"
+
+
+class ScheduleState(StrEnum):
+    """Represent the schedule recurrence.
+
+    This is deprecated and can be remove in HA Core 2025.8.
+    """
 
     NEVER = "never"
     DAILY = "daily"
@@ -281,6 +312,10 @@ class ScheduleState(StrEnum):
 class BackupSchedule:
     """Represent the backup schedule."""
 
+    days: list[Day] = field(default_factory=list)
+    recurrence: ScheduleRecurrence = ScheduleRecurrence.NEVER
+    # Although no longer used, state is kept for backwards compatibility.
+    # It can be removed in HA Core 2025.8.
     state: ScheduleState = ScheduleState.NEVER
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
@@ -293,22 +328,26 @@ class BackupSchedule:
     ) -> None:
         """Apply a new schedule.
 
-        There are only three possible state types: never, daily, or weekly.
+        There are only three possible recurrence types: never, daily, or custom_days
         """
-        if self.state is ScheduleState.NEVER:
+        if self.recurrence is ScheduleRecurrence.NEVER or (
+            self.recurrence is ScheduleRecurrence.CUSTOM_DAYS and not self.days
+        ):
             self._unschedule_next(manager)
             return
 
         time = self.time if self.time is not None else DEFAULT_BACKUP_TIME
-        if self.state is ScheduleState.DAILY:
+        if self.recurrence is ScheduleRecurrence.DAILY:
             self._schedule_next(
                 CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour),
                 manager,
             )
-        else:
+        else:  # ScheduleRecurrence.CUSTOM_DAYS
             self._schedule_next(
                 CRON_PATTERN_WEEKLY.format(
-                    m=time.minute, h=time.hour, d=self.state.value
+                    m=time.minute,
+                    h=time.hour,
+                    d=",".join(day.value for day in self.days),
                 ),
                 manager,
             )
@@ -376,6 +415,8 @@ class BackupSchedule:
     def to_dict(self) -> StoredBackupSchedule:
         """Convert backup schedule to a dict."""
         return StoredBackupSchedule(
+            days=self.days,
+            recurrence=self.recurrence,
             state=self.state,
             time=self.time.isoformat() if self.time else None,
         )

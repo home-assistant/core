@@ -44,7 +44,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -74,7 +74,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import (
     convert,
     dt as dt_util,
-    location as loc_util,
+    location as location_util,
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -1858,7 +1858,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
+        location_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
 
 
