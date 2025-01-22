@@ -55,7 +55,6 @@ from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
-ICON = "mdi:flash"
 _LOGGER = logging.getLogger(__name__)
 
 INVERTERS_KEY = "inverters"
@@ -946,8 +945,6 @@ class EnvoySensorBaseEntity(EnvoyBaseEntity, SensorEntity):
 class EnvoySystemSensorEntity(EnvoySensorBaseEntity):
     """Envoy system base entity."""
 
-    _attr_icon = ICON
-
     def __init__(
         self,
         coordinator: EnphaseUpdateCoordinator,
@@ -1174,7 +1171,6 @@ class EnvoyStorageCTPhaseEntity(EnvoySystemSensorEntity):
 class EnvoyInverterEntity(EnvoySensorBaseEntity):
     """Envoy inverter entity."""
 
-    _attr_icon = ICON
     entity_description: EnvoyInverterSensorEntityDescription
 
     def __init__(
