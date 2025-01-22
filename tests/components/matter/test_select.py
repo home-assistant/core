@@ -117,9 +117,17 @@ async def test_list_select_entities(
     assert state
     assert state.state == "Off"
     assert state.attributes["options"] == ["Off", "Low", "Medium", "High"]
+    set_node_attribute(matter_node, 1, 83, 1, 3)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.laundrywasher_spin_speed")
+    assert state.state == "High"
 
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state
     assert state.state == "off"
     assert state.attributes["options"] == ["off", "normal", "extra", "max"]
+    set_node_attribute(matter_node, 1, 83, 2, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.laundrywasher_number_of_rinses")
+    assert state.state == "normal"
