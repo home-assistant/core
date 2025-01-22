@@ -172,11 +172,11 @@ class ViCareFan(ViCareEntity, FanEntity):
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
 
-    # @property
-    # def is_on(self) -> bool | None:
-    #     """Return true if the entity is on."""
-    #     # Viessmann ventilation unit cannot be turned off
-    #     return True
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if the entity is on."""
+        # Viessmann ventilation unit cannot be turned off
+        return True
 
     @property
     def icon(self) -> str | None:
