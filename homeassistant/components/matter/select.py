@@ -324,7 +324,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterBasicListSelectEntityDescription(
             key="LaundryWasherControlsSpinSpeed",
-            translation_key="spin_speed",
+            translation_key="laundry_washer_spin_speed",
             list_attribute=clusters.LaundryWasherControls.Attributes.SpinSpeeds,
         ),
         entity_class=MatterBasicListSelectEntity,
@@ -332,5 +332,27 @@ DISCOVERY_SCHEMAS = [
             clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
             clusters.LaundryWasherControls.Attributes.SpinSpeeds,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="MatterLaundryWasherNumberOfRinses",
+            translation_key="laundry_washer_number_of_rinses",
+            options=["off", "normal", "extra", "max"],
+            measurement_to_ha={
+                0: "off",
+                1: "normal",
+                2: "extra",
+                3: "max",
+            }.get,
+            ha_to_native_value={
+                "off": 0,
+                "normal": 1,
+                "extra": 2,
+                "max": 3,
+            }.get,
+        ),
+        entity_class=MatterSelectEntity,
+        required_attributes=(clusters.LaundryWasherControls.Attributes.NumberOfRinses,),
     ),
 ]

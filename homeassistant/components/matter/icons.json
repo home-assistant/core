@@ -37,7 +37,7 @@
       }
     },
     "select": {
-      "spin_speed": {
+      "laundry_washer_spin_speed": {
         "default": "mdi:reload"
       }
     },
