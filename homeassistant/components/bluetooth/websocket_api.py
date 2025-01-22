@@ -7,6 +7,7 @@ from functools import lru_cache, partial
 import time
 from typing import Any
 
+from bleak_retry_connector import Allocations
 from habluetooth import BluetoothScanningMode
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
@@ -148,3 +149,57 @@ async def ws_subscribe_advertisements(
     _AdvertisementSubscription(
         hass, connection, msg["id"], BluetoothCallbackMatcher(connectable=False)
     ).async_start()
+
+
+class _ConnnectionsSubscription:
+    """Class to hold and manage the connection subscription data."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        ws_msg_id: int,
+        source: str | None,
+    ) -> None:
+        """Initialize the subscription data."""
+        self.hass = hass
+        self.source = source
+        self.ws_msg_id = ws_msg_id
+        self.connection = connection
+
+    @callback
+    def async_start(self) -> None:
+        """Start the subscription."""
+        connection = self.connection
+        manager = _get_manager(self.hass)
+        connection.subscriptions[self.ws_msg_id] = (
+            manager.async_register_allocation_callback(
+                self._async_allocations_changed, self.source
+            )
+        )
+        self.connection.send_message(
+            json_bytes(websocket_api.result_message(self.ws_msg_id))
+        )
+        if current_allocations := manager.async_current_allocations(self.source):
+            self._async_allocations_changed(current_allocations)
+
+    def _async_allocations_changed(self, allocations: Allocations) -> None:
+        self.connection.send_message(
+            json_bytes(
+                websocket_api.event_message(self.ws_msg_id, allocations.to_dict())
+            )
+        )
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "bluetooth/subscribe_connection_allocations",
+        vol.Optional("source"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_subscribe_connections(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe advertisements websocket command."""
+    _ConnnectionsSubscription(hass, connection, msg["id"], msg["source"]).async_start()
