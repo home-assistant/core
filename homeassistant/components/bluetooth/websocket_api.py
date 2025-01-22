@@ -170,7 +170,7 @@ async def ws_subscribe_connections(
 
     def _async_allocations_changed(allocations: HaBluetoothSlotAllocations) -> None:
         connection.send_message(
-            json_bytes(websocket_api.event_message(ws_msg_id, allocations))
+            json_bytes(websocket_api.event_message(ws_msg_id, [allocations]))
         )
 
     connection.subscriptions[ws_msg_id] = manager.async_register_allocation_callback(
@@ -178,5 +178,6 @@ async def ws_subscribe_connections(
     )
     connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
     if current_allocations := manager.async_current_allocations(source):
-        for allocation in current_allocations:
-            _async_allocations_changed(allocation)
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, current_allocations))
+        )
