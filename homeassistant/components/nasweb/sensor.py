@@ -93,31 +93,63 @@ async def async_setup_entry(
     async_add_entities([temp_sensor])
 
 
-class InputStateSensor(SensorEntity, BaseCoordinatorEntity):
+class BaseSensorEntity(SensorEntity, BaseCoordinatorEntity):
+    """Base class providing common functionality."""
+
+    def __init__(self, coordinator: BaseDataUpdateCoordinatorProtocol) -> None:
+        """Initialize base sensor."""
+        super().__init__(coordinator)
+        self._attr_available = False
+        self._attr_has_entity_name = True
+        self._attr_should_poll = False
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
+    def _set_attr_available(
+        self, entity_last_update: float, available: bool | None
+    ) -> None:
+        if (
+            self.coordinator.last_update is None
+            or time.time() - entity_last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL
+        ):
+            self._attr_available = False
+        else:
+            self._attr_available = available if available is not None else False
+
+    async def async_update(self) -> None:
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        """
+
+
+class InputStateSensor(BaseSensorEntity):
     """Entity representing NASweb input."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options: list[str] = [
+        STATE_FAULT,
+        STATE_TAMPER,
+        STATE_UNDEFINED,
+        STATE_VIGIL,
+        STATE_VIOLATION,
+    ]
+    _attr_icon = "mdi:import"
+    _attr_translation_key = SENSOR_INPUT_TRANSLATION_KEY
 
     def __init__(
         self,
         coordinator: BaseDataUpdateCoordinatorProtocol,
         nasweb_input: NASwebInput,
     ) -> None:
-        """Initialize zone entity."""
+        """Initialize InputStateSensor entity."""
         super().__init__(coordinator)
         self._input = nasweb_input
-        self._attr_device_class = SensorDeviceClass.ENUM
-        self._attr_options: list[str] = [
-            STATE_FAULT,
-            STATE_TAMPER,
-            STATE_UNDEFINED,
-            STATE_VIGIL,
-            STATE_VIOLATION,
-        ]
         self._attr_native_value: str | None = None
-        self._attr_available = False
-        self._attr_icon = "mdi:import"
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
-        self._attr_translation_key = SENSOR_INPUT_TRANSLATION_KEY
         self._attr_translation_placeholders = {"index": f"{nasweb_input.index:2d}"}
         self._attr_unique_id = (
             f"{DOMAIN}.{self._input.webio_serial}.input.{self._input.index}"
@@ -125,11 +157,6 @@ class InputStateSensor(SensorEntity, BaseCoordinatorEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._input.webio_serial)},
         )
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -139,73 +166,35 @@ class InputStateSensor(SensorEntity, BaseCoordinatorEntity):
         else:
             _LOGGER.warning("Received unrecognized input state: %s", self._input.state)
             self._attr_native_value = None
-        if (
-            self.coordinator.last_update is None
-            or time.time() - self._input.last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL
-        ):
-            self._attr_available = False
-        else:
-            self._attr_available = (
-                self._input.available if self._input.available is not None else False
-            )
+        self._set_attr_available(self._input.last_update, self._input.available)
         self.async_write_ha_state()
 
-    async def async_update(self) -> None:
-        """Update the entity.
 
-        Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
-        """
-
-
-class TemperatureSensor(SensorEntity, BaseCoordinatorEntity):
+class TemperatureSensor(BaseSensorEntity):
     """Entity representing NASweb temperature sensor."""
+
+    _attr_device_class = SensorDeviceClass.TEMPERATURE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     def __init__(
         self,
         coordinator: BaseDataUpdateCoordinatorProtocol,
         nasweb_temp_sensor: TempSensor,
     ) -> None:
-        """Initialize TemperatureSensor."""
+        """Initialize TemperatureSensor entity."""
         super().__init__(coordinator)
         self._temp_sensor = nasweb_temp_sensor
-        self._attr_device_class = SensorDeviceClass.TEMPERATURE
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-        self._attr_available = False
-        self._attr_has_entity_name = True
-        self._attr_should_poll = False
         self._attr_unique_id = f"{DOMAIN}.{self._temp_sensor.webio_serial}.temp_sensor"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._temp_sensor.webio_serial)}
         )
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._handle_coordinator_update()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._temp_sensor.value
-        if (
-            self.coordinator.last_update is None
-            or time.time() - self._temp_sensor.last_update
-            >= STATUS_UPDATE_MAX_TIME_INTERVAL
-        ):
-            self._attr_available = False
-        else:
-            self._attr_available = (
-                self._temp_sensor.available
-                if self._temp_sensor.available is not None
-                else False
-            )
+        self._set_attr_available(
+            self._temp_sensor.last_update, self._temp_sensor.available
+        )
         self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the entity.
-
-        Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
-        """
