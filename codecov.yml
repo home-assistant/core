@@ -52,6 +52,3 @@ flag_management:
         - ".*"
       carryforward: true
 
-ignore:
-  - "homeassistant/scripts/benchmark"
-  - "homeassistant/scripts/macos"
