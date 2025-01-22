@@ -185,9 +185,7 @@ class _ConnnectionsSubscription:
 
     def _async_allocations_changed(self, allocations: Allocations) -> None:
         self.connection.send_message(
-            json_bytes(
-                websocket_api.event_message(self.ws_msg_id, allocations.to_dict())
-            )
+            json_bytes(websocket_api.event_message(self.ws_msg_id, allocations))
         )
 
 
