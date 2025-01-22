@@ -591,10 +591,10 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.0.0
+bleak-esphome==2.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.7.0
+bleak-retry-connector==3.8.0
 
 # homeassistant.components.bluetooth
 bleak==0.22.3
@@ -1097,7 +1097,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.9.2
+habluetooth==3.10.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1543,7 +1543,7 @@ oemthermostat==1.1.1
 ohme==1.2.3
 
 # homeassistant.components.ollama
-ollama==0.4.5
+ollama==0.4.7
 
 # homeassistant.components.omnilogic
 omnilogic==0.4.5

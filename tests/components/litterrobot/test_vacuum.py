@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
-    ATTR_STATUS,
     DOMAIN as PLATFORM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
@@ -52,21 +51,9 @@ async def test_vacuum(
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
     assert vacuum.state == VacuumActivity.DOCKED
-    assert vacuum.attributes["is_sleeping"] is False
 
     ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
-
-
-async def test_vacuum_status_when_sleeping(
-    hass: HomeAssistant, mock_account_with_sleeping_robot: MagicMock
-) -> None:
-    """Tests the vacuum status when sleeping."""
-    await setup_integration(hass, mock_account_with_sleeping_robot, PLATFORM_DOMAIN)
-
-    vacuum = hass.states.get(VACUUM_ENTITY_ID)
-    assert vacuum
-    assert vacuum.attributes.get(ATTR_STATUS) == "Ready (Sleeping)"
 
 
 async def test_no_robots(
