@@ -51,3 +51,7 @@ flag_management:
       paths:
         - ".*"
       carryforward: true
+
+ignore:
+  - "homeassistant/scripts/benchmark"
+  - "homeassistant/scripts/macos"
