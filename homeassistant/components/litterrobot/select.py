@@ -21,22 +21,16 @@ from .hub import LitterRobotHub
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
 
-@dataclass(frozen=True)
-class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
-    """A class that describes robot select entity required keys."""
-
-    current_fn: Callable[[_RobotT], _CastTypeT | None]
-    options_fn: Callable[[_RobotT], list[_CastTypeT]]
-    select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
-
-
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class RobotSelectEntityDescription(
-    SelectEntityDescription, RequiredKeysMixin[_RobotT, _CastTypeT]
+    SelectEntityDescription, Generic[_RobotT, _CastTypeT]
 ):
     """A class that describes robot select entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
+    current_fn: Callable[[_RobotT], _CastTypeT | None]
+    options_fn: Callable[[_RobotT], list[_CastTypeT]]
+    select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
 
 
 ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
@@ -51,12 +45,14 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
     LitterRobot4: RobotSelectEntityDescription[LitterRobot4, str](
         key="panel_brightness",
         translation_key="brightness_level",
-        current_fn=lambda robot: bri.name.lower()
-        if (bri := robot.panel_brightness) is not None
-        else None,
+        current_fn=(
+            lambda robot: bri.name.lower()
+            if (bri := robot.panel_brightness) is not None
+            else None
+        ),
         options_fn=lambda _: [level.name.lower() for level in BrightnessLevel],
-        select_fn=lambda robot, opt: robot.set_panel_brightness(
-            BrightnessLevel[opt.upper()]
+        select_fn=(
+            lambda robot, opt: robot.set_panel_brightness(BrightnessLevel[opt.upper()])
         ),
     ),
     FeederRobot: RobotSelectEntityDescription[FeederRobot, float](
