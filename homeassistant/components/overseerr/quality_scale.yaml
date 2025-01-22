@@ -38,7 +38,7 @@ rules:
     comment: Handled by the coordinator
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
@@ -61,9 +61,9 @@ rules:
     status: exempt
     comment: |
       This integration has a fixed single device.
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
