@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry, snapshot_platform
     ("fixture_type", "fixture_data"),
     [
         ("type:boiler", "vicare/Vitodens300W.json"),
-        # ("type:heatpump", "vicare/Vitocal250A.json"),
+        ("type:heatpump", "vicare/Vitocal250A.json"),
         ("type:ventilation", "vicare/ViAir300F.json"),
     ],
 )
