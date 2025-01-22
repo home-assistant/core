@@ -200,6 +200,7 @@ MOCK_CONFIG = {
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
     "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
+    "script:1": {"id": 1, "name": "test_script.js", "enable": True},
 }
 
 
@@ -331,6 +332,13 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "script:1": {
+        "id": 1,
+        "running": True,
+        "mem_used": 826,
+        "mem_peak": 1666,
+        "mem_free": 24360,
+    },
     "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
@@ -342,6 +350,22 @@ MOCK_STATUS_RPC = {
     "voltmeter:100": {"voltage": 4.321, "xvoltage": 12.34},
     "wifi": {"rssi": -63},
 }
+
+MOCK_SCRIPT = """"
+function eventHandler(event, userdata) {
+  if (typeof event.component !== "string")
+    return;
+
+  let component = event.component.substring(0, 5);
+  if (component === "input") {
+    let id = Number(event.component.substring(6));
+    Shelly.emitEvent("input_event", { id: id });
+  }
+}
+
+Shelly.addEventHandler(eventHandler);
+Shelly.emitEvent("script_start");
+"""
 
 
 @pytest.fixture(autouse=True)
@@ -426,6 +450,7 @@ def _mock_rpc_device(version: str | None = None):
         firmware_version="some fw string",
         initialized=True,
         connected=True,
+        script_getcode=AsyncMock(side_effect=lambda script_id: {"data": MOCK_SCRIPT}),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

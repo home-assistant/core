@@ -217,5 +217,10 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
         if event["id"] == self.input_index:
-            self._trigger_event(event["event"], event.get("data"))
+            event_type = event["event"]
+            if event_type not in self.event_types:
+                # This can happen if we didn't find this event type in the script
+                return
+
+            self._trigger_event(event_type, event.get("data"))
             self.async_write_ha_state()
