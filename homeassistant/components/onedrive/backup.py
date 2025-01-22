@@ -110,7 +110,8 @@ class OneDriveBackupAgent(BackupAgent):
         self.name = entry.title
 
     @handle_backup_errors
-    async def async_download_backup( self,backup_id: str,**kwargs: Any ) -> AsyncIterator[bytes]:
+    async def async_download_backup( self,backup_id: str,
+                                    **kwargs: Any ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         # this forces the query to return a raw httpx response, but breaks typing
         request_config = (
