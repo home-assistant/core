@@ -12,7 +12,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.webhook import async_generate_id
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -67,14 +67,26 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                 if error:
                     errors["base"] = error
                 else:
-                    return self.async_create_entry(
-                        title="Overseerr",
+                    if self.source == SOURCE_USER:
+                        return self.async_create_entry(
+                            title="Overseerr",
+                            data={
+                                CONF_HOST: host,
+                                CONF_PORT: port,
+                                CONF_SSL: url.scheme == "https",
+                                CONF_API_KEY: user_input[CONF_API_KEY],
+                                CONF_WEBHOOK_ID: async_generate_id(),
+                            },
+                        )
+                    reconfigure_entry = self._get_reconfigure_entry()
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
                         data={
+                            **reconfigure_entry.data,
                             CONF_HOST: host,
                             CONF_PORT: port,
                             CONF_SSL: url.scheme == "https",
                             CONF_API_KEY: user_input[CONF_API_KEY],
-                            CONF_WEBHOOK_ID: async_generate_id(),
                         },
                     )
         return self.async_show_form(
@@ -116,3 +128,9 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()
