@@ -63,7 +63,7 @@ async def test_entry_not_setup(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.litterrobot.hub.Account.connect",
+        "homeassistant.components.litterrobot.coordinator.Account.connect",
         side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

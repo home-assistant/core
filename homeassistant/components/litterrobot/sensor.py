@@ -19,7 +19,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfMass
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
@@ -159,12 +159,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        LitterRobotSensorEntity(robot=robot, hub=hub, description=description)
-        for robot in hub.account.robots
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotSensorEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
         for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
         if isinstance(robot, robot_type)
         for description in entity_descriptions
-    ]
-    async_add_entities(entities)
+    )
