@@ -61,6 +61,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
+        name="Light Level",
         translation_key="light_level",
         native_unit_of_measurement="Level",
         state_class=SensorStateClass.MEASUREMENT,
