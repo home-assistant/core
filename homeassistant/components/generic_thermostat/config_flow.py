@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import timedelta
 from typing import Any, cast
 
 import voluptuous as vol
@@ -12,7 +13,9 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDevic
 from homeassistant.const import CONF_NAME, DEGREE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
+    SchemaFlowError,
     SchemaFlowFormStep,
 )
 
@@ -94,13 +97,30 @@ CONFIG_SCHEMA = {
 }
 
 
+async def _validate_config(
+    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
+) -> dict[str, Any]:
+    """Validate config."""
+    min_cycle = timedelta(**user_input[CONF_MIN_DUR])
+    max_cycle = timedelta(**user_input[CONF_MAX_DUR])
+
+    if min_cycle >= max_cycle:
+        raise SchemaFlowError("min_max_runtime")
+
+    return user_input
+
+
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(vol.Schema(CONFIG_SCHEMA), next_step="presets"),
     "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA), next_step="presets"),
+    "init": SchemaFlowFormStep(
+        vol.Schema(OPTIONS_SCHEMA),
+        validate_user_input=_validate_config,
+        next_step="presets",
+    ),
     "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 

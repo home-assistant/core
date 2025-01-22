@@ -170,7 +170,6 @@ async def _async_setup_config(
     target_temp: float | None = config.get(CONF_TARGET_TEMP)
     ac_mode: bool | None = config.get(CONF_AC_MODE)
     min_cycle_duration: timedelta | None = config.get(CONF_MIN_DUR)
-    # how do we ensure `max_cycle_duration` is greater than `min_cycle_duration`?
     max_cycle_duration: timedelta | None = config.get(CONF_MAX_DUR)
     cycle_cooldown: timedelta | None = config.get(CONF_DUR_COOLDOWN)
     cold_tolerance: float = config[CONF_COLD_TOLERANCE]
@@ -535,6 +534,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self.heater_entity_id,
                     self.max_cycle_duration,
                 )
+                if self._max_cycle_callback:
+                    self._max_cycle_callback()
+                    self._max_cycle_callback = None
                 await self._async_heater_turn_off()
                 return
 
