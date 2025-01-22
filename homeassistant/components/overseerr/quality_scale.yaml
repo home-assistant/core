@@ -62,8 +62,14 @@ rules:
     comment: |
       This integration has a fixed single device.
   entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
+  entity-device-class:
+    status: exempt
+    comment: |
+      This integration has no relevant device class to use.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration has no unpopular entities to disable.
   entity-translations: done
   exception-translations: done
   icon-translations: done
