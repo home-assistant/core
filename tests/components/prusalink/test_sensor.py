@@ -1,7 +1,7 @@
 """Test Prusalink sensors."""
 
 from datetime import UTC, datetime
-from unittest.mock import PropertyMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -27,16 +27,11 @@ from homeassistant.setup import async_setup_component
 @pytest.fixture(autouse=True)
 def setup_sensor_platform_only():
     """Only setup sensor platform."""
-    with (
-        patch("homeassistant.components.prusalink.PLATFORMS", [Platform.SENSOR]),
-        patch(
-            "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-            PropertyMock(return_value=True),
-        ),
-    ):
+    with patch("homeassistant.components.prusalink.PLATFORMS", [Platform.SENSOR]):
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) -> None:
     """Test sensors while no job active."""
     assert await async_setup_component(hass, "prusalink", {})
@@ -140,6 +135,7 @@ async def test_sensors_no_job(hass: HomeAssistant, mock_config_entry, mock_api) 
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_idle_job_mk3(
     hass: HomeAssistant,
     mock_config_entry,
@@ -248,6 +244,7 @@ async def test_sensors_idle_job_mk3(
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == REVOLUTIONS_PER_MINUTE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_active_job(
     hass: HomeAssistant,
     mock_config_entry,

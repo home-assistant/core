@@ -15,6 +15,8 @@ from .const import ATTR_DESCRIPTION, ATTR_TYPE
 from .coordinator import TVDataUpdateCoordinator
 from .entity import TrafikverketCameraEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -230,8 +230,6 @@ def async_host_input_received(
     )
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
     device = device_registry.async_get_device(identifiers=identifiers)
-    if device is None:
-        return
 
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
         _async_fire_access_control_event(hass, device, address, inp)
@@ -240,7 +238,10 @@ def async_host_input_received(
 
 
 def _async_fire_access_control_event(
-    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+    hass: HomeAssistant,
+    device: dr.DeviceEntry | None,
+    address: AddressType,
+    inp: InputType,
 ) -> None:
     """Fire access control event (transponder, transmitter, fingerprint, codelock)."""
     event_data = {
@@ -262,7 +263,10 @@ def _async_fire_access_control_event(
 
 
 def _async_fire_send_keys_event(
-    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+    hass: HomeAssistant,
+    device: dr.DeviceEntry | None,
+    address: AddressType,
+    inp: InputType,
 ) -> None:
     """Fire send_keys event."""
     for table, action in enumerate(inp.actions):

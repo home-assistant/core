@@ -149,7 +149,7 @@ async def _async_wait_for_initialization(
     while (
         fireplace.data.ipv4_address == "127.0.0.1" and fireplace.data.serial == "unset"
     ):
-        LOGGER.debug(f"Waiting for fireplace to initialize [{fireplace.read_mode}]")
+        LOGGER.debug("Waiting for fireplace to initialize [%s]", fireplace.read_mode)
         await asyncio.sleep(INIT_WAIT_TIME_SECONDS)
 
 

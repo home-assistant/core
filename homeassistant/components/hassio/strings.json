@@ -362,7 +362,7 @@
         },
         "addons": {
           "name": "Add-ons",
-          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
+          "description": "List of add-ons to include in the backup. Use the name slug of each add-on."
         },
         "folders": {
           "name": "Folders",
@@ -418,11 +418,11 @@
         },
         "folders": {
           "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::folders::description%]"
+          "description": "List of directories to restore from the backup."
         },
         "addons": {
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
+          "description": "List of add-ons to restore from the backup. Use the name slug of each add-on."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",

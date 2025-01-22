@@ -2,13 +2,14 @@
 
 from unittest.mock import AsyncMock, patch
 
-from universal_silabs_flasher.const import ApplicationType
-
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
     FirmwareGuess,
+    FlasherApplicationType,
     get_zha_device_path,
     guess_firmware_type,
+    probe_silabs_firmware_type,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -156,3 +157,27 @@ async def test_guess_firmware_type(hass: HomeAssistant) -> None:
         assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
             is_running=True, firmware_type=ApplicationType.CPC, source="multiprotocol"
         )
+
+
+async def test_probe_silabs_firmware_type() -> None:
+    """Test probing Silabs firmware type."""
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.Flasher.probe_app_type",
+        side_effect=RuntimeError,
+    ):
+        assert (await probe_silabs_firmware_type("/dev/ttyUSB0")) is None
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.Flasher.probe_app_type",
+        side_effect=lambda self: setattr(self, "app_type", FlasherApplicationType.EZSP),
+        autospec=True,
+    ) as mock_probe_app_type:
+        # The application type constant is converted back and forth transparently
+        result = await probe_silabs_firmware_type(
+            "/dev/ttyUSB0", probe_methods=[ApplicationType.EZSP]
+        )
+        assert result is ApplicationType.EZSP
+
+        flasher = mock_probe_app_type.mock_calls[0].args[0]
+        assert flasher._probe_methods == [FlasherApplicationType.EZSP]
