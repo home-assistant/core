@@ -61,6 +61,7 @@ async def handle_info(
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+            "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
         },
     )
 
@@ -329,7 +330,8 @@ async def handle_config_info(
         {
             "config": config
             | {
-                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup
+                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+                "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
             }
         },
     )
