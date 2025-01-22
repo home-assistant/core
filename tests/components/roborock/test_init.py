@@ -15,6 +15,7 @@ from roborock import (
 
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -166,6 +167,7 @@ async def test_reauth_started(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
 async def test_remove_from_hass(
     hass: HomeAssistant,
     bypass_api_fixture,
@@ -190,6 +192,7 @@ async def test_remove_from_hass(
     assert not cleanup_map_storage.exists()
 
 
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
 async def test_oserror_remove_image(
     hass: HomeAssistant,
     bypass_api_fixture,
