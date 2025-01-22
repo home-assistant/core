@@ -39,7 +39,7 @@ def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
 async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
     coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
-    await coordinator.login(load_robots=True, subscribe_for_updates=True)
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     if platforms := get_platforms_for_robots(coordinator.account.robots):

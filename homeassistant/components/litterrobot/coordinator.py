@@ -42,27 +42,30 @@ class LitterRobotDataUpdateCoordinator(DataUpdateCoordinator[None]):
             update_interval=UPDATE_INTERVAL,
         )
 
+        self._connected = False
         self.account = Account(websession=async_get_clientsession(hass))
 
     async def _async_update_data(self) -> None:
         """Update all device states from the Litter-Robot API."""
+        if not self._connected:
+            await self._login()
         await self.account.refresh_robots()
 
-    async def login(
-        self, load_robots: bool = False, subscribe_for_updates: bool = False
-    ) -> None:
+    async def _login(self) -> None:
         """Login to Litter-Robot."""
         try:
             await self.account.connect(
                 username=self.config_entry.data[CONF_USERNAME],
                 password=self.config_entry.data[CONF_PASSWORD],
-                load_robots=load_robots,
-                subscribe_for_updates=subscribe_for_updates,
+                load_robots=True,
+                subscribe_for_updates=True,
             )
         except LitterRobotLoginException as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
         except LitterRobotException as ex:
             raise ConfigEntryNotReady("Unable to connect to Litter-Robot API") from ex
+        else:
+            self._connected = True
 
     def litter_robots(self) -> Generator[LitterRobot]:
         """Get Litter-Robots from the account."""
