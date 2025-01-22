@@ -1,15 +1,15 @@
 """Platform for number."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
 from ohme import ApiException, OhmeApiClient
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.const import PERCENTAGE
 
 from . import OhmeConfigEntry
 from .const import DOMAIN
@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 1
 class OhmeNumberDescription(OhmeEntityDescription, NumberEntityDescription):
     """Class describing Ohme number entities."""
 
-    set_fn: Callable[[OhmeApiClient, float], None]
+    set_fn: Callable[[OhmeApiClient, float], Awaitable[None]]
     value_fn: Callable[[OhmeApiClient], float]
 
 

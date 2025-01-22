@@ -1,25 +1,21 @@
 """Tests for numbers."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
-from ohme import ApiException
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform, ATTR_ENTITY_ID
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE,
+)
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from homeassistant.components.number import (
-    DOMAIN as NUMBER_DOMAIN,
-    SERVICE_SET_VALUE,
-    ATTR_VALUE,
-)
-
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_numbers(
