@@ -26,12 +26,12 @@ ATTR_DEVICE: Final = "device"
 CONF_SUBTYPE: Final = "subtype"
 
 INPUTS_EVENTS_TYPES: Final = {
-    "btn_down",
-    "btn_up",
-    "single_push",
-    "double_push",
-    "triple_push",
-    "long_push",
+    "button_down",
+    "button_up",
+    "button_single_push",
+    "button_double_push",
+    "button_triple_push",
+    "button_long_push",
 }
 
 INPUTS_EVENTS_SUBTYPES: Final = {

@@ -32,7 +32,14 @@ async def test_rpc_button(
     assert state
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["btn_down", "btn_up", "double_push", "long_push", "single_push", "triple_push"]
+        [
+            "button_down",
+            "button_up",
+            "button_double_push",
+            "button_long_push",
+            "button_single_push",
+            "button_triple_push",
+        ]
     )
     assert state.attributes.get(ATTR_EVENT_TYPE) is None
     assert state.attributes.get(ATTR_DEVICE_CLASS) == EventDeviceClass.BUTTON
@@ -47,7 +54,7 @@ async def test_rpc_button(
         {
             "events": [
                 {
-                    "event": "single_push",
+                    "event": "button_single_push",
                     "id": 1,
                 }
             ],
@@ -56,7 +63,7 @@ async def test_rpc_button(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
-    assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "button_single_push"
 
 
 async def test_rpc_event_removal(

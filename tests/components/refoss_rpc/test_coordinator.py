@@ -89,7 +89,7 @@ async def test_rpc_click_event(
         {
             "events": [
                 {
-                    "event": "single_push",
+                    "event": "button_single_push",
                     "id": 1,
                     "ts": 1736925488,
                 }
@@ -104,7 +104,7 @@ async def test_rpc_click_event(
         ATTR_DEVICE_ID: device.id,
         ATTR_DEVICE: "Test name",
         ATTR_CHANNEL: 1,
-        ATTR_CLICK_TYPE: "single_push",
+        ATTR_CLICK_TYPE: "button_single_push",
     }
 
 

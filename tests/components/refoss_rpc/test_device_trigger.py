@@ -40,12 +40,12 @@ async def test_get_triggers_rpc_device(
             "metadata": {},
         }
         for trigger_type in (
-            "btn_down",
-            "btn_up",
-            "single_push",
-            "double_push",
-            "triple_push",
-            "long_push",
+            "button_down",
+            "button_up",
+            "button_single_push",
+            "button_double_push",
+            "button_triple_push",
+            "button_long_push",
         )
     ]
 
@@ -76,12 +76,12 @@ async def test_if_fires_on_click_event_rpc_device(
                         CONF_PLATFORM: "device",
                         CONF_DOMAIN: DOMAIN,
                         CONF_DEVICE_ID: device.id,
-                        CONF_TYPE: "single_push",
+                        CONF_TYPE: "button_single_push",
                         CONF_SUBTYPE: "button1",
                     },
                     "action": {
                         "service": "test.automation",
-                        "data_template": {"some": "test_trigger_single_push"},
+                        "data_template": {"some": "test_trigger_button_single_push"},
                     },
                 },
             ]
@@ -90,11 +90,11 @@ async def test_if_fires_on_click_event_rpc_device(
 
     message = {
         CONF_DEVICE_ID: device.id,
-        ATTR_CLICK_TYPE: "single_push",
+        ATTR_CLICK_TYPE: "button_single_push",
         ATTR_CHANNEL: 1,
     }
     hass.bus.async_fire(EVENT_REFOSS_CLICK, message)
     await hass.async_block_till_done()
 
     assert len(service_calls) == 1
-    assert service_calls[0].data["some"] == "test_trigger_single_push"
+    assert service_calls[0].data["some"] == "test_trigger_button_single_push"

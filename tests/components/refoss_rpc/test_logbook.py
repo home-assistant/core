@@ -38,7 +38,7 @@ async def test_click_event_rpc_device(
                 {
                     ATTR_DEVICE_ID: device.id,
                     ATTR_DEVICE: "test1",
-                    ATTR_CLICK_TYPE: "single_push",
+                    ATTR_CLICK_TYPE: "button_single_push",
                     ATTR_CHANNEL: 1,
                 },
             ),
@@ -47,7 +47,7 @@ async def test_click_event_rpc_device(
                 {
                     ATTR_DEVICE_ID: "no_device_id",
                     ATTR_DEVICE: "test2",
-                    ATTR_CLICK_TYPE: "btn_down",
+                    ATTR_CLICK_TYPE: "button_down",
                     ATTR_CHANNEL: 1,
                 },
             ),
@@ -57,12 +57,13 @@ async def test_click_event_rpc_device(
     assert event1["name"] == "Refoss"
     assert event1["domain"] == DOMAIN
     assert (
-        event1["message"] == "'single_push' click event for test input Input was fired"
+        event1["message"]
+        == "'button_single_push' click event for test input Input was fired"
     )
 
     assert event2["name"] == "Refoss"
     assert event2["domain"] == DOMAIN
     assert (
         event2["message"]
-        == "'btn_down' click event for test2 channel 1 Input was fired"
+        == "'button_down' click event for test2 channel 1 Input was fired"
     )
