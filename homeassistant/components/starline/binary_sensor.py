@@ -43,8 +43,13 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     ),
     BinarySensorEntityDescription(
         key="run",
-        translation_key="is_running",
-        device_class=BinarySensorDeviceClass.RUNNING,
+        translation_key="ignition",
+        entity_registry_enabled_default=False,
+    ),
+    BinarySensorEntityDescription(
+        key="r_start",
+        translation_key="autostart",
+        entity_registry_enabled_default=False,
     ),
     BinarySensorEntityDescription(
         key="hfree",
