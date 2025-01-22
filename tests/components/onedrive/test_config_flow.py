@@ -19,6 +19,7 @@ from homeassistant.components.onedrive.const import (
     OAUTH_SCOPES,
 )
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -104,14 +105,14 @@ async def test_full_flow(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert result["title"] == "John Doe's OneDrive"
+    assert result["result"].unique_id == "mock_drive_id"
+    assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
-    (
-        "exception",
-        "error",
-    ),
+    ("exception", "error"),
     [
         (Exception, "unknown"),
         (APIError, "connection_error"),

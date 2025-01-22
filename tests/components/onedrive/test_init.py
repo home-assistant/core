@@ -29,10 +29,7 @@ async def test_load_unload_config_entry(
 
 
 @pytest.mark.parametrize(
-    (
-        "side_effect",
-        "state",
-    ),
+    ("side_effect", "state"),
     [
         (APIError(response_status_code=403), ConfigEntryState.SETUP_ERROR),
         (APIError(response_status_code=500), ConfigEntryState.SETUP_RETRY),
