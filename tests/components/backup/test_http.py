@@ -12,8 +12,8 @@ from aiohttp import web
 import pytest
 
 from homeassistant.components.backup import AddonInfo, AgentBackup, Folder
-from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import DATA_MANAGER, DOMAIN
 
 from .common import TEST_BACKUP_ABC123, BackupAgentTest, setup_backup_integration
 

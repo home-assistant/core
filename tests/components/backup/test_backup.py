@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, mock_open, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import DOMAIN
 from homeassistant.setup import async_setup_component
 
 from .common import TEST_BACKUP_ABC123, TEST_BACKUP_PATH_ABC123

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohasupervisor import SupervisorError
+from aiohasupervisor import SupervisorClient, SupervisorError
 from aiohasupervisor.models import (
     HomeAssistantUpdateOptions,
     OSUpdate,
@@ -18,9 +18,10 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, ATTR_NAME
+from homeassistant.const import ATTR_ICON, ATTR_NAME, __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -40,6 +41,7 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
+from .handler import get_supervisor_client
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     name="Update",
@@ -163,13 +165,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
-        try:
-            await self.coordinator.supervisor_client.store.update_addon(
-                self._addon_slug, StoreAddonUpdate(backup=backup)
-            )
-        except SupervisorError as err:
-            raise HomeAssistantError(f"Error updating {self.title}: {err}") from err
-
+        await update_addon(self.hass, self._addon_slug, backup, self.title)
         await self.coordinator.force_info_update_supervisor()
 
 
@@ -303,11 +299,87 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
+        await update_core(self.hass, version, backup)
+
+
+async def _default_agent(client: SupervisorClient) -> str:
+    """Return the default agent for creating a backup."""
+    mounts = await client.mounts.info()
+    default_mount = mounts.default_backup_mount
+    return f"hassio.{default_mount if default_mount is not None else 'local'}"
+
+
+async def update_addon(
+    hass: HomeAssistant, addon: str, backup: bool, addon_name: str | None
+) -> None:
+    """Update an addon.
+
+    Optionally make a backup before updating.
+    """
+    client = get_supervisor_client(hass)
+
+    if backup:
+        backup_manager = async_get_backup_manager(hass)
+
+        # Use the password from automatic settings if available
+        if backup_manager.config.data.create_backup.agent_ids:
+            password = backup_manager.config.data.create_backup.password
+        else:
+            password = None
+
         try:
-            await self.coordinator.supervisor_client.homeassistant.update(
-                HomeAssistantUpdateOptions(version=version, backup=backup)
+            await backup_manager.async_create_backup(
+                agent_ids=[await _default_agent(client)],
+                include_addons=[addon],
+                include_all_addons=False,
+                include_database=False,
+                include_folders=None,
+                include_homeassistant=False,
+                name=f"{addon_name or addon} {HAVERSION}",
+                password=password,
             )
-        except SupervisorError as err:
-            raise HomeAssistantError(
-                f"Error updating Home Assistant Core: {err}"
-            ) from err
+        except HomeAssistantError as err:
+            raise HomeAssistantError(f"Error creating backup: {err}") from err
+
+    try:
+        await client.store.update_addon(addon, StoreAddonUpdate(backup=False))
+    except SupervisorError as err:
+        raise HomeAssistantError(
+            f"Error updating {addon_name or addon}: {err}"
+        ) from err
+
+
+async def update_core(hass: HomeAssistant, version: str | None, backup: bool) -> None:
+    """Update core.
+
+    Optionally make a backup before updating.
+    """
+    client = get_supervisor_client(hass)
+
+    if backup:
+        backup_manager = async_get_backup_manager(hass)
+        try:
+            if backup_manager.config.data.create_backup.agent_ids:
+                # Create a backup with automatic settings
+                await backup_manager.async_create_automatic_backup()
+            else:
+                # Create a manual backup
+                await backup_manager.async_create_backup(
+                    agent_ids=[await _default_agent(client)],
+                    include_addons=None,
+                    include_all_addons=False,
+                    include_database=True,
+                    include_folders=None,
+                    include_homeassistant=True,
+                    name=f"Home Assistant Core {HAVERSION}",
+                    password=None,
+                )
+        except HomeAssistantError as err:
+            raise HomeAssistantError(f"Error creating backup: {err}") from err
+
+    try:
+        await client.homeassistant.update(
+            HomeAssistantUpdateOptions(version=version, backup=False)
+        )
+    except SupervisorError as err:
+        raise HomeAssistantError(f"Error updating Home Assistant Core: {err}") from err

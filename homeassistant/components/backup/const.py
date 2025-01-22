@@ -3,16 +3,8 @@
 from __future__ import annotations
 
 from logging import getLogger
-from typing import TYPE_CHECKING
-
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from .manager import BackupManager
 
 BUF_SIZE = 2**20 * 4  # 4MB
-DOMAIN = "backup"
-DATA_MANAGER: HassKey[BackupManager] = HassKey(DOMAIN)
 LOGGER = getLogger(__package__)
 
 EXCLUDE_FROM_BACKUP = [

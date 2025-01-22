@@ -7,8 +7,8 @@ from unittest.mock import patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.backup.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import DOMAIN
 
 from .common import setup_backup_integration
 

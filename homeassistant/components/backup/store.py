@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.backup import DOMAIN
 from homeassistant.helpers.storage import Store
-
-from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .config import StoredBackupConfig

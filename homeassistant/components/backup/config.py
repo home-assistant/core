@@ -381,22 +381,11 @@ class BackupSchedule:
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
             manager.remove_next_backup_event = None
-            config_data = manager.config.data
             self._schedule_next(cron_pattern, manager)
 
             # create the backup
             try:
-                await manager.async_create_backup(
-                    agent_ids=config_data.create_backup.agent_ids,
-                    include_addons=config_data.create_backup.include_addons,
-                    include_all_addons=config_data.create_backup.include_all_addons,
-                    include_database=config_data.create_backup.include_database,
-                    include_folders=config_data.create_backup.include_folders,
-                    include_homeassistant=True,  # always include HA
-                    name=config_data.create_backup.name,
-                    password=config_data.create_backup.password,
-                    with_automatic_settings=True,
-                )
+                await manager.async_create_automatic_backup()
             except BackupManagerError as err:
                 LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001

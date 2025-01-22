@@ -24,7 +24,6 @@ from unittest.mock import (
 import pytest
 
 from homeassistant.components.backup import (
-    DOMAIN,
     AgentBackup,
     BackupAgentPlatformProtocol,
     BackupManager,
@@ -34,7 +33,6 @@ from homeassistant.components.backup import (
     backup as local_backup_platform,
 )
 from homeassistant.components.backup.agent import BackupAgentError
-from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
     BackupManagerError,
     BackupManagerState,
@@ -51,6 +49,7 @@ from homeassistant.components.backup.manager import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.backup import DATA_MANAGER, DOMAIN
 from homeassistant.setup import async_setup_component
 
 from .common import (

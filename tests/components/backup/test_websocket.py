@@ -17,7 +17,6 @@ from homeassistant.components.backup import (
     store,
 )
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
-from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import (
     CreateBackupEvent,
     CreateBackupState,
@@ -26,6 +25,7 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import DATA_MANAGER, DOMAIN
 from homeassistant.setup import async_setup_component
 
 from .common import (

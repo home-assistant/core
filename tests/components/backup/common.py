@@ -8,15 +8,14 @@ from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
-    DOMAIN,
     AddonInfo,
     AgentBackup,
     BackupAgent,
     BackupAgentPlatformProtocol,
     Folder,
 )
-from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import DATA_MANAGER, DOMAIN
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
