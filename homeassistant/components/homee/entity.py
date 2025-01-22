@@ -73,19 +73,20 @@ class HomeeNodeEntity(Entity):
         self._attr_unique_id = f"{entry.unique_id}-{node.id}"
         self._entry = entry
 
-        self._attr_device_info = (
-            DeviceInfo(
+        ## Homee hub itself has node-id -1
+        if node.id == -1:
+            self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, entry.runtime_data.settings.uid)},
             )
-            if node.id == -1
-            else DeviceInfo(
+        else:
+            self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, f"{entry.unique_id}-{node.id}")},
                 name=node.name,
                 model=get_name_for_enum(NodeProfile, node.profile),
                 sw_version=self._get_software_version(),
                 via_device=(DOMAIN, entry.runtime_data.settings.uid),
             )
-        )
+
         self._host_connected = entry.runtime_data.connected
 
     async def async_added_to_hass(self) -> None:
@@ -116,13 +117,13 @@ class HomeeNodeEntity(Entity):
                 AttributeType.FIRMWARE_REVISION
             )
         ) is not None:
-            return f"{attribute.get_value()}"
+            return str(attribute.get_value())
         if (
             attribute := self._node.get_attribute_by_type(
                 AttributeType.SOFTWARE_REVISION
             )
         ) is not None:
-            return f"{attribute.get_value()}"
+            return str(attribute.get_value())
 
         return None
 
