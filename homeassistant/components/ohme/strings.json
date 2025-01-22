@@ -52,7 +52,7 @@
     },
     "number": {
       "target_percentage": {
-        "name": "Target Percentage"
+        "name": "Target percentage"
       }
     },
     "sensor": {
