@@ -37,15 +37,11 @@ rules:
     status: todo
     comment: |
       set `PARALLEL_UPDATES` in lock.py
-  reauthentication-flow:
-    status: todo
-    comment: |
-      Consider using snapshots for fixating all the entities a device creates.
-      E.g., reconfiguring device encryption key or password
+  reauthentication-flow: todo
   test-coverage:
     status: todo
     comment: |
-      To be completed.
+      Consider using snapshots for fixating all the entities a device creates.
 
   # Gold
   devices: done
