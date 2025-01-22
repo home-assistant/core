@@ -1454,9 +1454,6 @@ pyElectra==1.2.4
 # homeassistant.components.homee
 pyHomee==1.2.0
 
-# homeassistant.components.openhardwaremonitor
-pyOpenHardwareMonitor==0.1.3
-
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
 
@@ -1760,6 +1757,9 @@ pyobihai==1.4.2
 
 # homeassistant.components.octoprint
 pyoctoprintapi==0.1.12
+
+# homeassistant.components.openhardwaremonitor
+pyopenhardwaremonitor==0.1.6
 
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
