@@ -28,9 +28,9 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import color as color_util
 
-from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import LightSchema
 from .storage.const import (
     CONF_COLOR_TEMP_MAX,

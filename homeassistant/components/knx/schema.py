@@ -4,13 +4,29 @@ from __future__ import annotations
 
 from abc import ABC
 from collections import OrderedDict
-from typing import ClassVar, Final
+from collections.abc import Callable, Mapping
+from functools import cache
+from typing import (
+    Any,
+    ClassVar,
+    Final,
+    Protocol,
+    Self,
+    TypedDict,
+    cast,
+    runtime_checkable,
+)
 
 import voluptuous as vol
+from voluptuous_serialize import UNSUPPORTED, convert as volConvert
 from xknx.devices.climate import FanSpeedMode, SetpointShiftMode
 from xknx.dpt import DPTBase, DPTNumeric
 from xknx.dpt.dpt_20 import HVACControllerMode, HVACOperationMode
-from xknx.exceptions import ConversionError, CouldNotParseTelegram
+from xknx.exceptions import ConversionError, CouldNotParseAddress, CouldNotParseTelegram
+from xknx.telegram.address import (
+    GroupAddress as XKnxGroupAddress,
+    parse_device_group_address,
+)
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
@@ -39,6 +55,7 @@ from homeassistant.const import (
     CONF_PAYLOAD,
     CONF_TYPE,
     CONF_VALUE_TEMPLATE,
+    EntityCategory,
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
@@ -57,6 +74,16 @@ from .const import (
     KNX_ADDRESS,
     ColorTempModes,
     FanZeroMode,
+)
+from .storage.const import (
+    CONF_DEVICE_INFO,
+    CONF_DPT,
+    CONF_DPT_MAIN,
+    CONF_DPT_SUB,
+    CONF_DPT_UNIT,
+    CONF_GA_PASSIVE,
+    CONF_GA_STATE,
+    CONF_GA_WRITE,
 )
 from .validation import (
     backwards_compatible_xknx_climate_enum_member,
@@ -985,3 +1012,606 @@ class WeatherSchema(KNXPlatformSchema):
             }
         ),
     )
+
+
+# NEW
+
+
+@runtime_checkable
+class VolValidator(Protocol):
+    """Protocol for a Voluptuous-compatible validator.
+
+    This Protocol defines the structure for classes that perform validation
+    of dictionaries against a predefined schema. Implementing classes must
+    provide a `__call__` method that validates the input, processes it, and
+    returns a cleaned or transformed version of the data.
+
+    The primary purpose is to ensure that classes implementing this Protocol
+    are compatible with the Voluptuous library, raising `vol.Invalid` for any
+    validation errors.
+    """
+
+    def __call__(self, value: Any) -> Any:
+        """Validate and process a dictionary based on the implemented schema.
+
+        This method checks if the provided dictionary adheres to the expected
+        schema rules. If validation is successful, it may also perform data
+        transformations or cleaning before returning the result. In case of
+        validation errors, a `vol.Invalid` exception is raised.
+
+        Args:
+            value (dict[str, Any]): The input dictionary to validate.
+
+        Returns:
+            dict[str, Any]: The validated and potentially transformed dictionary.
+
+        Raises:
+            vol.Invalid: If the input does not conform to the expected schema or
+            contains invalid data.
+
+        """
+
+
+@runtime_checkable
+class SerializableSchema(Protocol):
+    """Protocol for serializing Voluptuous schema definitions.
+
+    This Protocol defines a structure for classes that implement schema serialization.
+    The `serialize` method allows the transformation of a Voluptuous schema definition
+    into a JSON-serializable dictionary format. This is particularly useful for
+    providing schema details to frontend applications or APIs for dynamic form generation.
+
+    Any class implementing this Protocol must provide a `serialize` method that:
+      - Processes the class (`cls`) and an instance (`value`) of the same type.
+      - Handles nested or complex schema definitions using a customizable `convert` function.
+      - Returns a dictionary representation of the schema that adheres to JSON serialization rules.
+    """
+
+    @classmethod
+    def serialize(cls, value: Self, convert: Callable[[Any], Any]) -> dict[str, Any]:
+        """Serialize a Voluptuous schema definition into a JSON-compatible dictionary.
+
+        This method transforms an instance of the schema into a dictionary format
+        that is ready for use in frontend applications or APIs. The `convert` parameter
+        allows recursive handling of nested schemas or custom elements that require
+        special processing.
+
+        Args:
+            cls (type[Self]): The schema class calling this method. This ensures
+                type consistency between the schema class and the provided instance.
+            value (Self): An instance of the schema class, containing the schema
+                definition and any associated data.
+            convert (Callable[[Any], Any]): A function to process nested or custom
+                schema elements recursively. This ensures compatibility with complex
+                or deeply nested schema structures.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of the schema,
+            ready for JSON serialization and suitable for frontend consumption.
+
+        Raises:
+            vol.Invalid: If the schema definition or its associated data is invalid
+            or does not meet the required constraints.
+
+        """
+
+
+class ConfigGroupSchema(VolValidator, SerializableSchema):
+    """Data entry flow section."""
+
+    class UIOptions(TypedDict, total=False):
+        """Represents the configuration for a ConfigGroup in the UI."""
+
+        collapsible: bool  # Indicates whether the section can be collapsed by the user.
+        collapsed: bool  # Specifies whether the section is initially collapsed.
+
+    UI_OPTIONS_SCHEMA: Final[vol.Schema] = vol.Schema(
+        vol.All(
+            {
+                vol.Optional("collapsible", default=False): bool,
+                vol.Optional("collapsed", default=False): bool,
+            },
+            lambda value: value
+            if value["collapsible"] or not value["collapsed"]
+            else (_ for _ in ()).throw(
+                vol.Invalid("'collapsed' can only be True if 'collapsible' is True.")
+            ),
+        )
+    )
+
+    def __init__(self, schema: vol.Schema, ui_options: UIOptions | None = None) -> None:
+        """Initialize."""
+        self.schema = schema
+        self.ui_options: ConfigGroupSchema.UIOptions = self.UI_OPTIONS_SCHEMA(
+            ui_options or {}
+        )
+
+    def __call__(self, value: Any) -> Any:
+        """Validate value against schema."""
+        return self.schema(value)
+
+    @classmethod
+    def serialize(
+        cls, value: ConfigGroupSchema, convert: Callable[[Any], Any]
+    ) -> dict[str, Any]:
+        """Convert Section schema into a dictionary representation."""
+
+        result: dict[str, Any] = {
+            "type": "config_group",
+            "ui_options": {
+                "collapsible": value.ui_options["collapsible"],
+            },
+            "properties": convert(value.schema),
+        }
+
+        # Only add collapsed state if collapsible is True
+        if value.ui_options["collapsible"]:
+            result["ui_options"]["collapsed"] = value.ui_options["collapsed"]
+        return result
+
+
+class GroupAddressSchema(VolValidator, SerializableSchema):
+    """Voluptuous-compatible validator for a KNX group address."""
+
+    def __init__(
+        self, allow_none: bool = False, allow_internal_address: bool = True
+    ) -> None:
+        """Initialize."""
+        self.allow_none = allow_none
+        self.allow_internal_address = allow_internal_address
+
+    def __call__(self, value: str | int | None) -> str | int | None:
+        """Validate that the value is parsable as GroupAddress or InternalGroupAddress."""
+        if self.allow_none and value is None:
+            return value
+
+        if not isinstance(value, (str, int)):
+            raise vol.Invalid(
+                f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
+            )
+        try:
+            if not self.allow_internal_address:
+                XKnxGroupAddress(value)
+            else:
+                parse_device_group_address(value)
+
+        except CouldNotParseAddress as exc:
+            raise vol.Invalid(
+                f"'{value}' is not a valid KNX group address: {exc.message}"
+            ) from exc
+        return value
+
+    @classmethod
+    def serialize(
+        cls,
+        value: GroupAddressSchema,
+        convert: Callable[[vol.Schema], Any],
+    ) -> dict[str, Any]:
+        """Convert GroupAddress schema into a dictionary representation."""
+        return {
+            "type": "group_address",
+            "allow_none": value.allow_none,
+            "allow_internal_address": value.allow_internal_address,
+        }
+
+
+class GroupAddressListSchema(VolValidator, SerializableSchema):
+    """Voluptuous-compatible validator for a collection of KNX group addresses."""
+
+    schema: vol.Schema
+
+    def __init__(self, allow_internal_addresses: bool = True) -> None:
+        """Initialize the group address collection."""
+        self.allow_internal_addresses = allow_internal_addresses
+        self.schema = self._build_schema()
+
+    def __call__(self, value: Any) -> Any:
+        """Validate the passed data."""
+        return self.schema(value)
+
+    def _build_schema(self) -> vol.Schema:
+        """Create the schema based on configuration."""
+        return vol.Schema(
+            vol.Any(
+                [
+                    GroupAddressSchema(
+                        allow_internal_address=self.allow_internal_addresses
+                    )
+                ],
+                vol.All(  # Coerce `None` to an empty list if passive is allowed
+                    vol.IsFalse(), vol.SetTo(list)
+                ),
+            )
+        )
+
+    @classmethod
+    def serialize(
+        cls, value: GroupAddressListSchema, convert: Callable[[Any], Any]
+    ) -> dict[str, Any]:
+        """Convert GroupAddressCollection schema into a dictionary representation."""
+        return {
+            "type": "group_address_list",
+            "items": convert(
+                GroupAddressSchema(
+                    allow_internal_address=value.allow_internal_addresses
+                )
+            ),
+        }
+
+
+class SyncStateSchema(VolValidator, SerializableSchema):
+    """Voluptuous-compatible validator for sync state selector."""
+
+    SCHEMA: Final = vol.Any(
+        vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
+        vol.Match(r"^(init|expire|every)( \d*)?$"),
+        # Ensure that the value is a type boolean and not coerced to a boolean
+        lambda v: v
+        if isinstance(v, bool)
+        else (_ for _ in ()).throw(vol.Invalid("Invalid value")),
+    )
+
+    def __call__(self, value: Any) -> Any:
+        """Validate value against schema."""
+        return self.SCHEMA(value)
+
+    @classmethod
+    def serialize(
+        cls, value: SyncStateSchema, convert: Callable[[Any], Any]
+    ) -> dict[str, Any]:
+        """Convert SyncState schema into a dictionary representation."""
+        return {"type": "sync_state"}
+
+
+class DatapointTypeSchema(VolValidator, SerializableSchema):
+    """Class representing a Data Point Type (DPT) used in KNX.
+
+    This class provides functionality to validate and process DPT configurations.
+    """
+
+    SCHEMA: Final[vol.Schema] = vol.Schema(
+        {
+            vol.Required(CONF_DPT_MAIN): int,
+            vol.Optional(CONF_DPT_SUB, default=None): vol.Any(None, int),
+            vol.Remove(CONF_DPT_UNIT): str,
+            vol.Remove(CONF_DPT): str,
+        }
+    )
+
+    def __init__(self, allowed_dpts: tuple[type[DPTBase], ...] | None = None) -> None:
+        """Initialize the DPT instance.
+
+        Args:
+            allowed_dpts: A tuple of allowed XKNX DPT classes. If None, all DPTs are allowed.
+
+        """
+        self.allowed_dpts = allowed_dpts
+
+    def __call__(self, value: Any) -> Any:
+        """Validate and process the input value against the DPT schema.
+
+        Args:
+            value: The input value to validate and process.
+
+        Returns:
+            The validated value if it matches one of the allowed DPTs.
+
+        Raises:
+            vol.Invalid: If the input value does not match any allowed DPT.
+
+        """
+        # Validate the input value using the schema
+        validated_value = self.SCHEMA(value)
+
+        # Return the validated value if no DPTs are specified
+        if self.allowed_dpts is None:
+            return validated_value
+
+        # Check if the value matches any allowed DPT
+        for dpt in self.allowed_dpts:
+            if dpt.dpt_main_number == validated_value[
+                CONF_DPT_MAIN
+            ] and dpt.dpt_sub_number == validated_value.get(CONF_DPT_SUB):
+                return validated_value
+
+        # Raise an error if no matching DPT is found
+        allowed_dpts_str = ", ".join(
+            formatted
+            for dpt in self.allowed_dpts
+            if (formatted := self.format_dpt(dpt)) is not None
+        )
+        raise vol.Invalid(
+            f"DPT not allowed. Got '{value}'. Expected one of: {allowed_dpts_str}"
+        )
+
+    @classmethod
+    def serialize(
+        cls, value: DatapointTypeSchema, convert: Callable[[Any], Any]
+    ) -> dict[str, Any]:
+        """Serialize a DPT instance into a dictionary format.
+
+        Args:
+            value: The value to serialize, expected to be an instance of this class.
+            convert: A recursive function that serializes nested or custom schema elements.
+
+        Returns:
+            A dictionary representation of the DPT instance.
+
+        """
+        schema = {
+            "type": "dpt",
+            "properties": convert(cls.SCHEMA),
+        }
+
+        # Add options only if allowed_dpts is not None
+        if value.allowed_dpts:
+            schema["options"] = tuple(
+                {
+                    CONF_DPT: cls.format_dpt(dpt),
+                    CONF_DPT_MAIN: dpt.dpt_main_number,
+                    CONF_DPT_SUB: dpt.dpt_sub_number,
+                    CONF_DPT_UNIT: dpt.unit,
+                }
+                for dpt in value.allowed_dpts
+            )
+
+        return schema
+
+    @staticmethod
+    def format_dpt(dpt: type[DPTBase]) -> str | None:
+        """Generate a string representation of a DPT class.
+
+        Args:
+            dpt: A DPT class type.
+
+        Returns:
+            A formatted string representation of the DPT class, including both main
+            and sub numbers (e.g., '1.002'). If the sub number is None, only the
+            main number is included (e.g., '14').
+            None: If the DPT class does not have distinct DPT numbers.
+
+        """
+        if not issubclass(dpt, DPTBase) or not dpt.has_distinct_dpt_numbers():
+            return None
+
+        return (
+            f"{dpt.dpt_main_number}.{dpt.dpt_sub_number:03}"
+            if dpt.dpt_sub_number is not None
+            else f"{dpt.dpt_main_number}"
+        )
+
+    @staticmethod
+    @cache
+    def derive_subtypes(*types: type[DPTBase]) -> tuple[type[DPTBase], ...]:
+        """Extract all distinct DPT types derived from the given DPT classes.
+
+        This function takes one or more DPT classes as input and recursively
+        gathers all types that are derived from these classes.
+
+        Args:
+            types: One or more DPT classes to process.
+
+        Returns:
+            A tuple of all distinct DPTs found in the class tree of the provided classes.
+
+        """
+        return tuple(
+            dpt
+            for dpt_class in types
+            for dpt in dpt_class.dpt_class_tree()
+            if dpt.has_distinct_dpt_numbers()
+        )
+
+
+class GroupAddressConfigSchema(VolValidator, SerializableSchema):
+    """Voluptuous-compatible validator for the group address config."""
+
+    schema: vol.Schema
+
+    def __init__(
+        self,
+        write: bool = True,
+        state: bool = True,
+        passive: bool = True,
+        write_required: bool = False,
+        state_required: bool = False,
+        allowed_dpts: tuple[type[DPTBase], ...] | None = None,
+    ) -> None:
+        """Initialize the group address selector."""
+        self.write = write
+        self.state = state
+        self.passive = passive
+        self.write_required = write_required
+        self.state_required = state_required
+        self.allowed_dpts = allowed_dpts
+
+        self.schema = self.build_schema()
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        return self.schema(data)
+
+    def build_schema(self) -> vol.Schema:
+        """Create the schema based on configuration."""
+        schema: dict[vol.Marker, Any] = {}  # will be modified in-place
+        self._add_group_addresses(schema)
+        self._add_passive(schema)
+        self._add_dpt(schema)
+        return vol.Schema(schema)
+
+    def _add_group_addresses(self, schema: dict[vol.Marker, Any]) -> None:
+        """Add basic group address items to the schema."""
+
+        items = [
+            (CONF_GA_WRITE, self.write, self.write_required),
+            (CONF_GA_STATE, self.state, self.state_required),
+        ]
+
+        for key, allowed, required in items:
+            if not allowed:
+                schema[vol.Remove(key)] = object
+            elif required:
+                schema[vol.Required(key)] = GroupAddressSchema()
+            else:
+                schema[vol.Optional(key, default=None)] = GroupAddressSchema(
+                    allow_none=True
+                )
+
+    def _add_passive(self, schema: dict[vol.Marker, Any]) -> None:
+        """Add passive group addresses validator to the schema."""
+        if self.passive:
+            schema[vol.Optional(CONF_GA_PASSIVE, default=list)] = (
+                GroupAddressListSchema()
+            )
+        else:
+            schema[vol.Remove(CONF_GA_PASSIVE)] = object
+
+    def _add_dpt(self, schema: dict[vol.Marker, Any]) -> None:
+        """Add DPT validator to the schema."""
+        if self.allowed_dpts is None:
+            schema[vol.Remove(CONF_DPT)] = object
+        else:
+            schema[vol.Required(CONF_DPT)] = DatapointTypeSchema(self.allowed_dpts)
+
+    @classmethod
+    def serialize(
+        cls,
+        value: GroupAddressConfigSchema,
+        convert: Callable[[Any], Any],
+    ) -> dict[str, Any]:
+        """Convert GroupAddressConfig schema into a dictionary representation."""
+
+        return {
+            "type": "group_address_config",
+            "properties": convert(value.build_schema()),
+        }
+
+
+class EntityConfigGroupSchema(ConfigGroupSchema):
+    """Voluptuous-compatible validator for the entity configuration group."""
+
+    def __init__(
+        self, allowed_categories: tuple[EntityCategory, ...] | None = None
+    ) -> None:
+        """Initialize the schema with optional allowed categories.
+
+        :param allowed_categories: Tuple of allowed EntityCategory values.
+        """
+
+        allowed_categories = allowed_categories or tuple(EntityCategory)
+
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_NAME): str,
+                vol.Optional(CONF_ENTITY_CATEGORY, default=None): vol.Maybe(
+                    vol.In(allowed_categories)
+                ),
+                vol.Optional(CONF_DEVICE_INFO, default=None): vol.Maybe(str),
+            },
+        )
+
+        super().__init__(schema)
+
+
+class PlatformConfigSchema(VolValidator, SerializableSchema):
+    """Data entry flow section."""
+
+    def __init__(
+        self,
+        platform: str,
+        config_schema: vol.Schema,
+    ) -> None:
+        """Initialize."""
+        self.schema = vol.Schema(
+            {
+                vol.Required("platform"): platform,
+                vol.Required("config"): ConfigGroupSchema(config_schema),
+            }
+        )
+
+    def __call__(self, value: Any) -> dict[str, Any]:
+        """Validate value against schema."""
+        return cast(dict, self.schema(value))
+
+    @classmethod
+    def serialize(
+        cls, value: PlatformConfigSchema, convert: Callable[[Any], Any]
+    ) -> dict[str, Any]:
+        """Convert Section schema into a dictionary representation."""
+
+        return {
+            "type": "platform_config",
+            "properties": convert(value.schema),
+        }
+
+
+class SchemaSerializer:
+    """A utility class to serialize different KNX-related object types (e.g., GASelector or Section)."""
+
+    _supported_types: tuple[type[SerializableSchema], ...] = (
+        ConfigGroupSchema,
+        DatapointTypeSchema,
+        GroupAddressConfigSchema,
+        GroupAddressListSchema,
+        GroupAddressSchema,
+        PlatformConfigSchema,
+        SyncStateSchema,
+    )
+
+    @classmethod
+    def convert(cls, schema: Any) -> Any:
+        """Convert a Voluptuous schema into a dictionary.
+
+        :param schema: A Voluptuous schema to be converted.
+        :return: A dictionary representing the schema.
+        """
+        return volConvert(schema, custom_serializer=cls._serializer)
+
+    @classmethod
+    def _serializer(cls, value: Any) -> Any | object:
+        """Dispatch method that determines how to serialize the provided value based on its type.
+
+        :param value: The object to be serialized. It can be a GASelector, a Section,
+                      or an unsupported object type.
+        :return: A dictionary representing the serialized form of the object.
+                 If the object type is unsupported, returns `UNSUPPORTED`.
+        """
+        for supported_type in cls._supported_types:
+            if isinstance(value, supported_type) or (
+                isinstance(value, type) and issubclass(value, supported_type)
+            ):
+                return supported_type.serialize(value, cls.convert)
+
+        if isinstance(value, type):
+            return {}
+
+        if isinstance(value, Mapping):
+            val = []
+
+            for key, val1 in value.items():
+                if isinstance(key, vol.Remove):
+                    continue
+
+                description = None
+                if isinstance(key, vol.Marker):
+                    pkey = key.schema
+                    description = key.description
+                else:
+                    pkey = key
+
+                pval = cls.convert(val1)
+                pval["name"] = pkey
+                if description is not None:
+                    pval["description"] = description
+
+                if isinstance(key, (vol.Required, vol.Optional)):
+                    pval[key.__class__.__name__.lower()] = True
+
+                    if key.default is not vol.UNDEFINED and callable(key.default):
+                        pval["default"] = key.default()
+
+                val.append(pval)
+
+            return val
+
+        return UNSUPPORTED

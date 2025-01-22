@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass, fields, is_dataclass
+from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
 
 from xknx.devices import Device as XknxDevice
 
@@ -17,7 +19,7 @@ from .storage.config_store import PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 
 class KnxUiEntityPlatformController(PlatformControllerBase):
@@ -58,7 +60,7 @@ class _KnxEntityBase(Entity):
     @property
     def name(self) -> str:
         """Return the name of the KNX device."""
-        return self._device.name
+        return self._device.name or ""
 
     @property
     def available(self) -> bool:
@@ -112,3 +114,163 @@ class KnxUiEntity(_KnxEntityBase):
             self._attr_entity_category = EntityCategory(entity_category)
         if device_info := entity_config.get(CONF_DEVICE_INFO):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
+
+
+@dataclass
+class BasePlatformConfiguration(ABC):
+    """Abstract base class for platform configuration.
+
+    This class defines the minimal interface for handling platform-specific configurations,
+    including schema validation and deserialization. It provides a framework for converting
+    data into a schema-compliant format and validating configurations against a predefined schema.
+
+    The `to_dict` method, which performs reverse serialization (i.e., converting an instance
+    back into a dictionary), is not marked as abstract because reverse serialization may not
+    be required for all use cases. If reverse serialization is needed, subclasses must
+    override and implement the `to_dict` method to ensure schema compliance.
+
+    Subclasses are required to:
+    - Provide a schema definition through `get_schema()`.
+    - Implement the `from_dict` method for creating instances from schema-compliant dictionaries.
+
+    Optional:
+    - Override `to_dict` if reverse serialization is required for the specific use case.
+    """
+
+    @classmethod
+    @abstractmethod
+    def get_schema(cls) -> Any:
+        """Retrieve a schema definition used for validation.
+
+        Subclasses must provide a Voluptuous complatible schema object that defines
+        the structure and validation rules for the configuration.
+
+        Returns:
+            Any: The schema object for validation.
+
+        """
+
+    @classmethod
+    @abstractmethod
+    def from_dict(cls, data: dict[str, Any]) -> Any:
+        """Create an instance from a schema-compliant dictionary.
+
+        This method is mandatory for all subclasses and should validate the input
+        against the schema returned by `get_schema()`.
+
+        Args:
+            data (dict[str, Any]): A dictionary adhering to the schema.
+
+        Returns:
+            Any: An instance of the subclass.
+
+        """
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert the instance into a dictionary conforming to the schema.
+
+        This method performs reverse serialization, converting the instance into
+        a schema-compliant dictionary. While not abstract, subclasses must override
+        this method if reverse serialization is necessary for their use case.
+
+        The default implementation uses `asdict` to serialize all dataclass fields.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of the instance, aligned
+            with the schema.
+
+        """
+        return {}
+
+
+InstanceType = TypeVar("InstanceType", bound=object)
+
+
+class StorageSerializationMixin(Generic[InstanceType], ABC):
+    """Adds storage-based serialization/deserialization to a dataclass.
+
+    This mixin provides two methods for converting between a dataclass
+    instance and a dictionary suitable for persistence in storage.
+    The target class must be a dataclass (i.e., support `fields(cls)`).
+    """
+
+    @classmethod
+    def from_storage_dict(
+        cls: type[InstanceType], data: dict[str, Any]
+    ) -> InstanceType:
+        """Instantiate the class from a storage-compatible dictionary.
+
+        This method filters out any keys not matching the dataclass fields
+        and then uses the remaining data to initialize an instance.
+
+        Args:
+            data (dict[str, Any]): A dictionary representing the object
+                in storage format.
+
+        Returns:
+            InstanceType: A newly instantiated object of this class.
+
+        """
+        if is_dataclass(cls):
+            field_names = {field.name for field in fields(cls)}
+            filtered_data: dict[str, Any] = {
+                key: value for key, value in data.items() if key in field_names
+            }
+            return cast(InstanceType, cls(**filtered_data))
+        raise TypeError(f"{cls} is not a dataclass.")
+
+    def to_storage_dict(self: InstanceType) -> dict[str, Any]:
+        """Convert the current instance into a dictionary suitable for storage.
+
+        Uses `asdict` to serialize all dataclass fields into a standard dictionary.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of this instance
+            suitable for storing in databases, files, etc.
+
+        """
+        if is_dataclass(self) and not isinstance(self, type):
+            return asdict(self)
+        raise TypeError(
+            "to_storage_dict can only be used on dataclass instances, not types."
+        )
+
+
+class StorageSerialization(ABC):
+    """Adds storage-based serialization/deserialization to a dataclass.
+
+    This mixin provides two methods for converting between a dataclass
+    instance and a dictionary suitable for persistence in storage.
+    The target class must be a dataclass (i.e., support `fields(cls)`).
+    """
+
+    @classmethod
+    @abstractmethod
+    def from_storage_dict(cls, data: dict[str, Any]) -> Self:
+        """Instantiate the class from a storage-compatible dictionary.
+
+        This method filters out any keys not matching the dataclass fields
+        and then uses the remaining data to initialize an instance.
+
+        Args:
+            data (dict[str, Any]): A dictionary representing the object
+                in storage format.
+
+        Returns:
+            InstanceType: A newly instantiated object of this class.
+
+        """
+
+    def to_storage_dict(self) -> dict[str, Any]:
+        """Convert the current instance into a dictionary suitable for storage.
+
+        Uses `asdict` to serialize all dataclass fields into a standard dictionary.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of this instance
+            suitable for storing in databases, files, etc.
+
+        """
+        if is_dataclass(self):
+            return cast(dict[str, Any], asdict(self))  # type: ignore[unreachable]
+        raise TypeError(f"{self} is not a dataclass.")
