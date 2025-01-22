@@ -2,13 +2,18 @@
 
 from datetime import timedelta
 
-from python_overseerr import OverseerrClient, RequestCount
-from python_overseerr.exceptions import OverseerrConnectionError
+from python_overseerr import (
+    OverseerrAuthenticationError,
+    OverseerrClient,
+    OverseerrConnectionError,
+    RequestCount,
+)
 from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -47,6 +52,11 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
         """Fetch data from API endpoint."""
         try:
             return await self.client.get_request_count()
+        except OverseerrAuthenticationError as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+            ) from err
         except OverseerrConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

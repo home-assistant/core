@@ -2,8 +2,11 @@
 
 from typing import Any
 
-from python_overseerr import OverseerrClient
-from python_overseerr.exceptions import OverseerrError
+from python_overseerr import (
+    OverseerrAuthenticationError,
+    OverseerrClient,
+    OverseerrError,
+)
 import voluptuous as vol
 from yarl import URL
 
@@ -47,6 +50,8 @@ class OverseerrConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 try:
                     await client.get_request_count()
+                except OverseerrAuthenticationError:
+                    errors["base"] = "invalid_auth"
                 except OverseerrError:
                     errors["base"] = "cannot_connect"
                 else:
