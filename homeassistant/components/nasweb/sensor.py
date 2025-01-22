@@ -26,17 +26,14 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import NASwebConfigEntry
-from .const import (
-    DOMAIN,
-    STATE_FAULT,
-    STATE_TAMPER,
-    STATE_UNDEFINED,
-    STATE_VIGIL,
-    STATE_VIOLATION,
-    STATUS_UPDATE_MAX_TIME_INTERVAL,
-)
+from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 SENSOR_INPUT_TRANSLATION_KEY = "sensor_input"
+STATE_FAULT = "fault"
+STATE_TAMPER = "tamper"
+STATE_UNDEFINED = "undefined"
+STATE_VIGIL = "vigil"
+STATE_VIOLATION = "violation"
 
 _LOGGER = logging.getLogger(__name__)
 
