@@ -7,8 +7,7 @@ from functools import lru_cache, partial
 import time
 from typing import Any
 
-from bleak_retry_connector import Allocations
-from habluetooth import BluetoothScanningMode
+from habluetooth import BluetoothScanningMode, HaBluetoothSlotAllocations
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
@@ -169,7 +168,7 @@ async def ws_subscribe_connections(
         websocket_api.error_message(ws_msg_id, "invalid_source", "Invalid source")
         return
 
-    def _async_allocations_changed(allocations: Allocations) -> None:
+    def _async_allocations_changed(allocations: HaBluetoothSlotAllocations) -> None:
         connection.send_message(
             json_bytes(websocket_api.event_message(ws_msg_id, allocations))
         )
@@ -179,4 +178,5 @@ async def ws_subscribe_connections(
     )
     connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
     if current_allocations := manager.async_current_allocations(source):
-        _async_allocations_changed(current_allocations)
+        for allocation in current_allocations:
+            _async_allocations_changed(allocation)
