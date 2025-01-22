@@ -13,7 +13,7 @@ import socket
 from typing import TYPE_CHECKING, Any, Final
 import wave
 
-from voip_utils import SIP_PORT, RtpDatagramProtocol
+from voip_utils import RtpDatagramProtocol
 from voip_utils.sip import SipEndpoint
 
 from homeassistant.components import assist_satellite, tts
@@ -27,15 +27,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CHANNELS,
-    CONF_SIP_HOST,
-    CONF_SIP_PORT,
-    DOMAIN,
-    RATE,
-    RTP_AUDIO_SETTINGS,
-    WIDTH,
-)
+from .const import CHANNELS, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
 from .devices import VoIPDevice
 from .entity import VoIPEntity
 
@@ -120,8 +112,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._tone_bytes: dict[Tones, bytes] = {}
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
-        self._hass_sip_host = config_entry.options.get(CONF_SIP_HOST, "127.0.0.1")
-        self._hass_sip_port = config_entry.options.get(CONF_SIP_PORT, SIP_PORT)
 
     @property
     def pipeline_entity_id(self) -> str | None:

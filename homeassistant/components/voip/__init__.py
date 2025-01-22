@@ -11,12 +11,13 @@ from voip_utils import SIP_PORT
 from voip_utils.sip import get_sip_endpoint
 
 from homeassistant.auth.const import GROUP_ID_USER
+from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_SIP_HOST, CONF_SIP_PORT, CONF_SIP_USER, DEFAULT_SIP_HOST, DOMAIN
+from .const import CONF_SIP_PORT, CONF_SIP_USER, DEFAULT_SIP_USER, DOMAIN
 from .devices import VoIPDevices
 from .voip import HassVoipDatagramProtocol
 
@@ -60,9 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, "user": voip_user.id}
         )
 
-    sip_host = entry.options.get(CONF_SIP_HOST, DEFAULT_SIP_HOST)
+    sip_host = await async_get_source_ip(hass)
     sip_port = entry.options.get(CONF_SIP_PORT, SIP_PORT)
-    sip_user = entry.options.get(CONF_SIP_USER)
+    sip_user = entry.options.get(CONF_SIP_USER, DEFAULT_SIP_USER)
     devices = VoIPDevices(hass, entry)
     devices.async_setup()
     local_endpoint = get_sip_endpoint(sip_host, port=sip_port, username=sip_user)

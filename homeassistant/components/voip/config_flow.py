@@ -7,7 +7,6 @@ from typing import Any
 from voip_utils import SIP_PORT
 import voluptuous as vol
 
-from homeassistant.components.network import async_get_source_ip
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -17,7 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SIP_HOST, CONF_SIP_PORT, CONF_SIP_USER, DOMAIN
+from .const import CONF_SIP_PORT, CONF_SIP_USER, DEFAULT_SIP_USER, DOMAIN
 
 
 class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -92,8 +91,6 @@ class VoipOptionsFlowHandler(OptionsFlow):
                 title="", data={**self.config_entry.options, **user_input}
             )
 
-        default_host = await async_get_source_ip(self.hass)
-
         return self.async_show_form(
             step_id="advanced",
             data_schema=vol.Schema(
@@ -102,14 +99,7 @@ class VoipOptionsFlowHandler(OptionsFlow):
                         CONF_SIP_USER,
                         default=self.config_entry.options.get(
                             CONF_SIP_USER,
-                            "HA",
-                        ),
-                    ): str,
-                    vol.Optional(
-                        CONF_SIP_HOST,
-                        default=self.config_entry.options.get(
-                            CONF_SIP_HOST,
-                            default_host,
+                            DEFAULT_SIP_USER,
                         ),
                     ): str,
                 }
