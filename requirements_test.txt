@@ -31,7 +31,7 @@ pytest-picked==0.5.0
 pytest-xdist==3.6.1
 pytest==8.3.4
 requests-mock==1.12.1
-respx==0.21.1
+respx==0.22.0
 syrupy==4.8.0
 tqdm==4.66.5
 types-aiofiles==24.1.0.20241221

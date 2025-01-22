@@ -72,48 +72,56 @@ from .validators import check_config
 _LOGGER = logging.getLogger(__name__)
 
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")  # noqa: PYI024
-RunEntry = namedtuple("RunEntry", "attr func")  # noqa: PYI024
+ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
+RunEntry = namedtuple("RunEntry", "attr func value_attr_name")  # noqa: PYI024
 PB_CALL = [
     ConfEntry(
         CALL_TYPE_COIL,
         "bits",
         "read_coils",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_DISCRETE,
         "bits",
         "read_discrete_inputs",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_REGISTER_HOLDING,
         "registers",
         "read_holding_registers",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_REGISTER_INPUT,
         "registers",
         "read_input_registers",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COIL,
-        "value",
+        "bits",
         "write_coil",
+        "value",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COILS,
         "count",
         "write_coils",
+        "values",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTER,
-        "value",
+        "registers",
         "write_register",
+        "value",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTERS,
         "count",
         "write_registers",
+        "values",
     ),
 ]
 
@@ -322,7 +330,9 @@ class ModbusHub:
 
         for entry in PB_CALL:
             func = getattr(self._client, entry.func_name)
-            self._pb_request[entry.call_type] = RunEntry(entry.attr, func)
+            self._pb_request[entry.call_type] = RunEntry(
+                entry.attr, func, entry.value_attr_name
+            )
 
         self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
@@ -368,10 +378,11 @@ class ModbusHub:
         self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
-        kwargs = {"slave": slave} if slave else {}
+        kwargs: dict[str, Any] = {"slave": slave} if slave else {}
         entry = self._pb_request[use_call]
+        kwargs[entry.value_attr_name] = value
         try:
-            result: ModbusPDU = await entry.func(address, value, **kwargs)
+            result: ModbusPDU = await entry.func(address, **kwargs)
         except ModbusException as exception_error:
             error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
