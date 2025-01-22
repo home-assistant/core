@@ -18,21 +18,21 @@ audioop-lts==0.2.1;python_version>='3.13'
 av==13.1.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
-bleak-retry-connector==3.6.0
+bleak-retry-connector==3.8.0
 bleak==0.22.3
-bluetooth-adapters==0.20.2
+bluetooth-adapters==0.21.0
 bluetooth-auto-recovery==1.4.2
-bluetooth-data-tools==1.20.0
+bluetooth-data-tools==1.22.0
 cached-ipaddress==0.8.0
 certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.0
-dbus-fast==2.28.0
-fnv-hash-fast==1.1.0
+dbus-fast==2.30.2
+fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.8.0
+habluetooth==3.10.0
 hass-nabucasa==0.88.1
 hassil==2.1.0
 home-assistant-bluetooth==1.13.0
@@ -60,20 +60,20 @@ PyTurboJPEG==1.7.5
 pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
-securetar==2025.1.2
+securetar==2025.1.3
 SQLAlchemy==2.0.36
 standard-aifc==3.13.0;python_version>='3.13'
 standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
-ulid-transform==1.0.2
+ulid-transform==1.2.0
 urllib3>=1.26.5,<2
-uv==0.5.18
+uv==0.5.21
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.18.3
-zeroconf==0.139.0
+zeroconf==0.140.1
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
@@ -117,7 +117,7 @@ httpcore==1.0.5
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.1
+numpy==2.2.2
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues

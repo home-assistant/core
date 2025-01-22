@@ -33,6 +33,7 @@ import bcrypt
 import freezegun
 import multidict
 import pytest
+import pytest_asyncio
 import pytest_socket
 import requests_mock
 import respx
@@ -89,7 +90,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, location
+from homeassistant.util import dt as dt_util, location as location_util
 from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
@@ -249,7 +250,9 @@ def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
 
 
 # Guard a few functions that would make network connections
-location.async_detect_location_info = check_real(location.async_detect_location_info)
+location_util.async_detect_location_info = check_real(
+    location_util.async_detect_location_info
+)
 
 
 @pytest.fixture(name="caplog")
@@ -1233,8 +1236,8 @@ def disable_translations_once(
     translations_once.start()
 
 
-@pytest.fixture(autouse=True, scope="session")
-def mock_zeroconf_resolver() -> Generator[_patch]:
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
     patcher = patch(
         "homeassistant.helpers.aiohttp_client._async_make_resolver",

@@ -49,6 +49,15 @@ def mock_vehicle_data() -> Generator[AsyncMock]:
         yield mock_vehicle_data
 
 
+@pytest.fixture
+def mock_legacy():
+    """Mock Tesla Fleet Api products method."""
+    with patch(
+        "homeassistant.components.teslemetry.VehicleSpecific.pre2021", return_value=True
+    ) as mock_pre2021:
+        yield mock_pre2021
+
+
 @pytest.fixture(autouse=True)
 def mock_wake_up():
     """Mock Tesla Fleet API Vehicle Specific wake_up method."""
