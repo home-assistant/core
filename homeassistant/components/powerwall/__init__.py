@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     if auth_cookie_value:
         cookie_jar.update_cookies(
             {AUTH_COOKIE_KEY: auth_cookie_value},
-            URL("http://" + entry.data[CONF_IP_ADDRESS]),
+            URL(f"http://{ip_address}"),
         )
         # Removing the password will skip authentication, since we're using the auth cookie
         password = None
@@ -170,6 +170,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             base_info = await _login_and_fetch_base_info(
                 power_wall, ip_address, password
             )
+
             # Cancel closing power_wall on success
             stack.pop_all()
         except (TimeoutError, PowerwallUnreachableError) as err:
@@ -182,6 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             )
             return False
         except AccessDeniedError as err:
+            _LOGGER.debug("Authentication failed", exc_info=err)
             raise ConfigEntryAuthFailed from err
         except ApiError as err:
             raise ConfigEntryNotReady from err
