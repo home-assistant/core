@@ -378,7 +378,7 @@ class ModbusHub:
         self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
-        kwargs: dict[str, Any] = {"slave": slave} if slave else {}
+        kwargs: dict[str, Any] = {"slave": slave} if slave is not None else {"slave": 1}
         entry = self._pb_request[use_call]
         kwargs[entry.value_attr_name] = value
         try:

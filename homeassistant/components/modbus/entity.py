@@ -79,7 +79,7 @@ class BasePlatform(Entity):
         """Initialize the Modbus binary sensor."""
 
         self._hub = hub
-        self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 0)
+        self._slave = entry.get(CONF_SLAVE) or entry.get(CONF_DEVICE_ADDRESS, 1)
         self._address = int(entry[CONF_ADDRESS])
         self._input_type = entry[CONF_INPUT_TYPE]
         self._value: str | None = None
