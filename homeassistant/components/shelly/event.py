@@ -73,6 +73,7 @@ SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     key="script",
     translation_key="script",
     device_class=None,
+    entity_registry_enabled_default=False,
 )
 
 
