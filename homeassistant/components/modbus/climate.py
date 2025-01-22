@@ -429,9 +429,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ],
         )
 
-        self._attr_current_temperature = int(
-            await self._async_read_register(self._input_type, self._address)
-            * self._current_temperature_scale
+        register_value = await self._async_read_register(
+            self._input_type, self._address
+        )
+        self._attr_current_temperature = (
+            int(register_value * self._current_temperature_scale)
+            if register_value
+            else None
         )
         # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
