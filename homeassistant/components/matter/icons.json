@@ -36,6 +36,11 @@
         }
       }
     },
+    "select": {
+      "spin_speed": {
+        "default": "mdi:reload"
+      }
+    },
     "sensor": {
       "contamination_state": {
         "default": "mdi:air-filter"

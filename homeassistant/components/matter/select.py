@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
 from chip.clusters.Types import Nullable
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
@@ -45,6 +46,14 @@ async def async_setup_entry(
 @dataclass(frozen=True)
 class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescription):
     """Describe Matter select entities."""
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterBasicListSelectEntityDescription(MatterSelectEntityDescription):
+    """Describe Matter select entities for MatterBasicListSelectEntity."""
+
+    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    list_attribute: type[ClusterAttributeDescriptor]
 
 
 class MatterSelectEntity(MatterEntity, SelectEntity):
@@ -109,6 +118,42 @@ class MatterModeSelectEntity(MatterSelectEntity):
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
+
+
+class MatterBasicListSelectEntity(MatterEntity, SelectEntity):
+    """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
+
+    entity_description: MatterBasicListSelectEntityDescription
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected mode."""
+        option_id = self._attr_options.index(option)
+
+        if TYPE_CHECKING:
+            assert option_id is not None
+        await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id, self._entity_info.primary_attribute
+            ),
+            value=option_id,
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        list_values = cast(
+            list[str],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        self._attr_options = list_values
+        current_option_idx: int | None = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        if current_option_idx is not None:
+            self._attr_current_option = list_values[current_option_idx]
+        else:
+            self._attr_current_option = None
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -273,6 +318,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSelectEntity,
         required_attributes=(
             clusters.ThermostatUserInterfaceConfiguration.Attributes.TemperatureDisplayMode,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterBasicListSelectEntityDescription(
+            key="LaundryWasherControlsSpinSpeed",
+            translation_key="spin_speed",
+            list_attribute=clusters.LaundryWasherControls.Attributes.SpinSpeeds,
+        ),
+        entity_class=MatterBasicListSelectEntity,
+        required_attributes=(
+            clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
+            clusters.LaundryWasherControls.Attributes.SpinSpeeds,
         ),
     ),
 ]
