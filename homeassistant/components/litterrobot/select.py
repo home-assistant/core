@@ -20,13 +20,6 @@ from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
-BRIGHTNESS_LEVEL_ICON_MAP: dict[BrightnessLevel | None, str] = {
-    BrightnessLevel.LOW: "mdi:lightbulb-on-30",
-    BrightnessLevel.MEDIUM: "mdi:lightbulb-on-50",
-    BrightnessLevel.HIGH: "mdi:lightbulb-on",
-    None: "mdi:lightbulb-question",
-}
-
 
 @dataclass(frozen=True)
 class RequiredKeysMixin(Generic[_RobotT, _CastTypeT]):
@@ -44,7 +37,6 @@ class RobotSelectEntityDescription(
     """A class that describes robot select entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
-    icon_fn: Callable[[_RobotT], str] | None = None
 
 
 ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
@@ -66,7 +58,6 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
         select_fn=lambda robot, opt: robot.set_panel_brightness(
             BrightnessLevel[opt.upper()]
         ),
-        icon_fn=lambda robot: BRIGHTNESS_LEVEL_ICON_MAP[robot.panel_brightness],
     ),
     FeederRobot: RobotSelectEntityDescription[FeederRobot, float](
         key="meal_insert_size",
@@ -112,13 +103,6 @@ class LitterRobotSelectEntity(
         super().__init__(robot, hub, description)
         options = self.entity_description.options_fn(self.robot)
         self._attr_options = list(map(str, options))
-
-    @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if icon_fn := self.entity_description.icon_fn:
-            return str(icon_fn(self.robot))
-        return super().icon
 
     @property
     def current_option(self) -> str | None:
