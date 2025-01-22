@@ -7,11 +7,7 @@ from httpx import Response
 from kiota_abstractions.api_error import APIError
 import pytest
 
-from homeassistant import config_entries, setup
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
+from homeassistant import config_entries
 from homeassistant.components.onedrive.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -25,7 +21,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
-from .const import CLIENT_ID, CLIENT_SECRET
+from .const import CLIENT_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -70,25 +66,6 @@ async def _do_get_token(
     )
 
 
-async def _setup_oauth_step(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> ConfigFlowResult:
-    """Set up the OAuth2 flow."""
-    assert await setup.async_setup_component(hass, "application_credentials", {})
-    await async_import_client_credential(
-        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
-
-    return result
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -98,7 +75,10 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
 
-    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -130,7 +110,10 @@ async def test_flow_errors(
 
     mock_adapter.get_http_response_message.side_effect = exception
 
-    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
@@ -148,7 +131,10 @@ async def test_already_configured(
     """Test already configured account."""
     await setup_integration(hass, mock_config_entry)
 
-    result = await _setup_oauth_step(hass, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
