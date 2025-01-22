@@ -19,17 +19,12 @@ from . import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
-@dataclass(frozen=True)
-class RequiredKeysMixin(Generic[_RobotT]):
-    """A class that describes robot time entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_RobotT]):
+    """A class that describes robot time entities."""
 
     value_fn: Callable[[_RobotT], time | None]
     set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
-
-
-@dataclass(frozen=True)
-class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_RobotT]):
-    """A class that describes robot time entities."""
 
 
 def _as_local_time(start: datetime | None) -> time | None:
@@ -42,8 +37,11 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     translation_key="sleep_mode_start_time",
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda robot: _as_local_time(robot.sleep_mode_start_time),
-    set_fn=lambda robot, value: robot.set_sleep_mode(
-        robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.get_default_time_zone())
+    set_fn=(
+        lambda robot, value: robot.set_sleep_mode(
+            robot.sleep_mode_enabled,
+            value.replace(tzinfo=dt_util.get_default_time_zone()),
+        )
     ),
 )
 

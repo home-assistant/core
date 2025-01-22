@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_all_entities(
+async def test_all_heating_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
@@ -26,6 +26,24 @@ async def test_all_entities(
     fixtures: list[Fixture] = [
         Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
     ]
+    with (
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_ventilation_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/ViAir300F.json")]
     with (
         patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
