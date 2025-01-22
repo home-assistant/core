@@ -101,7 +101,7 @@ PB_CALL = [
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COIL,
-        "value",
+        "bits",
         "write_coil",
         "value",
     ),
@@ -113,7 +113,7 @@ PB_CALL = [
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTER,
-        "value",
+        "registers",
         "write_register",
         "value",
     ),
