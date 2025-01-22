@@ -46,7 +46,9 @@ class LinkPlayBaseEntity(Entity):
 
         self._attr_device_info = dr.DeviceInfo(
             configuration_url=bridge.endpoint,
-            connections={(dr.CONNECTION_NETWORK_MAC, bridge.device.properties["MAC"])},
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, bridge.device.properties.get("MAC", None))
+            },
             hw_version=bridge.device.properties["hardware"],
             identifiers={(DOMAIN, bridge.device.uuid)},
             manufacturer=manufacturer,
