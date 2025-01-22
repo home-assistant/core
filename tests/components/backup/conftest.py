@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import DOMAIN
 
 from .common import TEST_BACKUP_PATH_ABC123
 

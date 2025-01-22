@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers.backup import DATA_MANAGER, DOMAIN
 
 from .common import setup_backup_integration
 

@@ -15,11 +15,11 @@ from multidict import istr
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.backup import DATA_MANAGER
 from homeassistant.util import slugify
 
 from . import util
 from .agent import BackupAgent
+from .const import DATA_MANAGER
 from .manager import BackupManager
 
 

@@ -18,10 +18,9 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ICON, ATTR_NAME, __version__ as HAVERSION
+from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -319,27 +318,10 @@ async def update_addon(
     client = get_supervisor_client(hass)
 
     if backup:
-        backup_manager = async_get_backup_manager(hass)
+        # pylint: disable-next=import-outside-toplevel
+        from .backup import backup_addon_before_update
 
-        # Use the password from automatic settings if available
-        if backup_manager.config.data.create_backup.agent_ids:
-            password = backup_manager.config.data.create_backup.password
-        else:
-            password = None
-
-        try:
-            await backup_manager.async_create_backup(
-                agent_ids=[await _default_agent(client)],
-                include_addons=[addon],
-                include_all_addons=False,
-                include_database=False,
-                include_folders=None,
-                include_homeassistant=False,
-                name=f"{addon_name or addon} {HAVERSION}",
-                password=password,
-            )
-        except HomeAssistantError as err:
-            raise HomeAssistantError(f"Error creating backup: {err}") from err
+        await backup_addon_before_update(hass, addon, addon_name)
 
     try:
         await client.store.update_addon(addon, StoreAddonUpdate(backup=False))
@@ -357,25 +339,10 @@ async def update_core(hass: HomeAssistant, version: str | None, backup: bool) ->
     client = get_supervisor_client(hass)
 
     if backup:
-        backup_manager = async_get_backup_manager(hass)
-        try:
-            if backup_manager.config.data.create_backup.agent_ids:
-                # Create a backup with automatic settings
-                await backup_manager.async_create_automatic_backup()
-            else:
-                # Create a manual backup
-                await backup_manager.async_create_backup(
-                    agent_ids=[await _default_agent(client)],
-                    include_addons=None,
-                    include_all_addons=False,
-                    include_database=True,
-                    include_folders=None,
-                    include_homeassistant=True,
-                    name=f"Home Assistant Core {HAVERSION}",
-                    password=None,
-                )
-        except HomeAssistantError as err:
-            raise HomeAssistantError(f"Error creating backup: {err}") from err
+        # pylint: disable-next=import-outside-toplevel
+        from .backup import backup_core_before_update
+
+        await backup_core_before_update(hass)
 
     try:
         await client.homeassistant.update(

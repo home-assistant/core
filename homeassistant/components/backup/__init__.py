@@ -2,7 +2,6 @@
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.backup import DATA_MANAGER, DOMAIN
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
@@ -16,6 +15,7 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
+from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
     BackupManager,

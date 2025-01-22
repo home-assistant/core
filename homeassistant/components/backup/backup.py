@@ -9,11 +9,10 @@ from tarfile import TarError
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.backup import DOMAIN
 from homeassistant.helpers.hassio import is_hassio
 
 from .agent import BackupAgent, LocalBackupAgent
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .models import AgentBackup
 from .util import read_backup
 
