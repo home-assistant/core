@@ -110,8 +110,9 @@ class OneDriveBackupAgent(BackupAgent):
         self.name = entry.title
 
     @handle_backup_errors
-    async def async_download_backup( self,backup_id: str,
-                                    **kwargs: Any ) -> AsyncIterator[bytes]:
+    async def async_download_backup(
+        self, backup_id: str, **kwargs: Any
+    ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         # this forces the query to return a raw httpx response, but breaks typing
         request_config = (
@@ -211,7 +212,9 @@ class OneDriveBackupAgent(BackupAgent):
         return backups
 
     @handle_backup_errors
-    async def async_get_backup(self, backup_id: str,**kwargs: Any) -> AgentBackup | None:
+    async def async_get_backup(
+        self, backup_id: str, **kwargs: Any
+    ) -> AgentBackup | None:
         """Return a backup."""
         try:
             blob_properties = await self._get_backup_file_item(backup_id).get()
