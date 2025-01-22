@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from freezegun import freeze_time
 
-from homeassistant.components.button import DOMAIN as PLATFORM_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -18,7 +18,7 @@ async def test_button(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_account: MagicMock
 ) -> None:
     """Test the creation and values of the Litter-Robot button."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, BUTTON_DOMAIN)
 
     state = hass.states.get(BUTTON_ENTITY)
     assert state
@@ -30,7 +30,7 @@ async def test_button(
 
     with freeze_time("2021-11-15 17:37:00", tz_offset=-7):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            BUTTON_DOMAIN,
             SERVICE_PRESS,
             {ATTR_ENTITY_ID: BUTTON_ENTITY},
             blocking=True,

@@ -10,7 +10,7 @@ import pytest
 
 from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
@@ -35,15 +35,15 @@ async def test_vacuum(
     """Tests the vacuum entity was set up."""
 
     entity_registry.async_get_or_create(
-        PLATFORM_DOMAIN,
+        VACUUM_DOMAIN,
         DOMAIN,
         VACUUM_UNIQUE_ID,
-        suggested_object_id=VACUUM_ENTITY_ID.replace(PLATFORM_DOMAIN, ""),
+        suggested_object_id=VACUUM_ENTITY_ID.replace(VACUUM_DOMAIN, ""),
     )
     ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
     assert len(entity_registry.entities) == 1
     assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
@@ -61,7 +61,7 @@ async def test_no_robots(
     mock_account_with_no_robots: MagicMock,
 ) -> None:
     """Tests the vacuum entity was set up."""
-    entry = await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
+    entry = await setup_integration(hass, mock_account_with_no_robots, VACUUM_DOMAIN)
 
     assert not hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
@@ -75,7 +75,7 @@ async def test_vacuum_with_error(
     hass: HomeAssistant, mock_account_with_error: MagicMock
 ) -> None:
     """Tests a vacuum entity with an error."""
-    await setup_integration(hass, mock_account_with_error, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_error, VACUUM_DOMAIN)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -100,7 +100,7 @@ async def test_activities(
     expected_state: str,
 ) -> None:
     """Test sending commands to the switch."""
-    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_litterrobot_4, VACUUM_DOMAIN)
     robot: Robot = mock_account_with_litterrobot_4.robots[0]
     robot._update_data(robot_data, partial=True)
 
@@ -133,7 +133,7 @@ async def test_commands(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test sending commands to the vacuum."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -144,7 +144,7 @@ async def test_commands(
     issues = extra.get("issues", set())
 
     await hass.services.async_call(
-        COMPONENT_SERVICE_DOMAIN.get(service, PLATFORM_DOMAIN),
+        COMPONENT_SERVICE_DOMAIN.get(service, VACUUM_DOMAIN),
         service,
         data,
         blocking=True,
