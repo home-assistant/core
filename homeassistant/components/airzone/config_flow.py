@@ -88,6 +88,9 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
                 title = f"Airzone {user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
+                if user_input[CONF_ID] != DEFAULT_SYSTEM_ID:
+                    title += f" #{user_input[CONF_ID]}"
+
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
