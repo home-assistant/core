@@ -434,6 +434,15 @@
       },
       "compressor_phase": {
         "name": "Compressor phase"
+      },
+      "spf-total": {
+        "name": "Saisonal performance factor"
+      },
+      "spf-dhw": {
+        "name": "Saisonal performance factor domestic hot water"
+      },
+      "spf-heating": {
+        "name": "Saisonal performance factor heating"
       }
     },
     "water_heater": {

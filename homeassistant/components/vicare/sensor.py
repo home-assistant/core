@@ -812,6 +812,24 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
     ),
+    ViCareSensorEntityDescription(
+        key="spf-total",
+        translation_key="spf-total",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorTotal(),
+    ),
+    ViCareSensorEntityDescription(
+        key="spf-dhw",
+        translation_key="spf-dhw",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorDHW(),
+    ),
+    ViCareSensorEntityDescription(
+        key="spf-heating",
+        translation_key="spf-heating",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorHeating(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
