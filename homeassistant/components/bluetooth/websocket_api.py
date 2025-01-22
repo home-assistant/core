@@ -24,6 +24,7 @@ from .models import BluetoothChange
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the bluetooth websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_advertisements)
+    websocket_api.async_register_command(hass, ws_subscribe_connection_allocations)
 
 
 @lru_cache(maxsize=1024)
@@ -157,7 +158,7 @@ async def ws_subscribe_advertisements(
     }
 )
 @websocket_api.async_response
-async def ws_subscribe_connections(
+async def ws_subscribe_connection_allocations(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe advertisements websocket command."""
