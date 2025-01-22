@@ -57,7 +57,9 @@ class _BackupStore(Store[StoredBackupData]):
                     data["config"]["schedule"]["days"] = [state]
                     data["config"]["schedule"]["recurrence"] = "custom_days"
 
-        if old_major_version > 1:
+        # Note: We allow reading data with major version 2.
+        # Reject if major version is higher than 2.
+        if old_major_version > 2:
             raise NotImplementedError
         return data
 
