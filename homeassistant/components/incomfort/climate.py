@@ -73,6 +73,8 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             manufacturer="Intergas",
             name=f"Thermostat {room.room_no}",
         )
+        if coordinator.unique_id:
+            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
