@@ -16,6 +16,7 @@ from pynecil import (
     ScreenOrientationMode,
     ScrollSpeed,
     TempUnit,
+    USBPDMode,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -61,7 +62,7 @@ async def test_state(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
@@ -104,6 +105,11 @@ async def test_state(
             "select.pinecil_boot_logo_duration",
             "loop",
             (CharSetting.LOGO_DURATION, LogoDuration.LOOP),
+        ),
+        (
+            "select.pinecil_power_delivery_3_1_epr",
+            "on",
+            (CharSetting.USB_PD_MODE, USBPDMode.ON),
         ),
     ],
 )

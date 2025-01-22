@@ -17,7 +17,10 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.cloud import DOMAIN
+from homeassistant.components.cloud.backup import async_register_backup_agents_listener
+from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -32,7 +35,10 @@ async def setup_integration(
     cloud_logged_in: None,
 ) -> AsyncGenerator[None]:
     """Set up cloud integration."""
-    with patch("homeassistant.components.backup.is_hassio", return_value=False):
+    with (
+        patch("homeassistant.components.backup.is_hassio", return_value=False),
+        patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
+    ):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -198,6 +204,7 @@ async def test_agents_list_backups_fail_cloud(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
     }
 
 
@@ -342,7 +349,7 @@ async def test_agents_upload(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0.0,
+        size=0,
     )
     aioclient_mock.put(mock_get_upload_details.return_value["url"])
 
@@ -379,10 +386,11 @@ async def test_agents_upload(
 async def test_agents_upload_fail_put(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
     aioclient_mock: AiohttpClientMocker,
     mock_get_upload_details: Mock,
     put_mock_kwargs: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup fails."""
     client = await hass_client()
@@ -398,7 +406,7 @@ async def test_agents_upload_fail_put(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0.0,
+        size=0,
     )
     aioclient_mock.put(mock_get_upload_details.return_value["url"], **put_mock_kwargs)
 
@@ -411,6 +419,9 @@ async def test_agents_upload_fail_put(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.cloud.backup.asyncio.sleep"),
+        patch("homeassistant.components.cloud.backup.random.randint", return_value=60),
+        patch("homeassistant.components.cloud.backup._RETRY_LIMIT", 2),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
@@ -418,9 +429,16 @@ async def test_agents_upload_fail_put(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
+        await hass.async_block_till_done()
 
+    assert len(aioclient_mock.mock_calls) == 2
+    assert "Failed to upload backup, retrying (2/2) in 60s" in caplog.text
     assert resp.status == 201
-    assert "Error during backup upload - Failed to upload backup" in caplog.text
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
 @pytest.mark.parametrize("side_effect", [ClientError, CloudError])
@@ -428,9 +446,9 @@ async def test_agents_upload_fail_put(
 async def test_agents_upload_fail_cloud(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
     mock_get_upload_details: Mock,
     side_effect: Exception,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
@@ -447,7 +465,7 @@ async def test_agents_upload_fail_cloud(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0.0,
+        size=0,
     )
     with (
         patch(
@@ -458,6 +476,7 @@ async def test_agents_upload_fail_cloud(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.cloud.backup.asyncio.sleep"),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
@@ -465,15 +484,20 @@ async def test_agents_upload_fail_cloud(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Error during backup upload - Failed to get upload details" in caplog.text
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
 async def test_agents_upload_not_protected(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    caplog: pytest.LogCaptureFixture,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
@@ -489,7 +513,7 @@ async def test_agents_upload_not_protected(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
-        size=0.0,
+        size=0,
     )
     with (
         patch("pathlib.Path.open"),
@@ -502,9 +526,14 @@ async def test_agents_upload_not_protected(
             "/api/backup/upload?agent_id=cloud.cloud",
             data={"file": StringIO("test")},
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Error during backup upload - Cloud backups must be protected" in caplog.text
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
@@ -576,3 +605,49 @@ async def test_agents_delete_not_found(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+
+
+@pytest.mark.parametrize("event_type", ["login", "logout"])
+async def test_calling_listener_on_login_logout(
+    hass: HomeAssistant,
+    event_type: str,
+) -> None:
+    """Test calling listener for login and logout events."""
+    listener = MagicMock()
+    async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": event_type})
+    await hass.async_block_till_done()
+
+    assert listener.call_count == 1
+
+
+async def test_not_calling_listener_after_unsub(hass: HomeAssistant) -> None:
+    """Test only calling listener until unsub."""
+    listener = MagicMock()
+    unsub = async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+    unsub()
+
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 1
+
+
+async def test_not_calling_listener_with_unknown_event_type(
+    hass: HomeAssistant,
+) -> None:
+    """Test not calling listener if we did not get the expected event type."""
+    listener = MagicMock()
+    async_register_backup_agents_listener(hass, listener=listener)
+
+    assert listener.call_count == 0
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "unknown"})
+    await hass.async_block_till_done()
+    assert listener.call_count == 0

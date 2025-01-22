@@ -34,6 +34,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.location import async_detect_location_info
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
@@ -41,6 +42,7 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
@@ -278,6 +280,8 @@ class CloudLoginView(HomeAssistantView):
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
         else:
             new_cloud_pipeline_id = None
+
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
@@ -297,6 +301,7 @@ class CloudLogoutView(HomeAssistantView):
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
         return self.json_message("ok")
 
 

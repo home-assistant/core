@@ -7,12 +7,12 @@ from elkm1_lib.discovery import ElkSystem
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
     ELK_DISCOVERY,
@@ -27,7 +27,7 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     MOCK_IP_ADDRESS, "", dr.format_mac(MOCK_MAC).replace(":", "")
 )
 ELK_DISCOVERY_INFO = asdict(ELK_DISCOVERY)
@@ -1141,7 +1141,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="any",
                 ip=MOCK_IP_ADDRESS,
                 macaddress="00:00:00:00:00:00",

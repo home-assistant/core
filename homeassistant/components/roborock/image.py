@@ -127,7 +127,10 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Update the image if it is not cached."""
         if self.is_map_valid():
             response = await asyncio.gather(
-                *(self.cloud_api.get_map_v1(), self.coordinator.get_rooms()),
+                *(
+                    self.cloud_api.get_map_v1(),
+                    self.coordinator.set_current_map_rooms(),
+                ),
                 return_exceptions=True,
             )
             if not isinstance(response[0], bytes):
@@ -179,7 +182,7 @@ async def refresh_coordinators(
             # We cannot get the map until the roborock servers fully process the
             # map change.
             await asyncio.sleep(MAP_SLEEP)
-        await coord.get_rooms()
+        await coord.set_current_map_rooms()
 
     if len(coord.maps) != 1:
         # Set the map back to the map the user previously had selected so that it

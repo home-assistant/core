@@ -12,6 +12,7 @@ from roborock import RoborockException
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -20,6 +21,12 @@ from .mock_data import MAP_DATA, PROP
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.IMAGE]
 
 
 async def test_floorplan_image(
