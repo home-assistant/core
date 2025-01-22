@@ -11,9 +11,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 class OneDriveAccessTokenProvider(AccessTokenProvider):
     """Provide OneDrive authentication tied to an OAuth2 based config entry."""
 
-    def __init__(
-        self,
-    ) -> None:
+    def __init__(self) -> None:
         """Initialize OneDrive auth."""
         super().__init__()
         # currently allowing all hosts
@@ -27,10 +25,7 @@ class OneDriveAccessTokenProvider(AccessTokenProvider):
 class OneDriveConfigFlowAccessTokenProvider(OneDriveAccessTokenProvider):
     """Provide OneDrive authentication tied to an OAuth2 based config entry."""
 
-    def __init__(
-        self,
-        token: str,
-    ) -> None:
+    def __init__(self, token: str) -> None:
         """Initialize OneDrive auth."""
         super().__init__()
         self._token = token

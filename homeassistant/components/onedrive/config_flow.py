@@ -11,7 +11,7 @@ from kiota_abstractions.request_information import RequestInformation
 from msgraph import GraphRequestAdapter, GraphServiceClient
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -41,7 +41,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         auth_provider = BaseBearerTokenAuthenticationProvider(
             access_token_provider=OneDriveConfigFlowAccessTokenProvider(
-                cast(str, data[CONF_TOKEN]["access_token"])
+                cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
             )
         )
         adapter = GraphRequestAdapter(

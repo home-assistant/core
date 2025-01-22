@@ -30,12 +30,6 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
-  "issues": {
-    "backup_folder_did_not_exist": {
-      "title": "Backup folder did not exist",
-      "description": "The backup folder {folder} does not exist anymore. Probably it was deleted or renamed. Please recreate the backup folder then fix this issue."
-    }
-  },
   "exceptions": {
     "backup_not_found": {
       "message": "Backup not found"
