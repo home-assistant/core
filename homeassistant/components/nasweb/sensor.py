@@ -35,18 +35,10 @@ from .const import (
     STATE_VIOLATION,
     STATUS_UPDATE_MAX_TIME_INTERVAL,
 )
-from .coordinator import NASwebCoordinator
 
 SENSOR_INPUT_TRANSLATION_KEY = "sensor_input"
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def _get_input(coordinator: NASwebCoordinator, index: int) -> NASwebInput | None:
-    for entry in coordinator.webio_api.inputs:
-        if entry.index == index:
-            return entry
-    return None
 
 
 async def async_setup_entry(
@@ -61,12 +53,14 @@ async def async_setup_entry(
 
     @callback
     def _check_entities() -> None:
-        received_inputs = {entry.index for entry in coordinator.webio_api.inputs}
+        received_inputs: dict[int, NASwebInput] = {
+            entry.index: entry for entry in coordinator.webio_api.inputs
+        }
         added = {i for i in received_inputs if i not in current_inputs}
         removed = {i for i in current_inputs if i not in received_inputs}
         entities_to_add: list[InputStateSensor] = []
         for index in added:
-            webio_input = _get_input(coordinator, index)
+            webio_input = received_inputs[index]
             if not isinstance(webio_input, NASwebInput):
                 _LOGGER.error("Cannot create InputStateSensor without NASwebInput")
                 continue
