@@ -22,6 +22,9 @@ from msgraph.generated.drives.item.items.item.content.content_request_builder im
 from msgraph.generated.drives.item.items.item.create_upload_session.create_upload_session_post_request_body import (
     CreateUploadSessionPostRequestBody,
 )
+from msgraph.generated.drives.item.items.item.drive_item_item_request_builder import (
+    DriveItemItemRequestBuilder,
+)
 from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_uploadable_properties import (
     DriveItemUploadableProperties,
@@ -121,9 +124,9 @@ class OneDriveBackupAgent(BackupAgent):
         )
         response = cast(
             Response,
-            await self._items.by_drive_item_id(
-                f"{self._folder_id}:/{backup_id}.tar:"
-            ).content.get(request_configuration=request_config),
+            await self._get_backup_file_item(backup_id).content.get(
+                request_configuration=request_config
+            ),
         )
 
         return response.aiter_bytes(chunk_size=1024)
@@ -146,8 +149,8 @@ class OneDriveBackupAgent(BackupAgent):
                 },
             )
         )
-        upload_session = await self._items.by_drive_item_id(
-            f"{self._folder_id}:/{backup.backup_id}.tar:"
+        upload_session = await self._get_backup_file_item(
+            backup.backup_id
         ).create_upload_session.post(upload_session_request_body)
 
         if upload_session is None:
@@ -180,13 +183,13 @@ class OneDriveBackupAgent(BackupAgent):
 
         # store metadata in description
         backup_dict = backup.as_dict()
-        backup_dict["version"] = 1  # version of the backup metadata
+        backup_dict["metadata_version"] = 1  # version of the backup metadata
         description = json.dumps(backup_dict)
         _LOGGER.debug("Creating metadata: %s", description)
 
-        await self._items.by_drive_item_id(
-            f"{self._folder_id}:/{backup.backup_id}.tar:"
-        ).patch(DriveItem(description=description))
+        await self._get_backup_file_item(backup.backup_id).patch(
+            DriveItem(description=description)
+        )
 
     @handle_backup_errors
     async def async_delete_backup(
@@ -195,9 +198,7 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        await self._items.by_drive_item_id(
-            f"{self._folder_id}:/{backup_id}.tar:"
-        ).delete()
+        await self._get_backup_file_item(backup_id).delete()
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -220,9 +221,7 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> AgentBackup | None:
         """Return a backup."""
         try:
-            blob_properties = await self._items.by_drive_item_id(
-                f"{self._folder_id}:/{backup_id}.tar:"
-            ).get()
+            blob_properties = await self._get_backup_file_item(backup_id).get()
         except APIError as err:
             if err.response_status_code == 404:
                 return None
@@ -250,3 +249,6 @@ class OneDriveBackupAgent(BackupAgent):
             description
         )  # OneDrive encodes the description on save automatically
         return AgentBackup.from_dict(json.loads(description))
+
+    def _get_backup_file_item(self, backup_id: str) -> DriveItemItemRequestBuilder:
+        return self._items.by_drive_item_id(f"{self._folder_id}:/{backup_id}.tar:")
