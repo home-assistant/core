@@ -314,7 +314,7 @@ DISCOVERY_SCHEMAS = [
                 "Fahrenheit": 1,
             }.get,
         ),
-        entity_class=MatterSelectEntity,
+        entity_class=MatterAttributeSelectEntity,
         required_attributes=(
             clusters.ThermostatUserInterfaceConfiguration.Attributes.TemperatureDisplayMode,
         ),
