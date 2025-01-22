@@ -30,46 +30,5 @@
     "info": {
       "api_endpoint_reachable": "Spotify API endpoint reachable"
     }
-  },
-  "entity": {
-    "sensor": {
-      "song_tempo": {
-        "name": "Song tempo"
-      },
-      "danceability": {
-        "name": "Song danceability"
-      },
-      "energy": {
-        "name": "Song energy"
-      },
-      "mode": {
-        "name": "Song mode",
-        "state": {
-          "minor": "Minor",
-          "major": "Major"
-        }
-      },
-      "speechiness": {
-        "name": "Song speechiness"
-      },
-      "acousticness": {
-        "name": "Song acousticness"
-      },
-      "instrumentalness": {
-        "name": "Song instrumentalness"
-      },
-      "valence": {
-        "name": "Song valence"
-      },
-      "liveness": {
-        "name": "Song liveness"
-      },
-      "time_signature": {
-        "name": "Song time signature"
-      },
-      "key": {
-        "name": "Song key"
-      }
-    }
   }
 }

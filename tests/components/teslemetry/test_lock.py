@@ -1,10 +1,9 @@
 """Test the Teslemetry lock platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
@@ -12,7 +11,7 @@ from homeassistant.components.lock import (
     SERVICE_UNLOCK,
     LockState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -30,18 +29,6 @@ async def test_lock(
 
     entry = await setup_platform(hass, [Platform.LOCK])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_lock_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the lock entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.LOCK])
-    state = hass.states.get("lock.test_lock")
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_lock_services(

@@ -53,7 +53,7 @@
         },
         "view_path": {
           "name": "View path",
-          "description": "The path of the dashboard view to show."
+          "description": "The URL path of the dashboard view to show."
         }
       }
     }

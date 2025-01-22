@@ -9,7 +9,7 @@ from homeassistant.components import litterrobot
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
-    STATE_DOCKED,
+    VacuumActivity,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
@@ -30,7 +30,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
-    assert vacuum.state == STATE_DOCKED
+    assert vacuum.state == VacuumActivity.DOCKED
 
     await hass.services.async_call(
         VACUUM_DOMAIN,
@@ -63,7 +63,7 @@ async def test_entry_not_setup(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.litterrobot.hub.Account.connect",
+        "homeassistant.components.litterrobot.coordinator.Account.connect",
         side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)

@@ -82,8 +82,6 @@ class TeslemetryCableLockEntity(TeslemetryVehicleEntity, LockEntity):
 
     def _async_update_attrs(self) -> None:
         """Update entity attributes."""
-        if self._value is None:
-            self._attr_is_locked = None
         self._attr_is_locked = self._value == ENGAGED
 
     async def async_lock(self, **kwargs: Any) -> None:

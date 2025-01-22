@@ -14,8 +14,8 @@ from homeassistant.setup import async_setup_component
 from .common import MockCover
 
 from tests.common import (
+    MockEntityPlatform,
     help_test_all,
-    import_and_test_deprecated_constant_enum,
     setup_test_component_platform,
 )
 
@@ -161,29 +161,17 @@ def test_all() -> None:
     help_test_all(cover)
 
 
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(cover.CoverEntityFeature, "SUPPORT_")
-    + _create_tuples(cover.CoverDeviceClass, "DEVICE_CLASS_"),
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, cover, enum, constant_prefix, "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
     """Test deprecated supported features ints."""
 
     class MockCoverEntity(cover.CoverEntity):
         _attr_supported_features = 1
 
     entity = MockCoverEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     assert entity.supported_features is cover.CoverEntityFeature(1)
     assert "MockCoverEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

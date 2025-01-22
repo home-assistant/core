@@ -120,8 +120,6 @@ class PurgeTask(RecorderTask):
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
-            with instance.get_session() as session:
-                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.

@@ -3,19 +3,21 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
-from typing import Any, NamedTuple
+from typing import Any
 
-from homewizard_energy import HomeWizardEnergy
+from homewizard_energy import HomeWizardEnergyV1
 from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 from homewizard_energy.models import Device
-from voluptuous import Required, Schema
+import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_API_ENABLED,
@@ -23,18 +25,8 @@ from .const import (
     CONF_PRODUCT_TYPE,
     CONF_SERIAL,
     DOMAIN,
+    LOGGER,
 )
-
-_LOGGER = logging.getLogger(__name__)
-
-
-class DiscoveryData(NamedTuple):
-    """User metadata."""
-
-    ip: str
-    product_name: str
-    product_type: str
-    serial: str
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -42,7 +34,10 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    discovery: DiscoveryData
+    ip_address: str | None = None
+    product_name: str | None = None
+    product_type: str | None = None
+    serial: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -53,7 +48,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 await self.async_set_unique_id(
@@ -68,18 +63,18 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=Schema(
+            data_schema=vol.Schema(
                 {
-                    Required(
+                    vol.Required(
                         CONF_IP_ADDRESS, default=user_input.get(CONF_IP_ADDRESS)
-                    ): str,
+                    ): TextSelector(),
                 }
             ),
             errors=errors,
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         if (
@@ -94,54 +89,81 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if (discovery_info.properties[CONF_PATH]) != "/api/v1":
             return self.async_abort(reason="unsupported_api_version")
 
-        self.discovery = DiscoveryData(
-            ip=discovery_info.host,
-            product_type=discovery_info.properties[CONF_PRODUCT_TYPE],
-            product_name=discovery_info.properties[CONF_PRODUCT_NAME],
-            serial=discovery_info.properties[CONF_SERIAL],
-        )
+        self.ip_address = discovery_info.host
+        self.product_type = discovery_info.properties[CONF_PRODUCT_TYPE]
+        self.product_name = discovery_info.properties[CONF_PRODUCT_NAME]
+        self.serial = discovery_info.properties[CONF_SERIAL]
 
-        await self.async_set_unique_id(
-            f"{self.discovery.product_type}_{self.discovery.serial}"
-        )
+        await self.async_set_unique_id(f"{self.product_type}_{self.serial}")
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: discovery_info.host}
         )
 
         return await self.async_step_discovery_confirm()
 
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle dhcp discovery to update existing entries.
+
+        This flow is triggered only by DHCP discovery of known devices.
+        """
+        try:
+            device = await self._async_try_connect(discovery_info.ip)
+        except RecoverableError as ex:
+            LOGGER.error(ex)
+            return self.async_abort(reason="unknown")
+
+        await self.async_set_unique_id(
+            f"{device.product_type}_{discovery_info.macaddress}"
+        )
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_IP_ADDRESS: discovery_info.ip}
+        )
+
+        # This situation should never happen, as Home Assistant will only
+        # send updates for existing entries. In case it does, we'll just
+        # abort the flow with an unknown error.
+        return self.async_abort(reason="unknown")
+
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
+        assert self.ip_address
+        assert self.product_name
+        assert self.product_type
+        assert self.serial
+
         errors: dict[str, str] | None = None
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             try:
-                await self._async_try_connect(self.discovery.ip)
+                await self._async_try_connect(self.ip_address)
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 return self.async_create_entry(
-                    title=self.discovery.product_name,
-                    data={CONF_IP_ADDRESS: self.discovery.ip},
+                    title=self.product_name,
+                    data={CONF_IP_ADDRESS: self.ip_address},
                 )
 
         self._set_confirm_only()
 
         # We won't be adding mac/serial to the title for devices
         # that users generally don't have multiple of.
-        name = self.discovery.product_name
-        if self.discovery.product_type not in ["HWE-P1", "HWE-WTR"]:
-            name = f"{name} ({self.discovery.serial})"
+        name = self.product_name
+        if self.product_type not in ["HWE-P1", "HWE-WTR"]:
+            name = f"{name} ({self.serial})"
         self.context["title_placeholders"] = {"name": name}
 
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={
-                CONF_PRODUCT_TYPE: self.discovery.product_type,
-                CONF_SERIAL: self.discovery.serial,
-                CONF_IP_ADDRESS: self.discovery.ip,
+                CONF_PRODUCT_TYPE: self.product_type,
+                CONF_SERIAL: self.serial,
+                CONF_IP_ADDRESS: self.ip_address,
             },
             errors=errors,
         )
@@ -162,13 +184,51 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_try_connect(reauth_entry.data[CONF_IP_ADDRESS])
             except RecoverableError as ex:
-                _LOGGER.error(ex)
+                LOGGER.error(ex)
                 errors = {"base": ex.error_code}
             else:
                 await self.hass.config_entries.async_reload(reauth_entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(step_id="reauth_confirm", errors=errors)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        if user_input:
+            try:
+                device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+
+            except RecoverableError as ex:
+                LOGGER.error(ex)
+                errors = {"base": ex.error_code}
+            else:
+                await self.async_set_unique_id(
+                    f"{device_info.product_type}_{device_info.serial}"
+                )
+                self._abort_if_unique_id_mismatch(reason="wrong_device")
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+        reconfigure_entry = self._get_reconfigure_entry()
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_IP_ADDRESS,
+                        default=reconfigure_entry.data.get(CONF_IP_ADDRESS),
+                    ): TextSelector(),
+                }
+            ),
+            description_placeholders={
+                "title": reconfigure_entry.title,
+            },
+            errors=errors,
+        )
 
     @staticmethod
     async def _async_try_connect(ip_address: str) -> Device:
@@ -177,7 +237,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         Make connection with device to test the connection
         and to get info for unique_id.
         """
-        energy_api = HomeWizardEnergy(ip_address)
+        energy_api = HomeWizardEnergyV1(ip_address)
         try:
             return await energy_api.device()
 
@@ -187,7 +247,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except UnsupportedError as ex:
-            _LOGGER.error("API version unsuppored")
+            LOGGER.error("API version unsuppored")
             raise AbortFlow("unsupported_api_version") from ex
 
         except RequestError as ex:
@@ -196,7 +256,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             ) from ex
 
         except Exception as ex:
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             raise AbortFlow("unknown_error") from ex
 
         finally:

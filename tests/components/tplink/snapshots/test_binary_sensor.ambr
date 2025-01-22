@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_states[binary_sensor.my_device_battery_low-entry]
+# name: test_states[binary_sensor.my_device_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.my_device_battery_low',
+    'entity_id': 'binary_sensor.my_device_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -23,7 +23,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery low',
+    'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,

@@ -3,11 +3,12 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
-from homeassistant.components import thread, zeroconf
+from homeassistant.components import thread
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-TEST_ZEROCONF_RECORD = zeroconf.ZeroconfServiceInfo(
+TEST_ZEROCONF_RECORD = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="HomeAssistant OpenThreadBorderRouter #0BBF",

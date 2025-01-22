@@ -61,15 +61,29 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME: Final = "Threshold"
 
-PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(float),
-        vol.Optional(CONF_LOWER): vol.Coerce(float),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_UPPER): vol.Coerce(float),
-    }
+
+def no_missing_threshold(value: dict) -> dict:
+    """Validate data point list is greater than polynomial degrees."""
+    if value.get(CONF_LOWER) is None and value.get(CONF_UPPER) is None:
+        raise vol.Invalid("Lower or Upper thresholds are not provided")
+
+    return value
+
+
+PLATFORM_SCHEMA = vol.All(
+    BINARY_SENSOR_PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_ENTITY_ID): cv.entity_id,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(
+                float
+            ),
+            vol.Optional(CONF_LOWER): vol.Coerce(float),
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_UPPER): vol.Coerce(float),
+        }
+    ),
+    no_missing_threshold,
 )
 
 
@@ -126,9 +140,6 @@ async def async_setup_platform(
     hysteresis: float = config[CONF_HYSTERESIS]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
 
-    if lower is None and upper is None:
-        raise ValueError("Lower or Upper thresholds not provided")
-
     async_add_entities(
         [
             ThresholdSensor(
@@ -151,6 +162,9 @@ class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
     _attr_should_poll = False
+    _unrecorded_attributes = frozenset(
+        {ATTR_ENTITY_ID, ATTR_HYSTERESIS, ATTR_LOWER, ATTR_TYPE, ATTR_UPPER}
+    )
 
     def __init__(
         self,

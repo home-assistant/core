@@ -34,7 +34,7 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 from homeassistant.util.unit_conversion import DistanceConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -193,7 +193,7 @@ async def async_setup_platform(
 
     devices = []
     for station in network.stations:
-        dist = location.distance(
+        dist = location_util.distance(
             latitude, longitude, station[ATTR_LATITUDE], station[ATTR_LONGITUDE]
         )
         station_id = station[ATTR_ID]
@@ -236,7 +236,7 @@ class CityBikesNetworks:
             for network in self.networks:
                 network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
                 network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
-                dist = location.distance(
+                dist = location_util.distance(
                     latitude, longitude, network_latitude, network_longitude
                 )
                 if minimum_dist is None or dist < minimum_dist:

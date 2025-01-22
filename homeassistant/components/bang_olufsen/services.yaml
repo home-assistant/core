@@ -1,0 +1,96 @@
+beolink_allstandby:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+
+beolink_expand:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    all_discovered:
+      required: false
+      example: false
+      selector:
+        boolean:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jids:
+          required: false
+          example: >-
+            [
+              1111.2222222.33333333@products.bang-olufsen.com,
+              4444.5555555.66666666@products.bang-olufsen.com
+            ]
+          selector:
+            object:
+
+beolink_join:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jid:
+          required: false
+          example: 1111.2222222.33333333@products.bang-olufsen.com
+          selector:
+            text:
+        source_id:
+          required: false
+          example: tidal
+          selector:
+            select:
+              translation_key: "source_ids"
+              options:
+                - beoradio
+                - deezer
+                - spotify
+                - tidal
+                - radio
+                - tp1
+                - tp2
+                - cd
+                - aux_a
+                - ph
+
+beolink_leave:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+
+beolink_unexpand:
+  target:
+    entity:
+      integration: bang_olufsen
+      domain: media_player
+    device:
+      integration: bang_olufsen
+  fields:
+    jid_options:
+      collapsed: false
+      fields:
+        beolink_jids:
+          required: true
+          example: >-
+            [
+              1111.2222222.33333333@products.bang-olufsen.com,
+              4444.5555555.66666666@products.bang-olufsen.com
+            ]
+          selector:
+            object:

@@ -3,5 +3,6 @@
   "name": "Logentries",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/logentries",
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
 }

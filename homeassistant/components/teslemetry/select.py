@@ -90,10 +90,12 @@ async def async_setup_entry(
                 )
                 for description in SEAT_HEATER_DESCRIPTIONS
                 for vehicle in entry.runtime_data.vehicles
+                if description.key in vehicle.coordinator.data
             ),
             (
                 TeslemetryWheelHeaterSelectEntity(vehicle, entry.runtime_data.scopes)
                 for vehicle in entry.runtime_data.vehicles
+                if vehicle.coordinator.data.get("climate_state_steering_wheel_heater")
             ),
             (
                 TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
@@ -137,7 +139,7 @@ class TeslemetrySeatHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
         self._attr_available = self.entity_description.available_fn(self)
         value = self._value
-        if value is None:
+        if not isinstance(value, int):
             self._attr_current_option = None
         else:
             self._attr_current_option = self._attr_options[value]
@@ -182,7 +184,7 @@ class TeslemetryWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEntity):
         """Handle updated data from the coordinator."""
 
         value = self._value
-        if value is None:
+        if not isinstance(value, int):
             self._attr_current_option = None
         else:
             self._attr_current_option = self._attr_options[value]

@@ -20,7 +20,7 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
         bring_list: BringData,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, bring_list["listUuid"])
 
         self._list_uuid = bring_list["listUuid"]
 

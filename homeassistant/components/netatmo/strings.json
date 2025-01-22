@@ -181,6 +181,11 @@
         }
       }
     },
+    "button": {
+      "preferred_position": {
+        "name": "Preferred position"
+      }
+    },
     "sensor": {
       "temp_trend": {
         "name": "Temperature trend"

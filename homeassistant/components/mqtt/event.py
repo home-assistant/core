@@ -38,6 +38,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_EVENT_TYPES = "event_types"
 
 MQTT_EVENT_ATTRIBUTES_BLOCKED = frozenset(
@@ -149,7 +151,7 @@ class MqttEvent(MqttEntity, EventEntity):
             )
         except KeyError:
             _LOGGER.warning(
-                ("`event_type` missing in JSON event payload, " " '%s' on topic %s"),
+                "`event_type` missing in JSON event payload, '%s' on topic %s",
                 payload,
                 msg.topic,
             )

@@ -10,12 +10,16 @@ import logging
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
 from pysmartapp.event import EVENT_TYPE_DEVICE
-from pysmartthings import Attribute, Capability, SmartThings
+from pysmartthings import APIInvalidGrant, Attribute, Capability, SmartThings
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -106,7 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # to import the modules.
     await async_get_loaded_integration(hass, DOMAIN).async_get_platforms(PLATFORMS)
 
-    remove_entry = False
     try:
         # See if the app is already setup. This occurs when there are
         # installs in multiple SmartThings locations (valid use-case)
@@ -175,33 +178,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         broker.connect()
         hass.data[DOMAIN][DATA_BROKERS][entry.entry_id] = broker
 
+    except APIInvalidGrant as ex:
+        raise ConfigEntryAuthFailed from ex
     except ClientResponseError as ex:
         if ex.status in (HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN):
-            _LOGGER.exception(
-                (
-                    "Unable to setup configuration entry '%s' - please reconfigure the"
-                    " integration"
-                ),
-                entry.title,
-            )
-            remove_entry = True
-        else:
-            _LOGGER.debug(ex, exc_info=True)
-            raise ConfigEntryNotReady from ex
+            raise ConfigEntryError(
+                "The access token is no longer valid. Please remove the integration and set up again."
+            ) from ex
+        _LOGGER.debug(ex, exc_info=True)
+        raise ConfigEntryNotReady from ex
     except (ClientConnectionError, RuntimeWarning) as ex:
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady from ex
-
-    if remove_entry:
-        hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
-        # only create new flow if there isn't a pending one for SmartThings.
-        if not hass.config_entries.flow.async_progress_by_handler(DOMAIN):
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}
-                )
-            )
-        return False
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

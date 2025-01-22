@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_alarm_control_panel[load_platforms0][alarm_control_panel.yale_smart_alarm-entry]
+# name: test_alarm_control_panel[load_platforms0][alarm_control_panel.test_username-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -11,7 +11,7 @@
     'disabled_by': None,
     'domain': 'alarm_control_panel',
     'entity_category': None,
-    'entity_id': 'alarm_control_panel.yale_smart_alarm',
+    'entity_id': 'alarm_control_panel.test_username',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -32,17 +32,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_alarm_control_panel[load_platforms0][alarm_control_panel.yale_smart_alarm-state]
+# name: test_alarm_control_panel[load_platforms0][alarm_control_panel.test_username-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
       'code_arm_required': False,
       'code_format': None,
-      'friendly_name': 'Yale Smart Alarm',
+      'friendly_name': 'test-username',
       'supported_features': <AlarmControlPanelEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'alarm_control_panel.yale_smart_alarm',
+    'entity_id': 'alarm_control_panel.test_username',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

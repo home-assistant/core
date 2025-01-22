@@ -161,6 +161,9 @@
       },
       "altitude": {
         "name": "Altitude above Sea Level"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
       }
     },
     "light": {
@@ -196,6 +199,9 @@
           "toggle": "[%key:common::action::toggle%]",
           "previous": "Previous"
         }
+      },
+      "temperature_display_mode": {
+        "name": "Temperature display mode"
       }
     },
     "sensor": {
@@ -245,6 +251,9 @@
       },
       "valve_position": {
         "name": "Valve position"
+      },
+      "battery_replacement_description": {
+        "name": "Battery type"
       }
     },
     "switch": {
@@ -253,6 +262,9 @@
       },
       "power": {
         "name": "Power"
+      },
+      "child_lock": {
+        "name": "Child lock"
       }
     },
     "vacuum": {

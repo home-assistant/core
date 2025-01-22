@@ -3,10 +3,11 @@
 from collections.abc import Awaitable
 import dataclasses
 
-from homeassistant.components import ssdp, zeroconf
+from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN, UPNP_ST
 from .helpers import hostname_to_uid
@@ -25,7 +26,7 @@ class SonosDiscoveryFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DO
         super().__init__(DOMAIN, "Sonos", _async_has_devices)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf."""
         hostname = discovery_info.hostname

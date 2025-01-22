@@ -14,20 +14,6 @@
       }),
     ]),
     'playback': dict({
-      'audio_features': dict({
-        'acousticness': 0.011,
-        'danceability': 0.696,
-        'energy': 0.905,
-        'instrumentalness': 0.000905,
-        'key': 3,
-        'liveness': 0.302,
-        'loudness': -2.743,
-        'mode': 1,
-        'speechiness': 0.103,
-        'tempo': 114.944,
-        'time_signature': 4,
-        'valence': 0.625,
-      }),
       'current_playback': dict({
         'context': dict({
           'context_type': 'playlist',
@@ -421,6 +407,69 @@
                 'track_number': 18,
                 'type': 'track',
                 'uri': 'spotify:track:2E2znCPaS8anQe21GLxcvJ',
+              }),
+            }),
+            dict({
+              'track': dict({
+                'description': 'Patreon: https://www.patreon.com/safetythirdMerch: https://safetythird.shopYouTube: https://www.youtube.com/@safetythird/Advertising Inquiries: https://redcircle.com/brandsPrivacy & Opt-Out: https://redcircle.com/privacy',
+                'duration_ms': 3690161,
+                'episode_id': '3o0RYoo5iOMKSmEbunsbvW',
+                'explicit': False,
+                'external_urls': dict({
+                  'spotify': 'https://open.spotify.com/episode/3o0RYoo5iOMKSmEbunsbvW',
+                }),
+                'href': 'https://api.spotify.com/v1/episodes/3o0RYoo5iOMKSmEbunsbvW',
+                'images': list([
+                  dict({
+                    'height': 640,
+                    'url': 'https://i.scdn.co/image/ab6765630000ba8ac7bedd27a4413b1abf926d8a',
+                    'width': 640,
+                  }),
+                  dict({
+                    'height': 300,
+                    'url': 'https://i.scdn.co/image/ab67656300005f1fc7bedd27a4413b1abf926d8a',
+                    'width': 300,
+                  }),
+                  dict({
+                    'height': 64,
+                    'url': 'https://i.scdn.co/image/ab6765630000f68dc7bedd27a4413b1abf926d8a',
+                    'width': 64,
+                  }),
+                ]),
+                'name': 'My Squirrel Has Brain Damage - Safety Third 119',
+                'release_date': '2024-07-26',
+                'release_date_precision': 'day',
+                'show': dict({
+                  'description': 'Safety Third is a weekly show hosted by William Osman, NileRed, The Backyard Scientist, Allen Pan, and a couple other YouTube "Scientists". Sometimes we have guests, sometimes it\'s just us, but always: safety is our number three priority.',
+                  'external_urls': dict({
+                    'spotify': 'https://open.spotify.com/show/1Y9ExMgMxoBVrgrfU7u0nD',
+                  }),
+                  'href': 'https://api.spotify.com/v1/shows/1Y9ExMgMxoBVrgrfU7u0nD',
+                  'images': list([
+                    dict({
+                      'height': 640,
+                      'url': 'https://i.scdn.co/image/ab6765630000ba8ac7bedd27a4413b1abf926d8a',
+                      'width': 640,
+                    }),
+                    dict({
+                      'height': 300,
+                      'url': 'https://i.scdn.co/image/ab67656300005f1fc7bedd27a4413b1abf926d8a',
+                      'width': 300,
+                    }),
+                    dict({
+                      'height': 64,
+                      'url': 'https://i.scdn.co/image/ab6765630000f68dc7bedd27a4413b1abf926d8a',
+                      'width': 64,
+                    }),
+                  ]),
+                  'name': 'Safety Third',
+                  'publisher': 'Safety Third ',
+                  'show_id': '1Y9ExMgMxoBVrgrfU7u0nD',
+                  'total_episodes': 120,
+                  'uri': 'spotify:show:1Y9ExMgMxoBVrgrfU7u0nD',
+                }),
+                'type': 'episode',
+                'uri': 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
               }),
             }),
           ]),

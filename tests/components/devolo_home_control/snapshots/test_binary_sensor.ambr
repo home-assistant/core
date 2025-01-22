@@ -88,7 +88,7 @@
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'overload',
     'unique_id': 'Overload',
     'unit_of_measurement': None,
   })
@@ -134,7 +134,7 @@
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'button',
     'unique_id': 'Test_1',
     'unit_of_measurement': None,
   })

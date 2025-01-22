@@ -46,7 +46,6 @@ class AtagThermostat(AtagEntity, ClimateEntity):
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: AtagDataUpdateCoordinator, atag_id: str) -> None:
         """Initialize an Atag climate device."""

@@ -104,10 +104,10 @@ async def test_if_fires_on_turn_on_request(
     assert service_calls[2].data["id"] == 0
 
 
-async def test_failure_scenarios(
+async def test_invalid_trigger_raises(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, client
 ) -> None:
-    """Test failure scenarios."""
+    """Test invalid trigger platform or device id raises."""
     await setup_webostv(hass)
 
     # Test wrong trigger platform type
@@ -128,7 +128,27 @@ async def test_failure_scenarios(
             },
         )
 
-    entry = MockConfigEntry(domain="fake", state=ConfigEntryState.LOADED, data={})
+
+@pytest.mark.parametrize(
+    ("domain", "entry_state"),
+    [
+        (DOMAIN, ConfigEntryState.NOT_LOADED),
+        ("fake", ConfigEntryState.LOADED),
+    ],
+)
+async def test_invalid_entry_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    caplog: pytest.LogCaptureFixture,
+    domain: str,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test device id not loaded or from another domain raises."""
+    await setup_webostv(hass)
+
+    entry = MockConfigEntry(domain=domain, state=entry_state, data={})
+    entry.runtime_data = None
     entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(

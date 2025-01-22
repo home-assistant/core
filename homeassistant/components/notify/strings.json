@@ -67,7 +67,7 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The {integration_title} `notify` actions(s) are migrated. A new `notify` entity is available now to replace each legacy `notify` action.\n\nUpdate any automations to use the new `notify.send_message` action exposed with this new entity. When this is done, fix this issue and restart Home Assistant.",
+            "description": "The {integration_title} `notify` action(s) are migrated. A new `notify` entity is available now to replace each legacy `notify` action.\n\nUpdate any automations to use the new `notify.send_message` action exposed with this new entity. When this is done, fix this issue and restart Home Assistant.",
             "title": "Migrate legacy {integration_title} notify action for domain `{domain}`"
           }
         }

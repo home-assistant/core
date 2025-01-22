@@ -36,12 +36,12 @@ from typing import (
     NotRequired,
     Self,
     TypedDict,
+    TypeVar,
     cast,
     overload,
 )
 
-from propcache import cached_property, under_cached_property
-from typing_extensions import TypeVar
+from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 
 from . import util
@@ -83,7 +83,7 @@ from .exceptions import (
     Unauthorized,
 )
 from .helpers.deprecation import (
-    DeprecatedConstantEnum,
+    DeferredDeprecatedAlias,
     EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
@@ -176,12 +176,17 @@ class EventStateReportedData(EventStateEventData):
     old_last_reported: datetime.datetime
 
 
-# SOURCE_* are deprecated as of Home Assistant 2022.2, use ConfigSource instead
-_DEPRECATED_SOURCE_DISCOVERED = DeprecatedConstantEnum(
-    ConfigSource.DISCOVERED, "2025.1"
+def _deprecated_core_config() -> Any:
+    # pylint: disable-next=import-outside-toplevel
+    from . import core_config
+
+    return core_config.Config
+
+
+# The Config class was moved to core_config in Home Assistant 2024.11
+_DEPRECATED_Config = DeferredDeprecatedAlias(
+    _deprecated_core_config, "homeassistant.core_config.Config", "2025.11"
 )
-_DEPRECATED_SOURCE_STORAGE = DeprecatedConstantEnum(ConfigSource.STORAGE, "2025.1")
-_DEPRECATED_SOURCE_YAML = DeprecatedConstantEnum(ConfigSource.YAML, "2025.1")
 
 
 # How long to wait until things that run on startup have to finish.
@@ -327,7 +332,7 @@ class HassJob[**_P, _R_co]:
     we run the job.
     """
 
-    __slots__ = ("target", "name", "_cancel_on_shutdown", "_cache")
+    __slots__ = ("_cache", "_cancel_on_shutdown", "name", "target")
 
     def __init__(
         self,
@@ -642,12 +647,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
-            "calls `async_add_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.4; Please review "
+        frame.report_usage(
+            "calls `async_add_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.4",
         )
 
         if target is None:
@@ -698,12 +703,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
-            "calls `async_add_hass_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.5; Please review "
+        frame.report_usage(
+            "calls `async_add_hass_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/04/07/deprecate_add_hass_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.5",
         )
 
         return self._async_add_hass_job(hassjob, *args, background=background)
@@ -972,12 +977,12 @@ class HomeAssistant:
         # late import to avoid circular imports
         from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-        frame.report(
-            "calls `async_run_job`, which is deprecated and will be removed in Home "
-            "Assistant 2025.4; Please review "
+        frame.report_usage(
+            "calls `async_run_job`, which should be reviewed against "
             "https://developers.home-assistant.io/blog/2024/03/13/deprecate_add_run_job"
             " for replacement options",
-            error_if_core=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.4",
         )
 
         if asyncio.iscoroutine(target):
@@ -1148,8 +1153,7 @@ class HomeAssistant:
                 await self.async_block_till_done()
         except TimeoutError:
             _LOGGER.warning(
-                "Timed out waiting for integrations to stop, the shutdown will"
-                " continue"
+                "Timed out waiting for integrations to stop, the shutdown will continue"
             )
             self._async_log_running_tasks("stop integrations")
 
@@ -1242,7 +1246,7 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    __slots__ = ("id", "user_id", "parent_id", "origin_event", "_cache")
+    __slots__ = ("_cache", "id", "origin_event", "parent_id", "user_id")
 
     def __init__(
         self,
@@ -1317,12 +1321,12 @@ class Event(Generic[_DataT]):
     """Representation of an event within the bus."""
 
     __slots__ = (
-        "event_type",
+        "_cache",
+        "context",
         "data",
+        "event_type",
         "origin",
         "time_fired_timestamp",
-        "context",
-        "_cache",
     )
 
     def __init__(
@@ -1621,10 +1625,10 @@ class EventBus:
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            frame.report(
-                "calls `async_listen` with run_immediately, which is"
-                " deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+            frame.report_usage(
+                "calls `async_listen` with run_immediately",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.5",
             )
 
         if event_filter is not None and not is_callback_check_partial(event_filter):
@@ -1691,10 +1695,10 @@ class EventBus:
             # late import to avoid circular imports
             from .helpers import frame  # pylint: disable=import-outside-toplevel
 
-            frame.report(
-                "calls `async_listen_once` with run_immediately, which is "
-                "deprecated and will be removed in Home Assistant 2025.5",
-                error_if_core=False,
+            frame.report_usage(
+                "calls `async_listen_once` with run_immediately",
+                core_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2025.5",
             )
 
         one_time_listener: _OneTimeListener[_DataT] = _OneTimeListener(
@@ -1763,18 +1767,18 @@ class State:
     """
 
     __slots__ = (
-        "entity_id",
-        "state",
+        "_cache",
         "attributes",
+        "context",
+        "domain",
+        "entity_id",
         "last_changed",
         "last_reported",
         "last_updated",
-        "context",
-        "state_info",
-        "domain",
-        "object_id",
         "last_updated_timestamp",
-        "_cache",
+        "object_id",
+        "state",
+        "state_info",
     )
 
     def __init__(
@@ -2062,7 +2066,7 @@ class States(UserDict[str, State]):
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    __slots__ = ("_states", "_states_data", "_reservations", "_bus", "_loop")
+    __slots__ = ("_bus", "_loop", "_reservations", "_states", "_states_data")
 
     def __init__(self, bus: EventBus, loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
@@ -2400,7 +2404,7 @@ class SupportsResponse(enum.StrEnum):
 class Service:
     """Representation of a callable service."""
 
-    __slots__ = ["job", "schema", "domain", "service", "supports_response"]
+    __slots__ = ["domain", "job", "schema", "service", "supports_response"]
 
     def __init__(
         self,
@@ -2427,10 +2431,11 @@ class Service:
 class ServiceCall:
     """Representation of a call to a service."""
 
-    __slots__ = ("domain", "service", "data", "context", "return_response")
+    __slots__ = ("context", "data", "domain", "hass", "return_response", "service")
 
     def __init__(
         self,
+        hass: HomeAssistant,
         domain: str,
         service: str,
         data: dict[str, Any] | None = None,
@@ -2438,6 +2443,7 @@ class ServiceCall:
         return_response: bool = False,
     ) -> None:
         """Initialize a service call."""
+        self.hass = hass
         self.domain = domain
         self.service = service
         self.data = ReadOnlyDict(data or {})
@@ -2458,7 +2464,7 @@ class ServiceCall:
 class ServiceRegistry:
     """Offer the services over the eventbus."""
 
-    __slots__ = ("_services", "_hass")
+    __slots__ = ("_hass", "_services")
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
@@ -2763,7 +2769,7 @@ class ServiceRegistry:
             processed_data = service_data
 
         service_call = ServiceCall(
-            domain, service, processed_data, context, return_response
+            self._hass, domain, service, processed_data, context, return_response
         )
 
         self._hass.bus.async_fire_internal(

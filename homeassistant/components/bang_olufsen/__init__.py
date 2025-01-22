@@ -8,6 +8,7 @@ from aiohttp.client_exceptions import (
     ClientConnectorError,
     ClientOSError,
     ServerTimeoutError,
+    WSMessageTypeError,
 )
 from mozart_api.exceptions import ApiException
 from mozart_api.mozart_client import MozartClient
@@ -33,7 +34,7 @@ class BangOlufsenData:
 
 type BangOlufsenConfigEntry = ConfigEntry[BangOlufsenData]
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.EVENT, Platform.MEDIA_PLAYER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) -> bool:
@@ -62,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) 
         ServerTimeoutError,
         ApiException,
         TimeoutError,
+        WSMessageTypeError,
     ) as error:
         await client.close_api_client()
         raise ConfigEntryNotReady(f"Unable to connect to {entry.title}") from error

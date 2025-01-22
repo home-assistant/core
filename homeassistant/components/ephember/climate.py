@@ -84,7 +84,6 @@ class EphEmberThermostat(ClimateEntity):
 
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, ember, zone):
         """Initialize the thermostat."""

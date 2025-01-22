@@ -10,12 +10,14 @@ from pyschlage.lock import Lock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schlage.const import DOMAIN, UPDATE_INTERVAL
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import MockSchlageConfigEntry
+
+from tests.common import async_fire_time_changed
 
 
 @patch(
@@ -23,7 +25,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
     side_effect=WarrantException,
 )
 async def test_auth_failed(
-    mock_auth: Mock, hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    mock_auth: Mock, hass: HomeAssistant, mock_config_entry: MockSchlageConfigEntry
 ) -> None:
     """Test failed auth on setup."""
     mock_config_entry.add_to_hass(hass)
@@ -36,7 +38,7 @@ async def test_auth_failed(
 
 async def test_update_data_fails(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
 ) -> None:
@@ -52,7 +54,7 @@ async def test_update_data_fails(
 
 async def test_update_data_auth_error(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
 ) -> None:
@@ -68,7 +70,7 @@ async def test_update_data_auth_error(
 
 async def test_update_data_get_logs_auth_error(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
     mock_lock: Mock,
@@ -87,7 +89,7 @@ async def test_update_data_get_logs_auth_error(
 
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry: MockSchlageConfigEntry,
     mock_pyschlage_auth: Mock,
     mock_schlage: Mock,
 ) -> None:
@@ -106,7 +108,7 @@ async def test_load_unload_config_entry(
 async def test_lock_device_registry(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
-    mock_added_config_entry: ConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test lock is added to device registry."""
@@ -117,7 +119,7 @@ async def test_lock_device_registry(
 async def test_auto_add_device(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
-    mock_added_config_entry: ConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_schlage: Mock,
     mock_lock: Mock,
     mock_lock_attrs: dict[str, Any],
@@ -153,7 +155,7 @@ async def test_auto_add_device(
 async def test_auto_remove_device(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
-    mock_added_config_entry: ConfigEntry,
+    mock_added_config_entry: MockSchlageConfigEntry,
     mock_schlage: Mock,
     freezer: FrozenDateTimeFactory,
 ) -> None:

@@ -38,6 +38,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockUser,
     async_capture_events,
     async_mock_service,
@@ -90,6 +91,8 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.entity_id = "test.entity"
     ent.hass = hass
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
     ent.async_write_ha_state()
 
     state = hass.states.get("test.entity")
@@ -184,6 +187,7 @@ async def test_turn_on_skips_domains_without_service(
     # because by mocking out the call service method, we mock out all
     # So we mimic how the service registry calls services
     service_call = ha.ServiceCall(
+        hass,
         "homeassistant",
         "turn_on",
         {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},

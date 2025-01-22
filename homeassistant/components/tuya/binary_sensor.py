@@ -151,7 +151,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.PRESENCE_STATE,
             device_class=BinarySensorDeviceClass.OCCUPANCY,
-            on_value="presence",
+            on_value={"presence", "small_move", "large_move", "peaceful"},
         ),
     ),
     # Formaldehyde Detector

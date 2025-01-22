@@ -34,6 +34,8 @@ from .const import (
 from .coordinator import BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -260,8 +262,6 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         except ValueError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="notify_missing_argument_item",
-                translation_placeholders={
-                    "service": f"{DOMAIN}.{SERVICE_PUSH_NOTIFICATION}",
-                },
+                translation_key="notify_missing_argument",
+                translation_placeholders={"field": "item"},
             ) from e

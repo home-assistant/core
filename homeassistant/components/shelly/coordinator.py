@@ -11,10 +11,16 @@ from typing import Any, cast
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
 from aioshelly.const import MODEL_NAMES, MODEL_VALVE
-from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
+from aioshelly.exceptions import (
+    DeviceConnectionError,
+    InvalidAuthError,
+    MacAddressMismatchError,
+    RpcCallError,
+)
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
-from propcache import cached_property
+from propcache.api import cached_property
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -25,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -149,6 +155,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             config_entry_id=self.entry.entry_id,
             name=self.name,
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
             model=MODEL_NAMES.get(self.model),
             model_id=self.model,
@@ -173,7 +180,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
         try:
             await self.device.initialize()
             update_device_fw_info(self.hass, self.device, self.entry)
-        except DeviceConnectionError as err:
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
             LOGGER.debug(
                 "Error connecting to Shelly device %s, error: %r", self.name, err
             )
@@ -366,7 +373,7 @@ class ShellyBlockCoordinator(ShellyCoordinatorBase[BlockDevice]):
         try:
             await self.device.update()
         except DeviceConnectionError as err:
-            raise UpdateFailed(f"Error fetching data: {err!r}") from err
+            raise UpdateFailed(repr(err)) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
 
@@ -450,8 +457,8 @@ class ShellyRestCoordinator(ShellyCoordinatorBase[BlockDevice]):
             if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
                 return
             await self.device.update_shelly()
-        except DeviceConnectionError as err:
-            raise UpdateFailed(f"Error fetching data: {err!r}") from err
+        except (DeviceConnectionError, MacAddressMismatchError) as err:
+            raise UpdateFailed(repr(err)) from err
         except InvalidAuthError:
             await self.async_shutdown_device_and_start_reauth()
         else:
@@ -603,7 +610,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
-        if self.update_sleep_period():
+        if self.update_sleep_period() or self.hass.is_stopping:
             return
 
         if self.sleep_period:
@@ -691,6 +698,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
+            async_remove_scanner(self.hass, format_mac(self.mac).upper())
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting

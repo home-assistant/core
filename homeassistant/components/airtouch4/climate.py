@@ -95,7 +95,6 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, ac_number, info):
         """Initialize the climate device."""
@@ -205,7 +204,6 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, group_number, info):
         """Initialize the climate device."""

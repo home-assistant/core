@@ -68,7 +68,6 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_modes = list(PRESET_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, spa):
         """Initialize the entity."""

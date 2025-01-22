@@ -15,6 +15,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["goalzero"],
-  "quality_scale": "silver",
   "requirements": ["goalzero==0.2.2"]
 }

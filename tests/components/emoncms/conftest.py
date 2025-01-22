@@ -91,6 +91,21 @@ def config_entry() -> MockConfigEntry:
     )
 
 
+FLOW_RESULT_SECOND_URL = copy.deepcopy(FLOW_RESULT)
+FLOW_RESULT_SECOND_URL[CONF_URL] = "http://1.1.1.2"
+
+
+@pytest.fixture
+def config_entry_unique_id() -> MockConfigEntry:
+    """Mock emoncms config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=SENSOR_NAME,
+        data=FLOW_RESULT_SECOND_URL,
+        unique_id="123-53535292",
+    )
+
+
 FLOW_RESULT_NO_FEED = copy.deepcopy(FLOW_RESULT)
 FLOW_RESULT_NO_FEED[CONF_ONLY_INCLUDE_FEEDID] = None
 
@@ -143,4 +158,5 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
+        client.async_get_uuid.return_value = "123-53535292"
         yield client

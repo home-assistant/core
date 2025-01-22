@@ -8,7 +8,7 @@ import itertools
 import logging
 from typing import Any, cast
 
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -535,13 +535,15 @@ class TemplateEntity(Entity):  # pylint: disable=hass-enforce-class-module
             )
         if self._entity_picture_template is not None:
             self.add_template_attribute(
-                "_attr_entity_picture", self._entity_picture_template
+                "_attr_entity_picture", self._entity_picture_template, cv.string
             )
         if (
             self._friendly_name_template is not None
             and not self._friendly_name_template.is_static
         ):
-            self.add_template_attribute("_attr_name", self._friendly_name_template)
+            self.add_template_attribute(
+                "_attr_name", self._friendly_name_template, cv.string
+            )
 
     @callback
     def async_start_preview(

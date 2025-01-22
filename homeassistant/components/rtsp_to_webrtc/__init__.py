@@ -30,6 +30,7 @@ from homeassistant.components import camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +41,24 @@ DATA_UNSUB = "unsub"
 TIMEOUT = 10
 CONF_STUN_SERVER = "stun_server"
 
+_DEPRECATED = "deprecated"
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _DEPRECATED,
+        breaks_in_ha_version="2025.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=_DEPRECATED,
+        translation_placeholders={
+            "go2rtc": "[go2rtc](https://www.home-assistant.io/integrations/go2rtc/)",
+        },
+    )
 
     client: WebRTCClientInterface
     try:
@@ -98,6 +113,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if DOMAIN in hass.data:
         del hass.data[DOMAIN]
+    ir.async_delete_issue(hass, DOMAIN, _DEPRECATED)
     return True
 
 

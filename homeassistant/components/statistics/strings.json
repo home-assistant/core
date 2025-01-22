@@ -10,7 +10,7 @@
     },
     "step": {
       "user": {
-        "description": "Add a statistics sensor",
+        "description": "Create a statistics sensor",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "entity_id": "Entity"
@@ -23,10 +23,10 @@
       "state_characteristic": {
         "description": "Read the documention for further details on available options and how to use them.",
         "data": {
-          "state_characteristic": "State_characteristic"
+          "state_characteristic": "Statistic characteristic"
         },
         "data_description": {
-          "state_characteristic": "The characteristic that should be used as the state of the statistics sensor."
+          "state_characteristic": "The statistic characteristic that should be used as the state of the sensor."
         }
       },
       "options": {

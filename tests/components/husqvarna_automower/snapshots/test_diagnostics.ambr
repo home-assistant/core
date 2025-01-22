@@ -71,9 +71,7 @@
       'activity': 'parked_in_cs',
       'error_code': 0,
       'error_datetime': None,
-      'error_datetime_naive': None,
       'error_key': None,
-      'error_timestamp': 0,
       'inactive_reason': 'none',
       'is_error_confirmable': False,
       'mode': 'main_area',
@@ -82,9 +80,7 @@
       'work_area_name': 'Front lawn',
     }),
     'planner': dict({
-      'next_start': 1685991600000,
       'next_start_datetime': '2023-06-05T19:00:00+02:00',
-      'next_start_datetime_naive': '2023-06-05T19:00:00',
       'override': dict({
         'action': 'not_active',
       }),
@@ -123,7 +119,7 @@
     'system': dict({
       'model': 'HUSQVARNA AUTOMOWER® 450XH',
       'name': 'Test Mower 1',
-      'serial_number': 123,
+      'serial_number': '123',
     }),
     'work_area_dict': dict({
       '0': 'my_lawn',
@@ -141,7 +137,6 @@
         'cutting_height': 50,
         'enabled': False,
         'last_time_completed': '2024-08-12T05:07:49+02:00',
-        'last_time_completed_naive': '2024-08-12T05:07:49',
         'name': 'my_lawn',
         'progress': 20,
       }),
@@ -149,7 +144,6 @@
         'cutting_height': 50,
         'enabled': True,
         'last_time_completed': '2024-08-12T07:54:29+02:00',
-        'last_time_completed_naive': '2024-08-12T07:54:29',
         'name': 'Front lawn',
         'progress': 40,
       }),
@@ -157,7 +151,6 @@
         'cutting_height': 25,
         'enabled': True,
         'last_time_completed': None,
-        'last_time_completed_naive': None,
         'name': 'Back lawn',
         'progress': None,
       }),

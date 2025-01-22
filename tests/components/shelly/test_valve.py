@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_VALVE, SERVICE_OPEN_VALVE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import init_integration
 
@@ -17,7 +17,7 @@ GAS_VALVE_BLOCK_ID = 6
 
 async def test_block_device_gas_valve(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -227,25 +227,21 @@ async def test_get_tts_audio(
     await on_start_callback()
     client = await hass_client()
 
-    url = "/api/tts_get_url"
-    data |= {"message": "There is someone at the door."}
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {"message": "There is someone at the door."}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
@@ -280,25 +276,21 @@ async def test_get_tts_audio_logged_out(
     await hass.async_block_till_done()
     client = await hass_client()
 
-    url = "/api/tts_get_url"
-    data |= {"message": "There is someone at the door."}
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {"message": "There is someone at the door."}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_6e8b81ac47_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
@@ -342,28 +334,24 @@ async def test_tts_entity(
     assert state
     assert state.state == STATE_UNKNOWN
 
-    url = "/api/tts_get_url"
-    data = {
-        "engine_id": entity_id,
-        "message": "There is someone at the door.",
-    }
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data = {
+            "engine_id": entity_id,
+            "message": "There is someone at the door.",
+        }
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_6e8b81ac47_{entity_id}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_6e8b81ac47_{entity_id}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
@@ -482,29 +470,25 @@ async def test_deprecated_voice(
     client = await hass_client()
 
     # Test with non deprecated voice.
-    url = "/api/tts_get_url"
-    data |= {
-        "message": "There is someone at the door.",
-        "language": language,
-        "options": {"voice": replacement_voice},
-    }
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {
+            "message": "There is someone at the door.",
+            "language": language,
+            "options": {"voice": replacement_voice},
+        }
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_87567e3e29_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_87567e3e29_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
@@ -522,22 +506,18 @@ async def test_deprecated_voice(
     # Test with deprecated voice.
     data["options"] = {"voice": deprecated_voice}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_13646b7d32_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_13646b7d32_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     issue_id = f"deprecated_voice_{deprecated_voice}"
 
@@ -631,28 +611,24 @@ async def test_deprecated_gender(
     client = await hass_client()
 
     # Test without deprecated gender option.
-    url = "/api/tts_get_url"
-    data |= {
-        "message": "There is someone at the door.",
-        "language": language,
-    }
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {
+            "message": "There is someone at the door.",
+            "language": language,
+        }
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_6e8b81ac47_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_6e8b81ac47_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     assert mock_process_tts.call_count == 1
     assert mock_process_tts.call_args is not None
@@ -667,22 +643,18 @@ async def test_deprecated_gender(
     # Test with deprecated gender option.
     data["options"] = {"gender": gender_option}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
 
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_dd0e95eb04_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_{language.lower()}_dd0e95eb04_{expected_url_suffix}.mp3"
-        ),
-    }
-    await hass.async_block_till_done()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
+        await hass.async_block_till_done()
 
     issue_id = "deprecated_gender"
 

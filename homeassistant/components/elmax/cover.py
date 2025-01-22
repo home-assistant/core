@@ -121,13 +121,13 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         else:
             _LOGGER.debug("Ignoring stop request as the cover is IDLE")
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.UP
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.DOWN

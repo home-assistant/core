@@ -87,5 +87,17 @@
         "name": "Memory usage"
       }
     }
+  },
+  "services": {
+    "reconnect_client": {
+      "name": "Reconnect wireless client",
+      "description": "Tries to get wireless client to reconnect to Omada Network.",
+      "fields": {
+        "mac": {
+          "name": "MAC address",
+          "description": "MAC address of the device."
+        }
+      }
+    }
   }
 }

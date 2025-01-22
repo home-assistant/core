@@ -33,6 +33,7 @@ def mock_all(
     store_info: AsyncMock,
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     _install_default_mocks(aioclient_mock)
@@ -145,19 +146,6 @@ def _install_default_mocks(aioclient_mock: AiohttpClientMocker):
     )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",

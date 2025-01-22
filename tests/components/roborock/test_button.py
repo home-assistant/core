@@ -6,10 +6,17 @@ import pytest
 import roborock
 
 from homeassistant.components.button import SERVICE_PRESS
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.BUTTON]
 
 
 @pytest.mark.parametrize(

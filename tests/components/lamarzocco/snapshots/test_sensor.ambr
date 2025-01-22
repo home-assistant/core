@@ -1,5 +1,21 @@
 # serializer version: 1
-# name: test_sensors[GS01234_current_coffee_temperature-entry]
+# name: test_scale_battery[Linea Mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'LMZ-123A45 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lmz_123a45_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '64',
+  })
+# ---
+# name: test_scale_battery[Linea Mini].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -13,7 +29,42 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gs01234_current_coffee_temperature',
+    'entity_id': 'sensor.lmz_123a45_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'LM012345_scale_battery',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.gs012345_current_coffee_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.gs012345_current_coffee_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,27 +84,27 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'current_temp_coffee',
-    'unique_id': 'GS01234_current_temp_coffee',
+    'unique_id': 'GS012345_current_temp_coffee',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[GS01234_current_coffee_temperature-sensor]
+# name: test_sensors[sensor.gs012345_current_coffee_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'GS01234 Current coffee temperature',
+      'friendly_name': 'GS012345 Current coffee temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gs01234_current_coffee_temperature',
+    'entity_id': 'sensor.gs012345_current_coffee_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '96.5',
   })
 # ---
-# name: test_sensors[GS01234_current_steam_temperature-entry]
+# name: test_sensors[sensor.gs012345_current_steam_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -67,7 +118,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.gs01234_current_steam_temperature',
+    'entity_id': 'sensor.gs012345_current_steam_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,27 +138,27 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'current_temp_steam',
-    'unique_id': 'GS01234_current_temp_steam',
+    'unique_id': 'GS012345_current_temp_steam',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensors[GS01234_current_steam_temperature-sensor]
+# name: test_sensors[sensor.gs012345_current_steam_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'GS01234 Current steam temperature',
+      'friendly_name': 'GS012345 Current steam temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gs01234_current_steam_temperature',
+    'entity_id': 'sensor.gs012345_current_steam_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '123.800003051758',
   })
 # ---
-# name: test_sensors[GS01234_shot_timer-entry]
+# name: test_sensors[sensor.gs012345_shot_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -121,7 +172,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.gs01234_shot_timer',
+    'entity_id': 'sensor.gs012345_shot_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -138,27 +189,27 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'shot_timer',
-    'unique_id': 'GS01234_shot_timer',
+    'unique_id': 'GS012345_shot_timer',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensors[GS01234_shot_timer-sensor]
+# name: test_sensors[sensor.gs012345_shot_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'GS01234 Shot timer',
+      'friendly_name': 'GS012345 Shot timer',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gs01234_shot_timer',
+    'entity_id': 'sensor.gs012345_shot_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensors[GS01234_total_coffees_made-entry]
+# name: test_sensors[sensor.gs012345_total_coffees_made-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -172,7 +223,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.gs01234_total_coffees_made',
+    'entity_id': 'sensor.gs012345_total_coffees_made',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -189,26 +240,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drink_stats_coffee',
-    'unique_id': 'GS01234_drink_stats_coffee',
+    'unique_id': 'GS012345_drink_stats_coffee',
     'unit_of_measurement': 'drinks',
   })
 # ---
-# name: test_sensors[GS01234_total_coffees_made-sensor]
+# name: test_sensors[sensor.gs012345_total_coffees_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Total coffees made',
+      'friendly_name': 'GS012345 Total coffees made',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gs01234_total_coffees_made',
+    'entity_id': 'sensor.gs012345_total_coffees_made',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1047',
   })
 # ---
-# name: test_sensors[GS01234_total_flushes_made-entry]
+# name: test_sensors[sensor.gs012345_total_flushes_made-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -222,7 +273,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.gs01234_total_flushes_made',
+    'entity_id': 'sensor.gs012345_total_flushes_made',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -239,19 +290,19 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'drink_stats_flushing',
-    'unique_id': 'GS01234_drink_stats_flushing',
+    'unique_id': 'GS012345_drink_stats_flushing',
     'unit_of_measurement': 'drinks',
   })
 # ---
-# name: test_sensors[GS01234_total_flushes_made-sensor]
+# name: test_sensors[sensor.gs012345_total_flushes_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GS01234 Total flushes made',
+      'friendly_name': 'GS012345 Total flushes made',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.gs01234_total_flushes_made',
+    'entity_id': 'sensor.gs012345_total_flushes_made',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

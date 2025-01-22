@@ -11,13 +11,7 @@ from python_homeassistant_analytics import (
 from python_homeassistant_analytics.models import IntegrationType
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-    OptionsFlowWithConfigEntry,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -26,6 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
+from . import AnalyticsInsightsConfigEntry
 from .const import (
     CONF_TRACKED_ADDONS,
     CONF_TRACKED_CUSTOM_INTEGRATIONS,
@@ -46,9 +41,11 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: AnalyticsInsightsConfigEntry,
+    ) -> HomeassistantAnalyticsOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return HomeassistantAnalyticsOptionsFlowHandler(config_entry)
+        return HomeassistantAnalyticsOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -132,7 +129,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
     """Handle Homeassistant Analytics options."""
 
     async def async_step_init(
@@ -211,6 +208,6 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithConfigEntry):
                         ),
                     },
                 ),
-                self.options,
+                self.config_entry.options,
             ),
         )

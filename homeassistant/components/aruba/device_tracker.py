@@ -90,7 +90,7 @@ class ArubaDeviceScanner(DeviceScanner):
         """Retrieve data from Aruba Access Point and return parsed result."""
 
         connect = f"ssh {self.username}@{self.host} -o HostKeyAlgorithms=ssh-rsa"
-        ssh = pexpect.spawn(connect)
+        ssh: pexpect.spawn[str] = pexpect.spawn(connect, encoding="utf-8")
         query = ssh.expect(
             [
                 "password:",
@@ -125,12 +125,12 @@ class ArubaDeviceScanner(DeviceScanner):
         ssh.expect("#")
         ssh.sendline("show clients")
         ssh.expect("#")
-        devices_result = ssh.before.split(b"\r\n")
+        devices_result = (ssh.before or "").splitlines()
         ssh.sendline("exit")
 
         devices: dict[str, dict[str, str]] = {}
         for device in devices_result:
-            if match := _DEVICES_REGEX.search(device.decode("utf-8")):
+            if match := _DEVICES_REGEX.search(device):
                 devices[match.group("ip")] = {
                     "ip": match.group("ip"),
                     "mac": match.group("mac").upper(),

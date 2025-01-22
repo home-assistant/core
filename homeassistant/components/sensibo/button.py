@@ -37,18 +37,30 @@ async def async_setup_entry(
     entry: SensiboConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Sensibo binary sensor platform."""
+    """Set up Sensibo button platform."""
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)
-        for device_id, device_data in coordinator.data.parsed.items()
-    )
+    added_devices: set[str] = set()
+
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, added_devices = coordinator.get_devices(added_devices)
+
+        if new_devices:
+            async_add_entities(
+                SensiboDeviceButton(coordinator, device_id, DEVICE_BUTTON_TYPES)
+                for device_id in coordinator.data.parsed
+                if device_id in new_devices
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
-    """Representation of a Sensibo Device Binary Sensor."""
+    """Representation of a Sensibo Device button."""
 
     entity_description: SensiboButtonEntityDescription
 

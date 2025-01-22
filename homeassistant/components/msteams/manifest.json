@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/msteams",
   "iot_class": "cloud_push",
   "loggers": ["pymsteams"],
+  "quality_scale": "legacy",
   "requirements": ["pymsteams==0.1.12"]
 }

@@ -1,8 +1,17 @@
 """Test Roborock Binary Sensor."""
 
+import pytest
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.BINARY_SENSOR]
 
 
 async def test_binary_sensors(

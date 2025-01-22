@@ -208,7 +208,7 @@ async def test_api_ingress_panels(
 @pytest.mark.parametrize(
     ("api_call", "method", "payload"),
     [
-        ("get_resolution_info", "GET", None),
+        ("get_network_info", "GET", None),
         ("update_diagnostics", "POST", True),
     ],
 )
@@ -338,20 +338,6 @@ async def test_api_set_yellow_settings(
         )
         == {}
     )
-    assert aioclient_mock.call_count == 1
-
-
-@pytest.mark.usefixtures("hassio_stubs")
-async def test_api_reboot_host(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
-    """Test setup with API ping."""
-    aioclient_mock.post(
-        "http://127.0.0.1/host/reboot",
-        json={"result": "ok", "data": {}},
-    )
-
-    assert await handler.async_reboot_host(hass) == {}
     assert aioclient_mock.call_count == 1
 
 

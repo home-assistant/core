@@ -6,10 +6,13 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.tradfri import config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from . import TRADFRI_PATH
 
@@ -86,10 +89,6 @@ async def test_user_connection_timeout(
     assert result["errors"] == {"base": "timeout"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.tradfri.config.error.invalid_security_code"],
-)
 async def test_user_connection_bad_key(
     hass: HomeAssistant, mock_auth, mock_entry_setup
 ) -> None:
@@ -107,7 +106,7 @@ async def test_user_connection_bad_key(
     assert len(mock_entry_setup.mock_calls) == 0
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"security_code": "invalid_security_code"}
+    assert result["errors"] == {"base": "invalid_security_code"}
 
 
 async def test_discovery_connection(
@@ -119,13 +118,13 @@ async def test_discovery_connection(
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -154,13 +153,13 @@ async def test_discovery_duplicate_aborted(hass: HomeAssistant) -> None:
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.124"),
             ip_addresses=[ip_address("123.123.123.124")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -178,13 +177,13 @@ async def test_duplicate_discovery(
     result = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -194,13 +193,13 @@ async def test_duplicate_discovery(
     result2 = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )
@@ -219,13 +218,13 @@ async def test_discovery_updates_unique_id(hass: HomeAssistant) -> None:
     flow = await hass.config_entries.flow.async_init(
         "tradfri",
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("123.123.123.123"),
             ip_addresses=[ip_address("123.123.123.123")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "homekit-id"},
+            properties={ATTR_PROPERTIES_ID: "homekit-id"},
             type="mock_type",
         ),
     )

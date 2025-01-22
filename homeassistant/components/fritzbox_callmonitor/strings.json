@@ -78,7 +78,8 @@
           "accepted": { "name": "Accepted" },
           "with_name": { "name": "With name" },
           "duration": { "name": "Duration" },
-          "closed": { "name": "Closed" }
+          "closed": { "name": "Closed" },
+          "vip": { "name": "Important" }
         }
       }
     }

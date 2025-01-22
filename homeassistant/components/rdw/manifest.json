@@ -6,6 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/rdw",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum",
   "requirements": ["vehicle==2.2.2"]
 }

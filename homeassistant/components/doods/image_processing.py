@@ -266,7 +266,7 @@ class Doods(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                box_label = f'{label} {instance["score"]:.1f}%'
+                box_label = f"{label} {instance['score']:.1f}%"
                 # Already scaled, use 1 for width and height
                 draw_box(
                     draw,

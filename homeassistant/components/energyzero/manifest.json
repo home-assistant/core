@@ -4,7 +4,8 @@
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/energyzero",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "platinum",
-  "requirements": ["energyzero==2.1.1"]
+  "requirements": ["energyzero==2.1.1"],
+  "single_config_entry": true
 }

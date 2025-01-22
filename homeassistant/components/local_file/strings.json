@@ -39,8 +39,8 @@
   },
   "services": {
     "update_file_path": {
-      "name": "Updates file path",
-      "description": "Use this action to change the file displayed by the camera.",
+      "name": "Update file path",
+      "description": "Changes the file displayed by the camera.",
       "fields": {
         "file_path": {
           "name": "File path",

@@ -8,7 +8,7 @@ from enum import StrEnum
 import logging
 from typing import Any, Self, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -42,8 +42,8 @@ __all__ = [
     "ATTR_EVENT_TYPE",
     "ATTR_EVENT_TYPES",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
     "EventDeviceClass",
     "EventEntity",
     "EventEntityDescription",

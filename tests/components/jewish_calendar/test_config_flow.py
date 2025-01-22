@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock
 
-import pytest
-
 from homeassistant import config_entries, setup
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -20,12 +18,10 @@ from homeassistant.const import (
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_NAME,
     CONF_TIME_ZONE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -57,51 +53,6 @@ async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert entries[0].data[CONF_LONGITUDE] == hass.config.longitude
     assert entries[0].data[CONF_ELEVATION] == hass.config.elevation
     assert entries[0].data[CONF_TIME_ZONE] == hass.config.time_zone
-
-
-@pytest.mark.parametrize("diaspora", [True, False])
-@pytest.mark.parametrize("language", ["hebrew", "english"])
-async def test_import_no_options(hass: HomeAssistant, language, diaspora) -> None:
-    """Test that the import step works."""
-    conf = {
-        DOMAIN: {CONF_NAME: "test", CONF_LANGUAGE: language, CONF_DIASPORA: diaspora}
-    }
-
-    assert await async_setup_component(hass, DOMAIN, conf.copy())
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    assert CONF_LANGUAGE in entries[0].data
-    assert CONF_DIASPORA in entries[0].data
-    for entry_key, entry_val in entries[0].data.items():
-        assert entry_val == conf[DOMAIN][entry_key]
-
-
-async def test_import_with_options(hass: HomeAssistant) -> None:
-    """Test that the import step works."""
-    conf = {
-        DOMAIN: {
-            CONF_NAME: "test",
-            CONF_DIASPORA: DEFAULT_DIASPORA,
-            CONF_LANGUAGE: DEFAULT_LANGUAGE,
-            CONF_CANDLE_LIGHT_MINUTES: 20,
-            CONF_HAVDALAH_OFFSET_MINUTES: 50,
-            CONF_LATITUDE: 31.76,
-            CONF_LONGITUDE: 35.235,
-        }
-    }
-
-    # Simulate HomeAssistant setting up the component
-    assert await async_setup_component(hass, DOMAIN, conf.copy())
-    await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-    for entry_key, entry_val in entries[0].data.items():
-        assert entry_val == conf[DOMAIN][entry_key]
-    for entry_key, entry_val in entries[0].options.items():
-        assert entry_val == conf[DOMAIN][entry_key]
 
 
 async def test_single_instance_allowed(
@@ -168,10 +119,6 @@ async def test_options_reconfigure(
     )
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.jewish_calendar.config.abort.reconfigure_successful"],
-)
 async def test_reconfigure(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:

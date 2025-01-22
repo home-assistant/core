@@ -331,8 +331,15 @@ class SQLSensor(ManualTriggerSensorEntity):
                 entry_type=DeviceEntryType.SERVICE,
                 identifiers={(DOMAIN, unique_id)},
                 manufacturer="SQL",
-                name=self.name,
+                name=self._rendered.get(CONF_NAME),
             )
+
+    @property
+    def name(self) -> str | None:
+        """Name of the entity."""
+        if self.has_entity_name:
+            return self._attr_name
+        return self._rendered.get(CONF_NAME)
 
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""

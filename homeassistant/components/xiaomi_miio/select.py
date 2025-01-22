@@ -260,10 +260,10 @@ class XiaomiGenericSelector(XiaomiSelector):
 
         if description.options_map:
             self._options_map = {}
-            for key, val in enum_class._member_map_.items():  # noqa: SLF001
+            for key, val in enum_class._member_map_.items():
                 self._options_map[description.options_map[key]] = val
         else:
-            self._options_map = enum_class._member_map_  # noqa: SLF001
+            self._options_map = enum_class._member_map_
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 

@@ -12,7 +12,7 @@ from aiohue.v2.models.feature import DynamicStatus
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_FLASH,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.helpers.entity_registry as er
+from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge
 from ..const import DOMAIN
@@ -157,7 +158,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         """Turn the grouped_light on."""
         transition = normalize_hue_transition(kwargs.get(ATTR_TRANSITION))
         xy_color = kwargs.get(ATTR_XY_COLOR)
-        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP))
+        color_temp = normalize_hue_colortemp(kwargs.get(ATTR_COLOR_TEMP_KELVIN))
         brightness = normalize_hue_brightness(kwargs.get(ATTR_BRIGHTNESS))
         flash = kwargs.get(ATTR_FLASH)
 
@@ -235,9 +236,21 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             if color_temp := light.color_temperature:
                 lights_with_color_temp_support += 1
                 # we assume mired values from the first capable light
-                self._attr_color_temp = color_temp.mirek
-                self._attr_max_mireds = color_temp.mirek_schema.mirek_maximum
-                self._attr_min_mireds = color_temp.mirek_schema.mirek_minimum
+                self._attr_color_temp_kelvin = (
+                    color_util.color_temperature_mired_to_kelvin(color_temp.mirek)
+                    if color_temp.mirek
+                    else None
+                )
+                self._attr_min_color_temp_kelvin = (
+                    color_util.color_temperature_mired_to_kelvin(
+                        color_temp.mirek_schema.mirek_maximum
+                    )
+                )
+                self._attr_max_color_temp_kelvin = (
+                    color_util.color_temperature_mired_to_kelvin(
+                        color_temp.mirek_schema.mirek_minimum
+                    )
+                )
                 if color_temp.mirek is not None and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
             if color := light.color:

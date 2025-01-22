@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceInfo
 from bleak.exc import BleakError
-from bleak_esphome.backend.cache import ESPHomeBluetoothCache
 from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 from bleak_esphome.backend.scanner import ESPHomeScanner
@@ -27,7 +26,6 @@ async def client_data_fixture(
     connector = HaBluetoothConnector(ESPHomeClientData, ESP_MAC_ADDRESS, lambda: True)
     return ESPHomeClientData(
         bluetooth_device=ESPHomeBluetoothDevice(ESP_NAME, ESP_MAC_ADDRESS),
-        cache=ESPHomeBluetoothCache(),
         client=mock_client,
         device_info=DeviceInfo(
             mac_address=ESP_MAC_ADDRESS,

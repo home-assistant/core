@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONNECT_TIMEOUT, DOMAIN, STREAM_MAGIC_EXCEPTIONS
 
@@ -27,7 +28,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Cambridge Audio integration from a config entry."""
 
-    client = StreamMagicClient(entry.data[CONF_HOST])
+    client = StreamMagicClient(entry.data[CONF_HOST], async_get_clientsession(hass))
 
     async def _connection_update_callback(
         _client: StreamMagicClient, _callback_type: CallbackType

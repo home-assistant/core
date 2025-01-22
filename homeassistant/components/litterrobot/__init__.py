@@ -4,15 +4,12 @@ from __future__ import annotations
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot4, Robot
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN
-from .hub import LitterRobotHub
-
-type LitterRobotConfigEntry = ConfigEntry[LitterRobotHub]
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
     Robot: (
@@ -41,11 +38,11 @@ def get_platforms_for_robots(robots: list[Robot]) -> set[Platform]:
 
 async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) -> bool:
     """Set up Litter-Robot from a config entry."""
-    hub = LitterRobotHub(hass, entry.data)
-    await hub.login(load_robots=True, subscribe_for_updates=True)
-    entry.runtime_data = hub
+    coordinator = LitterRobotDataUpdateCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
-    if platforms := get_platforms_for_robots(hub.account.robots):
+    if platforms := get_platforms_for_robots(coordinator.account.robots):
         await hass.config_entries.async_forward_entry_setups(entry, platforms)
     return True
 
