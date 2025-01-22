@@ -28,7 +28,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -306,7 +310,7 @@ class GroupManager:
         return group_info_by_entity_id
 
     async def async_join_players(
-        self, leader_id: int, leader_entity_id: str, member_entity_ids: list[str]
+        self, leader_id: int, member_entity_ids: list[str]
     ) -> None:
         """Create a group a group leader and member players."""
         # Resolve HEOS player_id for each member entity_id
@@ -320,26 +324,11 @@ class GroupManager:
                 )
             member_ids.append(member_id)
 
-        try:
-            await self.controller.create_group(leader_id, member_ids)
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to group %s with %s: %s",
-                leader_entity_id,
-                member_entity_ids,
-                err,
-            )
+        await self.controller.create_group(leader_id, member_ids)
 
-    async def async_unjoin_player(self, player_id: int, player_entity_id: str):
+    async def async_unjoin_player(self, player_id: int):
         """Remove `player_entity_id` from any group."""
-        try:
-            await self.controller.create_group(player_id, [])
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to ungroup %s: %s",
-                player_entity_id,
-                err,
-            )
+        await self.controller.create_group(player_id, [])
 
     async def async_update_groups(self) -> None:
         """Update the group membership from the controller."""
@@ -449,7 +438,11 @@ class SourceManager:
             await player.play_input_source(input_source.media_id)
             return
 
-        _LOGGER.error("Unknown source: %s", source)
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_source",
+            translation_placeholders={"source": source},
+        )
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""

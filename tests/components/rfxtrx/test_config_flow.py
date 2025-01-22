@@ -756,10 +756,10 @@ async def test_options_add_and_configure_device(
     assert entry.data["devices"]["0913000022670e013970"]
     assert entry.data["devices"]["0913000022670e013970"]["off_delay"] == 9
 
-    state = hass.states.get("binary_sensor.pt2262_22670e")
+    state = hass.states.get("binary_sensor.pt2262_226700")
     assert state
     assert state.state == STATE_UNKNOWN
-    assert state.attributes.get("friendly_name") == "PT2262 22670e"
+    assert state.attributes.get("friendly_name") == "PT2262 226700"
 
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
 
