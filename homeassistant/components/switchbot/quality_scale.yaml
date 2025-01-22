@@ -72,10 +72,7 @@ rules:
     status: todo
     comment: |
       Needs to provide translations for hub2 temperature entity
-  exception-translations:
-    status: exempt
-    comment: |
-      No custom exceptions.
+  exception-translations: todo
   icon-translations:
     status: exempt
     comment: |
