@@ -434,6 +434,9 @@
       },
       "compressor_phase": {
         "name": "Compressor phase"
+      },
+      "supply_pressure": {
+        "name": "Supply pressure"
       }
     },
     "water_heater": {
