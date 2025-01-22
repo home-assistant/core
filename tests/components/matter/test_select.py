@@ -103,3 +103,23 @@ async def test_attribute_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_list_select_entities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test ListSelect entities are discovered and working from a laundrywasher fixture."""
+    # SpinSpeedCurrent
+    state = hass.states.get("select.laundrywasher_spin_speed")
+    assert state
+    assert state.state == "Off"
+    assert state.attributes["options"] == ["Off", "Low", "Medium", "High"]
+
+    # NumberOfRinses
+    state = hass.states.get("select.laundrywasher_number_of_rinses")
+    assert state
+    assert state.state == "off"
+    assert state.attributes["options"] == ["off", "normal", "extra", "max"]
