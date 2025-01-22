@@ -12,7 +12,6 @@ from roborock import RoborockException
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -198,7 +197,7 @@ async def test_fail_parse_on_startup(
     mock_roborock_entry: MockConfigEntry,
     bypass_api_fixture,
 ) -> None:
-    """Test that if we fail parsing on startup, we create the entity but set it as unavailable."""
+    """Test that if we fail parsing on startup, we still create the entity."""
     map_data = copy.deepcopy(MAP_DATA)
     map_data.image = None
     with patch(
@@ -210,7 +209,7 @@ async def test_fail_parse_on_startup(
     assert (
         image_entity := hass.states.get("image.roborock_s7_maxv_upstairs")
     ) is not None
-    assert image_entity.state == STATE_UNAVAILABLE
+    assert image_entity.state
 
 
 async def test_fail_get_map_on_startup(
@@ -219,7 +218,7 @@ async def test_fail_get_map_on_startup(
     mock_roborock_entry: MockConfigEntry,
     bypass_api_fixture,
 ) -> None:
-    """Test that if we fail getting map on startup, we create the entity but set it as unavailable."""
+    """Test that if we fail getting map on startup, we can still create the entity."""
     with (
         patch(
             "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.get_map_v1",
@@ -231,7 +230,7 @@ async def test_fail_get_map_on_startup(
     assert (
         image_entity := hass.states.get("image.roborock_s7_maxv_upstairs")
     ) is not None
-    assert image_entity.state == STATE_UNAVAILABLE
+    assert image_entity.state
 
 
 async def test_fail_updating_image(

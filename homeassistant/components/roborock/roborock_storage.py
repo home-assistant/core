@@ -6,9 +6,11 @@ import shutil
 
 from homeassistant.core import HomeAssistant
 
+from .const import DOMAIN, MAP_FILENAME_SUFFIX
+
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_PATH = ".storage/{DOMAIN}"
+STORAGE_PATH = f".storage/{DOMAIN}"
 MAPS_PATH = "maps"
 
 
@@ -32,7 +34,7 @@ class RoborockMapStorage:
 
     async def async_load_map(self, map_flag: int) -> bytes | None:
         """Load maps from disk."""
-        filename = self._path_prefix / str(map_flag)
+        filename = self._path_prefix / f"{map_flag}{MAP_FILENAME_SUFFIX}"
         return await self._hass.async_add_executor_job(self._load_map, filename)
 
     def _load_map(self, filename: Path) -> bytes | None:
@@ -47,7 +49,7 @@ class RoborockMapStorage:
 
     async def async_save_map(self, map_flag: int, content: bytes) -> None:
         """Write map if it should be updated."""
-        filename = self._path_prefix / str(map_flag)
+        filename = self._path_prefix / f"{map_flag}{MAP_FILENAME_SUFFIX}"
         await self._hass.async_add_executor_job(self._save_map, filename, content)
 
     def _save_map(self, filename: Path, content: bytes) -> None:

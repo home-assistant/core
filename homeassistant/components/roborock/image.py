@@ -18,7 +18,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from . import RoborockConfigEntry
-from .const import DEFAULT_DRAWABLES, DOMAIN, DRAWABLES, IMAGE_CACHE_INTERVAL, MAP_SLEEP
+from .const import (
+    DEFAULT_DRAWABLES,
+    DOMAIN,
+    DRAWABLES,
+    IMAGE_CACHE_INTERVAL,
+    MAP_FILE_FORMAT,
+    MAP_SLEEP,
+)
 from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
@@ -80,11 +87,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         self.map_flag = map_flag
         self.cached_map = b""
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
-
-    @property
-    def available(self) -> bool:
-        """Determines if the entity is available."""
-        return self.cached_map != b""
 
     @property
     def is_selected(self) -> bool:
@@ -153,7 +155,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 translation_key="map_failure",
             )
         img_byte_arr = io.BytesIO()
-        parsed_map.image.data.save(img_byte_arr, format="PNG")
+        parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
         return img_byte_arr.getvalue()
 
 
