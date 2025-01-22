@@ -60,7 +60,6 @@ async def async_setup_entry(
             for coord in config_entry.runtime_data.v1
             for map_info in coord.maps.values()
         ),
-        True,
     )
 
 
@@ -112,6 +111,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         content = await self.coordinator.map_storage.async_load_map(self.map_flag)
         self.cached_map = content or b""
         self._attr_image_last_updated = dt_util.utcnow()
+        self.async_write_ha_state()
 
     def _handle_coordinator_update(self) -> None:
         # Bump last updated every third time the coordinator runs, so that async_image
