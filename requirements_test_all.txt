@@ -440,7 +440,7 @@ anova-wifi==0.17.0
 anthemav==1.4.1
 
 # homeassistant.components.anthropic
-anthropic==0.31.2
+anthropic==0.44.0
 
 # homeassistant.components.mcp_server
 anyio==4.8.0
@@ -1309,7 +1309,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.35.7
+openai==1.59.9
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
