@@ -1050,7 +1050,7 @@
     'state': '25.5',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_level-entry]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1091,7 +1091,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_level-state]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1112,7 +1112,7 @@
     'state': 'levelone',
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-entry]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_reason-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1154,7 +1154,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_ventilation_entities[sensor.model0_ventilation_reason-state]
+# name: test_all_entities[type:ventilation-vicare/ViAir300F.json][sensor.model0_ventilation_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
