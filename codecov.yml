@@ -51,4 +51,3 @@ flag_management:
       paths:
         - ".*"
       carryforward: true
-
