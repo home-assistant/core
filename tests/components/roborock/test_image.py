@@ -12,7 +12,7 @@ from roborock import RoborockException
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
