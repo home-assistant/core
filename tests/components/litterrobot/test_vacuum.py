@@ -8,7 +8,6 @@ from unittest.mock import MagicMock
 from pylitterbot import Robot
 import pytest
 
-from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
     DOMAIN as PLATFORM_DOMAIN,
@@ -20,7 +19,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .common import VACUUM_ENTITY_ID
+from .common import DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
