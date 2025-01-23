@@ -326,7 +326,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        if value := self.metadata.get("duration") is not None:
+        if (value := self.metadata.get("duration")) is not None:
             return int(value)
 
         return None
@@ -338,7 +338,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         if properties := self.coordinator.server.stream(
             self._current_group.stream
         ).properties:
-            if value := properties.get("position", None) is not None:
+            if (value := properties.get("position", None)) is not None:
                 return int(value)
 
         return None
