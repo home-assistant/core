@@ -777,10 +777,10 @@ async def test_select_radio_favorite_command_error(
 
 
 @pytest.mark.parametrize(
-    ("source_name", "station", "media_id"),
+    ("source_name", "station"),
     [
-        ("HEOS Drive - Line In 1", "Line In 1", const.INPUT_AUX_IN_1),
-        ("Speaker - Line In 1", "Speaker - Line In 1", const.INPUT_AUX_IN_1),
+        ("HEOS Drive - Line In 1", "Line In 1"),
+        ("Speaker - Line In 1", "Speaker - Line In 1"),
     ],
 )
 async def test_select_input_source(
@@ -790,7 +790,6 @@ async def test_select_input_source(
     input_sources: list[MediaItem],
     source_name: str,
     station: str,
-    media_id: str,
 ) -> None:
     """Tests selecting input source and state."""
     config_entry.add_to_hass(hass)
@@ -815,7 +814,7 @@ async def test_select_input_source(
     # Update the now_playing_media to reflect play_media
     player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
     player.now_playing_media.station = station
-    player.now_playing_media.media_id = media_id
+    player.now_playing_media.media_id = const.INPUT_AUX_IN_1
     await player.heos.dispatcher.wait_send(
         SignalType.PLAYER_EVENT, player.player_id, const.EVENT_PLAYER_STATE_CHANGED
     )
