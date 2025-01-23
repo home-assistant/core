@@ -133,6 +133,9 @@ class HomeConnectCoordinator(
                 await asyncio.sleep(EVENT_STREAM_RECONNECT_DELAY)
             except HomeConnectApiError as error:
                 _LOGGER.error("Error while listening for events: %s", error)
+                self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                )
                 break
 
     async def _call_event_listener(self, event_message: EventMessage):

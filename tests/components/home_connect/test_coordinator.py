@@ -1,5 +1,6 @@
 """Test for Home Connect coordinator."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
@@ -20,7 +21,7 @@ from aiohomeconnect.model.error import (
 import pytest
 
 from homeassistant.components.home_connect.coordinator import HomeConnectCoordinator
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -233,16 +234,23 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
 async def test_event_listener_error(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
     client_with_exception: MagicMock,
 ) -> None:
-    """Test that the event listener is resilient to interruptions."""
-    coordinator = HomeConnectCoordinator(hass, config_entry, client_with_exception)
+    """Test that the configuration entry is reloaded when the event stream raises an API error."""
     client_with_exception.stream_all_events = MagicMock(
         side_effect=HomeConnectApiError("error.key", "error description")
     )
-    await coordinator.start_event_listener()
-    await hass.async_block_till_done()
 
+    with patch.object(
+        ConfigEntries, "async_schedule_reload",
+    ) as mock_schedule_reload:
+        await integration_setup(client_with_exception)
+        await hass.async_block_till_done()
+
+    client_with_exception.stream_all_events.assert_called_once()
+    mock_schedule_reload.assert_called_once_with(config_entry.entry_id)
     assert not config_entry._background_tasks
 
 
