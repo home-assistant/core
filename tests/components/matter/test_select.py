@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models.node import MatterNode
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -121,6 +122,25 @@ async def test_list_select_entities(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.laundrywasher_spin_speed")
     assert state.state == "High"
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.laundrywasher_spin_speed",
+            "option": "High",
+        },
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
+        ),
+        value=3,
+    )
 
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
