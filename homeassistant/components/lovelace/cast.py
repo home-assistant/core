@@ -25,7 +25,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, LOVELACE_DATA, ConfigNotFound
+from .const import DOMAIN, LOVELACE_DATA
+from .util import ConfigNotFound
 
 DEFAULT_DASHBOARD = "_default_"
 
