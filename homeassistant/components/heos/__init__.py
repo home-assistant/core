@@ -9,10 +9,8 @@ import logging
 from typing import Any
 
 from pyheos import (
-    Credentials,
     Heos,
     HeosError,
-    HeosOptions,
     HeosPlayer,
     PlayerUpdateResult,
     SignalHeosEvent,
@@ -20,15 +18,9 @@ from pyheos import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -46,6 +38,7 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
+from .coordinator import HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -60,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 class HeosRuntimeData:
     """Runtime data and coordinators for HEOS config entries."""
 
+    coordinator: HeosCoordinator
     controller_manager: ControllerManager
     group_manager: GroupManager
     source_manager: SourceManager
@@ -81,63 +75,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
-    host = entry.data[CONF_HOST]
-    credentials: Credentials | None = None
-    if entry.options:
-        credentials = Credentials(
-            entry.options[CONF_USERNAME], entry.options[CONF_PASSWORD]
-        )
+    # Migrate non-string device identifiers.
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        for domain, player_id in device.identifiers:
+            if domain == DOMAIN and not isinstance(player_id, str):
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, str(player_id))}
+                )
+            break
 
-    # Setting all_progress_events=False ensures that we only receive a
-    # media position update upon start of playback or when media changes
-    controller = Heos(
-        HeosOptions(
-            host,
-            all_progress_events=False,
-            auto_reconnect=True,
-            credentials=credentials,
-        )
-    )
-
-    # Auth failure handler must be added before connecting to the host, otherwise
-    # the event will be missed when login fails during connection.
-    async def auth_failure() -> None:
-        """Handle authentication failure."""
-        entry.async_start_reauth(hass)
-
-    entry.async_on_unload(controller.add_on_user_credentials_invalid(auth_failure))
-
-    try:
-        # Auto reconnect only operates if initial connection was successful.
-        await controller.connect()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady from error
-
-    # Disconnect when shutting down
-    async def disconnect_controller(event):
-        await controller.disconnect()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
-    )
-
-    # Get players and sources
-    try:
-        players = await controller.get_players()
-        favorites = {}
-        if controller.is_signed_in:
-            favorites = await controller.get_favorites()
-        else:
-            _LOGGER.warning(
-                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-            )
-        inputs = await controller.get_input_sources()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady from error
+    coordinator = HeosCoordinator(hass, entry)
+    await coordinator.async_setup()
+    # Preserve existing logic until migrated into coordinator
+    controller = coordinator.heos
+    players = controller.players
+    favorites = coordinator.favorites
+    inputs = coordinator.inputs
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()
@@ -148,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     group_manager = GroupManager(hass, controller, players)
 
     entry.runtime_data = HeosRuntimeData(
-        controller_manager, group_manager, source_manager, players
+        coordinator, controller_manager, group_manager, source_manager, players
     )
 
     group_manager.connect_update()
@@ -161,7 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.controller_manager.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
@@ -221,13 +176,13 @@ class ControllerManager:
             # update device registry
             assert self._device_registry is not None
             entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, old_id)}  # type: ignore[arg-type]  # Fix in the future
+                identifiers={(DOMAIN, str(old_id))}
             )
-            new_identifiers = {(DOMAIN, new_id)}
+            new_identifiers = {(DOMAIN, str(new_id))}
             if entry:
                 self._device_registry.async_update_device(
                     entry.id,
-                    new_identifiers=new_identifiers,  # type: ignore[arg-type]  # Fix in the future
+                    new_identifiers=new_identifiers,
                 )
                 _LOGGER.debug(
                     "Updated device %s identifiers to %s", entry.id, new_identifiers
@@ -294,7 +249,7 @@ class GroupManager:
         return group_info_by_entity_id
 
     async def async_join_players(
-        self, leader_id: int, leader_entity_id: str, member_entity_ids: list[str]
+        self, leader_id: int, member_entity_ids: list[str]
     ) -> None:
         """Create a group a group leader and member players."""
         # Resolve HEOS player_id for each member entity_id
@@ -308,26 +263,11 @@ class GroupManager:
                 )
             member_ids.append(member_id)
 
-        try:
-            await self.controller.create_group(leader_id, member_ids)
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to group %s with %s: %s",
-                leader_entity_id,
-                member_entity_ids,
-                err,
-            )
+        await self.controller.create_group(leader_id, member_ids)
 
-    async def async_unjoin_player(self, player_id: int, player_entity_id: str):
+    async def async_unjoin_player(self, player_id: int):
         """Remove `player_entity_id` from any group."""
-        try:
-            await self.controller.create_group(player_id, [])
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to ungroup %s: %s",
-                player_entity_id,
-                err,
-            )
+        await self.controller.create_group(player_id, [])
 
     async def async_update_groups(self) -> None:
         """Update the group membership from the controller."""
@@ -437,7 +377,11 @@ class SourceManager:
             await player.play_input_source(input_source.media_id)
             return
 
-        _LOGGER.error("Unknown source: %s", source)
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_source",
+            translation_placeholders={"source": source},
+        )
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""

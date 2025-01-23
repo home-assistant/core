@@ -24,5 +24,84 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "brightness_instance": {
+        "name": "Illuminance {instance}"
+      },
+      "current_instance": {
+        "name": "Current {instance}"
+      },
+      "dawn": {
+        "name": "Dawn"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_instance": {
+        "name": "Energy {instance}"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "link_quality": {
+        "name": "Link quality"
+      },
+      "node_state": {
+        "name": "Node state"
+      },
+      "position": {
+        "name": "Position"
+      },
+      "power_instance": {
+        "name": "Power {instance}"
+      },
+      "rainfall_hour": {
+        "name": "Rainfall last hour"
+      },
+      "rainfall_day": {
+        "name": "Rainfall today"
+      },
+      "total_current": {
+        "name": "Total current"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_voltage": {
+        "name": "Total voltage"
+      },
+      "up_down": {
+        "name": "State",
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "closed": "[%key:common::state::closed%]",
+          "partial": "Partially open",
+          "opening": "Opening",
+          "closing": "Closing"
+        }
+      },
+      "uv": {
+        "name": "Ultraviolet"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "voltage_instance": {
+        "name": "Voltage {instance}"
+      },
+      "window_position": {
+        "name": "Window position",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
+          "tilted": "Tilted"
+        }
+      }
+    }
   }
 }

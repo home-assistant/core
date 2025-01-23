@@ -12,7 +12,7 @@ from homeassistant.components.dsmr_reader.sensor import DSMRSensor
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_fire_mqtt_message
+from tests.common import MockConfigEntry, MockEntityPlatform, async_fire_mqtt_message
 
 
 @pytest.mark.parametrize(
@@ -93,6 +93,7 @@ async def test_entity_dsmr_transform(hass: HomeAssistant) -> None:
     )
     sensor = DSMRSensor(description, config_entry)
     sensor.hass = hass
+    sensor.platform = MockEntityPlatform(hass)
     await sensor.async_added_to_hass()
 
     # Test dsmr version, if it's a digit
