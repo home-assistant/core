@@ -9,10 +9,8 @@ import logging
 from typing import Any
 
 from pyheos import (
-    Credentials,
     Heos,
     HeosError,
-    HeosOptions,
     HeosPlayer,
     PlayerUpdateResult,
     SignalHeosEvent,
@@ -20,19 +18,9 @@ from pyheos import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import (
-    ConfigEntryNotReady,
-    HomeAssistantError,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -50,6 +38,7 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
+from .coordinator import HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -64,6 +53,7 @@ _LOGGER = logging.getLogger(__name__)
 class HeosRuntimeData:
     """Runtime data and coordinators for HEOS config entries."""
 
+    coordinator: HeosCoordinator
     controller_manager: ControllerManager
     group_manager: GroupManager
     source_manager: SourceManager
@@ -97,63 +87,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
                 )
             break
 
-    host = entry.data[CONF_HOST]
-    credentials: Credentials | None = None
-    if entry.options:
-        credentials = Credentials(
-            entry.options[CONF_USERNAME], entry.options[CONF_PASSWORD]
-        )
-
-    # Setting all_progress_events=False ensures that we only receive a
-    # media position update upon start of playback or when media changes
-    controller = Heos(
-        HeosOptions(
-            host,
-            all_progress_events=False,
-            auto_reconnect=True,
-            credentials=credentials,
-        )
-    )
-
-    # Auth failure handler must be added before connecting to the host, otherwise
-    # the event will be missed when login fails during connection.
-    async def auth_failure() -> None:
-        """Handle authentication failure."""
-        entry.async_start_reauth(hass)
-
-    entry.async_on_unload(controller.add_on_user_credentials_invalid(auth_failure))
-
-    try:
-        # Auto reconnect only operates if initial connection was successful.
-        await controller.connect()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady from error
-
-    # Disconnect when shutting down
-    async def disconnect_controller(event):
-        await controller.disconnect()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
-    )
-
-    # Get players and sources
-    try:
-        players = await controller.get_players()
-        favorites = {}
-        if controller.is_signed_in:
-            favorites = await controller.get_favorites()
-        else:
-            _LOGGER.warning(
-                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-            )
-        inputs = await controller.get_input_sources()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady from error
+    coordinator = HeosCoordinator(hass, entry)
+    await coordinator.async_setup()
+    # Preserve existing logic until migrated into coordinator
+    controller = coordinator.heos
+    players = controller.players
+    favorites = coordinator.favorites
+    inputs = coordinator.inputs
 
     controller_manager = ControllerManager(hass, controller)
     await controller_manager.connect_listeners()
@@ -164,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     group_manager = GroupManager(hass, controller, players)
 
     entry.runtime_data = HeosRuntimeData(
-        controller_manager, group_manager, source_manager, players
+        coordinator, controller_manager, group_manager, source_manager, players
     )
 
     group_manager.connect_update()
@@ -177,7 +117,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.controller_manager.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
