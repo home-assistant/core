@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -64,7 +65,7 @@ async def test_broadcast_config_ip_and_port(
     hass: HomeAssistant, mock_send_magic_packet: AsyncMock
 ) -> None:
     """Test with broadcast address and broadcast port config."""
-    mac = "00-01-02-03-04-05"
+    mac = "00:01:02:03:04:05"
     broadcast_address = "255.255.255.255"
     port = 999
 
@@ -92,6 +93,7 @@ async def test_broadcast_config_ip_and_port(
         blocking=True,
     )
 
+    mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(
         mac, ip_address=broadcast_address, port=port
     )
@@ -102,7 +104,7 @@ async def test_broadcast_config_ip(
 ) -> None:
     """Test with only broadcast address."""
 
-    mac = "00-01-02-03-04-05"
+    mac = "00:01:02:03:04:05"
     broadcast_address = "255.255.255.255"
 
     assert await async_setup_component(
@@ -128,6 +130,7 @@ async def test_broadcast_config_ip(
         blocking=True,
     )
 
+    mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(mac, ip_address=broadcast_address)
 
 
@@ -136,7 +139,7 @@ async def test_broadcast_config_port(
 ) -> None:
     """Test with only broadcast port config."""
 
-    mac = "00-01-02-03-04-05"
+    mac = "00:01:02:03:04:05"
     port = 999
 
     assert await async_setup_component(
@@ -156,6 +159,7 @@ async def test_broadcast_config_port(
         blocking=True,
     )
 
+    mac = dr.format_mac(mac)
     mock_send_magic_packet.assert_called_with(mac, port=port)
 
 

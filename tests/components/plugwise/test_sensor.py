@@ -2,11 +2,13 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from homeassistant.components.plugwise.const import DOMAIN
-from homeassistant.const import Platform
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_registry import async_get
+import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -49,16 +51,16 @@ async def test_adam_climate_sensor_entity_2(
 
 async def test_unique_id_migration_humidity(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_smile_adam_4: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unique ID migration of -relative_humidity to -humidity."""
     mock_config_entry.add_to_hass(hass)
 
-    entity_registry = async_get(hass)
     # Entry to migrate
     entity_registry.async_get_or_create(
-        Platform.SENSOR,
+        SENSOR_DOMAIN,
         DOMAIN,
         "f61f1a2535f54f52ad006a3d18e459ca-relative_humidity",
         config_entry=mock_config_entry,
@@ -67,7 +69,7 @@ async def test_unique_id_migration_humidity(
     )
     # Entry not needing migration
     entity_registry.async_get_or_create(
-        Platform.SENSOR,
+        SENSOR_DOMAIN,
         DOMAIN,
         "f61f1a2535f54f52ad006a3d18e459ca-battery",
         config_entry=mock_config_entry,
@@ -135,8 +137,12 @@ async def test_p1_dsmr_sensor_entities(
     assert not state
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_p1_3ph_dsmr_sensor_entities(
-    hass: HomeAssistant, mock_smile_p1_2: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_smile_p1_2: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test creation of power related sensor entities."""
     state = hass.states.get("sensor.p1_electricity_phase_one_consumed")
@@ -151,20 +157,21 @@ async def test_p1_3ph_dsmr_sensor_entities(
     assert state
     assert int(state.state) == 2080
 
-    entity_id = "sensor.p1_voltage_phase_one"
-    state = hass.states.get(entity_id)
-    assert not state
-
-    entity_registry = async_get(hass)
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
-
-    await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
-
+    # Default disabled sensor test
     state = hass.states.get("sensor.p1_voltage_phase_one")
     assert state
     assert float(state.state) == 233.2
+
+
+async def test_p1_3ph_dsmr_sensor_disabled_entities(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_smile_p1_2: MagicMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test disabled power related sensor entities intent."""
+    state = hass.states.get("sensor.p1_voltage_phase_one")
+    assert not state
 
 
 async def test_stretch_sensor_entities(

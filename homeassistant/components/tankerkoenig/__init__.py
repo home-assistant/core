@@ -4,14 +4,11 @@ from __future__ import annotations
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(

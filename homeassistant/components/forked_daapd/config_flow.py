@@ -2,11 +2,11 @@
 
 from contextlib import suppress
 import logging
+from typing import Any
 
 from pyforked_daapd import ForkedDaapdAPI
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_LIBRESPOT_JAVA_PORT,
@@ -51,11 +52,9 @@ TEST_CONNECTION_ERROR_DICT = {
 class ForkedDaapdOptionsFlowHandler(OptionsFlow):
     """Handle a forked-daapd options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="options", data=user_input)
@@ -111,7 +110,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self.discovery_schema = None
+        self.discovery_schema: vol.Schema | None = None
 
     @staticmethod
     @callback
@@ -119,7 +118,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> ForkedDaapdOptionsFlowHandler:
         """Return options flow handler."""
-        return ForkedDaapdOptionsFlowHandler(config_entry)
+        return ForkedDaapdOptionsFlowHandler()
 
     async def validate_input(self, user_input):
         """Validate the user input."""
@@ -135,7 +134,9 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         return validate_result
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a forked-daapd config flow start.
 
         Manage device specific parameters.
@@ -163,7 +164,7 @@ class ForkedDaapdFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered forked-daapd device."""
         version_num = 0

@@ -8,20 +8,20 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
-    ATTR_OPERATION_LIST,
-    ATTR_OPERATION_MODE,
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
+    WaterHeaterEntityDescription,
+    WaterHeaterEntityEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
@@ -29,8 +29,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
     mock_integration,
     mock_platform,
 )
@@ -42,7 +40,7 @@ async def test_set_temp_schema_no_req(
     """Test the set temperature schema with missing required data."""
     domain = "climate"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {"hvac_mode": "off", "entity_id": ["climate.test_id"]}
@@ -59,7 +57,7 @@ async def test_set_temp_schema(
     """Test the set temperature schema with ok required data."""
     domain = "water_heater"
     service = "test_set_temperature"
-    schema = SET_TEMPERATURE_SCHEMA
+    schema = cv.make_entity_service_schema(SET_TEMPERATURE_SCHEMA)
     calls = async_mock_service(hass, domain, service, schema)
 
     data = {
@@ -210,49 +208,13 @@ async def test_operation_mode_validation(
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
 
 
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(water_heater)
-
-
 @pytest.mark.parametrize(
-    ("enum"),
-    [
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE,
-        WaterHeaterEntityFeature.OPERATION_MODE,
-        WaterHeaterEntityFeature.AWAY_MODE,
-    ],
+    ("class_name", "expected_log"),
+    [(WaterHeaterEntityDescription, False), (WaterHeaterEntityEntityDescription, True)],
 )
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: WaterHeaterEntityFeature,
+async def test_deprecated_entity_description(
+    caplog: pytest.LogCaptureFixture, class_name: type, expected_log: bool
 ) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, water_heater, enum, "SUPPORT_", "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockWaterHeaterEntity(WaterHeaterEntity):
-        _attr_operation_list = ["mode1", "mode2"]
-        _attr_temperature_unit = UnitOfTemperature.CELSIUS
-        _attr_current_operation = "mode1"
-        _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE.value
-
-    entity = MockWaterHeaterEntity()
-    entity.hass = hass
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
-    assert "MockWaterHeaterEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "WaterHeaterEntityFeature.OPERATION_MODE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is WaterHeaterEntityFeature(2)
-    assert "is using deprecated supported features values" not in caplog.text
-    assert entity.state_attributes[ATTR_OPERATION_MODE] == "mode1"
-    assert entity.capability_attributes[ATTR_OPERATION_LIST] == ["mode1", "mode2"]
+    """Test deprecated WaterHeaterEntityEntityDescription logs warning."""
+    class_name(key="test")
+    assert ("is a deprecated class" in caplog.text) is expected_log

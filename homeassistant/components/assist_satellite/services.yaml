@@ -1,0 +1,16 @@
+announce:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+  fields:
+    message:
+      required: false
+      example: "Time to wake up!"
+      selector:
+        text:
+    media_id:
+      required: false
+      selector:
+        text:

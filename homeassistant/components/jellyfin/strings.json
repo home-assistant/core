@@ -26,6 +26,14 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "watching": {
+        "name": "Active clients",
+        "unit_of_measurement": "clients"
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {

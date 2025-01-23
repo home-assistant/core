@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 
 from . import MOCK_MAC
 
-from tests.common import async_capture_events, async_mock_service, mock_device_registry
+from tests.common import async_capture_events
 
 MOCK_SETTINGS = {
     "name": "Test name",
@@ -166,8 +166,20 @@ MOCK_BLOCKS = [
 
 MOCK_CONFIG = {
     "input:0": {"id": 0, "name": "Test name input 0", "type": "button"},
-    "input:1": {"id": 1, "type": "analog", "enable": True},
-    "input:2": {"id": 2, "name": "Gas", "type": "count", "enable": True},
+    "input:1": {
+        "id": 1,
+        "type": "analog",
+        "enable": True,
+        "xpercent": {"expr": None, "unit": None},
+    },
+    "input:2": {
+        "id": 2,
+        "name": "Gas",
+        "type": "count",
+        "enable": True,
+        "xcounts": {"expr": None, "unit": None},
+        "xfreq": {"expr": None, "unit": None},
+    },
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},
@@ -186,7 +198,67 @@ MOCK_CONFIG = {
         "device": {"name": "Test name"},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
+    "ws": {"enable": False, "server": None},
+    "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
 }
+
+
+MOCK_BLU_TRV_REMOTE_CONFIG = {
+    "components": [
+        {
+            "key": "blutrv:200",
+            "status": {
+                "id": 200,
+                "target_C": 17.1,
+                "current_C": 17.1,
+                "pos": 0,
+                "rssi": -60,
+                "battery": 100,
+                "packet_id": 58,
+                "last_updated_ts": 1734967725,
+                "paired": True,
+                "rpc": True,
+                "rsv": 61,
+            },
+            "config": {
+                "id": 200,
+                "addr": "f8:44:77:25:f0:dd",
+                "name": "TRV-Name",
+                "key": None,
+                "trv": "bthomedevice:200",
+                "temp_sensors": [],
+                "dw_sensors": [],
+                "override_delay": 30,
+                "meta": {},
+            },
+        },
+    ],
+    "blutrv:200": {
+        "id": 0,
+        "enable": True,
+        "min_valve_position": 0,
+        "default_boost_duration": 1800,
+        "default_override_duration": 2147483647,
+        "default_override_target_C": 8,
+        "addr": "f8:44:77:25:f0:dd",
+        "name": "TRV-Name",
+        "local_name": "SBTR-001AEU",
+    },
+}
+
+
+MOCK_BLU_TRV_REMOTE_STATUS = {
+    "blutrv:200": {
+        "id": 0,
+        "pos": 0,
+        "steps": 0,
+        "current_C": 15.2,
+        "target_C": 17.1,
+        "schedule_rev": 0,
+        "errors": [],
+    },
+}
+
 
 MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
@@ -213,9 +285,9 @@ MOCK_STATUS_COAP = {
     "update": {
         "status": "pending",
         "has_update": True,
-        "beta_version": "some_beta_version",
-        "new_version": "some_new_version",
-        "old_version": "some_old_version",
+        "beta_version": "20231107-162609/v1.14.1-rc1-g0617c15",
+        "new_version": "20230913-111730/v1.14.0-gcb84623",
+        "old_version": "20230913-111730/v1.14.0-gcb84623",
     },
     "uptime": 5 * REST_SENSORS_UPDATE_INTERVAL,
     "wifi_sta": {"rssi": -64},
@@ -226,7 +298,12 @@ MOCK_STATUS_RPC = {
     "switch:0": {"output": True},
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
-    "input:2": {"id": 2, "counts": {"total": 56174, "xtotal": 561.74}},
+    "input:2": {
+        "id": 2,
+        "counts": {"total": 56174, "xtotal": 561.74},
+        "freq": 208.00,
+        "xfreq": 6.11,
+    },
     "light:0": {"output": True, "brightness": 53.0},
     "light:1": {"output": True, "brightness": 53.0},
     "light:2": {"output": True, "brightness": 53.0},
@@ -254,6 +331,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "humidity:0": {"rh": 44.4},
     "sys": {
         "available_updates": {
             "beta": {"version": "some_beta_version"},
@@ -261,7 +339,7 @@ MOCK_STATUS_RPC = {
         },
         "relay_in_thermostat": True,
     },
-    "voltmeter": {"voltage": 4.321},
+    "voltmeter:100": {"voltage": 4.321, "xvoltage": 12.34},
     "wifi": {"rssi": -63},
 }
 
@@ -284,18 +362,6 @@ def mock_ws_server():
     """Mock out ws_server."""
     with patch("homeassistant.components.shelly.utils.get_ws_context"):
         yield
-
-
-@pytest.fixture
-def device_reg(hass: HomeAssistant):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.fixture
@@ -359,6 +425,25 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
+        connected=True,
+    )
+    type(device).name = PropertyMock(return_value="Test name")
+    return device
+
+
+def _mock_blu_rtv_device(version: str | None = None):
+    """Mock rpc (Gen2, Websocket) device."""
+    device = Mock(
+        spec=RpcDevice,
+        config=MOCK_CONFIG | MOCK_BLU_TRV_REMOTE_CONFIG,
+        event={},
+        shelly=MOCK_SHELLY_RPC,
+        version=version or "1.0.0",
+        hostname="test-host",
+        status=MOCK_STATUS_RPC | MOCK_BLU_TRV_REMOTE_STATUS,
+        firmware_version="some fw string",
+        initialized=True,
+        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -409,5 +494,26 @@ async def mock_rpc_device():
 
 
 @pytest.fixture(autouse=True)
-def mock_bluetooth(enable_bluetooth):
+def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
+
+
+@pytest.fixture(autouse=True)
+async def mock_blu_trv():
+    """Mock BLU TRV."""
+
+    with (
+        patch("aioshelly.rpc_device.RpcDevice.create") as blu_trv_device_mock,
+        patch("homeassistant.components.shelly.bluetooth.async_start_scanner"),
+    ):
+
+        def update():
+            blu_trv_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.STATUS
+            )
+
+        device = _mock_blu_rtv_device()
+        blu_trv_device_mock.return_value = device
+        blu_trv_device_mock.return_value.mock_update = Mock(side_effect=update)
+
+        yield blu_trv_device_mock.return_value

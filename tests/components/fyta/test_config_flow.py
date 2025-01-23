@@ -1,6 +1,5 @@
 """Test the fyta config flow."""
 
-from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 from fyta_cli.fyta_exceptions import (
@@ -15,17 +14,35 @@ from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+
+from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 
 from tests.common import MockConfigEntry
 
-USERNAME = "fyta_user"
-PASSWORD = "fyta_pass"
-ACCESS_TOKEN = "123xyz"
-EXPIRATION = datetime.fromisoformat("2024-12-31T10:00:00").replace(tzinfo=UTC)
+
+async def user_step(
+    hass: HomeAssistant, flow_id: str, mock_setup_entry: AsyncMock
+) -> None:
+    """Test user step (helper function)."""
+
+    result = await hass.config_entries.flow.async_configure(
+        flow_id, {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == USERNAME
+    assert result["data"] == {
+        CONF_USERNAME: USERNAME,
+        CONF_PASSWORD: PASSWORD,
+        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
+        CONF_EXPIRATION: EXPIRATION,
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_flow(
-    hass: HomeAssistant, mock_fyta: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_fyta_connector: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test we get the form."""
 
@@ -35,20 +52,7 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
-    await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == USERNAME
-    assert result2["data"] == {
-        CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: PASSWORD,
-        CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-        CONF_EXPIRATION: "2024-12-31T10:00:00+00:00",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    await user_step(hass, result["flow_id"], mock_setup_entry)
 
 
 @pytest.mark.parametrize(
@@ -64,7 +68,7 @@ async def test_form_exceptions(
     hass: HomeAssistant,
     exception: Exception,
     error: dict[str, str],
-    mock_fyta: AsyncMock,
+    mock_fyta_connector: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test we can handle Form exceptions."""
@@ -73,7 +77,7 @@ async def test_form_exceptions(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_fyta.return_value.login.side_effect = exception
+    mock_fyta_connector.login.side_effect = exception
 
     # tests with connection error
     result = await hass.config_entries.flow.async_configure(
@@ -85,7 +89,7 @@ async def test_form_exceptions(
     assert result["step_id"] == "user"
     assert result["errors"] == error
 
-    mock_fyta.return_value.login.side_effect = None
+    mock_fyta_connector.login.side_effect = None
 
     # tests with all information provided
     result = await hass.config_entries.flow.async_configure(
@@ -98,12 +102,14 @@ async def test_form_exceptions(
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert result["data"][CONF_EXPIRATION] == "2024-12-31T10:00:00+00:00"
+    assert result["data"][CONF_EXPIRATION] == EXPIRATION
 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_duplicate_entry(hass: HomeAssistant, mock_fyta: AsyncMock) -> None:
+async def test_duplicate_entry(
+    hass: HomeAssistant, mock_fyta_connector: AsyncMock
+) -> None:
     """Test duplicate setup handling."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -143,7 +149,7 @@ async def test_reauth(
     hass: HomeAssistant,
     exception: Exception,
     error: dict[str, str],
-    mock_fyta: AsyncMock,
+    mock_fyta_connector: AsyncMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth-flow works."""
@@ -155,20 +161,16 @@ async def test_reauth(
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
             CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-            CONF_EXPIRATION: "2024-06-30T10:00:00+00:00",
+            CONF_EXPIRATION: EXPIRATION,
         },
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_fyta.return_value.login.side_effect = exception
+    mock_fyta_connector.login.side_effect = exception
 
     # tests with connection error
     result = await hass.config_entries.flow.async_configure(
@@ -181,7 +183,7 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == error
 
-    mock_fyta.return_value.login.side_effect = None
+    mock_fyta_connector.login.side_effect = None
 
     # tests with all information provided
     result = await hass.config_entries.flow.async_configure(
@@ -195,4 +197,28 @@ async def test_reauth(
     assert entry.data[CONF_USERNAME] == "other_username"
     assert entry.data[CONF_PASSWORD] == "other_password"
     assert entry.data[CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert entry.data[CONF_EXPIRATION] == "2024-12-31T10:00:00+00:00"
+    assert entry.data[CONF_EXPIRATION] == EXPIRATION
+
+
+async def test_dhcp_discovery(
+    hass: HomeAssistant, mock_fyta_connector: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test DHCP discovery flow."""
+
+    service_info = DhcpServiceInfo(
+        hostname="FYTA HUB",
+        ip="1.2.3.4",
+        macaddress="aabbccddeeff",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_DHCP},
+        data=service_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    await user_step(hass, result["flow_id"], mock_setup_entry)

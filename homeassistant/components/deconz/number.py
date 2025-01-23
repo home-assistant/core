@@ -13,7 +13,7 @@ from pydeconz.models.sensor import SensorBase as PydeconzSensorBase
 from pydeconz.models.sensor.presence import Presence
 
 from homeassistant.components.number import (
-    DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
 )
@@ -22,7 +22,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .deconz_device import DeconzDevice
+from .entity import DeconzDevice
 from .hub import DeconzHub
 
 
@@ -74,7 +74,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the deCONZ number entity."""
     hub = DeconzHub.get_hub(hass, config_entry)
-    hub.entities[DOMAIN] = set()
+    hub.entities[NUMBER_DOMAIN] = set()
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
@@ -99,7 +99,7 @@ async def async_setup_entry(
 class DeconzNumber(DeconzDevice[SensorResources], NumberEntity):
     """Representation of a deCONZ number entity."""
 
-    TYPE = DOMAIN
+    TYPE = NUMBER_DOMAIN
     entity_description: DeconzNumberDescription
 
     def __init__(

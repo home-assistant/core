@@ -1,4 +1,152 @@
 # serializer version: 1
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_filter_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_filter',
+    'unique_id': 'E1234567890000000003_lifespan_filter',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_filter_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'E1234567890000000003 Filter lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_filter_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_main_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_main_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Main brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_main_brush',
+    'unique_id': 'E1234567890000000003_lifespan_main_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_main_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'E1234567890000000003 Main brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_main_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_side_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.e1234567890000000003_side_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_side_brush',
+    'unique_id': 'E1234567890000000003_lifespan_side_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_legacy_sensors[123][sensor.e1234567890000000003_side_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'E1234567890000000003 Side brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.e1234567890000000003_side_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_legacy_sensors[123][states]
+  list([
+    'sensor.e1234567890000000003_main_brush_lifespan',
+    'sensor.e1234567890000000003_side_brush_lifespan',
+    'sensor.e1234567890000000003_filter_lifespan',
+  ])
+# ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -29,14 +177,14 @@
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Goat G1 Area cleaned',
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_area_cleaned',
@@ -364,7 +512,7 @@
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': '8516fbb1-17f1-4194-0000000_total_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[5xu9h3][sensor.goat_g1_total_area_cleaned:state]
@@ -372,7 +520,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Goat G1 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.goat_g1_total_area_cleaned',
@@ -577,6 +725,781 @@
     'state': 'Testnetwork',
   })
 # ---
+# name: test_sensors[qhe2o2][sensor.dusty_area_cleaned:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dusty_area_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Area cleaned',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stats_area',
+    'unique_id': '8516fbb1-17f1-4194-0000001_stats_area',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_area_cleaned:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Area cleaned',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_area_cleaned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_battery:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '8516fbb1-17f1-4194-0000001_battery_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_battery:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Dusty Battery',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_cleaning_duration:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dusty_cleaning_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Cleaning duration',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'stats_time',
+    'unique_id': '8516fbb1-17f1-4194-0000001_stats_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_cleaning_duration:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Dusty Cleaning duration',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_cleaning_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_error:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'error',
+    'unique_id': '8516fbb1-17f1-4194-0000001_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_error:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'description': 'NoError: Robot is operational',
+      'friendly_name': 'Dusty Error',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_filter_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_filter_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_filter',
+    'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_filter',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_filter_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Filter lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_filter_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '56',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_ip_address:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_ip_address',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'IP address',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_ip',
+    'unique_id': '8516fbb1-17f1-4194-0000001_network_ip',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_ip_address:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty IP address',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_ip_address',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '192.168.0.10',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_main_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_main_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Main brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_main_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Main brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_main_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_round_mop_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_round_mop_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Round mop lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_round_mop',
+    'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_round_mop',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_round_mop_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Round mop lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_round_mop_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_side_brush_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_side_brush_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side brush lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_side_brush',
+    'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_side_brush',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_side_brush_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Side brush lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_side_brush_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_station_state:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'idle',
+        'emptying_dustbin',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dusty_station_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Station state',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'station_state',
+    'unique_id': '8516fbb1-17f1-4194-0000001_station_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_station_state:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Dusty Station state',
+      'options': list([
+        'idle',
+        'emptying_dustbin',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_station_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'emptying_dustbin',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dusty_total_area_cleaned',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total area cleaned',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_stats_area',
+    'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_area',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_total_area_cleaned:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Total area cleaned',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_total_area_cleaned',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_total_cleaning_duration:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dusty_total_cleaning_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Total cleaning duration',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_stats_time',
+    'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_time',
+    'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_total_cleaning_duration:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Dusty Total cleaning duration',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_total_cleaning_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.000',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_total_cleanings:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dusty_total_cleanings',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleanings',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_stats_cleanings',
+    'unique_id': '8516fbb1-17f1-4194-0000001_total_stats_cleanings',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_total_cleanings:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Total cleanings',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_total_cleanings',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_unit_care_lifespan:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_unit_care_lifespan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Unit care lifespan',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'lifespan_unit_care',
+    'unique_id': '8516fbb1-17f1-4194-0000001_lifespan_unit_care',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_unit_care_lifespan:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Unit care lifespan',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_unit_care_lifespan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_wi_fi_rssi:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_wi_fi_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi RSSI',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_rssi',
+    'unique_id': '8516fbb1-17f1-4194-0000001_network_rssi',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_wi_fi_rssi:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Wi-Fi RSSI',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_wi_fi_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-62',
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_wi_fi_ssid:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dusty_wi_fi_ssid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wi-Fi SSID',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'network_ssid',
+    'unique_id': '8516fbb1-17f1-4194-0000001_network_ssid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[qhe2o2][sensor.dusty_wi_fi_ssid:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dusty Wi-Fi SSID',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dusty_wi_fi_ssid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Testnetwork',
+  })
+# ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -607,14 +1530,14 @@
     'supported_features': 0,
     'translation_key': 'stats_area',
     'unique_id': 'E1234567890000000001_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_area_cleaned:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Area cleaned',
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_area_cleaned',
@@ -910,7 +1833,7 @@
     'state': '80',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:entity-registry]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -922,7 +1845,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -934,7 +1857,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Side brushes lifespan',
+    'original_name': 'Side brush lifespan',
     'platform': 'ecovacs',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -943,14 +1866,14 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[yna5x1][sensor.ozmo_950_side_brushes_lifespan:state]
+# name: test_sensors[yna5x1][sensor.ozmo_950_side_brush_lifespan:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ozmo 950 Side brushes lifespan',
+      'friendly_name': 'Ozmo 950 Side brush lifespan',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ozmo_950_side_brushes_lifespan',
+    'entity_id': 'sensor.ozmo_950_side_brush_lifespan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -989,7 +1912,7 @@
     'supported_features': 0,
     'translation_key': 'total_stats_area',
     'unique_id': 'E1234567890000000001_total_stats_area',
-    'unit_of_measurement': 'm²',
+    'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
   })
 # ---
 # name: test_sensors[yna5x1][sensor.ozmo_950_total_area_cleaned:state]
@@ -997,7 +1920,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Ozmo 950 Total area cleaned',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'm²',
+      'unit_of_measurement': <UnitOfArea.SQUARE_METERS: 'm²'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ozmo_950_total_area_cleaned',

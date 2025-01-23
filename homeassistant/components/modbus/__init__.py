@@ -46,9 +46,13 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    SERVICE_RELOAD,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import async_get_platforms
+from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -85,9 +89,10 @@ from .const import (
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_OFF_VALUE,
+    CONF_HVAC_ON_VALUE,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_MAX_TEMP,
     CONF_MAX_VALUE,
     CONF_MIN_TEMP,
@@ -96,7 +101,6 @@ from .const import (
     CONF_NAN_VALUE,
     CONF_PARITY,
     CONF_PRECISION,
-    CONF_RETRIES,
     CONF_SCALE,
     CONF_SLAVE_COUNT,
     CONF_STATE_CLOSED,
@@ -128,6 +132,8 @@ from .const import (
     CONF_WRITE_TYPE,
     CONF_ZERO_SUPPRESS,
     DEFAULT_HUB,
+    DEFAULT_HVAC_OFF_VALUE,
+    DEFAULT_HVAC_ON_VALUE,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_TEMP_UNIT,
     MODBUS_DOMAIN as DOMAIN,
@@ -139,7 +145,6 @@ from .const import (
 )
 from .modbus import ModbusHub, async_modbus_setup
 from .validators import (
-    check_hvac_target_temp_registers,
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
     hvac_fixedsize_reglist_validator,
@@ -163,7 +168,6 @@ BASE_COMPONENT_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
         ): cv.positive_int,
-        vol.Optional(CONF_LAZY_ERROR): cv.positive_int,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
 )
@@ -235,8 +239,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
                         CALL_TYPE_X_REGISTER_HOLDINGS,
                     ]
                 ),
-                vol.Optional(CONF_STATE_OFF): cv.positive_int,
-                vol.Optional(CONF_STATE_ON): cv.positive_int,
+                vol.Optional(CONF_STATE_OFF): vol.All(
+                    cv.ensure_list, [cv.positive_int]
+                ),
+                vol.Optional(CONF_STATE_ON): vol.All(cv.ensure_list, [cv.positive_int]),
                 vol.Optional(CONF_DELAY, default=0): cv.positive_int,
             }
         ),
@@ -254,6 +260,12 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
+            ): cv.positive_int,
+            vol.Optional(
+                CONF_HVAC_OFF_VALUE, default=DEFAULT_HVAC_OFF_VALUE
+            ): cv.positive_int,
             vol.Optional(CONF_WRITE_REGISTERS, default=False): cv.boolean,
             vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
                 {
@@ -321,7 +333,6 @@ CLIMATE_SCHEMA = vol.All(
             ),
         },
     ),
-    check_hvac_target_temp_registers,
 )
 
 COVERS_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
@@ -395,7 +406,6 @@ MODBUS_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string,
         vol.Optional(CONF_TIMEOUT, default=3): cv.socket_timeout,
         vol.Optional(CONF_DELAY, default=0): cv.positive_int,
-        vol.Optional(CONF_RETRIES): cv.positive_int,
         vol.Optional(CONF_MSG_WAIT): cv.positive_int,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
             cv.ensure_list, [BINARY_SENSOR_SCHEMA]
@@ -455,18 +465,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Modbus component."""
     if DOMAIN not in config:
         return True
+
+    async def _reload_config(call: Event | ServiceCall) -> None:
+        """Reload Modbus."""
+        if DOMAIN not in hass.data:
+            _LOGGER.error("Modbus cannot reload, because it was never loaded")
+            return
+        hubs = hass.data[DOMAIN]
+        for name in hubs:
+            await hubs[name].async_close()
+        reset_platforms = async_get_platforms(hass, DOMAIN)
+        for reset_platform in reset_platforms:
+            _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
+            await reset_platform.async_reset()
+        reload_config = await async_integration_yaml_config(hass, DOMAIN)
+        if not reload_config:
+            _LOGGER.debug("Modbus not present anymore")
+            return
+        _LOGGER.debug("Modbus reloading")
+        await async_modbus_setup(hass, reload_config)
+
+    async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
+
     return await async_modbus_setup(
         hass,
         config,
     )
-
-
-async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
-    """Release modbus resources."""
-    if DOMAIN not in hass.data:
-        _LOGGER.error("Modbus cannot reload, because it was never loaded")
-        return
-    _LOGGER.info("Modbus reloading")
-    hubs = hass.data[DOMAIN]
-    for name in hubs:
-        await hubs[name].async_close()

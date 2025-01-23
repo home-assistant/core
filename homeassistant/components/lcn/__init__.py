@@ -2,90 +2,87 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from functools import partial
 import logging
 
 import pypck
+from pypck.connection import (
+    PchkAuthenticationError,
+    PchkConnectionFailedError,
+    PchkConnectionManager,
+    PchkConnectionRefusedError,
+    PchkLcnNotConnectedError,
+    PchkLicenseError,
+)
+from pypck.lcn_defs import LcnEvent
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_ADDRESS,
     CONF_DEVICE_ID,
     CONF_DOMAIN,
+    CONF_ENTITIES,
     CONF_IP_ADDRESS,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_RESOURCE,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ADD_ENTITIES_CALLBACKS,
+    CONF_ACKNOWLEDGE,
     CONF_DIM_MODE,
     CONF_DOMAIN_DATA,
     CONF_SK_NUM_TRIES,
+    CONF_TRANSITION,
     CONNECTION,
+    DEVICE_CONNECTIONS,
     DOMAIN,
     PLATFORMS,
 )
 from .helpers import (
     AddressType,
-    DeviceConnectionType,
     InputType,
     async_update_config_entry,
     generate_unique_id,
-    get_device_model,
-    import_lcn_config,
     register_lcn_address_devices,
     register_lcn_host_device,
 )
-from .schemas import CONFIG_SCHEMA  # noqa: F401
-from .services import SERVICES
+from .services import register_services
+from .websocket import register_panel_and_ws_api
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LCN component."""
-    if DOMAIN not in config:
-        return True
+    hass.data.setdefault(DOMAIN, {})
 
-    # initialize a config_flow for all LCN configurations read from
-    # configuration.yaml
-    config_entries_data = import_lcn_config(config[DOMAIN])
+    await register_services(hass)
+    await register_panel_and_ws_api(hass)
 
-    for config_entry_data in config_entries_data:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=config_entry_data,
-            )
-        )
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up a connection to PCHK host from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
     if config_entry.entry_id in hass.data[DOMAIN]:
         return False
 
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
+        "ACKNOWLEDGE": config_entry.data[CONF_ACKNOWLEDGE],
     }
 
     # connect to PCHK
-    lcn_connection = pypck.connection.PchkConnectionManager(
+    lcn_connection = PchkConnectionManager(
         config_entry.data[CONF_IP_ADDRESS],
         config_entry.data[CONF_PORT],
         config_entry.data[CONF_USERNAME],
@@ -93,29 +90,29 @@ async def async_setup_entry(
         settings=settings,
         connection_id=config_entry.entry_id,
     )
+
     try:
         # establish connection to PCHK server
         await lcn_connection.async_connect(timeout=15)
-    except pypck.connection.PchkAuthenticationError:
-        _LOGGER.warning('Authentication on PCHK "%s" failed', config_entry.title)
-        return False
-    except pypck.connection.PchkLicenseError:
-        _LOGGER.warning(
-            (
-                'Maximum number of connections on PCHK "%s" was '
-                "reached. An additional license key is required"
-            ),
-            config_entry.title,
-        )
-        return False
-    except TimeoutError:
-        _LOGGER.warning('Connection to PCHK "%s" failed', config_entry.title)
-        return False
+    except (
+        PchkAuthenticationError,
+        PchkLicenseError,
+        PchkConnectionRefusedError,
+        PchkConnectionFailedError,
+        PchkLcnNotConnectedError,
+    ) as ex:
+        await lcn_connection.async_close()
+        raise ConfigEntryNotReady(
+            f"Unable to connect to {config_entry.title}: {ex}"
+        ) from ex
 
     _LOGGER.debug('LCN connected to "%s"', config_entry.title)
     hass.data[DOMAIN][config_entry.entry_id] = {
         CONNECTION: lcn_connection,
+        DEVICE_CONNECTIONS: {},
+        ADD_ENTITIES_CALLBACKS: {},
     }
+
     # Update config_entry with LCN device serials
     await async_update_config_entry(hass, config_entry)
 
@@ -128,24 +125,54 @@ async def async_setup_entry(
 
     # register for LCN bus messages
     device_registry = dr.async_get(hass)
+    event_received = partial(async_host_event_received, hass, config_entry)
     input_received = partial(
         async_host_input_received, hass, config_entry, device_registry
     )
-    lcn_connection.register_for_inputs(input_received)
 
-    # register service calls
-    for service_name, service in SERVICES:
-        if not hass.services.has_service(DOMAIN, service_name):
-            hass.services.async_register(
-                DOMAIN, service_name, service(hass).async_call_service, service.schema
-            )
+    lcn_connection.register_for_events(event_received)
+    lcn_connection.register_for_inputs(input_received)
 
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    new_data = {**config_entry.data}
+
+    if config_entry.version == 1:
+        # update to 1.2  (add acknowledge flag)
+        if config_entry.minor_version < 2:
+            new_data[CONF_ACKNOWLEDGE] = False
+
+        # update to 2.1  (fix transitions for lights and switches)
+        new_entities_data = [*new_data[CONF_ENTITIES]]
+        for entity in new_entities_data:
+            if entity[CONF_DOMAIN] in [Platform.LIGHT, Platform.SCENE]:
+                if entity[CONF_DOMAIN_DATA][CONF_TRANSITION] is None:
+                    entity[CONF_DOMAIN_DATA][CONF_TRANSITION] = 0
+                entity[CONF_DOMAIN_DATA][CONF_TRANSITION] /= 1000.0
+        new_data[CONF_ENTITIES] = new_entities_data
+
+    hass.config_entries.async_update_entry(
+        config_entry, data=new_data, minor_version=1, version=2
+    )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Close connection to PCHK host represented by config_entry."""
     # forward unloading to platforms
     unload_ok = await hass.config_entries.async_unload_platforms(
@@ -156,17 +183,37 @@ async def async_unload_entry(
         host = hass.data[DOMAIN].pop(config_entry.entry_id)
         await host[CONNECTION].async_close()
 
-    # unregister service calls
-    if unload_ok and not hass.data[DOMAIN]:  # check if this is the last entry to unload
-        for service_name, _ in SERVICES:
-            hass.services.async_remove(DOMAIN, service_name)
-
     return unload_ok
+
+
+def async_host_event_received(
+    hass: HomeAssistant, config_entry: ConfigEntry, event: pypck.lcn_defs.LcnEvent
+) -> None:
+    """Process received event from LCN."""
+    lcn_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+
+    async def reload_config_entry() -> None:
+        """Close connection and schedule config entry for reload."""
+        await lcn_connection.async_close()
+        hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    if event in (
+        LcnEvent.CONNECTION_LOST,
+        LcnEvent.PING_TIMEOUT,
+    ):
+        _LOGGER.info('The connection to host "%s" has been lost', config_entry.title)
+        hass.async_create_task(reload_config_entry())
+    elif event == LcnEvent.BUS_DISCONNECTED:
+        _LOGGER.info(
+            'The connection to the LCN bus via host "%s" has been disconnected',
+            config_entry.title,
+        )
+        hass.async_create_task(reload_config_entry())
 
 
 def async_host_input_received(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: ConfigEntry,
     device_registry: dr.DeviceRegistry,
     inp: pypck.inputs.Input,
 ) -> None:
@@ -183,8 +230,6 @@ def async_host_input_received(
     )
     identifiers = {(DOMAIN, generate_unique_id(config_entry.entry_id, address))}
     device = device_registry.async_get_device(identifiers=identifiers)
-    if device is None:
-        return
 
     if isinstance(inp, pypck.inputs.ModStatusAccessControl):
         _async_fire_access_control_event(hass, device, address, inp)
@@ -193,7 +238,10 @@ def async_host_input_received(
 
 
 def _async_fire_access_control_event(
-    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+    hass: HomeAssistant,
+    device: dr.DeviceEntry | None,
+    address: AddressType,
+    inp: InputType,
 ) -> None:
     """Fire access control event (transponder, transmitter, fingerprint, codelock)."""
     event_data = {
@@ -215,7 +263,10 @@ def _async_fire_access_control_event(
 
 
 def _async_fire_send_keys_event(
-    hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
+    hass: HomeAssistant,
+    device: dr.DeviceEntry | None,
+    address: AddressType,
+    inp: InputType,
 ) -> None:
     """Fire send_keys event."""
     for table, action in enumerate(inp.actions):
@@ -236,75 +287,3 @@ def _async_fire_send_keys_event(
                 event_data.update({CONF_DEVICE_ID: device.id})
 
             hass.bus.async_fire("lcn_send_keys", event_data)
-
-
-class LcnEntity(Entity):
-    """Parent class for all entities associated with the LCN component."""
-
-    _attr_should_poll = False
-
-    def __init__(
-        self, config: ConfigType, entry_id: str, device_connection: DeviceConnectionType
-    ) -> None:
-        """Initialize the LCN device."""
-        self.config = config
-        self.entry_id = entry_id
-        self.device_connection = device_connection
-        self._unregister_for_inputs: Callable | None = None
-        self._name: str = config[CONF_NAME]
-
-    @property
-    def address(self) -> AddressType:
-        """Return LCN address."""
-        return (
-            self.device_connection.seg_id,
-            self.device_connection.addr_id,
-            self.device_connection.is_group,
-        )
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return generate_unique_id(
-            self.entry_id, self.address, self.config[CONF_RESOURCE]
-        )
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device specific attributes."""
-        address = f"{'g' if self.address[2] else 'm'}{self.address[0]:03d}{self.address[1]:03d}"
-        model = (
-            "LCN resource"
-            f" ({get_device_model(self.config[CONF_DOMAIN], self.config[CONF_DOMAIN_DATA])})"
-        )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=f"{address}.{self.config[CONF_RESOURCE]}",
-            model=model,
-            manufacturer="Issendorff",
-            via_device=(
-                DOMAIN,
-                generate_unique_id(self.entry_id, self.config[CONF_ADDRESS]),
-            ),
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        if not self.device_connection.is_group:
-            self._unregister_for_inputs = self.device_connection.register_for_inputs(
-                self.input_received
-            )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._unregister_for_inputs is not None:
-            self._unregister_for_inputs()
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self._name
-
-    def input_received(self, input_obj: InputType) -> None:
-        """Set state/value when LCN input object (command) is received."""

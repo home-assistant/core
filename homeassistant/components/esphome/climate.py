@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from functools import partial
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -45,7 +46,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -53,32 +53,18 @@ from homeassistant.const import (
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import (
     EsphomeEntity,
     convert_api_error_ha_error,
+    esphome_float_state_property,
     esphome_state_property,
     platform_async_setup_entry,
 )
 from .enum_mapper import EsphomeEnumMapper
 
 FAN_QUIET = "quiet"
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up ESPHome climate devices based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=ClimateInfo,
-        entity_type=EsphomeClimateEntity,
-        state_type=ClimateState,
-    )
 
 
 _CLIMATE_MODES: EsphomeEnumMapper[ClimateMode, HVACMode] = EsphomeEnumMapper(
@@ -143,7 +129,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "climate"
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -242,9 +227,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return _SWING_MODES.from_esphome(self._state.swing_mode)
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if not self._static_info.supports_current_temperature:
+            return None
         return self._state.current_temperature
 
     @property
@@ -256,19 +243,19 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         return round(self._state.current_humidity)
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._state.target_temperature
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
         return self._state.target_temperature_low
 
     @property
-    @esphome_state_property
+    @esphome_float_state_property
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
         return self._state.target_temperature_high
@@ -333,3 +320,11 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
         self._client.climate_command(
             key=self._key, swing_mode=_SWING_MODES.from_hass(swing_mode)
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=ClimateInfo,
+    entity_type=EsphomeClimateEntity,
+    state_type=ClimateState,
+)

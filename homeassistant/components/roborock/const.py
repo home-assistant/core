@@ -9,6 +9,28 @@ CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
 
+# Option Flow steps
+DRAWABLES = "drawables"
+
+DEFAULT_DRAWABLES = {
+    Drawable.CHARGER: True,
+    Drawable.CLEANED_AREA: False,
+    Drawable.GOTO_PATH: False,
+    Drawable.IGNORED_OBSTACLES: False,
+    Drawable.IGNORED_OBSTACLES_WITH_PHOTO: False,
+    Drawable.MOP_PATH: False,
+    Drawable.NO_CARPET_AREAS: False,
+    Drawable.NO_GO_AREAS: False,
+    Drawable.NO_MOPPING_AREAS: False,
+    Drawable.OBSTACLES: False,
+    Drawable.OBSTACLES_WITH_PHOTO: False,
+    Drawable.PATH: True,
+    Drawable.PREDICTED_PATH: False,
+    Drawable.VACUUM_POSITION: True,
+    Drawable.VIRTUAL_WALLS: False,
+    Drawable.ZONES: False,
+}
+
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
@@ -21,14 +43,11 @@ PLATFORMS = [
     Platform.VACUUM,
 ]
 
-IMAGE_DRAWABLES: list[Drawable] = [
-    Drawable.PATH,
-    Drawable.CHARGER,
-    Drawable.VACUUM_POSITION,
-]
 
 IMAGE_CACHE_INTERVAL = 90
 
 MAP_SLEEP = 3
 
 GET_MAPS_SERVICE_NAME = "get_maps"
+SET_VACUUM_GOTO_POSITION_SERVICE_NAME = "set_vacuum_goto_position"
+GET_VACUUM_CURRENT_POSITION_SERVICE_NAME = "get_vacuum_current_position"

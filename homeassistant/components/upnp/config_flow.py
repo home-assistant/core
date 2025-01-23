@@ -9,17 +9,30 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant.components import ssdp
-from homeassistant.components.ssdp import SsdpServiceInfo
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    SOURCE_IGNORE,
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
+    SsdpServiceInfo,
+)
 
 from .const import (
+    CONFIG_ENTRY_FORCE_POLL,
     CONFIG_ENTRY_HOST,
     CONFIG_ENTRY_LOCATION,
     CONFIG_ENTRY_MAC_ADDRESS,
     CONFIG_ENTRY_ORIGINAL_UDN,
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
+    DEFAULT_CONFIG_ENTRY_FORCE_POLL,
     DOMAIN,
     DOMAIN_DISCOVERIES,
     LOGGER,
@@ -29,17 +42,17 @@ from .const import (
 from .device import async_get_mac_address_from_host, get_preferred_location
 
 
-def _friendly_name_from_discovery(discovery_info: ssdp.SsdpServiceInfo) -> str:
+def _friendly_name_from_discovery(discovery_info: SsdpServiceInfo) -> str:
     """Extract user-friendly name from discovery."""
     return cast(
         str,
-        discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
-        or discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)
+        discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
+        or discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME)
         or discovery_info.ssdp_headers.get("_host", ""),
     )
 
 
-def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+def _is_complete_discovery(discovery_info: SsdpServiceInfo) -> bool:
     """Test if discovery is complete and usable."""
     return bool(
         discovery_info.ssdp_udn
@@ -51,7 +64,7 @@ def _is_complete_discovery(discovery_info: ssdp.SsdpServiceInfo) -> bool:
 
 async def _async_discovered_igd_devices(
     hass: HomeAssistant,
-) -> list[ssdp.SsdpServiceInfo]:
+) -> list[SsdpServiceInfo]:
     """Discovery IGD devices."""
     return await ssdp.async_get_discovery_info_by_st(
         hass, ST_IGD_V1
@@ -68,10 +81,10 @@ async def _async_mac_address_from_discovery(
     return await async_get_mac_address_from_host(hass, host)
 
 
-def _is_igd_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+def _is_igd_device(discovery_info: SsdpServiceInfo) -> bool:
     """Test if discovery is a complete IGD device."""
     root_device_info = discovery_info.upnp
-    return root_device_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) in {ST_IGD_V1, ST_IGD_V2}
+    return root_device_info.get(ATTR_UPNP_DEVICE_TYPE) in {ST_IGD_V1, ST_IGD_V2}
 
 
 class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -82,6 +95,14 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
     # Paths:
     # 1: ssdp(discovery_info) --> ssdp_confirm(None) --> ssdp_confirm({}) --> create_entry()
     # 2: user(None): scan --> user({...}) --> create_entry()
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> UpnpOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return UpnpOptionsFlowHandler()
 
     @property
     def _discoveries(self) -> dict[str, SsdpServiceInfo]:
@@ -151,7 +172,7 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UPnP/IGD device.
 
@@ -249,9 +270,14 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
             CONFIG_ENTRY_LOCATION: get_preferred_location(discovery.ssdp_all_locations),
         }
+        options = {
+            CONFIG_ENTRY_FORCE_POLL: False,
+        }
 
         await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
-        return self.async_create_entry(title=user_input["title"], data=data)
+        return self.async_create_entry(
+            title=user_input["title"], data=data, options=options
+        )
 
     async def _async_create_entry_from_discovery(
         self,
@@ -273,4 +299,30 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
             CONFIG_ENTRY_MAC_ADDRESS: mac_address,
             CONFIG_ENTRY_HOST: discovery.ssdp_headers["_host"],
         }
-        return self.async_create_entry(title=title, data=data)
+        options = {
+            CONFIG_ENTRY_FORCE_POLL: False,
+        }
+        return self.async_create_entry(title=title, data=data, options=options)
+
+
+class UpnpOptionsFlowHandler(OptionsFlow):
+    """Handle an options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONFIG_ENTRY_FORCE_POLL,
+                    default=self.config_entry.options.get(
+                        CONFIG_ENTRY_FORCE_POLL, DEFAULT_CONFIG_ENTRY_FORCE_POLL
+                    ),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=data_schema)

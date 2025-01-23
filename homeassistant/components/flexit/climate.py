@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -36,7 +36,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 CALL_TYPE_WRITE_REGISTER = "write_register"
 CONF_HUB = "hub"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
         vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
@@ -70,7 +70,6 @@ class Flexit(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, hub: ModbusHub, modbus_slave: int | None, name: str | None

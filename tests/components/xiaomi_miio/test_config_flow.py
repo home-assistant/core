@@ -704,7 +704,7 @@ async def test_config_flow_step_device_manual_model_succes(hass: HomeAssistant) 
     }
 
 
-async def config_flow_device_success(hass, model_to_test):
+async def config_flow_device_success(hass: HomeAssistant, model_to_test: str) -> None:
     """Test a successful config flow for a device (base class)."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -748,7 +748,7 @@ async def config_flow_device_success(hass, model_to_test):
     }
 
 
-async def config_flow_generic_roborock(hass):
+async def config_flow_generic_roborock(hass: HomeAssistant) -> None:
     """Test a successful config flow for a generic roborock vacuum."""
     dummy_model = "roborock.vacuum.dummy"
 
@@ -794,7 +794,9 @@ async def config_flow_generic_roborock(hass):
     }
 
 
-async def zeroconf_device_success(hass, zeroconf_name_to_test, model_to_test):
+async def zeroconf_device_success(
+    hass: HomeAssistant, zeroconf_name_to_test: str, model_to_test: str
+) -> None:
     """Test a successful zeroconf discovery of a device  (base class)."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
@@ -974,11 +976,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

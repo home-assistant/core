@@ -1,7 +1,7 @@
 """Test the Environment Canada (EC) config flow."""
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as ET
 
 import aiohttp
 import pytest
@@ -23,26 +23,16 @@ FAKE_CONFIG = {
 FAKE_TITLE = "Universal title!"
 
 
-def mocked_ec(
-    station_id=FAKE_CONFIG[CONF_STATION],
-    lat=FAKE_CONFIG[CONF_LATITUDE],
-    lon=FAKE_CONFIG[CONF_LONGITUDE],
-    lang=FAKE_CONFIG[CONF_LANGUAGE],
-    update=None,
-    metadata={"location": FAKE_TITLE},
-):
+def mocked_ec():
     """Mock the env_canada library."""
     ec_mock = MagicMock()
-    ec_mock.station_id = station_id
-    ec_mock.lat = lat
-    ec_mock.lon = lon
-    ec_mock.language = lang
-    ec_mock.metadata = metadata
+    ec_mock.station_id = FAKE_CONFIG[CONF_STATION]
+    ec_mock.lat = FAKE_CONFIG[CONF_LATITUDE]
+    ec_mock.lon = FAKE_CONFIG[CONF_LONGITUDE]
+    ec_mock.language = FAKE_CONFIG[CONF_LANGUAGE]
+    ec_mock.metadata = {"location": FAKE_TITLE}
 
-    if update:
-        ec_mock.update = update
-    else:
-        ec_mock.update = AsyncMock()
+    ec_mock.update = AsyncMock()
 
     return patch(
         "homeassistant.components.environment_canada.config_flow.ECWeather",
@@ -104,7 +94,7 @@ async def test_create_same_entry_twice(hass: HomeAssistant) -> None:
         (aiohttp.ClientResponseError(Mock(), (), status=404), "bad_station_id"),
         (aiohttp.ClientResponseError(Mock(), (), status=400), "error_response"),
         (aiohttp.ClientConnectionError, "cannot_connect"),
-        (et.ParseError, "bad_station_id"),
+        (ET.ParseError, "bad_station_id"),
         (ValueError, "unknown"),
     ],
 )

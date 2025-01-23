@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "device_mode": {
+        "default": "mdi:connection"
+      },
+      "firmware_channel": {
+        "default": "mdi:update"
+      },
+      "zigbee_type": {
+        "default": "mdi:zigbee"
+      }
+    }
+  }
+}

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your tedee locks",
+        "title": "Set up your tedee locks",
         "data": {
           "local_access_token": "Local access token",
           "host": "[%key:common::config_flow::data::host%]"
@@ -14,18 +14,32 @@
       },
       "reauth_confirm": {
         "title": "Update of access key required",
-        "description": "Tedee needs an updated access key, because the existing one is invalid, or might have expired.",
+        "description": "Tedee needs an updated access key because the existing one is invalid or might have expired.",
         "data": {
           "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
         },
         "data_description": {
           "local_access_token": "[%key:component::tedee::config::step::user::data_description::local_access_token%]"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure tedee",
+        "description": "Update the settings of this integration.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
+        },
+        "data_description": {
+          "host": "[%key:component::tedee::config::step::user::data_description::host%]",
+          "local_access_token": "[%key:component::tedee::config::step::user::data_description::local_access_token%]"
+        }
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "You selected a different bridge than the one this config entry was configured with, this is not allowed."
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
@@ -40,12 +54,35 @@
       },
       "semi_locked": {
         "name": "Semi locked"
+      },
+      "uncalibrated": {
+        "name": "Lock uncalibrated"
       }
     },
     "sensor": {
       "pullspring_duration": {
         "name": "Pullspring duration"
       }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "Error while communicating with the API"
+    },
+    "authentication_failed": {
+      "message": "Authentication failed. Local access token is invalid"
+    },
+    "lock_failed": {
+      "message": "Failed to lock the door. Lock {lock_id}"
+    },
+    "unlock_failed": {
+      "message": "Failed to unlock the door. Lock {lock_id}"
+    },
+    "update_failed": {
+      "message": "Error while updating data"
+    },
+    "open_failed": {
+      "message": "Failed to unlatch the door. Lock {lock_id}"
     }
   }
 }

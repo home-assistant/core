@@ -20,11 +20,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, REGULAR_FIRMWARE
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -77,7 +79,7 @@ class DevoloUpdateEntity(DevoloCoordinatorEntity, UpdateEntity):
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DevoloDataUpdateCoordinator,
         description: DevoloUpdateEntityDescription,
     ) -> None:
         """Initialize entity."""

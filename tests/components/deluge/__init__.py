@@ -14,3 +14,10 @@ CONF_DATA = {
     CONF_PORT: DEFAULT_RPC_PORT,
     CONF_WEB_PORT: DEFAULT_WEB_PORT,
 }
+
+GET_TORRENT_STATUS_RESPONSE = {
+    "upload_rate": 3462.0,
+    "download_rate": 98.5,
+    "dht_upload_rate": 7818.0,
+    "dht_download_rate": 2658.0,
+}

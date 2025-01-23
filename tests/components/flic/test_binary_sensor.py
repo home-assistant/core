@@ -8,10 +8,11 @@ from homeassistant.setup import async_setup_component
 
 
 class _MockFlicClient:
-    def __init__(self, button_addresses):
+    def __init__(self, button_addresses) -> None:
         self.addresses = button_addresses
         self.get_info_callback = None
         self.scan_wizard = None
+        self.channel = None
 
     def close(self):
         pass

@@ -130,10 +130,15 @@ class HueSceneEntity(HueSceneEntityBase):
     @property
     def is_dynamic(self) -> bool:
         """Return if this scene has a dynamic color palette."""
-        if self.resource.palette.color and len(self.resource.palette.color) > 1:
+        if (
+            self.resource.palette
+            and self.resource.palette.color
+            and len(self.resource.palette.color) > 1
+        ):
             return True
         if (
-            self.resource.palette.color_temperature
+            self.resource.palette
+            and self.resource.palette.color_temperature
             and len(self.resource.palette.color_temperature) > 1
         ):
             return True
@@ -177,6 +182,9 @@ class HueSceneEntity(HueSceneEntityBase):
                 if action.action.dimming:
                     brightness = action.action.dimming.brightness
                     break
+        if brightness is not None:
+            # Hue uses a range of [0, 100] to control brightness.
+            brightness = round((brightness / 100) * 255)
         return {
             "group_name": self.group.metadata.name,
             "group_type": self.group.type.value,

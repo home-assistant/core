@@ -33,9 +33,20 @@ from tests.typing import RecorderInstanceGenerator
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
+
+
+@pytest.fixture
+def disable_states_meta_manager():
+    """Disable the states meta manager."""
+    with patch.object(
+        recorder.table_managers.states_meta.StatesMetaManager,
+        "active",
+        False,
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -46,7 +57,9 @@ def db_schema_32():
 
 
 @pytest.fixture(autouse=True)
-def setup_recorder(db_schema_32, recorder_mock: Recorder) -> recorder.Recorder:
+def setup_recorder(
+    db_schema_32, disable_states_meta_manager, recorder_mock: Recorder
+) -> recorder.Recorder:
     """Set up recorder."""
 
 
@@ -568,7 +581,9 @@ async def test_get_significant_states_only(
         )
 
 
-def record_states(hass) -> tuple[datetime, datetime, dict[str, list[State]]]:
+def record_states(
+    hass: HomeAssistant,
+) -> tuple[datetime, datetime, dict[str, list[State]]]:
     """Record some test states.
 
     We inject a bunch of state updates from media player, zone and

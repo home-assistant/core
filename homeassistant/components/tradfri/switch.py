@@ -12,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 
 async def async_setup_entry(
@@ -73,11 +73,11 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(False))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
         if not self._device_control:
-            return None
+            return
         await self._api(self._device_control.set_state(True))

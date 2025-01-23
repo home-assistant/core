@@ -9,7 +9,6 @@ from motioneye_client.client import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.motioneye.const import (
     CONF_ADMIN_PASSWORD,
     CONF_ADMIN_USERNAME,
@@ -23,6 +22,7 @@ from homeassistant.components.motioneye.const import (
 from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from . import TEST_URL, create_mock_motioneye_client, create_mock_motioneye_config_entry
 
@@ -264,14 +264,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     config_entry = create_mock_motioneye_config_entry(hass, data=config_data)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-        data=config_entry.data,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
 

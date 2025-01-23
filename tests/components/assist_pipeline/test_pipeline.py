@@ -26,25 +26,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import MANY_LANGUAGES
-from .conftest import MockSttProvider, MockTTSProvider
+from .conftest import MockSTTProviderEntity, MockTTSProvider
 
 from tests.common import flush_store
 
 
 @pytest.fixture(autouse=True)
-async def delay_save_fixture() -> AsyncGenerator[None, None]:
+async def delay_save_fixture() -> AsyncGenerator[None]:
     """Load the homeassistant integration."""
     with patch("homeassistant.helpers.collection.SAVE_DELAY", new=0):
         yield
 
 
 @pytest.fixture(autouse=True)
-async def load_homeassistant(hass) -> None:
+async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
 
 
-async def test_load_pipelines(hass: HomeAssistant, init_components) -> None:
+@pytest.mark.usefixtures("init_components")
+async def test_load_pipelines(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
 
     pipelines = [
@@ -247,9 +248,8 @@ async def test_migrate_pipeline_store(
     assert store.async_get_preferred_item() == "01GX8ZWBAQYWNB1XV3EXEZ75DY"
 
 
-async def test_create_default_pipeline(
-    hass: HomeAssistant, init_supporting_components
-) -> None:
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_create_default_pipeline(hass: HomeAssistant) -> None:
     """Test async_create_default_pipeline."""
     assert await async_setup_component(hass, "assist_pipeline", {})
 
@@ -395,10 +395,10 @@ async def test_default_pipeline_no_stt_tts(
         ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
     ],
 )
+@pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline(
     hass: HomeAssistant,
-    init_supporting_components,
-    mock_stt_provider: MockSttProvider,
+    mock_stt_provider_entity: MockSTTProviderEntity,
     mock_tts_provider: MockTTSProvider,
     ha_language: str,
     ha_country: str | None,
@@ -412,7 +412,7 @@ async def test_default_pipeline(
     hass.config.language = ha_language
 
     with (
-        patch.object(mock_stt_provider, "_supported_languages", MANY_LANGUAGES),
+        patch.object(mock_stt_provider_entity, "_supported_languages", MANY_LANGUAGES),
         patch.object(mock_tts_provider, "_supported_languages", MANY_LANGUAGES),
     ):
         assert await async_setup_component(hass, "assist_pipeline", {})
@@ -429,7 +429,7 @@ async def test_default_pipeline(
         id=pipeline.id,
         language=pipeline_language,
         name="Home Assistant",
-        stt_engine="test",
+        stt_engine="stt.mock_stt",
         stt_language=stt_language,
         tts_engine="test",
         tts_language=tts_language,
@@ -439,13 +439,12 @@ async def test_default_pipeline(
     )
 
 
+@pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline_unsupported_stt_language(
-    hass: HomeAssistant,
-    init_supporting_components,
-    mock_stt_provider: MockSttProvider,
+    hass: HomeAssistant, mock_stt_provider_entity: MockSTTProviderEntity
 ) -> None:
     """Test async_get_pipeline."""
-    with patch.object(mock_stt_provider, "_supported_languages", ["smurfish"]):
+    with patch.object(mock_stt_provider_entity, "_supported_languages", ["smurfish"]):
         assert await async_setup_component(hass, "assist_pipeline", {})
 
     pipeline_data: PipelineData = hass.data[DOMAIN]
@@ -470,10 +469,9 @@ async def test_default_pipeline_unsupported_stt_language(
     )
 
 
+@pytest.mark.usefixtures("init_supporting_components")
 async def test_default_pipeline_unsupported_tts_language(
-    hass: HomeAssistant,
-    init_supporting_components,
-    mock_tts_provider: MockTTSProvider,
+    hass: HomeAssistant, mock_tts_provider: MockTTSProvider
 ) -> None:
     """Test async_get_pipeline."""
     with patch.object(mock_tts_provider, "_supported_languages", ["smurfish"]):
@@ -491,7 +489,7 @@ async def test_default_pipeline_unsupported_tts_language(
         id=pipeline.id,
         language="en",
         name="Home Assistant",
-        stt_engine="test",
+        stt_engine="stt.mock_stt",
         stt_language="en-US",
         tts_engine=None,
         tts_language=None,
@@ -502,8 +500,7 @@ async def test_default_pipeline_unsupported_tts_language(
 
 
 async def test_update_pipeline(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
+    hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test async_update_pipeline."""
     assert await async_setup_component(hass, "assist_pipeline", {})
@@ -577,6 +574,7 @@ async def test_update_pipeline(
         "tts_voice": "test_voice",
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
+        "prefer_local_intents": False,
     }
 
     await async_update_pipeline(
@@ -620,12 +618,12 @@ async def test_update_pipeline(
         "tts_voice": "test_voice",
         "wake_word_entity": "wake_work.test_1",
         "wake_word_id": "wake_word_id_1",
+        "prefer_local_intents": False,
     }
 
 
-async def test_migrate_after_load(
-    hass: HomeAssistant, init_supporting_components
-) -> None:
+@pytest.mark.usefixtures("init_supporting_components")
+async def test_migrate_after_load(hass: HomeAssistant) -> None:
     """Test migrating an engine after done loading."""
     assert await async_setup_component(hass, "assist_pipeline", {})
 

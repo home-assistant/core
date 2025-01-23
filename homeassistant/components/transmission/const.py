@@ -1,4 +1,4 @@
-"""Constants for the Transmission Bittorent Client component."""
+"""Constants for the Transmission Bittorrent Client component."""
 
 from __future__ import annotations
 
@@ -40,6 +40,7 @@ STATE_ATTR_TORRENT_INFO = "torrent_info"
 
 ATTR_DELETE_DATA = "delete_data"
 ATTR_TORRENT = "torrent"
+ATTR_DOWNLOAD_PATH = "download_path"
 
 SERVICE_ADD_TORRENT = "add_torrent"
 SERVICE_REMOVE_TORRENT = "remove_torrent"

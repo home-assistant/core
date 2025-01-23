@@ -39,6 +39,11 @@
         "name": "Static IP"
       }
     },
+    "number": {
+      "max_current": {
+        "name": "Maximum current"
+      }
+    },
     "sensor": {
       "voltage_in": {
         "name": "Input voltage"
@@ -72,7 +77,18 @@
     "switch": {
       "auto_charge": {
         "name": "Auto charge"
+      },
+      "session_active": {
+        "name": "Charging Enabled"
       }
+    }
+  },
+  "exceptions": {
+    "max_current_in_sharing_mode": {
+      "message": "Cannot set the max current when power sharing mode is enabled."
+    },
+    "set_charging_enabled_on_auto_charge": {
+      "message": "Cannot enable or disable charging when auto-charge is enabled. Try disabling auto-charge first."
     }
   }
 }

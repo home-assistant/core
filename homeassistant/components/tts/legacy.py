@@ -57,9 +57,6 @@ from .const import (
 from .media_source import generate_media_source_id
 from .models import Voice
 
-if TYPE_CHECKING:
-    from . import SpeechManager
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_SERVICE_NAME = "service_name"
@@ -105,8 +102,6 @@ async def async_setup_legacy(
     hass: HomeAssistant, config: ConfigType
 ) -> list[Coroutine[Any, Any, None]]:
     """Set up legacy text-to-speech providers."""
-    tts: SpeechManager = hass.data[DATA_TTS_MANAGER]
-
     # Load service descriptions from tts/services.yaml
     services_yaml = Path(__file__).parent / "services.yaml"
     services_dict = await hass.async_add_executor_job(
@@ -147,7 +142,9 @@ async def async_setup_legacy(
                     _LOGGER.error("Error setting up platform: %s", p_type)
                     return
 
-                tts.async_register_legacy_engine(p_type, provider, p_config)
+                hass.data[DATA_TTS_MANAGER].async_register_legacy_engine(
+                    p_type, provider, p_config
+                )
         except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return

@@ -13,6 +13,7 @@ from airthings_ble import (
 from homeassistant.components.airthings_ble.const import DOMAIN
 from homeassistant.components.bluetooth.models import BluetoothServiceInfoBleak
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 
 from tests.common import MockConfigEntry, MockEntity
@@ -48,7 +49,7 @@ def patch_airthings_ble(return_value=AirthingsDevice, side_effect=None):
 def patch_airthings_device_update():
     """Patch airthings-ble device."""
     return patch(
-        "homeassistant.components.airthings_ble.AirthingsBluetoothDeviceData.update_device",
+        "homeassistant.components.airthings_ble.coordinator.AirthingsBluetoothDeviceData.update_device",
         return_value=WAVE_DEVICE_INFO,
     )
 
@@ -225,7 +226,7 @@ VOC_V3 = MockEntity(
 )
 
 
-def create_entry(hass):
+def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a config entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,

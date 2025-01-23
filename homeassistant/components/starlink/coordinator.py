@@ -14,8 +14,11 @@ from starlink_grpc import (
     GrpcError,
     LocationDict,
     ObstructionDict,
+    PowerDict,
     StatusDict,
+    UsageDict,
     get_sleep_config,
+    history_stats,
     location_data,
     reboot,
     set_sleep_config,
@@ -39,6 +42,8 @@ class StarlinkData:
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    usage: UsageDict
+    consumption: PowerDict
 
 
 class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
@@ -57,11 +62,15 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
-        channel_context = self.channel_context
-        status = status_data(channel_context)
-        location = location_data(channel_context)
-        sleep = get_sleep_config(channel_context)
-        return StarlinkData(location, sleep, *status)
+        context = self.channel_context
+        status = status_data(context)
+        location = location_data(context)
+        sleep = get_sleep_config(context)
+        status, obstruction, alert = status_data(context)
+        usage, consumption = history_stats(parse_samples=-1, context=context)[-2:]
+        return StarlinkData(
+            location, sleep, status, obstruction, alert, usage, consumption
+        )
 
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
@@ -119,12 +128,16 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     async def async_set_sleep_duration(self, end: int) -> None:
         """Set Starlink system sleep schedule end time."""
+        duration = end - self.data.sleep[0]
+        if duration < 0:
+            # If the duration pushed us into the next day, add one days worth to correct that.
+            duration += 1440
         async with asyncio.timeout(4):
             try:
                 await self.hass.async_add_executor_job(
                     set_sleep_config,
                     self.data.sleep[0],
-                    end,
+                    duration,
                     self.data.sleep[2],
                     self.channel_context,
                 )

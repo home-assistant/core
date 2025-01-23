@@ -5,7 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairzone.const import AZD_MAC, AZD_WEBSERVER, DEFAULT_SYSTEM_ID
+from aioairzone.const import (
+    AZD_FIRMWARE,
+    AZD_FULL_NAME,
+    AZD_MAC,
+    AZD_MODEL,
+    AZD_WEBSERVER,
+    DEFAULT_SYSTEM_ID,
+)
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +24,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -25,15 +32,18 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
 
 _LOGGER = logging.getLogger(__name__)
 
+type AirzoneConfigEntry = ConfigEntry[AirzoneUpdateCoordinator]
+
 
 async def _async_migrate_unique_ids(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AirzoneConfigEntry,
     coordinator: AirzoneUpdateCoordinator,
 ) -> None:
     """Migrate entities when the mac address gets discovered."""
@@ -71,7 +81,7 @@ async def _async_migrate_unique_ids(
         await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
     """Set up Airzone from a config entry."""
     options = ConnectionOptions(
         entry.data[CONF_HOST],
@@ -84,16 +94,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     await _async_migrate_unique_ids(hass, entry, coordinator)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
+
+    device_registry = dr.async_get(hass)
+
+    ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
+    if ws_data is not None:
+        mac = ws_data.get(AZD_MAC, "")
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+            manufacturer=MANUFACTURER,
+            model=ws_data.get(AZD_MODEL),
+            name=ws_data.get(AZD_FULL_NAME),
+            sw_version=ws_data.get(AZD_FIRMWARE),
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

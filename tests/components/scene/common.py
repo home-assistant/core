@@ -6,11 +6,12 @@ components. Instead call the service directly.
 
 from homeassistant.components.scene import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
 
 
 @bind_hass
-def activate(hass, entity_id=ENTITY_MATCH_ALL):
+def activate(hass: HomeAssistant, entity_id: str = ENTITY_MATCH_ALL) -> None:
     """Activate a scene."""
     data = {}
 

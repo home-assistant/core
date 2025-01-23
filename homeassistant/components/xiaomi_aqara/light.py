@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.color as color_util
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 

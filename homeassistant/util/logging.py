@@ -196,8 +196,8 @@ def async_create_catching_coro[_T](
     trace = traceback.extract_stack()
     return catch_log_coro_exception(
         target,
-        lambda: "Exception in {} called from\n {}".format(
-            target.__name__,
-            "".join(traceback.format_list(trace[:-1])),
+        lambda: (
+            f"Exception in {target.__name__} called from\n"
+            + "".join(traceback.format_list(trace[:-1]))
         ),
     )

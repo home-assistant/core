@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -68,7 +68,7 @@ CATEGORY_SCHEMA = vol.Schema(
     {vol.Required(CONF_CATEGORY): cv.string, vol.Optional(CONF_AREA): AREA_SCHEMA}
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FILE_OUT, default=[]): vol.All(cv.ensure_list, [cv.template]),
         vol.Required(CONF_MODEL): vol.Schema(
@@ -261,8 +261,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 area_config.get(CONF_RIGHT),
             ]
 
-        template.attach(hass, self._file_out)
-
         self._matches = {}
         self._total_matches = 0
         self._last_image = None
@@ -326,13 +324,13 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                label = "{} {:.1f}%".format(category, instance["score"])
+                label = f"{category} {instance['score']:.1f}%"
                 draw_box(
                     draw, instance["box"], img_width, img_height, label, (255, 255, 0)
                 )
 
         for path in paths:
-            _LOGGER.info("Saving results image to %s", path)
+            _LOGGER.debug("Saving results image to %s", path)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 

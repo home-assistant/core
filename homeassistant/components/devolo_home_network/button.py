@@ -22,6 +22,8 @@ from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, IDENTIFY, PAIRING, RESTART, START_WPS
 from .entity import DevoloEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class DevoloButtonEntityDescription(ButtonEntityDescription):

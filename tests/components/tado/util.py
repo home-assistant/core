@@ -20,12 +20,19 @@ async def async_init_integration(
     mobile_devices_fixture = "tado/mobile_devices.json"
     me_fixture = "tado/me.json"
     weather_fixture = "tado/weather.json"
+    home_fixture = "tado/home.json"
     home_state_fixture = "tado/home_state.json"
     zones_fixture = "tado/zones.json"
     zone_states_fixture = "tado/zone_states.json"
 
     # WR1 Device
     device_wr1_fixture = "tado/device_wr1.json"
+
+    # Smart AC with fanLevel, Vertical and Horizontal swings
+    zone_6_state_fixture = "tado/smartac4.with_fanlevel.json"
+    zone_6_capabilities_fixture = (
+        "tado/zone_with_fanlevel_horizontal_vertical_swing.json"
+    )
 
     # Smart AC with Swing
     zone_5_state_fixture = "tado/smartac3.with_swing.json"
@@ -58,6 +65,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/me",
             text=load_fixture(me_fixture),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/",
+            text=load_fixture(home_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/weather",
@@ -94,6 +105,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/homes/1/zoneStates",
             text=load_fixture(zone_states_fixture),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/6/capabilities",
+            text=load_fixture(zone_6_capabilities_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/5/capabilities",
@@ -134,6 +149,14 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/5/defaultOverlay",
             text=load_fixture(zone_def_overlay),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/6/defaultOverlay",
+            text=load_fixture(zone_def_overlay),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/6/state",
+            text=load_fixture(zone_6_state_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/5/state",

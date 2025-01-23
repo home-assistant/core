@@ -21,25 +21,19 @@ from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import load_json
 
+from .common import UNITS_OF_MEASUREMENT, MockSensor
+
 from tests.common import (
     MockConfigEntry,
     async_get_device_automation_capabilities,
     async_get_device_automations,
-    async_mock_service,
     setup_test_component_platform,
 )
-from tests.components.sensor.common import UNITS_OF_MEASUREMENT, MockSensor
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 @pytest.mark.parametrize(
@@ -170,7 +164,7 @@ async def test_get_conditions_hidden_auxiliary(
             "entity_id": entity_entry.id,
             "metadata": {"secondary": True},
         }
-        for condition in ["is_value"]
+        for condition in ("is_value",)
     ]
     conditions = await async_get_device_automations(
         hass, DeviceAutomationType.CONDITION, device_entry.id
@@ -462,13 +456,12 @@ async def test_get_condition_capabilities_none(
         assert capabilities == expected_capabilities
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_not_above_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
     caplog: pytest.LogCaptureFixture,
-    enable_custom_integrations: None,
 ) -> None:
     """Test for bad value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -505,12 +498,12 @@ async def test_if_state_not_above_below(
     assert "must contain at least one of below, above" in caplog.text
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_above(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -556,30 +549,30 @@ async def test_if_state_above(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_above_legacy(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -625,30 +618,30 @@ async def test_if_state_above_legacy(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_below(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -694,30 +687,30 @@ async def test_if_state_below(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "event - test_event1"
 
 
+@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_if_state_between(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    calls,
-    enable_custom_integrations: None,
+    service_calls: list[ServiceCall],
 ) -> None:
     """Test for value conditions."""
     config_entry = MockConfigEntry(domain="test", data={})
@@ -764,30 +757,30 @@ async def test_if_state_between(
         },
     )
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 9)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 0
 
     hass.states.async_set(entry.entity_id, 11)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "event - test_event1"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "event - test_event1"
 
     hass.states.async_set(entry.entity_id, 21)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
 
     hass.states.async_set(entry.entity_id, 19)
     hass.bus.async_fire("test_event1")
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data["some"] == "event - test_event1"
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == "event - test_event1"

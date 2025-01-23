@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_async import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, DeviceType
 import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
@@ -23,7 +23,8 @@ from .const import (
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
-from .utils import BondDevice, BondHub
+from .models import BondData
+from .utils import BondDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,19 +47,17 @@ async def async_setup_entry(
     """Set up Bond light devices."""
     data = entry.runtime_data
     hub = data.hub
-    bpup_subs = data.bpup_subs
-    platform = entity_platform.async_get_current_platform()
 
     platform = entity_platform.async_get_current_platform()
     for service in ENTITY_SERVICES:
         platform.async_register_entity_service(
             service,
-            {},
+            None,
             f"async_{service}",
         )
 
     fan_lights: list[Entity] = [
-        BondLight(hub, device, bpup_subs)
+        BondLight(data, device)
         for device in hub.devices
         if DeviceType.is_fan(device.type)
         and device.supports_light()
@@ -66,31 +65,31 @@ async def async_setup_entry(
     ]
 
     fan_up_lights: list[Entity] = [
-        BondUpLight(hub, device, bpup_subs, "up_light")
+        BondUpLight(data, device, "up_light")
         for device in hub.devices
         if DeviceType.is_fan(device.type) and device.supports_up_light()
     ]
 
     fan_down_lights: list[Entity] = [
-        BondDownLight(hub, device, bpup_subs, "down_light")
+        BondDownLight(data, device, "down_light")
         for device in hub.devices
         if DeviceType.is_fan(device.type) and device.supports_down_light()
     ]
 
     fireplaces: list[Entity] = [
-        BondFireplace(hub, device, bpup_subs)
+        BondFireplace(data, device)
         for device in hub.devices
         if DeviceType.is_fireplace(device.type)
     ]
 
     fp_lights: list[Entity] = [
-        BondLight(hub, device, bpup_subs, "light")
+        BondLight(data, device, "light")
         for device in hub.devices
         if DeviceType.is_fireplace(device.type) and device.supports_light()
     ]
 
     lights: list[Entity] = [
-        BondLight(hub, device, bpup_subs)
+        BondLight(data, device)
         for device in hub.devices
         if DeviceType.is_light(device.type)
     ]
@@ -130,8 +129,8 @@ class BondBaseLight(BondEntity, LightEntity):
             await self.async_set_power_belief(False)
             return
         try:
-            await self._hub.bond.action(
-                self._device.device_id,
+            await self._bond.action(
+                self._device_id,
                 Action.set_brightness_belief(round((brightness * 100) / 255)),
             )
         except ClientResponseError as ex:
@@ -143,8 +142,8 @@ class BondBaseLight(BondEntity, LightEntity):
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the belief state of the light."""
         try:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_light_state_belief(power_state)
+            await self._bond.action(
+                self._device_id, Action.set_light_state_belief(power_state)
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(
@@ -158,13 +157,12 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 
     def __init__(
         self,
-        hub: BondHub,
+        data: BondData,
         device: BondDevice,
-        bpup_subs: BPUPSubscriptions,
         sub_device: str | None = None,
     ) -> None:
         """Create HA entity representing Bond light."""
-        super().__init__(hub, device, bpup_subs, sub_device)
+        super().__init__(data, device, sub_device)
         if device.supports_set_brightness():
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -178,16 +176,16 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if brightness := kwargs.get(ATTR_BRIGHTNESS):
-            await self._hub.bond.action(
-                self._device.device_id,
+            await self._bond.action(
+                self._device_id,
                 Action.set_brightness(round((brightness * 100) / 255)),
             )
         else:
-            await self._hub.bond.action(self._device.device_id, Action.turn_light_on())
+            await self._bond.action(self._device_id, Action.turn_light_on())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._hub.bond.action(self._device.device_id, Action.turn_light_off())
+        await self._bond.action(self._device_id, Action.turn_light_off())
 
     @callback
     def _async_has_action_or_raise(self, action: str) -> None:
@@ -202,8 +200,8 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
             " replaced with a button; Call the button.press service instead"
         )
         self._async_has_action_or_raise(Action.START_INCREASING_BRIGHTNESS)
-        await self._hub.bond.action(
-            self._device.device_id, Action(Action.START_INCREASING_BRIGHTNESS)
+        await self._bond.action(
+            self._device_id, Action(Action.START_INCREASING_BRIGHTNESS)
         )
 
     async def async_start_decreasing_brightness(self) -> None:
@@ -213,8 +211,8 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
             " replaced with a button; Call the button.press service instead"
         )
         self._async_has_action_or_raise(Action.START_DECREASING_BRIGHTNESS)
-        await self._hub.bond.action(
-            self._device.device_id, Action(Action.START_DECREASING_BRIGHTNESS)
+        await self._bond.action(
+            self._device_id, Action(Action.START_DECREASING_BRIGHTNESS)
         )
 
     async def async_stop(self) -> None:
@@ -224,7 +222,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
             " Call the button.press service instead"
         )
         self._async_has_action_or_raise(Action.STOP)
-        await self._hub.bond.action(self._device.device_id, Action(Action.STOP))
+        await self._bond.action(self._device_id, Action(Action.STOP))
 
 
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):
@@ -236,15 +234,11 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action(Action.TURN_DOWN_LIGHT_ON)
-        )
+        await self._bond.action(self._device_id, Action(Action.TURN_DOWN_LIGHT_ON))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action(Action.TURN_DOWN_LIGHT_OFF)
-        )
+        await self._bond.action(self._device_id, Action(Action.TURN_DOWN_LIGHT_OFF))
 
 
 class BondUpLight(BondBaseLight, BondEntity, LightEntity):
@@ -256,15 +250,11 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action(Action.TURN_UP_LIGHT_ON)
-        )
+        await self._bond.action(self._device_id, Action(Action.TURN_UP_LIGHT_ON))
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
-        await self._hub.bond.action(
-            self._device.device_id, Action(Action.TURN_UP_LIGHT_OFF)
-        )
+        await self._bond.action(self._device_id, Action(Action.TURN_UP_LIGHT_OFF))
 
 
 class BondFireplace(BondEntity, LightEntity):
@@ -287,15 +277,15 @@ class BondFireplace(BondEntity, LightEntity):
 
         if brightness := kwargs.get(ATTR_BRIGHTNESS):
             flame = round((brightness * 100) / 255)
-            await self._hub.bond.action(self._device.device_id, Action.set_flame(flame))
+            await self._bond.action(self._device_id, Action.set_flame(flame))
         else:
-            await self._hub.bond.action(self._device.device_id, Action.turn_on())
+            await self._bond.action(self._device_id, Action.turn_on())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fireplace off."""
         _LOGGER.debug("Fireplace async_turn_off called with: %s", kwargs)
 
-        await self._hub.bond.action(self._device.device_id, Action.turn_off())
+        await self._bond.action(self._device_id, Action.turn_off())
 
     async def async_set_brightness_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
@@ -305,8 +295,8 @@ class BondFireplace(BondEntity, LightEntity):
             await self.async_set_power_belief(False)
             return
         try:
-            await self._hub.bond.action(
-                self._device.device_id,
+            await self._bond.action(
+                self._device_id,
                 Action.set_brightness_belief(round((brightness * 100) / 255)),
             )
         except ClientResponseError as ex:
@@ -318,8 +308,8 @@ class BondFireplace(BondEntity, LightEntity):
     async def async_set_power_belief(self, power_state: bool) -> None:
         """Set the belief state of the light."""
         try:
-            await self._hub.bond.action(
-                self._device.device_id, Action.set_power_state_belief(power_state)
+            await self._bond.action(
+                self._device_id, Action.set_power_state_belief(power_state)
             )
         except ClientResponseError as ex:
             raise HomeAssistantError(

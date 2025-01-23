@@ -16,15 +16,13 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DEVICE_LIST, DOMAIN
 from .entity import ViCareEntity
-from .types import ViCareDevice, ViCareRequiredKeysMixinWithSet
-from .utils import is_supported
+from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixinWithSet
+from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,9 +52,10 @@ def _build_entities(
 
     return [
         ViCareButton(
-            device.api,
-            device.config,
             description,
+            get_device_serial(device.api),
+            device.config,
+            device.api,
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
@@ -66,16 +65,14 @@ def _build_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ViCareConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    device_list = hass.data[DOMAIN][config_entry.entry_id][DEVICE_LIST]
-
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
-            device_list,
+            config_entry.runtime_data.devices,
         )
     )
 
@@ -87,12 +84,13 @@ class ViCareButton(ViCareEntity, ButtonEntity):
 
     def __init__(
         self,
-        api: PyViCareDevice,
-        device_config: PyViCareDeviceConfig,
         description: ViCareButtonEntityDescription,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config, api, description.key)
+        super().__init__(description.key, device_serial, device_config, device)
         self.entity_description = description
 
     def press(self) -> None:

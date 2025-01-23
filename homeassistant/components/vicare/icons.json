@@ -84,10 +84,15 @@
       },
       "compressor_phase": {
         "default": "mdi:information"
+      },
+      "ventilation_level": {
+        "default": "mdi:fan"
       }
     }
   },
   "services": {
-    "set_vicare_mode": "mdi:cog"
+    "set_vicare_mode": {
+      "service": "mdi:cog"
+    }
   }
 }

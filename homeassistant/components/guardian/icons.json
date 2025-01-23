@@ -18,8 +18,14 @@
     }
   },
   "services": {
-    "pair_sensor": "mdi:link-variant",
-    "unpair_sensor": "mdi:link-variant-remove",
-    "upgrade_firmware": "mdi:update"
+    "pair_sensor": {
+      "service": "mdi:link-variant"
+    },
+    "unpair_sensor": {
+      "service": "mdi:link-variant-remove"
+    },
+    "upgrade_firmware": {
+      "service": "mdi:update"
+    }
   }
 }

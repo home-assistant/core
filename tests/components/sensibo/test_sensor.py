@@ -1,53 +1,47 @@
-"""The test for the sensibo select platform."""
+"""The test for the sensibo sensor platform."""
 
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from pysensibo.model import SensiboData
+from freezegun.api import FrozenDateTimeFactory
+from pysensibo.model import PureAQI
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
 async def test_sensor(
     hass: HomeAssistant,
-    entity_registry_enabled_by_default: None,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
+    mock_client: MagicMock,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo sensor."""
 
-    state1 = hass.states.get("sensor.hallway_motion_sensor_battery_voltage")
-    state2 = hass.states.get("sensor.kitchen_pm2_5")
-    state3 = hass.states.get("sensor.kitchen_pure_sensitivity")
-    state4 = hass.states.get("sensor.hallway_climate_react_low_temperature_threshold")
-    assert state1.state == "3000"
-    assert state2.state == "1"
-    assert state3.state == "n"
-    assert state4.state == "0.0"
-    assert state2.attributes == snapshot
-    assert state4.attributes == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pm25", 2)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pm25_pure = PureAQI(2)
 
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    state1 = hass.states.get("sensor.kitchen_pm2_5")
-    assert state1.state == "2"
+    state = hass.states.get("sensor.kitchen_pure_aqi")
+    assert state.state == "moderate"

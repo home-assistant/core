@@ -28,6 +28,11 @@
     }
   },
   "services": {
-    "get_packages": "mdi:package"
+    "get_packages": {
+      "service": "mdi:package"
+    },
+    "archive_package": {
+      "service": "mdi:archive"
+    }
   }
 }

@@ -66,7 +66,7 @@ INVALID_SORT_BY_CONFIG = {
 class ObjectView:
     """Use dict properties as attributes."""
 
-    def __init__(self, d):
+    def __init__(self, d) -> None:
         """Set dict as internal dict."""
         self.__dict__ = d
 
@@ -111,7 +111,7 @@ class MockPraw:
         username: str,
         password: str,
         user_agent: str,
-    ):
+    ) -> None:
         """Add mock data for API return."""
         self._data = MOCK_RESULTS
 
@@ -123,7 +123,7 @@ class MockPraw:
 class MockSubreddit:
     """Mock class for a subreddit instance."""
 
-    def __init__(self, subreddit: str, data):
+    def __init__(self, subreddit: str, data) -> None:
         """Add mock data for API return."""
         self._subreddit = subreddit
         self._data = data

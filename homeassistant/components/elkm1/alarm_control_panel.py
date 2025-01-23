@@ -15,33 +15,27 @@ from homeassistant.components.alarm_control_panel import (
     ATTR_CHANGED_BY,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
-)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.typing import VolDictType
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
 from .const import (
     ATTR_CHANGED_BY_ID,
     ATTR_CHANGED_BY_KEYPAD,
     ATTR_CHANGED_BY_TIME,
     ELK_USER_CODE_SERVICE_SCHEMA,
 )
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 from .models import ELKM1Data
 
-DISPLAY_MESSAGE_SERVICE_SCHEMA = {
+DISPLAY_MESSAGE_SERVICE_SCHEMA: VolDictType = {
     vol.Optional("clear", default=2): vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
     vol.Optional("beep", default=False): cv.boolean,
     vol.Optional("timeout", default=0): vol.All(
@@ -123,7 +117,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         self._changed_by_time: str | None = None
         self._changed_by_id: int | None = None
         self._changed_by: str | None = None
-        self._state: str | None = None
+        self._state: AlarmControlPanelState | None = None
 
     async def async_added_to_hass(self) -> None:
         """Register callback for ElkM1 changes."""
@@ -175,7 +169,7 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
         return CodeFormat.NUMBER
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the element."""
         return self._state
 
@@ -205,23 +199,25 @@ class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
 
     def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         elk_state_to_hass_state = {
-            ArmedStatus.DISARMED: STATE_ALARM_DISARMED,
-            ArmedStatus.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-            ArmedStatus.ARMED_STAY: STATE_ALARM_ARMED_HOME,
-            ArmedStatus.ARMED_STAY_INSTANT: STATE_ALARM_ARMED_HOME,
-            ArmedStatus.ARMED_TO_NIGHT: STATE_ALARM_ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_NIGHT_INSTANT: STATE_ALARM_ARMED_NIGHT,
-            ArmedStatus.ARMED_TO_VACATION: STATE_ALARM_ARMED_AWAY,
+            ArmedStatus.DISARMED: AlarmControlPanelState.DISARMED,
+            ArmedStatus.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+            ArmedStatus.ARMED_STAY: AlarmControlPanelState.ARMED_HOME,
+            ArmedStatus.ARMED_STAY_INSTANT: AlarmControlPanelState.ARMED_HOME,
+            ArmedStatus.ARMED_TO_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_NIGHT_INSTANT: AlarmControlPanelState.ARMED_NIGHT,
+            ArmedStatus.ARMED_TO_VACATION: AlarmControlPanelState.ARMED_AWAY,
         }
 
         if self._element.alarm_state is None:
             self._state = None
         elif self._element.in_alarm_state():
             # Area is in alarm state
-            self._state = STATE_ALARM_TRIGGERED
+            self._state = AlarmControlPanelState.TRIGGERED
         elif self._entry_exit_timer_is_running():
             self._state = (
-                STATE_ALARM_ARMING if self._element.is_exit else STATE_ALARM_PENDING
+                AlarmControlPanelState.ARMING
+                if self._element.is_exit
+                else AlarmControlPanelState.PENDING
             )
         elif self._element.armed_status is not None:
             self._state = elk_state_to_hass_state[self._element.armed_status]

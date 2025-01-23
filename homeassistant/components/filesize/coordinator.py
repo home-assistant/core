@@ -46,25 +46,28 @@ class FileSizeCoordinator(DataUpdateCoordinator[dict[str, int | float | datetime
 
     def _update(self) -> os.stat_result:
         """Fetch file information."""
-        if not hasattr(self, "path"):
-            self.path = self._get_full_path()
-
         try:
             return self.path.stat()
         except OSError as error:
             raise UpdateFailed(f"Can not retrieve file statistics {error}") from error
+
+    async def _async_setup(self) -> None:
+        """Set up path."""
+        self.path = await self.hass.async_add_executor_job(self._get_full_path)
 
     async def _async_update_data(self) -> dict[str, float | int | datetime]:
         """Fetch file information."""
         statinfo = await self.hass.async_add_executor_job(self._update)
         size = statinfo.st_size
         last_updated = dt_util.utc_from_timestamp(statinfo.st_mtime)
+        created = dt_util.utc_from_timestamp(statinfo.st_ctime)
 
         _LOGGER.debug("size %s, last updated %s", size, last_updated)
         data: dict[str, int | float | datetime] = {
             "file": round(size / 1e6, 2),
             "bytes": size,
             "last_updated": last_updated,
+            "created": created,
         }
 
         return data

@@ -22,14 +22,16 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN, POWERWALL_API_CHANGED, POWERWALL_COORDINATOR, UPDATE_INTERVAL
-from .models import PowerwallBaseInfo, PowerwallData, PowerwallRuntimeData
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+from .models import (
+    PowerwallBaseInfo,
+    PowerwallConfigEntry,
+    PowerwallData,
+    PowerwallRuntimeData,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
@@ -115,7 +117,7 @@ class PowerwallDataManager:
         raise RuntimeError("unreachable")
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
     """Set up Tesla Powerwall from a config entry."""
     ip_address: str = entry.data[CONF_IP_ADDRESS]
 
@@ -166,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Powerwall site",
         update_method=manager.async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
@@ -176,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     runtime_data[POWERWALL_COORDINATOR] = coordinator
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime_data
+    entry.runtime_data = runtime_data
 
     await async_migrate_entity_unique_ids(hass, entry, base_info)
 
@@ -186,7 +189,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_migrate_entity_unique_ids(
-    hass: HomeAssistant, entry: ConfigEntry, base_info: PowerwallBaseInfo
+    hass: HomeAssistant, entry: PowerwallConfigEntry, base_info: PowerwallBaseInfo
 ) -> None:
     """Migrate old entity unique ids to use gateway_din."""
     old_base_unique_id = "_".join(base_info.serial_numbers)
@@ -276,21 +279,18 @@ async def _fetch_powerwall_data(power_wall: Powerwall) -> PowerwallData:
 
 
 @callback
-def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+def async_last_update_was_successful(
+    hass: HomeAssistant, entry: PowerwallConfigEntry
+) -> bool:
     """Return True if the last update was successful."""
     return bool(
-        (domain_data := hass.data.get(DOMAIN))
-        and (entry_data := domain_data.get(entry.entry_id))
-        and (coordinator := entry_data.get(POWERWALL_COORDINATOR))
+        hasattr(entry, "runtime_data")
+        and (runtime_data := entry.runtime_data)
+        and (coordinator := runtime_data.get(POWERWALL_COORDINATOR))
         and coordinator.last_update_success
     )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

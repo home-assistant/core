@@ -1,6 +1,7 @@
 """Handle Cloud assist pipelines."""
 
 import asyncio
+from typing import Any
 
 from homeassistant.components.assist_pipeline import (
     async_create_default_pipeline,
@@ -27,7 +28,7 @@ async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
     """Create a cloud assist pipeline."""
     # Wait for stt and tts platforms to set up and entities to be added
     # before creating the pipeline.
-    platforms_setup: dict[str, asyncio.Event] = hass.data[DATA_PLATFORMS_SETUP]
+    platforms_setup = hass.data[DATA_PLATFORMS_SETUP]
     await asyncio.gather(*(event.wait() for event in platforms_setup.values()))
     # Make sure the pipeline store is loaded, needed because assist_pipeline
     # is an after dependency of cloud
@@ -91,14 +92,14 @@ async def async_migrate_cloud_pipeline_engine(
     else:
         raise ValueError(f"Invalid platform {platform}")
 
-    platforms_setup: dict[str, asyncio.Event] = hass.data[DATA_PLATFORMS_SETUP]
+    platforms_setup = hass.data[DATA_PLATFORMS_SETUP]
     await platforms_setup[wait_for_platform].wait()
 
     # Make sure the pipeline store is loaded, needed because assist_pipeline
     # is an after dependency of cloud
     await async_setup_pipeline_store(hass)
 
-    kwargs: dict[str, str] = {pipeline_attribute: engine_id}
+    kwargs: dict[str, Any] = {pipeline_attribute: engine_id}
     pipelines = async_get_pipelines(hass)
     for pipeline in pipelines:
         if getattr(pipeline, pipeline_attribute) == DOMAIN:

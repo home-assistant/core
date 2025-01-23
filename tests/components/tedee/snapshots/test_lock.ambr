@@ -1,81 +1,4 @@
 # serializer version: 1
-# name: test_lock
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Lock-1A2B',
-      'supported_features': <LockEntityFeature: 1>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'lock.lock_1a2b',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unlocked',
-  })
-# ---
-# name: test_lock.1
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'lock',
-    'entity_category': None,
-    'entity_id': 'lock.lock_1a2b',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tedee',
-    'previous_unique_id': None,
-    'supported_features': <LockEntityFeature: 1>,
-    'translation_key': None,
-    'unique_id': '12345-lock',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_lock.2
-  DeviceRegistryEntrySnapshot({
-    'area_id': None,
-    'config_entries': <ANY>,
-    'configuration_url': None,
-    'connections': set({
-    }),
-    'disabled_by': None,
-    'entry_type': None,
-    'hw_version': None,
-    'id': <ANY>,
-    'identifiers': set({
-      tuple(
-        'tedee',
-        '12345',
-      ),
-    }),
-    'is_new': False,
-    'labels': set({
-    }),
-    'manufacturer': 'Tedee',
-    'model': 'Tedee PRO',
-    'name': 'Lock-1A2B',
-    'name_by_user': None,
-    'serial_number': None,
-    'suggested_area': None,
-    'sw_version': None,
-    'via_device_id': <ANY>,
-  })
-# ---
 # name: test_lock_without_pullspring
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -145,11 +68,107 @@
     }),
     'manufacturer': 'Tedee',
     'model': 'Tedee GO',
+    'model_id': 'Tedee GO',
     'name': 'Lock-2C3D',
     'name_by_user': None,
+    'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
+  })
+# ---
+# name: test_locks[lock.lock_1a2b-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.lock_1a2b',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'supported_features': <LockEntityFeature: 1>,
+    'translation_key': None,
+    'unique_id': '12345-lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_locks[lock.lock_1a2b-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Lock-1A2B',
+      'supported_features': <LockEntityFeature: 1>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.lock_1a2b',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unlocked',
+  })
+# ---
+# name: test_locks[lock.lock_2c3d-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'lock',
+    'entity_category': None,
+    'entity_id': 'lock.lock_2c3d',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tedee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '98765-lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_locks[lock.lock_2c3d-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Lock-2C3D',
+      'supported_features': <LockEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'lock.lock_2c3d',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unlocked',
   })
 # ---

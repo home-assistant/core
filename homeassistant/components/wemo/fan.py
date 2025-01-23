@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -37,7 +38,7 @@ ATTR_WATER_LEVEL = "water_level"
 
 SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
 
-SET_HUMIDITY_SCHEMA = {
+SET_HUMIDITY_SCHEMA: VolDictType = {
     vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
         vol.Coerce(float), vol.Range(min=0, max=100)
     ),
@@ -66,14 +67,18 @@ async def async_setup_entry(
 
     # This will call WemoHumidifier.reset_filter_life()
     platform.async_register_entity_service(
-        SERVICE_RESET_FILTER_LIFE, {}, WemoHumidifier.reset_filter_life.__name__
+        SERVICE_RESET_FILTER_LIFE, None, WemoHumidifier.reset_filter_life.__name__
     )
 
 
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     wemo: Humidifier
     _last_fan_on_mode: FanMode
 

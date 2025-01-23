@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SIGNAL_ADD_ENTITIES
-from .insteon_entity import InsteonEntity
+from .entity import InsteonEntity
 from .utils import async_add_insteon_devices, async_add_insteon_entities
 
 MAX_BRIGHTNESS = 255

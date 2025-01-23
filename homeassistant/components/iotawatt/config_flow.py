@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from iotawattpy.iotawatt import Iotawatt
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,11 +47,13 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self._data = {}
+        self._data: dict[str, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             user_input = {}
@@ -72,7 +75,9 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_auth(self, user_input=None):
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Authenticate user if authentication is enabled on the IoTaWatt device."""
         if user_input is None:
             user_input = {}

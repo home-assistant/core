@@ -1,5 +1,6 @@
 """Component to allow running Python scripts."""
 
+from collections.abc import Callable, Mapping, Sequence
 import datetime
 import glob
 import logging
@@ -7,6 +8,7 @@ from numbers import Number
 import operator
 import os
 import time
+import types
 from typing import Any
 
 from RestrictedPython import (
@@ -108,13 +110,13 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def discover_scripts(hass):
+def discover_scripts(hass: HomeAssistant) -> None:
     """Discover python scripts in folder."""
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
-        return False
+        return
 
     def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
@@ -167,6 +169,20 @@ IOPERATOR_TO_OPERATOR = {
 }
 
 
+def guarded_import(
+    name: str,
+    globals: Mapping[str, object] | None = None,
+    locals: Mapping[str, object] | None = None,
+    fromlist: Sequence[str] = (),
+    level: int = 0,
+) -> types.ModuleType:
+    """Guard imports."""
+    # Allow import of _strptime needed by datetime.datetime.strptime
+    if name == "_strptime":
+        return __import__(name, globals, locals, fromlist, level)
+    raise ImportError(f"Not allowed to import {name}")
+
+
 def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
     """Implement augmented-assign (+=, -=, etc.) operators for restricted code.
 
@@ -181,7 +197,12 @@ def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
 
 
 @bind_hass
-def execute_script(hass, name, data=None, return_response=False):
+def execute_script(
+    hass: HomeAssistant,
+    name: str,
+    data: dict[str, Any] | None = None,
+    return_response: bool = False,
+) -> dict | None:
     """Execute a script."""
     filename = f"{name}.py"
     raise_if_invalid_filename(filename)
@@ -191,7 +212,13 @@ def execute_script(hass, name, data=None, return_response=False):
 
 
 @bind_hass
-def execute(hass, filename, source, data=None, return_response=False):
+def execute(
+    hass: HomeAssistant,
+    filename: str,
+    source: Any,
+    data: dict[str, Any] | None = None,
+    return_response: bool = False,
+) -> dict | None:
     """Execute Python source."""
 
     compiled = compile_restricted_exec(source, filename=filename)
@@ -207,31 +234,25 @@ def execute(hass, filename, source, data=None, return_response=False):
             "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
         )
 
-    def protected_getattr(obj, name, default=None):
+    def protected_getattr(obj: object, name: str, default: Any = None) -> Any:
         """Restricted method to get attributes."""
         if name.startswith("async_"):
             raise ScriptError("Not allowed to access async methods")
         if (
-            obj is hass
-            and name not in ALLOWED_HASS
-            or obj is hass.bus
-            and name not in ALLOWED_EVENTBUS
-            or obj is hass.states
-            and name not in ALLOWED_STATEMACHINE
-            or obj is hass.services
-            and name not in ALLOWED_SERVICEREGISTRY
-            or obj is dt_util
-            and name not in ALLOWED_DT_UTIL
-            or obj is datetime
-            and name not in ALLOWED_DATETIME
-            or isinstance(obj, TimeWrapper)
-            and name not in ALLOWED_TIME
+            (obj is hass and name not in ALLOWED_HASS)
+            or (obj is hass.bus and name not in ALLOWED_EVENTBUS)
+            or (obj is hass.states and name not in ALLOWED_STATEMACHINE)
+            or (obj is hass.services and name not in ALLOWED_SERVICEREGISTRY)
+            or (obj is dt_util and name not in ALLOWED_DT_UTIL)
+            or (obj is datetime and name not in ALLOWED_DATETIME)
+            or (isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME)
         ):
             raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
 
     extra_builtins = {
+        "__import__": guarded_import,
         "datetime": datetime,
         "sorted": sorted,
         "time": TimeWrapper(),
@@ -277,7 +298,7 @@ def execute(hass, filename, source, data=None, return_response=False):
         if not isinstance(restricted_globals["output"], dict):
             output_type = type(restricted_globals["output"])
             restricted_globals["output"] = {}
-            raise ScriptError(
+            raise ScriptError(  # noqa: TRY301
                 f"Expected `output` to be a dictionary, was {output_type}"
             )
     except ScriptError as err:
@@ -299,10 +320,10 @@ def execute(hass, filename, source, data=None, return_response=False):
 class StubPrinter:
     """Class to handle printing inside scripts."""
 
-    def __init__(self, _getattr_):
+    def __init__(self, _getattr_: Callable) -> None:
         """Initialize our printer."""
 
-    def _call_print(self, *objects, **kwargs):
+    def _call_print(self, *objects: object, **kwargs: Any) -> None:
         """Print text."""
         _LOGGER.warning("Don't use print() inside scripts. Use logger.info() instead")
 
@@ -313,7 +334,7 @@ class TimeWrapper:
     # Class variable, only going to warn once per Home Assistant run
     warned = False
 
-    def sleep(self, *args, **kwargs):
+    def sleep(self, *args: Any, **kwargs: Any) -> None:
         """Sleep method that warns once."""
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
@@ -323,12 +344,12 @@ class TimeWrapper:
 
         time.sleep(*args, **kwargs)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         """Fetch an attribute from Time module."""
         attribute = getattr(time, attr)
         if callable(attribute):
 
-            def wrapper(*args, **kw):
+            def wrapper(*args: Any, **kw: Any) -> Any:
                 """Wrap to return callable method if callable."""
                 return attribute(*args, **kw)
 

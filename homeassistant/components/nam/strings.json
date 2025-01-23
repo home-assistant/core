@@ -28,7 +28,7 @@
       "confirm_discovery": {
         "description": "Do you want to set up Nettigo Air Monitor at {host}?"
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update configuration for {device_name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -74,6 +74,9 @@
       },
       "bmp280_temperature": {
         "name": "BMP280 temperature"
+      },
+      "ds18b20_temperature": {
+        "name": "DS18B20 temperature"
       },
       "heca_humidity": {
         "name": "HECA humidity"

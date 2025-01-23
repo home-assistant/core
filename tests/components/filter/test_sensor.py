@@ -37,6 +37,11 @@ import homeassistant.util.dt as dt_util
 from tests.common import assert_setup_component, get_fixture_path
 
 
+@pytest.fixture(autouse=True, name="stub_blueprint_populate")
+def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
+    """Stub copying the blueprints to the config folder."""
+
+
 @pytest.fixture(name="values")
 def values_fixture() -> list[State]:
     """Fixture for a list of test States."""
@@ -390,7 +395,7 @@ def test_initial_outlier(values: list[State]) -> None:
     """Test issue #13363."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     out = State("sensor.test_monitored", "4000")
-    for state in [out, *values]:
+    for state in (out, *values):
         filtered = filt.filter_state(state)
     assert filtered.state == 21
 
@@ -399,7 +404,7 @@ def test_unknown_state_outlier(values: list[State]) -> None:
     """Test issue #32395."""
     filt = OutlierFilter(window_size=3, precision=2, entity=None, radius=4.0)
     out = State("sensor.test_monitored", "unknown")
-    for state in [out, *values, out]:
+    for state in (out, *values, out):
         try:
             filtered = filt.filter_state(state)
         except ValueError:
@@ -419,7 +424,7 @@ def test_lowpass(values: list[State]) -> None:
     """Test if lowpass filter works."""
     filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
     out = State("sensor.test_monitored", "unknown")
-    for state in [out, *values, out]:
+    for state in (out, *values, out):
         try:
             filtered = filt.filter_state(state)
         except ValueError:
@@ -467,7 +472,7 @@ def test_throttle(values: list[State]) -> None:
         new_state = filt.filter_state(state)
         if not filt.skip_processing:
             filtered.append(new_state)
-    assert [20, 21] == [f.state for f in filtered]
+    assert [f.state for f in filtered] == [20, 21]
 
 
 def test_time_throttle(values: list[State]) -> None:
@@ -480,7 +485,7 @@ def test_time_throttle(values: list[State]) -> None:
         new_state = filt.filter_state(state)
         if not filt.skip_processing:
             filtered.append(new_state)
-    assert [20, 18, 22] == [f.state for f in filtered]
+    assert [f.state for f in filtered] == [20, 18, 22]
 
 
 def test_time_sma(values: list[State]) -> None:

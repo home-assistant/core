@@ -13,7 +13,8 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -33,6 +34,9 @@
       "daily_total_water_use": {
         "name": "Daily total water use"
       },
+      "daily_active_water_time": {
+        "name": "Daily active watering time"
+      },
       "daily_active_water_use": {
         "name": "Daily active water use"
       },
@@ -43,7 +47,7 @@
         "name": "Next cycle"
       },
       "watering_time": {
-        "name": "Watering time"
+        "name": "Remaining watering time"
       }
     },
     "switch": {
@@ -53,6 +57,32 @@
       "manual_watering": {
         "name": "Manual watering"
       }
+    }
+  },
+  "services": {
+    "start_watering": {
+      "name": "Start watering",
+      "description": "Starts a watering cycle in the selected irrigation zone.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Length of time to run the watering cycle. If not specified (or zero), the default watering duration set in the Hydrawise mobile or web app for the irrigation zone will be used."
+        }
+      }
+    },
+    "suspend": {
+      "name": "Suspend automatic watering",
+      "description": "Suspends an irrigation zone's automatic watering schedule until the given date and time.",
+      "fields": {
+        "until": {
+          "name": "Until",
+          "description": "Date and time to resume the automated watering schedule."
+        }
+      }
+    },
+    "resume": {
+      "name": "Resume automatic watering",
+      "description": "Resumes an irrigation zone's automatic watering schedule."
     }
   }
 }

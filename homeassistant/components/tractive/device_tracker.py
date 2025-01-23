@@ -47,9 +47,9 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         )
 
         self._battery_level: int | None = item.hw_info.get("battery_level")
-        self._latitude: float = item.pos_report["latlong"][0]
-        self._longitude: float = item.pos_report["latlong"][1]
-        self._accuracy: int = item.pos_report["pos_uncertainty"]
+        self._attr_latitude = item.pos_report["latlong"][0]
+        self._attr_longitude = item.pos_report["latlong"][1]
+        self._attr_location_accuracy: int = item.pos_report["pos_uncertainty"]
         self._source_type: str = item.pos_report["sensor_used"]
         self._attr_unique_id = item.trackable["_id"]
 
@@ -61,21 +61,6 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
         if self._source_type == "KNOWN_WIFI":
             return SourceType.ROUTER
         return SourceType.GPS
-
-    @property
-    def latitude(self) -> float:
-        """Return latitude value of the device."""
-        return self._latitude
-
-    @property
-    def longitude(self) -> float:
-        """Return longitude value of the device."""
-        return self._longitude
-
-    @property
-    def location_accuracy(self) -> int:
-        """Return the gps accuracy of the device."""
-        return self._accuracy
 
     @property
     def battery_level(self) -> int | None:
@@ -90,9 +75,9 @@ class TractiveDeviceTracker(TractiveEntity, TrackerEntity):
 
     @callback
     def _handle_position_update(self, event: dict[str, Any]) -> None:
-        self._latitude = event["latitude"]
-        self._longitude = event["longitude"]
-        self._accuracy = event["accuracy"]
+        self._attr_latitude = event["latitude"]
+        self._attr_longitude = event["longitude"]
+        self._attr_location_accuracy = event["accuracy"]
         self._source_type = event["sensor_used"]
         self._attr_available = True
         self.async_write_ha_state()

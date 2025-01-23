@@ -7,7 +7,7 @@ from typing import Any
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import COVER, STATE_COVER, STATE_OFF, STATE_ON
 
-from homeassistant.components.cover import STATE_CLOSED, CoverDeviceClass, CoverEntity
+from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -85,7 +85,7 @@ class ComelitCoverEntity(
         if self._last_action:
             return self._last_action == STATE_COVER.index("closing")
 
-        return self._last_state == STATE_CLOSED
+        return self._last_state == CoverState.CLOSED
 
     @property
     def is_closing(self) -> bool:

@@ -2,16 +2,35 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from io import BytesIO
 import logging
 from typing import Any
 
-from aiohttp import ClientResponseError
-from habitipy.aio import HabitipyAsync
+from aiohttp import ClientError
+from habiticalib import (
+    ContentData,
+    Habitica,
+    HabiticaException,
+    NotAuthorizedError,
+    TaskData,
+    TaskFilter,
+    TooManyRequestsError,
+    UserData,
+    UserStyles,
+)
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -21,10 +40,10 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class HabiticaData:
-    """Coordinator data class."""
+    """Habitica data."""
 
-    user: dict[str, Any]
-    tasks: list[dict]
+    user: UserData
+    tasks: list[TaskData]
 
 
 class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
@@ -32,23 +51,94 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, habitipy: HabitipyAsync) -> None:
+    def __init__(self, hass: HomeAssistant, habitica: Habitica) -> None:
         """Initialize the Habitica data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=60),
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=5,
+                immediate=False,
+            ),
         )
-        self.api = habitipy
+        self.habitica = habitica
+        self.content: ContentData
 
-    async def _async_update_data(self) -> HabiticaData:
-        user_fields = set(self.async_contexts())
+    async def _async_setup(self) -> None:
+        """Set up Habitica integration."""
 
         try:
-            user_response = await self.api.user.get(userFields=",".join(user_fields))
-            tasks_response = await self.api.tasks.user.get()
-        except ClientResponseError as error:
-            raise UpdateFailed(f"Error communicating with API: {error}") from error
+            user = await self.habitica.get_user()
+            self.content = (
+                await self.habitica.get_content(user.data.preferences.language)
+            ).data
+        except NotAuthorizedError as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from e
+        except TooManyRequestsError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except (HabiticaException, ClientError) as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
 
-        return HabiticaData(user=user_response, tasks=tasks_response)
+        if not self.config_entry.data.get(CONF_NAME):
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, CONF_NAME: user.data.profile.name},
+            )
+
+    async def _async_update_data(self) -> HabiticaData:
+        try:
+            user = (await self.habitica.get_user()).data
+            tasks = (await self.habitica.get_tasks()).data
+            completed_todos = (
+                await self.habitica.get_tasks(TaskFilter.COMPLETED_TODOS)
+            ).data
+        except TooManyRequestsError:
+            _LOGGER.debug("Rate limit exceeded, will try again later")
+            return self.data
+        except (HabiticaException, ClientError) as e:
+            raise UpdateFailed(f"Unable to connect to Habitica: {e}") from e
+        else:
+            return HabiticaData(user=user, tasks=tasks + completed_todos)
+
+    async def execute(
+        self, func: Callable[[HabiticaDataUpdateCoordinator], Any]
+    ) -> None:
+        """Execute an API call."""
+
+        try:
+            await func(self)
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+            ) from e
+        except (HabiticaException, ClientError) as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+            ) from e
+        else:
+            await self.async_request_refresh()
+
+    async def generate_avatar(self, user_styles: UserStyles) -> bytes:
+        """Generate Avatar."""
+
+        avatar = BytesIO()
+        await self.habitica.generate_avatar(
+            fp=avatar, user_styles=user_styles, fmt="PNG"
+        )
+
+        return avatar.getvalue()

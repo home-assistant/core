@@ -6,10 +6,11 @@ from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
+from pydrawise.schema import Controller
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.hydrawise.const import SCAN_INTERVAL
-from homeassistant.const import Platform
+from homeassistant.components.hydrawise.const import MAIN_SCAN_INTERVAL
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -41,10 +42,30 @@ async def test_update_data_fails(
     # Make the coordinator refresh data.
     mock_pydrawise.get_user.reset_mock(return_value=True)
     mock_pydrawise.get_user.side_effect = ClientError
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    mock_pydrawise.get_water_use_summary.side_effect = ClientError
+    freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
     assert connectivity is not None
-    assert connectivity.state == "unavailable"
+    assert connectivity.state == STATE_OFF
+
+
+async def test_controller_offline(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+    mock_pydrawise: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    controller: Controller,
+) -> None:
+    """Test the binary_sensor for the controller being online."""
+    # Make the coordinator refresh data.
+    controller.online = False
+    freezer.tick(MAIN_SCAN_INTERVAL + timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    connectivity = hass.states.get("binary_sensor.home_controller_connectivity")
+    assert connectivity
+    assert connectivity.state == STATE_OFF

@@ -24,9 +24,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import Control4Entity
 from .const import CONF_DIRECTOR, CONF_DIRECTOR_ALL_ITEMS, CONF_UI_CONFIGURATION, DOMAIN
 from .director_utils import update_variables_for_config_entry
+from .entity import Control4Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,11 +81,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Control4 rooms from a config entry."""
+    entry_data = hass.data[DOMAIN][entry.entry_id]
+    ui_config = entry_data[CONF_UI_CONFIGURATION]
+
+    # OS 2 will not have a ui_configuration
+    if not ui_config:
+        _LOGGER.debug("No UI Configuration found for Control4")
+        return
+
     all_rooms = await get_rooms(hass, entry)
     if not all_rooms:
         return
 
-    entry_data = hass.data[DOMAIN][entry.entry_id]
     scan_interval = entry_data[CONF_SCAN_INTERVAL]
     _LOGGER.debug("Scan interval = %s", scan_interval)
 
@@ -118,8 +125,6 @@ async def async_setup_entry(
         for k, item in items_by_id.items()
         if "parentId" in item and k > 1
     }
-
-    ui_config = entry_data[CONF_UI_CONFIGURATION]
 
     entity_list = []
     for room in all_rooms:

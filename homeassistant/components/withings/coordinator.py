@@ -8,7 +8,9 @@ from typing import TYPE_CHECKING
 
 from aiowithings import (
     Activity,
+    Device,
     Goals,
+    MeasurementPosition,
     MeasurementType,
     NotificationCategory,
     SleepSummary,
@@ -85,7 +87,9 @@ class WithingsDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
 
 class WithingsMeasurementDataUpdateCoordinator(
-    WithingsDataUpdateCoordinator[dict[MeasurementType, float]]
+    WithingsDataUpdateCoordinator[
+        dict[tuple[MeasurementType, MeasurementPosition | None], float]
+    ]
 ):
     """Withings measurement coordinator."""
 
@@ -98,9 +102,13 @@ class WithingsMeasurementDataUpdateCoordinator(
             NotificationCategory.WEIGHT,
             NotificationCategory.PRESSURE,
         }
-        self._previous_data: dict[MeasurementType, float] = {}
+        self._previous_data: dict[
+            tuple[MeasurementType, MeasurementPosition | None], float
+        ] = {}
 
-    async def _internal_update_data(self) -> dict[MeasurementType, float]:
+    async def _internal_update_data(
+        self,
+    ) -> dict[tuple[MeasurementType, MeasurementPosition | None], float]:
         """Retrieve measurement data."""
         if self._last_valid_update is None:
             now = dt_util.utcnow()
@@ -284,3 +292,17 @@ class WithingsWorkoutDataUpdateCoordinator(
             self._previous_data = latest_workout
             self._last_valid_update = latest_workout.end_date
         return self._previous_data
+
+
+class WithingsDeviceDataUpdateCoordinator(
+    WithingsDataUpdateCoordinator[dict[str, Device]]
+):
+    """Withings device coordinator."""
+
+    coordinator_name: str = "device"
+    _default_update_interval = timedelta(hours=1)
+
+    async def _internal_update_data(self) -> dict[str, Device]:
+        """Update coordinator data."""
+        devices = await self._client.get_devices()
+        return {device.device_id: device for device in devices}

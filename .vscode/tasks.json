@@ -16,7 +16,7 @@
     {
       "label": "Pytest",
       "type": "shell",
-      "command": "python3 -m pytest --timeout=10 tests",
+      "command": "${command:python.interpreterPath} -m pytest --timeout=10 tests",
       "dependsOn": ["Install all Test Requirements"],
       "group": {
         "kind": "test",
@@ -31,7 +31,7 @@
     {
       "label": "Pytest (changed tests only)",
       "type": "shell",
-      "command": "python3 -m pytest --timeout=10 --picked",
+      "command": "${command:python.interpreterPath} -m pytest --timeout=10 --picked",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -46,6 +46,20 @@
       "label": "Ruff",
       "type": "shell",
       "command": "pre-commit run ruff --all-files",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Pre-commit",
+      "type": "shell",
+      "command": "pre-commit run --show-diff-on-failure",
       "group": {
         "kind": "test",
         "isDefault": true
@@ -75,7 +89,24 @@
       "label": "Code Coverage",
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",
-      "command": "python3 -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "command": "${command:python.interpreterPath} -m pytest ./tests/components/${input:integrationName}/ --cov=homeassistant.components.${input:integrationName} --cov-report term-missing --durations-min=1 --durations=0 --numprocesses=auto",
+      "dependsOn": ["Compile English translations"],
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Update syrupy snapshots",
+      "detail": "Update syrupy snapshots for a given integration.",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pytest ./tests/components/${input:integrationName} --snapshot-update",
+      "dependsOn": ["Compile English translations"],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -132,7 +163,7 @@
       "label": "Compile English translations",
       "detail": "In order to test changes to translation files, the translation strings must be compiled into Home Assistant's translation directories.",
       "type": "shell",
-      "command": "python3 -m script.translations develop --all",
+      "command": "${command:python.interpreterPath} -m script.translations develop --all",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -142,7 +173,7 @@
       "label": "Run scaffold",
       "detail": "Add new functionality to a integration using a scaffold.",
       "type": "shell",
-      "command": "python3 -m script.scaffold ${input:scaffoldName} --integration ${input:integrationName}",
+      "command": "${command:python.interpreterPath} -m script.scaffold ${input:scaffoldName} --integration ${input:integrationName}",
       "group": {
         "kind": "build",
         "isDefault": true
@@ -152,7 +183,7 @@
       "label": "Create new integration",
       "detail": "Use the scaffold to create a new integration.",
       "type": "shell",
-      "command": "python3 -m script.scaffold integration",
+      "command": "${command:python.interpreterPath} -m script.scaffold integration",
       "group": {
         "kind": "build",
         "isDefault": true

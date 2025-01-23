@@ -93,7 +93,7 @@ class SolarEdgeOverviewDataService(SolarEdgeDataService):
             for index, key in enumerate(energy_keys, start=1):
                 # All coming values in list should be larger than the current value.
                 if any(self.data[k] > self.data[key] for k in energy_keys[index:]):
-                    LOGGER.info(
+                    LOGGER.warning(
                         "Ignoring invalid energy value %s for %s", self.data[key], key
                     )
                     self.data.pop(key)

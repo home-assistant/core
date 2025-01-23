@@ -15,9 +15,9 @@ if TYPE_CHECKING:
 _function_cache: dict[str, Callable[[str, str, dict[str, str] | None], str]] = {}
 
 
-def import_async_get_exception_message() -> (
-    Callable[[str, str, dict[str, str] | None], str]
-):
+def import_async_get_exception_message() -> Callable[
+    [str, str, dict[str, str] | None], str
+]:
     """Return a method that can fetch a translated exception message.
 
     Defaults to English, requires translations to already be cached.
@@ -138,7 +138,7 @@ class ConditionError(HomeAssistantError):
         """Return indentation."""
         return "  " * indent + message
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         raise NotImplementedError
 
@@ -154,7 +154,7 @@ class ConditionErrorMessage(ConditionError):
     # A message describing this error
     message: str
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         yield self._indent(indent, f"In '{self.type}' condition: {self.message}")
 
@@ -170,11 +170,11 @@ class ConditionErrorIndex(ConditionError):
     # The error that this error wraps
     error: ConditionError
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         if self.total > 1:
             yield self._indent(
-                indent, f"In '{self.type}' (item {self.index+1} of {self.total}):"
+                indent, f"In '{self.type}' (item {self.index + 1} of {self.total}):"
             )
         else:
             yield self._indent(indent, f"In '{self.type}':")
@@ -189,7 +189,7 @@ class ConditionErrorContainer(ConditionError):
     # List of ConditionErrors that this error wraps
     errors: Sequence[ConditionError]
 
-    def output(self, indent: int) -> Generator[str, None, None]:
+    def output(self, indent: int) -> Generator[str]:
         """Yield an indented representation."""
         for item in self.errors:
             yield from item.output(indent)
@@ -264,6 +264,25 @@ class ServiceNotFound(ServiceValidationError):
             translation_domain="homeassistant",
             translation_key="service_not_found",
             translation_placeholders={"domain": domain, "service": service},
+        )
+        self.domain = domain
+        self.service = service
+        self.generate_message = True
+
+
+class ServiceNotSupported(ServiceValidationError):
+    """Raised when an entity action is not supported."""
+
+    def __init__(self, domain: str, service: str, entity_id: str) -> None:
+        """Initialize ServiceNotSupported exception."""
+        super().__init__(
+            translation_domain="homeassistant",
+            translation_key="service_not_supported",
+            translation_placeholders={
+                "domain": domain,
+                "service": service,
+                "entity_id": entity_id,
+            },
         )
         self.domain = domain
         self.service = service

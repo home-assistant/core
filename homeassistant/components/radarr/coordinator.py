@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Generic, TypeVar, cast
 
 from aiopyarr import (
     Health,
@@ -20,12 +20,14 @@ from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 
 from homeassistant.components.calendar import CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from . import RadarrConfigEntry
 
 T = TypeVar("T", bound=SystemStatus | list[RootFolder] | list[Health] | int | None)
 
@@ -45,7 +47,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
 class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], Generic[T], ABC):
     """Data update coordinator for the Radarr integration."""
 
-    config_entry: ConfigEntry
+    config_entry: RadarrConfigEntry
     _update_interval = timedelta(seconds=30)
 
     def __init__(

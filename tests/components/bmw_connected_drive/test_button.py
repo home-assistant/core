@@ -1,6 +1,6 @@
 """Test BMW buttons."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
@@ -8,24 +8,37 @@ import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
+
+from tests.common import snapshot_platform
 
 
+@pytest.mark.usefixtures("bmw_fixture")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test button options and values."""
 
     # Setup component
-    assert await setup_mocked_integration(hass)
+    with patch(
+        "homeassistant.components.bmw_connected_drive.PLATFORMS",
+        [Platform.BUTTON],
+    ):
+        mock_config_entry = await setup_mocked_integration(hass)
 
-    # Get all button entities
-    assert hass.states.async_all("button") == snapshot
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -56,9 +69,9 @@ async def test_service_call_success(
     check_remote_service_call(bmw_fixture, remote_service)
 
 
+@pytest.mark.usefixtures("bmw_fixture")
 async def test_service_call_fail(
     hass: HomeAssistant,
-    bmw_fixture: respx.Router,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test failed button press."""
@@ -72,11 +85,13 @@ async def test_service_call_fail(
     monkeypatch.setattr(
         RemoteServices,
         "trigger_remote_service",
-        AsyncMock(side_effect=MyBMWRemoteServiceError),
+        AsyncMock(
+            side_effect=MyBMWRemoteServiceError("HTTPStatusError: 502 Bad Gateway")
+        ),
     )
 
     # Test
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=REMOTE_SERVICE_EXC_TRANSLATION):
         await hass.services.async_call(
             "button",
             "press",
@@ -156,7 +171,7 @@ async def test_service_call_success_state_change(
         (
             "button.i4_edrive40_find_vehicle",
             "device_tracker.i4_edrive40",
-            {"latitude": 123.456, "longitude": 34.5678, "direction": 121},
+            {"latitude": 12.345, "longitude": 34.5678, "direction": 121},
             {"latitude": 48.177334, "longitude": 11.556274, "direction": 180},
         ),
     ],

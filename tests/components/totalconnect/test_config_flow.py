@@ -6,10 +6,11 @@ from total_connect_client.exceptions import AuthenticationError
 
 from homeassistant.components.totalconnect.const import (
     AUTO_BYPASS,
+    CODE_REQUIRED,
     CONF_USERCODES,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -141,9 +142,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_REAUTH}, data=entry.data
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -240,11 +239,11 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={AUTO_BYPASS: True}
+            result["flow_id"], user_input={AUTO_BYPASS: True, CODE_REQUIRED: False}
         )
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {AUTO_BYPASS: True}
+        assert config_entry.options == {AUTO_BYPASS: True, CODE_REQUIRED: False}
         await hass.async_block_till_done()
 
         assert await hass.config_entries.async_unload(config_entry.entry_id)

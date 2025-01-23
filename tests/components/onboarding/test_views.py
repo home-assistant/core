@@ -1,10 +1,11 @@
 """Test the onboarding views."""
 
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import os
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -27,7 +28,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass):
+def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
     hass.loop.run_until_complete(
         register_auth_provider(hass, {"type": "homeassistant"})
@@ -35,7 +36,9 @@ def auth_active(hass):
 
 
 @pytest.fixture(name="rpi")
-async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -49,7 +52,9 @@ async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="no_rpi")
-async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def no_rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -63,39 +68,33 @@ async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="mock_supervisor")
-async def mock_supervisor_fixture(hass, aioclient_mock):
+async def mock_supervisor_fixture(
+    aioclient_mock: AiohttpClientMocker,
+    store_info: AsyncMock,
+    supervisor_is_connected: AsyncMock,
+    resolution_info: AsyncMock,
+) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
+        "http://127.0.0.1/network/info",
         json={
             "result": "ok",
             "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
         patch(
-            "homeassistant.components.hassio.HassIO.is_connected",
-            return_value=True,
-        ),
-        patch(
             "homeassistant.components.hassio.HassIO.get_info",
             return_value={},
         ),
         patch(
             "homeassistant.components.hassio.HassIO.get_host_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_store",
             return_value={},
         ),
         patch(
@@ -192,10 +191,9 @@ async def test_onboarding_user(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client_no_auth: ClientSessionGenerator,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test creating a new user."""
-    area_registry = ar.async_get(hass)
-
     # Create an existing area to mimic an integration creating an area
     # before onboarding is done.
     area_registry.async_create("Living Room")

@@ -491,17 +491,28 @@ USERS_VERIFICATION_MOCK = {
 }
 
 
-async def async_init_integration(
+def init_config_entry(
     hass: HomeAssistant,
-) -> None:
-    """Set up the QNAP QSW integration in Home Assistant."""
-
+) -> MockConfigEntry:
+    """Set up the QNAP QSW entry in Home Assistant."""
     config_entry = MockConfigEntry(
         data=CONFIG,
         domain=DOMAIN,
         unique_id="qsw_unique_id",
     )
     config_entry.add_to_hass(hass)
+
+    return config_entry
+
+
+async def async_init_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry | None = None,
+) -> None:
+    """Set up the QNAP QSW integration in Home Assistant."""
+
+    if config_entry is None:
+        config_entry = init_config_entry(hass)
 
     with (
         patch(

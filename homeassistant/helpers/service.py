@@ -20,8 +20,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ACTION,
     CONF_ENTITY_ID,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SERVICE_TEMPLATE,
@@ -33,6 +33,7 @@ from homeassistant.core import (
     Context,
     EntityServiceResponse,
     HassJob,
+    HassJobType,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -41,6 +42,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import (
     HomeAssistantError,
+    ServiceNotSupported,
     TemplateError,
     Unauthorized,
     UnknownUser,
@@ -63,7 +65,7 @@ from . import (
 )
 from .group import expand_entity_ids
 from .selector import TargetSelector
-from .typing import ConfigType, TemplateVarsType
+from .typing import ConfigType, TemplateVarsType, VolDictType, VolSchemaType
 
 if TYPE_CHECKING:
     from .entity import Entity
@@ -131,8 +133,7 @@ def _validate_option_or_feature(option_or_feature: str, label: str) -> Any:
         domain, enum, option = option_or_feature.split(".", 2)
     except ValueError as exc:
         raise vol.Invalid(
-            f"Invalid {label} '{option_or_feature}', expected "
-            "<domain>.<enum>.<member>"
+            f"Invalid {label} '{option_or_feature}', expected <domain>.<enum>.<member>"
         ) from exc
 
     base_components = _base_components()
@@ -179,15 +180,37 @@ _FIELD_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICE_SCHEMA = vol.Schema(
+_SECTION_SCHEMA = vol.Schema(
     {
-        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Required("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-_SERVICES_SCHEMA = vol.Schema({cv.slug: vol.Any(None, _SERVICE_SCHEMA)})
+_SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
+        vol.Optional("fields"): vol.Schema(
+            {str: vol.Any(_SECTION_SCHEMA, _FIELD_SCHEMA)}
+        ),
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+def starts_with_dot(key: str) -> str:
+    """Check if key starts with dot."""
+    if not key.startswith("."):
+        raise vol.Invalid("Key does not start with .")
+    return key
+
+
+_SERVICES_SCHEMA = vol.Schema(
+    {
+        vol.Remove(vol.All(str, starts_with_dot)): object,
+        cv.slug: vol.Any(None, _SERVICE_SCHEMA),
+    }
+)
 
 
 class ServiceParams(TypedDict):
@@ -336,14 +359,13 @@ def async_prepare_call_from_config(
                 f"Invalid config for calling service: {ex}"
             ) from ex
 
-    if CONF_SERVICE in config:
-        domain_service = config[CONF_SERVICE]
+    if CONF_ACTION in config:
+        domain_service = config[CONF_ACTION]
     else:
         domain_service = config[CONF_SERVICE_TEMPLATE]
 
     if isinstance(domain_service, template.Template):
         try:
-            domain_service.hass = hass
             domain_service = domain_service.async_render(variables)
             domain_service = cv.service(domain_service)
         except TemplateError as ex:
@@ -362,10 +384,8 @@ def async_prepare_call_from_config(
         conf = config[CONF_TARGET]
         try:
             if isinstance(conf, template.Template):
-                conf.hass = hass
                 target.update(conf.async_render(variables))
             else:
-                template.attach(hass, conf)
                 target.update(template.render_complex(conf, variables))
 
             if CONF_ENTITY_ID in target:
@@ -391,7 +411,6 @@ def async_prepare_call_from_config(
         if conf not in config:
             continue
         try:
-            template.attach(hass, config[conf])
             render = template.render_complex(config[conf], variables)
             if not isinstance(render, dict):
                 raise HomeAssistantError(
@@ -483,7 +502,7 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
 
 
 @bind_hass
-def async_extract_referenced_entity_ids(  # noqa: C901
+def async_extract_referenced_entity_ids(
     hass: HomeAssistant, service_call: ServiceCall, expand_group: bool = True
 ) -> SelectedEntities:
     """Extract referenced entity IDs from a service call."""
@@ -552,19 +571,31 @@ def async_extract_referenced_entity_ids(  # noqa: C901
             for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
         )
 
-    # Find devices for targeted areas
-    selected.referenced_devices.update(selector.device_ids)
-
     selected.referenced_areas.update(selector.area_ids)
-    if selected.referenced_areas:
-        for area_id in selected.referenced_areas:
-            selected.referenced_devices.update(
-                device_entry.id
-                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
-            )
+    selected.referenced_devices.update(selector.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
+
+    # Add indirectly referenced by device
+    selected.indirectly_referenced.update(
+        entry.entity_id
+        for device_id in selected.referenced_devices
+        for entry in entities.get_entries_for_device_id(device_id)
+        # Do not add entities which are hidden or which are config
+        # or diagnostic entities.
+        if (entry.entity_category is None and entry.hidden_by is None)
+    )
+
+    # Find devices for targeted areas
+    referenced_devices_by_area: set[str] = set()
+    if selected.referenced_areas:
+        for area_id in selected.referenced_areas:
+            referenced_devices_by_area.update(
+                device_entry.id
+                for device_entry in dev_reg.devices.get_devices_for_area_id(area_id)
+            )
+    selected.referenced_devices.update(referenced_devices_by_area)
 
     # Add indirectly referenced by area
     selected.indirectly_referenced.update(
@@ -576,10 +607,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
         # or diagnostic entities.
         if entry.entity_category is None and entry.hidden_by is None
     )
-    # Add indirectly referenced by device
+    # Add indirectly referenced by area through device
     selected.indirectly_referenced.update(
         entry.entity_id
-        for device_id in selected.referenced_devices
+        for device_id in referenced_devices_by_area
         for entry in entities.get_entries_for_device_id(device_id)
         # Do not add entities which are hidden or which are config
         # or diagnostic entities.
@@ -591,11 +622,10 @@ def async_extract_referenced_entity_ids(  # noqa: C901
                 # by an area and the entity
                 # has no explicitly set area
                 not entry.area_id
-                # The entity's device matches a targeted device
-                or device_id in selector.device_ids
             )
         )
     )
+
     return selected
 
 
@@ -653,6 +683,14 @@ def _load_services_files(
 ) -> list[JSON_TYPE]:
     """Load service files for multiple integrations."""
     return [_load_services_file(hass, integration) for integration in integrations]
+
+
+@callback
+def async_get_cached_service_description(
+    hass: HomeAssistant, domain: str, service: str
+) -> dict[str, Any] | None:
+    """Return the cached description for a service."""
+    return hass.data.get(SERVICE_DESCRIPTION_CACHE, {}).get((domain, service))
 
 
 @bind_hass
@@ -833,7 +871,7 @@ def async_set_service_schema(
 def _get_permissible_entity_candidates(
     call: ServiceCall,
     entities: dict[str, Entity],
-    entity_perms: None | (Callable[[str, str], bool]),
+    entity_perms: Callable[[str, str], bool] | None,
     target_all_entities: bool,
     all_referenced: set[str] | None,
 ) -> list[Entity]:
@@ -889,7 +927,7 @@ async def entity_service_call(
 
     Calls all platforms simultaneously.
     """
-    entity_perms: None | (Callable[[str, str], bool]) = None
+    entity_perms: Callable[[str, str], bool] | None = None
     return_response = call.return_response
 
     if call.context.user_id:
@@ -948,9 +986,7 @@ async def entity_service_call(
         ):
             # If entity explicitly referenced, raise an error
             if referenced is not None and entity.entity_id in referenced.referenced:
-                raise HomeAssistantError(
-                    f"Entity {entity.entity_id} does not support this service."
-                )
+                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
 
             continue
 
@@ -1079,7 +1115,7 @@ def async_register_admin_service(
     domain: str,
     service: str,
     service_func: Callable[[ServiceCall], Awaitable[None] | None],
-    schema: vol.Schema = vol.Schema({}, extra=vol.PREVENT_EXTRA),
+    schema: VolSchemaType = vol.Schema({}, extra=vol.PREVENT_EXTRA),
 ) -> None:
     """Register a service that requires admin access."""
     hass.services.async_register(
@@ -1214,3 +1250,53 @@ class ReloadServiceHelper[_T]:
                 self._service_running = False
                 self._pending_reload_targets -= reload_targets
                 self._service_condition.notify_all()
+
+
+@callback
+def async_register_entity_service(
+    hass: HomeAssistant,
+    domain: str,
+    name: str,
+    *,
+    entities: dict[str, Entity],
+    func: str | Callable[..., Any],
+    job_type: HassJobType | None,
+    required_features: Iterable[int] | None = None,
+    schema: VolDictType | VolSchemaType | None,
+    supports_response: SupportsResponse = SupportsResponse.NONE,
+) -> None:
+    """Help registering an entity service.
+
+    This is called by EntityComponent.async_register_entity_service and
+    EntityPlatform.async_register_entity_service and should not be called
+    directly by integrations.
+    """
+    if schema is None or isinstance(schema, dict):
+        schema = cv.make_entity_service_schema(schema)
+    elif not cv.is_entity_service_schema(schema):
+        # pylint: disable-next=import-outside-toplevel
+        from .frame import ReportBehavior, report_usage
+
+        report_usage(
+            "registers an entity service with a non entity service schema",
+            core_behavior=ReportBehavior.LOG,
+            breaks_in_ha_version="2025.9",
+        )
+
+    service_func: str | HassJob[..., Any]
+    service_func = func if isinstance(func, str) else HassJob(func)
+
+    hass.services.async_register(
+        domain,
+        name,
+        partial(
+            entity_service_call,
+            hass,
+            entities,
+            service_func,
+            required_features=required_features,
+        ),
+        schema,
+        supports_response,
+        job_type=job_type,
+    )

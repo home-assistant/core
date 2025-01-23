@@ -8,11 +8,26 @@
     {
       "hostname": "ring*",
       "macaddress": "0CAE7D*"
+    },
+    {
+      "hostname": "ring*",
+      "macaddress": "2CAB33*"
+    },
+    {
+      "hostname": "ring*",
+      "macaddress": "94E36D*"
+    },
+    {
+      "hostname": "ring*",
+      "macaddress": "9C7613*"
+    },
+    {
+      "hostname": "ring*",
+      "macaddress": "341513*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/ring",
   "iot_class": "cloud_polling",
   "loggers": ["ring_doorbell"],
-  "quality_scale": "silver",
-  "requirements": ["ring-doorbell[listen]==0.8.11"]
+  "requirements": ["ring-doorbell==0.9.13"]
 }

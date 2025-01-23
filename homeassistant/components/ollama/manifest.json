@@ -1,12 +1,12 @@
 {
   "domain": "ollama",
   "name": "Ollama",
-  "after_dependencies": ["assist_pipeline"],
+  "after_dependencies": ["assist_pipeline", "intent"],
   "codeowners": ["@synesthesiam"],
   "config_flow": true,
   "dependencies": ["conversation"],
   "documentation": "https://www.home-assistant.io/integrations/ollama",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "requirements": ["ollama-hass==0.1.7"]
+  "requirements": ["ollama==0.4.5"]
 }

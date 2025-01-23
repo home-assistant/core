@@ -7,7 +7,6 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum
 import functools
-from functools import cached_property
 from typing import Any, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
@@ -17,11 +16,15 @@ from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
+from propcache import cached_property
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import BrowseMediaSource, PlayMedia
+from homeassistant.components.media_source import (
+    BrowseMediaSource,
+    PlayMedia,
+    Unresolvable,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback

@@ -41,7 +41,7 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 
 
 @pytest.fixture(autouse=True)
-async def mock_client() -> Generator[Mock, None, None]:
+async def mock_client() -> Generator[Mock]:
     """Fixture to setup a fake spreadsheet client library."""
     with patch(
         "homeassistant.components.google_sheets.config_flow.Client"
@@ -49,11 +49,11 @@ async def mock_client() -> Generator[Mock, None, None]:
         yield mock_client
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -116,11 +116,11 @@ async def test_full_flow(
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_create_sheet_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -168,11 +168,11 @@ async def test_create_sheet_error(
     assert result.get("reason") == "create_spreadsheet_failure"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -235,6 +235,7 @@ async def test_reauth(
         "homeassistant.components.google_sheets.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1
@@ -249,11 +250,11 @@ async def test_reauth(
     assert config_entry.data["token"].get("refresh_token") == "mock-refresh-token"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth_abort(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:
@@ -318,11 +319,11 @@ async def test_reauth_abort(
     assert result.get("reason") == "open_spreadsheet_failure"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_already_configured(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    current_request_with_host: None,
     setup_credentials,
     mock_client,
 ) -> None:

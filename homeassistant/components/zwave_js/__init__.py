@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Coroutine
 from contextlib import suppress
 import logging
 from typing import Any
 
+from awesomeversion import AwesomeVersion
+import voluptuous as vol
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import CommandClass, RemoveNodeReason
 from zwave_js_server.exceptions import BaseZwaveJSServerError, InvalidServerVersion
@@ -79,13 +80,18 @@ from .const import (
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
+    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_NETWORK_KEY,
     CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_DATA_COLLECTION_OPTED_IN,
+    CONF_INSTALLER_MODE,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
     CONF_S0_LEGACY_KEY,
     CONF_S2_ACCESS_CONTROL_KEY,
@@ -96,8 +102,10 @@ from .const import (
     DATA_CLIENT,
     DOMAIN,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
+    EVENT_VALUE_UPDATED,
     LIB_LOGGER,
     LOGGER,
+    LR_ADDON_VERSION,
     USER_AGENT,
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
@@ -126,17 +134,32 @@ DATA_CLIENT_LISTEN_TASK = "client_listen_task"
 DATA_DRIVER_EVENTS = "driver_events"
 DATA_START_CLIENT_TASK = "start_client_task"
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_INSTALLER_MODE, default=False): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = config.get(DOMAIN, {})
     for entry in hass.config_entries.async_entries(DOMAIN):
         if not isinstance(entry.unique_id, str):
             hass.config_entries.async_update_entry(
                 entry, unique_id=str(entry.unique_id)
             )
+
+    dev_reg = dr.async_get(hass)
+    ent_reg = er.async_get(hass)
+    services = ZWaveServices(hass, ent_reg, dev_reg)
+    services.async_register()
+
     return True
 
 
@@ -174,11 +197,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_delete_issue(hass, DOMAIN, "invalid_server_version")
     LOGGER.info("Connected to Zwave JS Server")
-
-    dev_reg = dr.async_get(hass)
-    ent_reg = er.async_get(hass)
-    services = ZWaveServices(hass, ent_reg, dev_reg)
-    services.async_register()
 
     # Set up websocket API
     async_register_api(hass)
@@ -325,8 +343,8 @@ class DriverEvents:
         """Set up platform if needed."""
         if platform not in self.platform_setup_tasks:
             self.platform_setup_tasks[platform] = self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
+                self.hass.config_entries.async_forward_entry_setups(
+                    self.config_entry, [platform]
                 )
             )
         await self.platform_setup_tasks[platform]
@@ -347,7 +365,7 @@ class ControllerEvents:
         self.discovered_value_ids: dict[str, set[str]] = defaultdict(set)
         self.driver_events = driver_events
         self.dev_reg = driver_events.dev_reg
-        self.registered_unique_ids: dict[str, dict[str, set[str]]] = defaultdict(
+        self.registered_unique_ids: dict[str, dict[Platform, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
         self.node_events = NodeEvents(hass, self)
@@ -617,7 +635,7 @@ class NodeEvents:
         )
 
         # add listeners to handle new values that get added later
-        for event in ("value added", "value updated", "metadata updated"):
+        for event in ("value added", EVENT_VALUE_UPDATED, "metadata updated"):
             self.config_entry.async_on_unload(
                 node.on(
                     event,
@@ -716,7 +734,7 @@ class NodeEvents:
         # add listener for value updated events
         self.config_entry.async_on_unload(
             disc_info.node.on(
-                "value updated",
+                EVENT_VALUE_UPDATED,
                 lambda event: self.async_on_value_updated_fire_event(
                     value_updates_disc_info, event["value"]
                 ),
@@ -958,14 +976,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     client: ZwaveClient = entry.runtime_data[DATA_CLIENT]
     driver_events: DriverEvents = entry.runtime_data[DATA_DRIVER_EVENTS]
-
-    tasks: list[Coroutine] = [
-        hass.config_entries.async_forward_entry_unload(entry, platform)
+    platforms = [
+        platform
         for platform, task in driver_events.platform_setup_tasks.items()
         if not task.cancel()
     ]
-
-    unload_ok = all(await asyncio.gather(*tasks)) if tasks else True
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
 
     if client.connected and client.driver:
         await async_disable_server_logging_if_needed(hass, entry, client.driver)
@@ -1054,8 +1070,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
     s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
     s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")
+    lr_s2_access_control_key: str = entry.data.get(CONF_LR_S2_ACCESS_CONTROL_KEY, "")
+    lr_s2_authenticated_key: str = entry.data.get(CONF_LR_S2_AUTHENTICATED_KEY, "")
     addon_state = addon_info.state
-
     addon_config = {
         CONF_ADDON_DEVICE: usb_path,
         CONF_ADDON_S0_LEGACY_KEY: s0_legacy_key,
@@ -1063,6 +1080,9 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         CONF_ADDON_S2_AUTHENTICATED_KEY: s2_authenticated_key,
         CONF_ADDON_S2_UNAUTHENTICATED_KEY: s2_unauthenticated_key,
     }
+    if addon_info.version and AwesomeVersion(addon_info.version) >= LR_ADDON_VERSION:
+        addon_config[CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY] = lr_s2_access_control_key
+        addon_config[CONF_ADDON_LR_S2_AUTHENTICATED_KEY] = lr_s2_authenticated_key
 
     if addon_state == AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
@@ -1102,6 +1122,21 @@ async def async_ensure_addon_running(hass: HomeAssistant, entry: ConfigEntry) ->
         updates[CONF_S2_AUTHENTICATED_KEY] = addon_s2_authenticated_key
     if s2_unauthenticated_key != addon_s2_unauthenticated_key:
         updates[CONF_S2_UNAUTHENTICATED_KEY] = addon_s2_unauthenticated_key
+
+    if addon_info.version and AwesomeVersion(addon_info.version) >= AwesomeVersion(
+        LR_ADDON_VERSION
+    ):
+        addon_lr_s2_access_control_key = addon_options.get(
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
+        )
+        addon_lr_s2_authenticated_key = addon_options.get(
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
+        )
+        if lr_s2_access_control_key != addon_lr_s2_access_control_key:
+            updates[CONF_LR_S2_ACCESS_CONTROL_KEY] = addon_lr_s2_access_control_key
+        if lr_s2_authenticated_key != addon_lr_s2_authenticated_key:
+            updates[CONF_LR_S2_AUTHENTICATED_KEY] = addon_lr_s2_authenticated_key
+
     if updates:
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 

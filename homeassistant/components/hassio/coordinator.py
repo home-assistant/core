@@ -5,7 +5,10 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import StoreInfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_NAME
@@ -42,6 +45,7 @@ from .const import (
     DATA_KEY_OS,
     DATA_KEY_SUPERVISOR,
     DATA_KEY_SUPERVISOR_ISSUES,
+    DATA_NETWORK_INFO,
     DATA_OS_INFO,
     DATA_STORE,
     DATA_SUPERVISOR_INFO,
@@ -52,8 +56,10 @@ from .const import (
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
-from .handler import HassIO, HassioAPIError
-from .issues import SupervisorIssues
+from .handler import HassIO, HassioAPIError, get_supervisor_client
+
+if TYPE_CHECKING:
+    from .issues import SupervisorIssues
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +102,16 @@ def get_supervisor_info(hass: HomeAssistant) -> dict[str, Any] | None:
     Async friendly.
     """
     return hass.data.get(DATA_SUPERVISOR_INFO)
+
+
+@callback
+@bind_hass
+def get_network_info(hass: HomeAssistant) -> dict[str, Any] | None:
+    """Return Host Network information.
+
+    Async friendly.
+    """
+    return hass.data.get(DATA_NETWORK_INFO)
 
 
 @callback
@@ -275,7 +291,7 @@ def async_remove_addons_from_dev_reg(
             dev_reg.async_remove_device(dev.id)
 
 
-class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io status."""
 
     def __init__(
@@ -302,6 +318,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
+        self.supervisor_client = get_supervisor_client(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -317,12 +334,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
         addons_info = get_addons_info(self.hass) or {}
         addons_stats = get_addons_stats(self.hass)
         addons_changelogs = get_addons_changelogs(self.hass)
-        store_data = get_store(self.hass) or {}
+        store_data = get_store(self.hass)
 
-        repositories = {
-            repo[ATTR_SLUG]: repo[ATTR_NAME]
-            for repo in store_data.get("repositories", [])
-        }
+        if store_data:
+            repositories = {
+                repo.slug: repo.name
+                for repo in StoreInfo.from_dict(store_data).repositories
+            }
+        else:
+            repositories = {}
 
         new_data[DATA_KEY_ADDONS] = {
             addon[ATTR_SLUG]: {
@@ -483,17 +503,17 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
-            stats = await self.hassio.get_addon_stats(slug)
-        except HassioAPIError as err:
+            stats = await self.supervisor_client.addons.addon_stats(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
             return (slug, None)
-        return (slug, stats)
+        return (slug, stats.to_dict())
 
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
-            changelog = await self.hassio.get_addon_changelog(slug)
-        except HassioAPIError as err:
+            changelog = await self.supervisor_client.store.addon_changelog(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
             return (slug, None)
         return (slug, changelog)
@@ -501,11 +521,15 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
-            info = await self.hassio.get_addon_info(slug)
-        except HassioAPIError as err:
+            info = await self.supervisor_client.addons.addon_info(slug)
+        except SupervisorError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
             return (slug, None)
-        return (slug, info)
+        # Translate to legacy hassio names for compatibility
+        info_dict = info.to_dict()
+        info_dict["hassio_api"] = info_dict.pop("supervisor_api")
+        info_dict["hassio_role"] = info_dict.pop("supervisor_role")
+        return (slug, info_dict)
 
     @callback
     def async_enable_container_updates(
@@ -539,8 +563,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):  # pylint: disable=has
             # updates if this is not a scheduled refresh and
             # we are not doing the first refresh.
             try:
-                await self.hassio.refresh_updates()
-            except HassioAPIError as err:
+                await self.supervisor_client.refresh_updates()
+            except SupervisorError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
 
         await super()._async_refresh(

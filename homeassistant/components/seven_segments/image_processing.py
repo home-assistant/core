@@ -11,7 +11,7 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
@@ -35,7 +35,7 @@ CONF_Y_POS = "y_position"
 
 DEFAULT_BINARY = "ssocr"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=""): cv.string,
         vol.Optional(CONF_DIGITS): cv.positive_int,
@@ -82,7 +82,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
 
         self.filepath = os.path.join(
             self.hass.config.config_dir,
-            "ssocr-{}.png".format(self._name.replace(" ", "_")),
+            f"ssocr-{self._name.replace(' ', '_')}.png",
         )
         crop = [
             "crop",

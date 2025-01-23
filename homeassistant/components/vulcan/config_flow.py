@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientConnectionError
 import voluptuous as vol
@@ -16,6 +16,7 @@ from vulcan import (
     UnauthorizedCertificateException,
     Vulcan,
 )
+from vulcan.model import Student
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
@@ -38,26 +39,32 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    account: Account
+    keystore: Keystore
+
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.account = None
-        self.keystore = None
-        self.students = None
+        self.students: list[Student] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle config flow."""
         if self._async_current_entries():
             return await self.async_step_add_next_config_entry()
 
         return await self.async_step_auth()
 
-    async def async_step_auth(self, user_input=None, errors=None):
+    async def async_step_auth(
+        self,
+        user_input: dict[str, str] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Authorize integration."""
 
         if user_input is not None:
             try:
                 credentials = await register(
-                    self.hass,
                     user_input[CONF_TOKEN],
                     user_input[CONF_REGION],
                     user_input[CONF_PIN],
@@ -105,16 +112,20 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_student(self, user_input=None):
+    async def async_step_select_student(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Allow user to select student."""
-        errors = {}
-        students = {}
+        errors: dict[str, str] = {}
+        students: dict[str, str] = {}
         if self.students is not None:
             for student in self.students:
                 students[str(student.pupil.id)] = (
                     f"{student.pupil.first_name} {student.pupil.last_name}"
                 )
         if user_input is not None:
+            if TYPE_CHECKING:
+                assert self.keystore is not None
             student_id = user_input["student"]
             await self.async_set_unique_id(str(student_id))
             self._abort_if_unique_id_configured()
@@ -133,17 +144,25 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_select_saved_credentials(self, user_input=None, errors=None):
+    async def async_step_select_saved_credentials(
+        self,
+        user_input: dict[str, str] | None = None,
+        errors: dict[str, str] | None = None,
+    ) -> ConfigFlowResult:
         """Allow user to select saved credentials."""
 
-        credentials = {}
+        credentials: dict[str, Any] = {}
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             credentials[entry.entry_id] = entry.data["account"]["UserName"]
 
         if user_input is not None:
-            entry = self.hass.config_entries.async_get_entry(user_input["credentials"])
-            keystore = Keystore.load(entry.data["keystore"])
-            account = Account.load(entry.data["account"])
+            existing_entry = self.hass.config_entries.async_get_entry(
+                user_input["credentials"]
+            )
+            if TYPE_CHECKING:
+                assert existing_entry is not None
+            keystore = Keystore.load(existing_entry.data["keystore"])
+            account = Account.load(existing_entry.data["account"])
             client = Vulcan(keystore, account, async_get_clientsession(self.hass))
             try:
                 students = await client.get_students()
@@ -187,12 +206,14 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_add_next_config_entry(self, user_input=None):
+    async def async_step_add_next_config_entry(
+        self, user_input: dict[str, bool] | None = None
+    ) -> ConfigFlowResult:
         """Flow initialized when user is adding next entry of that integration."""
 
         existing_entries = self.hass.config_entries.async_entries(DOMAIN)
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if not user_input["use_saved_credentials"]:
@@ -246,13 +267,14 @@ class VulcanFlowHandler(ConfigFlow, domain=DOMAIN):
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Reauthorize integration."""
         errors = {}
         if user_input is not None:
             try:
                 credentials = await register(
-                    self.hass,
                     user_input[CONF_TOKEN],
                     user_input[CONF_REGION],
                     user_input[CONF_PIN],

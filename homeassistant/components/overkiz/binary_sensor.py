@@ -14,12 +14,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
@@ -109,17 +108,30 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_HEATING_STATUS,
         name="Heating status",
         device_class=BinarySensorDeviceClass.HEAT,
-        value_fn=lambda state: state == OverkizCommandParam.ON,
+        value_fn=lambda state: cast(str, state).lower()
+        in (OverkizCommandParam.ON, OverkizCommandParam.HEATING),
     ),
     OverkizBinarySensorDescription(
         key=OverkizState.MODBUSLINK_DHW_ABSENCE_MODE,
         name="Absence mode",
-        value_fn=lambda state: state == OverkizCommandParam.ON,
+        value_fn=(
+            lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
+        ),
     ),
     OverkizBinarySensorDescription(
         key=OverkizState.MODBUSLINK_DHW_BOOST_MODE,
         name="Boost mode",
-        value_fn=lambda state: state == OverkizCommandParam.ON,
+        value_fn=(
+            lambda state: state in (OverkizCommandParam.ON, OverkizCommandParam.PROG)
+        ),
+    ),
+    OverkizBinarySensorDescription(
+        key=OverkizState.MODBUSLINK_DHW_MODE,
+        name="Manual mode",
+        value_fn=(
+            lambda state: state
+            in (OverkizCommandParam.MANUAL, OverkizCommandParam.MANUAL_ECO_INACTIVE)
+        ),
     ),
 ]
 
@@ -130,11 +142,11 @@ SUPPORTED_STATES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz binary sensors from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizBinarySensor] = []
 
     for device in data.coordinator.data.values():

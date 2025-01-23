@@ -1,5 +1,7 @@
 """A pool for sqlite connections."""
 
+from __future__ import annotations
+
 import asyncio
 import logging
 import threading
@@ -14,7 +16,7 @@ from sqlalchemy.pool import (
     StaticPool,
 )
 
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.util.loop import raise_for_blocking_call
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,13 +47,13 @@ class RecorderPool(SingletonThreadPool, NullPool):
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
-        assert (
-            recorder_and_worker_thread_ids is not None
-        ), "recorder_and_worker_thread_ids is required"
+        assert recorder_and_worker_thread_ids is not None, (
+            "recorder_and_worker_thread_ids is required"
+        )
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 
-    def recreate(self) -> "RecorderPool":
+    def recreate(self) -> RecorderPool:
         """Recreate the pool."""
         self.logger.info("Pool recreating")
         return self.__class__(
@@ -69,7 +71,8 @@ class RecorderPool(SingletonThreadPool, NullPool):
 
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
-            return super()._do_return_conn(record)
+            super()._do_return_conn(record)
+            return
         record.close()
 
     def shutdown(self) -> None:
@@ -97,7 +100,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
             # which is allowed but discouraged since its much slower
             return self._do_get_db_connection_protected()
         # In the event loop, raise an exception
-        raise_for_blocking_call(
+        raise_for_blocking_call(  # noqa: RET503
             self._do_get_db_connection_protected,
             strict=True,
             advise_msg=ADVISE_MSG,
@@ -105,14 +108,14 @@ class RecorderPool(SingletonThreadPool, NullPool):
         # raise_for_blocking_call will raise an exception
 
     def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
-        report(
+        report_usage(
             (
                 "accesses the database without the database executor; "
                 f"{ADVISE_MSG} "
                 "for faster database operations"
             ),
             exclude_integrations={"recorder"},
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
         return NullPool._create_connection(self)  # noqa: SLF001
 

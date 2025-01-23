@@ -5,17 +5,25 @@ from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
 from roborock import RoborockException
 
 from homeassistant.components.roborock import DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .mock_data import MAP_DATA, PROP
+
 from tests.common import MockConfigEntry, async_fire_time_changed
-from tests.components.roborock.mock_data import MAP_DATA, PROP
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.IMAGE]
 
 
 async def test_floorplan_image(

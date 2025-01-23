@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from pyirishrail.pyirishrail import IrishRailRTPI
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -36,7 +40,7 @@ DEFAULT_NAME = "Next Train"
 SCAN_INTERVAL = timedelta(minutes=2)
 TIME_STR_FORMAT = "%H:%M"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION): cv.string,
         vol.Optional(CONF_DIRECTION): cv.string,
@@ -101,7 +105,7 @@ class IrishRailTransportSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times:
             next_up = "None"
@@ -124,6 +128,7 @@ class IrishRailTransportSensor(SensorEntity):
                 ATTR_NEXT_UP: next_up,
                 ATTR_TRAIN_TYPE: self._times[0][ATTR_TRAIN_TYPE],
             }
+        return None
 
     @property
     def native_unit_of_measurement(self):
@@ -189,9 +194,9 @@ class IrishRailTransportData:
                 ATTR_STATION: self.station,
                 ATTR_ORIGIN: "",
                 ATTR_DESTINATION: dest,
-                ATTR_DUE_IN: "n/a",
-                ATTR_DUE_AT: "n/a",
-                ATTR_EXPECT_AT: "n/a",
+                ATTR_DUE_IN: None,
+                ATTR_DUE_AT: None,
+                ATTR_EXPECT_AT: None,
                 ATTR_DIRECTION: direction,
                 ATTR_STOPS_AT: stops_at,
                 ATTR_TRAIN_TYPE: "",

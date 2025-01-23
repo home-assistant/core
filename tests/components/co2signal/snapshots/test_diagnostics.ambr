@@ -7,6 +7,8 @@
         'location': '',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'co2signal',
       'entry_id': '904a74160aa6f335526706bee85dfb83',
       'minor_version': 1,

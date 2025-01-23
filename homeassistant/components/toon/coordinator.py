@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import secrets
 
+from aiohttp import web
 from toonapi import Status, Toon, ToonError
 
 from homeassistant.components import cloud, webhook
@@ -89,7 +90,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
             await self.toon.subscribe_webhook(
                 application_id=self.entry.entry_id, url=webhook_url
             )
-            _LOGGER.info("Registered Toon webhook: %s", webhook_url)
+            _LOGGER.debug("Registered Toon webhook: %s", webhook_url)
         except ToonError as err:
             _LOGGER.error("Error during webhook registration - %s", err)
 
@@ -98,7 +99,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
         )
 
     async def handle_webhook(
-        self, hass: HomeAssistant, webhook_id: str, request
+        self, hass: HomeAssistant, webhook_id: str, request: web.Request
     ) -> None:
         """Handle webhook callback."""
         try:

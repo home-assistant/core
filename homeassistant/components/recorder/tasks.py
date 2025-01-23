@@ -60,17 +60,21 @@ class ChangeStatisticsUnitTask(RecorderTask):
 class ClearStatisticsTask(RecorderTask):
     """Object to store statistics_ids which for which to remove statistics."""
 
+    on_done: Callable[[], None] | None
     statistic_ids: list[str]
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         statistics.clear_statistics(instance, self.statistic_ids)
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
 class UpdateStatisticsMetadataTask(RecorderTask):
     """Object to store statistics_id and unit for update of statistics metadata."""
 
+    on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
@@ -83,6 +87,8 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             self.new_statistic_id,
             self.new_unit_of_measurement,
         )
+        if self.on_done:
+            self.on_done()
 
 
 @dataclass(slots=True)
@@ -114,8 +120,6 @@ class PurgeTask(RecorderTask):
         if purge.purge_old_data(
             instance, self.purge_before, self.repack, self.apply_filter
         ):
-            with instance.get_session() as session:
-                instance.recorder_runs_manager.load_from_db(session)
             # We always need to do the db cleanups after a purge
             # is finished to ensure the WAL checkpoint and other
             # tasks happen after a vacuum.
@@ -323,31 +327,6 @@ class SynchronizeTask(RecorderTask):
 
 
 @dataclass(slots=True)
-class PostSchemaMigrationTask(RecorderTask):
-    """Post migration task to update schema."""
-
-    old_version: int
-    new_version: int
-
-    def run(self, instance: Recorder) -> None:
-        """Handle the task."""
-        instance._post_schema_migration(  # noqa: SLF001
-            self.old_version, self.new_version
-        )
-
-
-@dataclass(slots=True)
-class StatisticsTimestampMigrationCleanupTask(RecorderTask):
-    """An object to insert into the recorder queue to run a statistics migration cleanup task."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run statistics timestamp cleanup task."""
-        if not statistics.cleanup_statistics_timestamp_migration(instance):
-            # Schedule a new statistics migration task if this one didn't finish
-            instance.queue_task(StatisticsTimestampMigrationCleanupTask())
-
-
-@dataclass(slots=True)
 class AdjustLRUSizeTask(RecorderTask):
     """An object to insert into the recorder queue to adjust the LRU size."""
 
@@ -356,102 +335,6 @@ class AdjustLRUSizeTask(RecorderTask):
     def run(self, instance: Recorder) -> None:
         """Handle the task to adjust the size."""
         instance._adjust_lru_size()  # noqa: SLF001
-
-
-@dataclass(slots=True)
-class StatesContextIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate states context ids."""
-
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Run context id migration task."""
-        if (
-            not instance._migrate_states_context_ids()  # noqa: SLF001
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(StatesContextIDMigrationTask())
-
-
-@dataclass(slots=True)
-class EventsContextIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate events context ids."""
-
-    commit_before = False
-
-    def run(self, instance: Recorder) -> None:
-        """Run context id migration task."""
-        if (
-            not instance._migrate_events_context_ids()  # noqa: SLF001
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EventsContextIDMigrationTask())
-
-
-@dataclass(slots=True)
-class EventTypeIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate event type ids."""
-
-    commit_before = True
-    # We have to commit before to make sure there are
-    # no new pending event_types about to be added to
-    # the db since this happens live
-
-    def run(self, instance: Recorder) -> None:
-        """Run event type id migration task."""
-        if not instance._migrate_event_type_ids():  # noqa: SLF001
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EventTypeIDMigrationTask())
-
-
-@dataclass(slots=True)
-class EntityIDMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to migrate entity_ids to StatesMeta."""
-
-    commit_before = True
-    # We have to commit before to make sure there are
-    # no new pending states_meta about to be added to
-    # the db since this happens live
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id migration task."""
-        if not instance._migrate_entity_ids():  # noqa: SLF001
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDMigrationTask())
-        else:
-            # The migration has finished, now we start the post migration
-            # to remove the old entity_id data from the states table
-            # at this point we can also start using the StatesMeta table
-            # so we set active to True
-            instance.states_meta_manager.active = True
-            instance.queue_task(EntityIDPostMigrationTask())
-
-
-@dataclass(slots=True)
-class EntityIDPostMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup after entity_ids migration."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run entity_id post migration task."""
-        if (
-            not instance._post_migrate_entity_ids()  # noqa: SLF001
-        ):
-            # Schedule a new migration task if this one didn't finish
-            instance.queue_task(EntityIDPostMigrationTask())
-
-
-@dataclass(slots=True)
-class EventIdMigrationTask(RecorderTask):
-    """An object to insert into the recorder queue to cleanup legacy event_ids in the states table.
-
-    This task should only be queued if the ix_states_event_id index exists
-    since it is used to scan the states table and it will be removed after this
-    task is run if its no longer needed.
-    """
-
-    def run(self, instance: Recorder) -> None:
-        """Clean up the legacy event_id index on states."""
-        instance._cleanup_legacy_states_event_ids()  # noqa: SLF001
 
 
 @dataclass(slots=True)

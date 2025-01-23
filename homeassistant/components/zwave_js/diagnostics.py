@@ -12,8 +12,7 @@ from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import ValueDataType
 from zwave_js_server.util.node import dump_node_state
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.diagnostics.util import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
@@ -81,7 +80,7 @@ def get_device_entities(
         er.async_get(hass), device.id, include_disabled_entities=True
     )
     entities = []
-    for entry in entity_entries:
+    for entry in sorted(entity_entries):
         # Skip entities that are not part of this integration
         if entry.config_entry_id != config_entry.entry_id:
             continue

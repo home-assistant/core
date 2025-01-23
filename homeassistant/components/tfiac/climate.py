@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -32,7 +32,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +88,6 @@ class TfiacClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, hass, client):
         """Init class."""

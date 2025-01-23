@@ -14,24 +14,26 @@ from tests.common import extract_stack_to_frame
 
 @patch("concurrent.futures.Future")
 @patch("threading.get_ident")
-def test_run_callback_threadsafe_from_inside_event_loop(mock_ident, _) -> None:
+def test_run_callback_threadsafe_from_inside_event_loop(
+    mock_ident: MagicMock, mock_future: MagicMock
+) -> None:
     """Testing calling run_callback_threadsafe from inside an event loop."""
     callback = MagicMock()
 
     loop = Mock(spec=["call_soon_threadsafe"])
 
-    loop._thread_ident = None
+    loop._thread_id = None
     mock_ident.return_value = 5
     hasync.run_callback_threadsafe(loop, callback)
     assert len(loop.call_soon_threadsafe.mock_calls) == 1
 
-    loop._thread_ident = 5
+    loop._thread_id = 5
     mock_ident.return_value = 5
     with pytest.raises(RuntimeError):
         hasync.run_callback_threadsafe(loop, callback)
     assert len(loop.call_soon_threadsafe.mock_calls) == 1
 
-    loop._thread_ident = 1
+    loop._thread_id = 1
     mock_ident.return_value = 5
     hasync.run_callback_threadsafe(loop, callback)
     assert len(loop.call_soon_threadsafe.mock_calls) == 2
@@ -76,7 +78,7 @@ async def test_run_callback_threadsafe(hass: HomeAssistant) -> None:
         nonlocal it_ran
         it_ran = True
 
-    with patch.dict(hass.loop.__dict__, {"_thread_ident": -1}):
+    with patch.dict(hass.loop.__dict__, {"_thread_id": -1}):
         assert hasync.run_callback_threadsafe(hass.loop, callback)
     assert it_ran is False
 
@@ -96,7 +98,7 @@ async def test_callback_is_always_scheduled(hass: HomeAssistant) -> None:
     hasync.shutdown_run_callback_threadsafe(hass.loop)
 
     with (
-        patch.dict(hass.loop.__dict__, {"_thread_ident": -1}),
+        patch.dict(hass.loop.__dict__, {"_thread_id": -1}),
         patch.object(hass.loop, "call_soon_threadsafe") as mock_call_soon_threadsafe,
         pytest.raises(RuntimeError),
     ):
@@ -138,7 +140,7 @@ async def test_create_eager_task_from_thread(hass: HomeAssistant) -> None:
     with pytest.raises(
         RuntimeError,
         match=(
-            "Detected code that attempted to create an asyncio task from a thread. Please report this issue."
+            "Detected code that attempted to create an asyncio task from a thread. Please report this issue"
         ),
     ):
         await hass.async_add_executor_job(create_task)
@@ -197,3 +199,17 @@ async def test_create_eager_task_from_thread_in_integration(
         "from a thread at homeassistant/components/hue/light.py, line 23: "
         "self.light.is_on"
     ) in caplog.text
+
+
+async def test_get_scheduled_timer_handles(hass: HomeAssistant) -> None:
+    """Test get_scheduled_timer_handles returns all scheduled timer handles."""
+    loop = hass.loop
+    timer_handle = loop.call_later(10, lambda: None)
+    timer_handle2 = loop.call_later(5, lambda: None)
+    timer_handle3 = loop.call_later(15, lambda: None)
+
+    handles = hasync.get_scheduled_timer_handles(loop)
+    assert set(handles).issuperset({timer_handle, timer_handle2, timer_handle3})
+    timer_handle.cancel()
+    timer_handle2.cancel()
+    timer_handle3.cancel()

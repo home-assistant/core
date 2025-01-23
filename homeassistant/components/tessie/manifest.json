@@ -5,6 +5,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tessie",
   "iot_class": "cloud_polling",
-  "loggers": ["tessie"],
-  "requirements": ["tessie-api==0.0.9"]
+  "loggers": ["tessie", "tesla-fleet-api"],
+  "requirements": ["tessie-api==0.1.1", "tesla-fleet-api==0.9.2"]
 }

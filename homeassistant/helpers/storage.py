@@ -6,13 +6,14 @@ import asyncio
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
-from functools import cached_property
 import inspect
 from json import JSONDecodeError, JSONEncoder
 import logging
 import os
 from pathlib import Path
 from typing import Any
+
+from propcache import cached_property
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_FINAL_WRITE,
@@ -263,6 +264,13 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     def path(self):
         """Return the config path."""
         return self.hass.config.path(STORAGE_DIR, self.key)
+
+    def make_read_only(self) -> None:
+        """Make the store read-only.
+
+        This method is irreversible.
+        """
+        self._read_only = True
 
     async def async_load(self) -> _T | None:
         """Load data.

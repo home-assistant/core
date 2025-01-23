@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/wolflink",
   "iot_class": "cloud_polling",
   "loggers": ["wolf_comm"],
-  "requirements": ["wolf-comm==0.0.8"]
+  "requirements": ["wolf-comm==0.0.15"]
 }

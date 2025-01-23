@@ -31,7 +31,7 @@ def coordinator_toloclient() -> Mock:
     Throw exception to abort entry setup and prevent socket IO. Only testing config flow.
     """
     with patch(
-        "homeassistant.components.tolo.ToloClient", side_effect=Exception
+        "homeassistant.components.tolo.coordinator.ToloClient", side_effect=Exception
     ) as toloclient:
         yield toloclient
 

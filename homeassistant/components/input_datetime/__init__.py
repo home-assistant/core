@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,7 +59,7 @@ def validate_set_datetime_attrs(config):
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
-STORAGE_FIELDS = {
+STORAGE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
     vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
@@ -176,14 +176,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         "set_datetime",
         vol.All(
-            vol.Schema(
+            cv.make_entity_service_schema(
                 {
                     vol.Optional(ATTR_DATE): cv.date,
                     vol.Optional(ATTR_TIME): cv.time,
                     vol.Optional(ATTR_DATETIME): cv.datetime,
                     vol.Optional(ATTR_TIMESTAMP): vol.Coerce(float),
                 },
-                extra=vol.ALLOW_EXTRA,
             ),
             cv.has_at_least_one_key(
                 ATTR_DATE, ATTR_TIME, ATTR_DATETIME, ATTR_TIMESTAMP
@@ -386,7 +385,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
     @callback
     def async_set_datetime(self, date=None, time=None, datetime=None, timestamp=None):
         """Set a new date / time."""
-        if timestamp:
+        if timestamp is not None:
             datetime = dt_util.as_local(dt_util.utc_from_timestamp(timestamp))
 
         if datetime:

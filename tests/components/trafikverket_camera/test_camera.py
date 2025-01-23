@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import CameraInfoModel
 
 from homeassistant.components.camera import async_get_image
 from homeassistant.config_entries import ConfigEntry
@@ -24,7 +24,7 @@ async def test_camera(
     freezer: FrozenDateTimeFactory,
     monkeypatch: pytest.MonkeyPatch,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera sensor."""
     state1 = hass.states.get("camera.test_camera")

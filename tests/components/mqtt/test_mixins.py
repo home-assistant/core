@@ -15,7 +15,7 @@ from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.common import MockConfigEntry, async_capture_events, async_fire_mqtt_message
-from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
+from tests.typing import MqttMockHAClientGenerator
 
 
 @pytest.mark.parametrize(
@@ -37,8 +37,7 @@ from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
     ],
 )
 async def test_availability_with_shared_state_topic(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test the state is not changed twice.
 
@@ -295,11 +294,10 @@ async def test_availability_with_shared_state_topic(
     ],
 )
 @patch("homeassistant.components.mqtt.client.DISCOVERY_COOLDOWN", 0.0)
+@pytest.mark.usefixtures("mqtt_client_mock")
 async def test_default_entity_and_device_name(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    mqtt_client_mock: MqttMockPahoClient,
-    mqtt_config_entry_data,
     caplog: pytest.LogCaptureFixture,
     entity_id: str,
     friendly_name: str,
@@ -315,7 +313,12 @@ async def test_default_entity_and_device_name(
     hass.set_state(CoreState.starting)
     await hass.async_block_till_done()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "mock-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -335,14 +338,13 @@ async def test_default_entity_and_device_name(
 
     # Assert that no issues ware registered
     assert len(events) == 0
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     # Assert that no issues ware registered
     assert len(events) == 0
 
 
 async def test_name_attribute_is_set_or_not(
-    hass: HomeAssistant,
-    mqtt_mock_entry: MqttMockHAClientGenerator,
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test frendly name with device_class set.
 

@@ -1,6 +1,10 @@
 {
   "services": {
-    "play_media": "mdi:play",
-    "extract_media_url": "mdi:link"
+    "play_media": {
+      "service": "mdi:play"
+    },
+    "extract_media_url": {
+      "service": "mdi:link"
+    }
   }
 }

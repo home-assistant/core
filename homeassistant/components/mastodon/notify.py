@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import mimetypes
-from typing import Any
+from typing import Any, cast
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonAPIError, MastodonUnauthorizedError
+from mastodon.Mastodon import MastodonAPIError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -26,7 +26,7 @@ ATTR_TARGET = "target"
 ATTR_MEDIA_WARNING = "media_warning"
 ATTR_CONTENT_WARNING = "content_warning"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ACCESS_TOKEN): cv.string,
         vol.Required(CONF_CLIENT_ID): cv.string,
@@ -35,47 +35,46 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+INTEGRATION_TITLE = "Mastodon"
 
-def get_service(
+
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MastodonNotificationService | None:
     """Get the Mastodon notification service."""
-    client_id = config.get(CONF_CLIENT_ID)
-    client_secret = config.get(CONF_CLIENT_SECRET)
-    access_token = config.get(CONF_ACCESS_TOKEN)
-    base_url = config.get(CONF_BASE_URL)
-
-    try:
-        mastodon = Mastodon(
-            client_id=client_id,
-            client_secret=client_secret,
-            access_token=access_token,
-            api_base_url=base_url,
-        )
-        mastodon.account_verify_credentials()
-    except MastodonUnauthorizedError:
-        LOGGER.warning("Authentication failed")
+    if discovery_info is None:
         return None
 
-    return MastodonNotificationService(mastodon)
+    client: Mastodon = discovery_info.get("client")
+
+    return MastodonNotificationService(hass, client)
 
 
 class MastodonNotificationService(BaseNotificationService):
     """Implement the notification service for Mastodon."""
 
-    def __init__(self, api: Mastodon) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: Mastodon,
+    ) -> None:
         """Initialize the service."""
-        self._api = api
+
+        self.client = client
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Toot a message, with media perhaps."""
+
+        target = None
+        if (target_list := kwargs.get(ATTR_TARGET)) is not None:
+            target = cast(list[str], target_list)[0]
+
         data = kwargs.get(ATTR_DATA)
 
         media = None
         mediadata = None
-        target = None
         sensitive = False
         content_warning = None
 
@@ -87,13 +86,12 @@ class MastodonNotificationService(BaseNotificationService):
                     return
                 mediadata = self._upload_media(media)
 
-            target = data.get(ATTR_TARGET)
             sensitive = data.get(ATTR_MEDIA_WARNING)
             content_warning = data.get(ATTR_CONTENT_WARNING)
 
         if mediadata:
             try:
-                self._api.status_post(
+                self.client.status_post(
                     message,
                     media_ids=mediadata["id"],
                     sensitive=sensitive,
@@ -104,7 +102,7 @@ class MastodonNotificationService(BaseNotificationService):
                 LOGGER.error("Unable to send message")
         else:
             try:
-                self._api.status_post(
+                self.client.status_post(
                     message, visibility=target, spoiler_text=content_warning
                 )
             except MastodonAPIError:
@@ -115,9 +113,9 @@ class MastodonNotificationService(BaseNotificationService):
         with open(media_path, "rb"):
             media_type = self._media_type(media_path)
         try:
-            mediadata = self._api.media_post(media_path, mime_type=media_type)
+            mediadata = self.client.media_post(media_path, mime_type=media_type)
         except MastodonAPIError:
-            LOGGER.error(f"Unable to upload image {media_path}")
+            LOGGER.error("Unable to upload image %s", media_path)
 
         return mediadata
 

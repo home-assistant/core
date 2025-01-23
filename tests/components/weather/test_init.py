@@ -22,7 +22,6 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     ROUNDING_PRECISION,
     SERVICE_GET_FORECASTS,
     Forecast,
@@ -47,7 +46,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
@@ -413,7 +411,9 @@ async def test_humidity(
     assert float(state.attributes[ATTR_WEATHER_HUMIDITY]) == 80
 
 
-async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> None:
+async def test_custom_units(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, config_flow_fixture: None
+) -> None:
     """Test custom unit."""
     wind_speed_value = 5
     wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
@@ -433,8 +433,6 @@ async def test_custom_units(hass: HomeAssistant, config_flow_fixture: None) -> N
         "temperature_unit": UnitOfTemperature.FAHRENHEIT,
         "visibility_unit": UnitOfLength.MILES,
     }
-
-    entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get_or_create("weather", "test", "very_unique")
     entity_registry.async_update_entity_options(entry.entity_id, "weather", set_options)
@@ -605,13 +603,6 @@ async def test_forecast_twice_daily_missing_is_daytime(
 
 
 @pytest.mark.parametrize(
-    ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
-)
-@pytest.mark.parametrize(
     ("forecast_type", "supported_features"),
     [
         ("daily", WeatherEntityFeature.FORECAST_DAILY),
@@ -628,7 +619,6 @@ async def test_get_forecast(
     forecast_type: str,
     supported_features: int,
     snapshot: SnapshotAssertion,
-    service: str,
 ) -> None:
     """Test get forecast service."""
 
@@ -659,7 +649,7 @@ async def test_get_forecast(
 
     response = await hass.services.async_call(
         DOMAIN,
-        service,
+        SERVICE_GET_FORECASTS,
         {
             "entity_id": entity0.entity_id,
             "type": forecast_type,
@@ -670,30 +660,9 @@ async def test_get_forecast(
     assert response == snapshot
 
 
-@pytest.mark.parametrize(
-    ("service", "expected"),
-    [
-        (
-            SERVICE_GET_FORECASTS,
-            {
-                "weather.testing": {
-                    "forecast": [],
-                }
-            },
-        ),
-        (
-            LEGACY_SERVICE_GET_FORECAST,
-            {
-                "forecast": [],
-            },
-        ),
-    ],
-)
 async def test_get_forecast_no_forecast(
     hass: HomeAssistant,
     config_flow_fixture: None,
-    service: str,
-    expected: dict[str, list | dict[str, list]],
 ) -> None:
     """Test get forecast service."""
 
@@ -714,7 +683,7 @@ async def test_get_forecast_no_forecast(
 
     response = await hass.services.async_call(
         DOMAIN,
-        service,
+        SERVICE_GET_FORECASTS,
         {
             "entity_id": entity0.entity_id,
             "type": "daily",
@@ -722,16 +691,13 @@ async def test_get_forecast_no_forecast(
         blocking=True,
         return_response=True,
     )
-    assert response == expected
+    assert response == {
+        "weather.testing": {
+            "forecast": [],
+        }
+    }
 
 
-@pytest.mark.parametrize(
-    ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
-)
 @pytest.mark.parametrize(
     ("supported_features", "forecast_types"),
     [
@@ -745,7 +711,6 @@ async def test_get_forecast_unsupported(
     config_flow_fixture: None,
     forecast_types: list[str],
     supported_features: int,
-    service: str,
 ) -> None:
     """Test get forecast service."""
 
@@ -775,7 +740,7 @@ async def test_get_forecast_unsupported(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                service,
+                SERVICE_GET_FORECASTS,
                 {
                     "entity_id": weather_entity.entity_id,
                     "type": forecast_type,
@@ -786,52 +751,3 @@ async def test_get_forecast_unsupported(
 
 
 ISSUE_TRACKER = "https://blablabla.com"
-
-
-async def test_issue_deprecated_service_weather_get_forecast(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    config_flow_fixture: None,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test the issue is raised on deprecated service weather.get_forecast."""
-
-    class MockWeatherMock(MockWeatherTest):
-        """Mock weather class."""
-
-        async def async_forecast_daily(self) -> list[Forecast] | None:
-            """Return the forecast_daily."""
-            return self.forecast_list
-
-    kwargs = {
-        "native_temperature": 38,
-        "native_temperature_unit": UnitOfTemperature.CELSIUS,
-        "supported_features": WeatherEntityFeature.FORECAST_DAILY,
-    }
-
-    entity0 = await create_entity(hass, MockWeatherMock, None, **kwargs)
-
-    _ = await hass.services.async_call(
-        DOMAIN,
-        LEGACY_SERVICE_GET_FORECAST,
-        {
-            "entity_id": entity0.entity_id,
-            "type": "daily",
-        },
-        blocking=True,
-        return_response=True,
-    )
-
-    issue = issue_registry.async_get_issue(
-        "weather", "deprecated_service_weather_get_forecast"
-    )
-    assert issue
-    assert issue.issue_domain == "test"
-    assert issue.issue_id == "deprecated_service_weather_get_forecast"
-    assert issue.translation_key == "deprecated_service_weather_get_forecast"
-
-    assert (
-        "Detected use of service 'weather.get_forecast'. "
-        "This is deprecated and will stop working in Home Assistant 2024.6. "
-        "Use 'weather.get_forecasts' instead which supports multiple entities"
-    ) in caplog.text

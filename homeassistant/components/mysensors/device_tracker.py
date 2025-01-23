@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import setup_mysensors_platform
 from .const import MYSENSORS_DISCOVERY, DiscoveryInfo
-from .device import MySensorsChildEntity
+from .entity import MySensorsChildEntity
 from .helpers import on_unload
 
 
@@ -47,24 +47,6 @@ async def async_setup_entry(
 class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
     """Represent a MySensors device tracker."""
 
-    _latitude: float | None = None
-    _longitude: float | None = None
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of the device."""
-        return self._latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of the device."""
-        return self._longitude
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
-
     @callback
     def _async_update(self) -> None:
         """Update the controller with the latest value from a device."""
@@ -73,5 +55,5 @@ class MySensorsDeviceTracker(MySensorsChildEntity, TrackerEntity):
         child = node.children[self.child_id]
         position: str = child.values[self.value_type]
         latitude, longitude, _ = position.split(",")
-        self._latitude = float(latitude)
-        self._longitude = float(longitude)
+        self._attr_latitude = float(latitude)
+        self._attr_longitude = float(longitude)

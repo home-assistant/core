@@ -28,7 +28,7 @@
       "confirm_discovery": {
         "description": "Do you want to set up the {model} at {host}?\n\nBattery-powered devices that are password protected must be woken up before continuing with setting up.\nBattery-powered devices that are not password protected will be added when the device wakes up, you can now manually wake the device up using a button on it or wait for the next data update from the device."
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update configuration for {device_name}.\n\nBefore setup, battery-powered devices must be woken up, you can now wake the device up using a button on it.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -45,14 +45,17 @@
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
-      "custom_port_not_supported": "Gen1 device does not support custom port."
+      "custom_port_not_supported": "Gen1 device does not support custom port.",
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used."
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Shelly device was used.",
+      "ipv6_not_supported": "IPv6 is not supported.",
+      "mac_address_mismatch": "[%key:component::shelly::config::error::mac_address_mismatch%]"
     }
   },
   "device_automation": {
@@ -175,14 +178,6 @@
     "push_update_failure": {
       "title": "Shelly device {device_name} push update failure",
       "description": "Home Assistant is not receiving push updates from the Shelly device {device_name} with IP address {ip_address}. Check the CoIoT configuration in the web panel of the device and your network configuration."
-    },
-    "deprecated_valve_switch": {
-      "title": "The switch entity for Shelly Gas Valve is deprecated",
-      "description": "The switch entity for Shelly Gas Valve is deprecated. A valve entity {entity} is available and should be used going forward. For this new valve entity you need to use {service} service."
-    },
-    "deprecated_valve_switch_entity": {
-      "title": "Deprecated switch entity for Shelly Gas Valve detected in {info}",
-      "description": "Your Shelly Gas Valve entity `{entity}` is being used in `{info}`. A valve entity is available and should be used going forward.\n\nPlease adjust `{info}` to fix this issue."
     },
     "unsupported_firmware": {
       "title": "Unsupported firmware for device {device_name}",

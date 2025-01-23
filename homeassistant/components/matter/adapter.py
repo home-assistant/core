@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, cast
 
-from matter_server.client.models.device_types import BridgedDevice
+from chip.clusters import Objects as clusters
+from matter_server.client.models.device_types import BridgedNode
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +45,7 @@ class MatterAdapter:
         self.hass = hass
         self.config_entry = config_entry
         self.platform_handlers: dict[Platform, AddEntitiesCallback] = {}
+        self.discovered_entities: set[str] = set()
 
     def register_platform_handler(
         self, platform: Platform, add_entities: AddEntitiesCallback
@@ -53,27 +55,19 @@ class MatterAdapter:
 
     async def setup_nodes(self) -> None:
         """Set up all existing nodes and subscribe to new nodes."""
-        initialized_nodes: set[int] = set()
         for node in self.matter_client.get_nodes():
-            if not node.available:
-                # ignore un-initialized nodes at startup
-                # catch them later when they become available.
-                continue
-            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def node_added_callback(event: EventType, node: MatterNode) -> None:
             """Handle node added event."""
-            initialized_nodes.add(node.node_id)
             self._setup_node(node)
 
         def node_updated_callback(event: EventType, node: MatterNode) -> None:
             """Handle node updated event."""
-            if node.node_id in initialized_nodes:
-                return
             if not node.available:
                 return
-            initialized_nodes.add(node.node_id)
+            # We always run the discovery logic again,
+            # because the firmware version could have been changed or features added.
             self._setup_node(node)
 
         def endpoint_added_callback(event: EventType, data: dict[str, int]) -> None:
@@ -142,10 +136,18 @@ class MatterAdapter:
     def _setup_node(self, node: MatterNode) -> None:
         """Set up an node."""
         LOGGER.debug("Setting up entities for node %s", node.node_id)
-
-        for endpoint in node.endpoints.values():
-            # Node endpoints are translated into HA devices
-            self._setup_endpoint(endpoint)
+        try:
+            for endpoint in node.endpoints.values():
+                # Node endpoints are translated into HA devices
+                self._setup_endpoint(endpoint)
+        except Exception as err:  # noqa: BLE001
+            # We don't want to crash the whole setup when a single node fails to setup
+            # for whatever reason, so we catch all exceptions here.
+            LOGGER.exception(
+                "Error setting up node %s: %s",
+                node.node_id,
+                err,
+            )
 
     def _create_device_registry(
         self,
@@ -160,7 +162,7 @@ class MatterAdapter:
             (
                 x
                 for x in endpoint.device_types
-                if x.device_type != BridgedDevice.device_type
+                if x.device_type != BridgedNode.device_type
             ),
             None,
         )
@@ -194,11 +196,25 @@ class MatterAdapter:
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number
 
-        model = (
-            get_clean_name(basic_info.productName) or device_type.__name__
+        # Model name is the human readable name of the model/product name
+        model_name = (
+            # productLabel is optional but preferred (e.g. Hue Bloom)
+            get_clean_name(basic_info.productLabel)
+            # alternative is the productName (e.g. LCT001)
+            or get_clean_name(basic_info.productName)
+            # if no product name, use the device type name
+            or device_type.__name__
             if device_type
             else None
         )
+        # Model ID is the non-human readable product ID
+        # we prefer the matter product ID so we can look it up in Matter DCL
+        if isinstance(basic_info, clusters.BridgedDeviceBasicInformation):
+            # On bridged devices, the productID is not available
+            model_id = None
+        else:
+            model_id = str(product_id) if (product_id := basic_info.productID) else None
+
         dr.async_get(self.hass).async_get_or_create(
             name=name,
             config_entry_id=self.config_entry.entry_id,
@@ -206,7 +222,8 @@ class MatterAdapter:
             hw_version=basic_info.hardwareVersionString,
             sw_version=basic_info.softwareVersionString,
             manufacturer=basic_info.vendorName or endpoint.node.device_info.vendorName,
-            model=model,
+            model=model_name,
+            model_id=model_id,
             serial_number=serial_number,
             via_device=(DOMAIN, bridge_device_id) if bridge_device_id else None,
         )
@@ -217,11 +234,20 @@ class MatterAdapter:
         self._create_device_registry(endpoint)
         # run platform discovery from device type instances
         for entity_info in async_discover_entities(endpoint):
+            discovery_key = (
+                f"{entity_info.platform}_{endpoint.node.node_id}_{endpoint.endpoint_id}_"
+                f"{entity_info.primary_attribute.cluster_id}_"
+                f"{entity_info.primary_attribute.attribute_id}_"
+                f"{entity_info.entity_description.key}"
+            )
+            if discovery_key in self.discovered_entities:
+                continue
             LOGGER.debug(
                 "Creating %s entity for %s",
                 entity_info.platform,
                 entity_info.primary_attribute,
             )
+            self.discovered_entities.add(discovery_key)
             new_entity = entity_info.entity_class(
                 self.matter_client, endpoint, entity_info
             )

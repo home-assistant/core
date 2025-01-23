@@ -6,6 +6,8 @@
         'project_id': '1234',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'google_assistant',
       'minor_version': 1,
       'options': dict({

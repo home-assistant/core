@@ -10,7 +10,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -29,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from . import AmbientNetworkConfigEntry
 from .coordinator import AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 
@@ -271,12 +270,12 @@ SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: AmbientNetworkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Ambient Network sensor entities."""
 
-    coordinator: AmbientNetworkDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     if coordinator.config_entry is not None:
         async_add_entities(
             AmbientNetworkSensor(
@@ -299,12 +298,10 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         mac_address: str,
     ) -> None:
         """Initialize a sensor object."""
-
         super().__init__(coordinator, description, mac_address)
 
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
-
         value = self.coordinator.data.get(self.entity_description.key)
 
         # Treatments for special units.
@@ -315,3 +312,8 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
 
         self._attr_available = value is not None
         self._attr_native_value = value
+
+        if self.coordinator.last_measured is not None:
+            self._attr_extra_state_attributes = {
+                "last_measured": self.coordinator.last_measured
+            }

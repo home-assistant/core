@@ -20,8 +20,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import IntegerTypeData, TuyaEntity
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,7 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
+            current_position=(DPCode.PERCENT_STATE, DPCode.PERCENT_CONTROL),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),

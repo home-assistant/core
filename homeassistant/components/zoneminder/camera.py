@@ -35,7 +35,7 @@ def setup_platform(
             )
 
         for monitor in monitors:
-            _LOGGER.info("Initializing camera %s", monitor.id)
+            _LOGGER.debug("Initializing camera %s", monitor.id)
             cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
     add_entities(cameras)
 

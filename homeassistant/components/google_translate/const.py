@@ -81,13 +81,14 @@ SUPPORT_LANGUAGES = [
     "sv",
     "sw",
     "ta",
-    "te",
+    "te",  # codespell:ignore te
     "th",
     "tl",
     "tr",
     "uk",
     "ur",
     "vi",
+    "yue",
     # dialects
     "zh-CN",
     "zh-cn",

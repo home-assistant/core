@@ -9,8 +9,8 @@ from accuweather.const import ENDPOINT
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
-from . import AccuWeatherConfigEntry
 from .const import DOMAIN
+from .coordinator import AccuWeatherConfigEntry
 
 
 @callback

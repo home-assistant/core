@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-from homeassistant.components.assist_pipeline.select import AssistPipelineSelect
+from homeassistant.components.assist_pipeline.select import (
+    AssistPipelineSelect,
+    VadSensitivitySelect,
+)
+from homeassistant.components.assist_pipeline.vad import VadSensitivity
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
@@ -38,13 +42,13 @@ async def async_setup_entry(
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.device is not None
 
-    device = item.satellite.device
     async_add_entities(
         [
-            WyomingSatellitePipelineSelect(hass, device),
-            WyomingSatelliteNoiseSuppressionLevelSelect(device),
+            WyomingSatellitePipelineSelect(hass, item.device),
+            WyomingSatelliteNoiseSuppressionLevelSelect(item.device),
+            WyomingSatelliteVadSensitivitySelect(hass, item.device),
         ]
     )
 
@@ -92,3 +96,21 @@ class WyomingSatelliteNoiseSuppressionLevelSelect(
         self._attr_current_option = option
         self.async_write_ha_state()
         self._device.set_noise_suppression_level(_NOISE_SUPPRESSION_LEVEL[option])
+
+
+class WyomingSatelliteVadSensitivitySelect(
+    WyomingSatelliteEntity, VadSensitivitySelect
+):
+    """VAD sensitivity selector for Wyoming satellites."""
+
+    def __init__(self, hass: HomeAssistant, device: SatelliteDevice) -> None:
+        """Initialize a VAD sensitivity selector."""
+        self.device = device
+
+        WyomingSatelliteEntity.__init__(self, device)
+        VadSensitivitySelect.__init__(self, hass, device.satellite_id)
+
+    async def async_select_option(self, option: str) -> None:
+        """Select an option."""
+        await super().async_select_option(option)
+        self.device.set_vad_sensitivity(VadSensitivity(option))

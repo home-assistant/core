@@ -1,0 +1,154 @@
+# serializer version: 1
+# name: test_states[siren.downstairs_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'available_tones': list([
+        'ding',
+        'motion',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.downstairs_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 5>,
+    'translation_key': 'siren',
+    'unique_id': '123456-siren',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[siren.downstairs_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'available_tones': list([
+        'ding',
+        'motion',
+      ]),
+      'friendly_name': 'Downstairs Siren',
+      'supported_features': <SirenEntityFeature: 5>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.downstairs_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[siren.front_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.front_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 3>,
+    'translation_key': 'siren',
+    'unique_id': '765432',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[siren.front_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'friendly_name': 'Front Siren',
+      'supported_features': <SirenEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.front_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_states[siren.internal_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.internal_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': <SirenEntityFeature: 3>,
+    'translation_key': 'siren',
+    'unique_id': '345678',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[siren.internal_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'friendly_name': 'Internal Siren',
+      'supported_features': <SirenEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.internal_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

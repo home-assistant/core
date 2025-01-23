@@ -1,7 +1,9 @@
 """Configuration for Elmax tests."""
 
+from collections.abc import Generator
+from datetime import datetime, timedelta
 import json
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from elmax_api.constants import (
     BASE_URL,
@@ -10,6 +12,7 @@ from elmax_api.constants import (
     ENDPOINT_LOGIN,
 )
 from httpx import Response
+import jwt
 import pytest
 import respx
 
@@ -29,7 +32,7 @@ MOCK_DIRECT_BASE_URI = (
 
 
 @pytest.fixture(autouse=True)
-def httpx_mock_cloud_fixture(requests_mock):
+def httpx_mock_cloud_fixture() -> Generator[respx.MockRouter]:
     """Configure httpx fixture for cloud API communication."""
     with respx.mock(base_url=BASE_URL, assert_all_called=False) as respx_mock:
         # Mock Login POST.
@@ -56,16 +59,27 @@ def httpx_mock_cloud_fixture(requests_mock):
 
 
 @pytest.fixture(autouse=True)
-def httpx_mock_direct_fixture(requests_mock):
+def httpx_mock_direct_fixture() -> Generator[respx.MockRouter]:
     """Configure httpx fixture for direct Panel-API communication."""
     with respx.mock(
         base_url=MOCK_DIRECT_BASE_URI, assert_all_called=False
     ) as respx_mock:
         # Mock Login POST.
         login_route = respx_mock.post(f"/api/v2/{ENDPOINT_LOGIN}", name="login")
-        login_route.return_value = Response(
-            200, json=json.loads(load_fixture("direct/login.json", "elmax"))
+
+        login_json = json.loads(load_fixture("direct/login.json", "elmax"))
+        decoded_jwt = jwt.decode_complete(
+            login_json["token"].split(" ")[1],
+            algorithms="HS256",
+            options={"verify_signature": False},
         )
+        expiration = datetime.now() + timedelta(hours=1)
+        decoded_jwt["payload"]["exp"] = int(expiration.timestamp())
+        jws_string = jwt.encode(
+            payload=decoded_jwt["payload"], algorithm="HS256", key=""
+        )
+        login_json["token"] = f"JWT {jws_string}"
+        login_route.return_value = Response(200, json=login_json)
 
         # Mock Device list GET.
         list_devices_route = respx_mock.get(
@@ -79,7 +93,7 @@ def httpx_mock_direct_fixture(requests_mock):
 
 
 @pytest.fixture(autouse=True)
-def elmax_mock_direct_cert(requests_mock):
+def elmax_mock_direct_cert() -> Generator[AsyncMock]:
     """Patch elmax library to return a specific PEM for SSL communication."""
     with patch(
         "elmax_api.http.GenericElmax.retrieve_server_certificate",

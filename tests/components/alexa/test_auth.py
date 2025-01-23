@@ -10,14 +10,14 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def run_auth_get_access_token(
-    hass,
-    aioclient_mock,
-    expires_in,
-    client_id,
-    client_secret,
-    accept_grant_code,
-    refresh_token,
-):
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    expires_in: int,
+    client_id: str,
+    client_secret: str,
+    accept_grant_code: str,
+    refresh_token: str,
+) -> None:
     """Do auth and request a new token for tests."""
     aioclient_mock.post(
         TEST_TOKEN_URL,

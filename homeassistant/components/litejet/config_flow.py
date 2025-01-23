@@ -24,10 +24,6 @@ from .const import CONF_DEFAULT_TRANSITION, DOMAIN
 class LiteJetOptionsFlow(OptionsFlow):
     """Handle LiteJet options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize LiteJet options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -57,9 +53,6 @@ class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a LiteJet config entry based upon user input."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
         if user_input is not None:
             port = user_input[CONF_PORT]
@@ -87,4 +80,4 @@ class LiteJetConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> LiteJetOptionsFlow:
         """Get the options flow for this handler."""
-        return LiteJetOptionsFlow(config_entry)
+        return LiteJetOptionsFlow()

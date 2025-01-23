@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from functools import cached_property
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
+from propcache import cached_property
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -113,7 +113,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @cached_property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION
@@ -143,7 +143,8 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
 
         await self.async_put_characteristics(
             {

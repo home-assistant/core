@@ -6,7 +6,10 @@ from unittest.mock import Mock
 
 from requests.exceptions import HTTPError
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -27,7 +30,7 @@ from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{BINARY_SENSOR_DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
@@ -148,5 +151,5 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"{DOMAIN}.new_device_alarm")
+    state = hass.states.get(f"{BINARY_SENSOR_DOMAIN}.new_device_alarm")
     assert state

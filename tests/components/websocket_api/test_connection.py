@@ -2,7 +2,7 @@
 
 import logging
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from aiohttp.test_utils import make_mocked_request
 import pytest
@@ -75,15 +75,16 @@ async def test_exception_handling(
     send_messages = []
     user = MockUser()
     refresh_token = Mock()
-    current_request = AsyncMock()
     hass.data[DOMAIN] = {}
 
-    def get_extra_info(key: str) -> Any:
+    def get_extra_info(key: str) -> Any | None:
         if key == "sslcontext":
             return True
 
         if key == "peername":
             return ("127.0.0.42", 8123)
+
+        return None
 
     mocked_transport = Mock()
     mocked_transport.get_extra_info = get_extra_info

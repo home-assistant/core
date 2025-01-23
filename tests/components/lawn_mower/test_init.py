@@ -52,7 +52,7 @@ class MockLawnMowerEntity(LawnMowerEntity):
 
 
 @pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None, None, None]:
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
     """Mock config flow."""
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
 
@@ -67,8 +67,8 @@ async def test_lawn_mower_setup(hass: HomeAssistant) -> None:
         hass: HomeAssistant, config_entry: ConfigEntry
     ) -> bool:
         """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setup(
-            config_entry, Platform.LAWN_MOWER
+        await hass.config_entries.async_forward_entry_setups(
+            config_entry, [Platform.LAWN_MOWER]
         )
         return True
 
@@ -176,4 +176,4 @@ async def test_lawn_mower_state(hass: HomeAssistant) -> None:
     lawn_mower.hass = hass
     lawn_mower.start_mowing()
 
-    assert lawn_mower.state == str(LawnMowerActivity.MOWING)
+    assert lawn_mower.state == LawnMowerActivity.MOWING

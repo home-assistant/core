@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import debounce
 from homeassistant.util.dt import utcnow
 
-from ..common import async_fire_time_changed
+from tests.common import async_fire_time_changed
 
 _LOGGER = logging.getLogger(__name__)
 

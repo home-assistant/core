@@ -1,9 +1,9 @@
 {
   "domain": "tplink",
   "name": "TP-Link Smart Home",
-  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco", "@sdb9696"],
+  "codeowners": ["@rytilahti", "@bdraco", "@sdb9696"],
   "config_flow": true,
-  "dependencies": ["network"],
+  "dependencies": ["network", "ffmpeg", "stream"],
   "dhcp": [
     {
       "registered_devices": true
@@ -38,6 +38,10 @@
     },
     {
       "hostname": "k[lps]*",
+      "macaddress": "5091E3*"
+    },
+    {
+      "hostname": "p1*",
       "macaddress": "5091E3*"
     },
     {
@@ -177,7 +181,7 @@
       "macaddress": "1C61B4*"
     },
     {
-      "hostname": "l5*",
+      "hostname": "l[59]*",
       "macaddress": "5CE931*"
     },
     {
@@ -185,8 +189,12 @@
       "macaddress": "3C52A1*"
     },
     {
-      "hostname": "l5*",
+      "hostname": "l[59]*",
       "macaddress": "5C628B*"
+    },
+    {
+      "hostname": "l[59]*",
+      "macaddress": "14EBB6*"
     },
     {
       "hostname": "tp*",
@@ -217,11 +225,23 @@
       "macaddress": "3C52A1*"
     },
     {
+      "hostname": "h1*",
+      "macaddress": "3C52A1*"
+    },
+    {
       "hostname": "l9*",
       "macaddress": "A842A1*"
     },
     {
+      "hostname": "p1*",
+      "macaddress": "A842A1*"
+    },
+    {
       "hostname": "l9*",
+      "macaddress": "3460F9*"
+    },
+    {
+      "hostname": "p1*",
       "macaddress": "3460F9*"
     },
     {
@@ -230,6 +250,10 @@
     },
     {
       "hostname": "k[lps]*",
+      "macaddress": "74DA88*"
+    },
+    {
+      "hostname": "p1*",
       "macaddress": "74DA88*"
     },
     {
@@ -263,11 +287,18 @@
     {
       "hostname": "l9*",
       "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "ks2*",
+      "macaddress": "F0A731*"
+    },
+    {
+      "hostname": "kh1*",
+      "macaddress": "F0A731*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "iot_class": "local_polling",
   "loggers": ["kasa"],
-  "quality_scale": "platinum",
-  "requirements": ["python-kasa[speedups]==0.6.2.1"]
+  "requirements": ["python-kasa[speedups]==0.9.1"]
 }

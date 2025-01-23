@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from jvcprojector import (
     JvcProjector,
@@ -40,7 +41,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         self.device = device
         self.unique_id = format_mac(device.mac)
 
-    async def _async_update_data(self) -> dict[str, str]:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest state data."""
         try:
             state = await self.device.get_state()

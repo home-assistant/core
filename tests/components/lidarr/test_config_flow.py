@@ -1,12 +1,14 @@
 """Test Lidarr config flow."""
 
 from homeassistant.components.lidarr.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import CONF_DATA, MOCK_INPUT, ComponentSetup
+
+from tests.common import MockConfigEntry
 
 
 async def test_flow_user_form(hass: HomeAssistant, connection) -> None:
@@ -95,20 +97,14 @@ async def test_flow_user_unknown_error(hass: HomeAssistant, unknown) -> None:
 
 
 async def test_flow_reauth(
-    hass: HomeAssistant, setup_integration: ComponentSetup, connection
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    connection,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Test reauth."""
     await setup_integration()
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=CONF_DATA,
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     result = await hass.config_entries.flow.async_configure(
@@ -123,4 +119,4 @@ async def test_flow_reauth(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
-    assert entry.data[CONF_API_KEY] == "abc123"
+    assert config_entry.data[CONF_API_KEY] == "abc123"

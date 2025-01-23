@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import hashlib
 import logging
-from typing import Any
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
@@ -23,19 +22,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 from . import AndroidTVConfigEntry
 from .const import (
     CONF_APPS,
     CONF_EXCLUDE_UNNAMED_APPS,
     CONF_GET_SOURCES,
-    CONF_SCREENCAP,
+    CONF_SCREENCAP_INTERVAL,
     CONF_TURN_OFF_COMMAND,
     CONF_TURN_ON_COMMAND,
     DEFAULT_EXCLUDE_UNNAMED_APPS,
     DEFAULT_GET_SOURCES,
-    DEFAULT_SCREENCAP,
+    DEFAULT_SCREENCAP_INTERVAL,
     DEVICE_ANDROIDTV,
     SIGNAL_CONFIG_ENTITY,
 )
@@ -47,8 +46,6 @@ ATTR_ADB_RESPONSE = "adb_response"
 ATTR_DEVICE_PATH = "device_path"
 ATTR_HDMI_INPUT = "hdmi_input"
 ATTR_LOCAL_PATH = "local_path"
-
-MIN_TIME_BETWEEN_SCREENCAPS = timedelta(seconds=60)
 
 SERVICE_ADB_COMMAND = "adb_command"
 SERVICE_DOWNLOAD = "download"
@@ -87,7 +84,7 @@ async def async_setup_entry(
         "adb_command",
     )
     platform.async_register_entity_service(
-        SERVICE_LEARN_SENDEVENT, {}, "learn_sendevent"
+        SERVICE_LEARN_SENDEVENT, None, "learn_sendevent"
     )
     platform.async_register_entity_service(
         SERVICE_DOWNLOAD,
@@ -125,7 +122,8 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
         self._app_name_to_id: dict[str, str] = {}
         self._get_sources = DEFAULT_GET_SOURCES
         self._exclude_unnamed_apps = DEFAULT_EXCLUDE_UNNAMED_APPS
-        self._screencap = DEFAULT_SCREENCAP
+        self._screencap_delta: timedelta | None = None
+        self._last_screencap: datetime | None = None
         self.turn_on_command: str | None = None
         self.turn_off_command: str | None = None
 
@@ -159,7 +157,13 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
         self._exclude_unnamed_apps = options.get(
             CONF_EXCLUDE_UNNAMED_APPS, DEFAULT_EXCLUDE_UNNAMED_APPS
         )
-        self._screencap = options.get(CONF_SCREENCAP, DEFAULT_SCREENCAP)
+        screencap_interval: int = options.get(
+            CONF_SCREENCAP_INTERVAL, DEFAULT_SCREENCAP_INTERVAL
+        )
+        if screencap_interval > 0:
+            self._screencap_delta = timedelta(minutes=screencap_interval)
+        else:
+            self._screencap_delta = None
         self.turn_off_command = options.get(CONF_TURN_OFF_COMMAND)
         self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
 
@@ -183,7 +187,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
     async def _async_get_screencap(self, prev_app_id: str | None = None) -> None:
         """Take a screen capture from the device when enabled."""
         if (
-            not self._screencap
+            not self._screencap_delta
             or self.state in {MediaPlayerState.OFF, None}
             or not self.available
         ):
@@ -193,11 +197,18 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             force: bool = prev_app_id is not None
             if force:
                 force = prev_app_id != self._attr_app_id
-            await self._adb_get_screencap(no_throttle=force)
+            await self._adb_get_screencap(force)
 
-    @Throttle(MIN_TIME_BETWEEN_SCREENCAPS)
-    async def _adb_get_screencap(self, **kwargs: Any) -> None:
-        """Take a screen capture from the device every 60 seconds."""
+    async def _adb_get_screencap(self, force: bool = False) -> None:
+        """Take a screen capture from the device every configured minutes."""
+        time_elapsed = self._screencap_delta is not None and (
+            self._last_screencap is None
+            or (utcnow() - self._last_screencap) >= self._screencap_delta
+        )
+        if not (force or time_elapsed):
+            return
+
+        self._last_screencap = utcnow()
         if media_data := await self._adb_screencap():
             self._media_image = media_data, "image/png"
             self._attr_media_image_hash = hashlib.sha256(media_data).hexdigest()[:16]
@@ -306,7 +317,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
                 msg,
                 title="Android Debug Bridge",
             )
-            _LOGGER.info("%s", msg)
+            _LOGGER.debug("%s", msg)
 
     @adb_decorator()
     async def service_download(self, device_path: str, local_path: str) -> None:

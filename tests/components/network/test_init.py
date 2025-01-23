@@ -20,6 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
+from tests.typing import WebSocketGenerator
+
 _NO_LOOPBACK_IPADDR = "192.168.1.5"
 _LOOPBACK_IPADDR = "127.0.0.1"
 
@@ -34,6 +36,7 @@ def _mock_cond_socket(sockname):
     class CondMockSock(MagicMock):
         def connect(self, addr):
             """Mock connect that stores addr."""
+            # pylint: disable-next=attribute-defined-outside-init
             self._addr = addr[0]
 
         def getsockname(self):
@@ -409,7 +412,9 @@ async def test_interfaces_configured_from_storage(
 
 
 async def test_interfaces_configured_from_storage_websocket_update(
-    hass: HomeAssistant, hass_ws_client, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test settings from storage can be updated via websocket api."""
     hass_storage[STORAGE_KEY] = {
@@ -881,3 +886,42 @@ async def test_async_get_announce_addresses_no_source_ip(hass: HomeAssistant) ->
         "172.16.1.5",
         "fe80::dead:beef:dead:beef",
     ]
+
+
+async def test_websocket_network_url(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the network/url websocket command."""
+    assert await async_setup_component(hass, "network", {})
+
+    client = await hass_ws_client(hass)
+
+    with (
+        patch(
+            "homeassistant.helpers.network._get_internal_url", return_value="internal"
+        ),
+        patch("homeassistant.helpers.network._get_cloud_url", return_value="cloud"),
+    ):
+        await client.send_json({"id": 1, "type": "network/url"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "internal": "internal",
+            "external": "cloud",
+            "cloud": "cloud",
+        }
+
+    # Test with no cloud URL
+    with (
+        patch(
+            "homeassistant.helpers.network._get_internal_url", return_value="internal"
+        ),
+    ):
+        await client.send_json({"id": 2, "type": "network/url"})
+        msg = await client.receive_json()
+        assert msg["success"]
+        assert msg["result"] == {
+            "internal": "internal",
+            "external": None,
+            "cloud": None,
+        }

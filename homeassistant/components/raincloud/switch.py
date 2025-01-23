@@ -7,25 +7,28 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    ALLOWED_WATERING_TIME,
-    CONF_WATERING_TIME,
-    DATA_RAINCLOUD,
-    DEFAULT_WATERING_TIME,
-    SWITCHES,
-    RainCloudEntity,
-)
+from .const import DATA_RAINCLOUD
+from .entity import RainCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+ALLOWED_WATERING_TIME = [5, 10, 15, 30, 45, 60]
+CONF_WATERING_TIME = "watering_minutes"
+DEFAULT_WATERING_TIME = 15
+
+SWITCHES = ["auto_watering", "manual_watering"]
+
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SWITCHES)): vol.All(
             cv.ensure_list, [vol.In(SWITCHES)]

@@ -15,14 +15,16 @@ from unittest.mock import patch
 from freezegun import freeze_time
 import orjson
 import pytest
+from syrupy import SnapshotAssertion
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.components import group
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -60,6 +62,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
     hass.config.units = UnitSystem(
         "custom",
         accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+        area=UnitOfArea.SQUARE_METERS,
         conversions={},
         length=UnitOfLength.METERS,
         mass=UnitOfMass.GRAMS,
@@ -1643,6 +1646,18 @@ def test_base64_decode(hass: HomeAssistant) -> None:
         ).async_render()
         == "homeassistant"
     )
+    assert (
+        template.Template(
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode(None) }}', hass
+        ).async_render()
+        == b"homeassistant"
+    )
+    assert (
+        template.Template(
+            '{{ "aG9tZWFzc2lzdGFudA==" | base64_decode("ascii") }}', hass
+        ).async_render()
+        == "homeassistant"
+    )
 
 
 def test_slugify(hass: HomeAssistant) -> None:
@@ -1955,7 +1970,7 @@ def test_is_state(hass: HomeAssistant) -> None:
 
 def test_is_state_attr(hass: HomeAssistant) -> None:
     """Test is_state_attr method."""
-    hass.states.async_set("test.object", "available", {"mode": "on"})
+    hass.states.async_set("test.object", "available", {"mode": "on", "exists": None})
     tpl = template.Template(
         """
 {% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
@@ -1987,6 +2002,22 @@ def test_is_state_attr(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "test.object"
+
+    tpl = template.Template(
+        """
+{% if is_state_attr("test.object", "exists", None) %}yes{% else %}no{% endif %}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{% if is_state_attr("test.object", "noexist", None) %}yes{% else %}no{% endif %}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == "no"
 
 
 def test_state_attr(hass: HomeAssistant) -> None:
@@ -2055,7 +2086,7 @@ def test_states_function(hass: HomeAssistant) -> None:
 
 async def test_state_translated(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
-):
+) -> None:
     """Test state_translated method."""
     assert await async_setup_component(
         hass,
@@ -2800,7 +2831,7 @@ def test_version(hass: HomeAssistant) -> None:
         "{{ version('2099.9.9') < '2099.9.10' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result is True
+    assert filter_result is function_result is True
 
     filter_result = template.Template(
         "{{ '2099.9.9' | version == '2099.9.9' }}",
@@ -2810,7 +2841,7 @@ def test_version(hass: HomeAssistant) -> None:
         "{{ version('2099.9.9') == '2099.9.9' }}",
         hass,
     ).async_render()
-    assert filter_result == function_result is True
+    assert filter_result is function_result is True
 
     with pytest.raises(TemplateError):
         template.Template(
@@ -3867,8 +3898,8 @@ async def test_device_attr(
     assert_result_info(info, None)
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ device_attr(56, 'id') }}")
         assert_result_info(info, None)
 
     # Test non existing device ids (is_device_attr)
@@ -3876,8 +3907,8 @@ async def test_device_attr(
     assert_result_info(info, False)
     assert info.rate_limit is None
 
+    info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
     with pytest.raises(TemplateError):
-        info = render_to_info(hass, "{{ is_device_attr(56, 'id', 'test') }}")
         assert_result_info(info, False)
 
     # Test non existing entity id (device_attr)
@@ -3977,6 +4008,48 @@ async def test_device_attr(
     )
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_config_entry_attr(hass: HomeAssistant) -> None:
+    """Test config entry attr."""
+    info = {
+        "domain": "mock_light",
+        "title": "mock title",
+        "source": config_entries.SOURCE_BLUETOOTH,
+        "disabled_by": config_entries.ConfigEntryDisabler.USER,
+    }
+    config_entry = MockConfigEntry(**info)
+    config_entry.add_to_hass(hass)
+
+    info["state"] = config_entries.ConfigEntryState.NOT_LOADED
+
+    for key, value in info.items():
+        tpl = template.Template(
+            "{{ config_entry_attr('" + config_entry.entry_id + "', '" + key + "') }}",
+            hass,
+        )
+        assert tpl.async_render(parse_result=False) == str(value)
+
+    for config_entry_id, key in (
+        (config_entry.entry_id, "invalid_key"),
+        (56, "domain"),
+    ):
+        with pytest.raises(TemplateError):
+            template.Template(
+                "{{ config_entry_attr("
+                + json.dumps(config_entry_id)
+                + ", '"
+                + key
+                + "') }}",
+                hass,
+            ).async_render()
+
+    assert (
+        template.Template(
+            "{{ config_entry_attr('invalid_id', 'domain') }}", hass
+        ).async_render(parse_result=False)
+        == "None"
+    )
 
 
 async def test_issues(hass: HomeAssistant, issue_registry: ir.IssueRegistry) -> None:
@@ -4494,7 +4567,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     hass.states.async_set("cover.office_window", "closed")
     hass.states.async_set("cover.office_skylight", "open")
     hass.states.async_set("cover.x_skylight", "open")
-    hass.states.async_set("binary_sensor.door", "open")
+    hass.states.async_set("binary_sensor.door", "on")
     await hass.async_block_till_done()
 
     info = render_to_info(hass, template_complex_str)
@@ -4504,7 +4577,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     assert info.all_states is True
     assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
-    hass.states.async_set("binary_sensor.door", "closed")
+    hass.states.async_set("binary_sensor.door", "off")
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains
@@ -5390,22 +5463,6 @@ async def test_unavailable_states(hass: HomeAssistant) -> None:
     assert tpl.async_render() == "light.none, light.unavailable, light.unknown"
 
 
-async def test_legacy_templates(hass: HomeAssistant) -> None:
-    """Test if old template behavior works when legacy templates are enabled."""
-    hass.states.async_set("sensor.temperature", "12")
-
-    assert (
-        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
-        == 12
-    )
-
-    await async_process_ha_core_config(hass, {"legacy_templates": True})
-    assert (
-        template.Template("{{ states.sensor.temperature.state }}", hass).async_render()
-        == "12"
-    )
-
-
 async def test_no_result_parsing(hass: HomeAssistant) -> None:
     """Test if templates results are not parsed."""
     hass.states.async_set("sensor.temperature", "12")
@@ -6198,3 +6255,348 @@ async def test_template_thread_safety_checks(hass: HomeAssistant) -> None:
         await hass.async_add_executor_job(template_obj.async_render_to_info)
 
     assert template_obj.async_render_to_info().result() == 23
+
+
+@pytest.mark.parametrize(
+    ("cola", "colb", "expected"),
+    [
+        ([1, 2], [3, 4], [(1, 3), (2, 4)]),
+        ([1, 2], [3, 4, 5], [(1, 3), (2, 4)]),
+        ([1, 2, 3, 4], [3, 4], [(1, 3), (2, 4)]),
+    ],
+)
+def test_zip(hass: HomeAssistant, cola, colb, expected) -> None:
+    """Test zip."""
+    assert (
+        template.Template("{{ zip(cola, colb) | list }}", hass).async_render(
+            {"cola": cola, "colb": colb}
+        )
+        == expected
+    )
+    assert (
+        template.Template(
+            "[{% for a, b in zip(cola, colb) %}({{a}}, {{b}}), {% endfor %}]", hass
+        ).async_render({"cola": cola, "colb": colb})
+        == expected
+    )
+
+
+@pytest.mark.parametrize(
+    ("col", "expected"),
+    [
+        ([(1, 3), (2, 4)], [(1, 2), (3, 4)]),
+        (["ax", "by", "cz"], [("a", "b", "c"), ("x", "y", "z")]),
+    ],
+)
+def test_unzip(hass: HomeAssistant, col, expected) -> None:
+    """Test unzipping using zip."""
+    assert (
+        template.Template("{{ zip(*col) | list }}", hass).async_render({"col": col})
+        == expected
+    )
+    assert (
+        template.Template(
+            "{% set a, b = zip(*col) %}[{{a}}, {{b}}]", hass
+        ).async_render({"col": col})
+        == expected
+    )
+
+
+def test_template_output_exceeds_maximum_size(hass: HomeAssistant) -> None:
+    """Test template output exceeds maximum size."""
+    tpl = template.Template("{{ 'a' * 1024 * 257 }}", hass)
+    with pytest.raises(TemplateError):
+        tpl.async_render()
+
+
+@pytest.mark.parametrize(
+    ("service_response"),
+    [
+        {
+            "calendar.sports": {
+                "events": [
+                    {
+                        "start": "2024-02-27T17:00:00-06:00",
+                        "end": "2024-02-27T18:00:00-06:00",
+                        "summary": "Basketball vs. Rockets",
+                        "description": "",
+                    }
+                ]
+            },
+            "calendar.local_furry_events": {"events": []},
+            "calendar.yap_house_schedules": {
+                "events": [
+                    {
+                        "start": "2024-02-26T08:00:00-06:00",
+                        "end": "2024-02-26T09:00:00-06:00",
+                        "summary": "Dr. Appt",
+                        "description": "",
+                    },
+                    {
+                        "start": "2024-02-28T20:00:00-06:00",
+                        "end": "2024-02-28T21:00:00-06:00",
+                        "summary": "Bake a cake",
+                        "description": "something good",
+                    },
+                ]
+            },
+        },
+        {
+            "binary_sensor.workday": {"workday": True},
+            "binary_sensor.workday2": {"workday": False},
+        },
+        {
+            "weather.smhi_home": {
+                "forecast": [
+                    {
+                        "datetime": "2024-03-31T16:00:00",
+                        "condition": "cloudy",
+                        "wind_bearing": 79,
+                        "cloud_coverage": 100,
+                        "temperature": 10,
+                        "templow": 4,
+                        "pressure": 998,
+                        "wind_gust_speed": 21.6,
+                        "wind_speed": 11.88,
+                        "precipitation": 0.2,
+                        "humidity": 87,
+                    },
+                    {
+                        "datetime": "2024-04-01T12:00:00",
+                        "condition": "rainy",
+                        "wind_bearing": 17,
+                        "cloud_coverage": 100,
+                        "temperature": 6,
+                        "templow": 1,
+                        "pressure": 999,
+                        "wind_gust_speed": 20.52,
+                        "wind_speed": 8.64,
+                        "precipitation": 2.2,
+                        "humidity": 88,
+                    },
+                    {
+                        "datetime": "2024-04-02T12:00:00",
+                        "condition": "cloudy",
+                        "wind_bearing": 17,
+                        "cloud_coverage": 100,
+                        "temperature": 0,
+                        "templow": -3,
+                        "pressure": 1003,
+                        "wind_gust_speed": 57.24,
+                        "wind_speed": 30.6,
+                        "precipitation": 1.3,
+                        "humidity": 71,
+                    },
+                ]
+            },
+            "weather.forecast_home": {
+                "forecast": [
+                    {
+                        "condition": "cloudy",
+                        "precipitation_probability": 6.6,
+                        "datetime": "2024-03-31T10:00:00+00:00",
+                        "wind_bearing": 71.8,
+                        "temperature": 10.9,
+                        "templow": 6.5,
+                        "wind_gust_speed": 24.1,
+                        "wind_speed": 13.7,
+                        "precipitation": 0,
+                        "humidity": 71,
+                    },
+                    {
+                        "condition": "cloudy",
+                        "precipitation_probability": 8,
+                        "datetime": "2024-04-01T10:00:00+00:00",
+                        "wind_bearing": 350.6,
+                        "temperature": 10.2,
+                        "templow": 3.4,
+                        "wind_gust_speed": 38.2,
+                        "wind_speed": 21.6,
+                        "precipitation": 0,
+                        "humidity": 79,
+                    },
+                    {
+                        "condition": "snowy",
+                        "precipitation_probability": 67.4,
+                        "datetime": "2024-04-02T10:00:00+00:00",
+                        "wind_bearing": 24.5,
+                        "temperature": 3,
+                        "templow": 0,
+                        "wind_gust_speed": 64.8,
+                        "wind_speed": 37.4,
+                        "precipitation": 2.3,
+                        "humidity": 77,
+                    },
+                ]
+            },
+        },
+        {
+            "vacuum.deebot_n8_plus_1": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "ok",
+                    }
+                },
+                "header": {
+                    "ver": "0.0.1",
+                },
+            },
+            "vacuum.deebot_n8_plus_2": {
+                "payloadType": "j",
+                "resp": {
+                    "body": {
+                        "msg": "ok",
+                    }
+                },
+                "header": {
+                    "ver": "0.0.1",
+                },
+            },
+        },
+    ],
+    ids=["calendar", "workday", "weather", "vacuum"],
+)
+async def test_merge_response(
+    hass: HomeAssistant,
+    service_response: dict,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter."""
+
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+
+    tpl = template.Template(_template, hass)
+    assert service_response == snapshot(name="a_response")
+    assert tpl.async_render() == snapshot(name="b_rendered")
+
+
+async def test_merge_response_with_entity_id_in_response(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with empty lists."""
+
+    service_response = {
+        "test.response": {"some_key": True, "entity_id": "test.response"},
+        "test.response2": {"some_key": False, "entity_id": "test.response2"},
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    with pytest.raises(
+        TemplateError,
+        match="ValueError: Response dictionary already contains key 'entity_id'",
+    ):
+        template.Template(_template, hass).async_render()
+
+    service_response = {
+        "test.response": {
+            "happening": [
+                {
+                    "start": "2024-02-27T17:00:00-06:00",
+                    "end": "2024-02-27T18:00:00-06:00",
+                    "summary": "Magic day",
+                    "entity_id": "test.response",
+                }
+            ]
+        }
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    with pytest.raises(
+        TemplateError,
+        match="ValueError: Response dictionary already contains key 'entity_id'",
+    ):
+        template.Template(_template, hass).async_render()
+
+
+async def test_merge_response_with_empty_response(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with empty lists."""
+
+    service_response = {
+        "calendar.sports": {"events": []},
+        "calendar.local_furry_events": {"events": []},
+        "calendar.yap_house_schedules": {"events": []},
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    tpl = template.Template(_template, hass)
+    assert service_response == snapshot(name="a_response")
+    assert tpl.async_render() == snapshot(name="b_rendered")
+
+
+async def test_response_empty_dict(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with empty dict."""
+
+    service_response = {}
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render() == []
+
+
+async def test_response_incorrect_value(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the merge_response function/filter with incorrect response."""
+
+    service_response = "incorrect"
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
+        template.Template(_template, hass).async_render()
+
+
+async def test_merge_response_with_incorrect_response(hass: HomeAssistant) -> None:
+    """Test the merge_response function/filter with empty response should raise."""
+
+    service_response = {"calendar.sports": []}
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    tpl = template.Template(_template, hass)
+    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
+        tpl.async_render()
+
+    service_response = {
+        "binary_sensor.workday": [],
+    }
+    _template = "{{ merge_response(" + str(service_response) + ") }}"
+    tpl = template.Template(_template, hass)
+    with pytest.raises(TemplateError, match="TypeError: Response is not a dictionary"):
+        tpl.async_render()
+
+
+def test_warn_no_hass(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+    """Test deprecation warning when instantiating Template without hass."""
+
+    message = "Detected code that creates a template object without passing hass"
+    template.Template("blah")
+    assert message in caplog.text
+    caplog.clear()
+
+    template.Template("blah", None)
+    assert message in caplog.text
+    caplog.clear()
+
+    template.Template("blah", hass)
+    assert message not in caplog.text
+    caplog.clear()
+
+
+async def test_merge_response_not_mutate_original_object(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test the merge_response does not mutate original service response value."""
+
+    value = '{"calendar.family": {"events": [{"summary": "An event"}]}'
+    _template = (
+        "{% set calendar_response = " + value + "} %}"
+        "{{ merge_response(calendar_response) }}"
+        # We should be able to merge the same response again
+        # as the merge is working on a copy of the original object (response)
+        "{{ merge_response(calendar_response) }}"
+    )
+
+    tpl = template.Template(_template, hass)
+    assert tpl.async_render()

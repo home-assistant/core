@@ -1,4 +1,4 @@
-"""Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+"""Support for Climate entities of the Evohome integration."""
 
 from __future__ import annotations
 
@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 import evohomeasync2 as evo
 from evohomeasync2.schema.const import (
     SZ_ACTIVE_FAULTS,
-    SZ_ALLOWED_SYSTEM_MODES,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_ID,
     SZ_SYSTEM_MODE,
@@ -37,19 +36,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
-from . import (
+from .const import (
     ATTR_DURATION_DAYS,
     ATTR_DURATION_HOURS,
     ATTR_DURATION_UNTIL,
     ATTR_SYSTEM_MODE,
     ATTR_ZONE_TEMP,
-    CONF_LOCATION_IDX,
-    SVC_RESET_ZONE_OVERRIDE,
-    SVC_SET_SYSTEM_MODE,
-    EvoChild,
-    EvoDevice,
-)
-from .const import (
     DOMAIN,
     EVO_AUTO,
     EVO_AUTOECO,
@@ -61,7 +53,9 @@ from .const import (
     EVO_PERMOVER,
     EVO_RESET,
     EVO_TEMPOVER,
+    EvoService,
 )
+from .entity import EvoChild, EvoDevice
 
 if TYPE_CHECKING:
     from . import EvoBroker
@@ -71,8 +65,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PRESET_RESET = "Reset"  # reset all child zones to EVO_FOLLOW
 PRESET_CUSTOM = "Custom"
-
-HA_HVAC_TO_TCS = {HVACMode.OFF: EVO_HEATOFF, HVACMode.HEAT: EVO_AUTO}
 
 TCS_PRESET_TO_HA = {
     EVO_AWAY: PRESET_AWAY,
@@ -116,8 +108,8 @@ async def async_setup_platform(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
         broker.tcs.modelType,
         broker.tcs.systemId,
-        broker.tcs.location.name,
-        broker.params[CONF_LOCATION_IDX],
+        broker.loc.name,
+        broker.loc_idx,
     )
 
     entities: list[EvoClimateEntity] = [EvoController(broker, broker.tcs)]
@@ -154,26 +146,21 @@ async def async_setup_platform(
 
 
 class EvoClimateEntity(EvoDevice, ClimateEntity):
-    """Base for an evohome Climate device."""
+    """Base for any evohome-compatible climate entity (controller, zone)."""
 
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return a list of available hvac operation modes."""
-        return list(HA_HVAC_TO_TCS)
 
 
 class EvoZone(EvoChild, EvoClimateEntity):
-    """Base for a Honeywell TCC Zone."""
+    """Base for any evohome-compatible heating zone."""
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
     _evo_device: evo.Zone  # mypy hint
 
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.Zone) -> None:
-        """Initialize a Honeywell TCC Zone."""
+        """Initialize an evohome-compatible heating zone."""
 
         super().__init__(evo_broker, evo_device)
         self._evo_id = evo_device.zoneId
@@ -200,11 +187,11 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
-        if service == SVC_RESET_ZONE_OVERRIDE:
+        if service == EvoService.RESET_ZONE_OVERRIDE:
             await self._evo_broker.call_client_api(self._evo_device.reset_mode())
             return
 
-        # otherwise it is SVC_SET_ZONE_OVERRIDE
+        # otherwise it is EvoService.SET_ZONE_OVERRIDE
         temperature = max(min(data[ATTR_ZONE_TEMP], self.max_temp), self.min_temp)
 
         if ATTR_DURATION_UNTIL in data:
@@ -348,7 +335,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
 
 class EvoController(EvoClimateEntity):
-    """Base for a Honeywell TCC Controller/Location.
+    """Base for any evohome-compatible controller.
 
     The Controller (aka TCS, temperature control system) is the parent of all the child
     (CH/DHW) devices. It is implemented as a Climate entity to expose the controller's
@@ -363,7 +350,7 @@ class EvoController(EvoClimateEntity):
     _evo_device: evo.ControlSystem  # mypy hint
 
     def __init__(self, evo_broker: EvoBroker, evo_device: evo.ControlSystem) -> None:
-        """Initialize a Honeywell TCC Controller/Location."""
+        """Initialize an evohome-compatible controller."""
 
         super().__init__(evo_broker, evo_device)
         self._evo_id = evo_device.systemId
@@ -371,9 +358,9 @@ class EvoController(EvoClimateEntity):
         self._attr_unique_id = evo_device.systemId
         self._attr_name = evo_device.location.name
 
-        modes = [m[SZ_SYSTEM_MODE] for m in evo_broker.config[SZ_ALLOWED_SYSTEM_MODES]]
+        self._evo_modes = [m[SZ_SYSTEM_MODE] for m in evo_device.allowedSystemModes]
         self._attr_preset_modes = [
-            TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
+            TCS_PRESET_TO_HA[m] for m in self._evo_modes if m in list(TCS_PRESET_TO_HA)
         ]
         if self._attr_preset_modes:
             self._attr_supported_features = ClimateEntityFeature.PRESET_MODE
@@ -386,9 +373,9 @@ class EvoController(EvoClimateEntity):
 
         Data validation is not required, it will have been done upstream.
         """
-        if service == SVC_SET_SYSTEM_MODE:
+        if service == EvoService.SET_SYSTEM_MODE:
             mode = data[ATTR_SYSTEM_MODE]
-        else:  # otherwise it is SVC_RESET_SYSTEM
+        else:  # otherwise it is EvoService.RESET_SYSTEM
             mode = EVO_RESET
 
         if ATTR_DURATION_DAYS in data:
@@ -407,14 +394,14 @@ class EvoController(EvoClimateEntity):
         """Set a Controller to any of its native EVO_* operating modes."""
         until = dt_util.as_utc(until) if until else None
         await self._evo_broker.call_client_api(
-            self._evo_tcs.set_mode(mode, until=until)  # type: ignore[arg-type]
+            self._evo_device.set_mode(mode, until=until)  # type: ignore[arg-type]
         )
 
     @property
     def hvac_mode(self) -> HVACMode:
         """Return the current operating mode of a Controller."""
-        tcs_mode = self._evo_tcs.system_mode
-        return HVACMode.OFF if tcs_mode == EVO_HEATOFF else HVACMode.HEAT
+        evo_mode = self._evo_device.system_mode
+        return HVACMode.OFF if evo_mode in (EVO_HEATOFF, "Off") else HVACMode.HEAT
 
     @property
     def current_temperature(self) -> float | None:
@@ -424,7 +411,7 @@ class EvoController(EvoClimateEntity):
         """
         temps = [
             z.temperature
-            for z in self._evo_tcs.zones.values()
+            for z in self._evo_device.zones.values()
             if z.temperature is not None
         ]
         return round(sum(temps) / len(temps), 1) if temps else None
@@ -432,9 +419,9 @@ class EvoController(EvoClimateEntity):
     @property
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
-        if not self._evo_tcs.system_mode:
+        if not self._evo_device.system_mode:
             return None
-        return TCS_PRESET_TO_HA.get(self._evo_tcs.system_mode)
+        return TCS_PRESET_TO_HA.get(self._evo_device.system_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Raise exception as Controllers don't have a target temperature."""
@@ -442,9 +429,13 @@ class EvoController(EvoClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set an operating mode for a Controller."""
-        if not (tcs_mode := HA_HVAC_TO_TCS.get(hvac_mode)):
+        if hvac_mode == HVACMode.HEAT:
+            evo_mode = EVO_AUTO if EVO_AUTO in self._evo_modes else "Heat"
+        elif hvac_mode == HVACMode.OFF:
+            evo_mode = EVO_HEATOFF if EVO_HEATOFF in self._evo_modes else "Off"
+        else:
             raise HomeAssistantError(f"Invalid hvac_mode: {hvac_mode}")
-        await self._set_tcs_mode(tcs_mode)
+        await self._set_tcs_mode(evo_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to 'Auto' mode."""
@@ -457,6 +448,6 @@ class EvoController(EvoClimateEntity):
         attrs = self._device_state_attrs
         for attr in STATE_ATTRS_TCS:
             if attr == SZ_ACTIVE_FAULTS:
-                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
+                attrs["activeSystemFaults"] = getattr(self._evo_device, attr)
             else:
-                attrs[attr] = getattr(self._evo_tcs, attr)
+                attrs[attr] = getattr(self._evo_device, attr)

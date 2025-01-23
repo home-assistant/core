@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
+
+from dateutil import parser
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,7 +24,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import get_time_zone
 
 from . import AirNowConfigEntry, AirNowDataUpdateCoordinator
 from .const import (
@@ -41,6 +41,7 @@ from .const import (
     ATTR_API_STATION_LONGITUDE,
     DEFAULT_NAME,
     DOMAIN,
+    US_TZ_OFFSETS,
 )
 
 ATTRIBUTION = "Data provided by AirNow"
@@ -70,6 +71,18 @@ def station_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
     return {}
 
 
+def aqi_extra_attrs(data: dict[str, Any]) -> dict[str, Any]:
+    """Process extra attributes for main AQI sensor."""
+    return {
+        ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
+        ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
+        ATTR_TIME: parser.parse(
+            f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}:00 {data[ATTR_API_REPORT_TZ]}",
+            tzinfos=US_TZ_OFFSETS,
+        ).isoformat(),
+    }
+
+
 SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
     AirNowEntityDescription(
         key=ATTR_API_AQI,
@@ -77,16 +90,7 @@ SENSOR_TYPES: tuple[AirNowEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.AQI,
         value_fn=lambda data: data.get(ATTR_API_AQI),
-        extra_state_attributes_fn=lambda data: {
-            ATTR_DESCR: data[ATTR_API_AQI_DESCRIPTION],
-            ATTR_LEVEL: data[ATTR_API_AQI_LEVEL],
-            ATTR_TIME: datetime.strptime(
-                f"{data[ATTR_API_REPORT_DATE]} {data[ATTR_API_REPORT_HOUR]}",
-                "%Y-%m-%d %H",
-            )
-            .replace(tzinfo=get_time_zone(data[ATTR_API_REPORT_TZ]))
-            .isoformat(),
-        },
+        extra_state_attributes_fn=aqi_extra_attrs,
     ),
     AirNowEntityDescription(
         key=ATTR_API_PM10,

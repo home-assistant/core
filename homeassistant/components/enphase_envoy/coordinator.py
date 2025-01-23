@@ -18,29 +18,37 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 import homeassistant.util.dt as dt_util
 
-from .const import INVALID_AUTH_ERRORS
+from .const import DOMAIN, INVALID_AUTH_ERRORS
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
 STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
+NOTIFICATION_ID = "enphase_envoy_notification"
 
 _LOGGER = logging.getLogger(__name__)
+
+
+type EnphaseConfigEntry = ConfigEntry[EnphaseUpdateCoordinator]
 
 
 class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """DataUpdateCoordinator to gather data from any envoy."""
 
     envoy_serial_number: str
+    envoy_firmware: str
+    config_entry: EnphaseConfigEntry
 
-    def __init__(self, hass: HomeAssistant, envoy: Envoy, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
+    ) -> None:
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
         entry_data = entry.data
-        self.entry = entry
         self.username = entry_data[CONF_USERNAME]
         self.password = entry_data[CONF_PASSWORD]
         self._setup_complete = False
+        self.envoy_firmware = ""
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
         super().__init__(
             hass,
@@ -99,7 +107,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await envoy.setup()
         assert envoy.serial_number is not None
         self.envoy_serial_number = envoy.serial_number
-        if token := self.entry.data.get(CONF_TOKEN):
+        if token := self.config_entry.data.get(CONF_TOKEN):
             with contextlib.suppress(*INVALID_AUTH_ERRORS):
                 # Always set the username and password
                 # so we can refresh the token if needed
@@ -128,9 +136,9 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # as long as the token is valid
         _LOGGER.debug("%s: Updating token in config entry from auth", self.name)
         self.hass.config_entries.async_update_entry(
-            self.entry,
+            self.config_entry,
             data={
-                **self.entry.data,
+                **self.config_entry.data,
                 CONF_TOKEN: envoy.auth.token,
             },
         )
@@ -150,9 +158,41 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     # token likely expired or firmware changed, try to re-authenticate
                     self._setup_complete = False
                     continue
-                raise ConfigEntryAuthFailed from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_error",
+                    translation_placeholders={
+                        "host": envoy.host,
+                        "args": err.args[0],
+                    },
+                ) from err
             except EnvoyError as err:
-                raise UpdateFailed(f"Error communicating with API: {err}") from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="envoy_error",
+                    translation_placeholders={
+                        "host": envoy.host,
+                        "args": err.args[0],
+                    },
+                ) from err
+
+            # if we have a firmware version from previous setup, compare to current one
+            # when envoy gets new firmware there will be an authentication failure
+            # which results in getting fw version again, if so reload the integration.
+            if (current_firmware := self.envoy_firmware) and current_firmware != (
+                new_firmware := envoy.firmware
+            ):
+                _LOGGER.warning(
+                    "Envoy firmware changed from: %s to: %s, reloading enphase envoy integration",
+                    current_firmware,
+                    new_firmware,
+                )
+                # reload the integration to get all established again
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                )
+            # remember firmware version for next time
+            self.envoy_firmware = envoy.firmware
             _LOGGER.debug("Envoy data: %s", envoy_data)
             return envoy_data.raw
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import Callable, Collection, Mapping
 import logging
 from typing import Any
@@ -23,7 +22,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import ATTR_AUTO, ATTR_ORDER, DOMAIN, GROUP_ORDER, REG_KEY
+from .const import ATTR_AUTO, ATTR_ORDER, DATA_COMPONENT, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry, SingleStateType
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -134,6 +133,7 @@ class Group(Entity):
     tracking: tuple[str, ...]
     trackable: tuple[str, ...]
     single_state_type_key: SingleStateType | None
+    _registry: GroupIntegrationRegistry
 
     def __init__(
         self,
@@ -262,13 +262,8 @@ class Group(Entity):
         """Test if any member has an assumed state."""
         return self._assumed_state
 
-    def update_tracked_entity_ids(self, entity_ids: Collection[str] | None) -> None:
-        """Update the member entity IDs."""
-        asyncio.run_coroutine_threadsafe(
-            self.async_update_tracked_entity_ids(entity_ids), self.hass.loop
-        ).result()
-
-    async def async_update_tracked_entity_ids(
+    @callback
+    def async_update_tracked_entity_ids(
         self, entity_ids: Collection[str] | None
     ) -> None:
         """Update the member entity IDs.
@@ -291,7 +286,7 @@ class Group(Entity):
             self.single_state_type_key = None
             return
 
-        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        registry = self._registry
         excluded_domains = registry.exclude_domains
 
         tracking: list[str] = []
@@ -320,7 +315,6 @@ class Group(Entity):
             registry.state_group_mapping[self.entity_id] = self.single_state_type_key
         else:
             self.single_state_type_key = None
-        self.async_on_remove(self._async_deregister)
 
         self.trackable = tuple(trackable)
         self.tracking = tuple(tracking)
@@ -328,7 +322,7 @@ class Group(Entity):
     @callback
     def _async_deregister(self) -> None:
         """Deregister group entity from the registry."""
-        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        registry = self._registry
         if self.entity_id in registry.state_group_mapping:
             registry.state_group_mapping.pop(self.entity_id)
 
@@ -370,8 +364,10 @@ class Group(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle addition to Home Assistant."""
+        self._registry = self.hass.data[REG_KEY]
         self._set_tracked(self._entity_ids)
         self.async_on_remove(start.async_at_start(self.hass, self._async_start))
+        self.async_on_remove(self._async_deregister)
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle removal from Home Assistant."""
@@ -412,7 +408,7 @@ class Group(Entity):
         entity_id = new_state.entity_id
         domain = new_state.domain
         state = new_state.state
-        registry: GroupIntegrationRegistry = self.hass.data[REG_KEY]
+        registry = self._registry
         self._assumed[entity_id] = bool(new_state.attributes.get(ATTR_ASSUMED_STATE))
 
         if domain not in registry.on_states_by_domain:
@@ -444,10 +440,8 @@ class Group(Entity):
         if not self._on_off:
             return
 
-        if (
-            tr_state is None
-            or self._assumed_state
-            and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
+        if tr_state is None or (
+            self._assumed_state and not tr_state.attributes.get(ATTR_ASSUMED_STATE)
         ):
             self._assumed_state = self.mode(self._assumed.values())
 
@@ -482,8 +476,8 @@ class Group(Entity):
 
 def async_get_component(hass: HomeAssistant) -> EntityComponent[Group]:
     """Get the group entity component."""
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent[Group](
+    if (component := hass.data.get(DATA_COMPONENT)) is None:
+        component = hass.data[DATA_COMPONENT] = EntityComponent[Group](
             _PACKAGE_LOGGER, DOMAIN, hass
         )
     return component

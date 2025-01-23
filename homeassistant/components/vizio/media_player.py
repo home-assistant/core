@@ -200,7 +200,7 @@ class VizioDevice(MediaPlayerEntity):
             return
 
         if not self._attr_available:
-            _LOGGER.info(
+            _LOGGER.warning(
                 "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._attr_available = True

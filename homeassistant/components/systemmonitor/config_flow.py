@@ -8,11 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
-from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -53,37 +49,6 @@ async def validate_sensor_setup(
     return {}
 
 
-async def validate_import_sensor_setup(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    """Validate sensor input."""
-    # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a sub-item so we update the options directly.
-    sensors: dict[str, list] = handler.options.setdefault(BINARY_SENSOR_DOMAIN, {})
-    import_processes: list[str] = user_input["processes"]
-    processes = sensors.setdefault(CONF_PROCESS, [])
-    processes.extend(import_processes)
-    legacy_resources: list[str] = handler.options.setdefault("resources", [])
-    legacy_resources.extend(user_input["legacy_resources"])
-
-    async_create_issue(
-        handler.parent_handler.hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        is_persistent=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "System Monitor",
-        },
-    )
-    return {}
-
-
 async def get_sensor_setup_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
     """Return process sensor setup schema."""
     hass = handler.parent_handler.hass
@@ -112,10 +77,6 @@ async def get_suggested_value(handler: SchemaCommonFlowHandler) -> dict[str, Any
 
 CONFIG_FLOW = {
     "user": SchemaFlowFormStep(schema=vol.Schema({})),
-    "import": SchemaFlowFormStep(
-        schema=vol.Schema({}),
-        validate_user_input=validate_import_sensor_setup,
-    ),
 }
 OPTIONS_FLOW = {
     "init": SchemaFlowFormStep(
@@ -132,17 +93,8 @@ class SystemMonitorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return "System Monitor"
-
-    @callback
-    def async_create_entry(
-        self, data: Mapping[str, Any], **kwargs: Any
-    ) -> ConfigFlowResult:
-        """Finish config flow and create a config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-        return super().async_create_entry(data, **kwargs)

@@ -11,8 +11,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .base import TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import TuyaEntity
 
 # All descriptions can be found here. Mostly the Enum data types in the
 # default instructions set of each category end up being a select.
@@ -304,6 +304,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.DEHUMIDITY_SET_ENUM,
             translation_key="target_humidity",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # CO2 Detector
+    # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
+    "co2bj": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            translation_key="volume",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

@@ -74,7 +74,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=title,
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
-            if self.context["source"] == SOURCE_IMPORT:
+            if self.source == SOURCE_IMPORT:
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:
@@ -94,13 +94,3 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
-
-    async def async_step_import(
-        self,
-        user_input: Mapping[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Import a config entry.
-
-        Only host was required in the yaml file all other fields are optional
-        """
-        return await self.async_step_user(user_input)

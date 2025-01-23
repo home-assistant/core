@@ -181,7 +181,7 @@ def test_color_hs_to_xy() -> None:
 
     assert color_util.color_hs_to_xy(350, 12.5) == (0.356, 0.321)
 
-    assert color_util.color_hs_to_xy(140, 50) == (0.229, 0.474)
+    assert color_util.color_hs_to_xy(140, 50) == (0.23, 0.474)
 
     assert color_util.color_hs_to_xy(0, 40) == (0.474, 0.317)
 
@@ -200,17 +200,17 @@ def test_color_hs_to_xy() -> None:
 
 def test_rgb_hex_to_rgb_list() -> None:
     """Test rgb_hex_to_rgb_list."""
-    assert [255, 255, 255] == color_util.rgb_hex_to_rgb_list("ffffff")
+    assert color_util.rgb_hex_to_rgb_list("ffffff") == [255, 255, 255]
 
-    assert [0, 0, 0] == color_util.rgb_hex_to_rgb_list("000000")
+    assert color_util.rgb_hex_to_rgb_list("000000") == [0, 0, 0]
 
-    assert [255, 255, 255, 255] == color_util.rgb_hex_to_rgb_list("ffffffff")
+    assert color_util.rgb_hex_to_rgb_list("ffffffff") == [255, 255, 255, 255]
 
-    assert [0, 0, 0, 0] == color_util.rgb_hex_to_rgb_list("00000000")
+    assert color_util.rgb_hex_to_rgb_list("00000000") == [0, 0, 0, 0]
 
-    assert [51, 153, 255] == color_util.rgb_hex_to_rgb_list("3399ff")
+    assert color_util.rgb_hex_to_rgb_list("3399ff") == [51, 153, 255]
 
-    assert [51, 153, 255, 0] == color_util.rgb_hex_to_rgb_list("3399ff00")
+    assert color_util.rgb_hex_to_rgb_list("3399ff00") == [51, 153, 255, 0]
 
 
 def test_color_name_to_rgb_valid_name() -> None:

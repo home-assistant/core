@@ -27,7 +27,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import uuid
 
-from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,
@@ -38,6 +37,8 @@ from .const import (
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
 )
+from .coordinator import MusicCastDataUpdateCoordinator
+from .entity import MusicCastDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 

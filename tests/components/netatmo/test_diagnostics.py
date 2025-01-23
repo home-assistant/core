@@ -42,4 +42,11 @@ async def test_entry_diagnostics(
 
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
-    ) == snapshot(exclude=paths("info.data.token.expires_at", "info.entry_id"))
+    ) == snapshot(
+        exclude=paths(
+            "info.data.token.expires_at",
+            "info.entry_id",
+            "info.created_at",
+            "info.modified_at",
+        )
+    )

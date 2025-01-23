@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/bring",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "requirements": ["bring-api==0.7.1"]
+  "loggers": ["bring_api"],
+  "requirements": ["bring-api==0.9.1"]
 }

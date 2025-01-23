@@ -6,7 +6,7 @@ from jvcprojector import JvcProjectorAuthError, JvcProjectorConnectError
 import pytest
 
 from homeassistant.components.jvc_projector.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -163,14 +163,7 @@ async def test_reauth_config_flow_success(
     hass: HomeAssistant, mock_device: AsyncMock, mock_integration: MockConfigEntry
 ) -> None:
     """Test reauth config flow success."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
+    result = await mock_integration.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -194,14 +187,7 @@ async def test_reauth_config_flow_auth_error(
     """Test reauth config flow when connect fails."""
     mock_device.connect.side_effect = JvcProjectorAuthError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
+    result = await mock_integration.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -218,14 +204,7 @@ async def test_reauth_config_flow_auth_error(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
+    result = await mock_integration.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -249,14 +228,7 @@ async def test_reauth_config_flow_connect_error(
     """Test reauth config flow when connect fails."""
     mock_device.connect.side_effect = JvcProjectorConnectError
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
+    result = await mock_integration.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -273,14 +245,7 @@ async def test_reauth_config_flow_connect_error(
 
     mock_device.connect.side_effect = None
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_integration.entry_id,
-        },
-        data={CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
-    )
+    result = await mock_integration.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

@@ -17,16 +17,27 @@
         "data": {
           "type": "[%key:component::brother::config::step::user::data::type%]"
         }
+      },
+      "reconfigure": {
+        "description": "Update configuration for {printer_name}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::brother::config::step::user::data_description::host%]"
+        }
       }
     },
     "error": {
       "wrong_host": "Invalid hostname or IP address.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "snmp_error": "SNMP server turned off or printer not supported."
+      "snmp_error": "SNMP server turned off or printer not supported.",
+      "another_device": "The IP address or hostname of another Brother printer was used."
     },
     "abort": {
       "unsupported_model": "This printer model is not supported.",
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -35,61 +46,75 @@
         "name": "Status"
       },
       "page_counter": {
-        "name": "Page counter"
+        "name": "Page counter",
+        "unit_of_measurement": "pages"
       },
       "bw_pages": {
-        "name": "B/W pages"
+        "name": "B/W pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "color_pages": {
-        "name": "Color pages"
+        "name": "Color pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "duplex_unit_page_counter": {
-        "name": "Duplex unit page counter"
+        "name": "Duplex unit page counter",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "drum_remaining_life": {
         "name": "Drum remaining lifetime"
       },
       "drum_remaining_pages": {
-        "name": "Drum remaining pages"
+        "name": "Drum remaining pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "drum_page_counter": {
-        "name": "Drum page counter"
+        "name": "Drum page counter",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "black_drum_remaining_life": {
         "name": "Black drum remaining lifetime"
       },
       "black_drum_remaining_pages": {
-        "name": "Black drum remaining pages"
+        "name": "Black drum remaining pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "black_drum_page_counter": {
-        "name": "Black drum page counter"
+        "name": "Black drum page counter",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "cyan_drum_remaining_life": {
         "name": "Cyan drum remaining lifetime"
       },
       "cyan_drum_remaining_pages": {
-        "name": "Cyan drum remaining pages"
+        "name": "Cyan drum remaining pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "cyan_drum_page_counter": {
-        "name": "Cyan drum page counter"
+        "name": "Cyan drum page counter",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "magenta_drum_remaining_life": {
         "name": "Magenta drum remaining lifetime"
       },
       "magenta_drum_remaining_pages": {
-        "name": "Magenta drum remaining pages"
+        "name": "Magenta drum remaining pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "magenta_drum_page_counter": {
-        "name": "Magenta drum page counter"
+        "name": "Magenta drum page counter",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "yellow_drum_remaining_life": {
         "name": "Yellow drum remaining lifetime"
       },
       "yellow_drum_remaining_pages": {
-        "name": "Yellow drum remaining pages"
+        "name": "Yellow drum remaining pages",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "yellow_drum_page_counter": {
-        "name": "Yellow drum page counter"
+        "name": "Yellow drum page counter",
+        "unit_of_measurement": "[%key:component::brother::entity::sensor::page_counter::unit_of_measurement%]"
       },
       "belt_unit_remaining_life": {
         "name": "Belt unit remaining lifetime"

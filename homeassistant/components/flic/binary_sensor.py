@@ -8,7 +8,10 @@ import threading
 import pyflic
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as BINARY_SENSOR_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
@@ -42,7 +45,7 @@ EVENT_DATA_ADDRESS = "button_address"
 EVENT_DATA_TYPE = "click_type"
 EVENT_DATA_QUEUED_TIME = "queued_time"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -105,7 +108,7 @@ def start_scanning(config, add_entities, client):
     def scan_completed_callback(scan_wizard, result, address, name):
         """Restart scan wizard to constantly check for new buttons."""
         if result == pyflic.ScanWizardResult.WizardSuccess:
-            _LOGGER.info("Found new button %s", address)
+            _LOGGER.debug("Found new button %s", address)
         elif result != pyflic.ScanWizardResult.WizardFailedTimeout:
             _LOGGER.warning(
                 "Failed to connect to button %s. Reason: %s", address, result
@@ -129,7 +132,7 @@ def setup_button(
     timeout: int = config[CONF_TIMEOUT]
     ignored_click_types: list[str] | None = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)
-    _LOGGER.info("Connected to button %s", address)
+    _LOGGER.debug("Connected to button %s", address)
 
     add_entities([button])
 
@@ -200,7 +203,7 @@ class FlicButton(BinarySensorEntity):
                 time_string,
             )
             return True
-        _LOGGER.info(
+        _LOGGER.debug(
             "Queued %s allowed for %s. Time in queue was %s",
             click_type,
             self._address,

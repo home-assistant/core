@@ -1,7 +1,8 @@
 """The tests for sensor recorder platform."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from sqlalchemy import select
@@ -15,17 +16,21 @@ from homeassistant.components.recorder.models import (
 )
 from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
     _generate_statistics_at_time_stmt,
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
+    async_list_statistic_ids,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
     get_metadata,
+    get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
+    validate_statistics,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
     _generate_get_metadata_stmt,
@@ -41,17 +46,20 @@ import homeassistant.util.dt as dt_util
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
     async_record_states,
+    async_recorder_block_till_done,
     async_wait_recording_done,
     do_adhoc_statistics,
+    get_start_time,
     statistics_during_period,
 )
 
+from tests.common import MockPlatform, mock_platform
 from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceGenerator,
 ) -> None:
     """Set up recorder."""
 
@@ -59,6 +67,15 @@ async def mock_recorder_before_hass(
 @pytest.fixture
 def setup_recorder(recorder_mock: Recorder) -> None:
     """Set up recorder."""
+
+
+async def _setup_mock_domain(
+    hass: HomeAssistant,
+    platform: Any | None = None,  # There's no RecorderPlatform class yet
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, "some_domain.recorder", platform or MockPlatform())
+    assert await async_setup_component(hass, "some_domain", {})
 
 
 def test_converters_align_with_sensor() -> None:
@@ -293,14 +310,17 @@ def mock_sensor_statistics():
         }
 
     def get_fake_stats(_hass, session, start, _end):
+        instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
                 sensor_stats("sensor.test1", start),
                 sensor_stats("sensor.test2", start),
                 sensor_stats("sensor.test3", start),
             ],
-            get_metadata(
-                _hass, statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"}
+            get_metadata_with_session(
+                instance,
+                session,
+                statistic_ids={"sensor.test1", "sensor.test2", "sensor.test3"},
             ),
         )
 
@@ -317,12 +337,12 @@ def mock_from_stats():
     counter = 0
     real_from_stats = StatisticsShortTerm.from_stats
 
-    def from_stats(metadata_id, stats):
+    def from_stats(metadata_id, stats, now_timestamp):
         nonlocal counter
         if counter == 0 and metadata_id == 2:
             counter += 1
             return None
-        return real_from_stats(metadata_id, stats)
+        return real_from_stats(metadata_id, stats, now_timestamp)
 
     with patch(
         "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",
@@ -338,7 +358,7 @@ async def test_compile_periodic_statistics_exception(
     """Test exception handling when compiling periodic statistics."""
     await async_setup_component(hass, "sensor", {})
 
-    now = dt_util.utcnow()
+    now = get_start_time(dt_util.utcnow())
     do_adhoc_statistics(hass, start=now)
     do_adhoc_statistics(hass, start=now + timedelta(minutes=5))
     await async_wait_recording_done(hass)
@@ -2468,3 +2488,162 @@ async def test_change_with_none(
         types={"change"},
     )
     assert stats == {}
+
+
+async def test_recorder_platform_with_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platform."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
+        return {}
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    recorder_platform = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
+        update_statistics_issues=Mock(),
+        validate_statistics=Mock(wraps=_mock_validate_statistics),
+    )
+
+    await _setup_mock_domain(hass, recorder_platform)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
+
+    recorder_platform.compile_statistics.assert_not_called()
+    recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.update_statistics_issues.assert_not_called()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    recorder_platform.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5)
+    )
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
+    recorder_platform.list_statistic_ids.assert_not_called()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test list statistic IDs
+    await async_list_statistic_ids(hass)
+    recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.list_statistic_ids.assert_called_once_with(
+        hass, statistic_ids=None, statistic_type=None
+    )
+    recorder_platform.update_statistics_issues.assert_called_once()
+    recorder_platform.validate_statistics.assert_not_called()
+
+    # Test validate statistics
+    await instance.async_add_executor_job(
+        validate_statistics,
+        hass,
+    )
+    recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.list_statistic_ids.assert_called_once()
+    recorder_platform.update_statistics_issues.assert_called_once()
+    recorder_platform.validate_statistics.assert_called_once_with(hass)
+
+
+async def test_recorder_platform_without_statistics(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recorder platform."""
+    recorder_data = hass.data["recorder"]
+    assert recorder_data.recorder_platforms == {}
+
+    await _setup_mock_domain(hass)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {}
+
+
+@pytest.mark.parametrize(
+    "supported_methods",
+    [
+        ("compile_statistics",),
+        ("list_statistic_ids",),
+        ("update_statistics_issues",),
+        ("validate_statistics",),
+    ],
+)
+async def test_recorder_platform_with_partial_statistics_support(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    supported_methods: tuple[str, ...],
+) -> None:
+    """Test recorder platform."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
+        return {}
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    mock_impl = {
+        "compile_statistics": _mock_compile_statistics,
+        "list_statistic_ids": _mock_list_statistic_ids,
+        "update_statistics_issues": None,
+        "validate_statistics": _mock_validate_statistics,
+    }
+
+    kwargs = {meth: Mock(wraps=mock_impl[meth]) for meth in supported_methods}
+
+    recorder_platform = Mock(
+        spec=supported_methods,
+        **kwargs,
+    )
+
+    await _setup_mock_domain(hass, recorder_platform)
+
+    # Wait for the sensor recorder platform to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
+
+    for meth in supported_methods:
+        getattr(recorder_platform, meth).assert_not_called()
+
+    # Test compile statistics + update statistics issues
+    # Issues are updated hourly when minutes = 50, trigger one hour later to make
+    # sure statistics is not suppressed by an existing row in StatisticsRuns
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    # Test list statistic IDs
+    await async_list_statistic_ids(hass)
+
+    # Test validate statistics
+    await instance.async_add_executor_job(
+        validate_statistics,
+        hass,
+    )
+
+    for meth in supported_methods:
+        getattr(recorder_platform, meth).assert_called_once()

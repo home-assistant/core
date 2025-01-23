@@ -9,6 +9,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
+import time
 from typing import Any, Concatenate
 
 import aiohttp
@@ -19,7 +20,7 @@ from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice import TTS_VOICES
 import voluptuous as vol
 
-from homeassistant.components import http, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
@@ -31,22 +32,26 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.location import async_detect_location_info
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
-    DOMAIN,
+    DATA_CLOUD,
+    EVENT_CLOUD_EVENT,
+    LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
+    PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
     PREF_REMOTE_ALLOW_REMOTE_ENABLE,
-    PREF_STRICT_CONNECTION,
     PREF_TTS_DEFAULT_VOICE,
     REQUEST_TIMEOUT,
 )
@@ -67,6 +72,10 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
         "Error making internal request",
     ),
 }
+
+
+class MFAExpiredOrNotStarted(auth.CloudError):
+    """Multi-factor authentication expired, or not started."""
 
 
 @callback
@@ -101,6 +110,11 @@ def async_setup(hass: HomeAssistant) -> None:
 
     _CLOUD_ERRORS.update(
         {
+            auth.InvalidTotpCode: (HTTPStatus.BAD_REQUEST, "Invalid TOTP code."),
+            auth.MFARequired: (
+                HTTPStatus.UNAUTHORIZED,
+                "Multi-factor authentication required.",
+            ),
             auth.UserNotFound: (HTTPStatus.BAD_REQUEST, "User does not exist."),
             auth.UserNotConfirmed: (HTTPStatus.BAD_REQUEST, "Email not confirmed."),
             auth.UserExists: (
@@ -111,6 +125,10 @@ def async_setup(hass: HomeAssistant) -> None:
             auth.PasswordChangeRequired: (
                 HTTPStatus.BAD_REQUEST,
                 "Password change required.",
+            ),
+            MFAExpiredOrNotStarted: (
+                HTTPStatus.BAD_REQUEST,
+                "Multi-factor authentication expired, or not started. Please try again.",
             ),
         }
     )
@@ -197,7 +215,7 @@ class GoogleActionsSyncView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Trigger a Google Actions sync."""
         hass = request.app[KEY_HASS]
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+        cloud = hass.data[DATA_CLOUD]
         gconf = await cloud.client.get_google_config()
         status = await gconf.async_sync_entities(gconf.agent_user_id)
         return self.json({}, status_code=status)
@@ -206,24 +224,64 @@ class GoogleActionsSyncView(HomeAssistantView):
 class CloudLoginView(HomeAssistantView):
     """Login to Home Assistant cloud."""
 
+    _mfa_tokens: dict[str, str] = {}
+    _mfa_tokens_set_time: float = 0
+
     url = "/api/cloud/login"
     name = "api:cloud:login"
 
     @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
-        vol.Schema({vol.Required("email"): str, vol.Required("password"): str})
+        vol.Schema(
+            vol.All(
+                {
+                    vol.Required("email"): str,
+                    vol.Exclusive("password", "login"): str,
+                    vol.Exclusive("code", "login"): str,
+                },
+                cv.has_at_least_one_key("password", "code"),
+            )
+        )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
         hass = request.app[KEY_HASS]
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
-        await cloud.login(data["email"], data["password"])
+        cloud = hass.data[DATA_CLOUD]
+
+        try:
+            email = data["email"]
+            password = data.get("password")
+            code = data.get("code")
+
+            if email and password:
+                await cloud.login(email, password)
+
+            else:
+                if (
+                    not self._mfa_tokens
+                    or time.time() - self._mfa_tokens_set_time > LOGIN_MFA_TIMEOUT
+                ):
+                    raise MFAExpiredOrNotStarted
+
+                # Voluptuous should ensure that code is not None because password is
+                assert code is not None
+
+                await cloud.login_verify_totp(email, code, self._mfa_tokens)
+                self._mfa_tokens = {}
+                self._mfa_tokens_set_time = 0
+
+        except auth.MFARequired as mfa_err:
+            self._mfa_tokens = mfa_err.mfa_tokens
+            self._mfa_tokens_set_time = time.time()
+            raise
 
         if "assist_pipeline" in hass.config.components:
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
         else:
             new_cloud_pipeline_id = None
+
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
@@ -238,11 +296,12 @@ class CloudLogoutView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         hass = request.app[KEY_HASS]
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+        cloud = hass.data[DATA_CLOUD]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
         return self.json_message("ok")
 
 
@@ -265,7 +324,7 @@ class CloudRegisterView(HomeAssistantView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle registration request."""
         hass = request.app[KEY_HASS]
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+        cloud = hass.data[DATA_CLOUD]
 
         client_metadata = None
 
@@ -302,7 +361,7 @@ class CloudResendConfirmView(HomeAssistantView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle resending confirm email code request."""
         hass = request.app[KEY_HASS]
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+        cloud = hass.data[DATA_CLOUD]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_resend_email_confirm(data["email"])
@@ -322,7 +381,7 @@ class CloudForgotPasswordView(HomeAssistantView):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle forgot password request."""
         hass = request.app[KEY_HASS]
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+        cloud = hass.data[DATA_CLOUD]
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.auth.async_forgot_password(data["email"])
@@ -342,7 +401,7 @@ async def websocket_cloud_remove_data(
 
     Async friendly.
     """
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     if cloud.is_logged_in:
         connection.send_message(
             websocket_api.error_message(
@@ -368,7 +427,7 @@ async def websocket_cloud_status(
 
     Async friendly.
     """
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     connection.send_message(
         websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
     )
@@ -392,7 +451,7 @@ def _require_cloud_login(
         msg: dict[str, Any],
     ) -> None:
         """Require to be logged into the cloud."""
-        cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+        cloud = hass.data[DATA_CLOUD]
         if not cloud.is_logged_in:
             connection.send_message(
                 websocket_api.error_message(
@@ -415,7 +474,7 @@ async def websocket_subscription(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     if (data := await async_subscription_info(cloud)) is None:
         connection.send_error(
             msg["id"], "request_failed", "Failed to request subscription"
@@ -440,17 +499,15 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/update_prefs",
-        vol.Optional(PREF_ENABLE_GOOGLE): bool,
-        vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
+        vol.Optional(PREF_ENABLE_ALEXA): bool,
+        vol.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
+        vol.Optional(PREF_ENABLE_GOOGLE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
+        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), validate_language_voice
-        ),
-        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
-        vol.Optional(PREF_STRICT_CONNECTION): vol.Coerce(
-            http.const.StrictConnectionMode
         ),
     }
 )
@@ -461,7 +518,7 @@ async def websocket_update_prefs(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
 
     changes = dict(msg)
     changes.pop("id")
@@ -512,7 +569,7 @@ async def websocket_hook_create(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     hook = await cloud.cloudhooks.async_create(msg["webhook_id"], False)
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
@@ -532,7 +589,7 @@ async def websocket_hook_delete(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for account info."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     await cloud.cloudhooks.async_delete(msg["webhook_id"])
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -601,7 +658,7 @@ async def websocket_remote_connect(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for connect remote."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     await cloud.client.prefs.async_update(remote_enabled=True)
     connection.send_result(msg["id"], await _account_data(hass, cloud))
 
@@ -617,7 +674,7 @@ async def websocket_remote_disconnect(
     msg: dict[str, Any],
 ) -> None:
     """Handle request for disconnect remote."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     await cloud.client.prefs.async_update(remote_enabled=False)
     connection.send_result(msg["id"], await _account_data(hass, cloud))
 
@@ -638,7 +695,7 @@ async def google_assistant_get(
     msg: dict[str, Any],
 ) -> None:
     """Get data for a single google assistant entity."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     gconf = await cloud.client.get_google_config()
     entity_id: str = msg["entity_id"]
     state = hass.states.get(entity_id)
@@ -646,7 +703,7 @@ async def google_assistant_get(
     if not state:
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_FOUND,
+            websocket_api.ERR_NOT_FOUND,
             f"{entity_id} unknown",
         )
         return
@@ -655,7 +712,7 @@ async def google_assistant_get(
     if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             f"{entity_id} not supported by Google assistant",
         )
         return
@@ -686,7 +743,7 @@ async def google_assistant_list(
     msg: dict[str, Any],
 ) -> None:
     """List all google assistant entities."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     gconf = await cloud.client.get_google_config()
     entities = google_helpers.async_get_entities(hass, gconf)
 
@@ -759,7 +816,7 @@ async def alexa_get(
     ):
         connection.send_error(
             msg["id"],
-            websocket_api.const.ERR_NOT_SUPPORTED,
+            websocket_api.ERR_NOT_SUPPORTED,
             f"{entity_id} not supported by Alexa",
         )
         return
@@ -778,7 +835,7 @@ async def alexa_list(
     msg: dict[str, Any],
 ) -> None:
     """List all alexa entities."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     alexa_config = await cloud.client.get_alexa_config()
     entities = alexa_entities.async_get_entities(hass, alexa_config)
 
@@ -804,7 +861,7 @@ async def alexa_sync(
     msg: dict[str, Any],
 ) -> None:
     """Sync with Alexa."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
     alexa_config = await cloud.client.get_alexa_config()
 
     async with asyncio.timeout(10):
@@ -834,7 +891,7 @@ async def thingtalk_convert(
     msg: dict[str, Any],
 ) -> None:
     """Convert a query."""
-    cloud: Cloud[CloudClient] = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
 
     async with asyncio.timeout(10):
         try:

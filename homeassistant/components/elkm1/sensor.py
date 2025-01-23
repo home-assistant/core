@@ -20,9 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import VolDictType
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
 from .const import ATTR_VALUE, ELK_USER_CODE_SERVICE_SCHEMA
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 SERVICE_SENSOR_COUNTER_REFRESH = "sensor_counter_refresh"
 SERVICE_SENSOR_COUNTER_SET = "sensor_counter_set"
@@ -30,7 +32,7 @@ SERVICE_SENSOR_ZONE_BYPASS = "sensor_zone_bypass"
 SERVICE_SENSOR_ZONE_TRIGGER = "sensor_zone_trigger"
 UNDEFINED_TEMPERATURE = -40
 
-ELK_SET_COUNTER_SERVICE_SCHEMA = {
+ELK_SET_COUNTER_SERVICE_SCHEMA: VolDictType = {
     vol.Required(ATTR_VALUE): vol.All(vol.Coerce(int), vol.Range(0, 65535))
 }
 
@@ -55,7 +57,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SENSOR_COUNTER_REFRESH,
-        {},
+        None,
         "async_counter_refresh",
     )
     platform.async_register_entity_service(
@@ -70,7 +72,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SENSOR_ZONE_TRIGGER,
-        {},
+        None,
         "async_zone_trigger",
     )
 
@@ -118,7 +120,7 @@ class ElkCounter(ElkSensor):
     _attr_icon = "mdi:numeric"
     _element: Counter
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
 
 
@@ -151,7 +153,7 @@ class ElkKeypad(ElkSensor):
         attrs["last_keypress"] = self._element.last_keypress
         return attrs
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = temperature_to_state(
             self._element.temperature, UNDEFINED_TEMPERATURE
         )
@@ -171,7 +173,7 @@ class ElkPanel(ElkSensor):
         attrs["system_trouble_status"] = self._element.system_trouble_status
         return attrs
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         if self._elk.is_connected():
             self._attr_native_value = (
                 "Paused" if self._element.remote_programming_status else "Connected"
@@ -186,7 +188,7 @@ class ElkSetting(ElkSensor):
     _attr_translation_key = "setting"
     _element: Setting
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
 
     @property
@@ -255,7 +257,7 @@ class ElkZone(ElkSensor):
             return UnitOfElectricPotential.VOLT
         return None
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         if self._element.definition == ZoneType.TEMPERATURE:
             self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE

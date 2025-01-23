@@ -1,8 +1,11 @@
 [
   {
-    "_id": "14",
+    "id": "14",
     "name": "Demo Waschmaschine",
     "status": "OFF",
-    "firmwareVersion": "2.1.0"
+    "internalIP": "192.168.0.123",
+    "model": "SU02",
+    "firmwareVersion": "2.1.0",
+    "totalEnergy": 1337.0
   }
 ]

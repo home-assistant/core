@@ -7,6 +7,7 @@ from typing import cast
 from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_APPARENT_TEMP,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -32,7 +33,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import AccuWeatherConfigEntry, AccuWeatherData
 from .const import (
     API_METRIC,
     ATTR_DIRECTION,
@@ -42,7 +42,9 @@ from .const import (
     CONDITION_MAP,
 )
 from .coordinator import (
+    AccuWeatherConfigEntry,
     AccuWeatherDailyForecastDataUpdateCoordinator,
+    AccuWeatherData,
     AccuWeatherObservationDataUpdateCoordinator,
 )
 
@@ -183,6 +185,7 @@ class AccuWeatherEntity(
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
                 ATTR_FORECAST_CLOUD_COVERAGE: item["CloudCoverDay"],
+                ATTR_FORECAST_HUMIDITY: item["RelativeHumidityDay"]["Average"],
                 ATTR_FORECAST_NATIVE_TEMP: item["TemperatureMax"][ATTR_VALUE],
                 ATTR_FORECAST_NATIVE_TEMP_LOW: item["TemperatureMin"][ATTR_VALUE],
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: item["RealFeelTemperatureMax"][

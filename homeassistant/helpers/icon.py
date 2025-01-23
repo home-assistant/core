@@ -7,7 +7,7 @@ from collections.abc import Iterable
 from functools import lru_cache
 import logging
 import pathlib
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import Integration, async_get_integrations
@@ -21,13 +21,26 @@ ICON_CACHE: HassKey[_IconsCache] = HassKey("icon_cache")
 _LOGGER = logging.getLogger(__name__)
 
 
-@callback
-def _component_icons_path(integration: Integration) -> pathlib.Path:
-    """Return the icons json file location for a component.
+def convert_shorthand_service_icon(
+    value: str | dict[str, str | dict[str, str]],
+) -> dict[str, str | dict[str, str]]:
+    """Convert shorthand service icon to dict."""
+    if isinstance(value, str):
+        return {"service": value}
+    return value
 
-    Ex: components/hue/icons.json
-    """
-    return integration.file_path / "icons.json"
+
+def _load_icons_file(
+    icons_file: pathlib.Path,
+) -> dict[str, Any]:
+    """Load and parse an icons.json file."""
+    icons = load_json_object(icons_file)
+    if "services" not in icons:
+        return icons
+    services = cast(dict[str, str | dict[str, str | dict[str, str]]], icons["services"])
+    for service, service_icons in services.items():
+        services[service] = convert_shorthand_service_icon(service_icons)
+    return icons
 
 
 def _load_icons_files(
@@ -35,7 +48,7 @@ def _load_icons_files(
 ) -> dict[str, dict[str, Any]]:
     """Load and parse icons.json files."""
     return {
-        component: load_json_object(icons_file)
+        component: _load_icons_file(icons_file)
         for component, icons_file in icons_files.items()
     }
 
@@ -50,7 +63,7 @@ async def _async_get_component_icons(
 
     # Determine files to load
     files_to_load = {
-        comp: _component_icons_path(integrations[comp]) for comp in components
+        comp: integrations[comp].file_path / "icons.json" for comp in components
     }
 
     # Load files

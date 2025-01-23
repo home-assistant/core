@@ -11,14 +11,11 @@ from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCal
 
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    RegistryEntry,
-    async_entries_for_config_entry,
-    async_get as er_async_get,
-)
+from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -112,8 +109,8 @@ def async_restore_block_attribute_entities(
     """Restore block attributes entities."""
     entities = []
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     domain = sensor_class.__module__.split(".")[-1]
 
@@ -221,8 +218,8 @@ def async_restore_rpc_attribute_entities(
     """Restore block attributes entities."""
     entities = []
 
-    ent_reg = er_async_get(hass)
-    entries = async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+    ent_reg = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
 
     domain = sensor_class.__module__.split(".")[-1]
 
@@ -294,6 +291,8 @@ class RpcEntityDescription(EntityDescription):
     extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
+    unit: Callable[[dict], str | None] | None = None
+    options_fn: Callable[[dict], list[str]] | None = None
 
 
 @dataclass(frozen=True)
@@ -358,6 +357,14 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         }
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
+
+    @property
+    def available(self) -> bool:
+        """Check if device is available and initialized or sleepy."""
+        coordinator = self.coordinator
+        return super().available and (
+            coordinator.device.initialized or bool(coordinator.sleep_period)
+        )
 
     @property
     def status(self) -> dict:
@@ -481,7 +488,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             self._last_value = self.entity_description.value(
                 self.block_coordinator.device.status, self._last_value
             )
@@ -508,6 +515,26 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         self._attr_unique_id = f"{super().unique_id}-{attribute}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key, description.name)
         self._last_value = None
+        id_key = key.split(":")[-1]
+        self._id = int(id_key) if id_key.isnumeric() else None
+
+        if description.unit is not None:
+            self._attr_native_unit_of_measurement = description.unit(
+                coordinator.device.config[key]
+            )
+
+        self.option_map: dict[str, str] = {}
+        self.reversed_option_map: dict[str, str] = {}
+        if "enum" in key:
+            titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
+            options = self.coordinator.device.config[key]["options"]
+            self.option_map = {
+                opt: (titles[opt] if titles.get(opt) is not None else opt)
+                for opt in options
+            }
+            self.reversed_option_map = {
+                tit: opt for opt, tit in self.option_map.items()
+            }
 
     @property
     def sub_status(self) -> Any:
@@ -517,7 +544,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             # using "get" here since subkey might not exist (e.g. "errors" sub_key)
             self._last_value = self.entity_description.value(
                 self.status.get(self.entity_description.sub_key), self._last_value

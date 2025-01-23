@@ -58,9 +58,9 @@ from .entity import NetatmoRoomEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_FROST_GUARD = "Frost Guard"
-PRESET_SCHEDULE = "Schedule"
-PRESET_MANUAL = "Manual"
+PRESET_FROST_GUARD = "frost_guard"
+PRESET_SCHEDULE = "schedule"
+PRESET_MANUAL = "manual"
 
 SUPPORT_FLAGS = (
     ClimateEntityFeature.TARGET_TEMPERATURE
@@ -174,7 +174,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_CLEAR_TEMPERATURE_SETTING,
-        {},
+        None,
         "_async_service_clear_temperature_setting",
     )
 
@@ -188,10 +188,10 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
     _attr_supported_features = SUPPORT_FLAGS
     _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_translation_key = "thermostat"
     _attr_name = None
     _away: bool | None = None
     _connected: bool | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     _away_temperature: float | None = None
     _hg_temperature: float | None = None

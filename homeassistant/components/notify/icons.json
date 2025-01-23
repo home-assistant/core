@@ -5,8 +5,14 @@
     }
   },
   "services": {
-    "notify": "mdi:bell-ring",
-    "persistent_notification": "mdi:bell-badge",
-    "send_message": "mdi:message-arrow-right"
+    "notify": {
+      "service": "mdi:bell-ring"
+    },
+    "persistent_notification": {
+      "service": "mdi:bell-badge"
+    },
+    "send_message": {
+      "service": "mdi:message-arrow-right"
+    }
   }
 }

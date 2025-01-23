@@ -1,5 +1,7 @@
 """Tests for iZone."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -8,10 +10,11 @@ from homeassistant import config_entries
 from homeassistant.components.izone.const import DISPATCH_CONTROLLER_DISCOVERED, IZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 
 @pytest.fixture
-def mock_disco():
+def mock_disco() -> Mock:
     """Mock discovery service."""
     disco = Mock()
     disco.pi_disco = Mock()
@@ -19,17 +22,15 @@ def mock_disco():
     return disco
 
 
-def _mock_start_discovery(hass, mock_disco):
-    from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-    def do_disovered(*args):
+def _mock_start_discovery(hass: HomeAssistant, mock_disco: Mock) -> Callable[..., Mock]:
+    def do_disovered(*args: Any) -> Mock:
         async_dispatcher_send(hass, DISPATCH_CONTROLLER_DISCOVERED, True)
         return mock_disco
 
     return do_disovered
 
 
-async def test_not_found(hass: HomeAssistant, mock_disco) -> None:
+async def test_not_found(hass: HomeAssistant, mock_disco: Mock) -> None:
     """Test not finding iZone controller."""
 
     with (
@@ -57,7 +58,7 @@ async def test_not_found(hass: HomeAssistant, mock_disco) -> None:
     stop_disco.assert_called_once()
 
 
-async def test_found(hass: HomeAssistant, mock_disco) -> None:
+async def test_found(hass: HomeAssistant, mock_disco: Mock) -> None:
     """Test not finding iZone controller."""
     mock_disco.pi_disco.controllers["blah"] = object()
 

@@ -1,11 +1,11 @@
 {
   "domain": "switcher_kis",
   "name": "Switcher",
-  "codeowners": ["@thecode"],
+  "codeowners": ["@thecode", "@YogevBokobza"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/switcher_kis",
   "iot_class": "local_push",
   "loggers": ["aioswitcher"],
-  "quality_scale": "platinum",
-  "requirements": ["aioswitcher==3.4.1"]
+  "requirements": ["aioswitcher==6.0.0"],
+  "single_config_entry": true
 }

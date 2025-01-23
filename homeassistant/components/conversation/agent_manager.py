@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 import logging
 from typing import Any
 
@@ -9,16 +10,24 @@ import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import config_validation as cv, singleton
-from homeassistant.helpers.entity_component import EntityComponent
 
-from .const import DOMAIN, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
-from .default_agent import async_get_default_agent
+from .const import (
+    DATA_COMPONENT,
+    DATA_DEFAULT_ENTITY,
+    HOME_ASSISTANT_AGENT,
+    OLD_HOME_ASSISTANT_AGENT,
+)
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
     AgentInfo,
     ConversationInput,
     ConversationResult,
+)
+from .trace import (
+    ConversationTraceEvent,
+    ConversationTraceEventType,
+    async_conversation_trace,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,11 +54,10 @@ def async_get_agent(
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
     if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
-        return async_get_default_agent(hass)
+        return hass.data[DATA_DEFAULT_ENTITY]
 
     if "." in agent_id:
-        entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-        return entity_component.get_entity(agent_id)
+        return hass.data[DATA_COMPONENT].get_entity(agent_id)
 
     manager = get_agent_manager(hass)
 
@@ -67,6 +75,7 @@ async def async_converse(
     language: str | None = None,
     agent_id: str | None = None,
     device_id: str | None = None,
+    extra_system_prompt: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
     agent = async_get_agent(hass, agent_id)
@@ -84,15 +93,25 @@ async def async_converse(
         language = hass.config.language
 
     _LOGGER.debug("Processing in %s: %s", language, text)
-    return await method(
-        ConversationInput(
-            text=text,
-            context=context,
-            conversation_id=conversation_id,
-            device_id=device_id,
-            language=language,
-        )
+    conversation_input = ConversationInput(
+        text=text,
+        context=context,
+        conversation_id=conversation_id,
+        device_id=device_id,
+        language=language,
+        agent_id=agent_id,
+        extra_system_prompt=extra_system_prompt,
     )
+    with async_conversation_trace() as trace:
+        trace.add_event(
+            ConversationTraceEvent(
+                ConversationTraceEventType.ASYNC_PROCESS,
+                dataclasses.asdict(conversation_input),
+            )
+        )
+        result = await method(conversation_input)
+        trace.set_result(**result.as_dict())
+        return result
 
 
 class AgentManager:

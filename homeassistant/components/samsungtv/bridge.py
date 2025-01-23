@@ -321,9 +321,14 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
-    async def async_device_info(self) -> None:
+    async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this device."""
         return None
+
+    def _notify_reauth_callback(self) -> None:
+        """Notify access denied callback."""
+        if self._reauth_callback is not None:
+            self.hass.loop.call_soon_threadsafe(self._reauth_callback)
 
     def _get_remote(self) -> Remote:
         """Create or return a remote control instance."""
@@ -531,7 +536,7 @@ class SamsungTVWSBridge(
                     LOGGER.debug("Working config: %s", config)
                     return RESULT_SUCCESS
             except ConnectionClosedError as err:
-                LOGGER.info(
+                LOGGER.warning(
                     (
                         "Working but unsupported config: %s, error: '%s'; this may be"
                         " an indication that access to the TV has been denied. Please"
@@ -604,7 +609,7 @@ class SamsungTVWSBridge(
             try:
                 await self._remote.start_listening(self._remote_event)
             except UnauthorizedError as err:
-                LOGGER.info(
+                LOGGER.warning(
                     "Failed to get remote for %s, re-authentication required: %s",
                     self.host,
                     repr(err),
@@ -613,7 +618,7 @@ class SamsungTVWSBridge(
                 self._notify_reauth_callback()
                 self._remote = None
             except ConnectionClosedError as err:
-                LOGGER.info(
+                LOGGER.warning(
                     "Failed to get remote for %s: %s",
                     self.host,
                     repr(err),
@@ -638,7 +643,7 @@ class SamsungTVWSBridge(
                     # Initialise device info on first connect
                     await self.async_device_info()
                 if self.token != self._remote.token:
-                    LOGGER.info(
+                    LOGGER.warning(
                         "SamsungTVWSBridge has provided a new token %s",
                         self._remote.token,
                     )

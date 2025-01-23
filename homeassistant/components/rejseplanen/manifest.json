@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/rejseplanen",
   "iot_class": "cloud_polling",
   "loggers": ["rjpl"],
+  "quality_scale": "legacy",
   "requirements": ["rjpl==0.3.6"]
 }

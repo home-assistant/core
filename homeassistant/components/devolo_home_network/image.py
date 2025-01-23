@@ -13,12 +13,14 @@ from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 import homeassistant.util.dt as dt_util
 
 from . import DevoloHomeNetworkConfigEntry
 from .const import IMAGE_GUEST_WIFI, SWITCH_GUEST_WIFI
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -64,7 +66,7 @@ class DevoloImageEntity(DevoloCoordinatorEntity[WifiGuestAccessGet], ImageEntity
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[WifiGuestAccessGet],
+        coordinator: DevoloDataUpdateCoordinator[WifiGuestAccessGet],
         description: DevoloImageEntityDescription,
     ) -> None:
         """Initialize entity."""

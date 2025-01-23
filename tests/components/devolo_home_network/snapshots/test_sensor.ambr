@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[connected_plc_devices-async_get_network_overview-interval2]
+# name: test_sensor[connected_plc_devices-async_get_network_overview-interval2-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Connected PLC devices',
@@ -12,7 +12,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensor[connected_plc_devices-async_get_network_overview-interval2].1
+# name: test_sensor[connected_plc_devices-async_get_network_overview-interval2-1].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -45,7 +45,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[connected_wi_fi_clients-async_get_wifi_connected_station-interval0]
+# name: test_sensor[connected_wi_fi_clients-async_get_wifi_connected_station-interval0-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Connected Wi-Fi clients',
@@ -59,7 +59,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensor[connected_wi_fi_clients-async_get_wifi_connected_station-interval0].1
+# name: test_sensor[connected_wi_fi_clients-async_get_wifi_connected_station-interval0-1].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -94,7 +94,54 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[neighboring_wi_fi_networks-async_get_wifi_neighbor_access_points-interval1]
+# name: test_sensor[last_restart_of_the_device-async_uptime-interval3-2023-01-13T11:58:50+00:00]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Mock Title Last restart of the device',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_last_restart_of_the_device',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-01-13T11:58:20+00:00',
+  })
+# ---
+# name: test_sensor[last_restart_of_the_device-async_uptime-interval3-2023-01-13T11:58:50+00:00].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_last_restart_of_the_device',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last restart of the device',
+    'platform': 'devolo_home_network',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_restart',
+    'unique_id': '1234567890_last_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[neighboring_wi_fi_networks-async_get_wifi_neighbor_access_points-interval1-1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mock Title Neighboring Wi-Fi networks',
@@ -107,7 +154,7 @@
     'state': '1',
   })
 # ---
-# name: test_sensor[neighboring_wi_fi_networks-async_get_wifi_neighbor_access_points-interval1].1
+# name: test_sensor[neighboring_wi_fi_networks-async_get_wifi_neighbor_access_points-interval1-1].1
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),

@@ -11,12 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     EFFECT_RANDOM,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -45,7 +45,7 @@ DEFAULT_ALLOW_LIGHTIFY_SWITCHES = True
 DEFAULT_INTERVAL_LIGHTIFY_STATUS = 5
 DEFAULT_INTERVAL_LIGHTIFY_CONF = 3600
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(
@@ -191,10 +191,7 @@ class Luminary(LightEntity):
         self._effect_list = []
         self._is_on = False
         self._available = True
-        self._min_mireds = None
-        self._max_mireds = None
         self._brightness = None
-        self._color_temp = None
         self._rgb_color = None
         self._device_attributes = None
 
@@ -257,11 +254,6 @@ class Luminary(LightEntity):
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
-    def color_temp(self):
-        """Return the color temperature."""
-        return self._color_temp
-
-    @property
     def brightness(self):
         """Return brightness of the luminary (0..255)."""
         return self._brightness
@@ -275,16 +267,6 @@ class Luminary(LightEntity):
     def effect_list(self):
         """List of supported effects."""
         return self._effect_list
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        return self._min_mireds
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        return self._max_mireds
 
     @property
     def unique_id(self):
@@ -326,12 +308,10 @@ class Luminary(LightEntity):
             self._rgb_color = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
             self._luminary.set_rgb(*self._rgb_color, transition)
 
-        if ATTR_COLOR_TEMP in kwargs:
-            self._color_temp = kwargs[ATTR_COLOR_TEMP]
-            self._luminary.set_temperature(
-                int(color_util.color_temperature_mired_to_kelvin(self._color_temp)),
-                transition,
-            )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            self._attr_color_temp_kelvin = color_temp_kelvin
+            self._luminary.set_temperature(color_temp_kelvin, transition)
 
         self._is_on = True
         if ATTR_BRIGHTNESS in kwargs:
@@ -362,10 +342,10 @@ class Luminary(LightEntity):
         self._attr_supported_features = self._get_supported_features()
         self._effect_list = self._get_effect_list()
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
-            self._min_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._attr_max_color_temp_kelvin = (
                 self._luminary.max_temp() or DEFAULT_KELVIN
             )
-            self._max_mireds = color_util.color_temperature_kelvin_to_mired(
+            self._attr_min_color_temp_kelvin = (
                 self._luminary.min_temp() or DEFAULT_KELVIN
             )
         if len(self._attr_supported_color_modes) == 1:
@@ -380,9 +360,7 @@ class Luminary(LightEntity):
             self._brightness = int(self._luminary.lum() * 2.55)
 
         if ColorMode.COLOR_TEMP in self._attr_supported_color_modes:
-            self._color_temp = color_util.color_temperature_kelvin_to_mired(
-                self._luminary.temp() or DEFAULT_KELVIN
-            )
+            self._attr_color_temp_kelvin = self._luminary.temp() or DEFAULT_KELVIN
 
         if ColorMode.HS in self._attr_supported_color_modes:
             self._rgb_color = self._luminary.rgb()

@@ -9,9 +9,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ModernFormsDeviceEntity, modernforms_exception_handler
+from . import modernforms_exception_handler
 from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(

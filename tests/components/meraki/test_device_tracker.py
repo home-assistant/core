@@ -1,8 +1,10 @@
 """The tests the for Meraki device tracker."""
 
+from asyncio import AbstractEventLoop
 from http import HTTPStatus
 import json
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components import device_tracker
@@ -16,9 +18,15 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.typing import ClientSessionGenerator
+
 
 @pytest.fixture
-def meraki_client(event_loop, hass, hass_client):
+def meraki_client(
+    event_loop: AbstractEventLoop,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+) -> TestClient:
     """Meraki mock client."""
     loop = event_loop
 
@@ -134,12 +142,8 @@ async def test_data_will_be_saved(
     req = await meraki_client.post(URL, data=json.dumps(data))
     assert req.status == HTTPStatus.OK
     await hass.async_block_till_done()
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a4")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a4").state
     assert state_name == "home"
 
-    state_name = hass.states.get(
-        "{}.{}".format("device_tracker", "00_26_ab_b8_a9_a5")
-    ).state
+    state_name = hass.states.get("device_tracker.00_26_ab_b8_a9_a5").state
     assert state_name == "home"

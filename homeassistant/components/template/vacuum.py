@@ -17,13 +17,8 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -58,12 +53,12 @@ CONF_FAN_SPEED_TEMPLATE = "fan_speed_template"
 
 ENTITY_ID_FORMAT = VACUUM_DOMAIN + ".{}"
 _VALID_STATES = [
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
+    VacuumActivity.CLEANING,
+    VacuumActivity.DOCKED,
+    VacuumActivity.PAUSED,
+    VacuumActivity.IDLE,
+    VacuumActivity.RETURNING,
+    VacuumActivity.ERROR,
 ]
 
 VACUUM_SCHEMA = vol.All(
@@ -100,7 +95,7 @@ async def _async_create_entities(hass, config):
     vacuums = []
 
     for object_id, entity_config in config[CONF_VACUUMS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         vacuums.append(
@@ -202,7 +197,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
     @property
-    def state(self) -> str | None:
+    def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
         return self._state
 
@@ -318,7 +313,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         try:
             battery_level_int = int(battery_level)
             if not 0 <= battery_level_int <= 100:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
         except ValueError:
             _LOGGER.error(
                 "Received invalid battery level: %s for entity %s. Expected: 0-100",

@@ -18,10 +18,7 @@ from homeassistant.components.hassio import (
     AddonInfo,
     AddonManager,
     AddonState,
-    HassioServiceInfo,
-    is_hassio,
 )
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import (
     SOURCE_USB,
     ConfigEntriesFlowManager,
@@ -29,6 +26,7 @@ from homeassistant.config_entries import (
     ConfigEntryBaseFlow,
     ConfigEntryState,
     ConfigFlow,
+    ConfigFlowContext,
     ConfigFlowResult,
     OptionsFlow,
     OptionsFlowManager,
@@ -38,6 +36,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow, FlowManager
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.hassio import is_hassio
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.typing import VolDictType
 
 from . import disconnect_client
 from .addon import get_addon_manager
@@ -46,12 +49,16 @@ from .const import (
     CONF_ADDON_DEVICE,
     CONF_ADDON_EMULATE_HARDWARE,
     CONF_ADDON_LOG_LEVEL,
+    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_NETWORK_KEY,
     CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_INTEGRATION_CREATED_ADDON,
+    CONF_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_S0_LEGACY_KEY,
     CONF_S2_ACCESS_CONTROL_KEY,
     CONF_S2_AUTHENTICATED_KEY,
@@ -86,6 +93,8 @@ ADDON_USER_INPUT_MAP = {
     CONF_ADDON_S2_ACCESS_CONTROL_KEY: CONF_S2_ACCESS_CONTROL_KEY,
     CONF_ADDON_S2_AUTHENTICATED_KEY: CONF_S2_AUTHENTICATED_KEY,
     CONF_ADDON_S2_UNAUTHENTICATED_KEY: CONF_S2_UNAUTHENTICATED_KEY,
+    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: CONF_LR_S2_ACCESS_CONTROL_KEY,
+    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_ADDON_LOG_LEVEL: CONF_LOG_LEVEL,
     CONF_ADDON_EMULATE_HARDWARE: CONF_EMULATE_HARDWARE,
 }
@@ -172,6 +181,8 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
         self.s2_access_control_key: str | None = None
         self.s2_authenticated_key: str | None = None
         self.s2_unauthenticated_key: str | None = None
+        self.lr_s2_access_control_key: str | None = None
+        self.lr_s2_authenticated_key: str | None = None
         self.usb_path: str | None = None
         self.ws_address: str | None = None
         self.restart_addon: bool = False
@@ -183,7 +194,7 @@ class BaseZwaveJSFlow(ConfigEntryBaseFlow, ABC):
 
     @property
     @abstractmethod
-    def flow_manager(self) -> FlowManager[ConfigFlowResult]:
+    def flow_manager(self) -> FlowManager[ConfigFlowContext, ConfigFlowResult]:
         """Return the flow manager of the flow."""
 
     async def async_step_install_addon(
@@ -337,11 +348,12 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _title: str
+
     def __init__(self) -> None:
         """Set up flow instance."""
         super().__init__()
         self.use_addon = False
-        self._title: str | None = None
         self._usb_discovery = False
 
     @property
@@ -355,19 +367,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow."""
-        return OptionsFlowHandler(config_entry)
-
-    async def async_step_import(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle imported data.
-
-        This step will be used when importing data
-        during Z-Wave to Z-Wave JS migration.
-        """
-        # Note that the data comes from the zwave integration.
-        # So we don't use our constants here.
-        self.s0_legacy_key = data.get("network_key")
-        self.usb_path = data.get("usb_path")
-        return await self.async_step_user()
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -397,6 +397,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual({CONF_URL: self.ws_address})
 
         assert self.ws_address
+        assert self.unique_id
         return self.async_show_form(
             step_id="zeroconf_confirm",
             description_placeholders={
@@ -405,9 +406,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="discovery_requires_supervisor")
@@ -565,6 +564,12 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             self.s2_unauthenticated_key = addon_config.get(
                 CONF_ADDON_S2_UNAUTHENTICATED_KEY, ""
             )
+            self.lr_s2_access_control_key = addon_config.get(
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, ""
+            )
+            self.lr_s2_authenticated_key = addon_config.get(
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
+            )
             return await self.async_step_finish_addon_setup()
 
         if addon_info.state == AddonState.NOT_RUNNING:
@@ -584,6 +589,8 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
             self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
             self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
+            self.lr_s2_access_control_key = user_input[CONF_LR_S2_ACCESS_CONTROL_KEY]
+            self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
             if not self._usb_discovery:
                 self.usb_path = user_input[CONF_USB_PATH]
 
@@ -594,6 +601,8 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
             }
 
             if new_addon_config != addon_config:
@@ -614,8 +623,14 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
         s2_unauthenticated_key = addon_config.get(
             CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
         )
+        lr_s2_access_control_key = addon_config.get(
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, self.lr_s2_access_control_key or ""
+        )
+        lr_s2_authenticated_key = addon_config.get(
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
+        )
 
-        schema = {
+        schema: VolDictType = {
             vol.Optional(CONF_S0_LEGACY_KEY, default=s0_legacy_key): str,
             vol.Optional(
                 CONF_S2_ACCESS_CONTROL_KEY, default=s2_access_control_key
@@ -623,6 +638,12 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_S2_AUTHENTICATED_KEY, default=s2_authenticated_key): str,
             vol.Optional(
                 CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+            ): str,
+            vol.Optional(
+                CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
+            ): str,
+            vol.Optional(
+                CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
             ): str,
         }
 
@@ -649,7 +670,7 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.context["source"] == SOURCE_USB:
+        if not self.unique_id or self.source == SOURCE_USB:
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -670,6 +691,8 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
             }
         )
         return self._async_create_entry_from_vars()
@@ -690,6 +713,8 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 CONF_USE_ADDON: self.use_addon,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
@@ -699,10 +724,9 @@ class ZWaveJSConfigFlow(BaseZwaveJSFlow, ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
     """Handle an options flow for Z-Wave JS."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Set up the options flow."""
         super().__init__()
-        self.config_entry = config_entry
         self.original_addon_config: dict[str, Any] | None = None
         self.revert_reason: str | None = None
 
@@ -801,6 +825,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
             self.s2_access_control_key = user_input[CONF_S2_ACCESS_CONTROL_KEY]
             self.s2_authenticated_key = user_input[CONF_S2_AUTHENTICATED_KEY]
             self.s2_unauthenticated_key = user_input[CONF_S2_UNAUTHENTICATED_KEY]
+            self.lr_s2_access_control_key = user_input[CONF_LR_S2_ACCESS_CONTROL_KEY]
+            self.lr_s2_authenticated_key = user_input[CONF_LR_S2_AUTHENTICATED_KEY]
             self.usb_path = user_input[CONF_USB_PATH]
 
             new_addon_config = {
@@ -810,6 +836,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 CONF_ADDON_LOG_LEVEL: user_input[CONF_LOG_LEVEL],
                 CONF_ADDON_EMULATE_HARDWARE: user_input.get(
                     CONF_EMULATE_HARDWARE, False
@@ -850,6 +878,12 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
         s2_unauthenticated_key = addon_config.get(
             CONF_ADDON_S2_UNAUTHENTICATED_KEY, self.s2_unauthenticated_key or ""
         )
+        lr_s2_access_control_key = addon_config.get(
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY, self.lr_s2_access_control_key or ""
+        )
+        lr_s2_authenticated_key = addon_config.get(
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY, self.lr_s2_authenticated_key or ""
+        )
         log_level = addon_config.get(CONF_ADDON_LOG_LEVEL, "info")
         emulate_hardware = addon_config.get(CONF_ADDON_EMULATE_HARDWARE, False)
 
@@ -867,6 +901,12 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 ): str,
                 vol.Optional(
                     CONF_S2_UNAUTHENTICATED_KEY, default=s2_unauthenticated_key
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_ACCESS_CONTROL_KEY, default=lr_s2_access_control_key
+                ): str,
+                vol.Optional(
+                    CONF_LR_S2_AUTHENTICATED_KEY, default=lr_s2_authenticated_key
                 ): str,
                 vol.Optional(CONF_LOG_LEVEL, default=log_level): vol.In(
                     ADDON_LOG_LEVELS
@@ -921,6 +961,8 @@ class OptionsFlowHandler(BaseZwaveJSFlow, OptionsFlow):
                 CONF_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
                 CONF_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
                 CONF_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                CONF_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                CONF_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             }

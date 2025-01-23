@@ -11,9 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import ONVIFBaseEntity
 from .const import DOMAIN
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 from .models import Profile
 
 

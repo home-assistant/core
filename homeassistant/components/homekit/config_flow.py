@@ -17,6 +17,7 @@ from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
+from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     ConfigEntry,
@@ -38,6 +39,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    selector,
 )
 from homeassistant.loader import async_get_integrations
 
@@ -105,6 +107,7 @@ SUPPORTED_DOMAINS = [
     "switch",
     "vacuum",
     "water_heater",
+    VALVE_DOMAIN,
 ]
 
 DEFAULT_DOMAINS = [
@@ -176,12 +179,12 @@ def _async_build_entities_filter(
     )
 
 
-def _async_cameras_from_entities(entities: list[str]) -> dict[str, str]:
-    return {
-        entity_id: entity_id
+def _async_cameras_from_entities(entities: list[str]) -> list[str]:
+    return [
+        entity_id
         for entity_id in entities
         if entity_id.startswith(CAMERA_ENTITY_PREFIX)
-    }
+    ]
 
 
 async def _async_name_to_type_map(hass: HomeAssistant) -> dict[str, str]:
@@ -309,12 +312,12 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
             title=f"{name}:{entry_data[CONF_PORT]}", data=entry_data
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from yaml."""
-        if not self._async_is_unique_name_port(user_input):
+        if not self._async_is_unique_name_port(import_data):
             return self.async_abort(reason="port_name_in_use")
         return self.async_create_entry(
-            title=f"{user_input[CONF_NAME]}:{user_input[CONF_PORT]}", data=user_input
+            title=f"{import_data[CONF_NAME]}:{import_data[CONF_PORT]}", data=import_data
         )
 
     @callback
@@ -359,17 +362,16 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Handle a option flow for homekit."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.hk_options: dict[str, Any] = {}
-        self.included_cameras: dict[str, str] = {}
+        self.included_cameras: list[str] = []
 
     async def async_step_yaml(
         self, user_input: dict[str, Any] | None = None
@@ -459,13 +461,21 @@ class OptionsFlowHandler(OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_CAMERA_COPY,
-                    default=cameras_with_copy,
-                ): cv.multi_select(self.included_cameras),
+                    CONF_CAMERA_COPY, default=cameras_with_copy
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        multiple=True,
+                        include_entities=(self.included_cameras),
+                    )
+                ),
                 vol.Optional(
-                    CONF_CAMERA_AUDIO,
-                    default=cameras_with_audio,
-                ): cv.multi_select(self.included_cameras),
+                    CONF_CAMERA_AUDIO, default=cameras_with_audio
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(
+                        multiple=True,
+                        include_entities=(self.included_cameras),
+                    )
+                ),
             }
         )
         return self.async_show_form(step_id="cameras", data_schema=data_schema)
@@ -506,9 +516,13 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="accessory",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_ENTITIES, default=default_value): vol.In(
-                        all_supported_entities
-                    )
+                    vol.Required(
+                        CONF_ENTITIES, default=default_value
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            include_entities=all_supported_entities,
+                        )
+                    ),
                 }
             ),
         )
@@ -544,9 +558,14 @@ class OptionsFlowHandler(OptionsFlow):
             },
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
-                        all_supported_entities
-                    )
+                    vol.Optional(
+                        CONF_ENTITIES, default=default_value
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            multiple=True,
+                            include_entities=all_supported_entities,
+                        )
+                    ),
                 }
             ),
         )
@@ -559,17 +578,17 @@ class OptionsFlowHandler(OptionsFlow):
         domains = hk_options[CONF_DOMAINS]
 
         if user_input is not None:
-            self.included_cameras = {}
+            self.included_cameras = []
             entities = cv.ensure_list(user_input[CONF_ENTITIES])
             if CAMERA_DOMAIN in domains:
                 camera_entities = _async_get_matching_entities(
                     self.hass, [CAMERA_DOMAIN]
                 )
-                self.included_cameras = {
-                    entity_id: entity_id
+                self.included_cameras = [
+                    entity_id
                     for entity_id in camera_entities
                     if entity_id not in entities
-                }
+                ]
             hk_options[CONF_FILTER] = _make_entity_filter(
                 include_domains=domains, exclude_entities=entities
             )
@@ -596,9 +615,14 @@ class OptionsFlowHandler(OptionsFlow):
             },
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_ENTITIES, default=default_value): cv.multi_select(
-                        all_supported_entities
-                    )
+                    vol.Optional(
+                        CONF_ENTITIES, default=default_value
+                    ): selector.EntitySelector(
+                        selector.EntitySelectorConfig(
+                            multiple=True,
+                            include_entities=all_supported_entities,
+                        )
+                    ),
                 }
             ),
         )
@@ -682,13 +706,11 @@ def _async_get_matching_entities(
     domains: list[str] | None = None,
     include_entity_category: bool = False,
     include_hidden: bool = False,
-) -> dict[str, str]:
+) -> list[str]:
     """Fetch all entities or entities in the given domains."""
     ent_reg = er.async_get(hass)
-    return {
-        state.entity_id: (
-            f"{state.attributes.get(ATTR_FRIENDLY_NAME, state.entity_id)} ({state.entity_id})"
-        )
+    return [
+        state.entity_id
         for state in sorted(
             hass.states.async_all(domains and set(domains)),
             key=lambda item: item.entity_id,
@@ -696,7 +718,7 @@ def _async_get_matching_entities(
         if not _exclude_by_entity_registry(
             ent_reg, state.entity_id, include_entity_category, include_hidden
         )
-    }
+    ]
 
 
 def _domains_set_from_entities(entity_ids: Iterable[str]) -> set[str]:

@@ -13,15 +13,14 @@ from roborock.exceptions import RoborockException
 from roborock.version_1_apis.roborock_client_v1 import AttributeCache
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
 
-from .const import DOMAIN
+from . import DOMAIN, RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class RoborockTimeDescription(TimeEntityDescription):
     # Gets the status of the switch
     cache_key: CacheableAttribute
     # Sets the status of the switch
-    update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, dict]]
+    update_value: Callable[[AttributeCache, datetime.time], Coroutine[Any, Any, None]]
     # Attribute from cache
     get_value: Callable[[AttributeCache], datetime.time]
 
@@ -114,18 +113,15 @@ TIME_DESCRIPTIONS: list[RoborockTimeDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoborockConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Roborock time platform."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
     possible_entities: list[
         tuple[RoborockDataUpdateCoordinator, RoborockTimeDescription]
     ] = [
         (coordinator, description)
-        for coordinator in coordinators.values()
+        for coordinator in config_entry.runtime_data.v1
         for description in TIME_DESCRIPTIONS
     ]
     # We need to check if this function is supported by the device.
@@ -145,7 +141,7 @@ async def async_setup_entry(
         else:
             valid_entities.append(
                 RoborockTimeEntity(
-                    f"{description.key}_{slugify(coordinator.roborock_device_info.device.duid)}",
+                    f"{description.key}_{coordinator.duid_slug}",
                     coordinator,
                     description,
                 )
@@ -153,7 +149,7 @@ async def async_setup_entry(
     async_add_entities(valid_entities)
 
 
-class RoborockTimeEntity(RoborockEntity, TimeEntity):
+class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
     """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
 
     entity_description: RoborockTimeDescription
@@ -177,6 +173,12 @@ class RoborockTimeEntity(RoborockEntity, TimeEntity):
 
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
-        await self.entity_description.update_value(
-            self.get_cache(self.entity_description.cache_key), value
-        )
+        try:
+            await self.entity_description.update_value(
+                self.get_cache(self.entity_description.cache_key), value
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            ) from err

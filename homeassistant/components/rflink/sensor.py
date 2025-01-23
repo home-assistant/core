@@ -8,7 +8,7 @@ from rflink.parser import PACKET_FIELDS, UNITS
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -40,7 +40,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     DATA_DEVICE_REGISTER,
@@ -51,8 +51,8 @@ from . import (
     SIGNAL_AVAILABILITY,
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
-    RflinkDevice,
 )
+from .entity import RflinkDevice
 
 SENSOR_TYPES = (
     # check new descriptors against PACKET_FIELDS & UNITS from rflink.parser
@@ -71,6 +71,8 @@ SENSOR_TYPES = (
         native_unit_of_measurement=UnitOfPressure.HPA,
     ),
     SensorEntityDescription(
+        # Rflink devices reports ok/low so device class can’t be used
+        # It should be migrated to a binary sensor
         key="battery",
         name="Battery",
         icon="mdi:battery",
@@ -262,7 +264,7 @@ SENSOR_TYPES = (
 
 SENSOR_TYPES_DICT = {desc.key: desc for desc in SENSOR_TYPES}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
         vol.Optional(CONF_DEVICES, default={}): {

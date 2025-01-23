@@ -3,9 +3,10 @@
 import asyncio
 from dataclasses import asdict
 from datetime import timedelta
-from unittest.mock import call, patch
+from unittest.mock import _Call, call, patch
 
 import pytest
+import pywemo
 from pywemo.exceptions import ActionException, PyWeMoException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
@@ -14,7 +15,7 @@ from homeassistant.components.wemo import CONF_DISCOVERY, CONF_STATIC
 from homeassistant.components.wemo.const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
 from homeassistant.components.wemo.coordinator import Options, async_get_coordinator
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -177,6 +178,7 @@ async def test_device_info(
     }
     assert device_entries[0].manufacturer == "Belkin"
     assert device_entries[0].model == "LightSwitch"
+    assert device_entries[0].model_id == "LightSwitch"
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
@@ -191,8 +193,8 @@ async def test_dli_device_info(
 
 
 async def test_options_enable_subscription_false(
-    hass, pywemo_registry, pywemo_device, wemo_entity
-):
+    hass: HomeAssistant, pywemo_registry, pywemo_device, wemo_entity
+) -> None:
     """Test setting Options.enable_subscription = False."""
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
@@ -203,7 +205,9 @@ async def test_options_enable_subscription_false(
     pywemo_registry.unregister.assert_called_once_with(pywemo_device)
 
 
-async def test_options_enable_long_press_false(hass, pywemo_device, wemo_entity):
+async def test_options_enable_long_press_false(
+    hass: HomeAssistant, pywemo_device, wemo_entity
+) -> None:
     """Test setting Options.enable_long_press = False."""
     config_entry = hass.config_entries.async_get_entry(wemo_entity.config_entry_id)
     assert hass.config_entries.async_update_entry(
@@ -246,14 +250,14 @@ class TestInsight:
     )
     async def test_should_poll(
         self,
-        hass,
-        subscribed,
-        state,
-        expected_calls,
-        wemo_entity,
-        pywemo_device,
-        pywemo_registry,
-    ):
+        hass: HomeAssistant,
+        subscribed: bool,
+        state: int,
+        expected_calls: list[_Call],
+        wemo_entity: er.RegistryEntry,
+        pywemo_device: pywemo.WeMoDevice,
+        pywemo_registry: pywemo.SubscriptionRegistry,
+    ) -> None:
         """Validate the should_poll returns the correct value."""
         pywemo_registry.is_subscribed.return_value = subscribed
         pywemo_device.get_state.reset_mock()

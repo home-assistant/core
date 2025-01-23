@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.device_api import WifiGuestAccessGet
@@ -15,17 +15,19 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DevoloHomeNetworkConfigEntry
 from .const import DOMAIN, SWITCH_GUEST_WIFI, SWITCH_LEDS
+from .coordinator import DevoloDataUpdateCoordinator
 from .entity import DevoloCoordinatorEntity
 
-_DataT = TypeVar("_DataT", bound=WifiGuestAccessGet | bool)
+PARALLEL_UPDATES = 0
+
+type _DataType = WifiGuestAccessGet | bool
 
 
 @dataclass(frozen=True, kw_only=True)
-class DevoloSwitchEntityDescription(SwitchEntityDescription, Generic[_DataT]):
+class DevoloSwitchEntityDescription[_DataT: _DataType](SwitchEntityDescription):
     """Describes devolo switch entity."""
 
     is_on_func: Callable[[_DataT], bool]
@@ -79,7 +81,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
+class DevoloSwitchEntity[_DataT: _DataType](
+    DevoloCoordinatorEntity[_DataT], SwitchEntity
+):
     """Representation of a devolo switch."""
 
     entity_description: DevoloSwitchEntityDescription[_DataT]
@@ -87,7 +91,7 @@ class DevoloSwitchEntity(DevoloCoordinatorEntity[_DataT], SwitchEntity):
     def __init__(
         self,
         entry: DevoloHomeNetworkConfigEntry,
-        coordinator: DataUpdateCoordinator[_DataT],
+        coordinator: DevoloDataUpdateCoordinator[_DataT],
         description: DevoloSwitchEntityDescription[_DataT],
     ) -> None:
         """Initialize entity."""

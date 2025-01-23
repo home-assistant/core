@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
 
 from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import (
@@ -20,19 +18,13 @@ from homeassistant.const import CONF_HOST, CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     WALLCONNECTOR_DATA_LIFETIME,
     WALLCONNECTOR_DATA_VITALS,
-    WALLCONNECTOR_DEVICE_NAME,
 )
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
@@ -79,6 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="tesla-wallconnector",
         update_interval=get_poll_interval(entry),
         update_method=async_update_data,
@@ -121,43 +114,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-def get_unique_id(serial_number: str, key: str) -> str:
-    """Get a unique entity name."""
-    return f"{serial_number}-{key}"
-
-
-class WallConnectorEntity(CoordinatorEntity):
-    """Base class for Wall Connector entities."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, wall_connector_data: WallConnectorData) -> None:
-        """Initialize WallConnector Entity."""
-        self.wall_connector_data = wall_connector_data
-        self._attr_unique_id = get_unique_id(
-            wall_connector_data.serial_number, self.entity_description.key
-        )
-        super().__init__(wall_connector_data.update_coordinator)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.wall_connector_data.serial_number)},
-            name=WALLCONNECTOR_DEVICE_NAME,
-            model=self.wall_connector_data.part_number,
-            sw_version=self.wall_connector_data.firmware_version,
-            manufacturer="Tesla",
-        )
-
-
-@dataclass(frozen=True)
-class WallConnectorLambdaValueGetterMixin:
-    """Mixin with a function pointer for getting sensor value."""
-
-    value_fn: Callable[[dict], Any]
 
 
 @dataclass

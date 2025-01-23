@@ -21,6 +21,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     STATE_UNKNOWN,
@@ -152,6 +153,7 @@ async def test_on_when_below_desired(saunabox, hass: HomeAssistant) -> None:
         feature_mock.desired = 64.8
         feature_mock.current = 25.7
 
+    feature_mock.mode = 1
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
     await hass.services.async_call(
         "climate",
@@ -186,12 +188,13 @@ async def test_on_when_above_desired(saunabox, hass: HomeAssistant) -> None:
         feature_mock.desired = 23.4
         feature_mock.current = 28.7
 
+    feature_mock.mode = 1
     feature_mock.async_on = AsyncMock(side_effect=turn_on)
 
     await hass.services.async_call(
         "climate",
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     feature_mock.async_off.assert_not_called()

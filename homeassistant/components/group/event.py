@@ -10,8 +10,8 @@ import voluptuous as vol
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     ATTR_EVENT_TYPES,
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as EVENT_DOMAIN,
+    PLATFORM_SCHEMA as EVENT_PLATFORM_SCHEMA,
     EventEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -38,9 +38,9 @@ DEFAULT_NAME = "Event group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = EVENT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(EVENT_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }

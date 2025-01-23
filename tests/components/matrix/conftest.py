@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -46,7 +48,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
@@ -265,7 +267,9 @@ def mock_load_json():
 @pytest.fixture
 def mock_allowed_path():
     """Allow using NamedTemporaryFile for mock image."""
-    with patch("homeassistant.core.Config.is_allowed_path", return_value=True) as mock:
+    with patch(
+        "homeassistant.core_config.Config.is_allowed_path", return_value=True
+    ) as mock:
         yield mock
 
 
@@ -292,21 +296,21 @@ async def matrix_bot(
 
 
 @pytest.fixture
-def matrix_events(hass: HomeAssistant):
+def matrix_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, MATRIX_DOMAIN)
 
 
 @pytest.fixture
-def command_events(hass: HomeAssistant):
+def command_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, EVENT_MATRIX_COMMAND)
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path) -> Generator[tempfile._TemporaryFileWrapper]:
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
-    image_file = tempfile.NamedTemporaryFile(dir=tmp_path)
-    image.save(image_file, "PNG")
-    return image_file
+    with tempfile.NamedTemporaryFile(dir=tmp_path) as image_file:
+        image.save(image_file, "PNG")
+        yield image_file

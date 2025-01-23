@@ -4,37 +4,30 @@ from __future__ import annotations
 
 from datetime import timedelta
 from enum import StrEnum
-from functools import cached_property, partial
 import logging
 from typing import Literal, final
 
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.config_validation import (  # noqa: F401
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DOMAIN = "binary_sensor"
-SCAN_INTERVAL = timedelta(seconds=30)
-
+DATA_COMPONENT: HassKey[EntityComponent[BinarySensorEntity]] = HassKey(DOMAIN)
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
+PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 class BinarySensorDeviceClass(StrEnum):
@@ -126,101 +119,14 @@ class BinarySensorDeviceClass(StrEnum):
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(BinarySensorDeviceClass))
-
-# DEVICE_CLASS* below are deprecated as of 2021.12
-# use the BinarySensorDeviceClass enum instead.
 DEVICE_CLASSES = [cls.value for cls in BinarySensorDeviceClass]
-_DEPRECATED_DEVICE_CLASS_BATTERY = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.BATTERY, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_BATTERY_CHARGING = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.BATTERY_CHARGING, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_CO = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.CO, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_COLD = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.COLD, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_CONNECTIVITY = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.CONNECTIVITY, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_DOOR = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.DOOR, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_GARAGE_DOOR = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.GARAGE_DOOR, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_GAS = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.GAS, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_HEAT = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.HEAT, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_LIGHT = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.LIGHT, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_LOCK = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.LOCK, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_MOISTURE = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.MOISTURE, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_MOTION = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.MOTION, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_MOVING = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.MOVING, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_OCCUPANCY = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.OCCUPANCY, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_OPENING = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.OPENING, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_PLUG = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.PLUG, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_POWER = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.POWER, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_PRESENCE = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.PRESENCE, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_PROBLEM = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.PROBLEM, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_RUNNING = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.RUNNING, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_SAFETY = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.SAFETY, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_SMOKE = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.SMOKE, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_SOUND = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.SOUND, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_TAMPER = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.TAMPER, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_UPDATE = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.UPDATE, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_VIBRATION = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.VIBRATION, "2025.1"
-)
-_DEPRECATED_DEVICE_CLASS_WINDOW = DeprecatedConstantEnum(
-    BinarySensorDeviceClass.WINDOW, "2025.1"
-)
 
 # mypy: disallow-any-generics
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for binary sensors."""
-    component = hass.data[DOMAIN] = EntityComponent[BinarySensorEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BinarySensorEntity](
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -230,14 +136,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[BinarySensorEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 class BinarySensorEntityDescription(EntityDescription, frozen_or_thawed=True):
@@ -296,11 +200,3 @@ class BinarySensorEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
         if (is_on := self.is_on) is None:
             return None
         return STATE_ON if is_on else STATE_OFF
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

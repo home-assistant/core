@@ -18,3 +18,14 @@ get_packages:
       selector:
         config_entry:
           integration: seventeentrack
+archive_package:
+  fields:
+    package_tracking_number:
+      required: true
+      selector:
+        text:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: seventeentrack

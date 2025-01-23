@@ -5,11 +5,12 @@
   "documentation": "https://www.home-assistant.io/integrations/tensorflow",
   "iot_class": "local_polling",
   "loggers": ["tensorflow"],
+  "quality_scale": "legacy",
   "requirements": [
     "tensorflow==2.5.0",
     "tf-models-official==2.5.0",
     "pycocotools==2.0.6",
-    "numpy==1.26.0",
-    "Pillow==10.3.0"
+    "numpy==2.2.1",
+    "Pillow==11.1.0"
   ]
 }

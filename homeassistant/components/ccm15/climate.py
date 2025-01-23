@@ -57,6 +57,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         HVACMode.HEAT,
         HVACMode.COOL,
         HVACMode.DRY,
+        HVACMode.FAN_ONLY,
         HVACMode.AUTO,
     ]
     _attr_fan_modes = [FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
@@ -69,7 +70,6 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, ac_host: str, ac_index: int, coordinator: CCM15Coordinator

@@ -6,8 +6,7 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SamsungTVConfigEntry
@@ -29,11 +28,16 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
     """Device that sends commands to a SamsungTV."""
 
     _attr_name = None
-    _attr_should_poll = False
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle data update."""
+        self._attr_is_on = self.coordinator.is_on
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self._bridge.async_power_off()
+        await super()._async_turn_off()
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to a device.
@@ -42,7 +46,7 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
         See https://github.com/jaruba/ha-samsungtv-tizen/blob/master/Key_codes.md
         """
         if self._bridge.power_off_in_progress:
-            LOGGER.info("TV is powering off, not sending keys: %s", command)
+            LOGGER.debug("TV is powering off, not sending keys: %s", command)
             return
 
         num_repeats = kwargs[ATTR_NUM_REPEATS]
@@ -53,11 +57,4 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the remote on."""
-        if self._turn_on_action:
-            await self._turn_on_action.async_run(self.hass, self._context)
-        elif self._mac:
-            await self.hass.async_add_executor_job(self._wake_on_lan)
-        else:
-            raise HomeAssistantError(
-                f"Entity {self.entity_id} does not support this service."
-            )
+        await super()._async_turn_on()

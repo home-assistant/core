@@ -1,6 +1,9 @@
 """Tests for the SmartThings component init module."""
 
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -20,8 +23,8 @@ from homeassistant.components.smartthings.const import (
     PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -419,7 +422,11 @@ async def test_broker_regenerates_token(hass: HomeAssistant, config_entry) -> No
     stored_action = None
     config_entry.add_to_hass(hass)
 
-    def async_track_time_interval(hass, action, interval):
+    def async_track_time_interval(
+        hass: HomeAssistant,
+        action: Callable[[datetime], Coroutine[Any, Any, None] | None],
+        interval: timedelta,
+    ) -> None:
         nonlocal stored_action
         stored_action = action
 

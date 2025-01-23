@@ -62,8 +62,11 @@ class FreedomproFan(CoordinatorEntity[FreedomproDataUpdateCoordinator], FanEntit
             model=device["type"],
             name=device["name"],
         )
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         if "rotationSpeed" in self._characteristics:
-            self._attr_supported_features = FanEntityFeature.SET_SPEED
+            self._attr_supported_features |= FanEntityFeature.SET_SPEED
 
     @property
     def is_on(self) -> bool | None:

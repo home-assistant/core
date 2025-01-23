@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Generic, TypeVar, cast
 
-from pyprusalink.types import JobInfo, PrinterState, PrinterStatus
+from pyprusalink.types import JobInfo, PrinterInfo, PrinterState, PrinterStatus
 from pyprusalink.types_legacy import LegacyPrinterStatus
 
 from homeassistant.components.sensor import (
@@ -29,11 +29,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 from homeassistant.util.variance import ignore_variance
 
-from . import PrusaLinkEntity
 from .const import DOMAIN
 from .coordinator import PrusaLinkUpdateCoordinator
+from .entity import PrusaLinkEntity
 
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
+T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo, PrinterInfo)
 
 
 @dataclass(frozen=True)
@@ -187,6 +187,16 @@ SENSORS: dict[str, tuple[PrusaLinkSensorEntityDescription, ...]] = {
                 data.get("time_remaining") is not None
                 and data.get("state") != PrinterState.IDLE.value
             ),
+        ),
+    ),
+    "info": (
+        PrusaLinkSensorEntityDescription[PrinterInfo](
+            key="info.nozzle_diameter",
+            translation_key="nozzle_diameter",
+            native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+            device_class=SensorDeviceClass.DISTANCE,
+            value_fn=lambda data: cast(str, data["nozzle_diameter"]),
+            entity_registry_enabled_default=False,
         ),
     ),
 }

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
@@ -16,26 +16,31 @@ from pyhap.const import (
 
 from homeassistant.components import button, input_button
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
-from homeassistant.components.switch import DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
-    STATE_CLEANING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_CLOSING,
     STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
 )
-from homeassistant.core import State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
 
-from .accessories import TYPES, HomeAccessory
+from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
     CHAR_ACTIVE,
     CHAR_IN_USE,
@@ -54,6 +59,8 @@ from .const import (
 from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
+
+VALVE_OPEN_STATES: Final = {STATE_OPEN, STATE_OPENING, STATE_CLOSING}
 
 
 class ValveInfo(NamedTuple):
@@ -102,7 +109,7 @@ class Outlet(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(SWITCH_DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -206,23 +213,33 @@ class Vacuum(Switch):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
+        current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
         _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
         self.char_on.set_value(current_state)
 
 
-@TYPES.register("Valve")
-class Valve(HomeAccessory):
-    """Generate a Valve accessory."""
+class ValveBase(HomeAccessory):
+    """Valve base class."""
 
-    def __init__(self, *args: Any) -> None:
+    def __init__(
+        self,
+        valve_type: str,
+        open_states: set[str],
+        on_service: str,
+        off_service: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """Initialize a Valve accessory object."""
-        super().__init__(*args)
+        super().__init__(*args, **kwargs)
+        self.domain = split_entity_id(self.entity_id)[0]
         state = self.hass.states.get(self.entity_id)
         assert state
 
-        valve_type = self.config[CONF_TYPE]
         self.category = VALVE_TYPE[valve_type].category
+        self.open_states = open_states
+        self.on_service = on_service
+        self.off_service = off_service
 
         serv_valve = self.add_preload_service(SERV_VALVE)
         self.char_active = serv_valve.configure_char(
@@ -241,17 +258,62 @@ class Valve(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.async_call_service(DOMAIN, service, params)
+        service = self.on_service if value else self.off_service
+        self.async_call_service(self.domain, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = 1 if new_state.state == STATE_ON else 0
+        current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+
+
+@TYPES.register("ValveSwitch")
+class ValveSwitch(ValveBase):
+    """Generate a Valve accessory from a HomeAssistant switch."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+    ) -> None:
+        """Initialize a Valve accessory object."""
+        super().__init__(
+            config[CONF_TYPE],
+            {STATE_ON},
+            SERVICE_TURN_ON,
+            SERVICE_TURN_OFF,
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
+            *args,
+        )
+
+
+@TYPES.register("Valve")
+class Valve(ValveBase):
+    """Generate a Valve accessory from a HomeAssistant valve."""
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a Valve accessory object."""
+        super().__init__(
+            TYPE_VALVE,
+            VALVE_OPEN_STATES,
+            SERVICE_OPEN_VALVE,
+            SERVICE_CLOSE_VALVE,
+            *args,
+        )
 
 
 @TYPES.register("SelectSwitch")

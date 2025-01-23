@@ -18,13 +18,11 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_GUST_SPEED,
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
     Forecast,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -66,9 +64,10 @@ ATTR_FORECAST = "forecast"
         },
     ],
 )
-async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
-    for attr, v_attr, value in [
+    for attr, v_attr, value in (
         (
             "sensor.attribution",
             ATTR_ATTRIBUTION,
@@ -85,7 +84,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
         ("sensor.dew_point", ATTR_WEATHER_DEW_POINT, 2.2),
         ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
         state = hass.states.get("weather.test")
@@ -96,10 +95,7 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
@@ -121,14 +117,15 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecasts(
-    hass: HomeAssistant, start_ha, snapshot: SnapshotAssertion, service: str
+    hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
 ) -> None:
     """Test forecast service."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -224,7 +221,6 @@ async def test_forecasts(
     ("service", "expected"),
     [
         (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -246,18 +242,18 @@ async def test_forecasts(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_invalid(
     hass: HomeAssistant,
-    start_ha,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected: dict[str, Any],
 ) -> None:
     """Test invalid forecasts."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -308,7 +304,6 @@ async def test_forecast_invalid(
     ("service", "expected"),
     [
         (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -329,18 +324,18 @@ async def test_forecast_invalid(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     hass: HomeAssistant,
-    start_ha,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected: dict[str, Any],
 ) -> None:
     """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -377,7 +372,6 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     ("service", "expected"),
     [
         (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-        (LEGACY_SERVICE_GET_FORECAST, {"forecast": []}),
     ],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -398,18 +392,18 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_invalid_datetime_missing(
     hass: HomeAssistant,
-    start_ha,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected: dict[str, Any],
 ) -> None:
     """Test forecast service invalid when datetime missing."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -444,10 +438,7 @@ async def test_forecast_invalid_datetime_missing(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
@@ -468,14 +459,15 @@ async def test_forecast_invalid_datetime_missing(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_format_error(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture, service: str
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, service: str
 ) -> None:
     """Test forecast service invalid on incorrect format."""
-    for attr, _v_attr, value in [
+    for attr, _v_attr, value in (
         ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
         ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ]:
+    ):
         hass.states.async_set(attr, value)
         await hass.async_block_till_done()
 
@@ -659,9 +651,8 @@ async def test_trigger_entity_restore_state(
         },
     ],
 )
-async def test_trigger_action(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_action(hass: HomeAssistant) -> None:
     """Test trigger entity with an action works."""
     state = hass.states.get("weather.hello_name")
     assert state is not None
@@ -679,10 +670,7 @@ async def test_trigger_action(
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 @pytest.mark.parametrize(("count", "domain"), [(1, "template")])
 @pytest.mark.parametrize(
@@ -733,11 +721,10 @@ async def test_trigger_action(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 @pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_trigger_weather_services(
     hass: HomeAssistant,
-    start_ha,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     service: str,
 ) -> None:

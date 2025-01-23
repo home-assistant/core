@@ -24,6 +24,8 @@
     }
   },
   "services": {
-    "unlock_specific_door": "mdi:lock-open-variant"
+    "unlock_specific_door": {
+      "service": "mdi:lock-open-variant"
+    }
   }
 }

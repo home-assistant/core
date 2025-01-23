@@ -21,8 +21,8 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .base import EnumTypeData, IntegerTypeData, TuyaEntity
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
 
 TUYA_SUPPORT_TYPE = {
     "fs",  # Fan
@@ -116,6 +116,10 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+        if self._switch is not None:
+            self._attr_supported_features |= (
+                FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+            )
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""

@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 import sys
+from types import TracebackType
 from typing import Any, Self
 
 import httpx
@@ -58,7 +59,12 @@ class HassHttpXAsyncClient(httpx.AsyncClient):
         """Prevent an integration from reopen of the client via context manager."""
         return self
 
-    async def __aexit__(self, *args: object) -> None:
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None = None,
+        exc_value: BaseException | None = None,
+        traceback: TracebackType | None = None,
+    ) -> None:
         """Prevent an integration from close of the client via context manager."""
 
 
@@ -105,7 +111,7 @@ def create_async_httpx_client(
 def _async_register_async_client_shutdown(
     hass: HomeAssistant,
     client: httpx.AsyncClient,
-    original_aclose: Callable[..., Any],
+    original_aclose: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """Register httpx AsyncClient aclose on Home Assistant shutdown.
 

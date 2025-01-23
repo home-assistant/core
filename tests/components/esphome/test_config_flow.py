@@ -2,7 +2,8 @@
 
 from ipaddress import ip_address
 import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -18,7 +19,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
-from homeassistant.components.esphome import DomainData, dashboard
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -26,10 +27,10 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from . import VALID_NOISE_PSK
@@ -47,8 +48,9 @@ def mock_setup_entry():
         yield
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_connection_works(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -89,8 +91,9 @@ async def test_user_connection_works(
     assert mock_client.noise_psk is None
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_connection_updates_host(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test setup up the same name updates the host."""
     entry = MockConfigEntry(
@@ -118,8 +121,9 @@ async def test_user_connection_updates_host(
     assert entry.data[CONF_HOST] == "127.0.0.1"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_sets_unique_id(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test that the user flow sets the unique id."""
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -170,8 +174,9 @@ async def test_user_sets_unique_id(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_resolve_error(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test user step with IP resolve error."""
 
@@ -195,8 +200,9 @@ async def test_user_resolve_error(
     assert len(mock_client.disconnect.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_causes_zeroconf_to_abort(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test that the user flow sets the unique id and aborts the zeroconf flow."""
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -242,8 +248,9 @@ async def test_user_causes_zeroconf_to_abort(
     assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_connection_error(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test user step with connection error."""
     mock_client.device_info.side_effect = APIConnectionError
@@ -263,8 +270,9 @@ async def test_user_connection_error(
     assert len(mock_client.disconnect.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_with_password(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test user step with password."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
@@ -293,9 +301,8 @@ async def test_user_with_password(
     assert mock_client.password == "password1"
 
 
-async def test_user_invalid_password(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_user_invalid_password(hass: HomeAssistant, mock_client) -> None:
     """Test user step with invalid password."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
 
@@ -319,11 +326,11 @@ async def test_user_invalid_password(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_dashboard_has_wrong_key(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
-    mock_zeroconf: None,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step with key from dashboard that is incorrect."""
@@ -366,11 +373,11 @@ async def test_user_dashboard_has_wrong_key(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_discovers_name_and_gets_key_from_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
-    mock_zeroconf: None,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name and get the key from the dashboard."""
@@ -418,12 +425,12 @@ async def test_user_discovers_name_and_gets_key_from_dashboard(
     "dashboard_exception",
     [aiohttp.ClientError(), json.JSONDecodeError("test", "test", 0)],
 )
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     hass: HomeAssistant,
     dashboard_exception: Exception,
     mock_client,
-    mock_dashboard,
-    mock_zeroconf: None,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name and get the key from the dashboard."""
@@ -474,11 +481,11 @@ async def test_user_discovers_name_and_gets_key_from_dashboard_fails(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_discovers_name_and_dashboard_is_unavailable(
     hass: HomeAssistant,
     mock_client,
-    mock_dashboard,
-    mock_zeroconf: None,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name but the dashboard is unavailable."""
@@ -529,8 +536,9 @@ async def test_user_discovers_name_and_dashboard_is_unavailable(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_login_connection_error(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test user step with connection error on login attempt."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=True, name="test")
@@ -555,8 +563,9 @@ async def test_login_connection_error(
     assert result["errors"] == {"base": "connection_error"}
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_discovery_initiation(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery importing works."""
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -587,8 +596,9 @@ async def test_discovery_initiation(
     assert result["result"].unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_discovery_no_mac(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery aborted if old ESPHome without mac in zeroconf."""
     service_info = zeroconf.ZeroconfServiceInfo(
@@ -694,8 +704,9 @@ async def test_discovery_updates_unique_id(
     assert entry.unique_id == "11:22:33:44:55:aa"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_requires_psk(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test user step with requiring encryption key."""
     mock_client.device_info.side_effect = RequiresEncryptionAPIError
@@ -715,8 +726,9 @@ async def test_user_requires_psk(
     assert len(mock_client.disconnect.mock_calls) == 2
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_encryption_key_valid_psk(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test encryption key step with valid key."""
 
@@ -749,8 +761,9 @@ async def test_encryption_key_valid_psk(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_encryption_key_invalid_psk(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test encryption key step with invalid key."""
 
@@ -776,9 +789,8 @@ async def test_encryption_key_invalid_psk(
     assert mock_client.noise_psk == INVALID_NOISE_PSK
 
 
-async def test_reauth_initiation(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None
-) -> None:
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_reauth_initiation(hass: HomeAssistant, mock_client) -> None:
     """Test reauth initiation shows form."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -786,20 +798,14 @@ async def test_reauth_initiation(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_confirm_valid(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test reauth initiation with valid PSK."""
     entry = MockConfigEntry(
@@ -808,14 +814,7 @@ async def test_reauth_confirm_valid(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
     result = await hass.config_entries.flow.async_configure(
@@ -827,11 +826,11 @@ async def test_reauth_confirm_valid(
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_fixed_via_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically via dashboard."""
@@ -862,14 +861,7 @@ async def test_reauth_fixed_via_dashboard(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
-            "esphome",
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-            },
-        )
+        result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
@@ -878,12 +870,12 @@ async def test_reauth_fixed_via_dashboard(
     assert len(mock_get_encryption_key.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
-    mock_dashboard,
-    mock_config_entry,
+    mock_dashboard: dict[str, Any],
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically via dashboard with password removed."""
@@ -905,14 +897,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
-            "esphome",
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_config_entry.entry_id,
-                "unique_id": mock_config_entry.unique_id,
-            },
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
@@ -925,32 +910,25 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 async def test_reauth_fixed_via_remove_password(
     hass: HomeAssistant,
     mock_client,
-    mock_config_entry,
-    mock_dashboard,
+    mock_config_entry: MockConfigEntry,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically by seeing password removed."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "unique_id": mock_config_entry.unique_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == ""
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_fixed_via_dashboard_at_confirm(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically via dashboard at confirm step."""
@@ -968,14 +946,7 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
 
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
@@ -1003,8 +974,9 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
     assert len(mock_get_encryption_key.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_confirm_invalid(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test reauth initiation with invalid PSK."""
     entry = MockConfigEntry(
@@ -1013,14 +985,7 @@ async def test_reauth_confirm_invalid(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
     result = await hass.config_entries.flow.async_configure(
@@ -1044,8 +1009,9 @@ async def test_reauth_confirm_invalid(
     assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_reauth_confirm_invalid_with_unique_id(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test reauth initiation with invalid PSK."""
     entry = MockConfigEntry(
@@ -1055,14 +1021,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
     result = await hass.config_entries.flow.async_configure(
@@ -1122,10 +1081,7 @@ async def test_discovery_dhcp_no_changes(
     )
     entry.add_to_hass(hass)
 
-    mock_entry_data = MagicMock()
-    mock_entry_data.device_info.name = "test8266"
-    domain_data = DomainData.get(hass)
-    domain_data.set_entry_data(entry, mock_entry_data)
+    mock_client.device_info = AsyncMock(return_value=DeviceInfo(name="test8266"))
 
     service_info = dhcp.DhcpServiceInfo(
         ip="192.168.43.183",
@@ -1142,7 +1098,9 @@ async def test_discovery_dhcp_no_changes(
     assert entry.data[CONF_HOST] == "192.168.43.183"
 
 
-async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
+async def test_discovery_hassio(
+    hass: HomeAssistant, mock_dashboard: dict[str, Any]
+) -> None:
     """Test dashboard discovery."""
     result = await hass.config_entries.flow.async_init(
         "esphome",
@@ -1166,11 +1124,11 @@ async def test_discovery_hassio(hass: HomeAssistant, mock_dashboard) -> None:
     assert dash.addon_slug == "mock-slug"
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_zeroconf_encryption_key_via_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key retrieved from dashboard."""
@@ -1232,11 +1190,11 @@ async def test_zeroconf_encryption_key_via_dashboard(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key retrieved from dashboard with api_encryption property set."""
@@ -1298,11 +1256,11 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
     assert mock_client.noise_psk == VALID_NOISE_PSK
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_zeroconf_no_encryption_key_via_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
-    mock_dashboard,
+    mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key not retrieved from dashboard."""
@@ -1375,10 +1333,10 @@ async def test_option_flow(
     assert len(mock_reload.mock_calls) == int(option_value)
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_user_discovers_name_no_dashboard(
     hass: HomeAssistant,
     mock_client,
-    mock_zeroconf: None,
     mock_setup_entry: None,
 ) -> None:
     """Test user step can discover the name and the there is not dashboard."""
@@ -1434,22 +1392,33 @@ async def mqtt_discovery_test_abort(hass: HomeAssistant, payload: str, reason: s
     assert flow["reason"] == reason
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_discovery_mqtt_no_mac(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery aborted if mac is missing in MQTT payload."""
     await mqtt_discovery_test_abort(hass, "{}", "mqtt_missing_mac")
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_discovery_mqtt_empty_payload(
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if MQTT payload is empty."""
+    await mqtt_discovery_test_abort(hass, "", "mqtt_missing_payload")
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_discovery_mqtt_no_api(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery aborted if api/port is missing in MQTT payload."""
     await mqtt_discovery_test_abort(hass, '{"mac":"abcdef123456"}', "mqtt_missing_api")
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_discovery_mqtt_no_ip(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery aborted if ip is missing in MQTT payload."""
     await mqtt_discovery_test_abort(
@@ -1457,8 +1426,9 @@ async def test_discovery_mqtt_no_ip(
     )
 
 
+@pytest.mark.usefixtures("mock_zeroconf")
 async def test_discovery_mqtt_initiation(
-    hass: HomeAssistant, mock_client, mock_zeroconf: None, mock_setup_entry: None
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery importing works."""
     service_info = MqttServiceInfo(

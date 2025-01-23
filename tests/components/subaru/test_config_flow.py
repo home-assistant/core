@@ -10,6 +10,7 @@ from subarulink.exceptions import InvalidCredentials, InvalidPIN, SubaruExceptio
 from homeassistant import config_entries
 from homeassistant.components.subaru import config_flow
 from homeassistant.components.subaru.const import CONF_UPDATE_ENABLED, DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -389,7 +390,7 @@ async def test_option_flow(hass: HomeAssistant, options_form) -> None:
 
 
 @pytest.fixture
-async def user_form(hass):
+async def user_form(hass: HomeAssistant) -> ConfigFlowResult:
     """Return initial form for Subaru config flow."""
     return await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -397,7 +398,9 @@ async def user_form(hass):
 
 
 @pytest.fixture
-async def two_factor_start_form(hass, user_form):
+async def two_factor_start_form(
+    hass: HomeAssistant, user_form: ConfigFlowResult
+) -> ConfigFlowResult:
     """Return two factor form for Subaru config flow."""
     with (
         patch(MOCK_API_CONNECT, return_value=True),
@@ -410,7 +413,9 @@ async def two_factor_start_form(hass, user_form):
 
 
 @pytest.fixture
-async def two_factor_verify_form(hass, two_factor_start_form):
+async def two_factor_verify_form(
+    hass: HomeAssistant, two_factor_start_form: ConfigFlowResult
+) -> ConfigFlowResult:
     """Return two factor form for Subaru config flow."""
     with (
         patch(
@@ -427,7 +432,9 @@ async def two_factor_verify_form(hass, two_factor_start_form):
 
 
 @pytest.fixture
-async def pin_form(hass, two_factor_verify_form):
+async def pin_form(
+    hass: HomeAssistant, two_factor_verify_form: ConfigFlowResult
+) -> ConfigFlowResult:
     """Return PIN input form for Subaru config flow."""
     with (
         patch(
@@ -443,7 +450,7 @@ async def pin_form(hass, two_factor_verify_form):
 
 
 @pytest.fixture
-async def options_form(hass):
+async def options_form(hass: HomeAssistant) -> ConfigFlowResult:
     """Return options form for Subaru config flow."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
     entry.add_to_hass(hass)

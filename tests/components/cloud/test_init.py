@@ -3,27 +3,27 @@
 from collections.abc import Callable, Coroutine
 from typing import Any
 from unittest.mock import MagicMock, patch
-from urllib.parse import quote_plus
 
-from hass_nabucasa import Cloud
 import pytest
 
-from homeassistant.components import cloud
 from homeassistant.components.cloud import (
+    CloudConnectionState,
     CloudNotAvailable,
     CloudNotConnected,
     async_get_or_create_cloudhook,
+    async_listen_connection_change,
+    async_remote_ui_url,
 )
 from homeassistant.components.cloud.const import (
+    DATA_CLOUD,
     DOMAIN,
+    MODE_DEV,
     PREF_CLOUDHOOKS,
-    PREF_STRICT_CONNECTION,
 )
 from homeassistant.components.cloud.prefs import STORAGE_KEY
-from homeassistant.components.http.const import StrictConnectionMode
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_MODE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import ServiceValidationError, Unauthorized
+from homeassistant.exceptions import Unauthorized
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockUser
@@ -38,14 +38,13 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
             {
                 "http": {},
                 "cloud": {
-                    cloud.CONF_MODE: cloud.MODE_DEV,
+                    CONF_MODE: MODE_DEV,
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
                     "relayer_server": "test-relayer-server",
                     "accounts_server": "test-acounts-server",
                     "cloudhook_server": "test-cloudhook-server",
-                    "alexa_server": "test-alexa-server",
                     "acme_server": "test-acme-server",
                     "remotestate_server": "test-remotestate-server",
                 },
@@ -53,8 +52,8 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
         )
         assert result
 
-    cl = hass.data["cloud"]
-    assert cl.mode == cloud.MODE_DEV
+    cl = hass.data[DATA_CLOUD]
+    assert cl.mode == MODE_DEV
     assert cl.cognito_client_id == "test-cognito_client_id"
     assert cl.user_pool_id == "test-user_pool_id"
     assert cl.region == "test-region"
@@ -62,16 +61,16 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.iot.ws_server_url == "wss://test-relayer-server/websocket"
     assert cl.accounts_server == "test-acounts-server"
     assert cl.cloudhook_server == "test-cloudhook-server"
-    assert cl.alexa_server == "test-alexa-server"
     assert cl.acme_server == "test-acme-server"
     assert cl.remotestate_server == "test-remotestate-server"
 
 
+@pytest.mark.usefixtures("mock_cloud_fixture")
 async def test_remote_services(
-    hass: HomeAssistant, mock_cloud_fixture, hass_read_only_user: MockUser
+    hass: HomeAssistant, hass_read_only_user: MockUser
 ) -> None:
     """Setup cloud component and test services."""
-    cloud = hass.data[DOMAIN]
+    cloud = hass.data[DATA_CLOUD]
 
     assert hass.services.has_service(DOMAIN, "remote_connect")
     assert hass.services.has_service(DOMAIN, "remote_disconnect")
@@ -114,7 +113,8 @@ async def test_remote_services(
     assert mock_disconnect.called is False
 
 
-async def test_shutdown_event(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_shutdown_event(hass: HomeAssistant) -> None:
     """Test if the cloud will stop on shutdown event."""
     with patch("hass_nabucasa.Cloud.stop") as mock_stop:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -136,7 +136,7 @@ async def test_setup_existing_cloud_user(
             {
                 "http": {},
                 "cloud": {
-                    cloud.CONF_MODE: cloud.MODE_DEV,
+                    CONF_MODE: MODE_DEV,
                     "cognito_client_id": "test-cognito_client_id",
                     "user_pool_id": "test-user_pool_id",
                     "region": "test-region",
@@ -149,9 +149,10 @@ async def test_setup_existing_cloud_user(
     assert hass_storage[STORAGE_KEY]["data"]["cloud_user"] == user.id
 
 
-async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_on_connect(hass: HomeAssistant) -> None:
     """Test cloud on connect triggers."""
-    cl: Cloud[cloud.client.CloudClient] = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
 
     assert len(cl.iot._on_connect) == 3
 
@@ -163,7 +164,7 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
         nonlocal cloud_states
         cloud_states.append(cloud_state)
 
-    cloud.async_listen_connection_change(hass, handle_state)
+    async_listen_connection_change(hass, handle_state)
 
     assert "async_setup" in str(cl.iot._on_connect[-1])
     await cl.iot._on_connect[-1]()
@@ -185,12 +186,12 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     assert len(mock_load.mock_calls) == 0
 
     assert len(cloud_states) == 1
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_CONNECTED
 
     await cl.iot._on_connect[-1]()
     await hass.async_block_till_done()
     assert len(cloud_states) == 2
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_CONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_CONNECTED
 
     assert len(cl.iot._on_disconnect) == 2
     assert "async_setup" in str(cl.iot._on_disconnect[-1])
@@ -198,39 +199,40 @@ async def test_on_connect(hass: HomeAssistant, mock_cloud_fixture) -> None:
     await hass.async_block_till_done()
 
     assert len(cloud_states) == 3
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_DISCONNECTED
 
     await cl.iot._on_disconnect[-1]()
     await hass.async_block_till_done()
     assert len(cloud_states) == 4
-    assert cloud_states[-1] == cloud.CloudConnectionState.CLOUD_DISCONNECTED
+    assert cloud_states[-1] == CloudConnectionState.CLOUD_DISCONNECTED
 
 
-async def test_remote_ui_url(hass: HomeAssistant, mock_cloud_fixture) -> None:
+@pytest.mark.usefixtures("mock_cloud_fixture")
+async def test_remote_ui_url(hass: HomeAssistant) -> None:
     """Test getting remote ui url."""
-    cl = hass.data["cloud"]
+    cl = hass.data[DATA_CLOUD]
 
     # Not logged in
-    with pytest.raises(cloud.CloudNotAvailable):
-        cloud.async_remote_ui_url(hass)
+    with pytest.raises(CloudNotAvailable):
+        async_remote_ui_url(hass)
 
-    with patch.object(cloud, "async_is_logged_in", return_value=True):
+    with patch("homeassistant.components.cloud.async_is_logged_in", return_value=True):
         # Remote not enabled
-        with pytest.raises(cloud.CloudNotAvailable):
-            cloud.async_remote_ui_url(hass)
+        with pytest.raises(CloudNotAvailable):
+            async_remote_ui_url(hass)
 
         with patch.object(cl.remote, "connect"):
             await cl.client.prefs.async_update(remote_enabled=True)
             await hass.async_block_till_done()
 
         # No instance domain
-        with pytest.raises(cloud.CloudNotAvailable):
-            cloud.async_remote_ui_url(hass)
+        with pytest.raises(CloudNotAvailable):
+            async_remote_ui_url(hass)
 
         # Remote finished initializing
         cl.client.prefs._prefs["remote_domain"] = "example.com"
 
-        assert cloud.async_remote_ui_url(hass) == "https://example.com"
+        assert async_remote_ui_url(hass) == "https://example.com"
 
 
 async def test_async_get_or_create_cloudhook(
@@ -301,77 +303,3 @@ async def test_cloud_logout(
     await hass.async_block_till_done()
 
     assert cloud.is_logged_in is False
-
-
-async def test_service_create_temporary_strict_connection_url_strict_connection_disabled(
-    hass: HomeAssistant,
-) -> None:
-    """Test service create_temporary_strict_connection_url with strict_connection not enabled."""
-    mock_config_entry = MockConfigEntry(domain=DOMAIN)
-    mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
-    await hass.async_block_till_done()
-    with pytest.raises(
-        ServiceValidationError,
-        match="Strict connection is not enabled for cloud requests",
-    ):
-        await hass.services.async_call(
-            cloud.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.parametrize(
-    ("mode"),
-    [
-        StrictConnectionMode.DROP_CONNECTION,
-        StrictConnectionMode.GUARD_PAGE,
-    ],
-)
-async def test_service_create_temporary_strict_connection(
-    hass: HomeAssistant,
-    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
-    mode: StrictConnectionMode,
-) -> None:
-    """Test service create_temporary_strict_connection_url."""
-    mock_config_entry = MockConfigEntry(domain=DOMAIN)
-    mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
-    await hass.async_block_till_done()
-
-    await set_cloud_prefs(
-        {
-            PREF_STRICT_CONNECTION: mode,
-        }
-    )
-
-    # No cloud url set
-    with pytest.raises(ServiceValidationError, match="No cloud URL available"):
-        await hass.services.async_call(
-            cloud.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-
-    # Patch cloud url
-    url = "https://example.com"
-    with patch(
-        "homeassistant.helpers.network._get_cloud_url",
-        return_value=url,
-    ):
-        response = await hass.services.async_call(
-            cloud.DOMAIN,
-            "create_temporary_strict_connection_url",
-            blocking=True,
-            return_response=True,
-        )
-    assert isinstance(response, dict)
-    direct_url_prefix = f"{url}/auth/strict_connection/temp_token?authSig="
-    assert response.pop("direct_url").startswith(direct_url_prefix)
-    assert response.pop("url").startswith(
-        f"https://login.home-assistant.io?u={quote_plus(direct_url_prefix)}"
-    )
-    assert response == {}  # No more keys in response

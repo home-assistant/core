@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from functools import cached_property
 import re
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
+from propcache import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -23,10 +23,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.system_info import is_official_image
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.signal_type import SignalType
+from homeassistant.util.system_info import is_official_image
 
 DOMAIN = "ffmpeg"
 
@@ -176,7 +176,7 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):
+class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-class-module
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False

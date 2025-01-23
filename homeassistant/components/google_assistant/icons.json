@@ -1,5 +1,7 @@
 {
   "services": {
-    "request_sync": "mdi:sync"
+    "request_sync": {
+      "service": "mdi:sync"
+    }
   }
 }
