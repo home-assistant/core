@@ -22,6 +22,8 @@ from .const import DOMAIN
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirGradientSwitchEntityDescription(SwitchEntityDescription):

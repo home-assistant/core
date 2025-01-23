@@ -1,6 +1,8 @@
 """Constants for Lovelace."""
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -15,8 +17,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util import slugify
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from . import LovelaceData
 
 DOMAIN = "lovelace"
+LOVELACE_DATA: HassKey[LovelaceData] = HassKey(DOMAIN)
 
 DEFAULT_ICON = "hass:view-dashboard"
 
