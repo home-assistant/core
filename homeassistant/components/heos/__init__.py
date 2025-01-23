@@ -8,20 +8,13 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyheos import (
-    Heos,
-    HeosError,
-    HeosPlayer,
-    PlayerUpdateResult,
-    SignalHeosEvent,
-    const as heos_const,
-)
+from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -54,7 +47,6 @@ class HeosRuntimeData:
     """Runtime data and coordinators for HEOS config entries."""
 
     coordinator: HeosCoordinator
-    controller_manager: ControllerManager
     group_manager: GroupManager
     source_manager: SourceManager
     players: dict[int, HeosPlayer]
@@ -95,16 +87,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     favorites = coordinator.favorites
     inputs = coordinator.inputs
 
-    controller_manager = ControllerManager(hass, controller)
-    await controller_manager.connect_listeners()
-
     source_manager = SourceManager(favorites, inputs)
     source_manager.connect_update(hass, controller)
 
     group_manager = GroupManager(hass, controller, players)
 
     entry.runtime_data = HeosRuntimeData(
-        coordinator, controller_manager, group_manager, source_manager, players
+        coordinator, group_manager, source_manager, players
     )
 
     group_manager.connect_update()
@@ -118,85 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class ControllerManager:
-    """Class that manages events of the controller."""
-
-    def __init__(self, hass: HomeAssistant, controller: Heos) -> None:
-        """Init the controller manager."""
-        self._hass = hass
-        self._device_registry: dr.DeviceRegistry | None = None
-        self._entity_registry: er.EntityRegistry | None = None
-        self.controller = controller
-
-    async def connect_listeners(self):
-        """Subscribe to events of interest."""
-        self._device_registry = dr.async_get(self._hass)
-        self._entity_registry = er.async_get(self._hass)
-
-        # Handle controller events
-        self.controller.add_on_controller_event(self._controller_event)
-
-        # Handle connection-related events
-        self.controller.add_on_heos_event(self._heos_event)
-
-    async def disconnect(self):
-        """Disconnect subscriptions."""
-        self.controller.dispatcher.disconnect_all()
-        await self.controller.disconnect()
-
-    async def _controller_event(
-        self, event: str, data: PlayerUpdateResult | None
-    ) -> None:
-        """Handle controller event."""
-        if event == heos_const.EVENT_PLAYERS_CHANGED:
-            assert data is not None
-            self.update_ids(data.updated_player_ids)
-        # Update players
-        async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
-
-    async def _heos_event(self, event):
-        """Handle connection event."""
-        if event == SignalHeosEvent.CONNECTED:
-            try:
-                # Retrieve latest players and refresh status
-                data = await self.controller.load_players()
-                self.update_ids(data.updated_player_ids)
-            except HeosError as ex:
-                _LOGGER.error("Unable to refresh players: %s", ex)
-        # Update players
-        _LOGGER.debug("HEOS Controller event called, calling dispatcher")
-        async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
-
-    def update_ids(self, mapped_ids: dict[int, int]):
-        """Update the IDs in the device and entity registry."""
-        # mapped_ids contains the mapped IDs (new:old)
-        for old_id, new_id in mapped_ids.items():
-            # update device registry
-            assert self._device_registry is not None
-            entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, str(old_id))}
-            )
-            new_identifiers = {(DOMAIN, str(new_id))}
-            if entry:
-                self._device_registry.async_update_device(
-                    entry.id,
-                    new_identifiers=new_identifiers,
-                )
-                _LOGGER.debug(
-                    "Updated device %s identifiers to %s", entry.id, new_identifiers
-                )
-            # update entity registry
-            assert self._entity_registry is not None
-            entity_id = self._entity_registry.async_get_entity_id(
-                Platform.MEDIA_PLAYER, DOMAIN, str(old_id)
-            )
-            if entity_id:
-                self._entity_registry.async_update_entity(
-                    entity_id, new_unique_id=str(new_id)
-                )
-                _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
 
 
 class GroupManager:
