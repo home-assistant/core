@@ -139,3 +139,8 @@ async def test_list_select_entities(
             targetTemperatureLevel=2
         ),
     )
+    # test that an invalid value (e.g. 253) leads to an unknown state
+    set_node_attribute(matter_node, 1, 86, 4, 253)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.laundrywasher_temperature_level")
+    assert state.state == "unknown"
