@@ -250,7 +250,8 @@ async def test_event_listener_error(
     )
 
     with patch.object(
-        ConfigEntries, "async_schedule_reload",
+        ConfigEntries,
+        "async_schedule_reload",
     ) as mock_schedule_reload:
         await integration_setup(client_with_exception)
         await hass.async_block_till_done()
