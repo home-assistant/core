@@ -40,14 +40,20 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Reauthorization for v2 API token revocation needs to be implemented.
   test-coverage: done
-
   # Gold
   devices: done
   diagnostics: done
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: todo
+    comment: |
+      Zeroconf discovery is not implemented for v2 API.
+      DHCP IP address updates are not implemented for v2 API.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -67,9 +73,9 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:
-    status: exempt
+    status: todo
     comment: |
-      This integration does not raise any repairable issues.
+      Rejected token should trigger reconfiguration/repair issue
   stale-devices:
     status: exempt
     comment: |

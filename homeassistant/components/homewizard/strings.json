@@ -18,6 +18,10 @@
       "reauth_confirm": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
       },
+      "authorize": {
+        "title": "Authorize",
+        "description": "Press the button on the HomeWizard Energy device, then click the button below."
+      },
       "reconfigure": {
         "description": "Update configuration for {title}.",
         "data": {
@@ -30,7 +34,8 @@
     },
     "error": {
       "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
-      "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
+      "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network",
+      "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
