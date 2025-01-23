@@ -41,7 +41,7 @@ from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-UPLOAD_CHUNK_SIZE = 5 * 320 * 1024
+UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
 
 
 async def async_get_backup_agents(
