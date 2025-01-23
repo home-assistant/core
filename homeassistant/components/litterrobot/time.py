@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
@@ -52,15 +52,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
+    coordinator = entry.runtime_data
     async_add_entities(
-        [
-            LitterRobotTimeEntity(
-                robot=robot, hub=hub, description=LITTER_ROBOT_3_SLEEP_START
-            )
-            for robot in hub.litter_robots()
-            if isinstance(robot, LitterRobot3)
-        ]
+        LitterRobotTimeEntity(
+            robot=robot,
+            coordinator=coordinator,
+            description=LITTER_ROBOT_3_SLEEP_START,
+        )
+        for robot in coordinator.litter_robots()
+        if isinstance(robot, LitterRobot3)
     )
 
 

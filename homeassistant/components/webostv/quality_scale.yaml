@@ -72,7 +72,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: migrate to aiohttp
+  inject-websession: done
   strict-typing: done
