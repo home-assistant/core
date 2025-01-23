@@ -238,7 +238,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 if input_source.media_id == now_playing_media.media_id:
                     return input_source.name
         # Try matching favorite
-        if now_playing_media.type is MediaType.STATION:
+        if now_playing_media.type == MediaType.STATION:
             # Some stations match on name:station, others match on media_id:album_id
             for favorite in self._favorites.values():
                 if (
