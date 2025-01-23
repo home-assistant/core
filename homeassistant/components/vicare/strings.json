@@ -456,6 +456,9 @@
           "forcedlevelfour": "Boost"
         }
       },
+      "supply_pressure": {
+        "name": "Supply pressure"
+      },
       "spf-total": {
         "name": "Saisonal performance factor"
       },

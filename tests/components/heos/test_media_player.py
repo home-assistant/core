@@ -11,6 +11,7 @@ from pyheos import (
     MediaItem,
     PlayerUpdateResult,
     PlayState,
+    RepeatType,
     SignalHeosEvent,
     SignalType,
     const,
@@ -30,6 +31,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
+    ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -40,6 +42,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
     MediaType,
+    RepeatMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -48,6 +51,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
     SERVICE_SHUFFLE_SET,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
@@ -561,6 +565,46 @@ async def test_shuffle_set_error(
             blocking=True,
         )
     player.set_play_mode.assert_called_once_with(player.repeat, True)
+
+
+async def test_repeat_set(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Test the repeat set service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    player = controller.players[1]
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_REPEAT: RepeatMode.ONE},
+        blocking=True,
+    )
+    player.set_play_mode.assert_called_once_with(RepeatType.ON_ONE, player.shuffle)
+
+
+async def test_repeat_set_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Test the repeat set service raises error."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    player = controller.players[1]
+    player.set_play_mode.side_effect = CommandFailedError(None, "Failure", 1)
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape("Unable to set repeat: Failure (1)"),
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_REPEAT_SET,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_MEDIA_REPEAT: RepeatMode.ALL,
+            },
+            blocking=True,
+        )
+    player.set_play_mode.assert_called_once_with(RepeatType.ON_ALL, player.shuffle)
 
 
 async def test_volume_set(
