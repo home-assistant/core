@@ -23,7 +23,7 @@ if TYPE_CHECKING:
     from . import LovelaceData
 
 DOMAIN = "lovelace"
-DOMAIN_DATA: HassKey[LovelaceData] = HassKey(DOMAIN)
+LOVELACE_DATA: HassKey[LovelaceData] = HassKey(DOMAIN)
 
 DEFAULT_ICON = "hass:view-dashboard"
 

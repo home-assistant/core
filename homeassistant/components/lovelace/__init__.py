@@ -29,8 +29,8 @@ from .const import (  # noqa: F401
     DASHBOARD_BASE_CREATE_FIELDS,
     DEFAULT_ICON,
     DOMAIN,
-    DOMAIN_DATA,
     EVENT_LOVELACE_UPDATED,
+    LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
     RESOURCE_CREATE_FIELDS,
@@ -112,7 +112,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         resource_collection = await create_yaml_resource_col(
             hass, config[DOMAIN].get(CONF_RESOURCES)
         )
-        hass.data[DOMAIN_DATA].resources = resource_collection
+        hass.data[LOVELACE_DATA].resources = resource_collection
 
     default_config: dashboard.LovelaceConfig
     if mode == MODE_YAML:
@@ -163,7 +163,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, websocket.websocket_lovelace_delete_config
     )
 
-    hass.data[DOMAIN_DATA] = LovelaceData(
+    hass.data[LOVELACE_DATA] = LovelaceData(
         mode=mode,
         # We store a dictionary mapping url_path: config. None is the default.
         dashboards={None: default_config},
@@ -180,11 +180,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if change_type == collection.CHANGE_REMOVED:
             frontend.async_remove_panel(hass, url_path)
-            await hass.data[DOMAIN_DATA].dashboards.pop(url_path).async_delete()
+            await hass.data[LOVELACE_DATA].dashboards.pop(url_path).async_delete()
             return
 
         if change_type == collection.CHANGE_ADDED:
-            existing = hass.data[DOMAIN_DATA].dashboards.get(url_path)
+            existing = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
             if existing:
                 _LOGGER.warning(
@@ -194,13 +194,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
                 return
 
-            hass.data[DOMAIN_DATA].dashboards[url_path] = dashboard.LovelaceStorage(
+            hass.data[LOVELACE_DATA].dashboards[url_path] = dashboard.LovelaceStorage(
                 hass, item
             )
 
             update = False
         else:
-            hass.data[DOMAIN_DATA].dashboards[url_path].config = item
+            hass.data[LOVELACE_DATA].dashboards[url_path].config = item
             update = True
 
         try:
@@ -209,10 +209,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.warning("Failed to %s panel %s from storage", change_type, url_path)
 
     # Process YAML dashboards
-    for url_path, dashboard_conf in hass.data[DOMAIN_DATA].yaml_dashboards.items():
+    for url_path, dashboard_conf in hass.data[LOVELACE_DATA].yaml_dashboards.items():
         # For now always mode=yaml
         lovelace_config = dashboard.LovelaceYAML(hass, url_path, dashboard_conf)
-        hass.data[DOMAIN_DATA].dashboards[url_path] = lovelace_config
+        hass.data[LOVELACE_DATA].dashboards[url_path] = lovelace_config
 
         try:
             _register_panel(hass, url_path, MODE_YAML, dashboard_conf, False)

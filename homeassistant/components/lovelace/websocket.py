@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_fragment
 
-from .const import CONF_URL_PATH, DOMAIN_DATA, ConfigNotFound
+from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
 from .dashboard import LovelaceStorage
 
 
@@ -27,7 +27,7 @@ def _handle_errors(func):
         msg: dict[str, Any],
     ) -> None:
         url_path = msg.get(CONF_URL_PATH)
-        config = hass.data[DOMAIN_DATA].dashboards.get(url_path)
+        config = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
         if config is None:
             connection.send_error(
@@ -74,7 +74,7 @@ async def websocket_lovelace_resources_impl(
 
     This function is called by both Storage and YAML mode WS handlers.
     """
-    resources = hass.data[DOMAIN_DATA].resources
+    resources = hass.data[LOVELACE_DATA].resources
 
     if hass.config.safe_mode:
         connection.send_result(msg["id"], [])
