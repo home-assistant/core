@@ -1,6 +1,7 @@
 """Provide info to system health."""
 
 import asyncio
+from typing import Any
 
 from homeassistant.components import system_health
 from homeassistant.const import CONF_MODE
@@ -17,9 +18,9 @@ def async_register(
     register.async_register_info(system_health_info, "/config/lovelace")
 
 
-async def system_health_info(hass):
+async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
     """Get info for the info page."""
-    health_info = {"dashboards": len(hass.data[DOMAIN_DATA].dashboards)}
+    health_info: dict[str, Any] = {"dashboards": len(hass.data[DOMAIN_DATA].dashboards)}
     health_info.update(await hass.data[DOMAIN_DATA].resources.async_get_info())
 
     dashboards_info = await asyncio.gather(

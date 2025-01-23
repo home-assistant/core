@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
@@ -150,7 +152,9 @@ async def async_play_media(
     return True
 
 
-async def _get_dashboard_info(hass, url_path):
+async def _get_dashboard_info(
+    hass: HomeAssistant, url_path: str | None
+) -> dict[str, Any]:
     """Load a dashboard and return info on views."""
     if url_path == DEFAULT_DASHBOARD:
         url_path = None
@@ -171,7 +175,7 @@ async def _get_dashboard_info(hass, url_path):
         url_path = dashboard.url_path
         title = config.get("title", url_path) if config else url_path
 
-    views = []
+    views: list[dict[str, Any]] = []
     data = {
         "title": title,
         "url_path": url_path,
