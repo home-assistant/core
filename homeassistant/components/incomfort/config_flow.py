@@ -5,8 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiohttp import ClientResponseError
-from incomfortclient import IncomfortError, InvalidHeaterList
+from incomfortclient import InvalidGateway, InvalidHeaterList
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -77,11 +76,6 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-ERROR_STATUS_MAPPING: dict[int, tuple[str, str]] = {
-    401: (CONF_PASSWORD, "auth_error"),
-    404: ("base", "not_found"),
-}
-
 
 async def async_try_connect_gateway(
     hass: HomeAssistant, config: dict[str, Any]
@@ -89,15 +83,10 @@ async def async_try_connect_gateway(
     """Try to connect to the Lan2RF gateway."""
     try:
         await async_connect_gateway(hass, config)
+    except InvalidGateway:
+        return {"base": "auth_error"}
     except InvalidHeaterList:
         return {"base": "no_heaters"}
-    except IncomfortError as exc:
-        if isinstance(exc.message, ClientResponseError):
-            scope, error = ERROR_STATUS_MAPPING.get(
-                exc.message.status, ("base", "unknown")
-            )
-            return {scope: error}
-        return {"base": "unknown"}
     except TimeoutError:
         return {"base": "timeout_error"}
     except Exception:  # noqa: BLE001

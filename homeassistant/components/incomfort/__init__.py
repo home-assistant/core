@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from aiohttp import ClientResponseError
-from incomfortclient import IncomfortError, InvalidHeaterList
+from incomfortclient import InvalidGateway, InvalidHeaterList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -35,12 +35,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
             await heater.update()
     except InvalidHeaterList as exc:
         raise NoHeaters from exc
-    except IncomfortError as exc:
-        if isinstance(exc.message, ClientResponseError):
-            if exc.message.status == 401:
-                raise ConfigEntryAuthFailed("Incorrect credentials") from exc
-            if exc.message.status == 404:
-                raise NotFound from exc
+    except InvalidGateway as exc:
+        raise ConfigEntryAuthFailed("Incorrect credentials") from exc
+    except ClientResponseError as exc:
+        if exc.status == 404:
+            raise NotFound from exc
         raise InConfortUnknownError from exc
     except TimeoutError as exc:
         raise InConfortTimeout from exc
