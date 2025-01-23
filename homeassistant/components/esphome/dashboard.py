@@ -12,6 +12,7 @@ from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.storage import Store
+from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .coordinator import ESPHomeDashboardCoordinator
@@ -19,7 +20,9 @@ from .coordinator import ESPHomeDashboardCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-KEY_DASHBOARD_MANAGER = "esphome_dashboard_manager"
+KEY_DASHBOARD_MANAGER: HassKey[ESPHomeDashboardManager] = HassKey(
+    "esphome_dashboard_manager"
+)
 
 STORAGE_KEY = "esphome.dashboard"
 STORAGE_VERSION = 1
@@ -33,7 +36,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     await async_get_or_create_dashboard_manager(hass)
 
 
-@singleton(KEY_DASHBOARD_MANAGER)
+@singleton(KEY_DASHBOARD_MANAGER, async_=True)
 async def async_get_or_create_dashboard_manager(
     hass: HomeAssistant,
 ) -> ESPHomeDashboardManager:
@@ -140,7 +143,7 @@ def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboardCoordinator | No
     where manager can be an asyncio.Event instead of the actual manager
     because the singleton decorator is not yet done.
     """
-    manager: ESPHomeDashboardManager | None = hass.data.get(KEY_DASHBOARD_MANAGER)
+    manager = hass.data.get(KEY_DASHBOARD_MANAGER)
     return manager.async_get() if manager else None
 
 
