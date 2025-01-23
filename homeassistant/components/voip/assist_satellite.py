@@ -225,7 +225,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         destination = SipEndpoint(self.voip_device.voip_id)
 
         self._pipeline_task_queue.put_nowait(
-            self._run_announce_pipeline(announcement.media_id)
+            self._run_announce_pipeline(announcement.original_media_id)
         )
 
         # Check to see if there is an existing call, if not call out to the phone
