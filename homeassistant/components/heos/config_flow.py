@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -186,6 +187,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry = cast(HeosConfigEntry, self._get_reauth_entry())
         if user_input is not None:
+            assert entry.state is ConfigEntryState.LOADED
             if await _validate_auth(
                 user_input, entry.runtime_data.coordinator.heos, errors
             ):
