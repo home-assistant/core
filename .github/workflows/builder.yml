@@ -531,7 +531,7 @@ jobs:
 
       - name: Generate artifact attestation
         if: needs.init.outputs.channel != 'dev' && needs.init.outputs.publish == 'true'
-        uses: actions/attest-build-provenance@7668571508540a607bdfd90a87a560489fe372eb # v2.1.0
+        uses: actions/attest-build-provenance@520d128f165991a6c774bcb264f323e3d70747f4 # v2.2.0
         with:
           subject-name: ${{ env.HASSFEST_IMAGE_NAME }}
           subject-digest: ${{ steps.push.outputs.digest }}
