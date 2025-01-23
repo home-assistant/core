@@ -257,22 +257,26 @@ class OneDriveBackupAgent(BackupAgent):
         async for chunk in stream:
             buffer.append(chunk)
             buffer_size += len(chunk)
-
-            # loop if buffer is more than 2 * UPLOAD_CHUNK_SIZE
-            while buffer_size >= UPLOAD_CHUNK_SIZE:
-                # flatten buffer
-                joined_buffer = b"".join(buffer)
-                chunk_data = joined_buffer[:UPLOAD_CHUNK_SIZE]
-                end = start + UPLOAD_CHUNK_SIZE - 1
-
-                await async_upload(start, end, chunk_data)
-
-                start += UPLOAD_CHUNK_SIZE
-                buffer = [joined_buffer[UPLOAD_CHUNK_SIZE:]]
+            if buffer_size >= UPLOAD_CHUNK_SIZE:
+                chunk_data = b"".join(buffer)
+                uploaded_chunks = 0
+                while (
+                    buffer_size > UPLOAD_CHUNK_SIZE
+                ):  # Loop in case the buffer is >= UPLOAD_CHUNK_SIZE * 2
+                    slice_start = uploaded_chunks * UPLOAD_CHUNK_SIZE
+                    await async_upload(
+                        start,
+                        start + UPLOAD_CHUNK_SIZE - 1,
+                        chunk_data[slice_start : slice_start + UPLOAD_CHUNK_SIZE],
+                    )
+                    start += UPLOAD_CHUNK_SIZE
+                    uploaded_chunks += 1
+                    buffer_size -= UPLOAD_CHUNK_SIZE
+                buffer = [chunk_data[UPLOAD_CHUNK_SIZE * uploaded_chunks :]]
                 buffer_size = len(buffer[0])
 
         # upload the remaining bytes
         if buffer:
             _LOGGER.debug("Last chunk")
-            joined_buffer = b"".join(buffer)
-            await async_upload(start, total_size - 1, joined_buffer)
+            chunk_data = b"".join(buffer)
+            await async_upload(start, start + len(chunk_data) - 1, chunk_data)
