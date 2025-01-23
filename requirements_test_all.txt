@@ -1015,11 +1015,11 @@ idasen-ha==2.6.3
 # homeassistant.components.network
 ifaddr==0.2.0
 
-# homeassistant.components.imeon_inverter
-imeon_inverter_api==0.3.10
-
 # homeassistant.components.igloohome
 igloohome-api==0.0.6
+
+# homeassistant.components.imeon_inverter
+imeon_inverter_api==0.3.11
 
 # homeassistant.components.imgw_pib
 imgw_pib==1.0.9

@@ -8,5 +8,6 @@
   "documentation": "https://www.home-assistant.io/integrations/imeon_inverter",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "requirements": ["imeon_inverter_api==0.3.10"]
+  "quality_scale": "bronze",
+  "requirements": ["imeon_inverter_api==0.3.11"]
 }

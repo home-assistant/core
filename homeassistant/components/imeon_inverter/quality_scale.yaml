@@ -9,8 +9,10 @@ rules:
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
-  entity-event-setup: todo
-  dependency-transparency: todo
+  entity-event-setup:
+    status: exempt
+    comment: This integration doesn't have sensors that subscribe to events.
+  dependency-transparency: done
   action-setup:
     status: exempt
     comment: This integration does not have any service for now.
