@@ -252,8 +252,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self.max_cycle_duration = max_cycle_duration
         self.cycle_cooldown = cycle_cooldown or timedelta()
         self._cold_tolerance = cold_tolerance
-        self._cycle_timer = datetime.now()
-        self._max_cycle_callback: CALLBACK_TYPE | None = None
+        self._cycle_timer = datetime.now() - self.cycle_cooldown
+        self._cycle_callback: CALLBACK_TYPE | None = None
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._hvac_mode = initial_hvac_mode
@@ -534,9 +534,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self.heater_entity_id,
                     self.max_cycle_duration,
                 )
-                if self._max_cycle_callback:
-                    self._max_cycle_callback()
-                    self._max_cycle_callback = None
+                if self._cycle_callback:
+                    self._cycle_callback()
+                    self._cycle_callback = None
                 await self._async_heater_turn_off()
                 return
 
@@ -611,11 +611,11 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     "Scheduling maximum run-time shut-off for %s",
                     self._cycle_timer + self.max_cycle_duration,
                 )
-                if self._max_cycle_callback:
+                if self._cycle_callback:
                     _LOGGER.debug("Cancelling previous scheduled shut-off")
-                    self._max_cycle_callback()
-                    self._max_cycle_callback = None
-                self._max_cycle_callback = async_call_later(
+                    self._cycle_callback()
+                    self._cycle_callback = None
+                self._cycle_callback = async_call_later(
                     self.hass,
                     self.max_cycle_duration,
                     partial(self._async_control_heating, force=True),
@@ -629,10 +629,10 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if not keepalive:
             self._cycle_timer = datetime.now()
-            if self._max_cycle_callback:
+            if self._cycle_callback:
                 _LOGGER.debug("Cancelling scheduled shut-off")
-                self._max_cycle_callback()
-                self._max_cycle_callback = None
+                self._cycle_callback()
+                self._cycle_callback = None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
