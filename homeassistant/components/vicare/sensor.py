@@ -843,6 +843,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getSupplyPressure(),
         unit_getter=lambda api: api.getSupplyPressureUnit(),
     ),
