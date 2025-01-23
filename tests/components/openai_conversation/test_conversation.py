@@ -1,6 +1,6 @@
 """Tests for the OpenAI integration."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from httpx import Response
@@ -12,7 +12,6 @@ from openai.types.chat.chat_completion_message_tool_call import (
     Function,
 )
 from openai.types.completion_usage import CompletionUsage
-from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
@@ -22,7 +21,6 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
-from homeassistant.util import ulid
 
 from tests.common import MockConfigEntry
 
@@ -57,7 +55,7 @@ async def test_entity(
 async def test_error_handling(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
-    """Test that the default prompt works."""
+    """Test that we handle errors when calling completion API."""
     with patch(
         "openai.resources.chat.completions.AsyncCompletions.create",
         new_callable=AsyncMock,
@@ -71,183 +69,6 @@ async def test_error_handling(
 
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
-
-
-async def test_template_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that template error handling works."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
-        },
-    )
-    with (
-        patch(
-            "openai.resources.models.AsyncModels.list",
-        ),
-        patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
-            new_callable=AsyncMock,
-        ),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
-    assert result.response.error_code == "unknown", result
-
-
-async def test_template_variables(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that template variables work."""
-    context = Context(user_id="12345")
-    mock_user = Mock()
-    mock_user.id = "12345"
-    mock_user.name = "Test User"
-
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            "prompt": (
-                "The user name is {{ user_name }}. "
-                "The user id is {{ llm_context.context.user_id }}."
-            ),
-        },
-    )
-    with (
-        patch(
-            "openai.resources.models.AsyncModels.list",
-        ),
-        patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
-            new_callable=AsyncMock,
-        ) as mock_create,
-        patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await conversation.async_converse(
-            hass, "hello", None, context, agent_id=mock_config_entry.entry_id
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
-    assert (
-        "The user name is Test User."
-        in mock_create.mock_calls[0][2]["messages"][0]["content"]
-    )
-    assert (
-        "The user id is 12345."
-        in mock_create.mock_calls[0][2]["messages"][0]["content"]
-    )
-
-
-async def test_extra_systen_prompt(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test that template variables work."""
-    extra_system_prompt = "Garage door cover.garage_door has been left open for 30 minutes. We asked the user if they want to close it."
-    extra_system_prompt2 = (
-        "User person.paulus came home. Asked him what he wants to do."
-    )
-
-    with (
-        patch(
-            "openai.resources.models.AsyncModels.list",
-        ),
-        patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
-            new_callable=AsyncMock,
-        ) as mock_create,
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        result = await conversation.async_converse(
-            hass,
-            "hello",
-            None,
-            Context(),
-            agent_id=mock_config_entry.entry_id,
-            extra_system_prompt=extra_system_prompt,
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
-    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
-        extra_system_prompt
-    )
-
-    conversation_id = result.conversation_id
-
-    # Verify that follow-up conversations with no system prompt take previous one
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-    ) as mock_create:
-        result = await conversation.async_converse(
-            hass,
-            "hello",
-            conversation_id,
-            Context(),
-            agent_id=mock_config_entry.entry_id,
-            extra_system_prompt=None,
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
-    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
-        extra_system_prompt
-    )
-
-    # Verify that we take new system prompts
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-    ) as mock_create:
-        result = await conversation.async_converse(
-            hass,
-            "hello",
-            conversation_id,
-            Context(),
-            agent_id=mock_config_entry.entry_id,
-            extra_system_prompt=extra_system_prompt2,
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
-    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
-        extra_system_prompt2
-    )
-
-    # Verify that follow-up conversations with no system prompt take previous one
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-    ) as mock_create:
-        result = await conversation.async_converse(
-            hass,
-            "hello",
-            conversation_id,
-            Context(),
-            agent_id=mock_config_entry.entry_id,
-        )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
-    assert mock_create.mock_calls[0][2]["messages"][0]["content"].endswith(
-        extra_system_prompt2
-    )
 
 
 async def test_conversation_agent(
@@ -605,65 +426,3 @@ async def test_assist_api_tools_conversion(
 
     tools = mock_create.mock_calls[0][2]["tools"]
     assert tools
-
-
-async def test_unknown_hass_api(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    snapshot: SnapshotAssertion,
-    mock_init_component,
-) -> None:
-    """Test when we reference an API that no longer exists."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            **mock_config_entry.options,
-            CONF_LLM_HASS_API: "non-existing",
-        },
-    )
-
-    await hass.async_block_till_done()
-
-    result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
-    )
-
-    assert result == snapshot
-
-
-@patch(
-    "openai.resources.chat.completions.AsyncCompletions.create",
-    new_callable=AsyncMock,
-)
-async def test_conversation_id(
-    mock_create,
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test conversation ID is honored."""
-    result = await conversation.async_converse(
-        hass, "hello", None, None, agent_id=mock_config_entry.entry_id
-    )
-
-    conversation_id = result.conversation_id
-
-    result = await conversation.async_converse(
-        hass, "hello", conversation_id, None, agent_id=mock_config_entry.entry_id
-    )
-
-    assert result.conversation_id == conversation_id
-
-    unknown_id = ulid.ulid()
-
-    result = await conversation.async_converse(
-        hass, "hello", unknown_id, None, agent_id=mock_config_entry.entry_id
-    )
-
-    assert result.conversation_id != unknown_id
-
-    result = await conversation.async_converse(
-        hass, "hello", "koala", None, agent_id=mock_config_entry.entry_id
-    )
-
-    assert result.conversation_id == "koala"

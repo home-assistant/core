@@ -2,10 +2,10 @@
 
 from http import HTTPStatus
 
-from homeassistant.components import ssdp
 from homeassistant.components.directv.const import CONF_RECEIVER_ID, DOMAIN
 from homeassistant.const import CONF_HOST, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -16,7 +16,7 @@ SSDP_LOCATION = "http://127.0.0.1/"
 UPNP_SERIAL = "RID-028877455858"
 
 MOCK_CONFIG = {DOMAIN: [{CONF_HOST: HOST}]}
-MOCK_SSDP_DISCOVERY_INFO = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DISCOVERY_INFO = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=SSDP_LOCATION,

@@ -9,18 +9,17 @@ from urllib.parse import urlparse
 from aiowebostv import WebOsTvPairError
 import voluptuous as vol
 
-from homeassistant.components import ssdp
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
-from . import async_control_connect
+from . import WebOsTvConfigEntry, async_control_connect
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
 from .helpers import async_get_sources
 
@@ -45,7 +44,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: WebOsTvConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -70,7 +69,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self._host, None)
+                client = await async_control_connect(self.hass, self._host, None)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -89,7 +88,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="pairing", errors=errors)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
         assert discovery_info.ssdp_location
@@ -97,10 +96,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         assert host
         self._host = host
         self._name = discovery_info.upnp.get(
-            ssdp.ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
+            ATTR_UPNP_FRIENDLY_NAME, DEFAULT_NAME
         ).replace("[LG]", "LG")
 
-        uuid = discovery_info.upnp[ssdp.ATTR_UPNP_UDN]
+        uuid = discovery_info.upnp[ATTR_UPNP_UDN]
         assert uuid
         uuid = uuid.removeprefix("uuid:")
         await self.async_set_unique_id(uuid)
@@ -131,7 +130,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self._host, None)
+                client = await async_control_connect(self.hass, self._host, None)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -155,7 +154,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             client_key = reconfigure_entry.data.get(CONF_CLIENT_SECRET)
 
             try:
-                client = await async_control_connect(host, client_key)
+                client = await async_control_connect(self.hass, host, client_key)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -182,7 +181,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class OptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: WebOsTvConfigEntry) -> None:
         """Initialize options flow."""
         self.host = config_entry.data[CONF_HOST]
         self.key = config_entry.data[CONF_CLIENT_SECRET]
@@ -196,7 +195,7 @@ class OptionsFlowHandler(OptionsFlow):
             options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
             return self.async_create_entry(title="", data=options_input)
         # Get sources
-        sources_list = await async_get_sources(self.host, self.key)
+        sources_list = await async_get_sources(self.hass, self.host, self.key)
         if not sources_list:
             errors["base"] = "cannot_retrieve"
 

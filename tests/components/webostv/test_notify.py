@@ -125,7 +125,7 @@ async def test_icon_not_found(
     ("side_effect", "error"),
     [
         (WebOsTvPairError, "Pairing with TV failed"),
-        (ConnectionRefusedError, "TV unreachable"),
+        (ConnectionResetError, "TV unreachable"),
     ],
 )
 async def test_connection_errors(
