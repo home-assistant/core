@@ -460,13 +460,13 @@
         "name": "Supply pressure"
       },
       "spf-total": {
-        "name": "Saisonal performance factor"
+        "name": "Seasonal performance factor"
       },
       "spf-dhw": {
-        "name": "Saisonal performance factor domestic hot water"
+        "name": "Seasonal performance factor - domestic hot water"
       },
       "spf-heating": {
-        "name": "Saisonal performance factor heating"
+        "name": "Seasonal performance factor - heating"
       }
     },
     "water_heater": {
