@@ -107,7 +107,7 @@ async def test_options_flow_cannot_retrieve(hass: HomeAssistant, client) -> None
     """Test options config flow cannot retrieve sources."""
     entry = await setup_webostv(hass)
 
-    client.connect.side_effect = ConnectionRefusedError
+    client.connect.side_effect = ConnectionResetError
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -141,7 +141,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, client) -> None:
         data=MOCK_USER_CONFIG,
     )
 
-    client.connect.side_effect = ConnectionRefusedError
+    client.connect.side_effect = ConnectionResetError
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
@@ -305,7 +305,7 @@ async def test_reauth_successful(hass: HomeAssistant, client) -> None:
     ("side_effect", "error"),
     [
         (WebOsTvPairError, "error_pairing"),
-        (ConnectionRefusedError, "cannot_connect"),
+        (ConnectionResetError, "cannot_connect"),
     ],
 )
 async def test_reauth_errors(hass: HomeAssistant, client, side_effect, error) -> None:
@@ -360,7 +360,7 @@ async def test_reconfigure_successful(hass: HomeAssistant, client) -> None:
     ("side_effect", "error"),
     [
         (WebOsTvPairError, "error_pairing"),
-        (ConnectionRefusedError, "cannot_connect"),
+        (ConnectionResetError, "cannot_connect"),
     ],
 )
 async def test_reconfigure_errors(
