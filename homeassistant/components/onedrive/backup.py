@@ -159,13 +159,8 @@ class OneDriveBackupAgent(BackupAgent):
                 translation_domain=DOMAIN, translation_key="backup_no_upload_session"
             )
 
-        adapter = GraphRequestAdapter(
-            auth_provider=AnonymousAuthenticationProvider(),
-            client=get_async_client(self._hass),
-        )
-
         await self._upload_file(
-            adapter, upload_session.upload_url, await open_stream(), backup.size
+            upload_session.upload_url, await open_stream(), backup.size
         )
 
         # store metadata in description
@@ -229,13 +224,14 @@ class OneDriveBackupAgent(BackupAgent):
         return self._items.by_drive_item_id(f"{self._folder_id}:/{backup_id}.tar:")
 
     async def _upload_file(
-        self,
-        adapter: GraphRequestAdapter,
-        upload_url: str,
-        stream: AsyncIterator[bytes],
-        total_size: int,
+        self, upload_url: str, stream: AsyncIterator[bytes], total_size: int
     ) -> None:
         """Use custom large file upload; SDK does not support stream."""
+
+        adapter = GraphRequestAdapter(
+            auth_provider=AnonymousAuthenticationProvider(),
+            client=get_async_client(self._hass),
+        )
         start = 0
         end = 0
         buffer = bytearray()
