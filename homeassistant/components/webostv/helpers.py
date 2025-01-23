@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import WebOsTvConfigEntry, async_control_connect
-from .const import DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
+from . import WebOsTvConfigEntry
+from .const import DOMAIN, LIVE_TV_APP_ID
 
 
 @callback
@@ -72,13 +72,8 @@ def async_get_client_by_device_entry(
     )
 
 
-async def async_get_sources(hass: HomeAssistant, host: str, key: str) -> list[str]:
+def get_sources(client: WebOsClient) -> list[str]:
     """Construct sources list."""
-    try:
-        client = await async_control_connect(hass, host, key)
-    except WEBOSTV_EXCEPTIONS:
-        return []
-
     sources = []
     found_live_tv = False
     for app in client.apps.values():

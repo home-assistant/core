@@ -106,21 +106,27 @@ def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
     @wraps(func)
     async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap all command methods."""
+        if self.state == MediaPlayerState.OFF:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_off",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "func": func.__name__,
+                },
+            )
         try:
             await func(self, *args, **kwargs)
-        except WEBOSTV_EXCEPTIONS as exc:
-            if self.state != MediaPlayerState.OFF:
-                raise HomeAssistantError(
-                    f"Error calling {func.__name__} on entity {self.entity_id},"
-                    f" state:{self.state}"
-                ) from exc
-            _LOGGER.warning(
-                "Error calling %s on entity %s, state:%s, error: %r",
-                func.__name__,
-                self.entity_id,
-                self.state,
-                exc,
-            )
+        except WEBOSTV_EXCEPTIONS as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "func": func.__name__,
+                    "error": str(error),
+                },
+            ) from error
 
     return cmd_wrapper
 
