@@ -22,21 +22,14 @@ import voluptuous as vol
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PATH, CONF_TOKEN
+from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    CONF_API_ENABLED,
-    CONF_PRODUCT_NAME,
-    CONF_PRODUCT_TYPE,
-    CONF_SERIAL,
-    DOMAIN,
-    LOGGER,
-)
+from .const import CONF_PRODUCT_NAME, CONF_PRODUCT_TYPE, CONF_SERIAL, DOMAIN, LOGGER
 
 
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -105,6 +98,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="authorize", errors=errors)
 
         # Now we got a token, we can ask for some more info
+
         async with HomeWizardEnergyV2(self.ip_address, token=token) as api:
             device_info = await api.device()
 
@@ -126,17 +120,13 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
+
         if (
-            CONF_API_ENABLED not in discovery_info.properties
-            or CONF_PATH not in discovery_info.properties
-            or CONF_PRODUCT_NAME not in discovery_info.properties
+            CONF_PRODUCT_NAME not in discovery_info.properties
             or CONF_PRODUCT_TYPE not in discovery_info.properties
             or CONF_SERIAL not in discovery_info.properties
         ):
             return self.async_abort(reason="invalid_discovery_parameters")
-
-        if (discovery_info.properties[CONF_PATH]) != "/api/v1":
-            return self.async_abort(reason="unsupported_api_version")
 
         self.ip_address = discovery_info.host
         self.product_type = discovery_info.properties[CONF_PRODUCT_TYPE]
@@ -194,6 +184,8 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             except RecoverableError as ex:
                 LOGGER.error(ex)
                 errors = {"base": ex.error_code}
+            except UnauthorizedError:
+                return await self.async_step_authorize()
             else:
                 return self.async_create_entry(
                     title=self.product_name,
