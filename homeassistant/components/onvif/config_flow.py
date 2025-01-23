@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 from onvif.util import is_auth_error, stringify_onvif_error
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
+from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
 from zeep.exceptions import Fault
@@ -58,11 +59,18 @@ CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
-    discovery = WSDiscovery(ttl=4)
+    discovery = WSDiscovery(ttl=4, relates_to=True)
     try:
         discovery.start()
         return discovery.searchServices(
-            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
+            types=[
+                QName(
+                    "http://www.onvif.org/ver10/network/wsdl",
+                    "NetworkVideoTransmitter",
+                    "dp0",
+                )
+            ],
+            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")],
         )
     finally:
         discovery.stop()
