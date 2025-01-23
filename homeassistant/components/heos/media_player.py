@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import reduce, wraps
-import logging
 from operator import ior
 from typing import Any
 
@@ -14,6 +13,7 @@ from pyheos import (
     HeosError,
     HeosPlayer,
     PlayState,
+    RepeatType,
     const as heos_const,
 )
 
@@ -26,9 +26,10 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
@@ -36,17 +37,20 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import GroupManager, HeosConfigEntry, SourceManager
 from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
+from .coordinator import HeosCoordinator
+
+PARALLEL_UPDATES = 0
 
 BASE_SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.VOLUME_SET
     | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
-    | MediaPlayerEntityFeature.SHUFFLE_SET
     | MediaPlayerEntityFeature.SELECT_SOURCE
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.GROUPING
@@ -76,7 +80,12 @@ HA_HEOS_ENQUEUE_MAP = {
     MediaPlayerEnqueue.PLAY: AddCriteriaType.PLAY_NOW,
 }
 
-_LOGGER = logging.getLogger(__name__)
+HEOS_HA_REPEAT_TYPE_MAP = {
+    RepeatType.OFF: RepeatMode.OFF,
+    RepeatType.ON_ALL: RepeatMode.ALL,
+    RepeatType.ON_ONE: RepeatMode.ONE,
+}
+HA_HEOS_REPEAT_TYPE_MAP = {v: k for k, v in HEOS_HA_REPEAT_TYPE_MAP.items()}
 
 
 async def async_setup_entry(
@@ -86,11 +95,14 @@ async def async_setup_entry(
     players = entry.runtime_data.players
     devices = [
         HeosMediaPlayer(
-            player, entry.runtime_data.source_manager, entry.runtime_data.group_manager
+            entry.runtime_data.coordinator,
+            player,
+            entry.runtime_data.source_manager,
+            entry.runtime_data.group_manager,
         )
         for player in players.values()
     ]
-    async_add_entities(devices, True)
+    async_add_entities(devices)
 
 
 type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
@@ -119,11 +131,10 @@ def catch_action_error[**_P](
     return decorator
 
 
-class HeosMediaPlayer(MediaPlayerEntity):
+class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     """The HEOS player."""
 
     _attr_media_content_type = MediaType.MUSIC
-    _attr_should_poll = False
     _attr_supported_features = BASE_SUPPORTED_FEATURES
     _attr_media_image_remotely_accessible = True
     _attr_has_entity_name = True
@@ -131,6 +142,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
 
     def __init__(
         self,
+        coordinator: HeosCoordinator,
         player: HeosPlayer,
         source_manager: SourceManager,
         group_manager: GroupManager,
@@ -152,16 +164,34 @@ class HeosMediaPlayer(MediaPlayerEntity):
             serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
+        self._update_attributes()
+        super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event):
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
-        await self.async_update_ha_state(True)
+        self._handle_coordinator_update()
 
-    async def _heos_updated(self) -> None:
-        """Handle sources changed."""
-        await self.async_update_ha_state(True)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attributes()
+        super()._handle_coordinator_update()
+
+    def _update_attributes(self) -> None:
+        """Update core attributes of the media player."""
+        self._attr_repeat = HEOS_HA_REPEAT_TYPE_MAP[self._player.repeat]
+        controls = self._player.now_playing_media.supported_controls
+        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
+        self._attr_supported_features = reduce(
+            ior, current_support, BASE_SUPPORTED_FEATURES
+        )
+        if self.support_next_track and self.support_previous_track:
+            self._attr_supported_features |= (
+                MediaPlayerEntityFeature.REPEAT_SET
+                | MediaPlayerEntityFeature.SHUFFLE_SET
+            )
 
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
@@ -169,7 +199,9 @@ class HeosMediaPlayer(MediaPlayerEntity):
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
         # Update state when heos changes
         self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
+            async_dispatcher_connect(
+                self.hass, SIGNAL_HEOS_UPDATED, self._handle_coordinator_update
+            )
         )
         # Register this player's entity_id so it can be resolved by the group manager
         self.async_on_remove(
@@ -178,6 +210,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
             )
         )
         async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
+        await super().async_added_to_hass()
 
     @catch_action_error("clear playlist")
     async def async_clear_playlist(self) -> None:
@@ -291,6 +324,13 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Select input source."""
         await self._source_manager.play_source(source, self._player)
 
+    @catch_action_error("set repeat")
+    async def async_set_repeat(self, repeat: RepeatMode) -> None:
+        """Set repeat mode."""
+        await self._player.set_play_mode(
+            HA_HEOS_REPEAT_TYPE_MAP[repeat], self._player.shuffle
+        )
+
     @catch_action_error("set shuffle")
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Enable/disable shuffle mode."""
@@ -300,14 +340,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
-
-    async def async_update(self) -> None:
-        """Update supported features of the player."""
-        controls = self._player.now_playing_media.supported_controls
-        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
-        self._attr_supported_features = reduce(
-            ior, current_support, BASE_SUPPORTED_FEATURES
-        )
 
     @catch_action_error("unjoin player")
     async def async_unjoin_player(self) -> None:

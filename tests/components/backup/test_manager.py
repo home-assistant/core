@@ -27,7 +27,6 @@ from homeassistant.components.backup import (
     DOMAIN,
     AgentBackup,
     BackupAgentPlatformProtocol,
-    BackupManager,
     BackupReaderWriterError,
     Folder,
     LocalBackupAgent,
@@ -38,8 +37,6 @@ from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
     BackupManagerError,
     BackupManagerState,
-    CoreBackupReaderWriter,
-    CreateBackupEvent,
     CreateBackupStage,
     CreateBackupState,
     NewBackup,
@@ -140,23 +137,31 @@ async def test_async_create_backup(
     )
 
 
-async def test_async_create_backup_when_backing_up(hass: HomeAssistant) -> None:
-    """Test generate backup."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-    manager.last_event = CreateBackupEvent(
-        stage=None, state=CreateBackupState.IN_PROGRESS
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_create_backup_when_busy(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test generate backup with busy manager."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID]}
     )
-    with pytest.raises(HomeAssistantError, match="Backup manager busy"):
-        await manager.async_create_backup(
-            agent_ids=[LOCAL_AGENT_ID],
-            include_addons=[],
-            include_all_addons=False,
-            include_database=True,
-            include_folders=[],
-            include_homeassistant=True,
-            name=None,
-            password=None,
-        )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is True
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": [LOCAL_AGENT_ID]}
+    )
+    result = await ws_client.receive_json()
+
+    assert result["success"] is False
+    assert result["error"]["code"] == "home_assistant_error"
+    assert result["error"]["message"] == "Backup manager busy: create_backup"
 
 
 @pytest.mark.parametrize(
@@ -223,10 +228,9 @@ async def test_create_backup_wrong_parameters(
         {"password": "pass123"},
     ],
 )
-async def test_async_initiate_backup(
+async def test_initiate_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
@@ -239,10 +243,7 @@ async def test_async_initiate_backup(
     """Test generate backup."""
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[])
-    agents = {
-        f"backup.{local_agent.name}": local_agent,
-        f"test.{remote_agent.name}": remote_agent,
-    }
+
     with patch(
         "homeassistant.components.backup.backup.async_get_backup_agents"
     ) as core_get_backup_agents:
@@ -275,6 +276,7 @@ async def test_async_initiate_backup(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -348,7 +350,7 @@ async def test_async_initiate_backup(
         },
         "name": name,
         "protected": bool(password),
-        "slug": ANY,
+        "slug": backup_id,
         "type": "partial",
         "version": 2,
     }
@@ -364,7 +366,7 @@ async def test_async_initiate_backup(
     assert backup_agent_ids == agent_ids
     assert backup_data == {
         "addons": [],
-        "backup_id": ANY,
+        "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
         "failed_agent_ids": [],
@@ -377,16 +379,6 @@ async def test_async_initiate_backup(
         "with_automatic_settings": False,
     }
 
-    for agent_id in agent_ids:
-        agent = agents[agent_id]
-        assert len(agent._backups) == 1
-        agent_backup = agent._backups[backup_data["backup_id"]]
-        assert agent_backup.backup_id == backup_data["backup_id"]
-        assert agent_backup.date == backup_data["date"]
-        assert agent_backup.name == backup_data["name"]
-        assert agent_backup.protected == backup_data["protected"]
-        assert agent_backup.size == backup_data["size"]
-
     outer_tar = mocked_tarfile.return_value
     core_tar = outer_tar.create_inner_tar.return_value.__enter__.return_value
     expected_files = [call(hass.config.path(), arcname="data", recursive=False)] + [
@@ -397,12 +389,12 @@ async def test_async_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_data['backup_id']}.tar"
+    assert tar_file_path == f"{backup_directory}/{backup_id}.tar"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize("exception", [BackupAgentError("Boom!"), Exception("Boom!")])
-async def test_async_initiate_backup_with_agent_error(
+async def test_initiate_backup_with_agent_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
@@ -521,6 +513,7 @@ async def test_async_initiate_backup_with_agent_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id(
@@ -616,6 +609,7 @@ async def test_async_initiate_backup_with_agent_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await hass.async_block_till_done()
@@ -842,7 +836,7 @@ async def test_create_backup_failure_raises_issue(
 @pytest.mark.parametrize(
     "exception", [BackupReaderWriterError("Boom!"), BaseException("Boom!")]
 )
-async def test_async_initiate_backup_non_agent_upload_error(
+async def test_initiate_backup_non_agent_upload_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
@@ -884,6 +878,7 @@ async def test_async_initiate_backup_non_agent_upload_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -950,7 +945,7 @@ async def test_async_initiate_backup_non_agent_upload_error(
 @pytest.mark.parametrize(
     "exception", [BackupReaderWriterError("Boom!"), Exception("Boom!")]
 )
-async def test_async_initiate_backup_with_task_error(
+async def test_initiate_backup_with_task_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
@@ -995,6 +990,7 @@ async def test_async_initiate_backup_with_task_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1100,6 +1096,7 @@ async def test_initiate_backup_file_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1165,35 +1162,6 @@ async def test_initiate_backup_file_error(
     assert open_mock.return_value.read.call_count == read_call_count
     assert open_mock.return_value.close.call_count == close_call_count
     assert unlink_mock.call_count == unlink_call_count
-
-
-async def test_loading_platforms(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test loading backup platforms."""
-    manager = BackupManager(hass, CoreBackupReaderWriter(hass))
-
-    assert not manager.platforms
-
-    get_agents_mock = AsyncMock(return_value=[])
-
-    await setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=AsyncMock(),
-            async_get_backup_agents=get_agents_mock,
-        ),
-    )
-    await manager.load_platforms()
-    await hass.async_block_till_done()
-
-    assert len(manager.platforms) == 1
-    assert "Loaded 1 platforms" in caplog.text
-
-    get_agents_mock.assert_called_once_with(hass)
 
 
 class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
@@ -1621,6 +1589,7 @@ async def test_receive_backup_agent_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id(
@@ -1699,6 +1668,7 @@ async def test_receive_backup_agent_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await hass.async_block_till_done()
@@ -1760,6 +1730,7 @@ async def test_receive_backup_non_agent_upload_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1881,6 +1852,7 @@ async def test_receive_backup_file_write_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1990,6 +1962,7 @@ async def test_receive_backup_read_tar_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -2158,6 +2131,7 @@ async def test_receive_backup_file_read_error(
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
         "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})

@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -13,11 +15,11 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -59,6 +61,49 @@ class MatterSwitch(MatterEntity, SwitchEntity):
         self._attr_is_on = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
+
+
+@dataclass(frozen=True)
+class MatterNumericSwitchEntityDescription(
+    SwitchEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Numeric Switch entities."""
+
+
+class MatterNumericSwitch(MatterSwitch):
+    """Representation of a Matter Enum Attribute as a Switch entity."""
+
+    entity_description: MatterNumericSwitchEntityDescription
+
+    async def _async_set_native_value(self, value: bool) -> None:
+        """Update the current value."""
+        matter_attribute = self._entity_info.primary_attribute
+        if value_convert := self.entity_description.ha_to_native_value:
+            send_value = value_convert(value)
+        await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id,
+                matter_attribute,
+            ),
+            value=send_value,
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn switch on."""
+        await self._async_set_native_value(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn switch off."""
+        await self._async_set_native_value(False)
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
+        if value_convert := self.entity_description.measurement_to_ha:
+            value = value_convert(value)
+        self._attr_is_on = value
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -138,5 +183,26 @@ DISCOVERY_SCHEMAS = [
             device_types.RoomAirConditioner,
             device_types.Speaker,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="EveTrvChildLock",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="child_lock",
+            measurement_to_ha={
+                0: False,
+                1: True,
+            }.get,
+            ha_to_native_value={
+                False: 0,
+                True: 1,
+            }.get,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(
+            clusters.ThermostatUserInterfaceConfiguration.Attributes.KeypadLockout,
+        ),
+        vendor_id=(4874,),
     ),
 ]

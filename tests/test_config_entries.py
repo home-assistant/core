@@ -46,8 +46,8 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 from homeassistant.util.json import json_loads
 
 from .common import (
