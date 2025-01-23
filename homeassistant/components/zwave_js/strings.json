@@ -556,7 +556,7 @@
       "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this action. If an area is specified, all Z-Wave JS devices and entities in that area will be targeted for this action.",
+          "description": "The area(s) to target for this action. If an area is specified, all Z-Wave devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
