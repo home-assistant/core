@@ -232,41 +232,47 @@ class OneDriveBackupAgent(BackupAgent):
             auth_provider=AnonymousAuthenticationProvider(),
             client=get_async_client(self._hass),
         )
-        start = 0
-        end = 0
-        buffer = bytearray()
+
         info = RequestInformation()
         info.url = upload_url
         info.http_method = Method.PUT
 
         async def async_upload(
-            start: int, end: int, chunk_data: bytearray
+            start: int, end: int, chunk_data: bytes
         ) -> LargeFileUploadSession:
             info.headers = HeadersCollection()
             info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
             info.headers.try_add("Content-Length", str(len(chunk_data)))
             info.headers.try_add("Content-Type", "application/octet-stream")
             _LOGGER.debug(info.headers.get_all())
-            info.set_stream_content(bytes(chunk_data))
+            info.set_stream_content(chunk_data)
             result = await adapter.send_async(info, LargeFileUploadSession, {})
             _LOGGER.debug("Next expected range: %s", result.next_expected_ranges)
             return result
 
+        start = 0
+        buffer: list[bytes] = []
+        buffer_size = 0
+
         async for chunk in stream:
-            buffer += chunk
+            buffer.append(chunk)
+            buffer_size += len(chunk)
 
-            # get at least the required chunk size
-            if len(buffer) < UPLOAD_CHUNK_SIZE:
-                continue
+            # loop if buffer is more than 2 * UPLOAD_CHUNK_SIZE
+            while buffer_size >= UPLOAD_CHUNK_SIZE:
+                # flatten buffer
+                joined_buffer = b"".join(buffer)
+                chunk_data = joined_buffer[:UPLOAD_CHUNK_SIZE]
+                end = start + UPLOAD_CHUNK_SIZE - 1
 
-            while len(buffer) >= UPLOAD_CHUNK_SIZE:
-                chunk_data = buffer[:UPLOAD_CHUNK_SIZE]
-                buffer = buffer[UPLOAD_CHUNK_SIZE:]
-                end = start + len(chunk_data) - 1
                 await async_upload(start, end, chunk_data)
-                start += len(chunk_data)
+
+                start += UPLOAD_CHUNK_SIZE
+                buffer = [joined_buffer[UPLOAD_CHUNK_SIZE:]]
+                buffer_size = len(buffer[0])
 
         # upload the remaining bytes
         if buffer:
             _LOGGER.debug("Last chunk")
-            await async_upload(start, total_size - 1, buffer)
+            joined_buffer = b"".join(buffer)
+            await async_upload(start, total_size - 1, joined_buffer)
