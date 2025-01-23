@@ -2299,6 +2299,9 @@ pysmartthings==0.7.8
 # homeassistant.components.smarty
 pysmarty2==0.10.1
 
+# homeassistant.components.smhi
+pysmhi==1.0.0
+
 # homeassistant.components.edl21
 pysml==0.0.12
 
@@ -2727,9 +2730,6 @@ slixmpp==1.8.5
 
 # homeassistant.components.smart_meter_texas
 smart-meter-texas==0.5.5
-
-# homeassistant.components.smhi
-smhi-pkg==1.0.19
 
 # homeassistant.components.snapcast
 snapcast==2.3.6

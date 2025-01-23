@@ -9,8 +9,7 @@ import logging
 from typing import Any, Final
 
 import aiohttp
-from smhi import Smhi
-from smhi.smhi_lib import SmhiForecast, SmhiForecastException
+from pysmhi import SMHIForecast, SmhiForecastException, SMHIPointForecast
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -59,7 +58,7 @@ from homeassistant.helpers import aiohttp_client, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import Throttle
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 
@@ -139,10 +138,10 @@ class SmhiWeather(WeatherEntity):
     ) -> None:
         """Initialize the SMHI weather entity."""
         self._attr_unique_id = f"{latitude}, {longitude}"
-        self._forecast_daily: list[SmhiForecast] | None = None
-        self._forecast_hourly: list[SmhiForecast] | None = None
+        self._forecast_daily: list[SMHIForecast] | None = None
+        self._forecast_hourly: list[SMHIForecast] | None = None
         self._fail_count = 0
-        self._smhi_api = Smhi(longitude, latitude, session=session)
+        self._smhi_api = SMHIPointForecast(longitude, latitude, session=session)
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
@@ -156,7 +155,7 @@ class SmhiWeather(WeatherEntity):
         """Return additional attributes."""
         if self._forecast_daily:
             return {
-                ATTR_SMHI_THUNDER_PROBABILITY: self._forecast_daily[0].thunder,
+                ATTR_SMHI_THUNDER_PROBABILITY: self._forecast_daily[0]["thunder"],
             }
         return None
 
@@ -165,8 +164,8 @@ class SmhiWeather(WeatherEntity):
         """Refresh the forecast data from SMHI weather API."""
         try:
             async with asyncio.timeout(TIMEOUT):
-                self._forecast_daily = await self._smhi_api.async_get_forecast()
-                self._forecast_hourly = await self._smhi_api.async_get_forecast_hour()
+                self._forecast_daily = await self._smhi_api.async_get_daily_forecast()
+                self._forecast_hourly = await self._smhi_api.async_get_hourly_forecast()
                 self._fail_count = 0
         except (TimeoutError, SmhiForecastException):
             _LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
@@ -176,15 +175,15 @@ class SmhiWeather(WeatherEntity):
                 return
 
         if self._forecast_daily:
-            self._attr_native_temperature = self._forecast_daily[0].temperature
-            self._attr_humidity = self._forecast_daily[0].humidity
-            self._attr_native_wind_speed = self._forecast_daily[0].wind_speed
-            self._attr_wind_bearing = self._forecast_daily[0].wind_direction
-            self._attr_native_visibility = self._forecast_daily[0].horizontal_visibility
-            self._attr_native_pressure = self._forecast_daily[0].pressure
-            self._attr_native_wind_gust_speed = self._forecast_daily[0].wind_gust
-            self._attr_cloud_coverage = self._forecast_daily[0].cloudiness
-            self._attr_condition = CONDITION_MAP.get(self._forecast_daily[0].symbol)
+            self._attr_native_temperature = self._forecast_daily[0]["temperature"]
+            self._attr_humidity = self._forecast_daily[0]["humidity"]
+            self._attr_native_wind_speed = self._forecast_daily[0]["wind_speed"]
+            self._attr_wind_bearing = self._forecast_daily[0]["wind_direction"]
+            self._attr_native_visibility = self._forecast_daily[0]["visibility"]
+            self._attr_native_pressure = self._forecast_daily[0]["pressure"]
+            self._attr_native_wind_gust_speed = self._forecast_daily[0]["wind_gust"]
+            self._attr_cloud_coverage = self._forecast_daily[0]["total_cloud"]
+            self._attr_condition = CONDITION_MAP.get(self._forecast_daily[0]["symbol"])
             if self._attr_condition == ATTR_CONDITION_SUNNY and not sun.is_up(
                 self.hass
             ):
@@ -196,7 +195,7 @@ class SmhiWeather(WeatherEntity):
         await self.async_update(no_throttle=True)
 
     def _get_forecast_data(
-        self, forecast_data: list[SmhiForecast] | None
+        self, forecast_data: list[SMHIForecast] | None
     ) -> list[Forecast] | None:
         """Get forecast data."""
         if forecast_data is None or len(forecast_data) < 3:
@@ -205,25 +204,28 @@ class SmhiWeather(WeatherEntity):
         data: list[Forecast] = []
 
         for forecast in forecast_data[1:]:
-            condition = CONDITION_MAP.get(forecast.symbol)
+            condition = CONDITION_MAP.get(forecast["symbol"])
             if condition == ATTR_CONDITION_SUNNY and not sun.is_up(
-                self.hass, forecast.valid_time.replace(tzinfo=dt_util.UTC)
+                self.hass, forecast["valid_time"]
             ):
                 condition = ATTR_CONDITION_CLEAR_NIGHT
 
             data.append(
                 {
-                    ATTR_FORECAST_TIME: forecast.valid_time.isoformat(),
-                    ATTR_FORECAST_NATIVE_TEMP: forecast.temperature_max,
-                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast.temperature_min,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.total_precipitation,
+                    ATTR_FORECAST_TIME: forecast["valid_time"].isoformat(),
+                    ATTR_FORECAST_NATIVE_TEMP: forecast["temperature_max"],
+                    ATTR_FORECAST_NATIVE_TEMP_LOW: forecast["temperature_min"],
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: forecast.get(
+                        "total_precipitation"
+                    )
+                    or forecast["mean_precipitation"],
                     ATTR_FORECAST_CONDITION: condition,
-                    ATTR_FORECAST_NATIVE_PRESSURE: forecast.pressure,
-                    ATTR_FORECAST_WIND_BEARING: forecast.wind_direction,
-                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast.wind_speed,
-                    ATTR_FORECAST_HUMIDITY: forecast.humidity,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast.wind_gust,
-                    ATTR_FORECAST_CLOUD_COVERAGE: forecast.cloudiness,
+                    ATTR_FORECAST_NATIVE_PRESSURE: forecast["pressure"],
+                    ATTR_FORECAST_WIND_BEARING: forecast["wind_direction"],
+                    ATTR_FORECAST_NATIVE_WIND_SPEED: forecast["wind_speed"],
+                    ATTR_FORECAST_HUMIDITY: forecast["humidity"],
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: forecast["wind_gust"],
+                    ATTR_FORECAST_CLOUD_COVERAGE: forecast["total_cloud"],
                 }
             )
 
