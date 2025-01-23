@@ -273,7 +273,6 @@ class OneDriveBackupAgent(BackupAgent):
                     uploaded_chunks += 1
                     buffer_size -= UPLOAD_CHUNK_SIZE
                 buffer = [chunk_data[UPLOAD_CHUNK_SIZE * uploaded_chunks :]]
-                buffer_size = len(buffer[0])
 
         # upload the remaining bytes
         if buffer:
