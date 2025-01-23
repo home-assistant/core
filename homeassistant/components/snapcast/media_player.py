@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from snapcast.control.client import Snapclient
 from snapcast.control.group import Snapgroup
@@ -280,7 +280,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         raise NotImplementedError
 
     @property
-    def metadata(self) -> Mapping[str, str | list[str | None]]:
+    def metadata(self) -> Mapping[str, Any]:
         """Get metadata from the current stream."""
         if metadata := self.coordinator.server.stream(
             self._current_group.stream
@@ -293,12 +293,12 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return cast(str, self.metadata.get("title"))
+        return self.metadata.get("title")
 
     @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
-        return cast(str, self.metadata.get("artUrl"))
+        return self.metadata.get("artUrl")
 
     @property
     def media_artist(self) -> str | None:
@@ -308,7 +308,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
-        return cast(str, self.metadata.get("album"))
+        return self.metadata.get("album")
 
     @property
     def media_album_artist(self) -> str | None:
@@ -338,7 +338,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         if properties := self.coordinator.server.stream(
             self._current_group.stream
         ).properties:
-            if (value := properties.get("position", None)) is not None:
+            if (value := properties.get("position")) is not None:
                 return int(value)
 
         return None
