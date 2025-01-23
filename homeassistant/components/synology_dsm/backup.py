@@ -19,10 +19,10 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 from .const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
+    DATA_KEY,
+    DATA_KEY_BACKUP_AGENT_LISTENERS,
     DOMAIN,
-    SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS,
 )
-from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -33,12 +33,13 @@ async def async_get_backup_agents(
     """Return a list of backup agents."""
     if not (
         entries := hass.config_entries.async_loaded_entries(DOMAIN)
-    ) or not hass.data.get(DOMAIN):
+    ) or not hass.data.get(DATA_KEY):
         LOGGER.debug("No proper config entry found")
         return []
     agents: list[BackupAgent] = []
     for entry in entries:
-        syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+        assert entry.unique_id
+        syno_data = hass.data[DATA_KEY][entry.unique_id]
         if syno_data.api.file_station and entry.options.get(CONF_BACKUP_PATH):
             agents.append(SynologyDSMBackupAgent(hass, entry))
     return agents
@@ -55,12 +56,12 @@ def async_register_backup_agents_listener(
 
     :return: A function to unregister the listener.
     """
-    hass.data.setdefault(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []).append(listener)
+    hass.data.setdefault(DATA_KEY_BACKUP_AGENT_LISTENERS, []).append(listener)
 
     @callback
     def remove_listener() -> None:
         """Remove the listener."""
-        hass.data[SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS].remove(listener)
+        hass.data[DATA_KEY_BACKUP_AGENT_LISTENERS].remove(listener)
 
     return remove_listener
 
@@ -78,7 +79,8 @@ class SynologyDSMBackupAgent(BackupAgent):
         self.path = (
             f"{entry.options[CONF_BACKUP_SHARE]}/{entry.options[CONF_BACKUP_PATH]}"
         )
-        syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+        assert entry.unique_id
+        syno_data = hass.data[DATA_KEY][entry.unique_id]
         self.api = syno_data.api
 
     @property

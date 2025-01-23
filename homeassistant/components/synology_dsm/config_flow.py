@@ -63,6 +63,7 @@ from .const import (
     CONF_DEVICE_TOKEN,
     CONF_SNAPSHOT_QUALITY,
     CONF_VOLUMES,
+    DATA_KEY,
     DEFAULT_BACKUP_PATH,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
@@ -74,7 +75,6 @@ from .const import (
     DOMAIN,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
-from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -453,7 +453,8 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
-        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.config_entry.unique_id]
+        assert self.config_entry.unique_id
+        syno_data = self.hass.data[DATA_KEY][self.config_entry.unique_id]
 
         data_schema = vol.Schema(
             {

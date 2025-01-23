@@ -15,10 +15,9 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
-from .const import DOMAIN
+from .const import DATA_KEY, DOMAIN
 from .coordinator import SynologyDSMSwitchUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
-from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS switch."""
-    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    assert entry.unique_id
+    data = hass.data[DATA_KEY][entry.unique_id]
     if coordinator := data.coordinator_switches:
         assert coordinator.version is not None
         async_add_entities(

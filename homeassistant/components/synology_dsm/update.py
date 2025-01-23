@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DATA_KEY
 from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 from .models import SynologyDSMData
@@ -41,7 +41,8 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Synology DSM update entities."""
-    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    assert entry.unique_id
+    data: SynologyDSMData = hass.data[DATA_KEY][entry.unique_id]
     async_add_entities(
         SynoDSMUpdateEntity(data.api, data.coordinator_central, description)
         for description in UPDATE_ENTITIES

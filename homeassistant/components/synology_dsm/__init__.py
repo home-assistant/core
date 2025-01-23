@@ -19,6 +19,8 @@ from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
+    DATA_KEY,
+    DATA_KEY_BACKUP_AGENT_LISTENERS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
@@ -26,7 +28,6 @@ from .const import (
     PLATFORMS,
     SYNOLOGY_AUTH_FAILED_EXCEPTIONS,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
-    SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS,
 )
 from .coordinator import (
     SynologyDSMCameraUpdateCoordinator,
@@ -122,7 +123,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_cameras=coordinator_cameras,
         coordinator_switches=coordinator_switches,
     )
-    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = synology_data
+    assert entry.unique_id
+    hass.data.setdefault(DATA_KEY, {})[entry.unique_id] = synology_data
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
@@ -135,15 +137,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Synology DSM sensors."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        entry_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+        assert entry.unique_id
+        entry_data = hass.data[DATA_KEY][entry.unique_id]
         await entry_data.api.async_unload()
-        hass.data[DOMAIN].pop(entry.unique_id)
+        hass.data[DATA_KEY].pop(entry.unique_id)
     hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
     return unload_ok
 
 
 async def _notify_backup_listeners(hass: HomeAssistant) -> None:
-    for listener in hass.data.get(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []):
+    for listener in hass.data.get(DATA_KEY_BACKUP_AGENT_LISTENERS, []):
         listener()
 
 
@@ -156,7 +159,8 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove synology_dsm config entry from a device."""
-    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    assert entry.unique_id
+    data = hass.data[DATA_KEY][entry.unique_id]
     api = data.api
     assert api.information is not None
     serial = api.information.serial

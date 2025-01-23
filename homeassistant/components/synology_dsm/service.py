@@ -8,8 +8,14 @@ from synology_dsm.exceptions import SynologyDSMException
 
 from homeassistant.core import HomeAssistant, ServiceCall
 
-from .const import CONF_SERIAL, DOMAIN, SERVICE_REBOOT, SERVICE_SHUTDOWN, SERVICES
-from .models import SynologyDSMData
+from .const import (
+    CONF_SERIAL,
+    DATA_KEY,
+    DOMAIN,
+    SERVICE_REBOOT,
+    SERVICE_SHUTDOWN,
+    SERVICES,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -20,10 +26,10 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     async def service_handler(call: ServiceCall) -> None:
         """Handle service call."""
         serial = call.data.get(CONF_SERIAL)
-        dsm_devices = hass.data[DOMAIN]
+        dsm_devices = hass.data[DATA_KEY]
 
         if serial:
-            dsm_device: SynologyDSMData = hass.data[DOMAIN][serial]
+            dsm_device = hass.data[DATA_KEY][serial]
         elif len(dsm_devices) == 1:
             dsm_device = next(iter(dsm_devices.values()))
             serial = next(iter(dsm_devices))
@@ -39,7 +45,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
             return
 
         if call.service in [SERVICE_REBOOT, SERVICE_SHUTDOWN]:
-            if serial not in hass.data[DOMAIN]:
+            if serial not in hass.data[DATA_KEY]:
                 LOGGER.error("DSM with specified serial %s not found", serial)
                 return
             LOGGER.debug("%s DSM with serial %s", call.service, serial)
@@ -50,7 +56,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
                 ),
                 call.service,
             )
-            dsm_device = hass.data[DOMAIN][serial]
+            dsm_device = hass.data[DATA_KEY][serial]
             dsm_api = dsm_device.api
             try:
                 await getattr(dsm_api, f"async_{call.service}")()
