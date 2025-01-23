@@ -1,6 +1,5 @@
 """The Bosch Smart Home Controller integration."""
 
-from dataclasses import dataclass
 import logging
 
 from boschshcpy import SHCSession
@@ -9,7 +8,7 @@ from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
 from homeassistant.components.zeroconf import async_get_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
@@ -25,15 +24,7 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class BoschData:
-    """Dataclass to store information in runtime_data."""
-
-    session: SHCSession
-    polling_handler: CALLBACK_TYPE | None = None
-
-
-type BoschConfigEntry = ConfigEntry[BoschData]
+type BoschConfigEntry = ConfigEntry[SHCSession]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
@@ -59,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
     if shc_info.updateState.name == "UPDATE_AVAILABLE":
         _LOGGER.warning("Please check for software updates in the Bosch Smart Home App")
 
-    entry.runtime_data = BoschData(session=session)
+    entry.runtime_data = session
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -79,8 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
         await hass.async_add_executor_job(session.stop_polling)
 
     await hass.async_add_executor_job(session.start_polling)
-    entry.runtime_data.polling_handler = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, stop_polling
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_polling)
     )
 
     return True
@@ -88,12 +79,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> boo
 
 async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bool:
     """Unload a config entry."""
-    session = entry.runtime_data.session
-
-    if (polling_handler := entry.runtime_data.polling_handler) is not None:
-        # Unsubscribe EVENT_HOMEASSISTANT_STOP
-        polling_handler()
-        entry.runtime_data.polling_handler = None
-    await hass.async_add_executor_job(session.stop_polling)
+    await hass.async_add_executor_job(entry.runtime_data.stop_polling)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

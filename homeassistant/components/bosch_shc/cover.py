@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC cover platform."""
-    session = config_entry.runtime_data.session
+    session = config_entry.runtime_data
 
     async_add_entities(
         ShutterControlCover(

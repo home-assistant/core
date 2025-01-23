@@ -82,7 +82,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC switch platform."""
-    session = config_entry.runtime_data.session
+    session = config_entry.runtime_data
 
     entities: list[SwitchEntity] = [
         SHCSwitch(
