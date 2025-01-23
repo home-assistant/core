@@ -33,19 +33,18 @@ async def _validate_influxdb_connection(
     return None
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class InfluxDBConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for InfluxDB."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
-    async def async_step_import(self, import_config=None) -> ConfigFlowResult:
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle the initial step."""
-        host = import_config.get(CONF_HOST)
-        database = import_config.get(CONF_DB_NAME)
-        bucket = import_config.get(CONF_BUCKET)
+        host = import_data.get(CONF_HOST)
+        database = import_data.get(CONF_DB_NAME)
+        bucket = import_data.get(CONF_BUCKET)
 
-        if import_config[CONF_API_VERSION] == DEFAULT_API_VERSION:
+        if import_data[CONF_API_VERSION] == DEFAULT_API_VERSION:
             unique_id = f"{host}_{database}"
             title = f"{database} ({host})"
         else:
@@ -53,10 +52,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title = f"{bucket} ({host})"
 
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(import_config)
+        self._abort_if_unique_id_configured(import_data)
 
-        errors = await _validate_influxdb_connection(self.hass, import_config)
+        errors = await _validate_influxdb_connection(self.hass, import_data)
         if errors:
             return self.async_abort(reason=errors["base"])
 
-        return self.async_create_entry(title=title, data=import_config)
+        return self.async_create_entry(title=title, data=import_data)
