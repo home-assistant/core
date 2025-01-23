@@ -1,14 +1,31 @@
 {
   "config": {
+    "flow_title": "Briiv Air Purifier {serial_number}",
     "step": {
       "user": {
+        "title": "Briiv Air Purifier",
+        "description": "Found {new_devices} new devices.\n\nAlready configured devices:\n{configured_devices}",
         "data": {
-          "host": "Host",
-          "port": "Port"
-        },
-        "description": "Set up your Briiv Air Purifier UDP listener",
-        "title": "Briiv Air Purifier"
+          "action": "Select Device"
+        }
+      },
+      "manual": {
+        "title": "Manual Configuration",
+        "description": "Manually configure a Briiv device",
+        "data": {
+          "host": "IP Address",
+          "serial_number": "Serial Number"
+        }
       }
+    },
+    "error": {
+      "discovery_error": "Failed to discover devices",
+      "cannot_connect": "Failed to connect",
+      "invalid_host": "Invalid IP address",
+      "invalid_serial": "Invalid serial number"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
     }
   }
 }

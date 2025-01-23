@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -12,11 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .api import BriivAPI
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-PRESET_MODE_BOOST = "boost"
+from .const import DOMAIN, LOGGER, PRESET_MODE_BOOST
 
 
 async def async_setup_entry(
@@ -60,12 +55,12 @@ class BriivFan(FanEntity):
         self._attr_preset_mode = None
         self._fan_speed = 0
 
-        _LOGGER.debug("Initializing Briiv fan with serial: %s", serial_number)
+        LOGGER.debug("Initializing Briiv fan with serial: %s", serial_number)
         self._api.register_callback(self._handle_update)
 
     async def _handle_update(self, data: dict[str, Any]) -> None:
         """Handle updated data from device."""
-        _LOGGER.debug("Received update data: %s", data)
+        LOGGER.debug("Received update data: %s", data)
         update_state = False
 
         if "power" in data:
@@ -75,7 +70,7 @@ class BriivFan(FanEntity):
                 if not power_state:
                     self._attr_percentage = 0
                 update_state = True
-                _LOGGER.debug("Power state updated to: %s", power_state)
+                LOGGER.debug("Power state updated to: %s", power_state)
 
         if "fan_speed" in data:
             new_speed = data["fan_speed"]
@@ -86,7 +81,7 @@ class BriivFan(FanEntity):
                 else:
                     self._attr_percentage = new_speed
                 update_state = True
-                _LOGGER.debug(
+                LOGGER.debug(
                     "Fan speed updated to: %s, percentage: %s",
                     new_speed,
                     self._attr_percentage,
@@ -101,14 +96,14 @@ class BriivFan(FanEntity):
             else:
                 self._attr_preset_mode = None
             update_state = True
-            _LOGGER.debug("Boost mode updated to: %s", boost_active)
+            LOGGER.debug("Boost mode updated to: %s", boost_active)
 
         if update_state:
             self.async_write_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
-        _LOGGER.debug("Setting percentage to: %s", percentage)
+        LOGGER.debug("Setting percentage to: %s", percentage)
 
         if percentage is None or percentage == 0:
             await self.async_turn_off()
@@ -124,7 +119,7 @@ class BriivFan(FanEntity):
         else:
             firmware_speed = 100
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "Mapped percentage %s to firmware speed %s", percentage, firmware_speed
         )
 
@@ -150,7 +145,7 @@ class BriivFan(FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        _LOGGER.debug(
+        LOGGER.debug(
             "Turn on called with percentage: %s, preset_mode: %s",
             percentage,
             preset_mode,
@@ -176,7 +171,7 @@ class BriivFan(FanEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        _LOGGER.debug("Turn off called")
+        LOGGER.debug("Turn off called")
 
         # Store current fan speed before turning off if not in boost mode
         if (
@@ -185,7 +180,7 @@ class BriivFan(FanEntity):
         ):
             await self._api.set_fan_speed(self._attr_percentage)
             self._fan_speed = self._attr_percentage
-            _LOGGER.debug("Stored fan speed before power off: %s", self._fan_speed)
+            LOGGER.debug("Stored fan speed before power off: %s", self._fan_speed)
 
         # Exit boost mode if active
         if self._attr_preset_mode == PRESET_MODE_BOOST:
@@ -201,7 +196,7 @@ class BriivFan(FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        _LOGGER.debug("Setting preset mode to: %s", preset_mode)
+        LOGGER.debug("Setting preset mode to: %s", preset_mode)
 
         if preset_mode == PRESET_MODE_BOOST:
             if not self._attr_is_on:
