@@ -69,7 +69,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self._host, None)
+                client = await async_control_connect(self.hass, self._host, None)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -130,7 +130,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self._host, None)
+                client = await async_control_connect(self.hass, self._host, None)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -154,7 +154,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             client_key = reconfigure_entry.data.get(CONF_CLIENT_SECRET)
 
             try:
-                client = await async_control_connect(host, client_key)
+                client = await async_control_connect(self.hass, host, client_key)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -195,7 +195,7 @@ class OptionsFlowHandler(OptionsFlow):
             options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
             return self.async_create_entry(title="", data=options_input)
         # Get sources
-        sources_list = await async_get_sources(self.host, self.key)
+        sources_list = await async_get_sources(self.hass, self.host, self.key)
         if not sources_list:
             errors["base"] = "cannot_retrieve"
 

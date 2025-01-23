@@ -3,7 +3,6 @@
 from pyheos import CommandAuthenticationError, CommandFailedError, Heos, HeosError
 import pytest
 
-from homeassistant.components import heos
 from homeassistant.components.heos.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -44,7 +43,7 @@ async def test_cannot_connect_shows_error_form(
     """Test form is shown with error when cannot connect."""
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
+        DOMAIN, context={"source": SOURCE_USER}, data={CONF_HOST: "127.0.0.1"}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
@@ -60,7 +59,7 @@ async def test_create_entry_when_host_valid(
     data = {CONF_HOST: "127.0.0.1"}
 
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": SOURCE_USER}, data=data
+        DOMAIN, context={"source": SOURCE_USER}, data=data
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
@@ -78,7 +77,7 @@ async def test_create_entry_when_friendly_name_valid(
     data = {CONF_HOST: "Office (127.0.0.1)"}
 
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": SOURCE_USER}, data=data
+        DOMAIN, context={"source": SOURCE_USER}, data=data
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -99,7 +98,7 @@ async def test_discovery_shows_create_form(
 
     # Single discovered host shows form for user to finish setup.
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
     )
     assert hass.data[DOMAIN] == {"Office (127.0.0.1)": "127.0.0.1"}
     assert result["type"] is FlowResultType.FORM
@@ -107,7 +106,7 @@ async def test_discovery_shows_create_form(
 
     # Subsequent discovered hosts append to discovered hosts and abort.
     result = await hass.config_entries.flow.async_init(
-        heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
     )
     assert hass.data[DOMAIN] == {
         "Office (127.0.0.1)": "127.0.0.1",
@@ -221,6 +220,7 @@ async def test_options_flow_signs_in(
 ) -> None:
     """Test options flow signs-in with entered credentials."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Start the options flow. Entry has not current options.
     assert CONF_USERNAME not in config_entry.options
@@ -259,6 +259,7 @@ async def test_options_flow_signs_out(
 ) -> None:
     """Test options flow signs-out when credentials cleared."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Start the options flow. Entry has not current options.
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -306,6 +307,7 @@ async def test_options_flow_missing_one_param_recovers(
 ) -> None:
     """Test options flow signs-in after recovering from only username or password being entered."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Start the options flow. Entry has not current options.
     assert CONF_USERNAME not in config_entry.options
@@ -354,6 +356,7 @@ async def test_reauth_signs_in_aborts(
 ) -> None:
     """Test reauth flow signs-in with entered credentials and aborts."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
@@ -391,6 +394,7 @@ async def test_reauth_signs_out(
 ) -> None:
     """Test reauth flow signs-out when credentials cleared and aborts."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["step_id"] == "reauth_confirm"
@@ -439,6 +443,7 @@ async def test_reauth_flow_missing_one_param_recovers(
 ) -> None:
     """Test reauth flow signs-in after recovering from only username or password being entered."""
     config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
 
     # Start the options flow. Entry has not current options.
     result = await config_entry.start_reauth_flow(hass)

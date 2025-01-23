@@ -9,10 +9,9 @@ from pylitterbot import Account, FeederRobot, LitterRobot3, LitterRobot4, Robot
 from pylitterbot.exceptions import InvalidCommandException
 import pytest
 
-from homeassistant.components import litterrobot
 from homeassistant.core import HomeAssistant
 
-from .common import CONFIG, FEEDER_ROBOT_DATA, ROBOT_4_DATA, ROBOT_DATA
+from .common import CONFIG, DOMAIN, FEEDER_ROBOT_DATA, ROBOT_4_DATA, ROBOT_DATA
 
 from tests.common import MockConfigEntry
 
@@ -117,16 +116,16 @@ def mock_account_with_side_effects() -> MagicMock:
 async def setup_integration(
     hass: HomeAssistant, mock_account: MagicMock, platform_domain: str | None = None
 ) -> MockConfigEntry:
-    """Load a Litter-Robot platform with the provided hub."""
+    """Load a Litter-Robot platform with the provided coordinator."""
     entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
     )
     entry.add_to_hass(hass)
 
     with (
         patch(
-            "homeassistant.components.litterrobot.hub.Account",
+            "homeassistant.components.litterrobot.coordinator.Account",
             return_value=mock_account,
         ),
         patch(
