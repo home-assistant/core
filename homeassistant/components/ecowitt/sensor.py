@@ -223,22 +223,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
 }
 
 
-def get_sensor_key_by_name(name: str | None) -> str | None:
-    """Retrieve the sensor key from SENSOR_MAP by its name."""
-    for key, mapping in SENSOR_MAP.items():
-        if mapping.name == name:
-            _LOGGER.debug("get_sensor_key_by_name %s", key)
-            return key
-    return None
+@dataclass
+class SensorInfo:
+    key: str
+    stype: EcoWittSensorTypes
 
-
-def get_sensor_stype_by_name(name: str) -> EcoWittSensorTypes | None:
-    """Retrieve the sensor type (stype) from SENSOR_MAP by its name."""
-    for mapping in SENSOR_MAP.values():
-        if mapping.name == name:
-            _LOGGER.debug("get_sensor_stype_by_name %s", mapping.stype)
-            return mapping.stype
-    return None
+SENSOR_INFO_BY_NAME = { mapping.name: SensorInfo(key, mapping.stype) for key, mapping in SENSOR_MAP.items() }
 
 
 async def async_setup_entry(
