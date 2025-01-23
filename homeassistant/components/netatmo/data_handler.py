@@ -18,6 +18,7 @@ from pyatmo.modules.device_types import (
 )
 
 from homeassistant.components import cloud
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -38,6 +39,7 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_COVER,
+    NETATMO_CREATE_DOOR_TAG,
     NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -60,6 +62,8 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
+DOOR_TAG = "door_tag"
+BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
 PUBLISHERS = {
@@ -68,6 +72,7 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
+    DOOR_TAG: "async_update_weather_stations",
     EVENT: "async_update_events",
 }
 
@@ -82,6 +87,7 @@ DEFAULT_INTERVALS = {
     WEATHER: 600,
     AIR_CARE: 300,
     PUBLIC: 600,
+    DOOR_TAG: 60,
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
@@ -308,6 +314,7 @@ class NetatmoDataHandler:
         """Dispatch the creation of entities."""
         await self.subscribe(WEATHER, WEATHER, None)
         await self.subscribe(AIR_CARE, AIR_CARE, None)
+        await self.subscribe(DOOR_TAG, DOOR_TAG, None)
 
         self.setup_air_care()
 
@@ -327,6 +334,7 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
+        #await self.unsubscribe(DOOR_TAG, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""
@@ -343,6 +351,21 @@ class NetatmoDataHandler:
                     ),
                 )
 
+    def setup_door_tag(self) -> None:
+        """Set up home door_tag modules."""
+        for module in self.account.modules.values():
+            if module.device_category is NetatmoDeviceCategory.opening:
+                _LOGGER.debug("Module %s dispatched as opening category (door_tag)", module.name)
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_DOOR_TAG,
+                    NetatmoDevice(
+                        self,
+                        module,
+                        BINARY_SENSOR,
+                        DOOR_TAG,
+                    ),
+                )
     def setup_modules(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up modules."""
         netatmo_type_signal_map = {
@@ -350,6 +373,7 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
+            #NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
@@ -365,9 +389,11 @@ class NetatmoDataHandler:
         }
         for module in home.modules.values():
             if not module.device_category:
+                _LOGGER.debug("Module %s skipped beacuse of missing category", module.name)
                 continue
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
+                _LOGGER.debug("Module %s dispatched as %s category by %s to publisher %s", module.name, module.device_category, signal, signal_home)
                 async_dispatcher_send(
                     self.hass,
                     signal,
@@ -379,6 +405,7 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
+                _LOGGER.debug("Module %s dispatched as weather category to publisher %s", module.name, WEATHER)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_WEATHER_SENSOR,
@@ -389,11 +416,24 @@ class NetatmoDataHandler:
                         WEATHER,
                     ),
                 )
+            if module.device_category is NetatmoDeviceCategory.opening:
+                _LOGGER.debug("Module %s dispatched as opening category to publisher %s", module.name, DOOR_TAG)
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_WEATHER_SENSOR,
+                    NetatmoDevice(
+                        self,
+                        module,
+                        home.entity_id,
+                        DOOR_TAG,
+                    ),
+                )
 
     def setup_rooms(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up rooms."""
         for room in home.rooms.values():
             if NetatmoDeviceCategory.climate in room.features:
+                _LOGGER.debug("Room %s dispatched", room)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_CLIMATE,
@@ -407,6 +447,7 @@ class NetatmoDataHandler:
 
                 for module in room.modules.values():
                     if module.device_category is NetatmoDeviceCategory.climate:
+                        _LOGGER.debug("Battery for climate module %s dispatched", module.name)
                         async_dispatcher_send(
                             self.hass,
                             NETATMO_CREATE_BATTERY,
@@ -419,6 +460,7 @@ class NetatmoDataHandler:
                         )
 
                 if "humidity" in room.features:
+                    _LOGGER.debug("Humidity for room %s dispatched", room)
                     async_dispatcher_send(
                         self.hass,
                         NETATMO_CREATE_ROOM_SENSOR,
