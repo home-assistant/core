@@ -20,7 +20,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.components.snapcast.const import DOMAIN, DOMAIN as SNAPCAST_DOMAIN
+from homeassistant.components.snapcast.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, STATE_PLAYING
 from homeassistant.core import HomeAssistant
@@ -41,7 +41,7 @@ async def _setup_integration(hass: HomeAssistant) -> MockConfigEntry:
 
     # Create a mock config entry
     mock_config_entry = MockConfigEntry(
-        domain=SNAPCAST_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: "127.0.0.1",
             CONF_PORT: CONTROL_PORT,
@@ -74,13 +74,13 @@ async def test_state(
     assert mock_config_entry
 
     # Fetch the coordinator
-    coordinator = hass.data[SNAPCAST_DOMAIN][mock_config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     # Load the test server data manually
     coordinator.server._on_server_update(TEST_STATE)
 
     # Asset basic state matches in both client and group entities
-    for entity_id in [TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID]:
+    for entity_id in (TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID):
         state = hass.states.get(entity_id)
         assert state
 
@@ -104,13 +104,13 @@ async def test_metadata(
     assert mock_config_entry
 
     # Fetch the coordinator
-    coordinator = hass.data[SNAPCAST_DOMAIN][mock_config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     # Load the test server data manually
     coordinator.server._on_server_update(TEST_STATE)
 
     # Asset metadata matches in both client and group entities
-    for entity_id in [TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID]:
+    for entity_id in (TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID):
         state = hass.states.get(entity_id)
         assert state
 
@@ -133,7 +133,7 @@ async def test_no_metadata(
     assert mock_config_entry
 
     # Fetch the coordinator
-    coordinator = hass.data[SNAPCAST_DOMAIN][mock_config_entry.entry_id]
+    coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
 
     # Load the test server data manually
     coordinator.server._on_server_update(TEST_STATE)
@@ -149,7 +149,7 @@ async def test_no_metadata(
     coordinator._on_update()
 
     # Assert that no metadata attributes are present in both client and group entities
-    for entity_id in [TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID]:
+    for entity_id in (TEST_CLIENT_ENTITY_ID, TEST_GROUP_ENTITY_ID):
         state = hass.states.get(entity_id)
         assert state
 
