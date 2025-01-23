@@ -37,7 +37,7 @@ from .const import (
     WS_TYPE_SUBSCRIBE,
 )
 from .coordinator import get_supervisor_info
-from .update import update_addon, update_core
+from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     {vol.Required(ATTR_WS_EVENT): cv.string},
@@ -176,7 +176,6 @@ async def websocket_update_addon(
     {
         vol.Required(WS_TYPE): "hassio/update/core",
         vol.Required("backup"): bool,
-        vol.Required("version"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -184,5 +183,5 @@ async def websocket_update_core(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Websocket handler to update an addon."""
-    await update_core(hass, msg["backup"], msg["version"])
+    await update_core(hass, None, msg["backup"])
     connection.send_result(msg[WS_ID])

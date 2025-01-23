@@ -33,6 +33,7 @@ from homeassistant.components.backup import (
     NewBackup,
     RestoreBackupEvent,
     WrittenBackup,
+    async_get_manager as async_get_backup_manager,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
@@ -522,7 +523,7 @@ async def backup_addon_before_update(
 
 async def backup_core_before_update(hass: HomeAssistant) -> None:
     """Prepare for updating core."""
-    backup_manager = hass.data[DATA_MANAGER]
+    backup_manager = async_get_backup_manager(hass)
     client = get_supervisor_client(hass)
 
     try:
