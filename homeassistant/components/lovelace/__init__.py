@@ -77,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 @dataclass
 class LovelaceData:
-    """Dataclass to store information hass.data."""
+    """Dataclass to store information in hass.data."""
 
     mode: str
     dashboards: dict[str | None, dashboard.LovelaceConfig]
