@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, NamedTuple
 
-from pytouchline import PyTouchline
+from pytouchline_extended import PyTouchline
 import voluptuous as vol
 
 from homeassistant.components.climate import (
@@ -53,12 +53,13 @@ def setup_platform(
     """Set up the Touchline devices."""
 
     host = config[CONF_HOST]
-    py_touchline = PyTouchline()
-    number_of_devices = int(py_touchline.get_number_of_devices(host))
-    add_entities(
-        (Touchline(PyTouchline(device_id)) for device_id in range(number_of_devices)),
-        True,
-    )
+    py_touchline = PyTouchline(url=host)
+    number_of_devices = int(py_touchline.get_number_of_devices())
+    devices = [
+        Touchline(PyTouchline(id=device_id, url=host))
+        for device_id in range(number_of_devices)
+    ]
+    add_entities(devices, True)
 
 
 class Touchline(ClimateEntity):
@@ -75,6 +76,7 @@ class Touchline(ClimateEntity):
         """Initialize the Touchline device."""
         self.unit = touchline_thermostat
         self._name = None
+        self._device_id = None
         self._current_temperature = None
         self._target_temperature = None
         self._current_operation_mode = None
@@ -84,6 +86,7 @@ class Touchline(ClimateEntity):
         """Update thermostat attributes."""
         self.unit.update()
         self._name = self.unit.get_name()
+        self._device_id = self.unit.get_device_id()
         self._current_temperature = self.unit.get_current_temperature()
         self._target_temperature = self.unit.get_target_temperature()
         self._preset_mode = TOUCHLINE_HA_PRESETS.get(
