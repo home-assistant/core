@@ -18,7 +18,7 @@
       "reauth_enable_api": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
       },
-      "reauth_confirm": {
+      "reauth_confirm_update_token": {
         "title": "Re-authenticate",
         "description": "[%key:component::homewizard::config::step::authorize::description%]"
       },

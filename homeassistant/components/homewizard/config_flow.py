@@ -227,7 +227,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # If token exists, we assume we use the v2 API and that the token has been invalidated
         if entry_data.get(CONF_TOKEN):
-            return await self.async_step_reauth_confirm()
+            return await self.async_step_reauth_confirm_update_token()
 
         # Else we assume we use the v1 API and that the API has been disabled
         return await self.async_step_reauth_enable_api()
@@ -250,7 +250,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="reauth_enable_api", errors=errors)
 
-    async def async_step_reauth_confirm(
+    async def async_step_reauth_confirm_update_token(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
@@ -271,7 +271,9 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        return self.async_show_form(step_id="reauth_confirm", errors=errors)
+        return self.async_show_form(
+            step_id="reauth_confirm_update_token", errors=errors
+        )
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None

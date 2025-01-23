@@ -108,7 +108,7 @@ async def test_load_detect_invalid_token(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("step_id") == "reauth_confirm_update_token"
     assert flow.get("handler") == DOMAIN
 
     assert "context" in flow

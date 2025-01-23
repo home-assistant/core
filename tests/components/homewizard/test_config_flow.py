@@ -745,7 +745,7 @@ async def test_reauth_flow_updates_token(
 
     result = await mock_config_entry_v2.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "reauth_confirm_update_token"
 
     # Simulate user pressing the button and getting a new token
     mock_homewizardenergy_v2.get_token.return_value = "cool_new_token"
@@ -756,10 +756,13 @@ async def test_reauth_flow_updates_token(
     assert result["reason"] == "reauth_successful"
 
     # Verify that the token was updated
+    # Verify that the token was updated
+    await hass.async_block_till_done()
     assert (
         hass.config_entries.async_entries(DOMAIN)[0].data.get(CONF_TOKEN)
         == "cool_new_token"
     )
+    assert len(mock_setup_entry.mock_calls) == 2
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -778,7 +781,7 @@ async def test_reauth_flow_handles_user_not_pressing_button(
 
     result = await mock_config_entry_v2.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["step_id"] == "reauth_confirm_update_token"
     assert result["errors"] is None
 
     # Simulate button not being pressed
@@ -800,7 +803,9 @@ async def test_reauth_flow_handles_user_not_pressing_button(
     assert result["reason"] == "reauth_successful"
 
     # Verify that the token was updated
+    await hass.async_block_till_done()
     assert (
         hass.config_entries.async_entries(DOMAIN)[0].data.get(CONF_TOKEN)
         == "cool_new_token"
     )
+    assert len(mock_setup_entry.mock_calls) == 2
