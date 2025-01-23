@@ -4,7 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': 'hallway',
       'config_entries': <ANY>,
-      'config_subentries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': 'https://home.sensibo.com/',
       'connections': set({
         tuple(
@@ -39,7 +39,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': 'kitchen',
       'config_entries': <ANY>,
-      'config_subentries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': 'https://home.sensibo.com/',
       'connections': set({
         tuple(
@@ -74,7 +74,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': 'bedroom',
       'config_entries': <ANY>,
-      'config_subentries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': 'https://home.sensibo.com/',
       'connections': set({
         tuple(
@@ -109,7 +109,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
-      'config_subentries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': 'https://home.sensibo.com/',
       'connections': set({
       }),

@@ -33,7 +33,7 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
-          'config_subentries': dict({
+          'config_entries_subentries': dict({
             '45a36e55aaddb2007c5f6602e0c38e72': list([
               None,
             ]),
@@ -277,7 +277,7 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
-          'config_subentries': dict({
+          'config_entries_subentries': dict({
             '45a36e55aaddb2007c5f6602e0c38e72': list([
               None,
             ]),
@@ -479,7 +479,7 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
-          'config_subentries': dict({
+          'config_entries_subentries': dict({
             '45a36e55aaddb2007c5f6602e0c38e72': list([
               None,
             ]),
@@ -723,7 +723,7 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
-          'config_subentries': dict({
+          'config_entries_subentries': dict({
             '45a36e55aaddb2007c5f6602e0c38e72': list([
               None,
             ]),
@@ -965,7 +965,7 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
-          'config_subentries': dict({
+          'config_entries_subentries': dict({
             '45a36e55aaddb2007c5f6602e0c38e72': list([
               None,
             ]),
@@ -1209,7 +1209,7 @@
           'config_entries': list([
             '45a36e55aaddb2007c5f6602e0c38e72',
           ]),
-          'config_subentries': dict({
+          'config_entries_subentries': dict({
             '45a36e55aaddb2007c5f6602e0c38e72': list([
               None,
             ]),

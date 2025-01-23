@@ -214,7 +214,7 @@ async def test_multiple_config_subentries(
         model="model",
     )
     assert entry.config_entries == {config_entry_1.entry_id}
-    assert entry.config_subentries == {config_entry_1.entry_id: {None}}
+    assert entry.config_entries_subentries == {config_entry_1.entry_id: {None}}
     entry_id = entry.id
 
     entry = device_registry.async_get_or_create(
@@ -227,7 +227,7 @@ async def test_multiple_config_subentries(
     )
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id}
-    assert entry.config_subentries == {config_entry_1.entry_id: {None}}
+    assert entry.config_entries_subentries == {config_entry_1.entry_id: {None}}
 
     entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_1.entry_id,
@@ -239,7 +239,7 @@ async def test_multiple_config_subentries(
     )
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
     }
 
@@ -253,7 +253,7 @@ async def test_multiple_config_subentries(
     )
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"}
     }
 
@@ -267,7 +267,7 @@ async def test_multiple_config_subentries(
     )
     assert entry.id == entry_id
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -291,7 +291,7 @@ async def test_loading_from_storage(
                 {
                     "area_id": "12345A",
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": "https://example.com/config",
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": created_at,
@@ -316,7 +316,7 @@ async def test_loading_from_storage(
             "deleted_devices": [
                 {
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "connections": [["Zigbee", "23.45.67.89.01"]],
                     "created_at": created_at,
                     "id": "bcdefghijklmn",
@@ -335,7 +335,7 @@ async def test_loading_from_storage(
 
     assert registry.deleted_devices["bcdefghijklmn"] == dr.DeletedDeviceEntry(
         config_entries={mock_config_entry.entry_id},
-        config_subentries={mock_config_entry.entry_id: {None}},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         connections={("Zigbee", "23.45.67.89.01")},
         created_at=datetime.fromisoformat(created_at),
         id="bcdefghijklmn",
@@ -354,7 +354,7 @@ async def test_loading_from_storage(
     assert entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={mock_config_entry.entry_id},
-        config_subentries={mock_config_entry.entry_id: {None}},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         configuration_url="https://example.com/config",
         connections={("Zigbee", "01.23.45.67.89")},
         created_at=datetime.fromisoformat(created_at),
@@ -389,7 +389,7 @@ async def test_loading_from_storage(
     )
     assert entry == dr.DeviceEntry(
         config_entries={mock_config_entry.entry_id},
-        config_subentries={mock_config_entry.entry_id: {None}},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         connections={("Zigbee", "23.45.67.89.01")},
         created_at=datetime.fromisoformat(created_at),
         id="bcdefghijklmn",
@@ -489,7 +489,7 @@ async def test_migration_from_1_1(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -513,7 +513,7 @@ async def test_migration_from_1_1(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -538,7 +538,7 @@ async def test_migration_from_1_1(
             "deleted_devices": [
                 {
                     "config_entries": ["123456"],
-                    "config_subentries": {"123456": [None]},
+                    "config_entries_subentries": {"123456": [None]},
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
                     "id": "deletedid",
@@ -636,7 +636,7 @@ async def test_migration_from_1_2(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -660,7 +660,7 @@ async def test_migration_from_1_2(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -772,7 +772,7 @@ async def test_migration_fom_1_3(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -796,7 +796,7 @@ async def test_migration_fom_1_3(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -910,7 +910,7 @@ async def test_migration_from_1_4(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -934,7 +934,7 @@ async def test_migration_from_1_4(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1050,7 +1050,7 @@ async def test_migration_from_1_5(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1074,7 +1074,7 @@ async def test_migration_from_1_5(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1192,7 +1192,7 @@ async def test_migration_from_1_6(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1216,7 +1216,7 @@ async def test_migration_from_1_6(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1336,7 +1336,7 @@ async def test_migration_from_1_7(
                 {
                     "area_id": None,
                     "config_entries": [mock_config_entry.entry_id],
-                    "config_subentries": {mock_config_entry.entry_id: [None]},
+                    "config_entries_subentries": {mock_config_entry.entry_id: [None]},
                     "configuration_url": None,
                     "connections": [["Zigbee", "01.23.45.67.89"]],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1360,7 +1360,7 @@ async def test_migration_from_1_7(
                 {
                     "area_id": None,
                     "config_entries": ["234567"],
-                    "config_subentries": {"234567": [None]},
+                    "config_entries_subentries": {"234567": [None]},
                     "configuration_url": None,
                     "connections": [],
                     "created_at": "1970-01-01T00:00:00+00:00",
@@ -1445,7 +1445,7 @@ async def test_removing_config_entries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {config_entry_1.entry_id: {None}},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
@@ -1457,7 +1457,7 @@ async def test_removing_config_entries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {None},
                 config_entry_2.entry_id: {None},
             },
@@ -1525,7 +1525,7 @@ async def test_deleted_device_removing_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {config_entry_1.entry_id: {None}},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
@@ -1651,7 +1651,7 @@ async def test_removing_config_subentries(
     assert entry.id == entry3.id
     assert entry.id == entry4.id
     assert entry4.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry4.config_subentries == {
+    assert entry4.config_entries_subentries == {
         config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -1659,7 +1659,7 @@ async def test_removing_config_subentries(
     device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -1669,7 +1669,7 @@ async def test_removing_config_subentries(
     )
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -1679,7 +1679,7 @@ async def test_removing_config_subentries(
     )
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
     assert entry.config_entries == {config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_2.entry_id: {"mock-subentry-id-2-1"}
     }
 
@@ -1700,14 +1700,14 @@ async def test_removing_config_subentries(
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_subentries": {config_entry_1.entry_id: {None}},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
             },
         },
@@ -1717,7 +1717,7 @@ async def test_removing_config_subentries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     None,
                     "mock-subentry-id-1-1",
@@ -1731,7 +1731,7 @@ async def test_removing_config_subentries(
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     None,
                     "mock-subentry-id-1-1",
@@ -1747,7 +1747,7 @@ async def test_removing_config_subentries(
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
@@ -1763,7 +1763,7 @@ async def test_removing_config_subentries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     "mock-subentry-id-1-2",
                 },
@@ -1852,7 +1852,7 @@ async def test_deleted_device_removing_config_subentries(
     assert entry.id == entry3.id
     assert entry.id == entry4.id
     assert entry4.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry4.config_subentries == {
+    assert entry4.config_entries_subentries == {
         config_entry_1.entry_id: {None, "mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -1873,14 +1873,14 @@ async def test_deleted_device_removing_config_subentries(
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_subentries": {config_entry_1.entry_id: {None}},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
         "action": "update",
         "device_id": entry.id,
         "changes": {
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {None, "mock-subentry-id-1-1"}
             },
         },
@@ -1890,7 +1890,7 @@ async def test_deleted_device_removing_config_subentries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     None,
                     "mock-subentry-id-1-1",
@@ -1908,7 +1908,7 @@ async def test_deleted_device_removing_config_subentries(
     device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -1919,7 +1919,7 @@ async def test_deleted_device_removing_config_subentries(
     )
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -1938,7 +1938,7 @@ async def test_deleted_device_removing_config_subentries(
     )
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == {config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_2.entry_id: {"mock-subentry-id-2-1"}
     }
     assert entry.orphaned_timestamp is None
@@ -1948,7 +1948,7 @@ async def test_deleted_device_removing_config_subentries(
     )
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == set()
-    assert entry.config_subentries == {}
+    assert entry.config_entries_subentries == {}
     assert entry.orphaned_timestamp is not None
 
     # No event when a deleted device is purged
@@ -1973,7 +1973,7 @@ async def test_deleted_device_removing_config_subentries(
     )
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == set()
-    assert entry.config_subentries == {}
+    assert entry.config_entries_subentries == {}
     assert entry.orphaned_timestamp is not None
 
     future_time = time.time() + dr.ORPHANED_DEVICE_KEEP_SECONDS + 1
@@ -2375,7 +2375,7 @@ async def test_update(
     assert updated_entry == dr.DeviceEntry(
         area_id="12345A",
         config_entries={mock_config_entry.entry_id},
-        config_subentries={mock_config_entry.entry_id: {None}},
+        config_entries_subentries={mock_config_entry.entry_id: {None}},
         configuration_url="https://example.com/config",
         connections={("mac", "65:43:21:fe:dc:ba")},
         created_at=created_at,
@@ -2632,7 +2632,7 @@ async def test_update_remove_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {config_entry_1.entry_id: {None}},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
         },
     }
     assert update_events[2].data == {
@@ -2644,7 +2644,7 @@ async def test_update_remove_config_entries(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {None},
                 config_entry_2.entry_id: {None},
             },
@@ -2659,7 +2659,7 @@ async def test_update_remove_config_entries(
                 config_entry_2.entry_id,
                 config_entry_3.entry_id,
             },
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {None},
                 config_entry_2.entry_id: {None},
                 config_entry_3.entry_id: {None},
@@ -2672,7 +2672,7 @@ async def test_update_remove_config_entries(
         "device_id": entry2.id,
         "changes": {
             "config_entries": {config_entry_2.entry_id, config_entry_3.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_2.entry_id: {None},
                 config_entry_3.entry_id: {None},
             },
@@ -2730,7 +2730,7 @@ async def test_update_remove_config_subentries(
     )
     entry_id = entry.id
     assert entry.config_entries == {config_entry_1.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-1"}
     }
 
@@ -2740,7 +2740,7 @@ async def test_update_remove_config_subentries(
         add_config_subentry_id="mock-subentry-id-1-2",
     )
     assert entry.config_entries == {config_entry_1.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"}
     }
 
@@ -2760,7 +2760,7 @@ async def test_update_remove_config_subentries(
         add_config_subentry_id="mock-subentry-id-2-1",
     )
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
@@ -2775,7 +2775,7 @@ async def test_update_remove_config_subentries(
         config_entry_2.entry_id,
         config_entry_3.entry_id,
     }
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-1", "mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
         config_entry_3.entry_id: {None},
@@ -2820,7 +2820,7 @@ async def test_update_remove_config_subentries(
         config_entry_2.entry_id,
         config_entry_3.entry_id,
     }
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_1.entry_id: {"mock-subentry-id-1-2"},
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
         config_entry_3.entry_id: {None},
@@ -2842,7 +2842,7 @@ async def test_update_remove_config_subentries(
         remove_config_subentry_id="mock-subentry-id-1-2",
     )
     assert entry.config_entries == {config_entry_2.entry_id, config_entry_3.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
         config_entry_3.entry_id: {None},
     }
@@ -2853,7 +2853,7 @@ async def test_update_remove_config_subentries(
         remove_config_subentry_id="mock-subentry-id-2-1",
     )
     assert entry.config_entries == {config_entry_3.entry_id}
-    assert entry.config_subentries == {
+    assert entry.config_entries_subentries == {
         config_entry_3.entry_id: {None},
     }
 
@@ -2875,7 +2875,9 @@ async def test_update_remove_config_subentries(
         "action": "update",
         "device_id": entry_id,
         "changes": {
-            "config_subentries": {config_entry_1.entry_id: {"mock-subentry-id-1-1"}},
+            "config_entries_subentries": {
+                config_entry_1.entry_id: {"mock-subentry-id-1-1"}
+            },
         },
     }
     assert update_events[2].data == {
@@ -2883,7 +2885,7 @@ async def test_update_remove_config_subentries(
         "device_id": entry_id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
@@ -2896,7 +2898,7 @@ async def test_update_remove_config_subentries(
         "device_id": entry_id,
         "changes": {
             "config_entries": {config_entry_1.entry_id, config_entry_2.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
@@ -2909,7 +2911,7 @@ async def test_update_remove_config_subentries(
         "action": "update",
         "device_id": entry_id,
         "changes": {
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     "mock-subentry-id-1-1",
                     "mock-subentry-id-1-2",
@@ -2928,7 +2930,7 @@ async def test_update_remove_config_subentries(
                 config_entry_2.entry_id,
                 config_entry_3.entry_id,
             },
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_1.entry_id: {
                     "mock-subentry-id-1-2",
                 },
@@ -2943,7 +2945,7 @@ async def test_update_remove_config_subentries(
         "device_id": entry_id,
         "changes": {
             "config_entries": {config_entry_2.entry_id, config_entry_3.entry_id},
-            "config_subentries": {
+            "config_entries_subentries": {
                 config_entry_2.entry_id: {"mock-subentry-id-2-1"},
                 config_entry_3.entry_id: {None},
             },
@@ -3369,7 +3371,7 @@ async def test_restore_shared_device(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_1.entry_id},
-            "config_subentries": {config_entry_1.entry_id: {None}},
+            "config_entries_subentries": {config_entry_1.entry_id: {None}},
             "identifiers": {("entry_123", "0123")},
         },
     }
@@ -3394,7 +3396,7 @@ async def test_restore_shared_device(
         "device_id": entry.id,
         "changes": {
             "config_entries": {config_entry_2.entry_id},
-            "config_subentries": {config_entry_2.entry_id: {None}},
+            "config_entries_subentries": {config_entry_2.entry_id: {None}},
             "identifiers": {("entry_234", "2345")},
         },
     }
@@ -3700,7 +3702,7 @@ async def test_loading_invalid_configuration_url_from_storage(
                 {
                     "area_id": None,
                     "config_entries": ["1234"],
-                    "config_subentries": {"1234": [None]},
+                    "config_entries_subentries": {"1234": [None]},
                     "configuration_url": "invalid",
                     "connections": [],
                     "created_at": "2024-01-01T00:00:00+00:00",

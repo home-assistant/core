@@ -160,7 +160,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             attrs.asdict(data)
             | {
                 "config_entries": ANY,
-                "config_subentries": ANY,
+                "config_entries_subentries": ANY,
                 "id": ANY,
             }
         )
