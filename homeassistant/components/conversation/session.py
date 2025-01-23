@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from abc import ABC, abstractmethod
+from collections.abc import AsyncGenerator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 import logging
-from typing import Literal
+from typing import Any, Literal, TypeVar
+
+import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
@@ -23,7 +26,9 @@ from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonObjectType
 
+from . import trace
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
@@ -36,6 +41,12 @@ DATA_CHAT_HISTORY_CLEANUP: HassKey[SessionCleanup] = HassKey(
 
 LOGGER = logging.getLogger(__name__)
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
+# Max number of back and forth with the LLM to generate a response
+MAX_TOOL_ITERATIONS = 10
+
+_NativeT = TypeVar("_NativeT")
+_NativeToolT = TypeVar("_NativeToolT")
+_NativeResponseT = TypeVar("_NativeResponseT")
 
 
 class SessionCleanup:
@@ -164,6 +175,33 @@ class ConverseError(HomeAssistantError):
         )
 
 
+class ConversationAgentError(HomeAssistantError):
+    """Error while communicating with the ConvesationAgent."""
+
+    def __init__(
+        self,
+        message: str,
+        conversation_id: str,
+        language: str,
+    ) -> None:
+        """Initialize the error."""
+        super().__init__(message)
+        self.message = message
+        self.conversation_id = conversation_id
+        self.language = language
+
+    def as_conversation_result(self) -> ConversationResult:
+        """Return the error as a conversation result."""
+        intent_response = intent.IntentResponse(language=self.language)
+        intent_response.async_set_error(
+            intent.IntentResponseErrorCode.UNKNOWN,
+            self.message,
+        )
+        return ConversationResult(
+            response=intent_response, conversation_id=self.conversation_id
+        )
+
+
 @dataclass
 class ChatMessage[_NativeT]:
     """Base class for chat messages.
@@ -182,6 +220,32 @@ class ChatMessage[_NativeT]:
         """Validate native message."""
         if self.role == "native" and self.native is None:
             raise ValueError("Native message must have a native object")
+
+
+class ChatMessageConverter[_NativeT, _NativeToolT, _NativeResponseT](ABC):
+    """Class to convert chat messages to the native format."""
+
+    @abstractmethod
+    def convert(self, message: ChatMessage[_NativeT]) -> _NativeT:
+        """Convert a chat message to the native format."""
+
+    @abstractmethod
+    def convert_tool(
+        self, tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+    ) -> _NativeToolT:
+        """Convert a tool to the native format."""
+
+    @abstractmethod
+    def convert_response(
+        self, agent_id: str | None, response: _NativeResponseT
+    ) -> tuple[ChatMessage[_NativeT], list[llm.ToolInput] | None]:
+        """Convert a native response to the Home Assistant LLM format."""
+
+    @abstractmethod
+    def convert_tool_response(
+        self, tool_call_id: str | None, tool_response: JsonObjectType
+    ) -> _NativeT:
+        """Convert a Home Assistant tool call response to the native format."""
 
 
 @dataclass
@@ -325,4 +389,101 @@ class ChatSession[_NativeT]:
             role="system",
             agent_id=user_input.agent_id,
             content=prompt,
+        )
+
+    async def async_model_loop(
+        self,
+        user_input: ConversationInput,
+        native_model_call: Callable[
+            [
+                ConversationInput,
+                str,
+                list[_NativeT],
+                list[_NativeToolT] | None,
+            ],
+            Awaitable[_NativeResponseT],
+        ],
+        message_converter: ChatMessageConverter[
+            _NativeT, _NativeToolT, _NativeResponseT
+        ],
+    ) -> ConversationResult:
+        """Invoke the native model loop call in a loop."""
+
+        tools: list[llm.Tool] | None = None
+        native_tools: list[_NativeToolT] | None = None
+        if self.llm_api:
+            tools = self.llm_api.tools
+            native_tools = [
+                message_converter.convert_tool(tool, self.llm_api.custom_serializer)
+                for tool in tools
+            ]
+
+        native_messages: list[_NativeT] = []
+        for message in self.messages:
+            if message.native is not None and message.agent_id == user_input.agent_id:
+                native_messages.append(message.native)
+            else:
+                native_messages.append(message_converter.convert(message))
+
+        LOGGER.debug("Prompt: %s", self.messages)
+        LOGGER.debug("Tools: %s", tools)
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                "messages": self.messages,
+                "tools": self.llm_api.tools if self.llm_api else None,
+            },
+        )
+
+        # To prevent infinite loops, we limit the number of iterations
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            try:
+                response = await native_model_call(
+                    user_input, self.conversation_id, native_messages, native_tools
+                )
+            except ConversationAgentError as err:
+                return err.as_conversation_result()
+
+            chat_message, tool_inputs = message_converter.convert_response(
+                user_input.agent_id, response
+            )
+            LOGGER.debug("Response %s", chat_message)
+            if chat_message.native is None:
+                raise ValueError("Converted chat message had no native value")
+            native_messages.append(chat_message.native)
+            self.async_add_message(chat_message)
+
+            if not tool_inputs or not self.llm_api:
+                break
+
+            for tool_input in tool_inputs:
+                LOGGER.debug(
+                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
+                )
+
+                try:
+                    tool_response = await self.llm_api.async_call_tool(tool_input)
+                except (HomeAssistantError, vol.Invalid) as e:
+                    tool_response = {"error": type(e).__name__}
+                    if str(e):
+                        tool_response["error_text"] = str(e)
+
+                LOGGER.debug("Tool response: %s", tool_response)
+
+                native_tool_response = message_converter.convert_tool_response(
+                    tool_input.tool_call_id, tool_response
+                )
+                self.async_add_message(
+                    ChatMessage(
+                        role="native",
+                        agent_id=user_input.agent_id,
+                        content="",
+                        native=native_tool_response,
+                    )
+                )
+
+        intent_response = intent.IntentResponse(language=user_input.language)
+        intent_response.async_set_speech(chat_message.content or "")
+        return ConversationResult(
+            response=intent_response, conversation_id=self.conversation_id
         )
