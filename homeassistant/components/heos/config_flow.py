@@ -22,6 +22,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from . import HeosConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -183,10 +184,11 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate account credentials and update options."""
         errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
+        entry = cast(HeosConfigEntry, self._get_reauth_entry())
         if user_input is not None:
-            heos = cast(Heos, entry.runtime_data.coordinator.heos)
-            if await _validate_auth(user_input, heos, errors):
+            if await _validate_auth(
+                user_input, entry.runtime_data.coordinator.heos, errors
+            ):
                 return self.async_update_reload_and_abort(entry, options=user_input)
 
         return self.async_show_form(
@@ -207,8 +209,10 @@ class HeosOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            heos = cast(Heos, self.config_entry.runtime_data.coordinator.heos)
-            if await _validate_auth(user_input, heos, errors):
+            entry = cast(HeosConfigEntry, self.config_entry)
+            if await _validate_auth(
+                user_input, entry.runtime_data.coordinator.heos, errors
+            ):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
