@@ -775,7 +775,7 @@ class SpeechManager:
 
         async def get_tts_data() -> str:
             """Handle data available."""
-            if engine_instance.name is None or engine_instance.name is UNDEFINED:
+            if engine_instance.name is UNDEFINED:
                 raise HomeAssistantError("TTS engine name is not set.")
 
             if isinstance(engine_instance, Provider):
@@ -826,9 +826,8 @@ class SpeechManager:
 
             # Save to memory
             if final_extension == "mp3":
-                data = self.write_tags(
-                    filename, data, engine_instance.name, message, language, options
-                )
+                name = engine_instance.name if engine_instance.name is not None else ""
+                data = self.write_tags(filename, data, name, message, language, options)
 
             self._async_store_to_memcache(cache_key, filename, data)
 
