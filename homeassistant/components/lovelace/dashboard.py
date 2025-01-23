@@ -25,6 +25,7 @@ from .const import (
     CONF_ICON,
     CONF_URL_PATH,
     DOMAIN,
+    DOMAIN_DATA,
     EVENT_LOVELACE_UPDATED,
     LOVELACE_CONFIG_FILE,
     MODE_STORAGE,
@@ -315,7 +316,7 @@ class DashboardsCollectionWebSocket(collection.DictStorageCollectionWebsocket):
             msg["id"],
             [
                 dashboard.config
-                for dashboard in hass.data[DOMAIN]["dashboards"].values()
+                for dashboard in hass.data[DOMAIN_DATA].dashboards.values()
                 if dashboard.config
             ],
         )

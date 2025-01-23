@@ -23,8 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, ConfigNotFound
-from .dashboard import LovelaceConfig
+from .const import DOMAIN, DOMAIN_DATA, ConfigNotFound
 
 DEFAULT_DASHBOARD = "_default_"
 
@@ -76,7 +75,7 @@ async def async_browse_media(
                 can_expand=False,
             )
         ]
-        for url_path in hass.data[DOMAIN]["dashboards"]:
+        for url_path in hass.data[DOMAIN_DATA].dashboards:
             if url_path is None:
                 continue
 
@@ -155,7 +154,7 @@ async def _get_dashboard_info(hass, url_path):
     """Load a dashboard and return info on views."""
     if url_path == DEFAULT_DASHBOARD:
         url_path = None
-    dashboard: LovelaceConfig | None = hass.data[DOMAIN]["dashboards"].get(url_path)
+    dashboard = hass.data[DOMAIN_DATA].dashboards.get(url_path)
 
     if dashboard is None:
         raise ValueError("Invalid dashboard specified")
