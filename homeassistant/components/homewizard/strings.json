@@ -131,6 +131,12 @@
       },
       "total_liter_m3": {
         "name": "Total water usage"
+      },
+      "cycles": {
+        "name": "Battery cycles"
+      },
+      "state_of_charge_pct": {
+        "name": "State of charge"
       }
     },
     "switch": {

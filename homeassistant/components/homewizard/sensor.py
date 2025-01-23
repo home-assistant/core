@@ -578,6 +578,24 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         has_fn=lambda data: data.total_liter_m3 is not None,
         value_fn=lambda data: data.total_liter_m3,
     ),
+    HomeWizardSensorEntityDescription(
+        key="state_of_charge_pct",
+        translation_key="state_of_charge_pct",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        has_fn=lambda data: data.state_of_charge_pct is not None,
+        value_fn=lambda data: data.state_of_charge_pct,
+    ),
+    HomeWizardSensorEntityDescription(
+        key="cycles",
+        translation_key="cycles",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        has_fn=lambda data: data.cycles is not None,
+        value_fn=lambda data: data.cycles,
+    ),
 )
 
 
