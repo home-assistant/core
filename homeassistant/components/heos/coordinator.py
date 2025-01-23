@@ -7,12 +7,21 @@ entities to update. Entities subscribe to entity-specific updates within the ent
 
 import logging
 
-from pyheos import Credentials, Heos, HeosError, HeosOptions, MediaItem
+from pyheos import (
+    Credentials,
+    Heos,
+    HeosError,
+    HeosOptions,
+    MediaItem,
+    PlayerUpdateResult,
+    const,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import DOMAIN
@@ -66,6 +75,10 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             )
         # Retrieve initial data
         await self._async_update_sources()
+        # Attach event callbacks
+        self.heos.add_on_disconnected(self._async_on_disconnected)
+        self.heos.add_on_connected(self._async_on_reconnected)
+        self.heos.add_on_controller_event(self._async_on_controller_event)
 
     async def async_shutdown(self) -> None:
         """Disconnect all callbacks and disconnect from the device."""
@@ -77,6 +90,58 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         """Handle when the user credentials are no longer valid."""
         assert self.config_entry is not None
         self.config_entry.async_start_reauth(self.hass)
+
+    async def _async_on_disconnected(self) -> None:
+        """Handle when disconnected so entities are marked unavailable."""
+        _LOGGER.warning("Connection to HEOS host %s lost", self.host)
+        self.async_update_listeners()
+
+    async def _async_on_reconnected(self) -> None:
+        """Handle when reconnected so resources are updated and entities marked available."""
+        await self._async_update_players()
+        _LOGGER.warning("Successfully reconnected to HEOS host %s", self.host)
+        self.async_update_listeners()
+
+    async def _async_on_controller_event(
+        self, event: str, data: PlayerUpdateResult | None
+    ) -> None:
+        """Handle a controller event, such as players or groups changed."""
+        if event == const.EVENT_PLAYERS_CHANGED:
+            assert data is not None
+            if data.updated_player_ids:
+                self._async_update_player_ids(data.updated_player_ids)
+        self.async_update_listeners()
+
+    def _async_update_player_ids(self, updated_player_ids: dict[int, int]) -> None:
+        """Update the IDs in the device and entity registry."""
+        device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+        # updated_player_ids contains the mapped IDs in format old:new
+        for old_id, new_id in updated_player_ids.items():
+            # update device registry
+            entry = device_registry.async_get_device(
+                identifiers={(DOMAIN, str(old_id))}
+            )
+            if entry:
+                new_identifiers = entry.identifiers.copy()
+                new_identifiers.remove((DOMAIN, str(old_id)))
+                new_identifiers.add((DOMAIN, str(new_id)))
+                device_registry.async_update_device(
+                    entry.id,
+                    new_identifiers=new_identifiers,
+                )
+                _LOGGER.debug(
+                    "Updated device %s identifiers to %s", entry.id, new_identifiers
+                )
+            # update entity registry
+            entity_id = entity_registry.async_get_entity_id(
+                Platform.MEDIA_PLAYER, DOMAIN, str(old_id)
+            )
+            if entity_id:
+                entity_registry.async_update_entity(
+                    entity_id, new_unique_id=str(new_id)
+                )
+                _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
 
     async def _async_update_sources(self) -> None:
         """Build source list for entities."""
@@ -91,3 +156,14 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             self.inputs = await self.heos.get_input_sources()
         except HeosError as error:
             _LOGGER.error("Unable to retrieve input sources: %s", error)
+
+    async def _async_update_players(self) -> None:
+        """Update players after reconnection."""
+        try:
+            player_updates = await self.heos.load_players()
+        except HeosError as error:
+            _LOGGER.error("Unable to refresh players: %s", error)
+            return
+        # After reconnecting, player_id may have changed
+        if player_updates.updated_player_ids:
+            self._async_update_player_ids(player_updates.updated_player_ids)
