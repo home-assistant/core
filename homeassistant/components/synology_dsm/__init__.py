@@ -11,7 +11,7 @@ from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
@@ -127,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if entry.options[CONF_BACKUP_SHARE]:
-        hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+        _async_notify_backup_listeners_soon(hass)
 
     return True
 
@@ -138,13 +138,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         await entry_data.api.async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    _async_notify_backup_listeners_soon(hass)
     return unload_ok
 
 
-async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
+
+
+@callback
+def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
+    hass.loop.call_soon(_async_notify_backup_listeners, hass)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
