@@ -21,6 +21,8 @@ from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirGradientSelectEntityDescription(SelectEntityDescription):
