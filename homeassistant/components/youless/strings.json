@@ -14,5 +14,42 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "total_water": {
+        "name": "Total water usage"
+      },
+      "total_gas_m3": {
+        "name": "Total gas usage"
+      },
+      "active_power_w": {
+        "name": "Current power usage"
+      },
+      "active_power_phase_w": {
+        "name": "Power phase {phase}"
+      },
+      "active_voltage_phase_v": {
+        "name": "Voltage phase {phase}"
+      },
+      "active_current_phase_a": {
+        "name": "Current phase {phase}"
+      },
+      "total_energy_import_tariff_kwh": {
+        "name": "Energy import tariff {tariff}"
+      },
+      "total_energy_import_kwh": {
+        "name": "Total energy import"
+      },
+      "total_energy_export_tariff_kwh": {
+        "name": "Energy export tariff {tariff}"
+      },
+      "total_s0_kwh": {
+        "name": "Total energy S0"
+      },
+      "active_s0_w": {
+        "name": "Current usage S0"
+      }
+    }
   }
 }
