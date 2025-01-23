@@ -266,7 +266,7 @@
       "fields": {
         "media_content_id": {
           "name": "Content ID",
-          "description": "The ID of the content to browse. Platform dependent."
+          "description": "The ID of the content to browse. Integration dependent."
         },
         "media_content_type": {
           "name": "Content type",
