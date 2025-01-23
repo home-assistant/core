@@ -64,6 +64,7 @@ async def test_rpc_button(
     assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_script_event(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
