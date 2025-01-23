@@ -1,0 +1,97 @@
+# serializer version: 1
+# name: test_device_info[{\n  "id": "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n  "connectionState": "Connected",\n  "firmware": {\n    "currentFwVersion": "9682R7A",\n    "desiredFwVersion": "9682R7A"\n  },\n  "product": {\n    "serialNumber": "10001",\n    "name": "Tehowatti Air"\n  },\n  "availableFeatures": {\n    "settings": true,\n    "reboot": true,\n    "forcesync": true,\n    "forceUpdate": false,\n    "requestUpdate": false,\n    "resetAlarm": true,\n    "triggerEvent": true,\n    "getMenu": false,\n    "getMenuChain": false,\n    "getGuideQuestion": false,\n    "sendHaystack": true,\n    "setSmartMode": false,\n    "setAidMode": true,\n    "getZones": false,\n    "processIntent": false,\n    "boostHotWater": true,\n    "boostVentilation": true,\n    "getScheduleConfig": false,\n    "getScheduleModes": false,\n    "getScheduleWeekly": false,\n    "getScheduleVacation": false,\n    "setScheduleModes": false,\n    "setScheduleWeekly": false,\n    "setScheduleOverride": false,\n    "setScheduleVacation": false,\n    "setVentilationMode": false\n  }\n}\n-alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-{\n  "page": 1,\n  "itemsPerPage": 10,\n  "numItems": 3,\n  "systems": [\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Gotham City",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7A",\n          "product": {\n            "serialNumber": "10001",\n            "name": "Tehowatti Air"\n          }\n        }\n      ]\n    },\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Batcave",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7B",\n          "product": {\n            "serialNumber": "10002",\n            "name": "F730 CU 3x400V"\n          }\n        }\n      ]\n    },\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Duckburg",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7C",\n          "product": {\n            "serialNumber": "10003",\n            "name": "SM0 20"\n          }\n        }\n      ]\n    }\n  ]\n}\n]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'myuplink',
+        'alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Jäspi',
+    'model': 'Tehowatti Air',
+    'model_id': None,
+    'name': 'Gotham City',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '10001',
+    'suggested_area': None,
+    'sw_version': '9682R7A',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[{\n  "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n  "connectionState": "Connected",\n  "firmware": {\n    "currentFwVersion": "9682R7B",\n    "desiredFwVersion": "9682R7B"\n  },\n  "product": {\n    "serialNumber": "10002",\n    "name": "F730 CU 3x400V"\n  },\n  "availableFeatures": {\n    "settings": true,\n    "reboot": true,\n    "forcesync": true,\n    "forceUpdate": false,\n    "requestUpdate": false,\n    "resetAlarm": true,\n    "triggerEvent": true,\n    "getMenu": false,\n    "getMenuChain": false,\n    "getGuideQuestion": false,\n    "sendHaystack": true,\n    "setSmartMode": false,\n    "setAidMode": true,\n    "getZones": false,\n    "processIntent": false,\n    "boostHotWater": true,\n    "boostVentilation": true,\n    "getScheduleConfig": false,\n    "getScheduleModes": false,\n    "getScheduleWeekly": false,\n    "getScheduleVacation": false,\n    "setScheduleModes": false,\n    "setScheduleWeekly": false,\n    "setScheduleOverride": false,\n    "setScheduleVacation": false,\n    "setVentilationMode": false\n  }\n}\n-batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-{\n  "page": 1,\n  "itemsPerPage": 10,\n  "numItems": 3,\n  "systems": [\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Gotham City",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7A",\n          "product": {\n            "serialNumber": "10001",\n            "name": "Tehowatti Air"\n          }\n        }\n      ]\n    },\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Batcave",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7B",\n          "product": {\n            "serialNumber": "10002",\n            "name": "F730 CU 3x400V"\n          }\n        }\n      ]\n    },\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Duckburg",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7C",\n          "product": {\n            "serialNumber": "10003",\n            "name": "SM0 20"\n          }\n        }\n      ]\n    }\n  ]\n}\n]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'myuplink',
+        'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Nibe',
+    'model': 'F730',
+    'model_id': None,
+    'name': 'Batcave',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '10002',
+    'suggested_area': None,
+    'sw_version': '9682R7B',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_info[{\n  "id": "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n  "connectionState": "Connected",\n  "firmware": {\n    "currentFwVersion": "9682R7C",\n    "desiredFwVersion": "9682R7C"\n  },\n  "product": {\n    "serialNumber": "10003",\n    "name": "SM0 20"\n  },\n  "availableFeatures": {\n    "settings": true,\n    "reboot": true,\n    "forcesync": true,\n    "forceUpdate": false,\n    "requestUpdate": false,\n    "resetAlarm": true,\n    "triggerEvent": true,\n    "getMenu": false,\n    "getMenuChain": false,\n    "getGuideQuestion": false,\n    "sendHaystack": true,\n    "setSmartMode": false,\n    "setAidMode": true,\n    "getZones": false,\n    "processIntent": false,\n    "boostHotWater": true,\n    "boostVentilation": true,\n    "getScheduleConfig": false,\n    "getScheduleModes": false,\n    "getScheduleWeekly": false,\n    "getScheduleVacation": false,\n    "setScheduleModes": false,\n    "setScheduleWeekly": false,\n    "setScheduleOverride": false,\n    "setScheduleVacation": false,\n    "setVentilationMode": false\n  }\n}\n-robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff-{\n  "page": 1,\n  "itemsPerPage": 10,\n  "numItems": 3,\n  "systems": [\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Gotham City",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7A",\n          "product": {\n            "serialNumber": "10001",\n            "name": "Tehowatti Air"\n          }\n        }\n      ]\n    },\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Batcave",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7B",\n          "product": {\n            "serialNumber": "10002",\n            "name": "F730 CU 3x400V"\n          }\n        }\n      ]\n    },\n    {\n      "systemId": "123456-7890-1234",\n      "name": "Duckburg",\n      "securityLevel": "admin",\n      "hasAlarm": false,\n      "country": "Sweden",\n      "devices": [\n        {\n          "id": "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",\n          "connectionState": "Connected",\n          "currentFwVersion": "9682R7C",\n          "product": {\n            "serialNumber": "10003",\n            "name": "SM0 20"\n          }\n        }\n      ]\n    }\n  ]\n}\n]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'myuplink',
+        'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'SM0',
+    'model': '20',
+    'model_id': None,
+    'name': 'Duckburg',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '10003',
+    'suggested_area': None,
+    'sw_version': '9682R7C',
+    'via_device_id': None,
+  })
+# ---
