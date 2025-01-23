@@ -1050,56 +1050,6 @@
     'state': '25.5',
   })
 # ---
-# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_atmospheric_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.model0_atmospheric_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
-    'original_icon': None,
-    'original_name': 'Atmospheric pressure',
-    'platform': 'vicare',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'supply_pressure',
-    'unique_id': 'gateway0_deviceSerialVitocal250A-supply_pressure',
-    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
-  })
-# ---
-# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_atmospheric_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'atmospheric_pressure',
-      'friendly_name': 'model0 Atmospheric pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.model0_atmospheric_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.1',
-  })
-# ---
 # name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_buffer_main_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1957,6 +1907,56 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.3',
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'supply_pressure',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-supply_pressure',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'model0 Pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.1',
   })
 # ---
 # name: test_all_entities[type:heatpump-vicare/Vitocal250A.json][sensor.model0_primary_circuit_supply_temperature-entry]
