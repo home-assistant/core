@@ -308,7 +308,7 @@ class MqttClientSetup:
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
-            client_id = None  # mqtt.base62(uuid.uuid4().int, padding=22)
+            client_id = None
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
             mqtt.CallbackAPIVersion.VERSION1,
