@@ -180,7 +180,7 @@ async def test_updates_from_connection_event_new_player_ids(
     controller: Heos,
     change_data_mapped_ids: PlayerUpdateResult,
 ) -> None:
-    """Test player updates from changes to available players."""
+    """Test player ids changed after reconnection updates ids."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
