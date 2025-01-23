@@ -1,4 +1,4 @@
-"""Utils for Lovelace."""
+"""Exceptions for Lovelace."""
 
 from homeassistant.exceptions import HomeAssistantError
 

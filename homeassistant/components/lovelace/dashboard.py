@@ -33,7 +33,7 @@ from .const import (
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
 )
-from .util import ConfigNotFound
+from .exceptions import ConfigNotFound
 
 CONFIG_STORAGE_KEY_DEFAULT = DOMAIN
 CONFIG_STORAGE_KEY = "lovelace.{}"
