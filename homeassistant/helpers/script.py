@@ -1259,7 +1259,10 @@ class _ScriptRun:
             """Run a script with a trace path."""
             trace_path_stack_cv.set(copy(trace_path_stack_cv.get()))
             with trace_path([str(idx), "sequence"]):
-                await self._async_run_script(script)
+                if script.scriptenabled:
+                    await self._async_run_script(script)
+                # else:
+                # todo: log that step was skipped as it was disabled in trace
 
         results = await asyncio.gather(
             *(async_run_with_trace(idx, script) for idx, script in enumerate(scripts)),
@@ -1417,6 +1420,7 @@ class Script:
         script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
+        scriptenabled: bool = True,
     ) -> None:
         """Initialize the script."""
         if not (all_scripts := hass.data.get(DATA_SCRIPTS)):
@@ -1437,6 +1441,7 @@ class Script:
         self.name = name
         self.unique_id = f"{domain}.{name}-{id(self)}"
         self.domain = domain
+        self.scriptenabled = scriptenabled
         self.running_description = running_description or f"{domain} script"
         self._change_listener = change_listener
         self._change_listener_job = (
@@ -1974,6 +1979,10 @@ class Script:
         step_name = action.get(CONF_ALIAS, f"Parallel action at step {step + 1}")
         parallel_scripts: list[Script] = []
         for idx, parallel_script in enumerate(action[CONF_PARALLEL], start=1):
+            try:
+                getenabled = self.sequence[step]["parallel"][(idx - 1)]["enabled"]
+            except:
+                getenabled = True
             parallel_name = parallel_script.get(CONF_ALIAS, f"parallel {idx}")
             parallel_script = Script(
                 self._hass,
@@ -1986,6 +1995,7 @@ class Script:
                 logger=self._logger,
                 top_level=False,
                 copy_variables=True,
+                parallelenabled=getenabled,
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script
