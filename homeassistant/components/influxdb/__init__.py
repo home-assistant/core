@@ -103,6 +103,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type InfluxDBConfigEntry = ConfigEntry[InfluxThread]
+
 
 def create_influx_url(conf: dict) -> dict:
     """Build URL used from config inputs and default when necessary."""
@@ -475,7 +477,7 @@ def get_influx_connection(  # noqa: C901
     return InfluxClient(databases, write_v1, query_v1, close_v1)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
     """Set up InfluxDB from a config entry."""
     config = dict(entry.data.items())
 
@@ -496,7 +498,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
     """Unload a config entry."""
     influx_thread = entry.runtime_data
 
@@ -542,7 +544,7 @@ class InfluxThread(threading.Thread):
             EVENT_STATE_CHANGED, self._event_listener
         )
 
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shutdown the influx thread."""
         self._unsubscribe()
 
