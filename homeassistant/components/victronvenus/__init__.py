@@ -68,9 +68,10 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: VictronVenusConfigEntry
 ) -> bool:
     """Unload a config entry."""
-
-    hub = entry.runtime_data
-    if hub is not None:
-        if isinstance(hub, VictronVenusHub):
-            await hub.disconnect()
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if hasattr(entry, "runtime_data"):
+        hub = entry.runtime_data
+        if hub is not None:
+            if isinstance(hub, VictronVenusHub):
+                await hub.disconnect()
+        return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return True

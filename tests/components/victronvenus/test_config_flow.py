@@ -47,7 +47,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Victron OS INSTALLID"
-
     assert result["data"][CONF_HOST] == "1.1.1.1"
     assert result["data"][CONF_PORT] == 1883
     assert result["data"][CONF_USERNAME] == "test-username"

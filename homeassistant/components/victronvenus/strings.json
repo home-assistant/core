@@ -4,9 +4,17 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "ssl": "[%key:common::config_flow::data::ssl%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of Victron Device, usually mDNS name like 'venus.local'",
+          "port": "The MQTT port on the host. Normally it is 1883.",
+          "username": "Username for the Victron Device, default is empty. This is not your VRM username.",
+          "password": "Password for the Victron Device, default is empty. This is not your VRM password.",
+          "ssl": "Indicates whether to use SSL to connect to the Victron Device. Normally it is disabled."
         }
       }
     },
