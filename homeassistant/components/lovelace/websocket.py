@@ -15,7 +15,9 @@ from homeassistant.helpers.json import json_fragment
 
 from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
 from .dashboard import LovelaceStorage
-from .resources import ResourceStorageCollection
+
+if TYPE_CHECKING:
+    from .resources import ResourceStorageCollection
 
 
 def _handle_errors(func):
