@@ -33,24 +33,14 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Check if entry already exists
-            await self.async_set_unique_id(user_input[CONF_ADDRESS])
-            self._abort_if_unique_id_configured()
+            connection = False
 
             async with Inverter(user_input[CONF_ADDRESS]) as client:
                 try:
                     # Check connection
-                    if (
-                        await client.login(
-                            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                        )
-                        is True
-                    ):
-                        # Create a new configuration entry if login succeeds
-                        return self.async_create_entry(
-                            title=user_input[CONF_ADDRESS], data=user_input
-                        )
-                    errors["base"] = "invalid_auth"
+                    connection = await client.login(
+                        user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    )
 
                 except TimeoutError:
                     errors["base"] = "cannot_connect"
@@ -64,5 +54,18 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     else:
                         errors["base"] = "unknown"
+
+                else:
+                    if connection is True:
+                        # Check if entry already exists
+                        serial = await client.get_serial()
+                        await self.async_set_unique_id(serial)
+                        self._abort_if_unique_id_configured()
+
+                        # Create a new configuration entry if login succeeds
+                        return self.async_create_entry(
+                            title=user_input[CONF_ADDRESS], data=user_input
+                        )
+                    errors["base"] = "invalid_auth"
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)

@@ -19,6 +19,8 @@ TEST_USER_INPUT = {
     CONF_PASSWORD: "password",
 }
 
+TEST_SERIAL = "111111111111111"
+
 
 @pytest.fixture
 def mock_login_async_setup_entry():
@@ -27,6 +29,10 @@ def mock_login_async_setup_entry():
         patch(
             "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
             return_value=True,
+        ),
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
+            return_value=TEST_SERIAL,
         ),
         patch(
             "homeassistant.components.imeon_inverter.async_setup_entry",
@@ -145,11 +151,13 @@ async def test_form_exception(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
 
-async def test_form_already_exists(hass: HomeAssistant) -> None:
+async def test_manual_setup_already_exists(
+    hass: HomeAssistant, mock_login_async_setup_entry
+) -> None:
     """Test that a flow with an existing host aborts."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_USER_INPUT[CONF_ADDRESS],
+        unique_id=TEST_SERIAL,
         data=TEST_USER_INPUT,
     )
 
@@ -159,9 +167,15 @@ async def test_form_already_exists(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
-        return_value=TEST_USER_INPUT[CONF_ADDRESS],
+    with (
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
+            return_value=TEST_SERIAL,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], TEST_USER_INPUT
