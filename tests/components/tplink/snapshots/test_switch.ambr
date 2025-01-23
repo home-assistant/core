@@ -173,6 +173,52 @@
     'state': 'on',
   })
 # ---
+# name: test_states[switch.my_device_baby_cry_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.my_device_baby_cry_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Baby cry detection',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'baby_cry_detection',
+    'unique_id': '123456789ABCDEFGH_baby_cry_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[switch.my_device_baby_cry_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Baby cry detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_device_baby_cry_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_states[switch.my_device_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -311,6 +357,52 @@
     'state': 'on',
   })
 # ---
+# name: test_states[switch.my_device_motion_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.my_device_motion_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion detection',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_detection',
+    'unique_id': '123456789ABCDEFGH_motion_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[switch.my_device_motion_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Motion detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_device_motion_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_states[switch.my_device_motion_sensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -357,6 +449,52 @@
     'state': 'on',
   })
 # ---
+# name: test_states[switch.my_device_person_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.my_device_person_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Person detection',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'person_detection',
+    'unique_id': '123456789ABCDEFGH_person_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[switch.my_device_person_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Person detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_device_person_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_states[switch.my_device_smooth_transitions-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -397,6 +535,52 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_device_smooth_transitions',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_states[switch.my_device_tamper_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.my_device_tamper_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Tamper detection',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'tamper_detection',
+    'unique_id': '123456789ABCDEFGH_tamper_detection',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[switch.my_device_tamper_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'my_device Tamper detection',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_device_tamper_detection',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

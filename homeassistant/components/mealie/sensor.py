@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import MealieConfigEntry, MealieStatisticsCoordinator
 from .entity import MealieEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MealieStatisticsSensorEntityDescription(SensorEntityDescription):

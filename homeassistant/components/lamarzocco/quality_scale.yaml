@@ -62,9 +62,9 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
-    status: exempt
+    status: done
     comment: |
-      Device type integration.
+      Device type integration, only possible for addon scale
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -74,9 +74,9 @@ rules:
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:
-    status: exempt
+    status: done
     comment: |
-      Device type integration.
+      Device type integration, only possible for addon scale
 
   # Platinum
   async-dependency: done

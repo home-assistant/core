@@ -83,13 +83,8 @@ async def async_attach_trigger(
         )
         to_match = condition.zone(hass, zone_state, to_state) if to_state else False
 
-        if (
-            trigger_event == EVENT_ENTER
-            and not from_match
-            and to_match
-            or trigger_event == EVENT_LEAVE
-            and from_match
-            and not to_match
+        if (trigger_event == EVENT_ENTER and not from_match and to_match) or (
+            trigger_event == EVENT_LEAVE and from_match and not to_match
         ):
             hass.async_run_hass_job(
                 job,

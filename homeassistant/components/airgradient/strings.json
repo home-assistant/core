@@ -119,6 +119,9 @@
       "raw_nitrogen": {
         "name": "Raw NOx"
       },
+      "raw_pm02": {
+        "name": "Raw PM2.5"
+      },
       "display_pm_standard": {
         "name": "[%key:component::airgradient::entity::select::display_pm_standard::name%]",
         "state": {
@@ -161,6 +164,17 @@
       "post_data_to_airgradient": {
         "name": "Post data to Airgradient"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "An error occurred while communicating with the Airgradient device: {error}"
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the Airgradient device: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while communicating with the Airgradient device: {error}"
     }
   }
 }

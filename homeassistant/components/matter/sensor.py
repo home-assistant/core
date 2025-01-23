@@ -244,6 +244,8 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PowerSource.Attributes.BatReplacementDescription,
         ),
+        # Some manufacturers returns an empty string
+        value_is_not="",
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -580,10 +582,10 @@ DISCOVERY_SCHEMAS = [
             key="ElectricalPowerMeasurementWatt",
             device_class=SensorDeviceClass.POWER,
             entity_category=EntityCategory.DIAGNOSTIC,
-            native_unit_of_measurement=UnitOfPower.WATT,
+            native_unit_of_measurement=UnitOfPower.MILLIWATT,
+            suggested_unit_of_measurement=UnitOfPower.WATT,
             suggested_display_precision=2,
             state_class=SensorStateClass.MEASUREMENT,
-            measurement_to_ha=lambda x: x / 1000,
         ),
         entity_class=MatterSensor,
         required_attributes=(

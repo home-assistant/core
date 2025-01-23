@@ -360,11 +360,11 @@ class LazyState(State):
     """A lazy version of core State."""
 
     __slots__ = [
-        "_row",
         "_attributes",
+        "_context",
         "_last_changed",
         "_last_updated",
-        "_context",
+        "_row",
     ]
 
     def __init__(self, row) -> None:  # pylint: disable=super-init-not-called
