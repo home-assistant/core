@@ -70,6 +70,7 @@ from homeassistant.helpers.entity_registry import (
     EventEntityRegistryUpdatedData,
 )
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import as_timestamp
 from homeassistant.util.unit_conversion import TemperatureConverter
@@ -137,6 +138,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         conf[CONF_COMPONENT_CONFIG_GLOB],
     )
 
+    # FINDME
+    entity_registry = er.async_get(hass)
+    area_registry = ar.async_get(hass)
+
     metrics = PrometheusMetrics(
         entity_filter,
         namespace,
@@ -186,6 +191,8 @@ class PrometheusMetrics:
         component_config: EntityValues,
         override_metric: str | None,
         default_metric: str | None,
+        entity_registry: er.EntityRegistry | None,
+        area_registry: ar.AreaRegistry | None,
     ) -> None:
         """Initialize Prometheus Metrics."""
         self._component_config = component_config
@@ -202,6 +209,8 @@ class PrometheusMetrics:
             self._sensor_default_metric,
             self._sensor_fallback_metric,
         ]
+        self._entity_registry = entity_registry
+        self._area_registry = area_registry
 
         if namespace:
             self.metrics_prefix = f"{namespace}_"
@@ -236,7 +245,7 @@ class PrometheusMetrics:
         entity_id = state.entity_id
         _LOGGER.debug("Handling state update for %s", entity_id)
 
-        labels = self._labels(state)
+        labels = self._labels(state, self._entity_registry, self._area_registry)
 
         self._metric(
             "state_change",
@@ -333,7 +342,7 @@ class PrometheusMetrics:
                 f"{state.domain}_attr_{key.lower()}",
                 prometheus_client.Gauge,
                 f"{key} attribute of {state.domain} entity",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(value)
 
     def _metric[_MetricBaseT: MetricWrapperBase](
@@ -383,20 +392,45 @@ class PrometheusMetrics:
     @staticmethod
     def _labels(
         state: State,
+        entity_registry: er.EntityRegistry | None,
+        area_registry: ar.AreaRegistry | None,
         extra_labels: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         if extra_labels is None:
             extra_labels = {}
+
         labels = {
             "entity": state.entity_id,
             "domain": state.domain,
             "friendly_name": state.attributes.get(ATTR_FRIENDLY_NAME),
         }
+
+        if entity_registry is not None:
+            entity = entity_registry.async_get("foo")
+
+            if entity is not None:
+                labels["platform"] = entity.platform
+                categories = entity.categories
+
+                if not labels.keys().isdisjoint(categories.keys()):
+                    conflicting_keys = labels.keys() & categories.keys()
+                    raise ValueError(
+                        f"categories contains conflicting keys: {conflicting_keys}"
+                    )
+                else:
+                    labels = labels | categories
+
+                if area_registry is not None:
+                    area = area_registry.async_get_area(entity.area_id)
+                    if area is not None:
+                        labels["area"] = area.normalized_name
+
         if not labels.keys().isdisjoint(extra_labels.keys()):
             conflicting_keys = labels.keys() & extra_labels.keys()
             raise ValueError(
                 f"extra_labels contains conflicting keys: {conflicting_keys}"
             )
+
         return labels | extra_labels
 
     def _battery(self, state: State) -> None:
@@ -412,7 +446,7 @@ class PrometheusMetrics:
             "battery_level_percent",
             prometheus_client.Gauge,
             "Battery level as a percentage of its capacity",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_binary_sensor(self, state: State) -> None:
@@ -423,7 +457,7 @@ class PrometheusMetrics:
             "binary_sensor_state",
             prometheus_client.Gauge,
             "State of the binary sensor (0/1)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_input_boolean(self, state: State) -> None:
@@ -434,7 +468,7 @@ class PrometheusMetrics:
             "input_boolean_state",
             prometheus_client.Gauge,
             "State of the input boolean (0/1)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _numeric_handler(self, state: State, domain: str, title: str) -> None:
@@ -446,14 +480,14 @@ class PrometheusMetrics:
                 f"{domain}_state_{unit}",
                 prometheus_client.Gauge,
                 f"State of the {title} measured in {unit}",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             )
         else:
             metric = self._metric(
                 f"{domain}_state",
                 prometheus_client.Gauge,
                 f"State of the {title}",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             )
 
         if (
@@ -480,7 +514,7 @@ class PrometheusMetrics:
             "device_tracker_state",
             prometheus_client.Gauge,
             "State of the device tracker (0/1)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_person(self, state: State) -> None:
@@ -491,7 +525,7 @@ class PrometheusMetrics:
             "person_state",
             prometheus_client.Gauge,
             "State of the person (0/1)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_cover(self, state: State) -> None:
@@ -501,7 +535,7 @@ class PrometheusMetrics:
                 "cover_state",
                 prometheus_client.Gauge,
                 "State of the cover (0/1)",
-                self._labels(state, {"state": cover_state}),
+                self._labels(state, self._entity_registry, self._area_registry, {"state": cover_state}),
             )
             metric.set(float(cover_state == state.state))
 
@@ -511,7 +545,7 @@ class PrometheusMetrics:
                 "cover_position",
                 prometheus_client.Gauge,
                 "Position of the cover (0-100)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(float(position))
 
         tilt_position = state.attributes.get(ATTR_CURRENT_TILT_POSITION)
@@ -520,7 +554,7 @@ class PrometheusMetrics:
                 "cover_tilt_position",
                 prometheus_client.Gauge,
                 "Tilt Position of the cover (0-100)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(float(tilt_position))
 
     def _handle_light(self, state: State) -> None:
@@ -536,7 +570,7 @@ class PrometheusMetrics:
             "light_brightness_percent",
             prometheus_client.Gauge,
             "Light brightness percentage (0..100)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_lock(self, state: State) -> None:
@@ -547,7 +581,7 @@ class PrometheusMetrics:
             "lock_state",
             prometheus_client.Gauge,
             "State of the lock (0/1)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_climate_temp(
@@ -564,7 +598,7 @@ class PrometheusMetrics:
             metric_name,
             prometheus_client.Gauge,
             metric_description,
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(temp)
 
     def _handle_climate(self, state: State) -> None:
@@ -599,7 +633,7 @@ class PrometheusMetrics:
                     "climate_action",
                     prometheus_client.Gauge,
                     "HVAC action",
-                    self._labels(state, {"action": action.value}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"action": action.value}),
                 ).set(float(action == current_action))
 
         current_mode = state.state
@@ -610,7 +644,7 @@ class PrometheusMetrics:
                     "climate_mode",
                     prometheus_client.Gauge,
                     "HVAC mode",
-                    self._labels(state, {"mode": mode}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"mode": mode}),
                 ).set(float(mode == current_mode))
 
         preset_mode = state.attributes.get(ATTR_PRESET_MODE)
@@ -621,7 +655,7 @@ class PrometheusMetrics:
                     "climate_preset_mode",
                     prometheus_client.Gauge,
                     "Preset mode enum",
-                    self._labels(state, {"mode": mode}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"mode": mode}),
                 ).set(float(mode == preset_mode))
 
         fan_mode = state.attributes.get(ATTR_FAN_MODE)
@@ -632,7 +666,7 @@ class PrometheusMetrics:
                     "climate_fan_mode",
                     prometheus_client.Gauge,
                     "Fan mode enum",
-                    self._labels(state, {"mode": mode}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"mode": mode}),
                 ).set(float(mode == fan_mode))
 
     def _handle_humidifier(self, state: State) -> None:
@@ -642,7 +676,7 @@ class PrometheusMetrics:
                 "humidifier_target_humidity_percent",
                 prometheus_client.Gauge,
                 "Target Relative Humidity",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(humidifier_target_humidity_percent)
 
         if (value := self.state_as_number(state)) is not None:
@@ -650,7 +684,7 @@ class PrometheusMetrics:
                 "humidifier_state",
                 prometheus_client.Gauge,
                 "State of the humidifier (0/1)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(value)
 
         current_mode = state.attributes.get(ATTR_MODE)
@@ -661,7 +695,7 @@ class PrometheusMetrics:
                     "humidifier_mode",
                     prometheus_client.Gauge,
                     "Humidifier Mode",
-                    self._labels(state, {"mode": mode}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"mode": mode}),
                 ).set(float(mode == current_mode))
 
     def _handle_sensor(self, state: State) -> None:
@@ -688,7 +722,7 @@ class PrometheusMetrics:
                 metric,
                 prometheus_client.Gauge,
                 documentation,
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(value)
 
         self._battery(state)
@@ -753,7 +787,7 @@ class PrometheusMetrics:
                 "switch_state",
                 prometheus_client.Gauge,
                 "State of the switch (0/1)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(value)
 
         self._handle_attributes(state)
@@ -764,7 +798,7 @@ class PrometheusMetrics:
                 "fan_state",
                 prometheus_client.Gauge,
                 "State of the fan (0/1)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(value)
 
         fan_speed_percent = state.attributes.get(ATTR_PERCENTAGE)
@@ -773,7 +807,7 @@ class PrometheusMetrics:
                 "fan_speed_percent",
                 prometheus_client.Gauge,
                 "Fan speed percent (0-100)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(float(fan_speed_percent))
 
         fan_is_oscillating = state.attributes.get(ATTR_OSCILLATING)
@@ -782,7 +816,7 @@ class PrometheusMetrics:
                 "fan_is_oscillating",
                 prometheus_client.Gauge,
                 "Whether the fan is oscillating (0/1)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(float(fan_is_oscillating))
 
         fan_preset_mode = state.attributes.get(ATTR_PRESET_MODE)
@@ -793,7 +827,7 @@ class PrometheusMetrics:
                     "fan_preset_mode",
                     prometheus_client.Gauge,
                     "Fan preset mode enum",
-                    self._labels(state, {"mode": mode}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"mode": mode}),
                 ).set(float(mode == fan_preset_mode))
 
         fan_direction = state.attributes.get(ATTR_DIRECTION)
@@ -802,7 +836,7 @@ class PrometheusMetrics:
                 "fan_direction_reversed",
                 prometheus_client.Gauge,
                 "Fan direction reversed (bool)",
-                self._labels(state),
+                self._labels(state, self._entity_registry, self._area_registry),
             ).set(float(fan_direction == DIRECTION_REVERSE))
 
     def _handle_zwave(self, state: State) -> None:
@@ -813,7 +847,7 @@ class PrometheusMetrics:
             "automation_triggered_count",
             prometheus_client.Counter,
             "Count of times an automation has been triggered",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).inc()
 
     def _handle_counter(self, state: State) -> None:
@@ -824,7 +858,7 @@ class PrometheusMetrics:
             "counter_value",
             prometheus_client.Gauge,
             "Value of counter entities",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_update(self, state: State) -> None:
@@ -835,7 +869,7 @@ class PrometheusMetrics:
             "update_state",
             prometheus_client.Gauge,
             "Update state, indicating if an update is available (0/1)",
-            self._labels(state),
+            self._labels(state, self._entity_registry, self._area_registry),
         ).set(value)
 
     def _handle_alarm_control_panel(self, state: State) -> None:
@@ -847,7 +881,7 @@ class PrometheusMetrics:
                     "alarm_control_panel_state",
                     prometheus_client.Gauge,
                     "State of the alarm control panel (0/1)",
-                    self._labels(state, {"state": alarm_state.value}),
+                    self._labels(state, self._entity_registry, self._area_registry, {"state": alarm_state.value}),
                 ).set(float(alarm_state.value == current_state))
 
 
