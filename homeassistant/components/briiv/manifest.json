@@ -1,0 +1,10 @@
+{
+  "domain": "briiv",
+  "name": "Briiv",
+  "codeowners": ["@FiveCreate"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/briiv",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": []
+}
