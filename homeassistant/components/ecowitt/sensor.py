@@ -45,8 +45,10 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
-MAX_AGE = 30
+MAX_AGE = 300
+
 _LOGGER = logging.getLogger(__name__)
+
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,
     EcoWittSensorTypes.RAIN_COUNT_MM,
@@ -235,15 +237,13 @@ SENSOR_INFO_BY_NAME = {
     mapping.name: SensorInfo(key, mapping.stype) for key, mapping in SENSOR_MAP.items()
 }
 
-_LOGGER.debug("SENSOR_INFO_BY_NAME: %s", SENSOR_INFO_BY_NAME)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EcowittConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up Ecowitt sensors."""
+    """Add sensors if new."""
     ecowitt = entry.runtime_data
     entities: list[EcowittSensorEntity] = []
     added_keys = set()
