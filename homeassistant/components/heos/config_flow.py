@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
@@ -185,7 +185,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate account credentials and update options."""
         errors: dict[str, str] = {}
-        entry = cast(HeosConfigEntry, self._get_reauth_entry())
+        entry: HeosConfigEntry = self._get_reauth_entry()
         if user_input is not None:
             assert entry.state is ConfigEntryState.LOADED
             if await _validate_auth(
@@ -211,7 +211,7 @@ class HeosOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            entry = cast(HeosConfigEntry, self.config_entry)
+            entry: HeosConfigEntry = self.config_entry
             if await _validate_auth(
                 user_input, entry.runtime_data.coordinator.heos, errors
             ):
