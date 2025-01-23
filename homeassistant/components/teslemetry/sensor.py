@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 
-from propcache import cached_property
+from propcache.api import cached_property
 from teslemetry_stream import Signal
 
 from homeassistant.components.sensor import (
