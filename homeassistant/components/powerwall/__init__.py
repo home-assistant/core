@@ -138,6 +138,7 @@ class PowerwallDataManager:
                     self.entry,
                     data={**self.entry.data, CONFIG_ENTRY_COOKIE: cookie.value},
                 )
+                _LOGGER.debug("Saved auth cookie")
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
@@ -147,6 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
     password: str | None = entry.data.get(CONF_PASSWORD)
 
     cookie_jar: CookieJar = CookieJar(unsafe=True)
+    use_auth_cookie: bool = False
     # Try to reuse the auth cookie
     auth_cookie_value: str | None = entry.data.get(CONFIG_ENTRY_COOKIE)
     if auth_cookie_value:
@@ -154,9 +156,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
             {AUTH_COOKIE_KEY: auth_cookie_value},
             URL(f"http://{ip_address}"),
         )
-        # Removing the password will skip authentication, since we're using the auth cookie
-        password = None
         _LOGGER.debug("Using existing auth cookie")
+        use_auth_cookie = True
 
     http_session = async_create_clientsession(
         hass, verify_ssl=False, cookie_jar=cookie_jar
@@ -168,7 +169,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
 
         try:
             base_info = await _login_and_fetch_base_info(
-                power_wall, ip_address, password
+                power_wall, ip_address, password, use_auth_cookie
             )
 
             # Cancel closing power_wall on success
@@ -205,7 +206,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
         cookie_jar,
         entry,
         ip_address,
-        entry.data.get(CONF_PASSWORD),
+        password,
         runtime_data,
     )
     await manager.save_auth_cookie()
@@ -258,10 +259,11 @@ async def async_migrate_entity_unique_ids(
 
 
 async def _login_and_fetch_base_info(
-    power_wall: Powerwall, host: str, password: str | None
+    power_wall: Powerwall, host: str, password: str | None, use_auth_cookie: bool
 ) -> PowerwallBaseInfo:
     """Login to the powerwall and fetch the base info."""
-    if password is not None:
+    # Login step is skipped if password is None or if we are using the auth cookie
+    if not (password is None or use_auth_cookie):
         await power_wall.login(password)
     return await _call_base_info(power_wall, host)
 
