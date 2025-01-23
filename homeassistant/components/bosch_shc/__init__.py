@@ -91,6 +91,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: BoschConfigEntry) -> bo
     session = entry.runtime_data.session
 
     if (polling_handler := entry.runtime_data.polling_handler) is not None:
+        # Unsubscribe EVENT_HOMEASSISTANT_STOP
         polling_handler()
         entry.runtime_data.polling_handler = None
     await hass.async_add_executor_job(session.stop_polling)
