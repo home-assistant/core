@@ -168,6 +168,28 @@ async def test_agents_info(
     }
 
 
+async def test_agents_not_loaded(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test backup agent with no loaded config entry."""
+    with patch("homeassistant.components.backup.is_hassio", return_value=False):
+        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+        client = await hass_ws_client(hass)
+
+        await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [
+            {"agent_id": "backup.local"},
+        ],
+    }
+
+
 async def test_agents_list_backups(
     hass: HomeAssistant,
     setup_dsm_with_filestation: MagicMock,
