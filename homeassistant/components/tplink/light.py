@@ -142,7 +142,7 @@ def _async_build_base_effect(
     }
 
 
-def _get_unique_id(
+def _get_backwards_compatible_light_unique_id(
     device: Device, entity_description: TPLinkModuleEntityDescription
 ) -> str:
     """Return unique ID for the entity."""
@@ -173,7 +173,7 @@ class TPLinkLightEntityDescription(
 ):
     """Base class for tplink light entity description."""
 
-    unique_id_fn = _get_unique_id
+    unique_id_fn = _get_backwards_compatible_light_unique_id
 
 
 LIGHT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
