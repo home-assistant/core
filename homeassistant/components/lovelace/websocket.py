@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
@@ -14,13 +15,20 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_fragment
 
 from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
-from .dashboard import LovelaceStorage
+from .dashboard import LovelaceConfig
 
 if TYPE_CHECKING:
     from .resources import ResourceStorageCollection
 
+type AsyncLovelaceWebSocketCommandHandler[_R] = Callable[
+    [HomeAssistant, websocket_api.ActiveConnection, dict[str, Any], LovelaceConfig],
+    Awaitable[_R],
+]
 
-def _handle_errors(func):
+
+def _handle_errors[_R](
+    func: AsyncLovelaceWebSocketCommandHandler[_R],
+) -> websocket_api.AsyncWebSocketCommandHandler:
     """Handle error with WebSocket calls."""
 
     @wraps(func)
@@ -105,7 +113,7 @@ async def websocket_lovelace_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
-    config: LovelaceStorage,
+    config: LovelaceConfig,
 ) -> json_fragment:
     """Send Lovelace UI config over WebSocket connection."""
     return await config.async_json(msg["force"])
@@ -125,7 +133,7 @@ async def websocket_lovelace_save_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
-    config: LovelaceStorage,
+    config: LovelaceConfig,
 ) -> None:
     """Save Lovelace UI configuration."""
     await config.async_save(msg["config"])
@@ -144,7 +152,7 @@ async def websocket_lovelace_delete_config(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
-    config: LovelaceStorage,
+    config: LovelaceConfig,
 ) -> None:
     """Delete Lovelace UI configuration."""
     await config.async_delete()

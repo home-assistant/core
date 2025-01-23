@@ -82,6 +82,10 @@ class LovelaceConfig(ABC):
         """Delete config."""
         raise HomeAssistantError("Not supported")
 
+    async def async_json(self, force: bool) -> json_fragment:
+        """Return JSON representation of the config."""
+        raise HomeAssistantError("Not supported")
+
     @callback
     def _config_updated(self) -> None:
         """Fire config updated event."""
