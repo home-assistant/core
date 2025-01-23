@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Protocol
 import uuid
 
 import voluptuous as vol
@@ -29,16 +29,27 @@ RESOURCES_STORAGE_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
 
 
+class ResourceCollectionProtocol(Protocol):
+    """Protocol for collections to store resources."""
+
+    async def async_get_info(self) -> dict[str, int]:
+        """Return the resources info for YAML mode."""
+
+    @callback
+    def async_items(self) -> list[dict]:
+        """Return list of items in collection."""
+
+
 class ResourceYAMLCollection:
     """Collection representing static YAML."""
 
     loaded = True
 
-    def __init__(self, data):
+    def __init__(self, data: list[dict[str, Any]]) -> None:
         """Initialize a resource YAML collection."""
         self.data = data
 
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, int]:
         """Return the resources info for YAML mode."""
         return {"resources": len(self.async_items() or [])}
 
@@ -62,7 +73,7 @@ class ResourceStorageCollection(collection.DictStorageCollection):
         )
         self.ll_config = ll_config
 
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, int]:
         """Return the resources info for YAML mode."""
         if not self.loaded:
             await self.async_load()

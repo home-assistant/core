@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -15,6 +15,7 @@ from homeassistant.helpers.json import json_fragment
 
 from .const import CONF_URL_PATH, LOVELACE_DATA, ConfigNotFound
 from .dashboard import LovelaceStorage
+from .resources import ResourceStorageCollection
 
 
 def _handle_errors(func):
@@ -75,6 +76,8 @@ async def websocket_lovelace_resources_impl(
     This function is called by both Storage and YAML mode WS handlers.
     """
     resources = hass.data[LOVELACE_DATA].resources
+    if TYPE_CHECKING:
+        assert isinstance(resources, ResourceStorageCollection)
 
     if hass.config.safe_mode:
         connection.send_result(msg["id"], [])
