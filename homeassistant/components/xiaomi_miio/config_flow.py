@@ -11,7 +11,6 @@ from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -21,6 +20,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_CLOUD_COUNTRY,
@@ -145,7 +145,7 @@ class XiaomiMiioFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_cloud()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         name = discovery_info.name

@@ -6,10 +6,17 @@ import pytest
 import roborock
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    return [Platform.SWITCH]
 
 
 @pytest.mark.parametrize(

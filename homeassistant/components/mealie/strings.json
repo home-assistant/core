@@ -1,4 +1,9 @@
 {
+  "common": {
+    "data_description_host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234",
+    "data_description_api_token": "The API token of your Mealie instance from your user profile within Mealie.",
+    "data_description_verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates."
+  },
   "config": {
     "step": {
       "user": {
@@ -8,13 +13,18 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "host": "The URL of your Mealie instance, for example, http://192.168.1.123:1234"
+          "host": "[%key:component::mealie::common::data_description_host%]",
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]",
+          "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
       },
       "reauth_confirm": {
         "description": "Please reauthenticate with Mealie.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]"
         }
       },
       "reconfigure": {
@@ -23,6 +33,11 @@
           "host": "[%key:common::config_flow::data::url%]",
           "api_token": "[%key:common::config_flow::data::api_token%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "host": "[%key:component::mealie::common::data_description_host%]",
+          "api_token": "[%key:component::mealie::common::data_description_api_token%]",
+          "verify_ssl": "[%key:component::mealie::common::data_description_verify_ssl%]"
         }
       }
     },
@@ -111,6 +126,21 @@
     },
     "version_error": {
       "message": "You are running {mealie_version} of Mealie. Minimum required version is {min_version}. Please upgrade Mealie and then retry."
+    },
+    "auth_failed": {
+      "message": "Authentication failed. Please reauthenticate."
+    },
+    "update_failed_mealplan": {
+      "message": "Could not fetch mealplan data."
+    },
+    "update_failed_shopping_list": {
+      "message": "Could not fetch shopping list data."
+    },
+    "update_failed_statistics": {
+      "message": "Could not fetch statistics data."
+    },
+    "setup_failed": {
+      "message": "Could not connect to the Mealie instance."
     }
   },
   "services": {
@@ -199,8 +229,8 @@
           "description": "The type of dish to set the recipe to."
         },
         "recipe_id": {
-          "name": "[%key:component::mealie::services::get_recipe::fields::recipe_id::name%]",
-          "description": "[%key:component::mealie::services::get_recipe::fields::recipe_id::description%]"
+          "name": "Recipe ID",
+          "description": "The recipe ID or the slug of the recipe to get."
         },
         "note_title": {
           "name": "Meal note title",

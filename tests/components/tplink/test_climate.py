@@ -27,12 +27,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
-    DEVICE_ID,
     _mocked_device,
     _mocked_feature,
     setup_platform_for_device,
     snapshot_platform,
 )
+from .const import DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -41,7 +41,7 @@ ENTITY_ID = "climate.thermostat"
 
 @pytest.fixture
 async def mocked_hub(hass: HomeAssistant) -> Device:
-    """Return mocked tplink binary sensor feature."""
+    """Return mocked tplink hub."""
 
     features = [
         _mocked_feature(
@@ -166,7 +166,8 @@ async def test_set_hvac_mode(
     )
     mocked_state.set_value.assert_called_with(True)
 
-    with pytest.raises(ServiceValidationError):
+    msg = "Tried to set unsupported mode: dry"
+    with pytest.raises(ServiceValidationError, match=msg):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,

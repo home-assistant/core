@@ -99,9 +99,8 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
         """Start or resume the cleaning task."""
         await self.send_api_command(VacuumCommands.START)
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
 
@@ -110,8 +109,6 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
 
         switchbot_state = str(self.coordinator.data.get("workingStatus"))
         self._attr_activity = VACUUM_SWITCHBOT_STATE_TO_HA_STATE.get(switchbot_state)
-
-        self.async_write_ha_state()
 
 
 @callback

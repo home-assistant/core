@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import re
-import telnetlib  # pylint: disable=deprecated-module
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (

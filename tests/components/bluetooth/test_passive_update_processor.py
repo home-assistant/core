@@ -1808,6 +1808,7 @@ async def test_naming(hass: HomeAssistant) -> None:
 
     sensor_entity: PassiveBluetoothProcessorEntity = sensor_entities[0]
     sensor_entity.hass = hass
+    sensor_entity.platform = MockEntityPlatform(hass)
     assert sensor_entity.available is True
     assert sensor_entity.name is UNDEFINED
     assert sensor_entity.device_class is SensorDeviceClass.TEMPERATURE

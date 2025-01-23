@@ -12,7 +12,6 @@ from google_nest_sdm.admin_client import PUBSUB_API_HOST, AdminClient
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
@@ -24,6 +23,7 @@ from .const import (
     OAUTH2_TOKEN,
     SDM_SCOPES,
 )
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class AccessTokenAuthImpl(AbstractAuth):
 
 
 async def new_subscriber(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: NestConfigEntry
 ) -> GoogleNestSubscriber | None:
     """Create a GoogleNestSubscriber."""
     implementation = (

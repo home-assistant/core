@@ -37,12 +37,12 @@ from .common import async_wait_recording_done, create_engine_test
 from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 

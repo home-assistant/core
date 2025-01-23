@@ -23,7 +23,6 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -34,6 +33,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 
@@ -273,7 +274,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         hostname = discovery_info.hostname
@@ -284,7 +285,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._process_discovery(gateway_id)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle ZeroConf discovery."""
         properties = discovery_info.properties

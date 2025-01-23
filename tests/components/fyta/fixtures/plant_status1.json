@@ -1,6 +1,9 @@
 {
   "battery_level": 80,
-  "low_battery": true,
+  "fertilisation": {
+    "was_repotted": true
+  },
+  "low_battery": false,
   "last_updated": "2023-01-10 10:10:00",
   "light": 2,
   "light_status": 3,
@@ -10,7 +13,7 @@
   "moisture_status": 3,
   "sensor_available": true,
   "sensor_id": "FD:1D:B7:E3:D0:E2",
-  "sensor_update_available": false,
+  "sensor_update_available": true,
   "sw_version": "1.0",
   "status": 1,
   "online": true,

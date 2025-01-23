@@ -100,6 +100,13 @@ BINARY_PUSH_SENSORS = (
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
     ),
+    ReolinkBinarySensorEntityDescription(
+        key="cry",
+        cmd_id=33,
+        translation_key="cry",
+        value=lambda api, ch: api.ai_detected(ch, "cry"),
+        supported=lambda api, ch: api.ai_supported(ch, "cry"),
+    ),
 )
 
 BINARY_SENSORS = (

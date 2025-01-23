@@ -36,8 +36,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.const import STATE_OFF
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_NAME, STATE_OFF
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -48,9 +48,33 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.util.dt import utc_from_timestamp
 
 from . import MusicAssistantConfigEntry
-from .const import ATTR_ACTIVE_QUEUE, ATTR_MASS_PLAYER_TYPE, DOMAIN
+from .const import (
+    ATTR_ACTIVE,
+    ATTR_ACTIVE_QUEUE,
+    ATTR_ALBUM,
+    ATTR_ANNOUNCE_VOLUME,
+    ATTR_ARTIST,
+    ATTR_AUTO_PLAY,
+    ATTR_CURRENT_INDEX,
+    ATTR_CURRENT_ITEM,
+    ATTR_ELAPSED_TIME,
+    ATTR_ITEMS,
+    ATTR_MASS_PLAYER_TYPE,
+    ATTR_MEDIA_ID,
+    ATTR_MEDIA_TYPE,
+    ATTR_NEXT_ITEM,
+    ATTR_QUEUE_ID,
+    ATTR_RADIO_MODE,
+    ATTR_REPEAT_MODE,
+    ATTR_SHUFFLE_ENABLED,
+    ATTR_SOURCE_PLAYER,
+    ATTR_URL,
+    ATTR_USE_PRE_ANNOUNCE,
+    DOMAIN,
+)
 from .entity import MusicAssistantEntity
 from .media_browser import async_browse_media
+from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
@@ -89,16 +113,7 @@ QUEUE_OPTION_MAP = {
 SERVICE_PLAY_MEDIA_ADVANCED = "play_media"
 SERVICE_PLAY_ANNOUNCEMENT = "play_announcement"
 SERVICE_TRANSFER_QUEUE = "transfer_queue"
-ATTR_RADIO_MODE = "radio_mode"
-ATTR_MEDIA_ID = "media_id"
-ATTR_MEDIA_TYPE = "media_type"
-ATTR_ARTIST = "artist"
-ATTR_ALBUM = "album"
-ATTR_URL = "url"
-ATTR_USE_PRE_ANNOUNCE = "use_pre_announce"
-ATTR_ANNOUNCE_VOLUME = "announce_volume"
-ATTR_SOURCE_PLAYER = "source_player"
-ATTR_AUTO_PLAY = "auto_play"
+SERVICE_GET_QUEUE = "get_queue"
 
 
 def catch_musicassistant_error[_R, **P](
@@ -178,6 +193,12 @@ async def async_setup_entry(
             vol.Optional(ATTR_AUTO_PLAY): vol.Coerce(bool),
         },
         "_async_handle_transfer_queue",
+    )
+    platform.async_register_entity_service(
+        SERVICE_GET_QUEUE,
+        schema=None,
+        func="_async_handle_get_queue",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -513,6 +534,32 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             source_queue_id, target_queue_id, auto_play
         )
 
+    @catch_musicassistant_error
+    async def _async_handle_get_queue(self) -> ServiceResponse:
+        """Handle get_queue action."""
+        if not self.active_queue:
+            raise HomeAssistantError("No active queue found")
+        active_queue = self.active_queue
+        response: ServiceResponse = QUEUE_DETAILS_SCHEMA(
+            {
+                ATTR_QUEUE_ID: active_queue.queue_id,
+                ATTR_ACTIVE: active_queue.active,
+                ATTR_NAME: active_queue.display_name,
+                ATTR_ITEMS: active_queue.items,
+                ATTR_SHUFFLE_ENABLED: active_queue.shuffle_enabled,
+                ATTR_REPEAT_MODE: active_queue.repeat_mode.value,
+                ATTR_CURRENT_INDEX: active_queue.current_index,
+                ATTR_ELAPSED_TIME: active_queue.corrected_elapsed_time,
+                ATTR_CURRENT_ITEM: queue_item_dict_from_mass_item(
+                    self.mass, active_queue.current_item
+                ),
+                ATTR_NEXT_ITEM: queue_item_dict_from_mass_item(
+                    self.mass, active_queue.next_item
+                ),
+            }
+        )
+        return response
+
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -565,17 +612,13 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             # shuffle and repeat are not (yet) supported for external sources
             self._attr_shuffle = None
             self._attr_repeat = None
-            if TYPE_CHECKING:
-                assert player.elapsed_time is not None
-            self._attr_media_position = int(player.elapsed_time)
+            self._attr_media_position = int(player.elapsed_time or 0)
             self._attr_media_position_updated_at = (
                 utc_from_timestamp(player.elapsed_time_last_updated)
                 if player.elapsed_time_last_updated
                 else None
             )
-            if TYPE_CHECKING:
-                assert player.elapsed_time is not None
-            self._prev_time = player.elapsed_time
+            self._prev_time = player.elapsed_time or 0
             return
 
         if queue is None:

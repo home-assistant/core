@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import logging
-import telnetlib  # pylint: disable=deprecated-module
 from typing import Final
 
+import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.media_player import (

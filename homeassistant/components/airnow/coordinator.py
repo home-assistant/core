@@ -21,7 +21,6 @@ from .const import (
     ATTR_API_CAT_DESCRIPTION,
     ATTR_API_CAT_LEVEL,
     ATTR_API_CATEGORY,
-    ATTR_API_PM25,
     ATTR_API_POLLUTANT,
     ATTR_API_REPORT_DATE,
     ATTR_API_REPORT_HOUR,
@@ -91,18 +90,16 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 max_aqi_desc = obv[ATTR_API_CATEGORY][ATTR_API_CAT_DESCRIPTION]
                 max_aqi_poll = pollutant
 
-            # Copy other data from PM2.5 Value
-            if obv[ATTR_API_AQI_PARAM] == ATTR_API_PM25:
-                # Copy Report Details
-                data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
-                data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
-                data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
+            # Copy Report Details
+            data[ATTR_API_REPORT_DATE] = obv[ATTR_API_REPORT_DATE]
+            data[ATTR_API_REPORT_HOUR] = obv[ATTR_API_REPORT_HOUR]
+            data[ATTR_API_REPORT_TZ] = obv[ATTR_API_REPORT_TZ]
 
-                # Copy Station Details
-                data[ATTR_API_STATE] = obv[ATTR_API_STATE]
-                data[ATTR_API_STATION] = obv[ATTR_API_STATION]
-                data[ATTR_API_STATION_LATITUDE] = obv[ATTR_API_STATION_LATITUDE]
-                data[ATTR_API_STATION_LONGITUDE] = obv[ATTR_API_STATION_LONGITUDE]
+            # Copy Station Details
+            data[ATTR_API_STATE] = obv[ATTR_API_STATE]
+            data[ATTR_API_STATION] = obv[ATTR_API_STATION]
+            data[ATTR_API_STATION_LATITUDE] = obv[ATTR_API_STATION_LATITUDE]
+            data[ATTR_API_STATION_LONGITUDE] = obv[ATTR_API_STATION_LONGITUDE]
 
         # Store Overall AQI
         data[ATTR_API_AQI] = max_aqi

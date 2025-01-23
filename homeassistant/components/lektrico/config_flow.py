@@ -7,7 +7,6 @@ from typing import Any
 from lektricowifi import Device, DeviceConnectionError
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     ATTR_HW_VERSION,
@@ -17,6 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -116,7 +116,7 @@ class LektricoFlowHandler(ConfigFlow, domain=DOMAIN):
         self._serial_number = str(settings["serial_number"])
         self._device_type = settings["type"]
         self._board_revision = settings["board_revision"]
-        self._name = f"{settings["type"]}_{self._serial_number}"
+        self._name = f"{settings['type']}_{self._serial_number}"
 
         # Check if already configured
         # Set unique id

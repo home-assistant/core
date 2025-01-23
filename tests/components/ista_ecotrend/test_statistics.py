@@ -41,7 +41,7 @@ async def test_statistics_import(
 
     # Test that consumption statistics for 2 months have been added
     for entity in entities:
-        statistic_id = f"ista_ecotrend:{entity.entity_id.removeprefix("sensor.")}"
+        statistic_id = f"ista_ecotrend:{entity.entity_id.removeprefix('sensor.')}"
         stats = await hass.async_add_executor_job(
             statistics_during_period,
             hass,
@@ -70,7 +70,7 @@ async def test_statistics_import(
     await async_wait_recording_done(hass)
 
     for entity in entities:
-        statistic_id = f"ista_ecotrend:{entity.entity_id.removeprefix("sensor.")}"
+        statistic_id = f"ista_ecotrend:{entity.entity_id.removeprefix('sensor.')}"
         stats = await hass.async_add_executor_job(
             statistics_during_period,
             hass,

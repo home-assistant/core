@@ -1,6 +1,6 @@
 """Test init of IronOS integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -61,7 +61,7 @@ async def test_setup_config_entry_not_ready(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=3))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -73,6 +73,7 @@ async def test_settings_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_pynecil: AsyncMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test skipping of settings on exception."""
     mock_pynecil.get_settings.side_effect = CommunicationError
@@ -80,7 +81,8 @@ async def test_settings_exception(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    async_fire_time_changed(hass, datetime.now() + timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED

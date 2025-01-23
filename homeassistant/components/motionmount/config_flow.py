@@ -7,7 +7,6 @@ from typing import Any
 import motionmount
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
     ConfigFlow,
@@ -15,6 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_UUID
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, EMPTY_MAC
 
@@ -80,7 +80,7 @@ class MotionMountFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=name, data=user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
 

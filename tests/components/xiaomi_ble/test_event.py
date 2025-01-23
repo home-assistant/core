@@ -23,8 +23,7 @@ from tests.components.bluetooth import (
             "54:EF:44:E3:9C:BC",
             make_advertisement(
                 "54:EF:44:E3:9C:BC",
-                b'XY\x97\td\xbc\x9c\xe3D\xefT" `'
-                b"\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3",
+                b'XY\x97\td\xbc\x9c\xe3D\xefT" `\x88\xfd\x00\x00\x00\x00:\x14\x8f\xb3',
             ),
             "5b51a7c91cde6707c9ef18dfda143a58",
             [
@@ -114,7 +113,7 @@ from tests.components.bluetooth import (
             "F8:24:41:C5:98:8B",
             make_advertisement(
                 "F8:24:41:C5:98:8B",
-                b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f" b"\x13Q\x00\x00\x00\xd6",
+                b"X0\xb6\x036\x8b\x98\xc5A$\xf8\x8b\xb8\xf2f\x13Q\x00\x00\x00\xd6",
             ),
             "b853075158487ca39a5b5ea9",
             [
@@ -221,7 +220,7 @@ async def test_xiaomi_fingerprint(hass: HomeAssistant) -> None:
         hass,
         make_advertisement(
             "D7:1F:44:EB:8A:91",
-            b"PD\x9e\x06B\x91\x8a\xebD\x1f\xd7" b"\x06\x00\x05\xff\xff\xff\xff\x00",
+            b"PD\x9e\x06B\x91\x8a\xebD\x1f\xd7\x06\x00\x05\xff\xff\xff\xff\x00",
         ),
     )
 
@@ -264,7 +263,7 @@ async def test_xiaomi_lock(hass: HomeAssistant) -> None:
         hass,
         make_advertisement(
             "D7:1F:44:EB:8A:91",
-            b"PD\x9e\x06C\x91\x8a\xebD\x1f\xd7\x0b\x00\t" b" \x02\x00\x01\x80|D/a",
+            b"PD\x9e\x06C\x91\x8a\xebD\x1f\xd7\x0b\x00\t \x02\x00\x01\x80|D/a",
         ),
     )
 

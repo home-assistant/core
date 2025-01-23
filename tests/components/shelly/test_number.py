@@ -3,8 +3,10 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
+from aioshelly.const import MODEL_BLU_GATEWAY_GEN3
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_MAX,
@@ -390,3 +392,26 @@ async def test_rpc_remove_virtual_number_when_orphaned(
 
     entry = entity_registry.async_get(entity_id)
     assert not entry
+
+
+async def test_blu_trv_number_entity(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test BLU TRV number entity."""
+    # disable automatic temperature control in the device
+    monkeypatch.setitem(mock_blu_trv.config["blutrv:200"], "enable", False)
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    for entity in ("external_temperature", "valve_position"):
+        entity_id = f"{NUMBER_DOMAIN}.trv_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")

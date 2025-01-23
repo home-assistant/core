@@ -2,16 +2,15 @@
 
 import asyncio
 
+import aiohttp
 from aiowebostv import WebOsTvCommandError
-from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from homeassistant.const import Platform
 
 DOMAIN = "webostv"
 PLATFORMS = [Platform.MEDIA_PLAYER]
-DATA_CONFIG_ENTRY = "config_entry"
 DATA_HASS_CONFIG = "hass_config"
-DEFAULT_NAME = "LG webOS Smart TV"
+DEFAULT_NAME = "LG webOS TV"
 
 ATTR_BUTTON = "button"
 ATTR_CONFIG_ENTRY_ID = "entry_id"
@@ -28,11 +27,10 @@ SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 
 WEBOSTV_EXCEPTIONS = (
-    OSError,
-    ConnectionClosed,
-    ConnectionClosedOK,
-    ConnectionRefusedError,
+    ConnectionResetError,
     WebOsTvCommandError,
-    TimeoutError,
+    aiohttp.ClientConnectorError,
+    aiohttp.ServerDisconnectedError,
     asyncio.CancelledError,
+    asyncio.TimeoutError,
 )

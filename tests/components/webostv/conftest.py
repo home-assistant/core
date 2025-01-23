@@ -7,7 +7,15 @@ import pytest
 
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID
 
-from .const import CHANNEL_1, CHANNEL_2, CLIENT_KEY, FAKE_UUID, MOCK_APPS, MOCK_INPUTS
+from .const import (
+    CHANNEL_1,
+    CHANNEL_2,
+    CLIENT_KEY,
+    FAKE_UUID,
+    MOCK_APPS,
+    MOCK_INPUTS,
+    TV_MODEL,
+)
 
 
 @pytest.fixture
@@ -28,7 +36,7 @@ def client_fixture():
         client = mock_client_class.return_value
         client.hello_info = {"deviceUUID": FAKE_UUID}
         client.software_info = {"major_ver": "major", "minor_ver": "minor"}
-        client.system_info = {"modelName": "TVFAKE"}
+        client.system_info = {"modelName": TV_MODEL}
         client.client_key = CLIENT_KEY
         client.apps = MOCK_APPS
         client.inputs = MOCK_INPUTS

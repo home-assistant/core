@@ -657,7 +657,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '3',
   })
 # ---
 # name: test_pre_brew_infusion_numbers[prebrew_off_time-set_prebrew_time-Enabled-6-kwargs0-Linea Mini].1
@@ -771,7 +771,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '3',
   })
 # ---
 # name: test_pre_brew_infusion_numbers[prebrew_on_time-set_prebrew_time-Enabled-6-kwargs1-Linea Mini].1
@@ -885,7 +885,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '3',
   })
 # ---
 # name: test_pre_brew_infusion_numbers[preinfusion_time-set_preinfusion_time-TypeB-7-kwargs2-Linea Mini].1
@@ -981,5 +981,115 @@
     'translation_key': 'preinfusion_off',
     'unique_id': 'MR012345_preinfusion_off',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_set_target[Linea Mini-1]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LMZ-123A45 Brew by weight target 1',
+      'max': 100,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.lmz_123a45_brew_by_weight_target_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32',
+  })
+# ---
+# name: test_set_target[Linea Mini-1].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.lmz_123a45_brew_by_weight_target_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brew by weight target 1',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'scale_target_key',
+    'unique_id': 'LM012345_scale_target_key1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_set_target[Linea Mini-2]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LMZ-123A45 Brew by weight target 2',
+      'max': 100,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.lmz_123a45_brew_by_weight_target_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '45',
+  })
+# ---
+# name: test_set_target[Linea Mini-2].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 1,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.lmz_123a45_brew_by_weight_target_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brew by weight target 2',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'scale_target_key',
+    'unique_id': 'LM012345_scale_target_key2',
+    'unit_of_measurement': None,
   })
 # ---

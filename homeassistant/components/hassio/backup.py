@@ -10,6 +10,7 @@ from typing import Any, cast
 
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
+    SupervisorError,
     SupervisorNotFoundError,
 )
 from aiohasupervisor.models import (
@@ -23,9 +24,12 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupReaderWriter,
+    BackupReaderWriterError,
     CreateBackupEvent,
     Folder,
+    IncorrectPasswordError,
     NewBackup,
+    RestoreBackupEvent,
     WrittenBackup,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -213,6 +217,10 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Create a backup."""
+        if not include_homeassistant and include_database:
+            raise HomeAssistantError(
+                "Cannot create a backup with database but without Home Assistant"
+            )
         manager = self._hass.data[DATA_MANAGER]
 
         include_addons_set: supervisor_backups.AddonSet | set[str] | None = None
@@ -220,11 +228,12 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             include_addons_set = supervisor_backups.AddonSet.ALL
         elif include_addons:
             include_addons_set = set(include_addons)
-        include_folders_set = (
-            {supervisor_backups.Folder(folder) for folder in include_folders}
-            if include_folders
-            else None
-        )
+        include_folders_set = {
+            supervisor_backups.Folder(folder) for folder in include_folders or []
+        }
+        # Always include SSL if Home Assistant is included
+        if include_homeassistant:
+            include_folders_set.add(supervisor_backups.Folder.SSL)
 
         hassio_agents: list[SupervisorBackupAgent] = [
             cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
@@ -233,20 +242,23 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         ]
         locations = [agent.location for agent in hassio_agents]
 
-        backup = await self._client.backups.partial_backup(
-            supervisor_backups.PartialBackupOptions(
-                addons=include_addons_set,
-                folders=include_folders_set,
-                homeassistant=include_homeassistant,
-                name=backup_name,
-                password=password,
-                compressed=True,
-                location=locations or LOCATION_CLOUD_BACKUP,
-                homeassistant_exclude_database=not include_database,
-                background=True,
-                extra=extra_metadata,
+        try:
+            backup = await self._client.backups.partial_backup(
+                supervisor_backups.PartialBackupOptions(
+                    addons=include_addons_set,
+                    folders=include_folders_set,
+                    homeassistant=include_homeassistant,
+                    name=backup_name,
+                    password=password,
+                    compressed=True,
+                    location=locations or LOCATION_CLOUD_BACKUP,
+                    homeassistant_exclude_database=not include_database,
+                    background=True,
+                    extra=extra_metadata,
+                )
             )
-        )
+        except SupervisorError as err:
+            raise BackupReaderWriterError(f"Error creating backup: {err}") from err
         backup_task = self._hass.async_create_task(
             self._async_wait_for_backup(
                 backup, remove_after_upload=not bool(locations)
@@ -265,7 +277,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup_id: str | None = None
 
         @callback
-        def on_progress(data: Mapping[str, Any]) -> None:
+        def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             nonlocal backup_id
             if data.get("done") is True:
@@ -273,27 +285,40 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 backup_complete.set()
 
         try:
-            unsub = self._async_listen_job_events(backup.job_id, on_progress)
+            unsub = self._async_listen_job_events(backup.job_id, on_job_progress)
             await backup_complete.wait()
         finally:
             unsub()
         if not backup_id:
-            raise HomeAssistantError("Backup failed")
+            raise BackupReaderWriterError("Backup failed")
 
         async def open_backup() -> AsyncIterator[bytes]:
-            return await self._client.backups.download_backup(backup_id)
+            try:
+                return await self._client.backups.download_backup(backup_id)
+            except SupervisorError as err:
+                raise BackupReaderWriterError(
+                    f"Error downloading backup: {err}"
+                ) from err
 
         async def remove_backup() -> None:
             if not remove_after_upload:
                 return
-            await self._client.backups.remove_backup(
-                backup_id,
-                options=supervisor_backups.RemoveBackupOptions(
-                    location={LOCATION_CLOUD_BACKUP}
-                ),
-            )
+            try:
+                await self._client.backups.remove_backup(
+                    backup_id,
+                    options=supervisor_backups.RemoveBackupOptions(
+                        location={LOCATION_CLOUD_BACKUP}
+                    ),
+                )
+            except SupervisorError as err:
+                raise BackupReaderWriterError(f"Error removing backup: {err}") from err
 
-        details = await self._client.backups.backup_info(backup_id)
+        try:
+            details = await self._client.backups.backup_info(backup_id)
+        except SupervisorError as err:
+            raise BackupReaderWriterError(
+                f"Error getting backup details: {err}"
+            ) from err
 
         return WrittenBackup(
             backup=_backup_details_to_agent_backup(details),
@@ -351,6 +376,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup_id: str,
         *,
         agent_id: str,
+        on_progress: Callable[[RestoreBackupEvent], None],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         password: str | None,
         restore_addons: list[str] | None,
@@ -359,8 +385,16 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         restore_homeassistant: bool,
     ) -> None:
         """Restore a backup."""
-        if restore_homeassistant and not restore_database:
-            raise HomeAssistantError("Cannot restore Home Assistant without database")
+        manager = self._hass.data[DATA_MANAGER]
+        # The backup manager has already checked that the backup exists so we don't need to
+        # check that here.
+        backup = await manager.backup_agents[agent_id].async_get_backup(backup_id)
+        if (
+            backup
+            and restore_homeassistant
+            and restore_database != backup.database_included
+        ):
+            raise HomeAssistantError("Restore database must match backup")
         if not restore_homeassistant and restore_database:
             raise HomeAssistantError("Cannot restore database without Home Assistant")
         restore_addons_set = set(restore_addons) if restore_addons else None
@@ -370,7 +404,6 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             else None
         )
 
-        manager = self._hass.data[DATA_MANAGER]
         restore_location: str | None
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
@@ -385,28 +418,35 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             agent = cast(SupervisorBackupAgent, manager.backup_agents[agent_id])
             restore_location = agent.location
 
-        job = await self._client.backups.partial_restore(
-            backup_id,
-            supervisor_backups.PartialRestoreOptions(
-                addons=restore_addons_set,
-                folders=restore_folders_set,
-                homeassistant=restore_homeassistant,
-                password=password,
-                background=True,
-                location=restore_location,
-            ),
-        )
+        try:
+            job = await self._client.backups.partial_restore(
+                backup_id,
+                supervisor_backups.PartialRestoreOptions(
+                    addons=restore_addons_set,
+                    folders=restore_folders_set,
+                    homeassistant=restore_homeassistant,
+                    password=password,
+                    background=True,
+                    location=restore_location,
+                ),
+            )
+        except SupervisorBadRequestError as err:
+            # Supervisor currently does not transmit machine parsable error types
+            message = err.args[0]
+            if message.startswith("Invalid password for backup"):
+                raise IncorrectPasswordError(message) from err
+            raise HomeAssistantError(message) from err
 
         restore_complete = asyncio.Event()
 
         @callback
-        def on_progress(data: Mapping[str, Any]) -> None:
+        def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             if data.get("done") is True:
                 restore_complete.set()
 
         try:
-            unsub = self._async_listen_job_events(job.job_id, on_progress)
+            unsub = self._async_listen_job_events(job.job_id, on_job_progress)
             await restore_complete.wait()
         finally:
             unsub()

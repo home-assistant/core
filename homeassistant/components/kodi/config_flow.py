@@ -8,7 +8,6 @@ from typing import Any
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -22,6 +21,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_WS_PORT,
@@ -103,7 +103,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovery_name: str | None = None
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self._host = discovery_info.host

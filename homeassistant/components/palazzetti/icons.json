@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "button": {
+      "silent": {
+        "default": "mdi:volume-mute"
+      }
+    }
+  }
+}

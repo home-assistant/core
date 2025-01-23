@@ -11,7 +11,7 @@ from chip.clusters import Objects as clusters
 from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
 from matter_server.common.helpers.util import create_attribute_path
 from matter_server.common.models import EventType, ServerInfoMessage
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo

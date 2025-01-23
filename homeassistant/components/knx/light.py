@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 from xknx import XKNX
 from xknx.devices.light import ColorTemperatureType, Light as XknxLight, XYYColor
 

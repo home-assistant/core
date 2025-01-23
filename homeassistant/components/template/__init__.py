@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             continue
         if isinstance(entry.options[key], str):
             raise ConfigEntryError(
-                f"The '{entry.options.get(CONF_NAME) or ""}' number template needs to "
+                f"The '{entry.options.get(CONF_NAME) or ''}' number template needs to "
                 f"be reconfigured, {key} must be a number, got '{entry.options[key]}'"
             )
 

@@ -16,11 +16,11 @@
     },
     "invoke_custom_function": {
       "name": "Invoke custom function",
-      "description": "Allows users with DSC panels to trigger a PGM output (1-4). Note that you need to specify the alarm panel's \"code\" parameter for this to work.\n.",
+      "description": "Allows users with DSC panels to trigger a PGM output (1-4). Note that you need to specify the alarm panel's \"code\" parameter for this to work.",
       "fields": {
         "partition": {
           "name": "Partition",
-          "description": "The alarm panel partition to trigger the PGM output on. Typically this is just \"1\".\n."
+          "description": "The alarm panel partition to trigger the PGM output on. Typically this is just \"1\"."
         },
         "pgm": {
           "name": "PGM",

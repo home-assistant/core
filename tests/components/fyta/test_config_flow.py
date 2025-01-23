@@ -10,11 +10,11 @@ from fyta_cli.fyta_exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import ACCESS_TOKEN, EXPIRATION, PASSWORD, USERNAME
 

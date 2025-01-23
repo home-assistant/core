@@ -168,7 +168,7 @@ async def _run_appliance_service[*_Ts](
     error_translation_placeholders: dict[str, str],
 ) -> None:
     try:
-        await hass.async_add_executor_job(getattr(appliance, method), args)
+        await hass.async_add_executor_job(getattr(appliance, method), *args)
     except api.HomeConnectError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,

@@ -15,7 +15,6 @@ from reolink_aio.exceptions import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
@@ -32,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .conftest import (
     DHCP_FORMATTED_MAC,
@@ -381,7 +381,7 @@ async def test_reauth_abort_unique_id_mismatch(
 
 async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> None:
     """Successful flow from DHCP discovery."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="Reolink",
         macaddress=DHCP_FORMATTED_MAC,
@@ -451,7 +451,7 @@ async def test_dhcp_ip_update_aborted_if_wrong_mac(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST2,
         hostname="Reolink",
         macaddress=DHCP_FORMATTED_MAC,
@@ -548,7 +548,7 @@ async def test_dhcp_ip_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST2,
         hostname="Reolink",
         macaddress=DHCP_FORMATTED_MAC,
@@ -620,7 +620,7 @@ async def test_dhcp_ip_update_ingnored_if_still_connected(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST2,
         hostname="Reolink",
         macaddress=DHCP_FORMATTED_MAC,

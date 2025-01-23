@@ -60,6 +60,7 @@ ENPOWER_GRID_SWITCH = EnvoyEnpowerSwitchEntityDescription(
 
 RELAY_STATE_SWITCH = EnvoyDryContactSwitchEntityDescription(
     key="relay_status",
+    translation_key="relay_status",
     value_fn=lambda dry_contact: dry_contact.status == DryContactStatus.CLOSED,
     turn_on_fn=lambda envoy, id: envoy.close_dry_contact(id),
     turn_off_fn=lambda envoy, id: envoy.open_dry_contact(id),

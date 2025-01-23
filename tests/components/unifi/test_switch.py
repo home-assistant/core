@@ -809,6 +809,24 @@ TRAFFIC_RULE = {
     "target_devices": [{"client_mac": CLIENT_1["mac"], "type": "CLIENT"}],
 }
 
+TRAFFIC_ROUTE = {
+    "_id": "676f8dbb8f1d54503bba19ab",
+    "description": "Test traffic route",
+    "domains": [{"domain": "youtube.com", "port_ranges": [], "ports": []}],
+    "enabled": True,
+    "ip_addresses": [],
+    "ip_ranges": [],
+    "kill_switch_enabled": True,
+    "matching_target": "DOMAIN",
+    "network_id": "676f8d288f1d54503bba1987",
+    "next_hop": "",
+    "regions": [],
+    "target_devices": [
+        {"network_id": "6060b00f45de3905133cea14", "type": "NETWORK"},
+        {"network_id": "6060ae6045de3905133cea0a", "type": "NETWORK"},
+    ],
+}
+
 
 @pytest.mark.parametrize(
     "config_entry_options", [{CONF_BLOCK_CLIENT: [BLOCKED["mac"]]}]
@@ -1148,6 +1166,60 @@ async def test_traffic_rules(
     )
 
     expected_enable_call = deepcopy(traffic_rule)
+    expected_enable_call["enabled"] = True
+
+    assert aioclient_mock.call_count == call_count + 2
+    assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+
+
+@pytest.mark.parametrize(("traffic_route_payload"), [([TRAFFIC_ROUTE])])
+async def test_traffic_routes(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    traffic_route_payload: list[dict[str, Any]],
+) -> None:
+    """Test control of UniFi traffic routes."""
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    # Validate state object
+    assert hass.states.get("switch.unifi_network_test_traffic_route").state == STATE_ON
+
+    traffic_route = deepcopy(traffic_route_payload[0])
+
+    # Disable traffic route
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/trafficroutes/{traffic_route['_id']}",
+    )
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.unifi_network_test_traffic_route"},
+        blocking=True,
+    )
+    # Updating the value for traffic routes will make another call to retrieve the values
+    assert aioclient_mock.call_count == call_count + 2
+    expected_disable_call = deepcopy(traffic_route)
+    expected_disable_call["enabled"] = False
+
+    assert aioclient_mock.mock_calls[call_count][2] == expected_disable_call
+
+    call_count = aioclient_mock.call_count
+
+    # Enable traffic route
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.unifi_network_test_traffic_route"},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(traffic_route)
     expected_enable_call["enabled"] = True
 
     assert aioclient_mock.call_count == call_count + 2
@@ -1577,14 +1649,14 @@ async def test_updating_unique_id(
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
-        f'{device_payload[0]["mac"]}-outlet-1',
+        f"{device_payload[0]['mac']}-outlet-1",
         suggested_object_id="plug_outlet_1",
         config_entry=config_entry,
     )
     entity_registry.async_get_or_create(
         SWITCH_DOMAIN,
         UNIFI_DOMAIN,
-        f'{device_payload[1]["mac"]}-poe-1',
+        f"{device_payload[1]['mac']}-poe-1",
         suggested_object_id="switch_port_1_poe",
         config_entry=config_entry,
     )

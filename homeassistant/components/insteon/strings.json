@@ -164,7 +164,7 @@
     },
     "x10_all_units_off": {
       "name": "X10 all units off",
-      "description": "[%key:component::insteon::services::add_all_link::description%]",
+      "description": "Sends X10 'All units off' command.",
       "fields": {
         "housecode": {
           "name": "Housecode",
@@ -174,7 +174,7 @@
     },
     "x10_all_lights_on": {
       "name": "X10 all lights on",
-      "description": "Sends X10 All Lights On command.",
+      "description": "Sends X10 'All lights on' command.",
       "fields": {
         "housecode": {
           "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",
@@ -184,7 +184,7 @@
     },
     "x10_all_lights_off": {
       "name": "X10 all lights off",
-      "description": "Sends X10 All Lights Off command.",
+      "description": "Sends X10 'All lights off' command.",
       "fields": {
         "housecode": {
           "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",

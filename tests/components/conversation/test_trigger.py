@@ -88,6 +88,7 @@ async def test_if_fires_on_event(
             "device_id": None,
             "language": "en",
             "text": "Ha ha ha",
+            "extra_system_prompt": None,
         },
     }
 
@@ -235,6 +236,7 @@ async def test_response_same_sentence(
             "device_id": None,
             "language": "en",
             "text": "test sentence",
+            "extra_system_prompt": None,
         },
     }
 
@@ -412,6 +414,7 @@ async def test_same_trigger_multiple_sentences(
             "device_id": None,
             "language": "en",
             "text": "hello",
+            "extra_system_prompt": None,
         },
     }
 
@@ -639,6 +642,7 @@ async def test_wildcards(hass: HomeAssistant, service_calls: list[ServiceCall]) 
             "device_id": None,
             "language": "en",
             "text": "play the white album by the beatles",
+            "extra_system_prompt": None,
         },
     }
 

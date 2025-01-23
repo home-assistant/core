@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_select_entities[select.tree_1_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'color',
+        'demo',
+        'effect',
+        'movie',
+        'off',
+        'playlist',
+        'rt',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.tree_1_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'twinkly',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '00:2d:13:3b:aa:bb_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_entities[select.tree_1_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tree 1 Mode',
+      'options': list([
+        'color',
+        'demo',
+        'effect',
+        'movie',
+        'off',
+        'playlist',
+        'rt',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.tree_1_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'color',
+  })
+# ---

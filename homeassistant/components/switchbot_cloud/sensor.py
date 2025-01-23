@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -61,18 +61,25 @@ POWER_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=UnitOfPower.WATT,
 )
 
-VOLATGE_DESCRIPTION = SensorEntityDescription(
+VOLTAGE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_VOLTAGE,
     device_class=SensorDeviceClass.VOLTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricPotential.VOLT,
 )
 
-CURRENT_DESCRIPTION = SensorEntityDescription(
+CURRENT_DESCRIPTION_IN_MA = SensorEntityDescription(
     key=SENSOR_TYPE_CURRENT,
     device_class=SensorDeviceClass.CURRENT,
     state_class=SensorStateClass.MEASUREMENT,
     native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
+)
+
+CURRENT_DESCRIPTION_IN_A = SensorEntityDescription(
+    key=SENSOR_TYPE_CURRENT,
+    device_class=SensorDeviceClass.CURRENT,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
 )
 
 CO2_DESCRIPTION = SensorEntityDescription(
@@ -100,8 +107,16 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Relay Switch 1PM": (
         POWER_DESCRIPTION,
-        VOLATGE_DESCRIPTION,
-        CURRENT_DESCRIPTION,
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_MA,
+    ),
+    "Plug Mini (US)": (
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_A,
+    ),
+    "Plug Mini (JP)": (
+        VOLTAGE_DESCRIPTION,
+        CURRENT_DESCRIPTION_IN_A,
     ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,
@@ -151,10 +166,8 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
-        self.async_write_ha_state()

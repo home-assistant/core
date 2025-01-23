@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import socket
-from telnetlib import Telnet  # pylint: disable=deprecated-module
 from typing import Any
 
+from telnetlib import Telnet  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.sensor import (

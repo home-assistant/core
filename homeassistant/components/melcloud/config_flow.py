@@ -126,9 +126,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     HTTPStatus.UNAUTHORIZED,
                     HTTPStatus.FORBIDDEN,
                 )
-                or isinstance(err, AttributeError)
-                and err.name == "get"
-            ):
+            ) or (isinstance(err, AttributeError) and err.name == "get"):
                 errors["base"] = "invalid_auth"
             else:
                 errors["base"] = "cannot_connect"
@@ -165,9 +163,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         HTTPStatus.UNAUTHORIZED,
                         HTTPStatus.FORBIDDEN,
                     )
-                    or isinstance(err, AttributeError)
-                    and err.name == "get"
-                ):
+                ) or (isinstance(err, AttributeError) and err.name == "get"):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"

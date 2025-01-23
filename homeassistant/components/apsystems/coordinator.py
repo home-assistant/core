@@ -29,6 +29,8 @@ class ApSystemsSensorData:
 class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
     """Coordinator used for all sensors."""
 
+    device_version: str
+
     def __init__(self, hass: HomeAssistant, api: APsystemsEZ1M) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -46,6 +48,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             raise UpdateFailed from None
         self.api.max_power = device_info.maxPower
         self.api.min_power = device_info.minPower
+        self.device_version = device_info.devVer
 
     async def _async_update_data(self) -> ApSystemsSensorData:
         try:

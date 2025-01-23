@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import asdict, dataclass
 from typing import Any
 
 from pysuez.const import ATTRIBUTION
@@ -28,7 +28,7 @@ class SuezWaterSensorEntityDescription(SensorEntityDescription):
     """Describes Suez water sensor entity."""
 
     value_fn: Callable[[SuezWaterData], float | str | None]
-    attr_fn: Callable[[SuezWaterData], Mapping[str, Any] | None] = lambda _: None
+    attr_fn: Callable[[SuezWaterData], dict[str, Any] | None] = lambda _: None
 
 
 SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
@@ -38,7 +38,7 @@ SENSORS: tuple[SuezWaterSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.WATER,
         value_fn=lambda suez_data: suez_data.aggregated_value,
-        attr_fn=lambda suez_data: suez_data.aggregated_attr,
+        attr_fn=lambda suez_data: asdict(suez_data.aggregated_attr),
     ),
     SuezWaterSensorEntityDescription(
         key="water_price",
@@ -93,6 +93,6 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state of the sensor."""
         return self.entity_description.attr_fn(self.coordinator.data)

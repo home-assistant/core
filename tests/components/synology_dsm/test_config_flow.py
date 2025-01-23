@@ -13,7 +13,6 @@ from synology_dsm.exceptions import (
 )
 from syrupy import SnapshotAssertion
 
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
     CONF_SNAPSHOT_QUALITY,
@@ -34,6 +33,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .consts import (
     DEVICE_TOKEN,
@@ -418,13 +423,13 @@ async def test_form_ssdp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://192.168.1.5:5000",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ssdp.ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
+                ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
             },
         ),
     )
@@ -465,13 +470,13 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://192.168.1.5:5000",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
             },
         ),
     )
@@ -508,13 +513,13 @@ async def test_skip_reconfig_ssdp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=f"http://{new_host}:5000",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
             },
         ),
     )
@@ -541,13 +546,13 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://192.168.1.5:5000",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ssdp.ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_FRIENDLY_NAME: "mydsm",
+                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
             },
         ),
     )
@@ -606,7 +611,7 @@ async def test_discovered_via_zeroconf(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.5"),
             ip_addresses=[ip_address("192.168.1.5")],
             port=5000,
@@ -645,7 +650,7 @@ async def test_discovered_via_zeroconf_missing_mac(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.5"),
             ip_addresses=[ip_address("192.168.1.5")],
             port=5000,

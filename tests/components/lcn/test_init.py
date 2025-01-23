@@ -2,7 +2,14 @@
 
 from unittest.mock import Mock, patch
 
-from pypck.connection import PchkAuthenticationError, PchkLicenseError
+from pypck.connection import (
+    PchkAuthenticationError,
+    PchkConnectionFailedError,
+    PchkConnectionRefusedError,
+    PchkLcnNotConnectedError,
+    PchkLicenseError,
+)
+from pypck.lcn_defs import LcnEvent
 import pytest
 
 from homeassistant import config_entries
@@ -84,21 +91,46 @@ async def test_async_setup_entry_update(
 
 
 @pytest.mark.parametrize(
-    "exception", [PchkAuthenticationError, PchkLicenseError, TimeoutError]
+    "exception",
+    [
+        PchkAuthenticationError,
+        PchkLicenseError,
+        PchkConnectionRefusedError,
+        PchkConnectionFailedError,
+        PchkLcnNotConnectedError,
+    ],
 )
-async def test_async_setup_entry_raises_authentication_error(
+async def test_async_setup_entry_fails(
     hass: HomeAssistant, entry: MockConfigEntry, exception: Exception
 ) -> None:
-    """Test that an authentication error is handled properly."""
-    with patch(
-        "homeassistant.components.lcn.PchkConnectionManager.async_connect",
-        side_effect=exception,
+    """Test that an error is handled properly."""
+    with (
+        patch(
+            "homeassistant.components.lcn.PchkConnectionManager.async_connect",
+            side_effect=exception,
+        ),
     ):
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "event",
+    [LcnEvent.CONNECTION_LOST, LcnEvent.PING_TIMEOUT, LcnEvent.BUS_DISCONNECTED],
+)
+async def test_async_entry_reload_on_host_event_received(
+    hass: HomeAssistant, entry: MockConfigEntry, event: LcnEvent
+) -> None:
+    """Test for config entry reload on certain host event received."""
+    lcn_connection = await init_integration(hass, entry)
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as async_schedule_reload:
+        lcn_connection.fire_event(event)
+        async_schedule_reload.assert_called_with(entry.entry_id)
 
 
 @patch("homeassistant.components.lcn.PchkConnectionManager", MockPchkConnectionManager)

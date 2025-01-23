@@ -24,7 +24,7 @@ from tests.components.recorder.common import (
     async_wait_recording_done,
     do_adhoc_statistics,
 )
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 POWER_SENSOR_ATTRIBUTES = {
     "device_class": "energy",
@@ -47,7 +47,7 @@ def disable_db_issue_creation():
 @pytest.mark.parametrize("enable_missing_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
-    async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
+    async_test_recorder: RecorderInstanceContextManager, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test compile missing statistics."""
     three_days_ago = datetime(2021, 1, 1, 0, 0, 0, tzinfo=dt_util.UTC)

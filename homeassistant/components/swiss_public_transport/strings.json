@@ -17,11 +17,14 @@
         "data": {
           "from": "Start station",
           "to": "End station",
-          "via": "List of up to 5 via stations",
+          "via": "Via stations",
           "time_station": "Select the relevant station",
           "time_mode": "Select a time mode"
         },
         "data_description": {
+          "from": "The station where the connection starts",
+          "to": "The station where the connection ends",
+          "via": "List of up to 5 stations the route must go through",
           "time_station": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
           "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
         },
@@ -32,12 +35,18 @@
         "data": {
           "time_fixed": "Time of day"
         },
+        "data_description": {
+          "time_fixed": "The time of day for the connection"
+        },
         "description": "Please select the relevant time for the connection (e.g. 7:12:00 AM every morning).",
         "title": "Swiss Public Transport"
       },
       "time_offset": {
         "data": {
           "time_offset": "Time offset"
+        },
+        "data_description": {
+          "time_offset": "The time offset added to the earliest possible connection"
         },
         "description": "Please select the relevant offset to add to the earliest possible connection (e.g. add +00:05:00 offset, taking into account the time to walk to the station)",
         "title": "Swiss Public Transport"

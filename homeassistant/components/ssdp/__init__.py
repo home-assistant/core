@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
-from dataclasses import dataclass, field
 from datetime import timedelta
 from enum import Enum
 from functools import partial
@@ -44,13 +43,36 @@ from homeassistant.const import (
     __version__ as current_version,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, callback as core_callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_NT as _ATTR_NT,
+    ATTR_ST as _ATTR_ST,
+    ATTR_UPNP_DEVICE_TYPE as _ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME as _ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER as _ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MANUFACTURER_URL as _ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_MODEL_DESCRIPTION as _ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_MODEL_NAME as _ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER as _ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_MODEL_URL as _ATTR_UPNP_MODEL_URL,
+    ATTR_UPNP_PRESENTATION_URL as _ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL as _ATTR_UPNP_SERIAL,
+    ATTR_UPNP_SERVICE_LIST as _ATTR_UPNP_SERVICE_LIST,
+    ATTR_UPNP_UDN as _ATTR_UPNP_UDN,
+    ATTR_UPNP_UPC as _ATTR_UPNP_UPC,
+    SsdpServiceInfo as _SsdpServiceInfo,
+)
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_ssdp, bind_hass
@@ -77,30 +99,90 @@ ATTR_SSDP_SERVER = "ssdp_server"
 ATTR_SSDP_BOOTID = "BOOTID.UPNP.ORG"
 ATTR_SSDP_NEXTBOOTID = "NEXTBOOTID.UPNP.ORG"
 # Attributes for accessing info from retrieved UPnP device description
-ATTR_ST = "st"
-ATTR_NT = "nt"
-ATTR_UPNP_DEVICE_TYPE = "deviceType"
-ATTR_UPNP_FRIENDLY_NAME = "friendlyName"
-ATTR_UPNP_MANUFACTURER = "manufacturer"
-ATTR_UPNP_MANUFACTURER_URL = "manufacturerURL"
-ATTR_UPNP_MODEL_DESCRIPTION = "modelDescription"
-ATTR_UPNP_MODEL_NAME = "modelName"
-ATTR_UPNP_MODEL_NUMBER = "modelNumber"
-ATTR_UPNP_MODEL_URL = "modelURL"
-ATTR_UPNP_SERIAL = "serialNumber"
-ATTR_UPNP_SERVICE_LIST = "serviceList"
-ATTR_UPNP_UDN = "UDN"
-ATTR_UPNP_UPC = "UPC"
-ATTR_UPNP_PRESENTATION_URL = "presentationURL"
+_DEPRECATED_ATTR_ST = DeprecatedConstant(
+    _ATTR_ST,
+    "homeassistant.helpers.service_info.ssdp.ATTR_ST",
+    "2026.2",
+)
+_DEPRECATED_ATTR_NT = DeprecatedConstant(
+    _ATTR_NT,
+    "homeassistant.helpers.service_info.ssdp.ATTR_NT",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_DEVICE_TYPE = DeprecatedConstant(
+    _ATTR_UPNP_DEVICE_TYPE,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_DEVICE_TYPE",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_FRIENDLY_NAME = DeprecatedConstant(
+    _ATTR_UPNP_FRIENDLY_NAME,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_FRIENDLY_NAME",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MANUFACTURER = DeprecatedConstant(
+    _ATTR_UPNP_MANUFACTURER,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MANUFACTURER_URL = DeprecatedConstant(
+    _ATTR_UPNP_MANUFACTURER_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MANUFACTURER_URL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_DESCRIPTION = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_DESCRIPTION,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_DESCRIPTION",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_NAME = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_NAME,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NAME",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_NUMBER = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_NUMBER,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_NUMBER",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_MODEL_URL = DeprecatedConstant(
+    _ATTR_UPNP_MODEL_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_MODEL_URL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_SERIAL = DeprecatedConstant(
+    _ATTR_UPNP_SERIAL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERIAL",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_SERVICE_LIST = DeprecatedConstant(
+    _ATTR_UPNP_SERVICE_LIST,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_SERVICE_LIST",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_UDN = DeprecatedConstant(
+    _ATTR_UPNP_UDN,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UDN",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_UPC = DeprecatedConstant(
+    _ATTR_UPNP_UPC,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_UPC",
+    "2026.2",
+)
+_DEPRECATED_ATTR_UPNP_PRESENTATION_URL = DeprecatedConstant(
+    _ATTR_UPNP_PRESENTATION_URL,
+    "homeassistant.helpers.service_info.ssdp.ATTR_UPNP_PRESENTATION_URL",
+    "2026.2",
+)
 # Attributes for accessing info added by Home Assistant
 ATTR_HA_MATCHING_DOMAINS = "x_homeassistant_matching_domains"
 
 PRIMARY_MATCH_KEYS = [
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_ST,
-    ATTR_UPNP_DEVICE_TYPE,
-    ATTR_NT,
-    ATTR_UPNP_MANUFACTURER_URL,
+    _ATTR_UPNP_MANUFACTURER,
+    _ATTR_ST,
+    _ATTR_UPNP_DEVICE_TYPE,
+    _ATTR_NT,
+    _ATTR_UPNP_MANUFACTURER_URL,
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -108,27 +190,16 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
-
-@dataclass(slots=True)
-class SsdpServiceInfo(BaseServiceInfo):
-    """Prepared info from ssdp/upnp entries."""
-
-    ssdp_usn: str
-    ssdp_st: str
-    upnp: Mapping[str, Any]
-    ssdp_location: str | None = None
-    ssdp_nt: str | None = None
-    ssdp_udn: str | None = None
-    ssdp_ext: str | None = None
-    ssdp_server: str | None = None
-    ssdp_headers: Mapping[str, Any] = field(default_factory=dict)
-    ssdp_all_locations: set[str] = field(default_factory=set)
-    x_homeassistant_matching_domains: set[str] = field(default_factory=set)
+_DEPRECATED_SsdpServiceInfo = DeprecatedConstant(
+    _SsdpServiceInfo,
+    "homeassistant.helpers.service_info.ssdp.SsdpServiceInfo",
+    "2026.2",
+)
 
 
 SsdpChange = Enum("SsdpChange", "ALIVE BYEBYE UPDATE")
 type SsdpHassJobCallback = HassJob[
-    [SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
+    [_SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
 ]
 
 SSDP_SOURCE_SSDP_CHANGE_MAPPING: Mapping[SsdpSource, SsdpChange] = {
@@ -148,7 +219,9 @@ def _format_err(name: str, *args: Any) -> str:
 @bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
-    callback: Callable[[SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None],
+    callback: Callable[
+        [_SsdpServiceInfo, SsdpChange], Coroutine[Any, Any, None] | None
+    ],
     match_dict: dict[str, str] | None = None,
 ) -> Callable[[], None]:
     """Register to receive a callback on ssdp broadcast.
@@ -169,7 +242,7 @@ async def async_register_callback(
 @bind_hass
 async def async_get_discovery_info_by_udn_st(
     hass: HomeAssistant, udn: str, st: str
-) -> SsdpServiceInfo | None:
+) -> _SsdpServiceInfo | None:
     """Fetch the discovery info cache."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_udn_st(udn, st)
@@ -178,7 +251,7 @@ async def async_get_discovery_info_by_udn_st(
 @bind_hass
 async def async_get_discovery_info_by_st(
     hass: HomeAssistant, st: str
-) -> list[SsdpServiceInfo]:
+) -> list[_SsdpServiceInfo]:
     """Fetch all the entries matching the st."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_st(st)
@@ -187,7 +260,7 @@ async def async_get_discovery_info_by_st(
 @bind_hass
 async def async_get_discovery_info_by_udn(
     hass: HomeAssistant, udn: str
-) -> list[SsdpServiceInfo]:
+) -> list[_SsdpServiceInfo]:
     """Fetch all the entries matching the udn."""
     scanner: Scanner = hass.data[DOMAIN][SSDP_SCANNER]
     return await scanner.async_get_discovery_info_by_udn(udn)
@@ -200,7 +273,7 @@ async def async_build_source_set(hass: HomeAssistant) -> set[IPv4Address | IPv6A
         for source_ip in await network.async_get_enabled_source_ips(hass)
         if not source_ip.is_loopback
         and not source_ip.is_global
-        and (source_ip.version == 6 and source_ip.scope_id or source_ip.version == 4)
+        and ((source_ip.version == 6 and source_ip.scope_id) or source_ip.version == 4)
     }
 
 
@@ -227,7 +300,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def _async_process_callbacks(
     hass: HomeAssistant,
     callbacks: list[SsdpHassJobCallback],
-    discovery_info: SsdpServiceInfo,
+    discovery_info: _SsdpServiceInfo,
     ssdp_change: SsdpChange,
 ) -> None:
     for callback in callbacks:
@@ -562,11 +635,11 @@ class Scanner:
             )
 
     def _async_dismiss_discoveries(
-        self, byebye_discovery_info: SsdpServiceInfo
+        self, byebye_discovery_info: _SsdpServiceInfo
     ) -> None:
         """Dismiss all discoveries for the given address."""
         for flow in self.hass.config_entries.flow.async_progress_by_init_data_type(
-            SsdpServiceInfo,
+            _SsdpServiceInfo,
             lambda service_info: bool(
                 service_info.ssdp_st == byebye_discovery_info.ssdp_st
                 and service_info.ssdp_location == byebye_discovery_info.ssdp_location
@@ -589,7 +662,7 @@ class Scanner:
 
     async def _async_headers_to_discovery_info(
         self, ssdp_device: SsdpDevice, headers: CaseInsensitiveDict
-    ) -> SsdpServiceInfo:
+    ) -> _SsdpServiceInfo:
         """Combine the headers and description into discovery_info.
 
         Building this is a bit expensive so we only do it on demand.
@@ -602,7 +675,7 @@ class Scanner:
 
     async def async_get_discovery_info_by_udn_st(
         self, udn: str, st: str
-    ) -> SsdpServiceInfo | None:
+    ) -> _SsdpServiceInfo | None:
         """Return discovery_info for a udn and st."""
         for ssdp_device in self._ssdp_devices:
             if ssdp_device.udn == udn:
@@ -612,7 +685,7 @@ class Scanner:
                     )
         return None
 
-    async def async_get_discovery_info_by_st(self, st: str) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_st(self, st: str) -> list[_SsdpServiceInfo]:
         """Return matching discovery_infos for a st."""
         return [
             await self._async_headers_to_discovery_info(ssdp_device, headers)
@@ -620,7 +693,7 @@ class Scanner:
             if (headers := ssdp_device.combined_headers(st))
         ]
 
-    async def async_get_discovery_info_by_udn(self, udn: str) -> list[SsdpServiceInfo]:
+    async def async_get_discovery_info_by_udn(self, udn: str) -> list[_SsdpServiceInfo]:
         """Return matching discovery_infos for a udn."""
         return [
             await self._async_headers_to_discovery_info(ssdp_device, headers)
@@ -665,7 +738,7 @@ def discovery_info_from_headers_and_description(
     ssdp_device: SsdpDevice,
     combined_headers: CaseInsensitiveDict,
     info_desc: Mapping[str, Any],
-) -> SsdpServiceInfo:
+) -> _SsdpServiceInfo:
     """Convert headers and description to discovery_info."""
     ssdp_usn = combined_headers["usn"]
     ssdp_st = combined_headers.get_lower("st")
@@ -681,11 +754,11 @@ def discovery_info_from_headers_and_description(
         ssdp_st = combined_headers["nt"]
 
     # Ensure UPnP "udn" is set
-    if ATTR_UPNP_UDN not in upnp_info:
+    if _ATTR_UPNP_UDN not in upnp_info:
         if udn := _udn_from_usn(ssdp_usn):
-            upnp_info[ATTR_UPNP_UDN] = udn
+            upnp_info[_ATTR_UPNP_UDN] = udn
 
-    return SsdpServiceInfo(
+    return _SsdpServiceInfo(
         ssdp_usn=ssdp_usn,
         ssdp_st=ssdp_st,
         ssdp_ext=combined_headers.get_lower("ext"),
@@ -887,3 +960,11 @@ class Server:
         """Stop UPnP/SSDP servers."""
         for server in self._upnp_servers:
             await server.async_stop()
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

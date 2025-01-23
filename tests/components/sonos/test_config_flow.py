@@ -6,17 +6,18 @@ from ipaddress import ip_address
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER, DOMAIN
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 
 async def test_user_form(
-    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: HomeAssistant, zeroconf_payload: ZeroconfServiceInfo
 ) -> None:
     """Test we get the user initiated form."""
 
@@ -84,7 +85,7 @@ async def test_user_form_already_created(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_form(
-    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: HomeAssistant, zeroconf_payload: ZeroconfServiceInfo
 ) -> None:
     """Test we pass Zeroconf discoveries to the manager."""
 
@@ -128,12 +129,12 @@ async def test_ssdp_discovery(hass: HomeAssistant, soco) -> None:
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_location=f"http://{soco.ip_address}/",
             ssdp_st="urn:schemas-upnp-org:device:ZonePlayer:1",
             ssdp_usn=f"uuid:{soco.uid}_MR::urn:schemas-upnp-org:service:GroupRenderingControl:1",
             upnp={
-                ssdp.ATTR_UPNP_UDN: f"uuid:{soco.uid}",
+                ATTR_UPNP_UDN: f"uuid:{soco.uid}",
             },
         ),
     )
@@ -173,7 +174,7 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.107"),
             ip_addresses=[ip_address("192.168.1.107")],
             port=1443,
@@ -221,7 +222,7 @@ async def test_zeroconf_sonos_v1(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_form_not_sonos(
-    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: HomeAssistant, zeroconf_payload: ZeroconfServiceInfo
 ) -> None:
     """Test we abort on non-sonos devices."""
     mock_manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = MagicMock()

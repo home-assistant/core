@@ -6,7 +6,6 @@ from pylitterbot import Account
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 
 from homeassistant import config_entries
-from homeassistant.components import litterrobot
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -49,14 +48,14 @@ async def test_form(hass: HomeAssistant, mock_account) -> None:
 async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we handle already configured."""
     MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
-        data=CONFIG[litterrobot.DOMAIN],
+        data=CONFIG[DOMAIN],
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -119,8 +118,8 @@ async def test_form_unknown_error(hass: HomeAssistant) -> None:
 async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
     """Test the reauth flow."""
     entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
     )
     entry.add_to_hass(hass)
 
@@ -141,7 +140,7 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
+            user_input={CONF_PASSWORD: CONFIG[DOMAIN][CONF_PASSWORD]},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
@@ -151,8 +150,8 @@ async def test_step_reauth(hass: HomeAssistant, mock_account: Account) -> None:
 async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) -> None:
     """Test the reauth flow fails and recovers."""
     entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
     )
     entry.add_to_hass(hass)
 
@@ -167,7 +166,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
+            user_input={CONF_PASSWORD: CONFIG[DOMAIN][CONF_PASSWORD]},
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -185,7 +184,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, mock_account: Account) ->
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_PASSWORD: CONFIG[litterrobot.DOMAIN][CONF_PASSWORD]},
+            user_input={CONF_PASSWORD: CONFIG[DOMAIN][CONF_PASSWORD]},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"

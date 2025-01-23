@@ -148,6 +148,13 @@ def get_entity_state(hass: HomeAssistant, entity_id: str) -> str:
     return entity.state
 
 
+def get_entity_attribute(hass: HomeAssistant, entity_id: str, attribute: str) -> str:
+    """Return entity attribute."""
+    entity = hass.states.get(entity_id)
+    assert entity
+    return entity.attributes[attribute]
+
+
 def register_device(
     device_registry: DeviceRegistry, config_entry: ConfigEntry
 ) -> DeviceEntry:

@@ -1,0 +1,13 @@
+{
+  "status": "success",
+  "result": {
+    "username": "firstnamelastname",
+    "email": "first.last@domain.com",
+    "firstName": "Firstname",
+    "lastName": "Lastname",
+    "temperatureUnit": "C",
+    "appRegistrationSource": "Sensibo",
+    "organization": null,
+    "availableOrganizations": []
+  }
+}

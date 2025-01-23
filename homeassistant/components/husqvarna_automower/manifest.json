@@ -8,5 +8,5 @@
   "iot_class": "cloud_push",
   "loggers": ["aioautomower"],
   "quality_scale": "silver",
-  "requirements": ["aioautomower==2024.12.0"]
+  "requirements": ["aioautomower==2025.1.0"]
 }

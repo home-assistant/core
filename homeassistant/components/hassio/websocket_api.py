@@ -25,7 +25,7 @@ from .const import (
     ATTR_SESSION_DATA_USER_ID,
     ATTR_TIMEOUT,
     ATTR_WS_EVENT,
-    DOMAIN,
+    DATA_COMPONENT,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
     WS_TYPE,
@@ -33,7 +33,6 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
-from .handler import HassIO
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     {vol.Required(ATTR_WS_EVENT): cv.string},
@@ -113,7 +112,7 @@ async def websocket_supervisor_api(
         msg[ATTR_ENDPOINT]
     ):
         raise Unauthorized
-    supervisor: HassIO = hass.data[DOMAIN]
+    supervisor = hass.data[DATA_COMPONENT]
 
     command = msg[ATTR_ENDPOINT]
     payload = msg.get(ATTR_DATA, {})

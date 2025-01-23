@@ -13,6 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONFIG_ENTRY_FORCE_POLL,
@@ -49,10 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
 
     # Register device discovered-callback.
     device_discovered_event = asyncio.Event()
-    discovery_info: ssdp.SsdpServiceInfo | None = None
+    discovery_info: SsdpServiceInfo | None = None
 
     async def device_discovered(
-        headers: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+        headers: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         if change == ssdp.SsdpChange.BYEBYE:
             return

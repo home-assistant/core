@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Iterable
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import cast
 
-from universal_silabs_flasher.const import ApplicationType
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
+from universal_silabs_flasher.flasher import Flasher
 
 from homeassistant.components.hassio import AddonError, AddonState
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -30,6 +33,26 @@ from .silabs_multiprotocol_addon import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class ApplicationType(StrEnum):
+    """Application type running on a device."""
+
+    GECKO_BOOTLOADER = "bootloader"
+    CPC = "cpc"
+    EZSP = "ezsp"
+    SPINEL = "spinel"
+
+    @classmethod
+    def from_flasher_application_type(
+        cls, app_type: FlasherApplicationType
+    ) -> ApplicationType:
+        """Convert a USF application type enum."""
+        return cls(app_type.value)
+
+    def as_flasher_application_type(self) -> FlasherApplicationType:
+        """Convert the application type enum into one compatible with USF."""
+        return FlasherApplicationType(self.value)
 
 
 def get_zha_device_path(config_entry: ConfigEntry) -> str | None:
@@ -137,3 +160,27 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
     assert guesses
 
     return guesses[-1]
+
+
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+) -> ApplicationType | None:
+    """Probe the running firmware on a Silabs device."""
+    flasher = Flasher(
+        device=device,
+        **(
+            {"probe_methods": [m.as_flasher_application_type() for m in probe_methods]}
+            if probe_methods
+            else {}
+        ),
+    )
+
+    try:
+        await flasher.probe_app_type()
+    except Exception:  # noqa: BLE001
+        _LOGGER.debug("Failed to probe application type", exc_info=True)
+
+    if flasher.app_type is None:
+        return None
+
+    return ApplicationType.from_flasher_application_type(flasher.app_type)

@@ -78,7 +78,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_host"
             except (TimeoutError, aiohttp.ClientConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -113,7 +113,7 @@ class GeniusHubConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_host"
             except (TimeoutError, aiohttp.ClientConnectionError):
                 errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

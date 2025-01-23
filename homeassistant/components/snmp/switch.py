@@ -264,7 +264,7 @@ class SnmpSwitch(SwitchEntity):
             _LOGGER.error(
                 "SNMP error: %s at %s",
                 errstatus.prettyPrint(),
-                errindex and restable[-1][int(errindex) - 1] or "?",
+                (errindex and restable[-1][int(errindex) - 1]) or "?",
             )
         else:
             for resrow in restable:

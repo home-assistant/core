@@ -12,12 +12,17 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import LaMarzoccoConfigEntry
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -91,6 +96,21 @@ STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     ),
 )
 
+SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
+    LaMarzoccoSensorEntityDescription(
+        key="scale_battery",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda device: (
+            device.config.scale.battery if device.config.scale else 0
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -106,12 +126,29 @@ async def async_setup_entry(
         if description.supported_fn(config_coordinator)
     ]
 
+    if (
+        config_coordinator.device.model == MachineModel.LINEA_MINI
+        and config_coordinator.device.config.scale
+    ):
+        entities.extend(
+            LaMarzoccoScaleSensorEntity(config_coordinator, description)
+            for description in SCALE_ENTITIES
+        )
+
     statistics_coordinator = entry.runtime_data.statistics_coordinator
     entities.extend(
         LaMarzoccoSensorEntity(statistics_coordinator, description)
         for description in STATISTIC_ENTITIES
         if description.supported_fn(statistics_coordinator)
     )
+
+    def _async_add_new_scale() -> None:
+        async_add_entities(
+            LaMarzoccoScaleSensorEntity(config_coordinator, description)
+            for description in SCALE_ENTITIES
+        )
+
+    config_coordinator.new_device_callback.append(_async_add_new_scale)
 
     async_add_entities(entities)
 
@@ -125,3 +162,9 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
     def native_value(self) -> int | float:
         """State of the sensor."""
         return self.entity_description.value_fn(self.coordinator.device)
+
+
+class LaMarzoccoScaleSensorEntity(LaMarzoccoSensorEntity, LaMarzoccScaleEntity):
+    """Sensor for a La Marzocco scale."""
+
+    entity_description: LaMarzoccoSensorEntityDescription

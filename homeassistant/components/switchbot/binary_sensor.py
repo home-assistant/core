@@ -64,6 +64,11 @@ BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
         translation_key="door_auto_lock_paused",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "leak": BinarySensorEntityDescription(
+        key="leak",
+        name=None,
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
 }
 
 

@@ -80,8 +80,8 @@
   },
   "services": {
     "test_service_1": {
-      "name": "Test service 1",
-      "description": "Fake service for testing",
+      "name": "Test action 1",
+      "description": "Fake action for testing",
       "fields": {
         "field_1": {
           "name": "Field 1",
