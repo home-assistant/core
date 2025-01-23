@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import dataclasses
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from decimal import Decimal
 import logging
@@ -45,7 +45,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
 
-MAX_AGE = 300
+MAX_AGE = 30
 _LOGGER = logging.getLogger(__name__)
 _METRIC: Final = (
     EcoWittSensorTypes.TEMPERATURE_C,
@@ -225,10 +225,17 @@ ECOWITT_SENSORS_MAPPING: Final = {
 
 @dataclass
 class SensorInfo:
+    """Represents information about an Ecowitt sensor, including its key and type."""
+
     key: str
     stype: EcoWittSensorTypes
 
-SENSOR_INFO_BY_NAME = { mapping.name: SensorInfo(key, mapping.stype) for key, mapping in SENSOR_MAP.items() }
+
+SENSOR_INFO_BY_NAME = {
+    mapping.name: SensorInfo(key, mapping.stype) for key, mapping in SENSOR_MAP.items()
+}
+
+_LOGGER.debug("SENSOR_INFO_BY_NAME: %s", SENSOR_INFO_BY_NAME)
 
 
 async def async_setup_entry(
@@ -243,7 +250,7 @@ async def async_setup_entry(
 
     def _generate_entity(sensor: EcoWittSensor, mapping: Any) -> EcowittSensorEntity:
         # Setup sensor description
-        description = dataclasses.replace(
+        description = replace(
             mapping,
             key=sensor.key,
             name=sensor.name,
@@ -256,7 +263,7 @@ async def async_setup_entry(
             "hourlyrainmm",
             "hourlyrainin",
         ):
-            description = dataclasses.replace(
+            description = replace(
                 description,
                 state_class=SensorStateClass.MEASUREMENT,
             )
@@ -297,7 +304,10 @@ async def async_setup_entry(
         if config_entry.original_name is not None:
             config_entry_unique_id = config_entry.unique_id.split("-")[0]
             config_entry_key = config_entry.unique_id.split("-")[1]
-            sensor_key_name = get_sensor_key_by_name(config_entry.original_name)
+            sensor_info = SENSOR_INFO_BY_NAME.get(config_entry.original_name)
+            if sensor_info is None:
+                return
+            sensor_key_name = sensor_info.key
             station = EcoWittStation(
                 **entry.data["station"],
             )
@@ -309,8 +319,7 @@ async def async_setup_entry(
                     station=station,
                 )
             )
-            stype = get_sensor_stype_by_name(config_entry.original_name)
-            assert stype is not None
+            stype = sensor_info.stype
             mapping = ECOWITT_SENSORS_MAPPING[stype]
             entity = _generate_entity(sensor, mapping)
             entities.append(entity)
