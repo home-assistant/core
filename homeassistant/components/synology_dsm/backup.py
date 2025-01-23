@@ -99,9 +99,6 @@ class SynologyDSMBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
         """
-        if not await self.async_get_backup(backup_id):
-            raise BackupAgentError("Backup not found")
-
         try:
             resp = await self._file_station.download_file(
                 path=self.path,
@@ -158,9 +155,6 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        if not await self.async_get_backup(backup_id):
-            return
-
         try:
             await self._file_station.delete_file(
                 path=self.path, filename=f"{backup_id}.tar"
@@ -172,6 +166,10 @@ class SynologyDSMBackupAgent(BackupAgent):
             raise BackupAgentError("Failed to delete the backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
+        """List backups."""
+        return list((await self._async_list_backups(**kwargs)).values())
+
+    async def _async_list_backups(self, **kwargs: Any) -> dict[str, AgentBackup]:
         """List backups."""
 
         async def _download_meta_data(filename: str) -> JsonObjectType:
@@ -198,11 +196,17 @@ class SynologyDSMBackupAgent(BackupAgent):
         if files is None:
             raise BackupAgentError("Failed to list backups")
 
-        return [
-            AgentBackup.from_dict(await _download_meta_data(file.name))
-            for file in files
-            if file.name.endswith("_meta.json")
-        ]
+        backups: dict[str, AgentBackup] = {}
+        for file in files:
+            if file.name.endswith("_meta.json"):
+                try:
+                    meta_data = await _download_meta_data(file.name)
+                except BackupAgentError as err:
+                    LOGGER.error("Failed to download meta data: %s", err)
+                    continue
+                agent_backup = AgentBackup.from_dict(meta_data)
+                backups[agent_backup.backup_id] = agent_backup
+        return backups
 
     async def async_get_backup(
         self,
@@ -210,10 +214,5 @@ class SynologyDSMBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup | None:
         """Return a backup."""
-        backups = await self.async_list_backups()
-
-        for backup in backups:
-            if backup.backup_id == backup_id:
-                return backup
-
-        return None
+        backups = await self._async_list_backups()
+        return backups.get(backup_id)

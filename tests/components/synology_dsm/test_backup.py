@@ -288,10 +288,7 @@ async def test_agents_get_backup_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agent_errors": {"synology_dsm.Mock Title": "Failed to download meta data"},
-        "backup": None,
-    }
+    assert response["result"] == {"agent_errors": {}, "backup": None}
 
 
 async def test_agents_get_backup_error(
@@ -349,7 +346,8 @@ async def test_agents_download_not_existing(
     resp = await client.get(
         f"/api/backup/download/{backup_id}?agent_id=synology_dsm.Mock Title"
     )
-    assert resp.status == 500
+    assert resp.reason == "Not Found"
+    assert resp.status == 404
 
 
 async def test_agents_upload(
@@ -490,7 +488,7 @@ async def test_agents_delete_not_existing(
     client = await hass_ws_client(hass)
     backup_id = "ef34ab12"
 
-    setup_dsm_with_filestation.file.download_file = AsyncMock(
+    setup_dsm_with_filestation.file.delete_file = AsyncMock(
         side_effect=SynologyDSMAPIErrorException("api", "404", "not found")
     )
 
@@ -504,10 +502,8 @@ async def test_agents_delete_not_existing(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"synology_dsm.Mock Title": "Failed to download meta data"}
+        "agent_errors": {"synology_dsm.Mock Title": "Failed to delete the backup"}
     }
-    mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
-    assert len(mock.mock_calls) == 0
 
 
 async def test_agents_delete_error(
