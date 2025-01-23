@@ -72,10 +72,10 @@ def async_get_client_by_device_entry(
     )
 
 
-async def async_get_sources(host: str, key: str) -> list[str]:
+async def async_get_sources(hass: HomeAssistant, host: str, key: str) -> list[str]:
     """Construct sources list."""
     try:
-        client = await async_control_connect(host, key)
+        client = await async_control_connect(hass, host, key)
     except WEBOSTV_EXCEPTIONS:
         return []
 
