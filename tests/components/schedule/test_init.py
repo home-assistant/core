@@ -15,10 +15,12 @@ from homeassistant.components.schedule.const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
+    CONF_END,
     CONF_FRIDAY,
     CONF_FROM,
     CONF_MONDAY,
     CONF_SATURDAY,
+    CONF_START,
     CONF_SUNDAY,
     CONF_THURSDAY,
     CONF_TO,
@@ -783,16 +785,16 @@ async def test_service_get(
     assert set(result) == CONF_ALL_DAYS
     assert result[CONF_FRIDAY] == [
         {
-            CONF_FROM: time(17),
-            CONF_TO: time(23, 59, 59),
+            CONF_START: time(17),
+            CONF_END: time(23, 59, 59),
             CONF_DATA: {"party_level": "epic"},
         }
     ]
-    assert result[CONF_SATURDAY] == [{CONF_FROM: time(0), CONF_TO: time(23, 59, 59)}]
+    assert result[CONF_SATURDAY] == [{CONF_START: time(0), CONF_END: time(23, 59, 59)}]
     assert result[CONF_SUNDAY] == [
         {
-            CONF_FROM: time(0),
-            CONF_TO: time(23, 59, 59, 999999),
+            CONF_START: time(0),
+            CONF_END: time(23, 59, 59, 999999),
             CONF_DATA: {"entry": "VIPs only"},
         }
     ]
@@ -833,6 +835,6 @@ async def test_service_get(
     result = service_result.get("schedule.from_storage")
 
     assert set(result) == CONF_ALL_DAYS
-    assert result[CONF_WEDNESDAY] == [{CONF_FROM: time(17), CONF_TO: time(19)}]
+    assert result[CONF_WEDNESDAY] == [{CONF_START: time(17), CONF_END: time(19)}]
     for day in CONF_ALL_DAYS.difference({CONF_WEDNESDAY}):
         assert result[day] == []

@@ -7,10 +7,12 @@ DOMAIN: Final = "schedule"
 LOGGER = logging.getLogger(__package__)
 
 CONF_DATA: Final = "data"
+CONF_END: Final = "end"
 CONF_FRIDAY: Final = "friday"
 CONF_FROM: Final = "from"
 CONF_MONDAY: Final = "monday"
 CONF_SATURDAY: Final = "saturday"
+CONF_START: Final = "start"
 CONF_SUNDAY: Final = "sunday"
 CONF_THURSDAY: Final = "thursday"
 CONF_TO: Final = "to"
