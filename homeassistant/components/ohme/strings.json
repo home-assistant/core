@@ -50,6 +50,11 @@
         "name": "Approve charge"
       }
     },
+    "number": {
+      "target_percentage": {
+        "name": "Target percentage"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
