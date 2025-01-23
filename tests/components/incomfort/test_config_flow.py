@@ -96,6 +96,7 @@ async def test_entry_already_configured(
             "base",
         ),
         (TimeoutError, "timeout_error", "base"),
+        (ValueError, "unknown", "base"),
     ],
 )
 async def test_form_validation(

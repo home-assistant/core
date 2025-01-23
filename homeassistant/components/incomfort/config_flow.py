@@ -77,11 +77,6 @@ OPTIONS_SCHEMA = vol.Schema(
     }
 )
 
-ERROR_STATUS_MAPPING: dict[int, tuple[str, str]] = {
-    401: (CONF_PASSWORD, "auth_error"),
-    404: ("base", "not_found"),
-}
-
 
 async def async_try_connect_gateway(
     hass: HomeAssistant, config: dict[str, Any]
@@ -96,6 +91,8 @@ async def async_try_connect_gateway(
     except TimeoutError:
         return {"base": "timeout_error"}
     except ClientResponseError:
+        return {"base": "unknown"}
+    except Exception:  # noqa: BLE001
         return {"base": "unknown"}
 
     return None
