@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Protocol
+from typing import Any
 import uuid
 
 import voluptuous as vol
@@ -27,17 +27,6 @@ from .websocket import websocket_lovelace_resources_impl
 RESOURCE_STORAGE_KEY = f"{DOMAIN}_resources"
 RESOURCES_STORAGE_VERSION = 1
 _LOGGER = logging.getLogger(__name__)
-
-
-class ResourceCollectionProtocol(Protocol):
-    """Protocol for collections to store resources."""
-
-    async def async_get_info(self) -> dict[str, int]:
-        """Return the resources info for YAML mode."""
-
-    @callback
-    def async_items(self) -> list[dict]:
-        """Return list of items in collection."""
 
 
 class ResourceYAMLCollection:
