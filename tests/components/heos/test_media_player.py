@@ -172,6 +172,36 @@ async def test_updates_from_connection_event(
     assert "Unable to refresh players" in caplog.text
 
 
+async def test_updates_from_connection_event_new_player_ids(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    controller: Heos,
+    change_data_mapped_ids: PlayerUpdateResult,
+) -> None:
+    """Test player updates from changes to available players."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Assert current IDs
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "1")})
+    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
+
+    # Send event which will result in updated IDs.
+    controller.load_players.return_value = change_data_mapped_ids
+    await controller.dispatcher.wait_send(
+        SignalType.HEOS_EVENT, SignalHeosEvent.CONNECTED
+    )
+    await hass.async_block_till_done()
+
+    # Assert updated IDs and previous don't exist
+    assert not device_registry.async_get_device(identifiers={(DOMAIN, "1")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "101")})
+    assert not entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "1")
+    assert entity_registry.async_get_entity_id(MEDIA_PLAYER_DOMAIN, DOMAIN, "101")
+
+
 async def test_updates_from_sources_updated(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
