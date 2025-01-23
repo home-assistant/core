@@ -36,12 +36,15 @@ async def async_get_backup_agents(
     ) or not hass.data.get(DOMAIN):
         LOGGER.debug("No proper config entry found")
         return []
-    agents: list[BackupAgent] = []
-    for entry in entries:
-        syno_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
-        if syno_data.api.file_station and entry.options.get(CONF_BACKUP_PATH):
-            agents.append(SynologyDSMBackupAgent(hass, entry))
-    return agents
+    syno_datas: dict[str, SynologyDSMData] = hass.data[DOMAIN]
+    return [
+        SynologyDSMBackupAgent(hass, entry)
+        for entry in entries
+        if entry.unique_id is not None
+        and (syno_data := syno_datas.get(entry.unique_id))
+        and syno_data.api.file_station
+        and entry.options.get(CONF_BACKUP_PATH)
+    ]
 
 
 @callback
@@ -62,7 +65,7 @@ def async_register_backup_agents_listener(
         """Remove the listener."""
         hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
         if not hass.data[DATA_BACKUP_AGENT_LISTENERS]:
-            hass.data.pop(DATA_BACKUP_AGENT_LISTENERS)
+            del hass.data[DATA_BACKUP_AGENT_LISTENERS]
 
     return remove_listener
 
