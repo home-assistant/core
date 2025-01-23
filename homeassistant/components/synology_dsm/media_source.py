@@ -21,7 +21,7 @@ from homeassistant.components.media_source import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_KEY, DOMAIN, SHARED_SUFFIX
+from .const import DOMAIN, SHARED_SUFFIX
 from .models import SynologyDSMData
 
 
@@ -41,12 +41,14 @@ class SynologyPhotosMediaSourceIdentifier:
         """Split identifier into parts."""
         parts = identifier.split("/")
 
-        self.unique_id = parts[0]
+        self.unique_id = None
         self.album_id = None
         self.cache_key = None
         self.file_name = None
         self.is_shared = False
         self.passphrase = ""
+
+        self.unique_id = parts[0]
 
         if len(parts) > 1:
             album_parts = parts[1].split("_")
@@ -80,7 +82,7 @@ class SynologyPhotosMediaSource(MediaSource):
         item: MediaSourceItem,
     ) -> BrowseMediaSource:
         """Return media."""
-        if not self.hass.data.get(DATA_KEY):
+        if not self.hass.data.get(DOMAIN):
             raise BrowseError("Diskstation not initialized")
         return BrowseMediaSource(
             domain=DOMAIN,
@@ -114,7 +116,7 @@ class SynologyPhotosMediaSource(MediaSource):
                 for entry in self.entries
             ]
         identifier = SynologyPhotosMediaSourceIdentifier(item.identifier)
-        diskstation = self.hass.data[DATA_KEY][identifier.unique_id]
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][identifier.unique_id]
         assert diskstation.api.photos is not None
 
         if identifier.album_id is None:
@@ -242,7 +244,7 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         self, request: web.Request, source_dir_id: str, location: str
     ) -> web.Response:
         """Start a GET request."""
-        if not self.hass.data.get(DATA_KEY):
+        if not self.hass.data.get(DOMAIN):
             raise web.HTTPNotFound
         # location: {cache_key}/{filename}
         cache_key, file_name, passphrase = location.split("/")
@@ -255,7 +257,7 @@ class SynologyDsmMediaView(http.HomeAssistantView):
         if not isinstance(mime_type, str):
             raise web.HTTPNotFound
 
-        diskstation = self.hass.data[DATA_KEY][source_dir_id]
+        diskstation: SynologyDSMData = self.hass.data[DOMAIN][source_dir_id]
         assert diskstation.api.photos is not None
         item = SynoPhotosItem(image_id, "", "", "", cache_key, "xl", shared, passphrase)
         try:

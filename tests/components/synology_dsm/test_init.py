@@ -47,7 +47,6 @@ async def test_services_registered(hass: HomeAssistant, mock_dsm: MagicMock) -> 
                 CONF_PASSWORD: PASSWORD,
                 CONF_MAC: MACS[0],
             },
-            unique_id="mock_serial",
         )
         entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -109,7 +108,6 @@ async def test_config_entry_migrations(
                 CONF_PASSWORD: PASSWORD,
                 CONF_MAC: MACS[0],
             },
-            unique_id="mock_serial",
         )
         entry.add_to_hass(hass)
 

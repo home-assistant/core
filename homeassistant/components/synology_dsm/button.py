@@ -19,7 +19,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
-from .const import DATA_KEY, DOMAIN
+from .const import DOMAIN
+from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,8 +56,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    assert entry.unique_id
-    data = hass.data[DATA_KEY][entry.unique_id]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     async_add_entities(SynologyDSMButton(data.api, button) for button in BUTTONS)
 
 

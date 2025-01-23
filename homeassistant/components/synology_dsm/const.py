@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from typing import TYPE_CHECKING
-
 from aiohttp import ClientTimeout
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 from synology_dsm.exceptions import (
@@ -18,18 +15,9 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.const import Platform
-from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from .models import SynologyDSMData
 
 DOMAIN = "synology_dsm"
-
-DATA_KEY: HassKey[dict[str, SynologyDSMData]] = HassKey(DOMAIN)
-DATA_KEY_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
-    f"{DOMAIN}_backup_agent_listeners"
-)
-
+SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS = "synology_dsm_backup_agent_listeners"
 ATTRIBUTION = "Data provided by Synology"
 PLATFORMS = [
     Platform.BINARY_SENSOR,

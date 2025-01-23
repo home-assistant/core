@@ -25,13 +25,13 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import SynoApi
 from .const import (
     CONF_SNAPSHOT_QUALITY,
-    DATA_KEY,
     DEFAULT_SNAPSHOT_QUALITY,
     DOMAIN,
     SIGNAL_CAMERA_SOURCE_CHANGED,
 )
 from .coordinator import SynologyDSMCameraUpdateCoordinator
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +49,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS cameras."""
-    assert entry.unique_id
-    data = hass.data[DATA_KEY][entry.unique_id]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     if coordinator := data.coordinator_cameras:
         async_add_entities(
             SynoDSMCamera(data.api, coordinator, camera_id)

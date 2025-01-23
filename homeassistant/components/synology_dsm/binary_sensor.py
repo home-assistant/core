@@ -18,13 +18,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
-from .const import DATA_KEY
+from .const import DOMAIN
 from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import (
     SynologyDSMBaseEntity,
     SynologyDSMDeviceEntity,
     SynologyDSMEntityDescription,
 )
+from .models import SynologyDSMData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -65,8 +66,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS binary sensor."""
-    assert entry.unique_id
-    data = hass.data[DATA_KEY][entry.unique_id]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
     coordinator = data.coordinator_central
     assert api.storage is not None

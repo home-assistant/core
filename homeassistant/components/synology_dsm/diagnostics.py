@@ -10,7 +10,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import CONF_DEVICE_TOKEN, DATA_KEY
+from .const import CONF_DEVICE_TOKEN, DOMAIN
+from .models import SynologyDSMData
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN}
 
@@ -19,8 +20,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    assert entry.unique_id
-    data = hass.data[DATA_KEY][entry.unique_id]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     syno_api = data.api
     dsm_info = syno_api.dsm.information
 

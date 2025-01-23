@@ -31,7 +31,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
 from . import SynoApi
-from .const import CONF_VOLUMES, DATA_KEY, ENTITY_UNIT_LOAD
+from .const import CONF_VOLUMES, DOMAIN, ENTITY_UNIT_LOAD
 from .coordinator import SynologyDSMCentralUpdateCoordinator
 from .entity import (
     SynologyDSMBaseEntity,
@@ -289,8 +289,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS Sensor."""
-    assert entry.unique_id
-    data: SynologyDSMData = hass.data[DATA_KEY][entry.unique_id]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     api = data.api
     coordinator = data.coordinator_central
     storage = api.storage
