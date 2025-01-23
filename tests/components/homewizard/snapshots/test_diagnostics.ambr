@@ -3,7 +3,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '1.00',
         'id': '**REDACTED**',
         'model_name': 'Plug-In Battery',
@@ -93,7 +93,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
@@ -183,7 +183,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
@@ -273,7 +273,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '4.19',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi P1 Meter',
@@ -399,7 +399,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.03',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
@@ -493,7 +493,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '4.07',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Energy Socket',
@@ -587,7 +587,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '2.03',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi Watermeter',
@@ -677,7 +677,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 1-phase',
@@ -767,7 +767,7 @@
   dict({
     'data': dict({
       'device': dict({
-        'api_version': 'v1',
+        'api_version': '1.0.0',
         'firmware_version': '3.06',
         'id': '**REDACTED**',
         'model_name': 'Wi-Fi kWh Meter 3-phase',
