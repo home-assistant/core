@@ -1,6 +1,5 @@
 """Tests for the init module."""
 
-import asyncio
 from typing import cast
 
 from pyheos import (
@@ -31,7 +30,7 @@ async def test_async_setup_entry_loads_platforms(
     """Test load connects to heos, retrieves players, and loads platforms."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("media_player.test_player") is not None
     assert controller.connect.call_count == 1
     assert controller.get_players.call_count == 1
@@ -71,7 +70,7 @@ async def test_async_setup_entry_auth_failure_starts_reauth(
     # Simulates what happens when the controller can't sign-in during connection
     async def connect_send_auth_failure() -> None:
         controller._signed_in_username = None
-        controller.dispatcher.send(
+        await controller.dispatcher.wait_send(
             SignalType.HEOS_EVENT, SignalHeosEvent.USER_CREDENTIALS_INVALID
         )
 
@@ -117,24 +116,41 @@ async def test_async_setup_entry_connect_failure(
     config_entry.add_to_hass(hass)
     controller.connect.side_effect = HeosError()
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
-    controller.connect.reset_mock()
-    controller.disconnect.reset_mock()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_async_setup_entry_player_failure(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
-    """Failure to retrieve players/sources raises ConfigEntryNotReady."""
+    """Failure to retrieve players raises ConfigEntryNotReady."""
     config_entry.add_to_hass(hass)
     controller.get_players.side_effect = HeosError()
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     assert controller.connect.call_count == 1
     assert controller.disconnect.call_count == 1
-    controller.connect.reset_mock()
-    controller.disconnect.reset_mock()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_favorites_failure(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Failure to retrieve favorites loads."""
+    config_entry.add_to_hass(hass)
+    controller.get_favorites.side_effect = HeosError()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_async_setup_entry_inputs_failure(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Failure to retrieve inputs loads."""
+    config_entry.add_to_hass(hass)
+    controller.get_input_sources.side_effect = HeosError()
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(
@@ -151,7 +167,6 @@ async def test_update_sources_retry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     controller: Heos,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test update sources retries on failures to max attempts."""
     config_entry.add_to_hass(hass)
@@ -162,12 +177,10 @@ async def test_update_sources_retry(
     source_manager.retry_delay = 0
     source_manager.max_retry_attempts = 1
     controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)
-    controller.dispatcher.send(
+    await controller.dispatcher.wait_send(
         SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
     )
-    # Wait until it's finished
-    while "Unable to update sources" not in caplog.text:
-        await asyncio.sleep(0.1)
+    await hass.async_block_till_done()
     assert controller.get_favorites.call_count == 2
 
 

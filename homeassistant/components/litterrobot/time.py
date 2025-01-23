@@ -15,21 +15,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
-@dataclass(frozen=True)
-class RequiredKeysMixin(Generic[_RobotT]):
-    """A class that describes robot time entity required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_RobotT]):
+    """A class that describes robot time entities."""
 
     value_fn: Callable[[_RobotT], time | None]
     set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
-
-
-@dataclass(frozen=True)
-class RobotTimeEntityDescription(TimeEntityDescription, RequiredKeysMixin[_RobotT]):
-    """A class that describes robot time entities."""
 
 
 def _as_local_time(start: datetime | None) -> time | None:
@@ -42,8 +37,11 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
     translation_key="sleep_mode_start_time",
     entity_category=EntityCategory.CONFIG,
     value_fn=lambda robot: _as_local_time(robot.sleep_mode_start_time),
-    set_fn=lambda robot, value: robot.set_sleep_mode(
-        robot.sleep_mode_enabled, value.replace(tzinfo=dt_util.get_default_time_zone())
+    set_fn=(
+        lambda robot, value: robot.set_sleep_mode(
+            robot.sleep_mode_enabled,
+            value.replace(tzinfo=dt_util.get_default_time_zone()),
+        )
     ),
 )
 
@@ -54,15 +52,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
+    coordinator = entry.runtime_data
     async_add_entities(
-        [
-            LitterRobotTimeEntity(
-                robot=robot, hub=hub, description=LITTER_ROBOT_3_SLEEP_START
-            )
-            for robot in hub.litter_robots()
-            if isinstance(robot, LitterRobot3)
-        ]
+        LitterRobotTimeEntity(
+            robot=robot,
+            coordinator=coordinator,
+            description=LITTER_ROBOT_3_SLEEP_START,
+        )
+        for robot in coordinator.litter_robots()
+        if isinstance(robot, LitterRobot3)
     )
 
 

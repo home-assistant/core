@@ -102,7 +102,7 @@ class BackupConfigData:
             schedule=BackupSchedule(
                 days=days,
                 recurrence=ScheduleRecurrence(data["schedule"]["recurrence"]),
-                state=ScheduleState(data["schedule"]["state"]),
+                state=ScheduleState(data["schedule"].get("state", ScheduleState.NEVER)),
                 time=time,
             ),
         )
@@ -320,6 +320,7 @@ class BackupSchedule:
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
     next_automatic_backup: datetime | None = field(init=False, default=None)
+    next_automatic_backup_additional = False
 
     @callback
     def apply(
@@ -377,6 +378,14 @@ class BackupSchedule:
             # reseed the cron event attribute
             # add a day to the next time to avoid scheduling at the same time again
             self.cron_event = CronSim(cron_pattern, now + timedelta(days=1))
+
+            # Compare the computed next time with the next time from the cron pattern
+            # to determine if an additional backup has been scheduled
+            cron_event_configured = CronSim(cron_pattern, now)
+            next_configured_time = next(cron_event_configured)
+            self.next_automatic_backup_additional = next_time < next_configured_time
+        else:
+            self.next_automatic_backup_additional = False
 
         async def _create_backup(now: datetime) -> None:
             """Create backup."""

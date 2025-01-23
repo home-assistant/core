@@ -33,9 +33,7 @@ rules:
     status: todo
     comment: |
       The integration currently spams the logs until reconnected
-  parallel-updates:
-    status: todo
-    comment: Needs to be set to 0. The underlying library handles parallel updates.
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage:
     status: done

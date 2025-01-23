@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
@@ -370,7 +370,7 @@ class AssistAPI(API):
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml.dump(list(exposed_entities.values())))
+            prompt.append(yaml_util.dump(list(exposed_entities.values())))
 
         return "\n".join(prompt)
 

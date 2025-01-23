@@ -846,6 +846,13 @@ async def test_pb_service_write(
         CALL_TYPE_WRITE_REGISTERS: mock_modbus_with_pymodbus.write_registers,
     }
 
+    value_arg_name = {
+        CALL_TYPE_WRITE_COIL: "value",
+        CALL_TYPE_WRITE_COILS: "values",
+        CALL_TYPE_WRITE_REGISTER: "value",
+        CALL_TYPE_WRITE_REGISTERS: "values",
+    }
+
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
@@ -858,10 +865,12 @@ async def test_pb_service_write(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args[0] == (
-        data[ATTR_ADDRESS],
-        data[do_write[DATA]],
-    )
+    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.kwargs == {
+        "slave": 17,
+        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
+    }
+
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
 
