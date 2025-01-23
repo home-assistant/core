@@ -181,7 +181,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             try:
                 await self._async_try_connect(self.ip_address)
-
             except RecoverableError as ex:
                 LOGGER.error(ex)
                 errors = {"base": ex.error_code}
