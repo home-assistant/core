@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -13,7 +12,7 @@ from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -21,16 +20,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
 
 from . import services
-from .const import (
-    COMMAND_RETRY_ATTEMPTS,
-    COMMAND_RETRY_DELAY,
-    DOMAIN,
-    SIGNAL_HEOS_PLAYER_ADDED,
-    SIGNAL_HEOS_UPDATED,
-)
+from .const import DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
 from .coordinator import HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -48,7 +40,6 @@ class HeosRuntimeData:
 
     coordinator: HeosCoordinator
     group_manager: GroupManager
-    source_manager: SourceManager
     players: dict[int, HeosPlayer]
 
 
@@ -84,17 +75,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     # Preserve existing logic until migrated into coordinator
     controller = coordinator.heos
     players = controller.players
-    favorites = coordinator.favorites
-    inputs = coordinator.inputs
-
-    source_manager = SourceManager(favorites, inputs)
-    source_manager.connect_update(hass, controller)
 
     group_manager = GroupManager(hass, controller, players)
 
-    entry.runtime_data = HeosRuntimeData(
-        coordinator, group_manager, source_manager, players
-    )
+    entry.runtime_data = HeosRuntimeData(coordinator, group_manager, players)
 
     group_manager.connect_update()
     entry.async_on_unload(group_manager.disconnect_update)
@@ -234,135 +218,3 @@ class GroupManager:
     def group_membership(self):
         """Provide access to group members for player entities."""
         return self._group_membership
-
-
-class SourceManager:
-    """Class that manages sources for players."""
-
-    def __init__(
-        self,
-        favorites,
-        inputs,
-        *,
-        retry_delay: int = COMMAND_RETRY_DELAY,
-        max_retry_attempts: int = COMMAND_RETRY_ATTEMPTS,
-    ) -> None:
-        """Init input manager."""
-        self.retry_delay = retry_delay
-        self.max_retry_attempts = max_retry_attempts
-        self.favorites = favorites
-        self.inputs = inputs
-        self.source_list = self._build_source_list()
-
-    def _build_source_list(self):
-        """Build a single list of inputs from various types."""
-        source_list = []
-        source_list.extend([favorite.name for favorite in self.favorites.values()])
-        source_list.extend([source.name for source in self.inputs])
-        return source_list
-
-    async def play_source(self, source: str, player):
-        """Determine type of source and play it."""
-        index = next(
-            (
-                index
-                for index, favorite in self.favorites.items()
-                if favorite.name == source
-            ),
-            None,
-        )
-        if index is not None:
-            await player.play_preset_station(index)
-            return
-
-        input_source = next(
-            (
-                input_source
-                for input_source in self.inputs
-                if input_source.name == source
-            ),
-            None,
-        )
-        if input_source is not None:
-            await player.play_input_source(input_source.media_id)
-            return
-
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unknown_source",
-            translation_placeholders={"source": source},
-        )
-
-    def get_current_source(self, now_playing_media):
-        """Determine current source from now playing media."""
-        # Match input by input_name:media_id
-        if now_playing_media.source_id == heos_const.MUSIC_SOURCE_AUX_INPUT:
-            return next(
-                (
-                    input_source.name
-                    for input_source in self.inputs
-                    if input_source.media_id == now_playing_media.media_id
-                ),
-                None,
-            )
-        # Try matching favorite by name:station or media_id:album_id
-        return next(
-            (
-                source.name
-                for source in self.favorites.values()
-                if source.name == now_playing_media.station
-                or source.media_id == now_playing_media.album_id
-            ),
-            None,
-        )
-
-    @callback
-    def connect_update(self, hass: HomeAssistant, controller: Heos) -> None:
-        """Connect listener for when sources change and signal player update.
-
-        EVENT_SOURCES_CHANGED is often raised multiple times in response to a
-        physical event therefore throttle it. Retrieving sources immediately
-        after the event may fail so retry.
-        """
-
-        @Throttle(MIN_UPDATE_SOURCES)
-        async def get_sources():
-            retry_attempts = 0
-            while True:
-                try:
-                    favorites = {}
-                    if controller.is_signed_in:
-                        favorites = await controller.get_favorites()
-                    inputs = await controller.get_input_sources()
-                except HeosError as error:
-                    if retry_attempts < self.max_retry_attempts:
-                        retry_attempts += 1
-                        _LOGGER.debug(
-                            "Error retrieving sources and will retry: %s", error
-                        )
-                        await asyncio.sleep(self.retry_delay)
-                    else:
-                        _LOGGER.error("Unable to update sources: %s", error)
-                        return None
-                else:
-                    return favorites, inputs
-
-        async def _update_sources() -> None:
-            # If throttled, it will return None
-            if sources := await get_sources():
-                self.favorites, self.inputs = sources
-                self.source_list = self._build_source_list()
-                _LOGGER.debug("Sources updated due to changed event")
-                # Let players know to update
-                async_dispatcher_send(hass, SIGNAL_HEOS_UPDATED)
-
-        async def _on_controller_event(event: str, data: Any | None) -> None:
-            if event in (
-                heos_const.EVENT_SOURCES_CHANGED,
-                heos_const.EVENT_USER_CHANGED,
-            ):
-                await _update_sources()
-
-        controller.add_on_connected(_update_sources)
-        controller.add_on_user_credentials_invalid(_update_sources)
-        controller.add_on_controller_event(_on_controller_event)
