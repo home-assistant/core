@@ -25,9 +25,12 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import EnergyZeroConfigEntry
 from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
-from .coordinator import EnergyZeroData, EnergyZeroDataUpdateCoordinator
+from .coordinator import (
+    EnergyZeroConfigEntry,
+    EnergyZeroData,
+    EnergyZeroDataUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)

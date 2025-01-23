@@ -59,8 +59,8 @@ async def test_disconnect_reconnect_log(
 
     mock_russound_client.is_connected = Mock(return_value=False)
     await mock_state_update(mock_russound_client, CallbackType.CONNECTION)
-    assert "Disconnected from device at 127.0.0.1" in caplog.text
+    assert "Disconnected from device at 192.168.20.75" in caplog.text
 
     mock_russound_client.is_connected = Mock(return_value=True)
     await mock_state_update(mock_russound_client, CallbackType.CONNECTION)
-    assert "Reconnected to device at 127.0.0.1" in caplog.text
+    assert "Reconnected to device at 192.168.20.75" in caplog.text

@@ -6,10 +6,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiohttp import ClientSession
 from iottycloud.device import Device
 from iottycloud.lightswitch import LightSwitch
+from iottycloud.outlet import Outlet
 from iottycloud.shutter import Shutter
 from iottycloud.verbs import (
     LS_DEVICE_TYPE_UID,
     OPEN_PERCENTAGE,
+    OU_DEVICE_TYPE_UID,
     RESULT,
     SH_DEVICE_TYPE_UID,
     STATUS,
@@ -71,6 +73,22 @@ test_sh_one_added = [
     sh_0,
     sh_1,
     sh_2,
+]
+
+ou_0 = Outlet("TestOU", "TEST_SERIAL_OU_0", OU_DEVICE_TYPE_UID, "[TEST] Outlet 0")
+
+ou_1 = Outlet("TestOU1", "TEST_SERIAL_OU_1", OU_DEVICE_TYPE_UID, "[TEST] Outlet 1")
+
+ou_2 = Outlet("TestOU2", "TEST_SERIAL_OU_2", OU_DEVICE_TYPE_UID, "[TEST] Outlet 2")
+
+test_ou = [ou_0, ou_1]
+
+test_ou_one_removed = [ou_0]
+
+test_ou_one_added = [
+    ou_0,
+    ou_1,
+    ou_2,
 ]
 
 
@@ -171,6 +189,16 @@ def mock_get_devices_twolightswitches() -> Generator[AsyncMock]:
 
     with patch(
         "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_ls
+    ) as mock_fn:
+        yield mock_fn
+
+
+@pytest.fixture
+def mock_get_devices_two_outlets() -> Generator[AsyncMock]:
+    """Mock for get_devices, returning two outlets."""
+
+    with patch(
+        "iottycloud.cloudapi.CloudApi.get_devices", return_value=test_ou
     ) as mock_fn:
         yield mock_fn
 

@@ -28,7 +28,6 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
-    ATTR_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_TRANSITION,
     FLASH_LONG,
@@ -59,6 +58,7 @@ from homeassistant.components.yeelight.const import (
     YEELIGHT_TEMPERATURE_TRANSACTION,
 )
 from homeassistant.components.yeelight.light import (
+    ATTR_KELVIN,
     ATTR_MINUTES,
     ATTR_MODE,
     EFFECT_CANDLE_FLICKER,

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.slide_local.const import CONF_INVERT_POSITION, DOMAIN
-from homeassistant.const import CONF_API_VERSION, CONF_HOST
+from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC
 
 from .const import HOST, SLIDE_INFO_DATA
 
@@ -22,6 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: HOST,
             CONF_API_VERSION: 2,
+            CONF_MAC: "12:34:56:78:90:ab",
         },
         options={
             CONF_INVERT_POSITION: False,
@@ -33,25 +34,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_slide_api():
+def mock_slide_api() -> Generator[AsyncMock]:
     """Build a fixture for the SlideLocalApi that connects successfully and returns one device."""
-
-    mock_slide_local_api = AsyncMock()
-    mock_slide_local_api.slide_info.return_value = SLIDE_INFO_DATA
 
     with (
         patch(
-            "homeassistant.components.slide_local.SlideLocalApi",
+            "homeassistant.components.slide_local.coordinator.SlideLocalApi",
             autospec=True,
-            return_value=mock_slide_local_api,
-        ),
+        ) as mock_slide_local_api,
         patch(
             "homeassistant.components.slide_local.config_flow.SlideLocalApi",
-            autospec=True,
-            return_value=mock_slide_local_api,
+            new=mock_slide_local_api,
         ),
     ):
-        yield mock_slide_local_api
+        client = mock_slide_local_api.return_value
+        client.slide_info.return_value = SLIDE_INFO_DATA
+        yield client
 
 
 @pytest.fixture

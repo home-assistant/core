@@ -11,7 +11,6 @@ from pyvizio import VizioAsync, async_guess_device_type
 from pyvizio.const import APP_HOME
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
@@ -32,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -257,7 +257,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host

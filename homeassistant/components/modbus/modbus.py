@@ -14,8 +14,8 @@ from pymodbus.client import (
     AsyncModbusUdpClient,
 )
 from pymodbus.exceptions import ModbusException
-from pymodbus.pdu import ModbusResponse
-from pymodbus.transaction import ModbusAsciiFramer, ModbusRtuFramer, ModbusSocketFramer
+from pymodbus.framer import FramerType
+from pymodbus.pdu import ModbusPDU
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -34,7 +34,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -73,48 +72,56 @@ from .validators import check_config
 _LOGGER = logging.getLogger(__name__)
 
 
-ConfEntry = namedtuple("ConfEntry", "call_type attr func_name")  # noqa: PYI024
-RunEntry = namedtuple("RunEntry", "attr func")  # noqa: PYI024
+ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
+RunEntry = namedtuple("RunEntry", "attr func value_attr_name")  # noqa: PYI024
 PB_CALL = [
     ConfEntry(
         CALL_TYPE_COIL,
         "bits",
         "read_coils",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_DISCRETE,
         "bits",
         "read_discrete_inputs",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_REGISTER_HOLDING,
         "registers",
         "read_holding_registers",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_REGISTER_INPUT,
         "registers",
         "read_input_registers",
+        "count",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COIL,
-        "value",
+        "bits",
         "write_coil",
+        "value",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_COILS,
         "count",
         "write_coils",
+        "values",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTER,
-        "value",
+        "registers",
         "write_register",
+        "value",
     ),
     ConfEntry(
         CALL_TYPE_WRITE_REGISTERS,
         "count",
         "write_registers",
+        "values",
     ),
 ]
 
@@ -124,8 +131,6 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
-
-    await async_setup_reload_service(hass, DOMAIN, [DOMAIN])
 
     if config[DOMAIN]:
         config[DOMAIN] = check_config(hass, config[DOMAIN])
@@ -265,14 +270,13 @@ class ModbusHub:
             "port": client_config[CONF_PORT],
             "timeout": client_config[CONF_TIMEOUT],
             "retries": 3,
-            "retry_on_empty": True,
         }
         if self._config_type == SERIAL:
             # serial configuration
             if client_config[CONF_METHOD] == "ascii":
-                self._pb_params["framer"] = ModbusAsciiFramer
+                self._pb_params["framer"] = FramerType.ASCII
             else:
-                self._pb_params["framer"] = ModbusRtuFramer
+                self._pb_params["framer"] = FramerType.RTU
             self._pb_params.update(
                 {
                     "baudrate": client_config[CONF_BAUDRATE],
@@ -285,9 +289,9 @@ class ModbusHub:
             # network configuration
             self._pb_params["host"] = client_config[CONF_HOST]
             if self._config_type == RTUOVERTCP:
-                self._pb_params["framer"] = ModbusRtuFramer
+                self._pb_params["framer"] = FramerType.RTU
             else:
-                self._pb_params["framer"] = ModbusSocketFramer
+                self._pb_params["framer"] = FramerType.SOCKET
 
         if CONF_MSG_WAIT in client_config:
             self._msg_wait = client_config[CONF_MSG_WAIT] / 1000
@@ -326,7 +330,9 @@ class ModbusHub:
 
         for entry in PB_CALL:
             func = getattr(self._client, entry.func_name)
-            self._pb_request[entry.call_type] = RunEntry(entry.attr, func)
+            self._pb_request[entry.call_type] = RunEntry(
+                entry.attr, func, entry.value_attr_name
+            )
 
         self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
@@ -370,12 +376,13 @@ class ModbusHub:
 
     async def low_level_pb_call(
         self, slave: int | None, address: int, value: int | list[int], use_call: str
-    ) -> ModbusResponse | None:
+    ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
-        kwargs = {"slave": slave} if slave else {}
+        kwargs: dict[str, Any] = {"slave": slave} if slave else {}
         entry = self._pb_request[use_call]
+        kwargs[entry.value_attr_name] = value
         try:
-            result: ModbusResponse = await entry.func(address, value, **kwargs)
+            result: ModbusPDU = await entry.func(address, **kwargs)
         except ModbusException as exception_error:
             error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
@@ -403,7 +410,7 @@ class ModbusHub:
         address: int,
         value: int | list[int],
         use_call: str,
-    ) -> ModbusResponse | None:
+    ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
         if self._config_delay:
             return None

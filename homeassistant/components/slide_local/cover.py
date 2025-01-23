@@ -54,7 +54,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         super().__init__(coordinator)
 
         self._attr_name = None
-        self._invert = entry.options[CONF_INVERT_POSITION]
+        self.invert = entry.options[CONF_INVERT_POSITION]
         self._attr_unique_id = coordinator.data["mac"]
 
     @property
@@ -79,7 +79,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         if pos is not None:
             if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:
                 pos = round(pos)
-            if not self._invert:
+            if not self.invert:
                 pos = 1 - pos
             pos = int(pos * 100)
         return pos
@@ -101,7 +101,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION] / 100
-        if not self._invert:
+        if not self.invert:
             position = 1 - position
 
         if self.coordinator.data["pos"] is not None:

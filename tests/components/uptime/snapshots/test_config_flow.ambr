@@ -27,14 +27,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'Uptime',
       'unique_id': None,
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Uptime',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
