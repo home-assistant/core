@@ -41,12 +41,13 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     ),
     "show_error_codes": "true",
     "follow_imports": "normal",
-    # "enable_incomplete_feature": ", ".join(  # noqa: FLY002
+    # "enable_incomplete_feature": ", ".join(
     #     []
     # ),
     # Enable some checks globally.
     "local_partial_types": "true",
     "strict_equality": "true",
+    "strict_bytes": "true",
     "no_implicit_optional": "true",
     "warn_incomplete_stub": "true",
     "warn_redundant_casts": "true",

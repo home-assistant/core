@@ -280,7 +280,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`, `MW`, `GW`, `TW`
+    Unit of measurement: `mW`, `W`, `kW`, `MW`, `GW`, `TW`, `BTU/h`
     """
 
     PRECIPITATION = "precipitation"
@@ -363,7 +363,7 @@ class NumberDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`, `µV`
+    Unit of measurement: `V`, `mV`, `µV`, `kV`, `MV`
     """
 
     VOLUME = "volume"

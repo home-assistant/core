@@ -1,13 +1,13 @@
 """Test the Ituran device_tracker."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pyituran.exceptions import IturanApiError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ituran.const import UPDATE_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,7 +24,8 @@ async def test_device_tracker(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test state of device_tracker."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.ituran.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        await setup_integration(hass, mock_config_entry)
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 

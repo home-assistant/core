@@ -255,7 +255,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:transmission-tower',
+    'original_icon': None,
     'original_name': 'Grid status',
     'platform': 'enphase_envoy',
     'previous_unique_id': None,
@@ -269,7 +269,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Enpower 654321 Grid status',
-      'icon': 'mdi:transmission-tower',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.enpower_654321_grid_status',

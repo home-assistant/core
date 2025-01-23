@@ -14,7 +14,7 @@ from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
