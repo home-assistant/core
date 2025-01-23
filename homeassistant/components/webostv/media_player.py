@@ -106,7 +106,7 @@ def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
     @wraps(func)
     async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap all command methods."""
-        if self.state == MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_off",

@@ -519,7 +519,7 @@ async def test_control_error_handling(
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
-    assert client.play.call_count == (1 if is_on else 0)
+    assert client.play.call_count == int(is_on)
 
 
 async def test_supported_features(hass: HomeAssistant, client) -> None:

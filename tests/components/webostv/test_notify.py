@@ -122,7 +122,7 @@ async def test_errors(
             blocking=True,
         )
 
-    assert client.send_message.call_count == (1 if is_on else 0)
+    assert client.send_message.call_count == int(is_on)
 
 
 async def test_no_discovery_info(
