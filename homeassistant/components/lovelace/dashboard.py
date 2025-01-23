@@ -129,7 +129,7 @@ class LovelaceStorage(LovelaceConfig):
         if (config := data["config"]) is None:
             raise ConfigNotFound
 
-        return config
+        return config  # type: ignore[no-any-return]
 
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
@@ -285,12 +285,12 @@ class DashboardsCollection(collection.DictStorageCollection):
         if url_path in self.hass.data[DATA_PANELS]:
             raise vol.Invalid("Panel url path needs to be unique")
 
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_URL_PATH]
+        return info[CONF_URL_PATH]  # type: ignore[no-any-return]
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
