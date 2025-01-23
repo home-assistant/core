@@ -14,7 +14,7 @@ USER_INPUT = {
 }
 
 BACKUP_METADATA = {
-    "version": "1",
+    "metadata_version": "1",
     "addons": "",
     "backup_id": "23e64aec",
     "date": "2024-11-22T11:48:48.727189+01:00",
