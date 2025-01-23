@@ -85,9 +85,6 @@ class SuezWaterCoordinator(DataUpdateCoordinator[SuezWaterData]):
                 price=(await self._suez_client.get_price()).price,
             )
         except PySuezError as err:
-            _LOGGER.exception(err)
-            raise UpdateFailed(
-                f"Suez coordinator error communicating with API: {err}"
-            ) from err
+            raise UpdateFailed(f"Suez data update failed: {err}") from err
         _LOGGER.debug("Successfully fetched suez data")
         return data

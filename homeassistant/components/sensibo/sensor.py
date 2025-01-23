@@ -36,6 +36,13 @@ from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 PARALLEL_UPDATES = 0
 
 
+def _smart_type_name(_type: str | None) -> str | None:
+    """Return a lowercase name of smart type."""
+    if _type and _type == "feelsLike":
+        return "feelslike"
+    return _type
+
+
 @dataclass(frozen=True, kw_only=True)
 class SensiboMotionSensorEntityDescription(SensorEntityDescription):
     """Describes Sensibo Motion sensor entity."""
@@ -153,7 +160,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="climate_react_type",
         translation_key="smart_type",
-        value_fn=lambda data: data.smart_type,
+        value_fn=lambda data: _smart_type_name(data.smart_type),
         extra_fn=None,
         entity_registry_enabled_default=False,
     ),
@@ -239,25 +246,40 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+    added_devices: set[str] = set()
 
-    for device_id, device_data in coordinator.data.parsed.items():
-        if device_data.motion_sensors:
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+
+        entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
+        nonlocal added_devices
+        new_devices, remove_devices, added_devices = coordinator.get_devices(
+            added_devices
+        )
+
+        if new_devices:
             entities.extend(
                 SensiboMotionSensor(
                     coordinator, device_id, sensor_id, sensor_data, description
                 )
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_data.motion_sensors
                 for sensor_id, sensor_data in device_data.motion_sensors.items()
+                if sensor_id in new_devices
                 for description in MOTION_SENSOR_TYPES
             )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DESCRIPTION_BY_MODELS.get(
-            device_data.model, DEVICE_SENSOR_TYPES
-        )
-    )
-    async_add_entities(entities)
+            entities.extend(
+                SensiboDeviceSensor(coordinator, device_id, description)
+                for device_id, device_data in coordinator.data.parsed.items()
+                if device_id in new_devices
+                for description in DESCRIPTION_BY_MODELS.get(
+                    device_data.model, DEVICE_SENSOR_TYPES
+                )
+            )
+            async_add_entities(entities)
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):

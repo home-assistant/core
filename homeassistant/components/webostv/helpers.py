@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from aiowebostv import WebOsClient
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import async_control_connect
-from .const import DATA_CONFIG_ENTRY, DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
+from . import WebOsTvConfigEntry, async_control_connect
+from .const import DOMAIN, LIVE_TV_APP_ID, WEBOSTV_EXCEPTIONS
 
 
 @callback
@@ -55,21 +56,26 @@ def async_get_client_by_device_entry(
     Raises ValueError if client is not found.
     """
     for config_entry_id in device.config_entries:
-        if client := hass.data[DOMAIN][DATA_CONFIG_ENTRY].get(config_entry_id):
-            break
-
-    if not client:
-        raise ValueError(
-            f"Device {device.id} is not from an existing {DOMAIN} config entry"
+        entry: WebOsTvConfigEntry | None = hass.config_entries.async_get_entry(
+            config_entry_id
         )
+        if entry and entry.domain == DOMAIN:
+            if entry.state is ConfigEntryState.LOADED:
+                return entry.runtime_data
 
-    return client
+            raise ValueError(
+                f"Device {device.id} is not from a loaded {DOMAIN} config entry"
+            )
+
+    raise ValueError(
+        f"Device {device.id} is not from an existing {DOMAIN} config entry"
+    )
 
 
-async def async_get_sources(host: str, key: str) -> list[str]:
+async def async_get_sources(hass: HomeAssistant, host: str, key: str) -> list[str]:
     """Construct sources list."""
     try:
-        client = await async_control_connect(host, key)
+        client = await async_control_connect(hass, host, key)
     except WEBOSTV_EXCEPTIONS:
         return []
 

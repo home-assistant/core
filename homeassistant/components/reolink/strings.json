@@ -34,7 +34,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unique_id_mismatch": "The mac address of the device does not match the previous mac address"
+      "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     }
   },
   "options": {
@@ -54,7 +54,7 @@
       "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
-      "message": "Reolink play_chime error: {device_name} is not a chime"
+      "message": "Reolink play_chime error: {device_name} is not a Chime"
     },
     "invalid_parameter": {
       "message": "Invalid input parameter: {err}"
@@ -89,6 +89,9 @@
     "timeout": {
       "message": "Timeout waiting on a response: {err}"
     },
+    "unexpected": {
+      "message": "Unexpected Reolink error: {err}"
+    },
     "firmware_install_error": {
       "message": "Error trying to update Reolink firmware: {err}"
     },
@@ -117,10 +120,6 @@
       "title": "Reolink firmware update required",
       "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
-    "hdr_switch_deprecated": {
-      "title": "Reolink HDR switch deprecated",
-      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
-    },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
       "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are depricated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
@@ -129,7 +128,7 @@
   "services": {
     "ptz_move": {
       "name": "PTZ move",
-      "description": "Move the camera with a specific speed.",
+      "description": "Moves the camera with a specific speed.",
       "fields": {
         "speed": {
           "name": "Speed",
@@ -139,11 +138,11 @@
     },
     "play_chime": {
       "name": "Play chime",
-      "description": "Play a ringtone on a chime.",
+      "description": "Plays a ringtone on a Reolink Chime.",
       "fields": {
         "device_id": {
           "name": "Target chime",
-          "description": "The chime to play the ringtone on."
+          "description": "The Reolink Chime to play the ringtone on."
         },
         "ringtone": {
           "name": "Ringtone",
@@ -210,6 +209,13 @@
       },
       "package": {
         "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "cry": {
+        "name": "Baby crying",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -567,6 +573,7 @@
           "stayoff": "Stay off",
           "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
           "alwayson": "Always on"
         }
       },
