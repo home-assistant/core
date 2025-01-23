@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
-from .const import DOMAIN
+from .const import DATA_KEY
 from .coordinator import AvmWrapper
 from .entity import FritzBoxBaseEntity
 
@@ -27,7 +27,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up guest WiFi QR code for device."""
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
 
     guest_wifi_info = await hass.async_add_executor_job(
         avm_wrapper.fritz_guest_wifi.get_info

@@ -16,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DATA_KEY
 from .coordinator import AvmWrapper
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
@@ -33,7 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up AVM FRITZ!Box update entities."""
     _LOGGER.debug("Setting up AVM FRITZ!Box update entities")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
 
     entities = [FritzBoxUpdateEntity(avm_wrapper, entry.title)]
 

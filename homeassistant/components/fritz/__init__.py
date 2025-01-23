@@ -14,9 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import (
-    DATA_FRITZ,
+    DATA_KEY,
+    DATA_KEY_FRITZDATA,
     DEFAULT_SSL,
-    DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
     PLATFORMS,
@@ -54,11 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await avm_wrapper.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = avm_wrapper
+    hass.data.setdefault(DATA_KEY, {})
+    hass.data[DATA_KEY][entry.entry_id] = avm_wrapper
 
-    if DATA_FRITZ not in hass.data:
-        hass.data[DATA_FRITZ] = FritzData()
+    if DATA_KEY_FRITZDATA not in hass.data:
+        hass.data[DATA_KEY_FRITZDATA] = FritzData()
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -72,17 +72,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
 
-    fritz_data = hass.data[DATA_FRITZ]
+    fritz_data = hass.data[DATA_KEY_FRITZDATA]
     fritz_data.tracked.pop(avm_wrapper.unique_id)
 
     if not bool(fritz_data.tracked):
-        hass.data.pop(DATA_FRITZ)
+        hass.data.pop(DATA_KEY_FRITZDATA)
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+        hass.data[DATA_KEY].pop(entry.entry_id)
 
     await async_unload_services(hass)
 

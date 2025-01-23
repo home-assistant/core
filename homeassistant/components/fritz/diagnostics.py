@@ -9,8 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import AvmWrapper
+from .const import DATA_KEY
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -19,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
 
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),

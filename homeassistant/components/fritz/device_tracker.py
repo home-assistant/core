@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_FRITZ, DOMAIN
+from .const import DATA_KEY, DATA_KEY_FRITZDATA
 from .coordinator import (
     AvmWrapper,
     FritzData,
@@ -28,8 +28,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for FRITZ!Box component."""
     _LOGGER.debug("Starting FRITZ!Box device tracker")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
+    data_fritz = hass.data[DATA_KEY_FRITZDATA]
 
     @callback
     def update_avm_device() -> None:

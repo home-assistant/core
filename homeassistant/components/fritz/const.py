@@ -1,7 +1,9 @@
 """Constants for the FRITZ!Box Tools integration."""
 
+from __future__ import annotations
+
 from enum import StrEnum
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from fritzconnection.core.exceptions import (
     FritzActionError,
@@ -15,6 +17,10 @@ from fritzconnection.core.exceptions import (
 )
 
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .coordinator import AvmWrapper, FritzData
 
 
 class MeshRoles(StrEnum):
@@ -26,6 +32,9 @@ class MeshRoles(StrEnum):
 
 
 DOMAIN = "fritz"
+
+DATA_KEY: HassKey[dict[str, AvmWrapper]] = HassKey(DOMAIN)
+DATA_KEY_FRITZDATA: HassKey[FritzData] = HassKey(f"{DOMAIN}_data")
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,

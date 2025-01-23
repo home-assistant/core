@@ -27,8 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, DSL_CONNECTION, UPTIME_DEVIATION
-from .coordinator import AvmWrapper, ConnectionInfo
+from .const import DATA_KEY, DSL_CONNECTION, UPTIME_DEVIATION
+from .coordinator import ConnectionInfo
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
 
 _LOGGER = logging.getLogger(__name__)
@@ -271,7 +271,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up FRITZ!Box sensors")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
 
     connection_info = await avm_wrapper.async_get_connection_info()
 

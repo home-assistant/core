@@ -18,7 +18,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
-    DATA_FRITZ,
+    DATA_KEY,
+    DATA_KEY_FRITZDATA,
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
@@ -224,8 +225,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up switches")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    avm_wrapper = hass.data[DATA_KEY][entry.entry_id]
+    data_fritz = hass.data[DATA_KEY_FRITZDATA]
 
     _LOGGER.debug("Fritzbox services: %s", avm_wrapper.connection.services)
 
