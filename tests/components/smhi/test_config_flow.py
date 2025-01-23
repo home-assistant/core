@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from smhi.smhi_lib import SmhiForecastException
+from pysmhi import SmhiForecastException
 
 from homeassistant import config_entries
 from homeassistant.components.smhi.const import DOMAIN
