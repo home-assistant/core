@@ -74,9 +74,11 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
-        value_func=lambda device: device.current_power_usage.value
-        if device.current_power_usage
-        else None,
+        value_func=(
+            lambda device: device.current_power_usage.value
+            if device.current_power_usage
+            else None
+        ),
     ),
     YouLessSensorEntityDescription(
         key="power_low",
