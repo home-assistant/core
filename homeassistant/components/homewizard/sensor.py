@@ -90,8 +90,12 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="wifi_ssid",
         translation_key="wifi_ssid",
         entity_category=EntityCategory.DIAGNOSTIC,
-        has_fn=lambda data: data.measurement.wifi_ssid is not None,
-        value_fn=lambda data: data.measurement.wifi_ssid,
+        has_fn=(
+            lambda data: data.system is not None and data.system.wifi_ssid is not None
+        ),
+        value_fn=(
+            lambda data: data.system.wifi_ssid if data.system is not None else None
+        ),
     ),
     HomeWizardSensorEntityDescription(
         key="active_tariff",
