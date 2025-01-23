@@ -50,6 +50,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type FritzConfigEntry = ConfigEntry[AvmWrapper]
+
 
 def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
     """Check if device is already tracked."""

@@ -12,7 +12,6 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -20,7 +19,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DATA_FRITZ, DOMAIN, MeshRoles
-from .coordinator import AvmWrapper, FritzData, FritzDevice, _is_tracked
+from .coordinator import (
+    AvmWrapper,
+    FritzConfigEntry,
+    FritzData,
+    FritzDevice,
+    _is_tracked,
+)
 from .entity import FritzDeviceBase
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,12 +70,12 @@ BUTTONS: Final = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FritzConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
     _LOGGER.debug("Setting up buttons")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     entities_list: list[ButtonEntity] = [
         FritzButton(avm_wrapper, entry.title, button) for button in BUTTONS

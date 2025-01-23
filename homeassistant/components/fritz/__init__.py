@@ -23,7 +23,7 @@ from .const import (
     FRITZ_EXCEPTIONS,
     PLATFORMS,
 )
-from .coordinator import AvmWrapper, FritzData
+from .coordinator import AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
     """Set up fritzboxtools from config entry."""
     _LOGGER.debug("Setting up FRITZ!Box Tools component")
     avm_wrapper = AvmWrapper(
@@ -64,8 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await avm_wrapper.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = avm_wrapper
+    entry.runtime_data = avm_wrapper
 
     if DATA_FRITZ not in hass.data:
         hass.data[DATA_FRITZ] = FritzData()
@@ -78,9 +77,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bool:
     """Unload FRITZ!Box Tools config entry."""
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
+    avm_wrapper = entry.runtime_data
 
     fritz_data = hass.data[DATA_FRITZ]
     fritz_data.tracked.pop(avm_wrapper.unique_id)
@@ -88,11 +87,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not bool(fritz_data.tracked):
         hass.data.pop(DATA_FRITZ)
 
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
