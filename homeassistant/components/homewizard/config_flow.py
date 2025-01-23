@@ -38,6 +38,7 @@ from .const import (
     LOGGER,
 )
 
+
 class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for P1 meter."""
 
@@ -84,48 +85,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-    async def async_step_authorize(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Step where we attempt to get a token."""
-
-        # We can assume that the IP address is set by the previous step, of not something is terribly wrong
-        assert self.ip_address is not None
-
-        api = HomeWizardEnergyV2(self.ip_address)
-        token: str | None = None
-        errors: dict[str, str] | None = None
-
-        # Tell device we want a token, user must now press the button within 30 seconds
-        # The first attempt will always fail and raise DisabledError but this opens the window to press the button
-        with contextlib.suppress(DisabledError):
-            token = await api.get_token("home-assistant")
-
-        if token is None:
-            errors = {"base": "authorization_failed"}
-
-        if user_input is None or token is None:
-            await api.close()
-            return self.async_show_form(step_id="authorize", errors=errors)
-
-        # Now we got a token, we can ask for some more info
-        device_info = await api.device()
-        await api.close()
-
-        data = {
-            CONF_IP_ADDRESS: self.ip_address,
-            CONF_TOKEN: token,
-        }
-
-        await self.async_set_unique_id(
-            f"{device_info.product_type}_{device_info.serial}"
-        )
-        self._abort_if_unique_id_configured(updates=data)
-        return self.async_create_entry(
-            title=f"{device_info.product_name}",
-            data=data,
         )
 
     async def async_step_authorize(
@@ -384,9 +343,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             raise RecoverableError(
                 "Device unreachable or unexpected response", "network_error"
             ) from ex
-
-        except UnauthorizedError as ex:
-            raise UnauthorizedError("Unauthorized") from ex
 
         except UnauthorizedError as ex:
             raise UnauthorizedError("Unauthorized") from ex
