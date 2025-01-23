@@ -13,7 +13,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "unique_id_mismatch": "Hmm, those login details are correct, but they're not for this adventurer. Got another account to try?",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -82,6 +83,30 @@
             },
             "data_description": {
               "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"
+            }
+          }
+        }
+      },
+      "reconfigure": {
+        "title": "Update Habitica configuration",
+        "description": "![Habiticans]({habiticans})\n\nEnter your new API token below. You can find it in Habitica under [**Settings -> Site Data**]({site_data})",
+        "data": {
+          "api_key": "[%key:component::habitica::config::step::advanced::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"
+        },
+        "sections": {
+          "danger_zone": {
+            "name": "Critical configuration options",
+            "description": "These settings impact core functionality. Modifications are unnecessary if connected to the official Habitica instance and may disrupt the integration. Proceed with caution.",
+            "data": {
+              "url": "[%key:common::config_flow::data::url%]",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "url": "URL of the Habitica instance",
+              "verify_ssl": "[%key:component::habitica::config::step::advanced::data_description::verify_ssl%]"
             }
           }
         }

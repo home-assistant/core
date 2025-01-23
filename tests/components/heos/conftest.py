@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyheos import (
     CONTROLS_ALL,
-    Dispatcher,
     Heos,
     HeosGroup,
     HeosOptions,
@@ -24,69 +23,56 @@ from pyheos import (
 import pytest
 import pytest_asyncio
 
-from homeassistant.components import ssdp
-from homeassistant.components.heos import (
-    CONF_PASSWORD,
-    DOMAIN,
-    ControllerManager,
-    GroupManager,
-    HeosRuntimeData,
-    SourceManager,
+from homeassistant.components.heos import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
-from homeassistant.const import CONF_HOST, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(heos_runtime_data):
+def config_entry_fixture() -> MockConfigEntry:
     """Create a mock HEOS config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",
         unique_id=DOMAIN,
     )
-    entry.runtime_data = heos_runtime_data
-    return entry
 
 
 @pytest.fixture(name="config_entry_options")
-def config_entry_options_fixture(heos_runtime_data):
+def config_entry_options_fixture() -> MockConfigEntry:
     """Create a mock HEOS config entry with options."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1"},
         title="HEOS System (via 127.0.0.1)",
         options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         unique_id=DOMAIN,
     )
-    entry.runtime_data = heos_runtime_data
-    return entry
 
 
-@pytest.fixture(name="heos_runtime_data")
-def heos_runtime_data_fixture(controller_manager, players):
-    """Create a mock HeosRuntimeData fixture."""
-    return HeosRuntimeData(
-        controller_manager, Mock(GroupManager), Mock(SourceManager), players
-    )
-
-
-@pytest.fixture(name="controller_manager")
-def controller_manager_fixture(controller):
-    """Create a mock controller manager fixture."""
-    mock_controller_manager = Mock(ControllerManager)
-    mock_controller_manager.controller = controller
-    return mock_controller_manager
-
-
-@pytest.fixture(name="controller")
-def controller_fixture(
-    players, favorites, input_sources, playlists, change_data, dispatcher, group
-):
+@pytest_asyncio.fixture(name="controller", autouse=True)
+async def controller_fixture(
+    players: dict[int, HeosPlayer],
+    favorites: dict[int, MediaItem],
+    input_sources: list[MediaItem],
+    playlists: list[MediaItem],
+    change_data: PlayerUpdateResult,
+    group: dict[int, HeosGroup],
+) -> AsyncIterator[Heos]:
     """Create a mock Heos controller fixture."""
-    mock_heos = Heos(HeosOptions(host="127.0.0.1", dispatcher=dispatcher))
+    mock_heos = Heos(HeosOptions(host="127.0.0.1"))
     for player in players.values():
         player.heos = mock_heos
     mock_heos.connect = AsyncMock()
@@ -105,20 +91,14 @@ def controller_fixture(
     new_mock = Mock(return_value=mock_heos)
     mock_heos.new_mock = new_mock
     with (
-        patch("homeassistant.components.heos.Heos", new=new_mock),
+        patch("homeassistant.components.heos.coordinator.Heos", new=new_mock),
         patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
     ):
         yield mock_heos
 
 
-@pytest.fixture(name="config")
-def config_fixture():
-    """Create hass config fixture."""
-    return {DOMAIN: {CONF_HOST: "127.0.0.1"}}
-
-
 @pytest.fixture(name="players")
-def player_fixture(quick_selects):
+def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
     """Create two mock HeosPlayers."""
     players = {}
     for i in (1, 2):
@@ -176,12 +156,11 @@ def player_fixture(quick_selects):
 
 
 @pytest.fixture(name="group")
-def group_fixture():
+def group_fixture() -> dict[int, HeosGroup]:
     """Create a HEOS group consisting of two players."""
     group = HeosGroup(
         name="Group", group_id=999, lead_player_id=1, member_player_ids=[2]
     )
-
     return {group.group_id: group}
 
 
@@ -212,7 +191,7 @@ def favorites_fixture() -> dict[int, MediaItem]:
 
 
 @pytest.fixture(name="input_sources")
-def input_sources_fixture() -> Sequence[MediaItem]:
+def input_sources_fixture() -> list[MediaItem]:
     """Create a set of input sources for testing."""
     source = MediaItem(
         source_id=1,
@@ -227,46 +206,40 @@ def input_sources_fixture() -> Sequence[MediaItem]:
     return [source]
 
 
-@pytest_asyncio.fixture(name="dispatcher")
-async def dispatcher_fixture() -> Dispatcher:
-    """Create a dispatcher for testing."""
-    return Dispatcher()
-
-
 @pytest.fixture(name="discovery_data")
-def discovery_data_fixture() -> dict:
+def discovery_data_fixture() -> SsdpServiceInfo:
     """Return mock discovery data for testing."""
-    return ssdp.SsdpServiceInfo(
+    return SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="http://127.0.0.1:60006/upnp/desc/aios_device/aios_device.xml",
         upnp={
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Office",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
-            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
-            ssdp.ATTR_UPNP_SERIAL: None,
-            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ATTR_UPNP_FRIENDLY_NAME: "Office",
+            ATTR_UPNP_MANUFACTURER: "Denon",
+            ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ATTR_UPNP_SERIAL: None,
+            ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
         },
     )
 
 
 @pytest.fixture(name="discovery_data_bedroom")
-def discovery_data_fixture_bedroom() -> dict:
+def discovery_data_fixture_bedroom() -> SsdpServiceInfo:
     """Return mock discovery data for testing."""
-    return ssdp.SsdpServiceInfo(
+    return SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="http://127.0.0.2:60006/upnp/desc/aios_device/aios_device.xml",
         upnp={
-            ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
-            ssdp.ATTR_UPNP_MANUFACTURER: "Denon",
-            ssdp.ATTR_UPNP_MODEL_NAME: "HEOS Drive",
-            ssdp.ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
-            ssdp.ATTR_UPNP_SERIAL: None,
-            ssdp.ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
+            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-denon-com:device:AiosDevice:1",
+            ATTR_UPNP_FRIENDLY_NAME: "Bedroom",
+            ATTR_UPNP_MANUFACTURER: "Denon",
+            ATTR_UPNP_MODEL_NAME: "HEOS Drive",
+            ATTR_UPNP_MODEL_NUMBER: "DWSA-10 4.0",
+            ATTR_UPNP_SERIAL: None,
+            ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
         },
     )
 
@@ -285,7 +258,7 @@ def quick_selects_fixture() -> dict[int, str]:
 
 
 @pytest.fixture(name="playlists")
-def playlists_fixture() -> Sequence[MediaItem]:
+def playlists_fixture() -> list[MediaItem]:
     """Create favorites fixture."""
     playlist = MediaItem(
         source_id=const.MUSIC_SOURCE_PLAYLISTS,
@@ -300,12 +273,12 @@ def playlists_fixture() -> Sequence[MediaItem]:
 
 
 @pytest.fixture(name="change_data")
-def change_data_fixture() -> dict:
+def change_data_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult()
 
 
 @pytest.fixture(name="change_data_mapped_ids")
-def change_data_mapped_ids_fixture() -> dict:
+def change_data_mapped_ids_fixture() -> PlayerUpdateResult:
     """Create player change data for testing."""
     return PlayerUpdateResult(updated_player_ids={1: 101})
