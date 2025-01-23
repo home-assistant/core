@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -17,6 +18,7 @@ from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util import slugify
 
 from . import dashboard, resources, websocket
 from .const import (  # noqa: F401
@@ -40,11 +42,24 @@ from .const import (  # noqa: F401
     SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
-    url_slug,
 )
 from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _validate_url_slug(value: Any) -> str:
+    """Validate value is a valid url slug."""
+    if value is None:
+        raise vol.Invalid("Slug should not be None")
+    if "-" not in value:
+        raise vol.Invalid("Url path needs to contain a hyphen (-)")
+    str_value = str(value)
+    slg = slugify(str_value, separator="-")
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
 
 CONF_DASHBOARDS = "dashboards"
 
@@ -65,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
-                    slug_validator=url_slug,
+                    slug_validator=_validate_url_slug,
                 ),
                 vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
