@@ -15,10 +15,6 @@ import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.climate import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation import (
-    ConversationTraceEventType,
-    async_conversation_trace_append,
-)
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
@@ -32,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
@@ -171,6 +167,12 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.conversation import (
+            ConversationTraceEventType,
+            async_conversation_trace_append,
+        )
+
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
@@ -368,7 +370,7 @@ class AssistAPI(API):
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml.dump(list(exposed_entities.values())))
+            prompt.append(yaml_util.dump(list(exposed_entities.values())))
 
         return "\n".join(prompt)
 

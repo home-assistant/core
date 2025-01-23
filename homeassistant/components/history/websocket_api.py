@@ -146,10 +146,12 @@ async def ws_get_history_during_period(
         # end_time. If it's false, we know there are no states in the
         # database up until end_time.
         (end_time and not has_states_before(hass, end_time))
-        or not include_start_time_state
-        and entity_ids
-        and not entities_may_have_state_changes_after(
-            hass, entity_ids, start_time, no_attributes
+        or (
+            not include_start_time_state
+            and entity_ids
+            and not entities_may_have_state_changes_after(
+                hass, entity_ids, start_time, no_attributes
+            )
         )
     ):
         connection.send_result(msg["id"], {})

@@ -70,20 +70,20 @@ class WebSocketHandler:
     """Handle an active websocket client connection."""
 
     __slots__ = (
-        "_hass",
-        "_loop",
-        "_request",
-        "_wsock",
-        "_handle_task",
-        "_writer_task",
-        "_closing",
         "_authenticated",
-        "_logger",
-        "_peak_checker_unsub",
+        "_closing",
         "_connection",
+        "_handle_task",
+        "_hass",
+        "_logger",
+        "_loop",
         "_message_queue",
+        "_peak_checker_unsub",
         "_ready_future",
         "_release_ready_queue_size",
+        "_request",
+        "_writer_task",
+        "_wsock",
     )
 
     def __init__(self, hass: HomeAssistant, request: web.Request) -> None:

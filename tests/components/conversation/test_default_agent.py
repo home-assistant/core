@@ -11,7 +11,7 @@ import pytest
 from syrupy import SnapshotAssertion
 import yaml
 
-from homeassistant.components import conversation, cover, media_player
+from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
@@ -3104,3 +3104,77 @@ async def test_turn_on_off(
     )
     assert len(off_calls) == 1
     assert off_calls[0].data.get("entity_id") == [entity_id]
+
+
+@pytest.mark.parametrize(
+    ("error_code", "return_response"),
+    [
+        (intent.IntentResponseErrorCode.NO_INTENT_MATCH, False),
+        (intent.IntentResponseErrorCode.NO_VALID_TARGETS, False),
+        (intent.IntentResponseErrorCode.FAILED_TO_HANDLE, True),
+        (intent.IntentResponseErrorCode.UNKNOWN, True),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_handle_intents_with_response_errors(
+    hass: HomeAssistant,
+    init_components: None,
+    area_registry: ar.AreaRegistry,
+    error_code: intent.IntentResponseErrorCode,
+    return_response: bool,
+) -> None:
+    """Test that handle_intents does not return response errors."""
+    assert await async_setup_component(hass, "climate", {})
+    area_registry.async_create("living room")
+
+    agent: default_agent.DefaultAgent = hass.data[DATA_DEFAULT_ENTITY]
+
+    user_input = ConversationInput(
+        text="What is the temperature in the living room?",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
+        return_value=default_agent._make_error_result(
+            user_input.language, error_code, "Mock error message"
+        ),
+    ) as mock_process:
+        response = await agent.async_handle_intents(user_input)
+
+    assert len(mock_process.mock_calls) == 1
+
+    if return_response:
+        assert response is not None and response.error_code == error_code
+    else:
+        assert response is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_state_names_are_not_translated(
+    hass: HomeAssistant,
+    init_components: None,
+) -> None:
+    """Test that state names are not translated in responses."""
+    await async_setup_component(hass, "weather", {})
+
+    hass.states.async_set("weather.test_weather", weather.ATTR_CONDITION_PARTLYCLOUDY)
+    expose_entity(hass, "weather.test_weather", True)
+
+    with patch(
+        "homeassistant.helpers.template.Template.async_render"
+    ) as mock_async_render:
+        result = await conversation.async_converse(
+            hass, "what is the weather like?", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+        mock_async_render.assert_called_once()
+
+        assert (
+            mock_async_render.call_args.args[0]["state"].state
+            == weather.ATTR_CONDITION_PARTLYCLOUDY
+        )

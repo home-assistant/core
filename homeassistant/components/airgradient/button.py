@@ -18,7 +18,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry
 from .const import DOMAIN
 from .coordinator import AirGradientCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -100,6 +102,7 @@ class AirGradientButton(AirGradientEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
 
+    @exception_handler
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.coordinator.client)

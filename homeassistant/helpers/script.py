@@ -16,7 +16,7 @@ from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -756,10 +756,8 @@ class _ScriptRun:
                 )
 
         running_script = (
-            params[CONF_DOMAIN] == "automation"
-            and params[CONF_SERVICE] == "trigger"
-            or params[CONF_DOMAIN] in ("python_script", "script")
-        )
+            params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
+        ) or params[CONF_DOMAIN] in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task_internal(

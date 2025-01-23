@@ -3,15 +3,11 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from bring_api import BringAuthException, BringParseException, BringRequestException
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.bring import (
-    BringAuthException,
-    BringParseException,
-    BringRequestException,
-    async_setup_entry,
-)
+from homeassistant.components.bring import async_setup_entry
 from homeassistant.components.bring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -120,13 +116,20 @@ async def test_config_entry_not_ready(
 
 
 @pytest.mark.parametrize(
-    "exception", [None, BringAuthException, BringRequestException, BringParseException]
+    ("exception", "state"),
+    [
+        (None, ConfigEntryState.LOADED),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR),
+        (BringRequestException, ConfigEntryState.SETUP_RETRY),
+        (BringParseException, ConfigEntryState.SETUP_RETRY),
+    ],
 )
 async def test_config_entry_not_ready_auth_error(
     hass: HomeAssistant,
     bring_config_entry: MockConfigEntry,
     mock_bring_client: AsyncMock,
     exception: Exception | None,
+    state: ConfigEntryState,
 ) -> None:
     """Test config entry not ready from authentication error."""
 
@@ -137,7 +140,7 @@ async def test_config_entry_not_ready_auth_error(
     await hass.config_entries.async_setup(bring_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert bring_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert bring_config_entry.state is state
 
 
 @pytest.mark.usefixtures("mock_bring_client")

@@ -108,41 +108,73 @@ async def test_set_target_humidity(
 
 
 @pytest.mark.parametrize(
-    ("turn_on", "api_response", "expectation"),
-    [
-        (False, False, pytest.raises(HomeAssistantError)),
-        (False, True, NoException),
-        (True, False, pytest.raises(HomeAssistantError)),
-        (True, True, NoException),
-    ],
+    ("api_response", "expectation"),
+    [(False, pytest.raises(HomeAssistantError)), (True, NoException)],
 )
-async def test_turn_on_off(
+async def test_turn_on(
     hass: HomeAssistant,
     humidifier_config_entry: MockConfigEntry,
-    turn_on: bool,
     api_response: bool,
     expectation,
 ) -> None:
-    """Test turn_on/off methods."""
+    """Test turn_on method."""
 
-    # turn_on/turn_off returns False indicating failure in which case humidifier.turn_on/turn_off
+    # turn_on returns False indicating failure in which case humidifier.turn_on
     # raises HomeAssistantError.
     with (
         expectation,
         patch(
-            f"pyvesync.vesyncfan.VeSyncHumid200300S.{'turn_on' if turn_on else 'turn_off'}",
-            return_value=api_response,
+            "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on", return_value=api_response
         ) as method_mock,
     ):
-        await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
-            SERVICE_TURN_ON if turn_on else SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER},
-            blocking=True,
-        )
+        with patch(
+            "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state"
+        ) as update_mock:
+            await hass.services.async_call(
+                HUMIDIFIER_DOMAIN,
+                SERVICE_TURN_ON,
+                {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER},
+                blocking=True,
+            )
 
         await hass.async_block_till_done()
         method_mock.assert_called_once()
+        update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [(False, pytest.raises(HomeAssistantError)), (True, NoException)],
+)
+async def test_turn_off(
+    hass: HomeAssistant,
+    humidifier_config_entry: MockConfigEntry,
+    api_response: bool,
+    expectation,
+) -> None:
+    """Test turn_off method."""
+
+    # turn_off returns False indicating failure in which case humidifier.turn_off
+    # raises HomeAssistantError.
+    with (
+        expectation,
+        patch(
+            "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off", return_value=api_response
+        ) as method_mock,
+    ):
+        with patch(
+            "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state"
+        ) as update_mock:
+            await hass.services.async_call(
+                HUMIDIFIER_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER},
+                blocking=True,
+            )
+
+        await hass.async_block_till_done()
+        method_mock.assert_called_once()
+        update_mock.assert_called_once()
 
 
 async def test_set_mode_invalid(

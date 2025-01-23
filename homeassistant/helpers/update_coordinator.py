@@ -13,7 +13,7 @@ from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
-from propcache import cached_property
+from propcache.api import cached_property
 import requests
 
 from homeassistant import config_entries
@@ -36,11 +36,6 @@ REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
-_DataUpdateCoordinatorT = TypeVar(
-    "_DataUpdateCoordinatorT",
-    bound="DataUpdateCoordinator[Any]",
-    default="DataUpdateCoordinator[dict[str, Any]]",
-)
 
 
 class UpdateFailed(HomeAssistantError):
@@ -364,7 +359,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self._async_unsub_refresh()
         self._debounced_refresh.async_cancel()
 
-        if self._shutdown_requested or scheduled and self.hass.is_stopping:
+        if self._shutdown_requested or (scheduled and self.hass.is_stopping):
             return
 
         if log_timing := self.logger.isEnabledFor(logging.DEBUG):
@@ -458,7 +453,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 self.logger.debug(
                     "Finished fetching %s data in %.3f seconds (success: %s)",
                     self.name,
-                    monotonic() - start,  # pylint: disable=possibly-used-before-assignment
+                    monotonic() - start,
                     self.last_update_success,
                 )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
@@ -564,7 +559,11 @@ class BaseCoordinatorEntity[
         """
 
 
-class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
+class CoordinatorEntity[
+    _DataUpdateCoordinatorT: DataUpdateCoordinator[Any] = DataUpdateCoordinator[
+        dict[str, Any]
+    ]
+](BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
     def __init__(

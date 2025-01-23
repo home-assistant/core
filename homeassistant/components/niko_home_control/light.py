@@ -112,7 +112,7 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
+        self._action.turn_on(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""

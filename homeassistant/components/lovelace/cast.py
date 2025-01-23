@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from pychromecast import Chromecast
 from pychromecast.const import CAST_TYPE_CHROMECAST
 
@@ -23,8 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 
-from .const import DOMAIN, ConfigNotFound
-from .dashboard import LovelaceConfig
+from .const import DOMAIN, LOVELACE_DATA, ConfigNotFound
 
 DEFAULT_DASHBOARD = "_default_"
 
@@ -76,7 +77,7 @@ async def async_browse_media(
                 can_expand=False,
             )
         ]
-        for url_path in hass.data[DOMAIN]["dashboards"]:
+        for url_path in hass.data[LOVELACE_DATA].dashboards:
             if url_path is None:
                 continue
 
@@ -151,11 +152,13 @@ async def async_play_media(
     return True
 
 
-async def _get_dashboard_info(hass, url_path):
+async def _get_dashboard_info(
+    hass: HomeAssistant, url_path: str | None
+) -> dict[str, Any]:
     """Load a dashboard and return info on views."""
     if url_path == DEFAULT_DASHBOARD:
         url_path = None
-    dashboard: LovelaceConfig | None = hass.data[DOMAIN]["dashboards"].get(url_path)
+    dashboard = hass.data[LOVELACE_DATA].dashboards.get(url_path)
 
     if dashboard is None:
         raise ValueError("Invalid dashboard specified")
@@ -172,7 +175,7 @@ async def _get_dashboard_info(hass, url_path):
         url_path = dashboard.url_path
         title = config.get("title", url_path) if config else url_path
 
-    views = []
+    views: list[dict[str, Any]] = []
     data = {
         "title": title,
         "url_path": url_path,

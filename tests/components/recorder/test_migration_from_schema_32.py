@@ -52,7 +52,7 @@ from .common import (
 from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
@@ -60,7 +60,7 @@ SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -124,7 +124,7 @@ def db_schema_32():
 @pytest.mark.parametrize("indices_to_drop", [[], [("events", "ix_events_context_id")]])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_events_context_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
@@ -396,7 +396,7 @@ async def test_migrate_events_context_ids(
 @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_finish_migrate_events_context_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test we re migrate old uuid context ids and ulid context ids to binary format.
 
@@ -505,7 +505,7 @@ async def test_finish_migrate_events_context_ids(
 @pytest.mark.parametrize("indices_to_drop", [[], [("states", "ix_states_context_id")]])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_states_context_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
 ) -> None:
     """Test we can migrate old uuid context ids and ulid context ids to binary format."""
@@ -758,7 +758,7 @@ async def test_migrate_states_context_ids(
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_finish_migrate_states_context_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test we re migrate old uuid context ids and ulid context ids to binary format.
 
@@ -866,7 +866,7 @@ async def test_finish_migrate_states_context_ids(
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_event_type_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test we can migrate event_types to the EventTypes table."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -984,7 +984,7 @@ async def test_migrate_event_type_ids(
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_entity_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -1092,7 +1092,7 @@ async def test_migrate_entity_ids(
 )
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_post_migrate_entity_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     indices_to_drop: list[tuple[str, str]],
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
@@ -1200,7 +1200,7 @@ async def test_post_migrate_entity_ids(
 @pytest.mark.parametrize("enable_migrate_entity_ids", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_null_entity_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test we can migrate entity_ids to the StatesMeta table."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -1310,7 +1310,7 @@ async def test_migrate_null_entity_ids(
 @pytest.mark.parametrize("enable_migrate_event_type_ids", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_null_event_type_ids(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test we can migrate event_types to the EventTypes table when the event_type is NULL."""
     importlib.import_module(SCHEMA_MODULE_32)
@@ -1991,7 +1991,7 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_stats_migrate_times(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we can migrate times in the statistics tables."""
@@ -2147,7 +2147,7 @@ async def test_stats_migrate_times(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_cleanup_unmigrated_state_timestamps(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Ensure schema 48 migration cleans up any unmigrated state timestamps."""
     importlib.import_module(SCHEMA_MODULE_32)

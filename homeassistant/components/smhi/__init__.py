@@ -32,6 +32,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
+
+    if entry.version > 3:
+        # Downgrade from future version
+        return False
+
     if entry.version == 1:
         new_data = {
             CONF_NAME: entry.data[CONF_NAME],
@@ -40,8 +45,11 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 CONF_LONGITUDE: entry.data[CONF_LONGITUDE],
             },
         }
+        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
 
-        if not hass.config_entries.async_update_entry(entry, data=new_data, version=2):
-            return False
+    if entry.version == 2:
+        new_data = entry.data.copy()
+        new_data.pop(CONF_NAME)
+        hass.config_entries.async_update_entry(entry, data=new_data, version=3)
 
     return True

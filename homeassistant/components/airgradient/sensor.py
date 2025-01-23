@@ -35,6 +35,8 @@ from .const import PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirGradientMeasurementSensorEntityDescription(SensorEntityDescription):

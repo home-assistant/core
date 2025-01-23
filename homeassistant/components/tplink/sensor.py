@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
-from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -141,10 +140,10 @@ async def async_setup_entry(
             feature_type=Feature.Type.Sensor,
             entity_class=TPLinkSensorEntity,
             descriptions=SENSOR_DESCRIPTIONS_MAP,
+            platform_domain=SENSOR_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )
-        async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
         async_add_entities(entities)
 
     _check_device()

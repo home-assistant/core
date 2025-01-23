@@ -8,28 +8,13 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyheos import (
-    Credentials,
-    Heos,
-    HeosError,
-    HeosOptions,
-    HeosPlayer,
-    PlayerUpdateResult,
-    SignalHeosEvent,
-    const as heos_const,
-)
+from pyheos import Heos, HeosError, HeosPlayer, const as heos_const
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -46,6 +31,7 @@ from .const import (
     SIGNAL_HEOS_PLAYER_ADDED,
     SIGNAL_HEOS_UPDATED,
 )
+from .coordinator import HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -60,7 +46,7 @@ _LOGGER = logging.getLogger(__name__)
 class HeosRuntimeData:
     """Runtime data and coordinators for HEOS config entries."""
 
-    controller_manager: ControllerManager
+    coordinator: HeosCoordinator
     group_manager: GroupManager
     source_manager: SourceManager
     players: dict[int, HeosPlayer]
@@ -81,66 +67,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=DOMAIN)
 
-    host = entry.data[CONF_HOST]
-    credentials: Credentials | None = None
-    if entry.options:
-        credentials = Credentials(
-            entry.options[CONF_USERNAME], entry.options[CONF_PASSWORD]
-        )
+    # Migrate non-string device identifiers.
+    device_registry = dr.async_get(hass)
+    for device in device_registry.devices.get_devices_for_config_entry_id(
+        entry.entry_id
+    ):
+        for domain, player_id in device.identifiers:
+            if domain == DOMAIN and not isinstance(player_id, str):
+                device_registry.async_update_device(
+                    device.id, new_identifiers={(DOMAIN, str(player_id))}
+                )
+            break
 
-    # Setting all_progress_events=False ensures that we only receive a
-    # media position update upon start of playback or when media changes
-    controller = Heos(
-        HeosOptions(
-            host,
-            all_progress_events=False,
-            auto_reconnect=True,
-            credentials=credentials,
-        )
-    )
-
-    # Auth failure handler must be added before connecting to the host, otherwise
-    # the event will be missed when login fails during connection.
-    async def auth_failure() -> None:
-        """Handle authentication failure."""
-        entry.async_start_reauth(hass)
-
-    entry.async_on_unload(controller.add_on_user_credentials_invalid(auth_failure))
-
-    try:
-        # Auto reconnect only operates if initial connection was successful.
-        await controller.connect()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to connect to controller %s: %s", host, error)
-        raise ConfigEntryNotReady from error
-
-    # Disconnect when shutting down
-    async def disconnect_controller(event):
-        await controller.disconnect()
-
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, disconnect_controller)
-    )
-
-    # Get players and sources
-    try:
-        players = await controller.get_players()
-        favorites = {}
-        if controller.is_signed_in:
-            favorites = await controller.get_favorites()
-        else:
-            _LOGGER.warning(
-                "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-            )
-        inputs = await controller.get_input_sources()
-    except HeosError as error:
-        await controller.disconnect()
-        _LOGGER.debug("Unable to retrieve players and sources: %s", error)
-        raise ConfigEntryNotReady from error
-
-    controller_manager = ControllerManager(hass, controller)
-    await controller_manager.connect_listeners()
+    coordinator = HeosCoordinator(hass, entry)
+    await coordinator.async_setup()
+    # Preserve existing logic until migrated into coordinator
+    controller = coordinator.heos
+    players = controller.players
+    favorites = coordinator.favorites
+    inputs = coordinator.inputs
 
     source_manager = SourceManager(favorites, inputs)
     source_manager.connect_update(hass, controller)
@@ -148,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     group_manager = GroupManager(hass, controller, players)
 
     entry.runtime_data = HeosRuntimeData(
-        controller_manager, group_manager, source_manager, players
+        coordinator, group_manager, source_manager, players
     )
 
     group_manager.connect_update()
@@ -161,87 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.controller_manager.disconnect()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-class ControllerManager:
-    """Class that manages events of the controller."""
-
-    def __init__(self, hass: HomeAssistant, controller: Heos) -> None:
-        """Init the controller manager."""
-        self._hass = hass
-        self._device_registry: dr.DeviceRegistry | None = None
-        self._entity_registry: er.EntityRegistry | None = None
-        self.controller = controller
-
-    async def connect_listeners(self):
-        """Subscribe to events of interest."""
-        self._device_registry = dr.async_get(self._hass)
-        self._entity_registry = er.async_get(self._hass)
-
-        # Handle controller events
-        self.controller.add_on_controller_event(self._controller_event)
-
-        # Handle connection-related events
-        self.controller.add_on_heos_event(self._heos_event)
-
-    async def disconnect(self):
-        """Disconnect subscriptions."""
-        self.controller.dispatcher.disconnect_all()
-        await self.controller.disconnect()
-
-    async def _controller_event(
-        self, event: str, data: PlayerUpdateResult | None
-    ) -> None:
-        """Handle controller event."""
-        if event == heos_const.EVENT_PLAYERS_CHANGED:
-            assert data is not None
-            self.update_ids(data.updated_player_ids)
-        # Update players
-        async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
-
-    async def _heos_event(self, event):
-        """Handle connection event."""
-        if event == SignalHeosEvent.CONNECTED:
-            try:
-                # Retrieve latest players and refresh status
-                data = await self.controller.load_players()
-                self.update_ids(data.updated_player_ids)
-            except HeosError as ex:
-                _LOGGER.error("Unable to refresh players: %s", ex)
-        # Update players
-        _LOGGER.debug("HEOS Controller event called, calling dispatcher")
-        async_dispatcher_send(self._hass, SIGNAL_HEOS_UPDATED)
-
-    def update_ids(self, mapped_ids: dict[int, int]):
-        """Update the IDs in the device and entity registry."""
-        # mapped_ids contains the mapped IDs (new:old)
-        for old_id, new_id in mapped_ids.items():
-            # update device registry
-            assert self._device_registry is not None
-            entry = self._device_registry.async_get_device(
-                identifiers={(DOMAIN, old_id)}  # type: ignore[arg-type]  # Fix in the future
-            )
-            new_identifiers = {(DOMAIN, new_id)}
-            if entry:
-                self._device_registry.async_update_device(
-                    entry.id,
-                    new_identifiers=new_identifiers,  # type: ignore[arg-type]  # Fix in the future
-                )
-                _LOGGER.debug(
-                    "Updated device %s identifiers to %s", entry.id, new_identifiers
-                )
-            # update entity registry
-            assert self._entity_registry is not None
-            entity_id = self._entity_registry.async_get_entity_id(
-                Platform.MEDIA_PLAYER, DOMAIN, str(old_id)
-            )
-            if entity_id:
-                self._entity_registry.async_update_entity(
-                    entity_id, new_unique_id=str(new_id)
-                )
-                _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
 
 
 class GroupManager:
@@ -294,7 +159,7 @@ class GroupManager:
         return group_info_by_entity_id
 
     async def async_join_players(
-        self, leader_id: int, leader_entity_id: str, member_entity_ids: list[str]
+        self, leader_id: int, member_entity_ids: list[str]
     ) -> None:
         """Create a group a group leader and member players."""
         # Resolve HEOS player_id for each member entity_id
@@ -308,26 +173,11 @@ class GroupManager:
                 )
             member_ids.append(member_id)
 
-        try:
-            await self.controller.create_group(leader_id, member_ids)
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to group %s with %s: %s",
-                leader_entity_id,
-                member_entity_ids,
-                err,
-            )
+        await self.controller.create_group(leader_id, member_ids)
 
-    async def async_unjoin_player(self, player_id: int, player_entity_id: str):
+    async def async_unjoin_player(self, player_id: int):
         """Remove `player_entity_id` from any group."""
-        try:
-            await self.controller.create_group(player_id, [])
-        except HeosError as err:
-            _LOGGER.error(
-                "Failed to ungroup %s: %s",
-                player_entity_id,
-                err,
-            )
+        await self.controller.create_group(player_id, [])
 
     async def async_update_groups(self) -> None:
         """Update the group membership from the controller."""
@@ -437,7 +287,11 @@ class SourceManager:
             await player.play_input_source(input_source.media_id)
             return
 
-        _LOGGER.error("Unknown source: %s", source)
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_source",
+            translation_placeholders={"source": source},
+        )
 
     def get_current_source(self, now_playing_media):
         """Determine current source from now playing media."""

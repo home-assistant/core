@@ -21,7 +21,7 @@ from aiolifx.aiolifx import (
 from aiolifx.connection import LIFXConnection
 from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,

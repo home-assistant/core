@@ -8,7 +8,6 @@ from dbus_fast.aio import message_bus
 import habluetooth.util as habluetooth_utils
 import pytest
 
-# pylint: disable-next=no-name-in-module
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 

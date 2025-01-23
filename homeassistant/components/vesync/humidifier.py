@@ -120,12 +120,12 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return self.device.config["auto_target_humidity"]
+        return self.device.auto_humidity
 
     @property
     def mode(self) -> str | None:
         """Get the current preset mode."""
-        return _get_ha_mode(self.device.details["mode"])
+        return _get_ha_mode(self.device.mode)
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
@@ -149,11 +149,15 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not success:
             raise HomeAssistantError("An error occurred while turning on.")
 
+        self.schedule_update_ha_state()
+
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = self.device.turn_off()
         if not success:
             raise HomeAssistantError("An error occurred while turning off.")
+
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self) -> bool:

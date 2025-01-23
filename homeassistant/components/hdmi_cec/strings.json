@@ -6,7 +6,7 @@
     },
     "select_device": {
       "name": "Select device",
-      "description": "Select HDMI device.",
+      "description": "Selects an HDMI device.",
       "fields": {
         "device": {
           "name": "[%key:common::config_flow::data::device%]",

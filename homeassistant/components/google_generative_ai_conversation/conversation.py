@@ -22,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import device_registry as dr, intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from .const import (
     CONF_CHAT_MODEL,
@@ -204,7 +204,7 @@ class GoogleGenerativeAIConversationEntity(
         """Process a sentence."""
         result = conversation.ConversationResult(
             response=intent.IntentResponse(language=user_input.language),
-            conversation_id=user_input.conversation_id or ulid.ulid_now(),
+            conversation_id=user_input.conversation_id or ulid_util.ulid_now(),
         )
         assert result.conversation_id
 

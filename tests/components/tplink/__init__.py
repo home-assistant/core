@@ -197,10 +197,12 @@ def _mocked_device(
         mod.get_feature.side_effect = device_features.get
         mod.has_feature.side_effect = lambda id: id in device_features
 
+    device.parent = None
     device.children = []
     if children:
         for child in children:
             child.mac = mac
+            child.parent = device
         device.children = children
     device.device_type = device_type if device_type else DeviceType.Unknown
     if (

@@ -394,7 +394,7 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
     )
     await hass.async_block_till_done()
 
-    mock_modbus.write_register.assert_called_with(11, 0xAA, slave=10)
+    mock_modbus.write_register.assert_called_with(11, value=0xAA, slave=10)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -404,7 +404,7 @@ async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
     )
     await hass.async_block_till_done()
 
-    mock_modbus.write_register.assert_called_with(11, 0xFF, slave=10)
+    mock_modbus.write_register.assert_called_with(11, value=0xFF, slave=10)
 
 
 @pytest.mark.parametrize(

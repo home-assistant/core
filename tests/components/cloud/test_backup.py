@@ -204,6 +204,8 @@ async def test_agents_list_backups_fail_cloud(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
 

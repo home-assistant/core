@@ -768,11 +768,8 @@ async def async_get_broker_settings(
         validated_user_input.update(user_input)
         client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
         client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
-        if (
-            client_certificate_id
-            and not client_key_id
-            or not client_certificate_id
-            and client_key_id
+        if (client_certificate_id and not client_key_id) or (
+            not client_certificate_id and client_key_id
         ):
             errors["base"] = "invalid_inclusion"
             return False
@@ -782,14 +779,20 @@ async def async_get_broker_settings(
 
         # Return to form for file upload CA cert or client cert and key
         if (
-            not client_certificate
-            and user_input.get(SET_CLIENT_CERT)
-            and not client_certificate_id
-            or not certificate
-            and user_input.get(SET_CA_CERT, "off") == "custom"
-            and not certificate_id
-            or user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
-            and CONF_WS_PATH not in user_input
+            (
+                not client_certificate
+                and user_input.get(SET_CLIENT_CERT)
+                and not client_certificate_id
+            )
+            or (
+                not certificate
+                and user_input.get(SET_CA_CERT, "off") == "custom"
+                and not certificate_id
+            )
+            or (
+                user_input.get(CONF_TRANSPORT) == TRANSPORT_WEBSOCKETS
+                and CONF_WS_PATH not in user_input
+            )
         ):
             return False
 

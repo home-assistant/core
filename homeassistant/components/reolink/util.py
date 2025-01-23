@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from reolink_aio.exceptions import (
     ApiError,
@@ -87,17 +87,13 @@ def get_device_uid_and_ch(
     return (device_uid, ch, is_chime)
 
 
-T = TypeVar("T")
-P = ParamSpec("P")
-
-
 # Decorators
-def raise_translated_error(
-    func: Callable[P, Awaitable[T]],
-) -> Callable[P, Coroutine[Any, Any, T]]:
+def raise_translated_error[**P, R](
+    func: Callable[P, Awaitable[R]],
+) -> Callable[P, Coroutine[Any, Any, R]]:
     """Wrap a reolink-aio function to translate any potential errors."""
 
-    async def decorator_raise_translated_error(*args: P.args, **kwargs: P.kwargs) -> T:
+    async def decorator_raise_translated_error(*args: P.args, **kwargs: P.kwargs) -> R:
         """Try a reolink-aio function and translate any potential errors."""
         try:
             return await func(*args, **kwargs)

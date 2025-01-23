@@ -123,7 +123,7 @@ async def test_handle_mjpeg_stream_not_supported(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
 ) -> None:
-    """Test handle_async_mjpeg_stream."""
+    """Test no stream if stream_rtsp_url is None after creation."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -132,17 +132,17 @@ async def test_handle_mjpeg_stream_not_supported(
     )
     mock_camera = mock_device.modules[Module.Camera]
 
-    mock_camera.stream_rtsp_url.return_value = None
+    mock_camera.stream_rtsp_url.side_effect = ("foo", None)
 
     await setup_platform_for_device(
         hass, mock_camera_config_entry, Platform.CAMERA, mock_device
     )
 
     mock_request = make_mocked_request("GET", "/", headers={"token": "x"})
-    stream = await async_get_mjpeg_stream(
+    mjpeg_stream = await async_get_mjpeg_stream(
         hass, mock_request, "camera.my_camera_live_view"
     )
-    assert stream is None
+    assert mjpeg_stream is None
 
 
 async def test_camera_image(

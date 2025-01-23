@@ -19,7 +19,7 @@ from homeassistant.components.template import DOMAIN, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from tests.common import async_mock_service
 
@@ -40,7 +40,7 @@ def patch_blueprint(
             return orig_load(self, path)
 
         return Blueprint(
-            yaml.load_yaml(data_path),
+            yaml_util.load_yaml(data_path),
             expected_domain=self.domain,
             path=path,
             schema=BLUEPRINT_SCHEMA,

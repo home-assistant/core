@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -88,11 +87,9 @@ async def async_setup_entry(
             feature_type=Feature.Type.BinarySensor,
             entity_class=TPLinkBinarySensorEntity,
             descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
+            platform_domain=BINARY_SENSOR_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
-        )
-        async_cleanup_deprecated(
-            hass, BINARY_SENSOR_DOMAIN, config_entry.entry_id, entities
         )
         async_add_entities(entities)
 

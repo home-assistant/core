@@ -2,8 +2,8 @@
 
 import asyncio
 
+import aiohttp
 from aiowebostv import WebOsTvCommandError
-from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from homeassistant.const import Platform
 
@@ -27,11 +27,10 @@ SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 
 WEBOSTV_EXCEPTIONS = (
-    OSError,
-    ConnectionClosed,
-    ConnectionClosedOK,
-    ConnectionRefusedError,
+    ConnectionResetError,
     WebOsTvCommandError,
-    TimeoutError,
+    aiohttp.ClientConnectorError,
+    aiohttp.ServerDisconnectedError,
     asyncio.CancelledError,
+    asyncio.TimeoutError,
 )

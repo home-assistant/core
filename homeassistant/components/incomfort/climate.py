@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -44,6 +44,7 @@ async def async_setup_entry(
 class InComfortClimate(IncomfortEntity, ClimateEntity):
     """Representation of an InComfort/InTouch climate device."""
 
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_min_temp = 5.0
     _attr_max_temp = 30.0
     _attr_name = None
@@ -72,6 +73,8 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             manufacturer="Intergas",
             name=f"Thermostat {room.room_no}",
         )
+        if coordinator.unique_id:
+            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -105,7 +108,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature: float = kwargs[ATTR_TEMPERATURE]
         await self._room.set_override(temperature)
         await self.coordinator.async_refresh()
 

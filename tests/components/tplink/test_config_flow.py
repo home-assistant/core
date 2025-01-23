@@ -7,7 +7,7 @@ from kasa import Module, TimeoutError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, stream
+from homeassistant.components import stream
 from homeassistant.components.tplink import (
     DOMAIN,
     AuthenticationError,
@@ -36,6 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import _mocked_device, _patch_connect, _patch_discovery, _patch_single_discovery
 from .conftest import override_side_effect
@@ -1291,7 +1292,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )
@@ -1305,7 +1306,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress="000000000000", hostname="mock_hostname"
             ),
         )
@@ -1321,7 +1322,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5", macaddress="000000000001", hostname="mock_hostname"
             ),
         )
@@ -1335,7 +1336,7 @@ async def test_discovered_by_discovery_and_dhcp(hass: HomeAssistant) -> None:
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         ),
@@ -1389,7 +1390,7 @@ async def test_discovered_by_dhcp_or_discovery(
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 ip=IP_ADDRESS, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         ),
@@ -1606,7 +1607,7 @@ async def test_dhcp_discovery_with_ip_change(
     discovery_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
         ),
     )
@@ -1631,7 +1632,7 @@ async def test_dhcp_discovery_discover_fail(
         discovery_result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=IP_ADDRESS2, macaddress=DHCP_FORMATTED_MAC_ADDRESS, hostname=ALIAS
             ),
         )

@@ -14,7 +14,7 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine

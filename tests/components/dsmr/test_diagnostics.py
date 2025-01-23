@@ -58,7 +58,7 @@ async def test_diagnostics(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m³"},
+                {"value": Decimal("745.695"), "unit": "m³"},
             ],
         ),
         "GAS_METER_READING",

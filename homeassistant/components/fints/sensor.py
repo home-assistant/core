@@ -9,7 +9,7 @@ from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.sensor import (

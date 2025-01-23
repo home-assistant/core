@@ -106,36 +106,23 @@ class _AdvertisementSubscription:
         self._async_added(self.pending_service_infos)
         self.pending_service_infos.clear()
 
-    def _async_added(self, service_infos: Iterable[BluetoothServiceInfoBleak]) -> None:
+    def _async_event_message(self, message: dict[str, Any]) -> None:
         self.connection.send_message(
-            json_bytes(
-                websocket_api.event_message(
-                    self.ws_msg_id,
-                    {
-                        "add": [
-                            serialize_service_info(service_info, self.time_diff)
-                            for service_info in service_infos
-                        ]
-                    },
-                )
-            )
+            json_bytes(websocket_api.event_message(self.ws_msg_id, message))
+        )
+
+    def _async_added(self, service_infos: Iterable[BluetoothServiceInfoBleak]) -> None:
+        self._async_event_message(
+            {
+                "add": [
+                    serialize_service_info(service_info, self.time_diff)
+                    for service_info in service_infos
+                ]
+            }
         )
 
     def _async_removed(self, address: str) -> None:
-        self.connection.send_message(
-            json_bytes(
-                websocket_api.event_message(
-                    self.ws_msg_id,
-                    {
-                        "remove": [
-                            {
-                                "address": address,
-                            }
-                        ]
-                    },
-                )
-            )
-        )
+        self._async_event_message({"remove": [{"address": address}]})
 
     @callback
     def _async_on_advertisement(

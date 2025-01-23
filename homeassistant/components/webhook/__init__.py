@@ -21,7 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import get_url, is_cloud_connection
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import network
+from homeassistant.util import network as network_util
 from homeassistant.util.aiohttp import MockRequest, MockStreamReader, serialize_response
 
 _LOGGER = logging.getLogger(__name__)
@@ -174,7 +174,7 @@ async def async_handle_webhook(
                 _LOGGER.debug("Unable to parse remote ip %s", request.remote)
                 return Response(status=HTTPStatus.OK)
 
-            is_local = network.is_local(request_remote)
+            is_local = network_util.is_local(request_remote)
 
         if not is_local:
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)

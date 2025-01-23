@@ -22,6 +22,7 @@ from bluetooth_adapters import (
     adapter_model,
     adapter_unique_name,
     get_adapters,
+    get_manufacturer_from_mac,
 )
 from bluetooth_data_tools import monotonic_time_coarse as MONOTONIC_TIME
 from habluetooth import (
@@ -78,6 +79,9 @@ from .const import (
     CONF_ADAPTER,
     CONF_DETAILS,
     CONF_PASSIVE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
     DOMAIN,
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
@@ -315,6 +319,38 @@ async def async_update_device(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry for a bluetooth scanner."""
+    if source_entry_id := entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID):
+        if not (source_entry := hass.config_entries.async_get_entry(source_entry_id)):
+            # Cleanup the orphaned entry using a call_soon to ensure
+            # we can return before the entry is removed
+            hass.loop.call_soon(
+                hass_callback(
+                    lambda: hass.async_create_task(
+                        hass.config_entries.async_remove(entry.entry_id),
+                        "remove orphaned bluetooth entry {entry.entry_id}",
+                    )
+                )
+            )
+        address = entry.unique_id
+        assert address is not None
+        assert source_entry is not None
+        source_domain = entry.data[CONF_SOURCE_DOMAIN]
+        if mac_manufacturer := await get_manufacturer_from_mac(address):
+            manufacturer = f"{mac_manufacturer} ({source_domain})"
+        else:
+            manufacturer = source_domain
+        details = AdapterDetails(
+            address=address,
+            product=entry.data.get(CONF_SOURCE_MODEL),
+            manufacturer=manufacturer,
+        )
+        await async_update_device(
+            hass,
+            entry,
+            source_entry.title,
+            details,
+        )
+        return True
     manager = _get_manager(hass)
     address = entry.unique_id
     assert address is not None

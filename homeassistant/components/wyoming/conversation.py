@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -97,7 +97,7 @@ class WyomingConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        conversation_id = user_input.conversation_id or ulid.ulid_now()
+        conversation_id = user_input.conversation_id or ulid_util.ulid_now()
         intent_response = intent.IntentResponse(language=user_input.language)
 
         try:

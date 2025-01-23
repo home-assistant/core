@@ -54,12 +54,12 @@ from .common import (
 )
 
 from tests.common import MockPlatform, mock_platform
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 

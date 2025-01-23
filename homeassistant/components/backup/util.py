@@ -17,26 +17,35 @@ from securetar import SecureTarError, SecureTarFile, SecureTarReadError
 
 from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE, LOGGER
 from .models import AddonInfo, AgentBackup, Folder
 
 
-class DecryptError(Exception):
+class DecryptError(HomeAssistantError):
     """Error during decryption."""
+
+    _message = "Unexpected error during decryption."
 
 
 class UnsupportedSecureTarVersion(DecryptError):
     """Unsupported securetar version."""
 
+    _message = "Unsupported securetar version."
+
 
 class IncorrectPassword(DecryptError):
     """Invalid password or corrupted backup."""
 
+    _message = "Invalid password or corrupted backup."
+
 
 class BackupEmpty(DecryptError):
     """No tar files found in the backup."""
+
+    _message = "No tar files found in the backup."
 
 
 def make_backup_dir(path: Path) -> None:

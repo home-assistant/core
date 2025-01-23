@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import dhcp, ssdp, zeroconf
 from homeassistant.components.axis import config_flow
 from homeassistant.components.axis.const import (
     CONF_STREAM_PROFILE,
@@ -33,6 +32,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DEFAULT_HOST, MAC, MODEL, NAME
 
@@ -268,7 +270,7 @@ async def test_reconfiguration_flow_update_configuration(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
                 macaddress=DHCP_FORMATTED_MAC,
@@ -276,7 +278,7 @@ async def test_reconfiguration_flow_update_configuration(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -312,7 +314,7 @@ async def test_reconfiguration_flow_update_configuration(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(DEFAULT_HOST),
                 ip_addresses=[ip_address(DEFAULT_HOST)],
                 port=80,
@@ -376,7 +378,7 @@ async def test_discovery_flow(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip=DEFAULT_HOST,
                 macaddress=DHCP_FORMATTED_MAC,
@@ -384,7 +386,7 @@ async def test_discovery_flow(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -396,7 +398,7 @@ async def test_discovery_flow(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address(DEFAULT_HOST),
                 ip_addresses=[ip_address(DEFAULT_HOST)],
                 hostname="mock_hostname",
@@ -431,7 +433,7 @@ async def test_discovered_device_already_configured(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="2.3.4.5",
                 macaddress=DHCP_FORMATTED_MAC,
@@ -440,7 +442,7 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -453,7 +455,7 @@ async def test_discovered_device_already_configured(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address("2.3.4.5"),
                 ip_addresses=[ip_address("2.3.4.5")],
                 hostname="mock_hostname",
@@ -507,7 +509,7 @@ async def test_discovery_flow_updated_configuration(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname="",
                 ip="",
                 macaddress=dr.format_mac("01234567890").replace(":", ""),
@@ -515,7 +517,7 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -527,7 +529,7 @@ async def test_discovery_flow_updated_configuration(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=None,
                 ip_addresses=[],
                 hostname="mock_hostname",
@@ -556,7 +558,7 @@ async def test_discovery_flow_ignore_non_axis_device(
     [
         (
             SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(
+            DhcpServiceInfo(
                 hostname=f"axis-{MAC}",
                 ip="169.254.3.4",
                 macaddress=DHCP_FORMATTED_MAC,
@@ -564,7 +566,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_SSDP,
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={
@@ -576,7 +578,7 @@ async def test_discovery_flow_ignore_non_axis_device(
         ),
         (
             SOURCE_ZEROCONF,
-            zeroconf.ZeroconfServiceInfo(
+            ZeroconfServiceInfo(
                 ip_address=ip_address("169.254.3.4"),
                 ip_addresses=[ip_address("169.254.3.4")],
                 hostname="mock_hostname",

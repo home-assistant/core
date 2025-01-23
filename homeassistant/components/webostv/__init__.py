@@ -19,6 +19,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -50,7 +51,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
     key = entry.data[CONF_CLIENT_SECRET]
 
     # Attempt a connection, but fail gracefully if tv is off for example.
-    entry.runtime_data = client = WebOsClient(host, key)
+    entry.runtime_data = client = WebOsClient(
+        host, key, client_session=async_get_clientsession(hass)
+    )
     with suppress(*WEBOSTV_EXCEPTIONS):
         try:
             await client.connect()
@@ -96,9 +99,15 @@ async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_control_connect(host: str, key: str | None) -> WebOsClient:
+async def async_control_connect(
+    hass: HomeAssistant, host: str, key: str | None
+) -> WebOsClient:
     """LG Connection."""
-    client = WebOsClient(host, key)
+    client = WebOsClient(
+        host,
+        key,
+        client_session=async_get_clientsession(hass),
+    )
     try:
         await client.connect()
     except WebOsTvPairError:

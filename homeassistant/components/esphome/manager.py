@@ -134,16 +134,16 @@ class ESPHomeManager:
     """Class to manage an ESPHome connection."""
 
     __slots__ = (
-        "hass",
-        "host",
-        "password",
-        "entry",
         "cli",
         "device_id",
         "domain_data",
+        "entry",
+        "entry_data",
+        "hass",
+        "host",
+        "password",
         "reconnect_logic",
         "zeroconf_instance",
-        "entry_data",
     )
 
     def __init__(

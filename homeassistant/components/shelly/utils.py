@@ -50,6 +50,7 @@ from .const import (
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
@@ -453,8 +454,13 @@ def mac_address_from_name(name: str) -> str | None:
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
-    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+    if (
+        beta and gen in BLOCK_GENERATIONS
+    ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
+
+    if beta:
+        return GEN2_BETA_RELEASE_URL
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
 

@@ -9,7 +9,6 @@ from pyfritzhome import LoginError
 import pytest
 from requests.exceptions import HTTPError
 
-from homeassistant.components import ssdp
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -18,6 +17,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
 
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_SSDP_DATA = {
-    "ip4_valid": ssdp.SsdpServiceInfo(
+    "ip4_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="https://10.0.0.1:12345/test",
@@ -35,7 +35,7 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_UDN: "uuid:only-a-test",
         },
     ),
-    "ip6_valid": ssdp.SsdpServiceInfo(
+    "ip6_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="https://[1234::1]:12345/test",
@@ -44,7 +44,7 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_UDN: "uuid:only-a-test",
         },
     ),
-    "ip6_invalid": ssdp.SsdpServiceInfo(
+    "ip6_invalid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
         ssdp_location="https://[fe80::1%1]:12345/test",
@@ -267,7 +267,7 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 async def test_ssdp(
     hass: HomeAssistant,
     fritz: Mock,
-    test_data: ssdp.SsdpServiceInfo,
+    test_data: SsdpServiceInfo,
     expected_result: str,
 ) -> None:
     """Test starting a flow from discovery."""

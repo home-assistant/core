@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleEntity
-from .helpers import handle_vehicle_command
+from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
@@ -28,24 +28,31 @@ class TeslemetryButtonEntityDescription(ButtonEntityDescription):
 
 
 DESCRIPTIONS: tuple[TeslemetryButtonEntityDescription, ...] = (
-    TeslemetryButtonEntityDescription(key="wake", func=lambda self: self.api.wake_up()),
     TeslemetryButtonEntityDescription(
-        key="flash_lights", func=lambda self: self.api.flash_lights()
+        key="wake", func=lambda self: handle_command(self.api.wake_up())
     ),
     TeslemetryButtonEntityDescription(
-        key="honk", func=lambda self: self.api.honk_horn()
+        key="flash_lights",
+        func=lambda self: handle_vehicle_command(self.api.flash_lights()),
     ),
     TeslemetryButtonEntityDescription(
-        key="enable_keyless_driving", func=lambda self: self.api.remote_start_drive()
+        key="honk", func=lambda self: handle_vehicle_command(self.api.honk_horn())
     ),
     TeslemetryButtonEntityDescription(
-        key="boombox", func=lambda self: self.api.remote_boombox(0)
+        key="enable_keyless_driving",
+        func=lambda self: handle_vehicle_command(self.api.remote_start_drive()),
+    ),
+    TeslemetryButtonEntityDescription(
+        key="boombox",
+        func=lambda self: handle_vehicle_command(self.api.remote_boombox(0)),
     ),
     TeslemetryButtonEntityDescription(
         key="homelink",
-        func=lambda self: self.api.trigger_homelink(
-            lat=self.coordinator.data["drive_state_latitude"],
-            lon=self.coordinator.data["drive_state_longitude"],
+        func=lambda self: handle_vehicle_command(
+            self.api.trigger_homelink(
+                lat=self.coordinator.data["drive_state_latitude"],
+                lon=self.coordinator.data["drive_state_longitude"],
+            )
         ),
     ),
 )
@@ -85,4 +92,4 @@ class TeslemetryButtonEntity(TeslemetryVehicleEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        await handle_vehicle_command(self.entity_description.func(self))
+        await self.entity_description.func(self)

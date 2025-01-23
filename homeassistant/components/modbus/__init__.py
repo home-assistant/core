@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
 
 import voluptuous as vol
 
@@ -143,7 +142,7 @@ from .const import (
     UDP,
     DataType,
 )
-from .modbus import ModbusHub, async_modbus_setup
+from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
 from .validators import (
     duplicate_fan_mode_validator,
     duplicate_swing_mode_validator,
@@ -458,7 +457,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
     """Return modbus hub with name."""
-    return cast(ModbusHub, hass.data[DOMAIN][name])
+    return hass.data[DATA_MODBUS_HUBS][name]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -468,12 +467,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: Event | ServiceCall) -> None:
         """Reload Modbus."""
-        if DOMAIN not in hass.data:
+        if DATA_MODBUS_HUBS not in hass.data:
             _LOGGER.error("Modbus cannot reload, because it was never loaded")
             return
-        hubs = hass.data[DOMAIN]
-        for name in hubs:
-            await hubs[name].async_close()
+        hubs = hass.data[DATA_MODBUS_HUBS]
+        for hub in hubs.values():
+            await hub.async_close()
         reset_platforms = async_get_platforms(hass, DOMAIN)
         for reset_platform in reset_platforms:
             _LOGGER.debug("Reload modbus resetting platform: %s", reset_platform.domain)
@@ -487,7 +486,4 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    return await async_modbus_setup(
-        hass,
-        config,
-    )
+    return await async_modbus_setup(hass, config)
