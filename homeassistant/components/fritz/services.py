@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from .const import DATA_KEY, DOMAIN, FRITZ_SERVICES, SERVICE_SET_GUEST_WIFI_PW
+from .const import DATA_KEY, DOMAIN, SERVICE_SET_GUEST_WIFI_PW
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,15 +79,3 @@ async def _async_get_configured_avm_device(
         ):
             list_entry_id.append(entry_id)
     return list_entry_id
-
-
-async def async_unload_services(hass: HomeAssistant) -> None:
-    """Unload services for Fritz integration."""
-
-    if not hass.data.get(FRITZ_SERVICES):
-        return
-
-    hass.data[FRITZ_SERVICES] = False
-
-    for service, _ in SERVICE_LIST:
-        hass.services.async_remove(DOMAIN, service)

@@ -22,7 +22,7 @@ from .const import (
     PLATFORMS,
 )
 from .coordinator import AvmWrapper, FritzData
-from .services import async_setup_services, async_unload_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,8 +83,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DATA_KEY].pop(entry.entry_id)
-
-    await async_unload_services(hass)
 
     return unload_ok
 
