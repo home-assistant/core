@@ -147,12 +147,12 @@ class MatterBasicListSelectEntity(MatterEntity, SelectEntity):
             self.get_matter_attribute_value(self.entity_description.list_attribute),
         )
         self._attr_options = list_values
-        current_option_idx: int | None = self.get_matter_attribute_value(
+        current_option_idx: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
-        if current_option_idx is not None:
+        try:
             self._attr_current_option = list_values[current_option_idx]
-        else:
+        except IndexError:
             self._attr_current_option = None
 
 

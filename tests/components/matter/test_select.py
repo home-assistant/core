@@ -141,6 +141,11 @@ async def test_list_select_entities(
         ),
         value=3,
     )
+    # test that an invalid value (e.g. 253) leads to an unknown state
+    set_node_attribute(matter_node, 1, 83, 1, 253)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("select.laundrywasher_spin_speed")
+    assert state.state == "unknown"
 
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
