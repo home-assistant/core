@@ -1,9 +1,8 @@
 {
   "config": {
     "abort": {
-      "no_mosque": "Sorry, there's no MAWAQIT mosque in your neighborhood.",
-      "one_instance_allowed": "A single MAWAQIT entry is necessary. If you want to reconfigure your mosque, you can click on \"Configure\" next to the existing entry.",
-      "configuration_kept": "You have chosen to keep the existing configuration."
+      "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one.",
+      "already_configured": "A single MAWAQIT entry is allowed. If you want to reconfigure your mosque, you can click on \"Configure\" next to the existing entry, or click on the 3 dots  and click on Delete."
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
@@ -79,6 +78,58 @@
       "options": {
         "keep": "Keep the existing configuration",
         "reset": "Reset to configure a new mosque"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "mosque_info": {
+        "name": "Mosque Information"
+      },
+      "prayer_fajr": {
+        "name": "Fajr Prayer"
+      },
+      "prayer_shuruq": {
+        "name": "Shuruq"
+      },
+      "prayer_dhuhr": {
+        "name": "Dhuhr Prayer"
+      },
+      "prayer_asr": {
+        "name": "Asr Prayer"
+      },
+      "prayer_maghrib": {
+        "name": "Maghrib Prayer"
+      },
+      "prayer_isha": {
+        "name": "Isha Prayer"
+      },
+      "prayer_jumua": {
+        "name": "Jumua Prayer"
+      },
+      "prayer_jumua_2": {
+        "name": "Second Jumua Prayer"
+      },
+      "iqama_fajr": {
+        "name": "Fajr Iqama"
+      },
+      "iqama_dhuhr": {
+        "name": "Dhuhr Iqama"
+      },
+      "iqama_asr": {
+        "name": "Asr Iqama"
+      },
+      "iqama_maghrib": {
+        "name": "Maghrib Iqama"
+      },
+      "iqama_isha": {
+        "name": "Isha Iqama"
+      },
+      "next_salat_name": {
+        "name": "Next Salat Name"
+      },
+      "next_salat_time": {
+        "name": "Next Salat in"
       }
     }
   },

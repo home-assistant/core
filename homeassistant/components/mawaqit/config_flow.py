@@ -34,7 +34,6 @@ from .const import (
     WRONG_CREDENTIAL,
 )
 from .utils import (
-    create_data_folder,
     read_all_mosques_NN_file,
     read_my_mosque_NN_file,
     write_all_mosques_NN_file,
@@ -64,14 +63,13 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if self.store is None:
             self.store = Store(self.hass, MAWAQIT_STORAGE_VERSION, MAWAQIT_STORAGE_KEY)
-
-        # create data folder if does not exist
-        create_data_folder()
-
+        # Set a unique ID for the whole integration since we do not want the user to have more than one instance of mawaqit
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
         # if the data folder is empty, we can continue the configuration
         # otherwise, we abort the configuration because that means that the user has already configured an entry.
-        if await utils.is_another_instance(self.hass, self.store):
-            return await self.async_step_keep_or_reset()
+        # if await utils.is_another_instance(self.hass, self.store):
+        #     return await self.async_step_keep_or_reset()
 
         if user_input is None:
             return await self._show_config_form(user_input=None)
@@ -120,22 +118,22 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._show_config_form2()
 
-    async def async_step_keep_or_reset(
-        self, user_input=None
-    ) -> config_entries.ConfigFlowResult:
-        """Handle the user's choice to keep current data or reset."""
-        if user_input is None:
-            return await self._show_keep_or_reset_form()
+    # async def async_step_keep_or_reset(
+    #     self, user_input=None
+    # ) -> config_entries.ConfigFlowResult:
+    #     """Handle the user's choice to keep current data or reset."""
+    #     if user_input is None:
+    #         return await self._show_keep_or_reset_form()
 
-        choice = user_input[CONF_CHOICE]
+    #     choice = user_input[CONF_CHOICE]
 
-        if choice == CONF_KEEP:
-            return self.async_abort(reason="configuration_kept")
-        if choice == CONF_RESET:
-            # Clear existing data and restart the configuration process
-            await utils.async_clear_data(self.hass, self.store, DOMAIN)
-            return await self.async_step_user()
-        return await self._show_keep_or_reset_form()
+    #     if choice == CONF_KEEP:
+    #         return self.async_abort(reason="configuration_kept")
+    #     if choice == CONF_RESET:
+    #         # Clear existing data and restart the configuration process
+    #         await utils.async_clear_data(self.hass, self.store, DOMAIN)
+    #         return await self.async_step_user()
+    #     return await self._show_keep_or_reset_form()
 
     async def async_step_search_method(
         self, user_input=None
@@ -166,10 +164,6 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
                 self.store
             )
-
-            await utils.async_write_in_data(
-                self.hass, CURRENT_DIR, "mosq_list_data", {"CALC_METHODS": CALC_METHODS}
-            )  # TODO deprecate this line and put instead  utils.write_mosq_list_data # pylint: disable=fixme
 
             return await self.async_step_mosques_coordinates()
 
@@ -331,17 +325,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
-        return MawaqitPrayerOptionsFlowHandler(config_entry)
+        return MawaqitPrayerOptionsFlowHandler()
 
 
 class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Mawaqit Prayer client options."""
 
-    def __init__(self, config_entry) -> None:
+    def __init__(self) -> None:
         """Initialize the options flow handler."""
-        self.config_entry = config_entry
         self.store: Store | None = None
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Manage options."""
@@ -367,30 +359,38 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
             )
             return self.async_create_entry(title=None, data={})
 
-        nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
-            lat, longi, token=mawaqit_token
-        )
-
-        await write_all_mosques_NN_file(nearest_mosques, self.store)
-
-        name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
-            self.store
-        )
-
-        current_mosque_data = await read_my_mosque_NN_file(self.store)
-        current_mosque = current_mosque_data["uuid"]
-
+        # Attempt to fetch nearby mosques, handle the NoMosqueAround exception
         try:
-            index = uuid_servers.index(current_mosque)
-            default_name = name_servers[index]
-        except ValueError:
-            default_name = "None"
+            nearest_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+                lat, longi, token=mawaqit_token
+            )
 
-        options = {
-            vol.Required(
-                CONF_CALC_METHOD,
-                default=default_name,
-            ): vol.In(name_servers)
-        }
+            await write_all_mosques_NN_file(nearest_mosques, self.store)
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+            name_servers, uuid_servers, CALC_METHODS = await read_all_mosques_NN_file(
+                self.store
+            )
+
+            current_mosque_data = await read_my_mosque_NN_file(self.store)
+            current_mosque = current_mosque_data["uuid"]
+
+            try:
+                index = uuid_servers.index(current_mosque)
+                default_name = name_servers[index]
+            except ValueError:
+                default_name = "None"
+
+            options = {
+                vol.Required(
+                    CONF_CALC_METHOD,
+                    default=default_name,
+                ): vol.In(name_servers)
+            }
+
+            return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+
+        except NoMosqueAround:
+            _LOGGER.error(
+                "No mosque found around your location. Please check your coordinates"
+            )
+            return self.async_abort(reason="no_mosque")

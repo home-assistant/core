@@ -75,3 +75,6 @@ MAWAQIT_MOSQ_LIST_DATA = "mosq_list_data"
 NO_MOSQUE_FOUND_KEYWORD = "no_mosque_found_keyword"
 CANNOT_CONNECT_TO_SERVER = "cannot_connect_to_server"
 WRONG_CREDENTIAL = "wrong_credential"
+
+PRAYER_NAMES = ["fajr", "shuruq", "dhuhr", "asr", "maghrib", "isha"]
+PRAYER_NAMES_IQAMA = ["fajr", "dhuhr", "asr", "maghrib", "isha"]

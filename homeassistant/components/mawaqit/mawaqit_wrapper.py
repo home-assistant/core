@@ -12,10 +12,12 @@ from mawaqit.consts import BadCredentialsException
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_credentials(username, password):
+async def test_credentials(username=None, password=None, client_instance=None):
     """Return True if the MAWAQIT credentials is valid."""
     try:
-        client = AsyncMawaqitClient(username=username, password=password)
+        client = client_instance
+        if client is None:
+            client = AsyncMawaqitClient(username=username, password=password)
         await client.login()
     except BadCredentialsException:
         _LOGGER.error("Error : Bad Credentials")
@@ -23,33 +25,48 @@ async def test_credentials(username, password):
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.error("Network-related error: %s", e)
     finally:
-        await client.close()
+        if client is not None:
+            await client.close()
 
     return True
 
 
-async def get_mawaqit_api_token(username, password):
+async def get_mawaqit_api_token(username=None, password=None, client_instance=None):
     """Return the MAWAQIT API token."""
     try:
-        client = AsyncMawaqitClient(username=username, password=password)
+        client = client_instance
+        if client is None:
+            client = AsyncMawaqitClient(username=username, password=password)
         token = await client.get_api_token()
     except BadCredentialsException as e:
         _LOGGER.error("Error on retrieving API Token: %s", e)
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.error("Network-related error: %s", e)
     finally:
-        await client.close()
+        if client is not None:
+            await client.close()
     return token
 
 
 async def all_mosques_neighborhood(
-    latitude, longitude, mosque=None, username=None, password=None, token=None
+    latitude,
+    longitude,
+    mosque=None,
+    username=None,
+    password=None,
+    token=None,
+    client_instance=None,
 ):
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
     try:
-        client = AsyncMawaqitClient(
-            latitude, longitude, mosque, username, password, token, session=None
-        )
+        client = client_instance
+        if client is None:
+            client = AsyncMawaqitClient(
+                latitude, longitude, mosque, username, password, token, session=None
+            )
+        else:
+            # TODO set pos in client # pylint: disable=fixme
+            pass
         await client.get_api_token()
         nearest_mosques = await client.all_mosques_neighborhood()
     except BadCredentialsException as e:
@@ -57,19 +74,25 @@ async def all_mosques_neighborhood(
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.error("Network-related error: %s", e)
     finally:
-        await client.close()
+        if client is not None:
+            await client.close()
 
     return nearest_mosques
 
 
 async def all_mosques_by_keyword(
-    search_keyword, username=None, password=None, token=None
+    search_keyword, username=None, password=None, token=None, client_instance=None
 ):
     """Return mosques in the neighborhood if any. Returns a list of dicts."""
     try:
-        client = AsyncMawaqitClient(
-            username=username, password=password, token=token, session=None
-        )
+        client = client_instance
+        if client is None:
+            client = AsyncMawaqitClient(
+                username=username, password=password, token=token, session=None
+            )
+        else:
+            # TODO set pos in client # pylint: disable=fixme
+            pass
         await client.get_api_token()
 
         search_mosques = []
@@ -82,20 +105,32 @@ async def all_mosques_by_keyword(
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.error("Network-related error: %s", e)
     finally:
-        await client.close()
+        if client is not None:
+            await client.close()
 
     return search_mosques
 
 
 async def fetch_prayer_times(
-    latitude=None, longitude=None, mosque=None, username=None, password=None, token=None
+    latitude=None,
+    longitude=None,
+    mosque=None,
+    username=None,
+    password=None,
+    token=None,
+    client_instance=None,
 ):
     """Get prayer times from the MAWAQIT API. Returns a dict."""
 
     try:
-        client = AsyncMawaqitClient(
-            latitude, longitude, mosque, username, password, token, session=None
-        )
+        client = client_instance
+        if client is None:
+            client = AsyncMawaqitClient(
+                latitude, longitude, mosque, username, password, token, session=None
+            )
+        else:
+            # TODO set pos in client # pylint: disable=fixme
+            pass
         await client.get_api_token()
         dict_calendar = await client.fetch_prayer_times()
 
@@ -104,6 +139,7 @@ async def fetch_prayer_times(
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.error("Network-related error: %s", e)
     finally:
-        await client.close()
+        if client is not None:
+            await client.close()
 
     return dict_calendar
