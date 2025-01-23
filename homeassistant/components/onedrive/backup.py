@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import html
-from io import BytesIO
 import json
 import logging
 from typing import Any, Concatenate, cast
@@ -32,6 +31,7 @@ from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_uploadable_properties import (
     DriveItemUploadableProperties,
 )
+from msgraph.generated.models.upload_session import UploadSession
 from msgraph_core.models import LargeFileUploadSession
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
@@ -42,6 +42,7 @@ from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+UPLOAD_CHUNK_SIZE = 5 * 320 * 1024
 
 
 async def async_get_backup_agents(
@@ -164,43 +165,9 @@ class OneDriveBackupAgent(BackupAgent):
             client=get_async_client(self._hass),
         )
 
-        CHUNK_SIZE = 320 * 1024
-        start = 0
-        end = 0
-        buffer: bytes = []
-        info = RequestInformation()
-        info.url = upload_session.upload_url
-        info.http_method = Method.PUT
-
-        async def async_upload(
-            start: int, end: int, total_size: int, chunk_data: bytes
-        ) -> None:
-            info.headers = HeadersCollection()
-            info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
-            info.headers.try_add("Content-Length", str(len(chunk_data)))
-            info.headers.try_add("Content-Type", "application/octet-stream")
-            _LOGGER.debug(info.headers.get_all())
-            info.set_stream_content(bytes(chunk_data))
-            await adapter.send_async(info, LargeFileUploadSession, {})
-
-        async for chunk in await open_stream():
-            buffer += chunk
-
-            # get at least the required chunk size
-            if len(buffer) < CHUNK_SIZE:
-                continue
-
-            while len(buffer) >= CHUNK_SIZE:
-                chunk_data = buffer[:CHUNK_SIZE]
-                buffer = buffer[CHUNK_SIZE:]
-                end = start + len(chunk_data) - 1
-                await async_upload(start, end, backup.size, chunk_data)
-                start += len(chunk_data)
-
-        # upload the remaining bytes
-        if buffer:
-            _LOGGER.debug("Last chunk")
-            await async_upload(start, backup.size - 1, backup.size, buffer)
+        await self._upload_file(
+            adapter, upload_session, await open_stream(), backup.size
+        )
 
         # store metadata in description
         backup_dict = backup.as_dict()
@@ -252,16 +219,6 @@ class OneDriveBackupAgent(BackupAgent):
             return self._backup_from_description(description)
         return None
 
-    async def _async_iterator_to_bytesio(
-        self, async_iterator: AsyncIterator[bytes]
-    ) -> BytesIO:
-        """Convert an AsyncIterator[bytes] to a BytesIO object."""
-        buffer = BytesIO()
-        async for chunk in async_iterator:
-            buffer.write(chunk)
-        buffer.seek(0)  # Reset the buffer's position to the beginning
-        return buffer
-
     def _backup_from_description(self, description: str) -> AgentBackup:
         """Create a backup object from a description."""
         description = html.unescape(
@@ -271,3 +228,50 @@ class OneDriveBackupAgent(BackupAgent):
 
     def _get_backup_file_item(self, backup_id: str) -> DriveItemItemRequestBuilder:
         return self._items.by_drive_item_id(f"{self._folder_id}:/{backup_id}.tar:")
+
+    async def _upload_file(
+        self,
+        adapter: GraphRequestAdapter,
+        upload_session: UploadSession,
+        stream: AsyncIterator[bytes],
+        total_size: int,
+    ) -> None:
+        """Use custom large file upload; SDK does not support stream."""
+        start = 0
+        end = 0
+        buffer = bytearray()
+        info = RequestInformation()
+        info.url = upload_session.upload_url
+        info.http_method = Method.PUT
+
+        async def async_upload(
+            start: int, end: int, chunk_data: bytes
+        ) -> LargeFileUploadSession:
+            info.headers = HeadersCollection()
+            info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
+            info.headers.try_add("Content-Length", str(len(chunk_data)))
+            info.headers.try_add("Content-Type", "application/octet-stream")
+            _LOGGER.debug(info.headers.get_all())
+            info.set_stream_content(chunk_data)
+            result = await adapter.send_async(info, LargeFileUploadSession, {})
+            _LOGGER.debug("Next expected range: %s", result.next_expected_ranges)
+            return result
+
+        async for chunk in stream:
+            buffer += chunk
+
+            # get at least the required chunk size
+            if len(buffer) < UPLOAD_CHUNK_SIZE:
+                continue
+
+            while len(buffer) >= UPLOAD_CHUNK_SIZE:
+                chunk_data = buffer[:UPLOAD_CHUNK_SIZE]
+                buffer = buffer[UPLOAD_CHUNK_SIZE:]
+                end = start + len(chunk_data) - 1
+                await async_upload(start, end, bytes(chunk_data))
+                start += len(chunk_data)
+
+        # upload the remaining bytes
+        if buffer:
+            _LOGGER.debug("Last chunk")
+            await async_upload(start, total_size - 1, bytes(buffer))

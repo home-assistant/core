@@ -12,6 +12,7 @@ from msgraph.generated.models.drive_item_collection_response import (
     DriveItemCollectionResponse,
 )
 from msgraph.generated.models.upload_session import UploadSession
+from msgraph_core.models import LargeFileUploadSession
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -77,6 +78,10 @@ def mock_adapter() -> Generator[MagicMock]:
             "homeassistant.components.onedrive.config_flow.GraphRequestAdapter",
             autospec=True,
         ) as mock_adapter,
+        patch(
+            "homeassistant.components.onedrive.backup.GraphRequestAdapter",
+            new=mock_adapter,
+        ),
     ):
         adapter = mock_adapter.return_value
         adapter.get_http_response_message.return_value = Response(
@@ -87,6 +92,9 @@ def mock_adapter() -> Generator[MagicMock]:
             },
         )
         yield adapter
+        adapter.send_async.return_value = LargeFileUploadSession(
+            next_expected_ranges=["2-"]
+        )
 
 
 @pytest.fixture(autouse=True)
@@ -123,7 +131,9 @@ def mock_graph_client(mock_adapter: MagicMock) -> Generator[MagicMock]:
             )
         )
         drive_items.delete = AsyncMock(return_value=None)
-        drive_items.create_upload_session.post = AsyncMock(return_value=UploadSession())
+        drive_items.create_upload_session.post = AsyncMock(
+            return_value=UploadSession(upload_url="https://test.tld")
+        )
         drive_items.patch = AsyncMock(return_value=None)
 
         async def generate_bytes() -> AsyncIterator[bytes]:
@@ -147,16 +157,6 @@ def mock_drive_items(mock_graph_client: MagicMock) -> MagicMock:
 def mock_get_special_folder(mock_graph_client: MagicMock) -> MagicMock:
     """Mock the get special folder method."""
     return mock_graph_client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get
-
-
-@pytest.fixture
-def mock_upload_task() -> Generator[MagicMock]:
-    """Return a mocked UploadTask."""
-    with patch(
-        "homeassistant.components.onedrive.backup.LargeFileUploadTask", autospec=True
-    ) as upload_task:
-        task = upload_task.return_value
-        yield task
 
 
 @pytest.fixture

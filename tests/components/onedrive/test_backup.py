@@ -135,9 +135,9 @@ async def test_agents_delete(
 async def test_agents_upload(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    mock_upload_task: MagicMock,
     mock_drive_items: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_adapter: MagicMock,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
@@ -152,6 +152,7 @@ async def test_agents_upload(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.onedrive.backup.UPLOAD_CHUNK_SIZE", 3),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
@@ -164,13 +165,12 @@ async def test_agents_upload(
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_drive_items.create_upload_session.post.assert_called_once()
     mock_drive_items.patch.assert_called_once()
-    mock_upload_task.upload.assert_called_once()
+    assert mock_adapter.send_async.call_count == 2
 
 
 async def test_broken_upload_session(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    mock_upload_task: MagicMock,
     mock_drive_items: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
