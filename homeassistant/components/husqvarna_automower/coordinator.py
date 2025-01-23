@@ -63,7 +63,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, MowerAttrib
             self.api.register_data_callback(self.callback)
             self.ws_connected = True
         try:
-            return await self.api.get_status()
+            data = await self.api.get_status()
         except ApiError as err:
             raise UpdateFailed(err) from err
         except AuthError as err:
