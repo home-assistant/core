@@ -46,14 +46,12 @@ TEST_STATE = {
                 "uri": {
                     "fragment": "",
                     "host": "",
-                    "path": "/tmp/snapfifo",
                     "query": {
                         "chunk_ms": "20",
                         "codec": "flac",
                         "name": "Test Stream 1",
                         "sampleformat": "48000:16:2",
                     },
-                    "raw": "pipe:///tmp/snapfifo?name=stream 1",
                     "scheme": "pipe",
                 },
                 "properties": {
@@ -75,14 +73,12 @@ TEST_STATE = {
                 "uri": {
                     "fragment": "",
                     "host": "",
-                    "path": "/tmp/snapfifo",
                     "query": {
                         "chunk_ms": "20",
                         "codec": "flac",
                         "name": "Test Stream 2",
                         "sampleformat": "48000:16:2",
                     },
-                    "raw": "pipe:///tmp/snapfifo?name=stream 2",
                     "scheme": "pipe",
                 },
             },
