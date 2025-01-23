@@ -756,7 +756,6 @@ async def test_reauth_flow_updates_token(
     assert result["reason"] == "reauth_successful"
 
     # Verify that the token was updated
-    # Verify that the token was updated
     await hass.async_block_till_done()
     assert (
         hass.config_entries.async_entries(DOMAIN)[0].data.get(CONF_TOKEN)
