@@ -306,7 +306,7 @@
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this action. If an area is specified, all zwave_js devices and entities in that area will be targeted for this action.",
+          "description": "The area(s) to target for this action. If an area is specified, all Z-Wave JS devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
@@ -474,7 +474,7 @@
           "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
         },
         "bitmask": {
-          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with value_size or value_format.",
+          "description": "Target a specific bitmask (see the documentation for more information). Cannot be combined with 'Value size' or 'Value format'.",
           "name": "Bitmask"
         },
         "device_id": {
@@ -498,11 +498,11 @@
           "name": "Value"
         },
         "value_format": {
-          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with value_size when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask.",
+          "description": "Format of the value, 0 for signed integer, 1 for unsigned integer, 2 for enumerated, 3 for bitfield. Used in combination with 'Value size' when a config parameter is not defined in your device's configuration file. Cannot be combined with 'Bitmask'.",
           "name": "Value format"
         },
         "value_size": {
-          "description": "Size of the value, either 1, 2, or 4. Used in combination with value_format when a config parameter is not defined in your device's configuration file. Cannot be combined with bitmask.",
+          "description": "Size of the value, either 1, 2, or 4. Used in combination with 'Value format' when a config parameter is not defined in your device's configuration file. Cannot be combined with 'Bitmask'.",
           "name": "Value size"
         }
       },
@@ -556,7 +556,7 @@
       "description": "Changes any value that Z-Wave JS recognizes on a Z-Wave device. This action has minimal validation so only use this action if you know what you are doing.",
       "fields": {
         "area_id": {
-          "description": "The area(s) to target for this action. If an area is specified, all zwave_js devices and entities in that area will be targeted for this action.",
+          "description": "The area(s) to target for this action. If an area is specified, all Z-Wave JS devices and entities in that area will be targeted for this action.",
           "name": "Area ID(s)"
         },
         "command_class": {
