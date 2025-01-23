@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from aiohttp import ClientResponseError
 from incomfortclient import InvalidGateway, InvalidHeaterList
 import voluptuous as vol
 
@@ -90,8 +89,6 @@ async def async_try_connect_gateway(
         return {"base": "no_heaters"}
     except TimeoutError:
         return {"base": "timeout_error"}
-    except ClientResponseError:
-        return {"base": "unknown"}
     except Exception:  # noqa: BLE001
         return {"base": "unknown"}
 
