@@ -4,7 +4,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import frontend, onboarding, websocket_api
+from homeassistant.components import frontend, websocket_api
 from homeassistant.config import (
     async_hass_config_yaml,
     async_process_component_and_handle_errors,
@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
-from homeassistant.helpers.translation import async_get_translations
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
 
@@ -211,9 +210,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Process storage dashboards
     dashboards_collection = dashboard.DashboardsCollection(hass)
 
-    # This can be removed when the map integration is removed
-    hass.data[DOMAIN]["dashboards_collection"] = dashboards_collection
-
     dashboards_collection.async_add_listener(storage_dashboard_changed)
     await dashboards_collection.async_load()
 
@@ -224,12 +220,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         STORAGE_DASHBOARD_CREATE_FIELDS,
         STORAGE_DASHBOARD_UPDATE_FIELDS,
     ).async_setup(hass)
-
-    def create_map_dashboard():
-        hass.async_create_task(_create_map_dashboard(hass))
-
-    if not onboarding.async_is_onboarded(hass):
-        onboarding.async_add_listener(hass, create_map_dashboard)
 
     return True
 
@@ -268,25 +258,3 @@ def _register_panel(hass, url_path, mode, config, update):
         kwargs["sidebar_icon"] = config.get(CONF_ICON, DEFAULT_ICON)
 
     frontend.async_register_built_in_panel(hass, DOMAIN, **kwargs)
-
-
-async def _create_map_dashboard(hass: HomeAssistant):
-    translations = await async_get_translations(
-        hass, hass.config.language, "dashboard", {onboarding.DOMAIN}
-    )
-    title = translations["component.onboarding.dashboard.map.title"]
-
-    dashboards_collection: dashboard.DashboardsCollection = hass.data[DOMAIN][
-        "dashboards_collection"
-    ]
-    await dashboards_collection.async_create_item(
-        {
-            CONF_ALLOW_SINGLE_WORD: True,
-            CONF_ICON: "mdi:map",
-            CONF_TITLE: title,
-            CONF_URL_PATH: "map",
-        }
-    )
-
-    map_store: dashboard.LovelaceStorage = hass.data[DOMAIN]["dashboards"]["map"]
-    await map_store.async_save({"strategy": {"type": "map"}})
