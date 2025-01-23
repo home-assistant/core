@@ -360,6 +360,9 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
             self._attr_native_value = sensor_data.native_value
             self._attr_available = True
             self.restored_value = sensor_data.native_value
+            self.hass.async_create_background_task(
+                self.check_availability(), self.entity_id
+            )
 
     @property
     def native_value(self) -> StateType | datetime | date | Decimal:
@@ -375,24 +378,23 @@ class EcowittSensorEntity(EcowittEntity, RestoreSensor):
             return super().available
         if self.restored_last_reported:
             age = dt_util.utcnow() - self.restored_last_reported
-            if age.seconds > MAX_AGE:
+            if age.seconds >= MAX_AGE:
                 return False
             if age.seconds < MAX_AGE:
-                self.hass.async_create_background_task(
-                    self.check_availability(), self.entity_id
-                )
                 return True
-        return True
+        return False
 
     async def check_availability(self) -> None:
         """Return whether the state is based on actual reading from device."""
-        self._attr_available = True
+        if not self.restored_last_reported:
+            self._attr_available = False
+            self.async_write_ha_state()
+            return
+
         age = dt_util.utcnow() - self.restored_last_reported
-        _LOGGER.debug("age: %s", age.seconds)
-        _LOGGER.debug("self.restored_last_reported: %s", self.restored_last_reported)
+        _LOGGER.debug("%s was last reported %is ago", self.entity_id, age.seconds)
         await asyncio.sleep(MAX_AGE - age.seconds)
         new_age = dt_util.utcnow() - self.restored_last_reported
-        _LOGGER.debug("schlafen vorbei, new age: %s", new_age.seconds)
-        if new_age.seconds > MAX_AGE:
-            _LOGGER.debug("Sensor %s is not available", self.entity_id)
+        if new_age.seconds >= MAX_AGE:
             self._attr_available = False
+            self.async_write_ha_state()
