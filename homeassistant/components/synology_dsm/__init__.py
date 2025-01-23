@@ -19,6 +19,7 @@ from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
+    DATA_BACKUP_AGENT_LISTENERS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
@@ -26,7 +27,6 @@ from .const import (
     PLATFORMS,
     SYNOLOGY_AUTH_FAILED_EXCEPTIONS,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
-    SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS,
 )
 from .coordinator import (
     SynologyDSMCameraUpdateCoordinator,
@@ -143,7 +143,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
-    for listener in hass.data.get(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []):
+    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
 
 

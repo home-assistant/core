@@ -19,8 +19,8 @@ from homeassistant.util.json import JsonObjectType, json_loads_object
 from .const import (
     CONF_BACKUP_PATH,
     CONF_BACKUP_SHARE,
+    DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
-    SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS,
 )
 from .models import SynologyDSMData
 
@@ -55,12 +55,12 @@ def async_register_backup_agents_listener(
 
     :return: A function to unregister the listener.
     """
-    hass.data.setdefault(SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS, []).append(listener)
+    hass.data.setdefault(DATA_BACKUP_AGENT_LISTENERS, []).append(listener)
 
     @callback
     def remove_listener() -> None:
         """Remove the listener."""
-        hass.data[SYNOLOGY_DATA_BACKUP_AGENT_LISTENERS].remove(listener)
+        hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
 
     return remove_listener
 
