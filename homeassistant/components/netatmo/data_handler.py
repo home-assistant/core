@@ -38,6 +38,7 @@ from .const import (
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_COVER,
+    NETATMO_CREATE_DOOR_TAG,
     NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -350,6 +351,7 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
+            NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
