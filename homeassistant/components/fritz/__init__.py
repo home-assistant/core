@@ -16,14 +16,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    DATA_FRITZ,
     DEFAULT_SSL,
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
     PLATFORMS,
 )
-from .coordinator import AvmWrapper, FritzConfigEntry, FritzData
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,8 +65,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
 
     entry.runtime_data = avm_wrapper
 
-    if DATA_FRITZ not in hass.data:
-        hass.data[DATA_FRITZ] = FritzData()
+    if FRITZ_DATA_KEY not in hass.data:
+        hass.data[FRITZ_DATA_KEY] = FritzData()
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -81,11 +80,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> bo
     """Unload FRITZ!Box Tools config entry."""
     avm_wrapper = entry.runtime_data
 
-    fritz_data = hass.data[DATA_FRITZ]
+    fritz_data = hass.data[FRITZ_DATA_KEY]
     fritz_data.tracked.pop(avm_wrapper.unique_id)
 
     if not bool(fritz_data.tracked):
-        hass.data.pop(DATA_FRITZ)
+        hass.data.pop(FRITZ_DATA_KEY)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

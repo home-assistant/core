@@ -36,6 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -49,6 +50,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
 
 type FritzConfigEntry = ConfigEntry[AvmWrapper]
 

@@ -18,8 +18,9 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DATA_FRITZ, DOMAIN, MeshRoles
+from .const import BUTTON_TYPE_WOL, CONNECTION_TYPE_LAN, DOMAIN, MeshRoles
 from .coordinator import (
+    FRITZ_DATA_KEY,
     AvmWrapper,
     FritzConfigEntry,
     FritzData,
@@ -85,7 +86,7 @@ async def async_setup_entry(
         async_add_entities(entities_list)
         return
 
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    data_fritz = hass.data[FRITZ_DATA_KEY]
     entities_list += _async_wol_buttons_list(avm_wrapper, data_fritz)
 
     async_add_entities(entities_list)
