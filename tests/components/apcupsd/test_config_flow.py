@@ -125,6 +125,8 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         ({"UPSNAME": "Friendly Name"}, "Friendly Name"),
         ({"MODEL": "MODEL X"}, "MODEL X"),
         ({"SERIALNO": "ZZZZ"}, "ZZZZ"),
+        # Some models report "Blank" as serial number, which we should ignore.
+        ({"SERIALNO": "Blank"}, "APC UPS"),
         ({}, "APC UPS"),
     ],
 )
