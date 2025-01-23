@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_entity_attributes
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tv',
+      'friendly_name': 'LG webOS TV MODEL',
+      'is_volume_muted': False,
+      'media_content_type': <MediaType.CHANNEL: 'channel'>,
+      'media_title': 'Channel 1',
+      'sound_output': 'speaker',
+      'source': 'Live TV',
+      'source_list': list([
+        'Input01',
+        'Input02',
+        'Live TV',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 24381>,
+      'volume_level': 0.37,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.lg_webos_tv_model',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_attributes.1
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'webostv',
+        'some-fake-uuid',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'LG',
+    'model': 'MODEL',
+    'model_id': None,
+    'name': 'LG webOS TV MODEL',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': 'major.minor',
+    'via_device_id': None,
+  })
+# ---

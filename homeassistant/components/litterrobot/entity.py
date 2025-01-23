@@ -9,44 +9,39 @@ from pylitterbot.robot import EVENT_UPDATE
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .hub import LitterRobotHub
+from .coordinator import LitterRobotDataUpdateCoordinator
 
 _RobotT = TypeVar("_RobotT", bound=Robot)
 
 
 class LitterRobotEntity(
-    CoordinatorEntity[DataUpdateCoordinator[bool]], Generic[_RobotT]
+    CoordinatorEntity[LitterRobotDataUpdateCoordinator], Generic[_RobotT]
 ):
     """Generic Litter-Robot entity representing common data and methods."""
 
     _attr_has_entity_name = True
 
     def __init__(
-        self, robot: _RobotT, hub: LitterRobotHub, description: EntityDescription
+        self,
+        robot: _RobotT,
+        coordinator: LitterRobotDataUpdateCoordinator,
+        description: EntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(hub.coordinator)
+        super().__init__(coordinator)
         self.robot = robot
-        self.hub = hub
         self.entity_description = description
-        self._attr_unique_id = f"{self.robot.serial}-{description.key}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information for a Litter-Robot."""
-        assert self.robot.serial
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.robot.serial)},
-            manufacturer="Litter-Robot",
-            model=self.robot.model,
-            name=self.robot.name,
-            sw_version=getattr(self.robot, "firmware", None),
+        self._attr_unique_id = f"{robot.serial}-{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, robot.serial)},
+            manufacturer="Whisker",
+            model=robot.model,
+            name=robot.name,
+            serial_number=robot.serial,
+            sw_version=getattr(robot, "firmware", None),
         )
 
     async def async_added_to_hass(self) -> None:

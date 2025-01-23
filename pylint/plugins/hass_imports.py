@@ -21,7 +21,7 @@ class ObsoleteImportMatch:
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "functools": [
         ObsoleteImportMatch(
-            reason="replaced by propcache.cached_property",
+            reason="replaced by propcache.api.cached_property",
             constant=re.compile(r"^cached_property$"),
         ),
     ],
@@ -33,7 +33,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.backports.functools": [
         ObsoleteImportMatch(
-            reason="replaced by propcache.cached_property",
+            reason="replaced by propcache.api.cached_property",
             constant=re.compile(r"^cached_property$"),
         ),
     ],
@@ -127,6 +127,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by US_CUSTOMARY_SYSTEM",
             constant=re.compile(r"^IMPERIAL_SYSTEM$"),
+        ),
+    ],
+    "propcache": [
+        ObsoleteImportMatch(
+            reason="importing from propcache.api recommended",
+            constant=re.compile(r"^(under_)?cached_property$"),
         ),
     ],
 }
@@ -268,9 +274,8 @@ class HassImportsFormatChecker(BaseChecker):
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
         """Check for improper 'from ._ import _' invocations."""
-        if (
-            node.level <= 1
-            or not current_package.startswith("homeassistant.components.")
+        if node.level <= 1 or (
+            not current_package.startswith("homeassistant.components.")
             and not current_package.startswith("tests.components.")
         ):
             return

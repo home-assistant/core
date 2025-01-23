@@ -34,7 +34,7 @@ class EcobeeNotifyEntity(EcobeeBaseEntity, NotifyEntity):
         """Initialize the thermostat."""
         super().__init__(data, thermostat_index)
         self._attr_unique_id = (
-            f"{self.thermostat["identifier"]}_notify_{thermostat_index}"
+            f"{self.thermostat['identifier']}_notify_{thermostat_index}"
         )
 
     def send_message(self, message: str, title: str | None = None) -> None:
