@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from homewizard_energy import HomeWizardEnergy
-from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -50,6 +51,9 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
             raise UpdateFailed(
                 ex, translation_domain=DOMAIN, translation_key="api_disabled"
             ) from ex
+
+        except UnauthorizedError as ex:
+            raise ConfigEntryAuthFailed from ex
 
         self.api_disabled = False
 

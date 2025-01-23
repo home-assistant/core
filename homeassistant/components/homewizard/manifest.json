@@ -11,7 +11,7 @@
   "documentation": "https://www.home-assistant.io/integrations/homewizard",
   "iot_class": "local_polling",
   "loggers": ["homewizard_energy"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["python-homewizard-energy==v8.1.1"],
   "zeroconf": ["_hwenergy._tcp.local."]
 }
