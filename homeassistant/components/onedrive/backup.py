@@ -31,7 +31,6 @@ from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.drive_item_uploadable_properties import (
     DriveItemUploadableProperties,
 )
-from msgraph.generated.models.upload_session import UploadSession
 from msgraph_core.models import LargeFileUploadSession
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
@@ -155,7 +154,7 @@ class OneDriveBackupAgent(BackupAgent):
             backup.backup_id
         ).create_upload_session.post(upload_session_request_body)
 
-        if upload_session is None:
+        if upload_session is None or upload_session.upload_url is None:
             raise BackupAgentError(
                 translation_domain=DOMAIN, translation_key="backup_no_upload_session"
             )
@@ -166,7 +165,7 @@ class OneDriveBackupAgent(BackupAgent):
         )
 
         await self._upload_file(
-            adapter, upload_session, await open_stream(), backup.size
+            adapter, upload_session.upload_url, await open_stream(), backup.size
         )
 
         # store metadata in description
@@ -232,7 +231,7 @@ class OneDriveBackupAgent(BackupAgent):
     async def _upload_file(
         self,
         adapter: GraphRequestAdapter,
-        upload_session: UploadSession,
+        upload_url: str,
         stream: AsyncIterator[bytes],
         total_size: int,
     ) -> None:
@@ -241,18 +240,18 @@ class OneDriveBackupAgent(BackupAgent):
         end = 0
         buffer = bytearray()
         info = RequestInformation()
-        info.url = upload_session.upload_url
+        info.url = upload_url
         info.http_method = Method.PUT
 
         async def async_upload(
-            start: int, end: int, chunk_data: bytes
+            start: int, end: int, chunk_data: bytearray
         ) -> LargeFileUploadSession:
             info.headers = HeadersCollection()
             info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
             info.headers.try_add("Content-Length", str(len(chunk_data)))
             info.headers.try_add("Content-Type", "application/octet-stream")
             _LOGGER.debug(info.headers.get_all())
-            info.set_stream_content(chunk_data)
+            info.set_stream_content(bytes(chunk_data))
             result = await adapter.send_async(info, LargeFileUploadSession, {})
             _LOGGER.debug("Next expected range: %s", result.next_expected_ranges)
             return result
@@ -268,10 +267,10 @@ class OneDriveBackupAgent(BackupAgent):
                 chunk_data = buffer[:UPLOAD_CHUNK_SIZE]
                 buffer = buffer[UPLOAD_CHUNK_SIZE:]
                 end = start + len(chunk_data) - 1
-                await async_upload(start, end, bytes(chunk_data))
+                await async_upload(start, end, chunk_data)
                 start += len(chunk_data)
 
         # upload the remaining bytes
         if buffer:
             _LOGGER.debug("Last chunk")
-            await async_upload(start, total_size - 1, bytes(buffer))
+            await async_upload(start, total_size - 1, buffer)
