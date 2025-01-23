@@ -87,7 +87,7 @@ async def test_coordinator_update_failing_get_settings_status(
         (EventType.EVENT, EventKey.BSH_COMMON_STATUS_OPERATION_STATE),
     ],
 )
-async def test_even_listener(
+async def test_event_listener(
     event_type: EventType,
     event_key: EventKey,
     hass: HomeAssistant,
@@ -140,7 +140,7 @@ async def test_even_listener(
         (EventType.EVENT, EventKey.UNKNOWN),
     ],
 )
-async def test_even_listener_ignore_unknowns(
+async def test_event_listener_ignore_unknowns(
     event_type: EventType,
     event_key: EventKey,
     hass: HomeAssistant,
