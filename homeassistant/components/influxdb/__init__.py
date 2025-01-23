@@ -489,7 +489,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> 
     event_to_json = _generate_event_to_json(config)
     max_tries = config.get(CONF_RETRY_COUNT)
     influx_thread = hass.data[DOMAIN] = InfluxThread(
-        hass, influx, event_to_json, max_tries
+        hass, entry, influx, event_to_json, max_tries
     )
     influx_thread.start()
 
@@ -529,7 +529,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class InfluxThread(threading.Thread):
     """A threaded event handler class."""
 
-    def __init__(self, hass, influx, event_to_json, max_tries):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: InfluxDBConfigEntry,
+        influx,
+        event_to_json,
+        max_tries,
+    ) -> None:
         """Initialize the listener."""
         threading.Thread.__init__(self, name=DOMAIN)
         self.queue: queue.SimpleQueue[threading.Event | tuple[float, Event] | None] = (
@@ -540,14 +547,12 @@ class InfluxThread(threading.Thread):
         self.max_tries = max_tries
         self.write_errors = 0
         self._shutdown = False
-        self._unsubscribe = hass.bus.async_listen(
-            EVENT_STATE_CHANGED, self._event_listener
+        entry.async_on_unload(
+            hass.bus.async_listen(EVENT_STATE_CHANGED, self._event_listener)
         )
 
     def shutdown(self) -> None:
         """Shutdown the influx thread."""
-        self._unsubscribe()
-
         self.queue.put(None)
         self.join()
         self.influx.close()
