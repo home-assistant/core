@@ -81,7 +81,7 @@ class LovelaceData:
 
     mode: str
     dashboards: dict[str | None, dashboard.LovelaceConfig]
-    resources: resources.ResourceStorageCollection
+    resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
 
 
@@ -115,6 +115,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[LOVELACE_DATA].resources = resource_collection
 
     default_config: dashboard.LovelaceConfig
+    resource_collection: (
+        resources.ResourceYAMLCollection | resources.ResourceStorageCollection
+    )
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
@@ -174,7 +177,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.config.recovery_mode:
         return True
 
-    async def storage_dashboard_changed(change_type, item_id, item):
+    async def storage_dashboard_changed(
+        change_type: str, item_id: str, item: dict
+    ) -> None:
         """Handle a storage dashboard change."""
         url_path = item[CONF_URL_PATH]
 
@@ -236,7 +241,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def create_yaml_resource_col(hass, yaml_resources):
+async def create_yaml_resource_col(
+    hass: HomeAssistant, yaml_resources: list[ConfigType] | None
+) -> resources.ResourceYAMLCollection:
     """Create yaml resources collection."""
     if yaml_resources is None:
         default_config = dashboard.LovelaceYAML(hass, None, None)
@@ -256,7 +263,9 @@ async def create_yaml_resource_col(hass, yaml_resources):
 
 
 @callback
-def _register_panel(hass, url_path, mode, config, update):
+def _register_panel(
+    hass: HomeAssistant, url_path: str | None, mode: str, config: dict, update: bool
+) -> None:
     """Register a panel."""
     kwargs = {
         "frontend_url_path": url_path,
