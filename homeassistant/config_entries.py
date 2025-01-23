@@ -26,7 +26,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, Self, TypedDict, cast
 
 from async_interrupt import interrupt
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from . import data_entry_flow, loader

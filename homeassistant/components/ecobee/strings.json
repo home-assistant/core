@@ -71,7 +71,7 @@
         },
         "start_date": {
           "name": "Start date",
-          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with start_time)."
+          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with 'Start time')."
         },
         "start_time": {
           "name": "Start time",
@@ -79,7 +79,7 @@
         },
         "end_date": {
           "name": "End date",
-          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with end_time)."
+          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with 'End time')."
         },
         "end_time": {
           "name": "End time",
@@ -149,11 +149,11 @@
     },
     "set_mic_mode": {
       "name": "Set mic mode",
-      "description": "Enables/disables Alexa mic (only for Ecobee 4).",
+      "description": "Enables/disables Alexa microphone (only for Ecobee 4).",
       "fields": {
         "mic_enabled": {
           "name": "Mic enabled",
-          "description": "Enable Alexa mic."
+          "description": "Enable Alexa microphone."
         }
       }
     },

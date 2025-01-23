@@ -40,13 +40,13 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with attrs
-    from propcache import cached_property as under_cached_property
+    from propcache.api import cached_property as under_cached_property
 
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
 else:
-    from propcache import under_cached_property
+    from propcache.api import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
