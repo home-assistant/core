@@ -21,23 +21,11 @@ def _format_ips(ips: list[IPv4ConfiguredAddress] | list[IPv6ConfiguredAddress]) 
     return ", ".join([f"{ip['address']}/{ip['network_prefix']!s}" for ip in ips])
 
 
-def _get_adapter_ipv4_addresses(adapter: Adapter) -> str:
-    return f"{adapter['name']} ({_format_ips(adapter['ipv4'])})"
-
-
-def _get_adapter_ipv6_addresses(adapter: Adapter) -> str:
-    return f"{adapter['name']} ({_format_ips(adapter['ipv6'])})"
-
-
 def _get_adapter_info(adapter: Adapter) -> str:
     state = "enabled" if adapter["enabled"] else "disabled"
     default = ", default" if adapter["default"] else ""
     auto = ", auto" if adapter["auto"] else ""
     return f"{adapter['name']} ({state}{default}{auto})"
-
-
-async def _async_get_announce_addresses(hass: HomeAssistant) -> str:
-    return ", ".join(await async_get_announce_addresses(hass))
 
 
 async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
@@ -48,12 +36,18 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
         # k: v for adapter in adapters for k, v in _get_adapter_info(adapter).items()
         "adapters": ", ".join([_get_adapter_info(adapter) for adapter in adapters]),
         "ipv4_addresses": ", ".join(
-            [_get_adapter_ipv4_addresses(adapter) for adapter in adapters]
+            [
+                f"{adapter['name']} ({_format_ips(adapter['ipv4'])})"
+                for adapter in adapters
+            ]
         ),
         "ipv6_addresses": ", ".join(
-            [_get_adapter_ipv6_addresses(adapter) for adapter in adapters]
+            [
+                f"{adapter['name']} ({_format_ips(adapter['ipv6'])})"
+                for adapter in adapters
+            ]
         ),
-        "announce_addresses": _async_get_announce_addresses(hass),
+        "announce_addresses": ", ".join(await async_get_announce_addresses(hass)),
     }
 
     return data

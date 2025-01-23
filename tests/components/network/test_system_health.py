@@ -1,4 +1,4 @@
-"""Test cloud system health."""
+"""Test network system health."""
 
 import asyncio
 
@@ -12,7 +12,7 @@ from tests.common import get_system_health_info
 
 
 @pytest.mark.usefixtures("mock_socket_no_loopback")
-async def test_cloud_system_health(hass: HomeAssistant) -> None:
+async def test_network_system_health(hass: HomeAssistant) -> None:
     """Test network system health."""
 
     assert await async_setup_component(hass, "system_health", {})
