@@ -385,7 +385,7 @@ OPTIONS_STEP_INIT_SCHEMA = vol.Schema(
 class OnkyoOptionsFlowHandler(OptionsFlow):
     """Handle an options flow for Onkyo."""
 
-    _data: dict[str, Any] = {}
+    _data: dict[str, Any]
     _input_sources: dict[InputSource, str]
 
     async def async_step_init(

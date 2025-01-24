@@ -638,6 +638,7 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         },
     )
 
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["errors"] == {OPTION_INPUT_SOURCES: "empty_input_source_list"}
 
@@ -648,6 +649,9 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
             OPTION_INPUT_SOURCES: ["TV"],
         },
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "names"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
