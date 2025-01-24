@@ -2132,7 +2132,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "torque",
     "touchline",
     "touchline_sl",
-    "tplink",
     "tplink_lte",
     "tplink_omada",
     "traccar",
