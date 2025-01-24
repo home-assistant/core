@@ -188,8 +188,7 @@ async def test_reauth_fails(
     )
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.async_start_reauth(hass)
-
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["step_id"] == "reauth_confirm"
 
     mock_auth.token.side_effect = NotAuthorizedError
