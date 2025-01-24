@@ -207,14 +207,14 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> AgentBackup | None:
         """Return a backup."""
         try:
-            blob_properties = await self._get_backup_file_item(backup_id).get()
+            drive_item = await self._get_backup_file_item(backup_id).get()
         except APIError as err:
             if err.response_status_code == 404:
                 return None
             raise
         if (
-            blob_properties is not None
-            and (description := blob_properties.description) is not None
+            drive_item is not None
+            and (description := drive_item.description) is not None
         ):
             return self._backup_from_description(description)
         return None
