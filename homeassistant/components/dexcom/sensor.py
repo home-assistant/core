@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -11,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import DexcomCoordinator
+from .coordinator import DexcomConfigEntry, DexcomCoordinator
 
 TRENDS = {
     1: "rising_quickly",
@@ -26,11 +25,11 @@ TRENDS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DexcomConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Dexcom sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     username = config_entry.data[CONF_USERNAME]
     async_add_entities(
         [
