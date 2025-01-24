@@ -546,17 +546,15 @@
     'state': 'previous',
   })
 # ---
-# name: test_selects[evse_charging][select.evse_mode-entry]
+# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Manual',
-        'Auto-scheduled',
-        'Solar',
-        'Auto-scheduled with Solar charging',
+        'Celsius',
+        'Fahrenheit',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -564,8 +562,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.evse_mode',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eve_thermo_temperature_display_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -577,93 +575,30 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mode',
+    'original_name': 'Temperature display mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-MatterEnergyEvseMode-157-1',
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000021-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[evse_charging][select.evse_mode-state]
+# name: test_selects[eve_thermo][select.eve_thermo_temperature_display_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Mode',
+      'friendly_name': 'Eve Thermo Temperature display mode',
       'options': list([
-        'Manual',
-        'Auto-scheduled',
-        'Solar',
-        'Auto-scheduled with Solar charging',
+        'Celsius',
+        'Fahrenheit',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.evse_mode',
+    'entity_id': 'select.eve_thermo_temperature_display_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Auto-scheduled',
-  })
-# ---
-# name: test_selects[evse_charging][select.evse_mode_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'No energy management (forecast only)',
-        'Device optimizes (no local or grid control)',
-        'Optimized within building',
-        'Optimized for grid',
-        'Optimized for grid and building',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': None,
-    'entity_id': 'select.evse_mode_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Mode',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'mode',
-    'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-MatterDeviceEnergyManagementMode-159-1',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_selects[evse_charging][select.evse_mode_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Mode',
-      'options': list([
-        'No energy management (forecast only)',
-        'Device optimizes (no local or grid control)',
-        'Optimized within building',
-        'Optimized for grid',
-        'Optimized for grid and building',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.evse_mode_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Optimized for grid',
+    'state': 'Celsius',
   })
 # ---
 # name: test_selects[extended_color_light][select.mock_extended_color_light_lighting-entry]
@@ -1691,6 +1626,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'previous',
+  })
+# ---
+# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature display mode',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature_display_mode',
+    'unique_id': '00000000000004D2-0000000000000004-MatterNodeDevice-1-TrvTemperatureDisplayMode-516-0',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_selects[thermostat][select.longan_link_hvac_temperature_display_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Longan link HVAC Temperature display mode',
+      'options': list([
+        'Celsius',
+        'Fahrenheit',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.longan_link_hvac_temperature_display_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Celsius',
   })
 # ---
 # name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-entry]
