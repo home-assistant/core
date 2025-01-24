@@ -37,7 +37,10 @@ class LcnEntity(Entity):
         self._name: str = config[CONF_NAME]
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, generate_unique_id(self.config_entry.entry_id, self.address))
+                (
+                    DOMAIN,
+                    generate_unique_id(self.config_entry.entry_id, self.address),
+                )
             },
         )
 
