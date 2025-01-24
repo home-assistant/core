@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.touchline import DOMAIN
+from homeassistant.components.touchline.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -27,7 +27,7 @@ MOCK_DATA_IMPORT = {
 MOCK_NUMBER_OF_DEVICES = 1
 
 
-async def test_form_successful(hass: HomeAssistant):
+async def test_form_successful(hass: HomeAssistant) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         "touchline", context={"source": config_entries.SOURCE_USER}
@@ -38,7 +38,7 @@ async def test_form_successful(hass: HomeAssistant):
     with (
         patch(
             "homeassistant.components.touchline.config_flow._try_connect_and_fetch_basic_info",
-            return_value={"type": "success", "data": {}},
+            return_value={"type": "success", "data": "unique_id"},
         ),
         patch(
             "homeassistant.components.touchline.async_setup_entry",
@@ -60,7 +60,7 @@ async def test_form_successful(hass: HomeAssistant):
 )
 async def test_form_cannot_connect(
     hass: HomeAssistant, exception: ConnectionRefusedError, reason: str
-):
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         "touchline", context={"source": config_entries.SOURCE_USER}
@@ -87,7 +87,7 @@ async def test_import(
 
     with patch(
         "homeassistant.components.touchline.config_flow._try_connect_and_fetch_basic_info",
-        return_value={"type": "success", "data": {}},
+        return_value={"type": "success", "data": "unique_id"},
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_DATA_IMPORT

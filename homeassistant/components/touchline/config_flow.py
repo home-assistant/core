@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 
 from pytouchline_extended import PyTouchline
 import voluptuous as vol
@@ -27,7 +26,7 @@ RESULT_CANNOT_CONNECT = "cannot_connect"
 def _try_connect_and_fetch_basic_info(host):
     """Attempt to connect and, if successful, fetch number of devices."""
     py_touchline = PyTouchline(url=host)
-    result = {"type": None, "data": {}}
+    result = {"type": None, "data": None}
     number_of_devices = None
     device = PyTouchline(id=0, url=host)
     try:
@@ -65,12 +64,12 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         errors = {}
-        result: dict[str, Any] = {"type": None, "data": {}}
+        result: dict[str, str | None] = {"type": None, "data": None}
 
         if user_input is not None:
             # Abort if an entry with same host is present.
@@ -97,8 +96,13 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             if result["type"] != RESULT_SUCCESS:
                 errors["base"] = "cannot_connect"
 
-            await self.async_set_unique_id(result["data"])
-            self._abort_if_unique_id_configured()
+            # Ensure `result["data"]` is not `None` before setting the unique ID
+            if result["data"]:
+                await self.async_set_unique_id(result["data"])
+                self._abort_if_unique_id_configured()
+            else:
+                errors["base"] = "cannot_connect"
+
             _LOGGER.debug(
                 "Host: %s",
                 user_input[CONF_HOST],
@@ -114,7 +118,7 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
+    async def async_step_import(self, user_input: dict[str, str]) -> ConfigFlowResult:
         """Import a configuration from yaml configuration."""
         try:
             result = await self.hass.async_add_executor_job(
@@ -128,12 +132,12 @@ class TouchlineConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to connect: %s", e)
             return self.async_abort(reason="cannot_connect")
 
-        if result["type"] != RESULT_SUCCESS:
+        if result["type"] != RESULT_SUCCESS or not result["data"]:
             return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
-    def _validate_input(self, user_input: dict[str, Any]) -> dict[str, str]:
+    def _validate_input(self, user_input: dict[str, str]) -> dict[str, str]:
         """Validate the user input."""
         errors = {}
         host = user_input[CONF_HOST]

@@ -18,6 +18,7 @@ from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import _LOGGER, DOMAIN
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.st
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the configurations from YAML to config flows."""
@@ -68,13 +69,42 @@ async def async_setup_platform(
         _LOGGER.error("No Roth Touchline detected")
         return
 
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_HOST: host},
-        )
+    # Log a deprecation warning in the logs
+    _LOGGER.warning(
+        "YAML configuration for Roth Touchline is deprecated and will be removed "
+        "in a future release. Please migrate to the configuration flow in the UI"
     )
+
+    # Create a deprecation issue in the Home Assistant UI
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_climate",
+        breaks_in_ha_version="2025.7.0",  # Adjust to the planned removal version
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "platform": "climate",
+            "integration_title": "Roth Touchline",
+        },
+    )
+
+    # Initialize PyTouchline instance
+    py_touchline = PyTouchline(url=host)
+
+    # Discover devices
+    number_of_devices = await hass.async_add_executor_job(
+        py_touchline.get_number_of_devices
+    )
+    _LOGGER.debug("Number of devices found (YAML): %s", number_of_devices)
+
+    # Create entities for each device
+    devices = [
+        Touchline(PyTouchline(id=device_id, url=host))
+        for device_id in range(number_of_devices)
+    ]
+    async_add_entities(devices, True)
 
 
 # This function sets up the Touchline device from the configuration entry.
@@ -108,24 +138,6 @@ async def async_setup_entry(
     ]
     # Add the devices to Home Assistant.
     async_add_entities(devices, True)
-
-
-# This function sets up the platform.
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the Touchline devices."""
-    host = config[CONF_HOST]
-    py_touchline = PyTouchline(url=host)
-    number_of_devices = int(py_touchline.get_number_of_devices())
-    devices = [
-        Touchline(PyTouchline(id=device_id, url=host))
-        for device_id in range(number_of_devices)
-    ]
-    add_entities(devices, True)
 
 
 # This class represents the Touchline device.
