@@ -40,7 +40,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import GroupManager, HeosConfigEntry, SourceManager
+from . import GroupManager, HeosConfigEntry
 from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
 from .coordinator import HeosCoordinator
 
@@ -97,7 +97,6 @@ async def async_setup_entry(
         HeosMediaPlayer(
             entry.runtime_data.coordinator,
             player,
-            entry.runtime_data.source_manager,
             entry.runtime_data.group_manager,
         )
         for player in players.values()
@@ -144,13 +143,11 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self,
         coordinator: HeosCoordinator,
         player: HeosPlayer,
-        source_manager: SourceManager,
         group_manager: GroupManager,
     ) -> None:
         """Initialize."""
         self._media_position_updated_at = None
         self._player: HeosPlayer = player
-        self._source_manager = source_manager
         self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
         model_parts = player.model.split(maxsplit=1)
@@ -164,8 +161,8 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
-        self._update_attributes()
         super().__init__(coordinator, context=player.player_id)
+        self._update_attributes()
 
     async def _player_update(self, event):
         """Handle player attribute updated."""
@@ -181,6 +178,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     def _update_attributes(self) -> None:
         """Update core attributes of the media player."""
+        self._attr_source_list = self.coordinator.async_get_source_list()
+        self._attr_source = self.coordinator.async_get_current_source(
+            self._player.now_playing_media
+        )
         self._attr_repeat = HEOS_HA_REPEAT_TYPE_MAP[self._player.repeat]
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
@@ -304,14 +305,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 index = int(media_id)
             except ValueError:
                 # Try finding index by name
-                index = next(
-                    (
-                        index
-                        for index, favorite in self._source_manager.favorites.items()
-                        if favorite.name == media_id
-                    ),
-                    None,
-                )
+                index = self.coordinator.async_get_favorite_index(media_id)
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_preset_station(index)
@@ -322,7 +316,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     @catch_action_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._source_manager.play_source(source, self._player)
+        await self.coordinator.async_play_source(source, self._player)
 
     @catch_action_error("set repeat")
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
@@ -427,16 +421,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         return self._player.shuffle
-
-    @property
-    def source(self) -> str:
-        """Name of the current input source."""
-        return self._source_manager.get_current_source(self._player.now_playing_media)
-
-    @property
-    def source_list(self) -> list[str]:
-        """List of available input sources."""
-        return self._source_manager.source_list
 
     @property
     def state(self) -> MediaPlayerState:

@@ -99,24 +99,6 @@ async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_control_connect(
-    hass: HomeAssistant, host: str, key: str | None
-) -> WebOsClient:
-    """LG Connection."""
-    client = WebOsClient(
-        host,
-        key,
-        client_session=async_get_clientsession(hass),
-    )
-    try:
-        await client.connect()
-    except WebOsTvPairError:
-        _LOGGER.warning("Connected to LG webOS TV %s but not paired", host)
-        raise
-
-    return client
-
-
 def update_client_key(
     hass: HomeAssistant, entry: ConfigEntry, client: WebOsClient
 ) -> None:
