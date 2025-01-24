@@ -34,7 +34,7 @@ type DVSPortalConfigEntry = ConfigEntry[DVSPortalRuntimeData]
 
 
 async def async_setup_entry(
-    hass: core.HomeAssistant, entry: DVSPortalConfigEntry
+    hass: HomeAssistant, entry: DVSPortalConfigEntry
 ) -> bool:
     """Set up the dvsportal component from a config entry."""
 
