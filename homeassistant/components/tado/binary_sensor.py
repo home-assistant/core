@@ -204,7 +204,6 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self.coordinator = coordinator
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self._attr_unique_id = (

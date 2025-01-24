@@ -25,7 +25,7 @@ def entry(request: pytest.FixtureRequest) -> ConfigEntry:
     )
     return ConfigEntry(
         version=1,
-        minor_version=0,
+        minor_version=1,
         domain="tado",
         title="Tado",
         data={
@@ -35,10 +35,8 @@ def entry(request: pytest.FixtureRequest) -> ConfigEntry:
         options={
             "fallback": fallback,
         },
-        source="user",
         unique_id="unique_id",
         entry_id="entry_id",
-        discovery_keys="discovery_keys",
     )
 
 
@@ -46,7 +44,7 @@ def entry(request: pytest.FixtureRequest) -> ConfigEntry:
 def tado() -> Tado:
     """Fixture for Tado instance."""
     with patch(
-        "homeassistant.components.tado.__init__.PyTado.interface.api.Tado.set_zone_overlay"
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_zone_overlay"
     ) as mock_set_zone_overlay:
         instance = MagicMock(spec=Tado)
         instance.set_zone_overlay = mock_set_zone_overlay
