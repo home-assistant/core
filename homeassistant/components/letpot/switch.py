@@ -33,14 +33,14 @@ BASE_SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
     LetPotSwitchEntityDescription(
         key="power",
         translation_key="power",
-        value_fn=lambda status: None if status is None else status.system_on,
+        value_fn=lambda status: status.system_on,
         set_value_fn=lambda device_client, value: device_client.set_power(value),
         entity_category=EntityCategory.CONFIG,
     ),
     LetPotSwitchEntityDescription(
         key="pump_cycling",
         translation_key="pump_cycling",
-        value_fn=lambda status: None if status is None else status.pump_mode == 1,
+        value_fn=lambda status: status.pump_mode == 1,
         set_value_fn=lambda device_client, value: device_client.set_pump_mode(value),
         entity_category=EntityCategory.CONFIG,
     ),
@@ -48,14 +48,14 @@ BASE_SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
 ALARM_SWITCH: LetPotSwitchEntityDescription = LetPotSwitchEntityDescription(
     key="alarm_sound",
     translation_key="alarm_sound",
-    value_fn=lambda status: None if status is None else status.system_sound,
+    value_fn=lambda status: status.system_sound,
     set_value_fn=lambda device_client, value: device_client.set_sound(value),
     entity_category=EntityCategory.CONFIG,
 )
 AUTO_MODE_SWITCH: LetPotSwitchEntityDescription = LetPotSwitchEntityDescription(
     key="auto_mode",
     translation_key="auto_mode",
-    value_fn=lambda status: None if status is None else status.water_mode == 1,
+    value_fn=lambda status: status.water_mode == 1,
     set_value_fn=lambda device_client, value: device_client.set_water_mode(value),
     entity_category=EntityCategory.CONFIG,
 )
