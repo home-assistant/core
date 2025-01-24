@@ -27,5 +27,12 @@
     "abort": {
       "invalid_dongle_path": "Invalid dongle path"
     }
+  },
+  "selector": {
+    "devices": {
+      "options": {
+        "manual": "Custom path"
+      }
+    }
   }
 }
