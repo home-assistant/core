@@ -36,6 +36,8 @@ from .listeners import setup_sse_listeners, setup_uart_listeners
 
 _LOGGER = logging.getLogger(__name__)
 
+type CrownstoneConfigEntry = ConfigEntry[CrownstoneEntryManager]
+
 
 class CrownstoneEntryManager:
     """Manage a Crownstone config entry."""
@@ -44,7 +46,9 @@ class CrownstoneEntryManager:
     cloud: CrownstoneCloud
     sse: CrownstoneSSEAsync
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: CrownstoneConfigEntry
+    ) -> None:
         """Initialize the hub."""
         self.hass = hass
         self.config_entry = config_entry
@@ -99,6 +103,8 @@ class CrownstoneEntryManager:
         # Save the sphere where the USB is located
         # Makes HA aware of the Crownstone environment HA is placed in, a user can have multiple
         self.usb_sphere_id = self.config_entry.options[CONF_USB_SPHERE]
+
+        self.config_entry.runtime_data = self
 
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
@@ -176,14 +182,9 @@ class CrownstoneEntryManager:
             for subscription_id in self.listeners[UART_LISTENERS]:
                 UartEventBus.unsubscribe(subscription_id)
 
-        unload_ok = await self.hass.config_entries.async_unload_platforms(
+        return await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
         )
-
-        if unload_ok:
-            self.hass.data[DOMAIN].pop(self.config_entry.entry_id)
-
-        return unload_ok
 
     @callback
     def on_shutdown(self, _: Event) -> None:
@@ -193,6 +194,8 @@ class CrownstoneEntryManager:
             self.uart.stop()
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: CrownstoneConfigEntry
+) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
