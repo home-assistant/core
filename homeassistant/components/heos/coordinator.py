@@ -5,6 +5,7 @@ The coordinator is responsible for refreshing data in response to system-wide ev
 entities to update. Entities subscribe to entity-specific updates within the entity class itself.
 """
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 
@@ -81,6 +82,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
             )
         # Retrieve initial data
+        await self._async_update_groups()
         await self._async_update_sources()
         # Attach event callbacks
         self.heos.add_on_disconnected(self._async_on_disconnected)
@@ -92,6 +94,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self.heos.dispatcher.disconnect_all()  # Removes all connected through heos.add_on_* and player.add_on_*
         await self.heos.disconnect()
         await super().async_shutdown()
+
+    def async_add_listener(self, update_callback, context=None) -> Callable[[], None]:
+        """Add a listener for the coordinator."""
+        remove_listener = super().async_add_listener(update_callback, context)
+        # Update entities so group_member entity_ids fully populate.
+        self.async_update_listeners()
+        return remove_listener
 
     async def _async_on_auth_failure(self) -> None:
         """Handle when the user credentials are no longer valid."""
@@ -118,6 +127,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             assert data is not None
             if data.updated_player_ids:
                 self._async_update_player_ids(data.updated_player_ids)
+        elif event == const.EVENT_GROUPS_CHANGED:
+            await self._async_update_players()
         elif (
             event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED)
             and not self._update_sources_pending
@@ -175,6 +186,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                     entity_id, new_unique_id=str(new_id)
                 )
                 _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
+
+    async def _async_update_groups(self) -> None:
+        """Update group information."""
+        try:
+            await self.heos.get_groups(refresh=True)
+        except HeosError as error:
+            _LOGGER.error("Unable to retrieve groups: %s", error)
 
     async def _async_update_sources(self) -> None:
         """Build source list for entities."""
@@ -265,3 +283,65 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             translation_key="unknown_source",
             translation_placeholders={"source": source},
         )
+
+    async def async_join_players(
+        self, player_id: int, member_entity_ids: list[str]
+    ) -> None:
+        """Join a player with a group of players."""
+        member_ids: list[int] = []
+        # Resolve entity_ids to player_ids
+        entity_registry = er.async_get(self.hass)
+        for entity_id in member_entity_ids:
+            entity = entity_registry.async_get(entity_id)
+            if entity is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if entity.platform != DOMAIN:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="not_heos_media_player",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            member_ids.append(int(entity.unique_id))
+        # Remove leader from members, if present
+        if player_id in member_ids:
+            member_ids.remove(player_id)
+        await self.heos.set_group(player_id, member_ids)
+
+    async def async_unjoin_player(self, player_id: int) -> None:
+        """Remove the player from any group."""
+        for group in self.heos.groups.values():
+            if group.lead_player_id == player_id:
+                # Player is the group leader, this effectively removes the group.
+                await self.heos.set_group([player_id])
+                return
+            if player_id in group.member_player_ids:
+                # Player is a group member, update the group to exclude it
+                new_members = [group.lead_player_id, *group.member_player_ids]
+                new_members.remove(player_id)
+                await self.heos.set_group(new_members)
+                return
+
+    @callback
+    def async_get_group_members(self, group_id: int | None) -> list[str] | None:
+        """Get group member entity IDs for the group."""
+        if group_id is None:
+            return None
+        if not (group := self.heos.groups.get(group_id)):
+            return None
+        player_ids = [group.lead_player_id, *group.member_player_ids]
+        # Resolve player_ids to entity_ids
+        entity_registry = er.async_get(self.hass)
+        entity_ids = [
+            entity
+            for member_id in player_ids
+            if (
+                entity := entity_registry.async_get_entity_id(
+                    Platform.MEDIA_PLAYER, DOMAIN, str(member_id)
+                )
+            )
+        ]
+        return entity_ids or None
