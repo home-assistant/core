@@ -193,6 +193,12 @@ async def test_battery_sensor_description(
     assert state
     assert state.state == "CR2032"
 
+    # case with a empty string to check if the attribute is indeed ignored
+    set_node_attribute(matter_node, 1, 47, 19, "")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.smoke_sensor_battery_type") is None
+
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_eve_thermo_sensor(
