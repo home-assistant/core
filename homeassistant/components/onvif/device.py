@@ -263,16 +263,22 @@ class ONVIFDevice:
             LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)
             return
 
-        cam_date = dt.datetime(
-            cdate.Date.Year,
-            cdate.Date.Month,
-            cdate.Date.Day,
-            cdate.Time.Hour,
-            cdate.Time.Minute,
-            cdate.Time.Second,
-            0,
-            tzone,
-        )
+        try:
+            cam_date = dt.datetime(
+                cdate.Date.Year,
+                cdate.Date.Month,
+                cdate.Date.Day,
+                cdate.Time.Hour,
+                cdate.Time.Minute,
+                cdate.Time.Second,
+                0,
+                tzone,
+            )
+        except ValueError as err:
+            LOGGER.warning(
+                "%s: Could not parse date/time from camera: %s", self.name, err
+            )
+            return
 
         cam_date_utc = cam_date.astimezone(dt_util.UTC)
 

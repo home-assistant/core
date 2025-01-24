@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
