@@ -458,6 +458,9 @@
           "silent": "Silent",
           "forcedlevelfour": "Boost"
         }
+      },
+      "supply_pressure": {
+        "name": "Supply pressure"
       }
     },
     "water_heater": {
