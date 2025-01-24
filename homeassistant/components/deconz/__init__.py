@@ -9,12 +9,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .config_flow import get_master_hub
 from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import DeconzHub, get_deconz_api
 from .services import async_setup_services
+from .util import get_master_hub
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
