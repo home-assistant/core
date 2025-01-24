@@ -3,7 +3,7 @@
     "name": "Home",
     "id": 123456,
     "settings": {
-      "geoTrackingEnabled": false,
+      "geoTrackingEnabled": true,
       "specialOffersEnabled": false,
       "onDemandLogRetrievalEnabled": false,
       "pushNotifications": {
@@ -16,10 +16,49 @@
         "energyIqReminder": false
       }
     },
+    "location": {
+      "stale": false,
+      "atHome": true,
+      "bearingFromHome": {
+        "degrees": 21.4215315376382,
+        "radians": 0.37387625615159
+      },
+      "relativeDistanceFromHomeFence": 0.0
+    },
     "deviceMetadata": {
       "platform": "Android",
       "osVersion": "14",
       "model": "Samsung",
+      "locale": "nl"
+    }
+  },
+  {
+    "name": "User2",
+    "id": 789012,
+    "settings": {
+      "geoTrackingEnabled": false,
+      "specialOffersEnabled": true,
+      "onDemandLogRetrievalEnabled": false
+    },
+    "deviceMetadata": {
+      "platform": "Android",
+      "osVersion": "14",
+      "model": "Model2",
+      "locale": "nl"
+    }
+  },
+  {
+    "name": "User3",
+    "id": 789012,
+    "settings": {
+      "geoTrackingEnabled": true,
+      "specialOffersEnabled": true,
+      "onDemandLogRetrievalEnabled": false
+    },
+    "deviceMetadata": {
+      "platform": "Android",
+      "osVersion": "14",
+      "model": "Model2",
       "locale": "nl"
     }
   }

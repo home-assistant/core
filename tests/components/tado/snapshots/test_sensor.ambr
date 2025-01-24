@@ -1,0 +1,83 @@
+# serializer version: 1
+# name: test_air_con_create_sensors
+  ReadOnlyDict({
+    'friendly_name': 'Air Conditioning Tado mode',
+  })
+# ---
+# name: test_air_con_create_sensors.1
+  ReadOnlyDict({
+    'device_class': 'temperature',
+    'friendly_name': 'Air Conditioning Temperature',
+    'setting': 0,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'time': '2020-03-05T03:57:38.850Z',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_air_con_create_sensors.2
+  ReadOnlyDict({
+    'friendly_name': 'Air Conditioning AC',
+    'time': '2020-03-05T04:01:07.162Z',
+  })
+# ---
+# name: test_air_con_create_sensors.3
+  ReadOnlyDict({
+    'device_class': 'humidity',
+    'friendly_name': 'Air Conditioning Humidity',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'time': '2020-03-05T03:57:38.850Z',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_heater_create_sensors
+  ReadOnlyDict({
+    'friendly_name': 'Baseboard Heater Tado mode',
+  })
+# ---
+# name: test_heater_create_sensors.1
+  ReadOnlyDict({
+    'device_class': 'temperature',
+    'friendly_name': 'Baseboard Heater Temperature',
+    'setting': 0,
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'time': '2020-03-10T07:44:11.947Z',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_heater_create_sensors.2
+  ReadOnlyDict({
+    'device_class': 'humidity',
+    'friendly_name': 'Baseboard Heater Humidity',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'time': '2020-03-10T07:44:11.947Z',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_home_create_sensors
+  ReadOnlyDict({
+    'device_class': 'temperature',
+    'friendly_name': 'home name Outdoor temperature',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'time': '2020-12-22T08:13:13.652Z',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_home_create_sensors.1
+  ReadOnlyDict({
+    'friendly_name': 'home name Solar percentage',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'time': '2020-12-22T08:13:13.652Z',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_home_create_sensors.2
+  ReadOnlyDict({
+    'friendly_name': 'home name Weather condition',
+    'time': '2020-12-22T08:13:13.652Z',
+  })
+# ---
+# name: test_water_heater_create_sensors
+  ReadOnlyDict({
+    'friendly_name': 'Water Heater Tado mode',
+  })
+# ---
