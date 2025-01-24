@@ -118,7 +118,7 @@ async def test_metadata(
         assert state.attributes[ATTR_MEDIA_ALBUM_ARTIST] == "Test Album Artist 1"
         assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Test Album"
         assert state.attributes[ATTR_MEDIA_TITLE] == "Test Title"
-        assert state.attributes[ATTR_MEDIA_TRACK] == 1
+        assert state.attributes[ATTR_MEDIA_TRACK] == 10
         assert state.attributes[ATTR_MEDIA_DURATION] == 60
         assert state.attributes[ATTR_MEDIA_POSITION] == 30
 
