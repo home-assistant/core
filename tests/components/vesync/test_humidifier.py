@@ -5,6 +5,7 @@ import logging
 from unittest.mock import patch
 
 import pytest
+from pyvesync.vesyncfan import model_features
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -12,12 +13,6 @@ from homeassistant.components.humidifier import (
     DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
-)
-from homeassistant.components.vesync.const import (
-    VS_HUMIDIFIER_MODE_AUTO,
-    VS_HUMIDIFIER_MODE_HUMIDITY,
-    VS_HUMIDIFIER_MODE_MANUAL,
-    VS_HUMIDIFIER_MODE_SLEEP,
 )
 from homeassistant.components.vesync.humidifier import _get_available_modes
 from homeassistant.config_entries import ConfigEntryState
@@ -64,34 +59,17 @@ async def test_humidifier_state(
     assert state.attributes.get(ATTR_HUMIDITY) == 40
 
 
-async def test_invalid_available_modes(caplog: pytest.LogCaptureFixture) -> None:
-    """Test invalid available mode mapping."""
+@pytest.mark.parametrize(
+    ("device_type"),
+    ["Classic200S", "LUH-A602S-WUS"],
+)
+async def test_mist_modes(device_type, caplog: pytest.LogCaptureFixture) -> None:
+    """Test validity of mist modes exposed by Vesync library."""
 
     caplog.clear()
     caplog.set_level(logging.WARNING)
 
-    _get_available_modes(["invalid_mode"])
-
-    assert len(caplog.record_tuples) == 1
-    assert caplog.record_tuples[0][1] == logging.WARNING
-    assert caplog.record_tuples[0][2].startswith("Unknown mode")
-
-
-async def test_valid_available_modes(caplog: pytest.LogCaptureFixture) -> None:
-    """Test valid available mode mapping."""
-
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-
-    _get_available_modes(
-        [
-            VS_HUMIDIFIER_MODE_AUTO,
-            VS_HUMIDIFIER_MODE_HUMIDITY,
-            VS_HUMIDIFIER_MODE_MANUAL,
-            VS_HUMIDIFIER_MODE_SLEEP,
-        ]
-    )
-
+    _get_available_modes(model_features(device_type).get("mist_modes"))
     assert len(caplog.record_tuples) == 0
 
 
