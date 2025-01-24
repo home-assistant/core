@@ -36,7 +36,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, start_reauth_flow
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_ezviz_client")
@@ -117,7 +117,7 @@ async def test_async_step_reauth(
     """Test the reauth step."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await start_reauth_flow(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -612,7 +612,7 @@ async def test_reauth_errors(
     """Test the reauth step."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await start_reauth_flow(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -653,7 +653,7 @@ async def test_reauth_unknown_exception(
     """Test the reauth step."""
     mock_config_entry.add_to_hass(hass)
 
-    result = await start_reauth_flow(hass, mock_config_entry)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
