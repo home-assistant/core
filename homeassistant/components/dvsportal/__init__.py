@@ -29,7 +29,9 @@ class DVSPortalRuntimeData:
     """Data class for runtime data of DVSPortal."""
 
     coordinator: DVSPortalCoordinator
-    ha_registered_license_plates: set[str]
+    ha_registered_license_plates: set[
+        str
+    ]  # Store all license places which have already have a DVSCarPortal instance
 
 
 type DVSPortalConfigEntry = ConfigEntry[DVSPortalRuntimeData]

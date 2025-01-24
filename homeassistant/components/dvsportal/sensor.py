@@ -33,9 +33,10 @@ async def async_setup_entry(
     def update_sensors_callback():
         # license plates
 
-        ha_registered_license_plates: set[str] = set(
+        ha_registered_license_plates: set[str] = (
             runtime_data.ha_registered_license_plates
         )
+
         known_license_plates: set[str] = set()
         if coordinator.data is not None:
             # sometimes coordinator.data is still None, if upstream api is slow..
