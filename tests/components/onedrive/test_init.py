@@ -74,27 +74,31 @@ async def test_faulty_integration_folder(
     assert "Failed to get backups_9f86d081 folder" in caplog.text
 
 
-@pytest.mark.parametrize(
-    ("status_code", "message"),
-    [
-        (404, "Failed to create backups_9f86d081 folder"),
-        (500, "Failed to get backups_9f86d081 folder"),
-    ],
-)
-async def test_errors_during_backup_folder_creation(
+async def test_500_error_during_backup_folder_get(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_drive_items: MagicMock,
     caplog: pytest.LogCaptureFixture,
-    status_code: int,
-    message: str,
 ) -> None:
     """Test error during backup folder creation."""
-    mock_drive_items.get.side_effect = APIError(response_status_code=status_code)
+    mock_drive_items.get.side_effect = APIError(response_status_code=500)
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert "Failed to get backups_9f86d081 folder" in caplog.text
+
+
+async def test_error_during_backup_folder_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_drive_items: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error during backup folder creation."""
+    mock_drive_items.get.side_effect = APIError(response_status_code=404)
     mock_drive_items.children.post.side_effect = APIError()
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert message in caplog.text
+    assert "Failed to create backups_9f86d081 folder" in caplog.text
 
 
 async def test_successful_backup_folder_creation(

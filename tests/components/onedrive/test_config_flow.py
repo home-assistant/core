@@ -12,7 +12,6 @@ from homeassistant.components.onedrive.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
-    OAUTH_SCOPES,
 )
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -42,7 +41,7 @@ async def _do_get_token(
         },
     )
 
-    scope = "+".join(OAUTH_SCOPES)
+    scope = "Files.ReadWrite.AppFolder+offline_access+openid"
 
     assert result["url"] == (
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
