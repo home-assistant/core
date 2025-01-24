@@ -2112,6 +2112,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
+# homeassistant.components.stiebel_eltron
 pymodbus==3.8.3
 
 # homeassistant.components.monoprice
