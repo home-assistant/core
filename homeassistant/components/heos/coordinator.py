@@ -187,7 +187,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 _LOGGER.error("Unable to retrieve favorites: %s", error)
             else:
                 self._source_list.extend(
-                    [favorite.name for favorite in self._favorites.values()]
+                    favorite.name for favorite in self._favorites.values()
                 )
         # Get input sources (across all devices in the HEOS system)
         try:
