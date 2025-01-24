@@ -49,7 +49,7 @@ dependencies    = [
     "hass-nabucasa==0.88.1",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
-    "httpx==0.27.2",
+    "httpx==0.28.1",
     "home-assistant-bluetooth==1.13.0",
     "ifaddr==0.2.0",
     "Jinja2==3.1.5",
@@ -82,7 +82,7 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.140.1"
+    "zeroconf==0.141.0"
 ]
 
 [project.urls]

@@ -11,6 +11,7 @@ from kasa import Device, Module, StreamResolution
 
 from homeassistant.components import ffmpeg, stream
 from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
     Camera,
     CameraEntityDescription,
     CameraEntityFeature,
@@ -20,7 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry, legacy_device_id
+from . import TPLinkConfigEntry
 from .const import CONF_CAMERA_CREDENTIALS
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import CoordinatedTPLinkModuleEntity, TPLinkModuleEntityDescription
@@ -75,6 +76,7 @@ async def async_setup_entry(
             coordinator=parent_coordinator,
             entity_class=TPLinkCameraEntity,
             descriptions=CAMERA_DESCRIPTIONS,
+            platform_domain=CAMERA_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )
@@ -120,10 +122,6 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self._last_update: float = 0
         self._can_stream = True
         self._http_mpeg_stream_running = False
-
-    def _get_unique_id(self) -> str:
-        """Return unique ID for the entity."""
-        return f"{legacy_device_id(self._device)}-{self.entity_description.key}"
 
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""

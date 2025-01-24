@@ -54,7 +54,8 @@
       }
     },
     "error": {
-      "cannot_retrieve": "Unable to retrieve the list of sources. Make sure device is switched on"
+      "cannot_connect": "[%key:component::webostv::config::error::cannot_connect%]",
+      "error_pairing": "[%key:component::webostv::config::error::error_pairing%]"
     }
   },
   "device_automation": {
@@ -108,6 +109,26 @@
           "description": "Name of the sound output to switch to."
         }
       }
+    }
+  },
+  "exceptions": {
+    "device_off": {
+      "message": "Error calling {func} for device {name}: Device is off and cannot be controlled."
+    },
+    "communication_error": {
+      "message": "Communication error while calling {func} for device {name}: {error}"
+    },
+    "notify_device_off": {
+      "message": "Error sending notification to device {name}: Device is off and cannot be controlled."
+    },
+    "notify_icon_not_found": {
+      "message": "Icon {icon_path} not found when sending notification for device {name}"
+    },
+    "notify_communication_error": {
+      "message": "Communication error while sending notification to device {name}: {error}"
+    },
+    "unhandled_trigger_type": {
+      "message": "Unhandled trigger type: {trigger_type}"
     }
   }
 }
