@@ -299,6 +299,21 @@ async def test_rpc_runs_connected_events_when_initialized(
     await hass.async_block_till_done()
 
 
+async def test_rpc_runs_connected_events_when_initialized_false(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC runs connected events when initialized."""
+    await set_integration(hass)
+    assert call.script_list() not in mock_rpc_device.mock_calls
+
+    # Mock initialized event
+    monkeypatch.setattr(mock_rpc_device, "initialized", False)
+    mock_rpc_device.mock_initialized()
+    await hass.async_block_till_done()
+
+
 async def test_rpc_already_connected(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

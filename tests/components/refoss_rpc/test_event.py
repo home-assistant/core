@@ -78,6 +78,11 @@ async def test_rpc_event_removal(
     assert entity_registry.async_get(entity_id) is not None
 
     monkeypatch.setitem(mock_rpc_device.config, "input:1", {"id": 1, "type": "switch"})
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "wifi",
+        {"sta_1": {"enable": False}, "sta_2": {"enable": False}},
+    )
     await set_integration(hass)
 
     assert entity_registry.async_get(entity_id) is None

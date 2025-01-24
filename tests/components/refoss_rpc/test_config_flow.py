@@ -24,7 +24,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="refoss-r11-743af4da2f5a",
-    name="refoss-r11-743af4da2f5a",
+    name="refoss-r11-743af4da2f5a._http._tcp.local.",
     port=None,
     properties={zeroconf.ATTR_PROPERTIES_ID: "refoss-r11-743af4da2f5a"},
     type="mock_type",
@@ -549,6 +549,38 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
+async def test_zeroconf_cannot_connect_initialize(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test we get the form."""
+    with patch(
+        "homeassistant.components.refoss_rpc.config_flow.get_info",
+        return_value={
+            "name": "Test name",
+            "model": "r11",
+            "mac": "test-mac",
+            "fw_ver": "1.0.0",
+            "hw_ver": "1.0.1",
+            "auth_en": False,
+        },
+    ):
+        monkeypatch.setattr(
+            mock_rpc_device,
+            "initialize",
+            AsyncMock(side_effect=DeviceConnectionError),
+        )
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "cannot_connect"
+
+
 async def test_zeroconf_require_auth(
     hass: HomeAssistant, mock_rpc_device: Mock
 ) -> None:
@@ -801,3 +833,44 @@ async def test_reconfigure_with_exception(
         )
 
     assert result["errors"] == {"base": base_error}
+
+
+@pytest.mark.parametrize(
+    ("exc", "base_error"),
+    [
+        (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
+    ],
+)
+async def test_form_errors_test_connection(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    exc: Exception,
+    base_error: str,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test we handle errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.refoss_rpc.config_flow.get_info",
+        return_value={
+            "name": "Test name",
+            "mac": "test-mac",
+            "model": "r11",
+            "dev_id": "refoss-r11-743af4da2f5a",
+            "fw_ver": "1.0.0",
+            "hw_ver": "1.0.1",
+            "auth_en": False,
+        },
+    ):
+        monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock(side_effect=exc))
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": base_error}
