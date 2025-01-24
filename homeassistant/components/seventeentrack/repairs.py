@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
+from homeassistant.components.repairs import RepairsFlow
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
@@ -46,4 +46,5 @@ async def async_create_fix_flow(
         entry := hass.config_entries.async_get_entry(data["entry_id"])
     ):
         return SensorDeprecationRepairFlow(entry)
-    return ConfirmRepairFlow()
+
+    raise ValueError(f"Unsupported issue_id: {issue_id}")

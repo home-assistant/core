@@ -49,7 +49,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
         if user_input is not None:
             try:
-                device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+                device_info = await async_try_connect(user_input[CONF_IP_ADDRESS])
             except RecoverableError as ex:
                 LOGGER.error(ex)
                 errors = {"base": ex.error_code}
@@ -88,7 +88,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Tell device we want a token, user must now press the button within 30 seconds
         # The first attempt will always fail, but this opens the window to press the button
-        token = await self._async_request_token(self.ip_address)
+        token = await async_request_token(self.ip_address)
         errors: dict[str, str] | None = None
 
         if token is None:
@@ -148,7 +148,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         This flow is triggered only by DHCP discovery of known devices.
         """
         try:
-            device = await self._async_try_connect(discovery_info.ip)
+            device = await async_try_connect(discovery_info.ip)
         except RecoverableError as ex:
             LOGGER.error(ex)
             return self.async_abort(reason="unknown")
@@ -180,7 +180,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] | None = None
         if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             try:
-                await self._async_try_connect(self.ip_address)
+                await async_try_connect(self.ip_address)
             except RecoverableError as ex:
                 LOGGER.error(ex)
                 errors = {"base": ex.error_code}
@@ -232,7 +232,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             reauth_entry = self._get_reauth_entry()
             try:
-                await self._async_try_connect(reauth_entry.data[CONF_IP_ADDRESS])
+                await async_try_connect(reauth_entry.data[CONF_IP_ADDRESS])
             except RecoverableError as ex:
                 LOGGER.error(ex)
                 errors = {"base": ex.error_code}
@@ -250,7 +250,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = None
 
-        token = await self._async_request_token(self.ip_address)
+        token = await async_request_token(self.ip_address)
 
         if user_input is not None:
             if token is None:
@@ -274,7 +274,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input:
             try:
-                device_info = await self._async_try_connect(user_input[CONF_IP_ADDRESS])
+                device_info = await async_try_connect(user_input[CONF_IP_ADDRESS])
 
             except RecoverableError as ex:
                 LOGGER.error(ex)
@@ -305,65 +305,65 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    @staticmethod
-    async def _async_try_connect(ip_address: str) -> Device:
-        """Try to connect.
 
-        Make connection with device to test the connection
-        and to get info for unique_id.
-        """
+async def async_try_connect(ip_address: str) -> Device:
+    """Try to connect.
 
-        energy_api: HomeWizardEnergy
+    Make connection with device to test the connection
+    and to get info for unique_id.
+    """
 
-        # Determine if device is v1 or v2 capable
-        if await has_v2_api(ip_address):
-            energy_api = HomeWizardEnergyV2(ip_address)
-        else:
-            energy_api = HomeWizardEnergyV1(ip_address)
+    energy_api: HomeWizardEnergy
 
-        try:
-            return await energy_api.device()
+    # Determine if device is v1 or v2 capable
+    if await has_v2_api(ip_address):
+        energy_api = HomeWizardEnergyV2(ip_address)
+    else:
+        energy_api = HomeWizardEnergyV1(ip_address)
 
-        except DisabledError as ex:
-            raise RecoverableError(
-                "API disabled, API must be enabled in the app", "api_not_enabled"
-            ) from ex
+    try:
+        return await energy_api.device()
 
-        except UnsupportedError as ex:
-            LOGGER.error("API version unsuppored")
-            raise AbortFlow("unsupported_api_version") from ex
+    except DisabledError as ex:
+        raise RecoverableError(
+            "API disabled, API must be enabled in the app", "api_not_enabled"
+        ) from ex
 
-        except RequestError as ex:
-            raise RecoverableError(
-                "Device unreachable or unexpected response", "network_error"
-            ) from ex
+    except UnsupportedError as ex:
+        LOGGER.error("API version unsuppored")
+        raise AbortFlow("unsupported_api_version") from ex
 
-        except UnauthorizedError as ex:
-            raise UnauthorizedError("Unauthorized") from ex
+    except RequestError as ex:
+        raise RecoverableError(
+            "Device unreachable or unexpected response", "network_error"
+        ) from ex
 
-        except Exception as ex:
-            LOGGER.exception("Unexpected exception")
-            raise AbortFlow("unknown_error") from ex
+    except UnauthorizedError as ex:
+        raise UnauthorizedError("Unauthorized") from ex
 
-        finally:
-            await energy_api.close()
+    except Exception as ex:
+        LOGGER.exception("Unexpected exception")
+        raise AbortFlow("unknown_error") from ex
 
-    @staticmethod
-    async def _async_request_token(ip_address: str) -> str | None:
-        """Try to request a token from the device.
+    finally:
+        await energy_api.close()
 
-        This method is used to request a token from the device,
-        it will return None if the token request failed.
-        """
 
-        api = HomeWizardEnergyV2(ip_address)
+async def async_request_token(ip_address: str) -> str | None:
+    """Try to request a token from the device.
 
-        try:
-            return await api.get_token("home-assistant")
-        except DisabledError:
-            return None
-        finally:
-            await api.close()
+    This method is used to request a token from the device,
+    it will return None if the token request failed.
+    """
+
+    api = HomeWizardEnergyV2(ip_address)
+
+    try:
+        return await api.get_token("home-assistant")
+    except DisabledError:
+        return None
+    finally:
+        await api.close()
 
 
 class RecoverableError(HomeAssistantError):
