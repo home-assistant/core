@@ -1157,6 +1157,9 @@ home-assistant-frontend==20250305.0
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.26
 
+# homeassistant.components.gentex_homelink
+homelink-home-assistant==0.0.6
+
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
 
