@@ -8,7 +8,6 @@ import logging
 import math
 from typing import Any, Final
 
-# Suppressing disable=deprecated-module is needed for Python 3.11
 import audioop  # pylint: disable=deprecated-module
 import voluptuous as vol
 
@@ -21,7 +20,6 @@ from homeassistant.util import language as language_util
 from .const import (
     DEFAULT_PIPELINE_TIMEOUT,
     DEFAULT_WAKE_WORD_TIMEOUT,
-    DOMAIN,
     EVENT_RECORDING,
     SAMPLE_CHANNELS,
     SAMPLE_RATE,
@@ -29,9 +27,9 @@ from .const import (
 )
 from .error import PipelineNotFound
 from .pipeline import (
+    KEY_ASSIST_PIPELINE,
     AudioSettings,
     DeviceAudioQueue,
-    PipelineData,
     PipelineError,
     PipelineEvent,
     PipelineEventType,
@@ -283,7 +281,7 @@ def websocket_list_runs(
     msg: dict[str, Any],
 ) -> None:
     """List pipeline runs for which debug data is available."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id = msg["pipeline_id"]
 
     if pipeline_id not in pipeline_data.pipeline_debug:
@@ -319,7 +317,7 @@ def websocket_list_devices(
     msg: dict[str, Any],
 ) -> None:
     """List assist devices."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     ent_reg = er.async_get(hass)
     connection.send_result(
         msg["id"],
@@ -350,7 +348,7 @@ def websocket_get_run(
     msg: dict[str, Any],
 ) -> None:
     """Get debug data for a pipeline run."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id = msg["pipeline_id"]
     pipeline_run_id = msg["pipeline_run_id"]
 
@@ -455,7 +453,7 @@ async def websocket_device_capture(
     msg: dict[str, Any],
 ) -> None:
     """Capture raw audio from a satellite device and forward to client."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     device_id = msg["device_id"]
 
     # Number of seconds to record audio in wall clock time

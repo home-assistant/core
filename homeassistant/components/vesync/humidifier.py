@@ -6,7 +6,6 @@ from typing import Any
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.humidifier import (
-    ATTR_HUMIDITY,
     MODE_AUTO,
     MODE_NORMAL,
     MODE_SLEEP,
@@ -40,16 +39,12 @@ _LOGGER = logging.getLogger(__name__)
 MIN_HUMIDITY = 30
 MAX_HUMIDITY = 80
 
-VS_TO_HA_ATTRIBUTES = {ATTR_HUMIDITY: "current_humidity"}
-
 VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_AUTO: MODE_AUTO,
     VS_HUMIDIFIER_MODE_HUMIDITY: MODE_AUTO,
     VS_HUMIDIFIER_MODE_MANUAL: MODE_NORMAL,
     VS_HUMIDIFIER_MODE_SLEEP: MODE_SLEEP,
 }
-
-HA_TO_VS_MODE_MAP = {v: k for k, v in VS_TO_HA_MODE_MAP.items()}
 
 
 async def async_setup_entry(
@@ -92,10 +87,6 @@ def _get_ha_mode(vs_mode: str) -> str | None:
     return ha_mode
 
 
-def _get_vs_mode(ha_mode: str) -> str | None:
-    return HA_TO_VS_MODE_MAP.get(ha_mode)
-
-
 class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
@@ -108,24 +99,45 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     device: VeSyncHumidifierDevice
 
+    def __init__(
+        self,
+        device: VeSyncBaseDevice,
+        coordinator: VeSyncDataCoordinator,
+    ) -> None:
+        """Initialize the VeSyncHumidifierHA device."""
+        super().__init__(device, coordinator)
+
+        # 2 Vesync humidifier modes (humidity and auto) maps to the HA mode auto.
+        # They are on different devices though. We need to map HA mode to the
+        # device specific mode when setting it.
+
+        self._ha_to_vs_mode_map: dict[str, str] = {}
+        self._available_modes: list[str] = []
+
+        # Populate maps once.
+        for vs_mode in self.device.mist_modes:
+            ha_mode = _get_ha_mode(vs_mode)
+            if ha_mode:
+                self._available_modes.append(ha_mode)
+                self._ha_to_vs_mode_map[ha_mode] = vs_mode
+
+    def _get_vs_mode(self, ha_mode: str) -> str | None:
+        return self._ha_to_vs_mode_map.get(ha_mode)
+
     @property
     def available_modes(self) -> list[str]:
         """Return the available mist modes."""
-        return [
-            ha_mode
-            for ha_mode in (_get_ha_mode(vs_mode) for vs_mode in self.device.mist_modes)
-            if ha_mode
-        ]
+        return self._available_modes
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return self.device.config["auto_target_humidity"]
+        return self.device.auto_humidity
 
     @property
     def mode(self) -> str | None:
         """Get the current preset mode."""
-        return _get_ha_mode(self.device.details["mode"])
+        return _get_ha_mode(self.device.mode)
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
@@ -140,8 +152,14 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             raise HomeAssistantError(
                 "{mode} is not one of the valid available modes: {self.available_modes}"
             )
-        if not self.device.set_humidity_mode(_get_vs_mode(mode)):
+        if not self.device.set_humidity_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
+
+        # Changing mode while humidifier is off actually turns it on, as per the app. But
+        # the library does not seem to update the device_status. It is also possible that
+        # other attributes get updated. Scheduling a forced refresh to get device status.
+        # updated.
+        self.schedule_update_ha_state(force_refresh=True)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
@@ -149,11 +167,15 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         if not success:
             raise HomeAssistantError("An error occurred while turning on.")
 
+        self.schedule_update_ha_state()
+
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = self.device.turn_off()
         if not success:
             raise HomeAssistantError("An error occurred while turning off.")
+
+        self.schedule_update_ha_state()
 
     @property
     def is_on(self) -> bool:

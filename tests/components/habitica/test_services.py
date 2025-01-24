@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
+from aiohttp import ClientError
 from habiticalib import Direction, Skill
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -46,8 +47,8 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica, try again later"
-RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again later"
+REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica: reason"
+RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again in 5 seconds"
 
 
 @pytest.fixture(autouse=True)
@@ -235,6 +236,15 @@ async def test_cast_skill(
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
         ),
+        (
+            {
+                ATTR_TASK: "Rechnungen bezahlen",
+                ATTR_SKILL: "smash",
+            },
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
     ],
 )
 async def test_cast_skill_exceptions(
@@ -359,6 +369,11 @@ async def test_handle_quests(
             ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
     ],
 )
@@ -519,6 +534,15 @@ async def test_score_task(
             ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
+                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                ATTR_DIRECTION: "up",
+            },
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
         (
             {
@@ -722,7 +746,7 @@ async def test_transformation(
             ERROR_BAD_REQUEST,
             None,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
         ),
         (
             {
@@ -752,7 +776,27 @@ async def test_transformation(
             None,
             ERROR_BAD_REQUEST,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
+                ATTR_TARGET: "test-partymember-username",
+                ATTR_ITEM: "spooky_sparkles",
+            },
+            None,
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+        (
+            {
+                ATTR_TARGET: "test-partymember-username",
+                ATTR_ITEM: "spooky_sparkles",
+            },
+            ClientError,
+            None,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
     ],
 )
