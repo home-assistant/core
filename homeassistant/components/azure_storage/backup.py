@@ -106,9 +106,9 @@ class AzureStorageBackupAgent(BackupAgent):
             "metadata_version": 1,
             "folders": json.dumps(backup.folders) if backup.folders else "",
             "addons": json.dumps(backup.addons) if backup.addons else "",
-            "extra_metadata": json.dumps(backup.extra_metadata)
-            if backup.extra_metadata
-            else "",
+            "extra_metadata": (
+                json.dumps(backup.extra_metadata) if backup.extra_metadata else ""
+            ),
         }
 
         # ensure dict is [str, str]
