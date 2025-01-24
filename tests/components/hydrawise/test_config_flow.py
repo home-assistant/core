@@ -33,16 +33,16 @@ async def test_form(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "asdf@asdf.com", CONF_PASSWORD: "__password__"},
     )
     mock_pydrawise.get_user.return_value = user
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "asdf@asdf.com"
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "asdf@asdf.com"
+    assert result["data"] == {
         CONF_USERNAME: "asdf@asdf.com",
         CONF_PASSWORD: "__password__",
     }
@@ -69,8 +69,8 @@ async def test_form_api_error(
 
     mock_pydrawise.get_user.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_auth_connect_timeout(
@@ -90,8 +90,8 @@ async def test_form_auth_connect_timeout(
     assert result["errors"] == {"base": "timeout_connect"}
 
     mock_auth.token.reset_mock(side_effect=True)
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_client_connect_timeout(
@@ -112,8 +112,8 @@ async def test_form_client_connect_timeout(
 
     mock_pydrawise.get_user.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_not_authorized_error(
@@ -133,8 +133,8 @@ async def test_form_not_authorized_error(
     assert result["errors"] == {"base": "invalid_auth"}
 
     mock_auth.token.reset_mock(side_effect=True)
-    result2 = await hass.config_entries.flow.async_configure(result["flow_id"], data)
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], data)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reauth(
@@ -164,13 +164,13 @@ async def test_reauth(
     assert result["step_id"] == "reauth_confirm"
 
     mock_pydrawise.get_user.return_value = user
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
 
 
 async def test_reauth_fails(
@@ -193,18 +193,18 @@ async def test_reauth_fails(
     assert result["step_id"] == "reauth_confirm"
 
     mock_auth.token.side_effect = NotAuthorizedError
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
     mock_auth.token.reset_mock(side_effect=True)
     mock_pydrawise.get_user.return_value = user
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
 
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
