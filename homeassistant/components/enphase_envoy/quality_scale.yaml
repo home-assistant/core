@@ -1,6 +1,8 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: only actions implemented are platform native ones.
   appropriate-polling: done
   brands: done
   common-modules: done
