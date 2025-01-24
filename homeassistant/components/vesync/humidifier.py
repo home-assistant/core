@@ -104,7 +104,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         device: VeSyncBaseDevice,
         coordinator: VeSyncDataCoordinator,
     ) -> None:
-        """Initialize the VeSyncHumidifierHA  device."""
+        """Initialize the VeSyncHumidifierHA device."""
         super().__init__(device, coordinator)
 
         # 2 Vesync humidifier modes (humidity and auto) maps to the HA mode auto.
