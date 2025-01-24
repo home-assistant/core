@@ -18,9 +18,10 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfTime,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -162,7 +163,7 @@ ENTITY_DESCRIPTIONS = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Electric Meter
+    # Meter
     SensorEntityDescription(
         key="meter_power",
         translation_key="meter_power",
@@ -442,11 +443,7 @@ class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
             sw_version="1.0",
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        try:
-            self._attr_native_value = self.coordinator.data.get(self.data_key)
-        except (TypeError, ValueError):
-            self._attr_native_value = None
-        self.async_write_ha_state()
+    @property
+    def native_value(self) -> StateType | None:
+        """Value of the sensor."""
+        return self.coordinator.data.get(self.data_key)

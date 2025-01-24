@@ -1,10 +1,8 @@
 {
   "domain": "imeon_inverter",
   "name": "Imeon Inverter",
-  "after_dependencies": [],
   "codeowners": ["@Imeon-Energy"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/imeon_inverter",
   "integration_type": "device",
   "iot_class": "local_polling",

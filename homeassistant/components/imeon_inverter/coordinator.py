@@ -31,6 +31,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
     """
 
     _HUBs: dict[Any, InverterCoordinator] = {}
+    config_entry: InverterConfigEntry
 
     # Implement methods to fetch and update data
     def __init__(
@@ -51,10 +52,6 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         )
 
         self.api = Inverter(entry.data[CONF_ADDRESS])  # API calls
-
-    def update(self, entry: InverterConfigEntry) -> None:
-        """Update HUB data based on user input."""
-        self.api = Inverter(entry.data[CONF_ADDRESS])
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -84,25 +81,24 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         data = {}
 
         try:
-            if self.config_entry is not None:
-                async with timeout(TIMEOUT * 4):
-                    # Am I logged in ? If not log in
-                    await self.api.login(
-                        self.config_entry.data[CONF_USERNAME],
-                        self.config_entry.data[CONF_PASSWORD],
-                    )
+            async with timeout(TIMEOUT * 4):
+                # Am I logged in ? If not log in
+                await self.api.login(
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
+                )
 
-                    # Fetch data using distant API
-                    await self.api.update()
+                # Fetch data using distant API
+                await self.api.update()
 
-                    # Store data
-                    for key, val in self.api.storage.items():
-                        if key != "timeline":
-                            val = self.api.storage[key]
-                            for sub_key, sub_val in val.items():
-                                data[key + "_" + sub_key] = sub_val
-                        else:  # Timeline is a list of dict, not a dict
-                            data[key] = self.api.storage[key]
+                # Store data
+                for key, val in self.api.storage.items():
+                    if key != "timeline":
+                        val = self.api.storage[key]
+                        for sub_key, sub_val in val.items():
+                            data[key + "_" + sub_key] = sub_val
+                    else:  # Timeline is a list of dict, not a dict
+                        data[key] = self.api.storage[key]
 
         except TimeoutError as e:
             raise UpdateFailed(

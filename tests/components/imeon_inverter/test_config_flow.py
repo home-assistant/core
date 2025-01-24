@@ -1,48 +1,22 @@
 """Test the Imeon Inverter config flow."""
 
-from unittest.mock import patch
-
-import pytest
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.imeon_inverter.const import DOMAIN
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .conftest import TEST_SERIAL, TEST_USER_INPUT
+
 from tests.common import MockConfigEntry
 
-# Sample test data
-TEST_USER_INPUT = {
-    CONF_ADDRESS: "192.168.200.1",
-    CONF_USERNAME: "user@local",
-    CONF_PASSWORD: "password",
-}
 
-TEST_SERIAL = "111111111111111"
-
-
-@pytest.fixture
-def mock_login_async_setup_entry():
-    """Fixture for mocking login and async_setup_entry."""
-    with (
-        patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
-            return_value=TEST_SERIAL,
-        ),
-        patch(
-            "homeassistant.components.imeon_inverter.async_setup_entry",
-            return_value=True,
-        ) as mock,
-    ):
-        yield mock
-
-
-async def test_form(hass: HomeAssistant, mock_login_async_setup_entry) -> None:
+async def test_form(
+    hass: HomeAssistant, mock_login_async_setup_entry: Generator[AsyncMock]
+) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -152,7 +126,7 @@ async def test_form_exception(hass: HomeAssistant) -> None:
 
 
 async def test_manual_setup_already_exists(
-    hass: HomeAssistant, mock_login_async_setup_entry
+    hass: HomeAssistant, mock_login_async_setup_entry: Generator[AsyncMock]
 ) -> None:
     """Test that a flow with an existing host aborts."""
     entry = MockConfigEntry(
