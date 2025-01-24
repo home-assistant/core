@@ -563,12 +563,10 @@ class Stream:
         if not self.hass.config.is_allowed_path(video_path):
             raise HomeAssistantError(f"Can't write {video_path}, no access to path!")
 
+        # Stop existing recording if one is active
+        await self.stop_recording()
+      
         # Add recorder
-        if recorder := self.outputs().get(RECORDER_PROVIDER):
-            assert isinstance(recorder, RecorderOutput)
-            raise HomeAssistantError(
-                f"Stream already recording to {recorder.video_path}!"
-            )
         recorder = cast(
             RecorderOutput, self.add_provider(RECORDER_PROVIDER, timeout=duration)
         )
@@ -587,7 +585,17 @@ class Stream:
             recorder.prepend(list(hls.get_segments())[-num_segments - 1 : -1])
 
         await recorder.async_record()
-
+      
+    async def stop_recording(self) -> None:
+        """Stop the current recording if one is in progress."""
+        existing_recorder = self.outputs().get(RECORDER_PROVIDER)
+        if not existing_recorder:
+            self._logger.info("No active recording to stop.")
+            return
+    
+        await self.remove_provider(existing_recorder)
+        self._logger.debug("Stopped the current recording.")
+      
     async def async_get_image(
         self,
         width: int | None = None,
