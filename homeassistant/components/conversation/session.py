@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Literal, TypeVar
+from typing import TYPE_CHECKING, Any, Literal, TypeVar
 
 import voluptuous as vol
 
@@ -457,35 +457,52 @@ class ChatSession[_NativeT]:
             if not tool_inputs or not self.llm_api:
                 break
 
-            for tool_input in tool_inputs:
-                LOGGER.debug(
-                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-                )
+            tool_responses = await self.async_call_tools(tool_inputs)
 
-                try:
-                    tool_response = await self.llm_api.async_call_tool(tool_input)
-                except (HomeAssistantError, vol.Invalid) as e:
-                    tool_response = {"error": type(e).__name__}
-                    if str(e):
-                        tool_response["error_text"] = str(e)
-
-                LOGGER.debug("Tool response: %s", tool_response)
-
-                native_tool_response = message_converter.convert_tool_response(
-                    tool_input.tool_call_id, tool_response
+            tool_response_messages = [
+                ChatMessage(
+                    role="native",
+                    agent_id=user_input.agent_id,
+                    content="",
+                    native=message_converter.convert_tool_response(
+                        tool_input.tool_call_id, tool_response
+                    ),
                 )
-                native_messages.append(native_tool_response)
-                self.async_add_message(
-                    ChatMessage(
-                        role="native",
-                        agent_id=user_input.agent_id,
-                        content="",
-                        native=native_tool_response,
-                    )
+                for tool_input, tool_response in zip(
+                    tool_inputs, tool_responses, strict=True
                 )
+            ]
+            for message in tool_response_messages:
+                if TYPE_CHECKING:
+                    assert message.native is not None
+                native_messages.append(message.native)
+                self.async_add_message(message)
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(chat_message.content or "")
         return ConversationResult(
             response=intent_response, conversation_id=self.conversation_id
         )
+
+    async def async_call_tools(
+        self, tool_inputs: list[llm.ToolInput]
+    ) -> list[JsonObjectType]:
+        """Invoke LLM tools for the configured LLM API."""
+        if not self.llm_api:
+            raise ValueError("No LLM API configured")
+        tool_responses: list[JsonObjectType] = []
+        for tool_input in tool_inputs:
+            LOGGER.debug(
+                "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
+            )
+
+            try:
+                tool_response = await self.llm_api.async_call_tool(tool_input)
+            except (HomeAssistantError, vol.Invalid) as e:
+                tool_response = {"error": type(e).__name__}
+                if str(e):
+                    tool_response["error_text"] = str(e)
+
+            LOGGER.debug("Tool response: %s", tool_response)
+            tool_responses.append(tool_response)
+        return tool_responses
