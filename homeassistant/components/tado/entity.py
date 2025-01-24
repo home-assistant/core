@@ -20,7 +20,6 @@ class TadoCoordinatorEntity(CoordinatorEntity[TadoDataUpdateCoordinator]):
 class TadoDeviceEntity(TadoCoordinatorEntity):
     """Base implementation for Tado device."""
 
-
     def __init__(
         self, device_info: dict[str, str], coordinator: TadoDataUpdateCoordinator
     ) -> None:
@@ -42,7 +41,6 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
 
 class TadoHomeEntity(TadoCoordinatorEntity):
     """Base implementation for Tado home."""
-
 
     def __init__(self, coordinator: TadoDataUpdateCoordinator) -> None:
         """Initialize a Tado home."""
