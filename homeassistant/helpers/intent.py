@@ -12,7 +12,7 @@ from itertools import groupby
 import logging
 from typing import Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
@@ -1202,17 +1202,17 @@ class Intent:
     """Hold the intent."""
 
     __slots__ = [
+        "assistant",
+        "category",
+        "context",
+        "conversation_agent_id",
+        "device_id",
         "hass",
-        "platform",
         "intent_type",
+        "language",
+        "platform",
         "slots",
         "text_input",
-        "context",
-        "language",
-        "category",
-        "assistant",
-        "device_id",
-        "conversation_agent_id",
     ]
 
     def __init__(
