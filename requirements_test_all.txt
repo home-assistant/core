@@ -1549,7 +1549,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.23
+pyeconet==0.1.26
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
