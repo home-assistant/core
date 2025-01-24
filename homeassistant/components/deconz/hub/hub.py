@@ -62,12 +62,14 @@ SENSORS = (
     sensors.WaterHandler,
 )
 
+type DeconzConfigEntry = ConfigEntry[DeconzHub]
+
 
 class DeconzHub:
     """Manages a single deCONZ gateway."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: DeconzSession
+        self, hass: HomeAssistant, config_entry: DeconzConfigEntry, api: DeconzSession
     ) -> None:
         """Initialize the system."""
         self.hass = hass
@@ -93,12 +95,6 @@ class DeconzHub:
         self.clip_sensors: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.deconz_groups: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
-
-    @callback
-    @staticmethod
-    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> DeconzHub:
-        """Return hub with a matching config entry ID."""
-        return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
 
     @property
     def bridgeid(self) -> str:
@@ -208,7 +204,7 @@ class DeconzHub:
 
     @staticmethod
     async def async_config_entry_updated(
-        hass: HomeAssistant, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: DeconzConfigEntry
     ) -> None:
         """Handle signals of config entry being updated.
 
@@ -217,11 +213,7 @@ class DeconzHub:
         Causes for this is either discovery updating host address or
         config entry options changing.
         """
-        if config_entry.entry_id not in hass.data[DECONZ_DOMAIN]:
-            # A race condition can occur if multiple config entries are
-            # unloaded in parallel
-            return
-        hub = DeconzHub.get_hub(hass, config_entry)
+        hub = config_entry.runtime_data
         previous_config = hub.config
         hub.config = DeconzConfig.from_config_entry(config_entry)
         if previous_config.host != hub.config.host:

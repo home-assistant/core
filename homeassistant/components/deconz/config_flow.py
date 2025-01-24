@@ -44,7 +44,7 @@ from .const import (
     HASSIO_CONFIGURATION_URL,
     LOGGER,
 )
-from .hub import DeconzHub
+from .hub import DeconzConfigEntry, DeconzHub
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"

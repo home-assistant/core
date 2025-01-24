@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -12,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import DeconzHub, get_deconz_api
+from .hub import DeconzConfigEntry, DeconzHub, get_deconz_api
 from .services import async_setup_services
 from .util import get_master_hub
 
@@ -25,14 +24,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: DeconzConfigEntry
+) -> bool:
     """Set up a deCONZ bridge for a config entry.
 
     Load config, group, light and sensor data for server information.
     Start websocket for push notification of state changes from deCONZ.
     """
-    hass.data.setdefault(DOMAIN, {})
-
     if not config_entry.options:
         await async_update_master_hub(hass, config_entry)
 
@@ -43,7 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     except AuthenticationRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    hub = hass.data[DOMAIN][config_entry.entry_id] = DeconzHub(hass, config_entry, api)
+    hub = DeconzHub(hass, config_entry, api)
+    config_entry.runtime_data = hub
     await hub.async_update_device_registry()
 
     config_entry.async_on_unload(
@@ -62,21 +62,29 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: DeconzConfigEntry
+) -> bool:
     """Unload deCONZ config entry."""
-    hub: DeconzHub = hass.data[DOMAIN].pop(config_entry.entry_id)
+    hub = config_entry.runtime_data
     async_unload_events(hub)
 
-    if hass.data[DOMAIN] and hub.master:
+    other_loaded_entries: list[DeconzConfigEntry] = [
+        e
+        for e in hass.config_entries.async_loaded_entries(DOMAIN)
+        # exclude the config entry being unloaded
+        if e.entry_id != config_entry.entry_id
+    ]
+    if other_loaded_entries and hub.master:
         await async_update_master_hub(hass, config_entry)
-        new_master_hub = next(iter(hass.data[DOMAIN].values()))
+        new_master_hub = next(iter(other_loaded_entries)).runtime_data
         await async_update_master_hub(hass, new_master_hub.config_entry)
 
     return await hub.async_reset()
 
 
 async def async_update_master_hub(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: DeconzConfigEntry
 ) -> None:
     """Update master hub boolean.
 

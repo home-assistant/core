@@ -12,6 +12,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
+from . import DeconzConfigEntry
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 from .hub import DeconzHub
 from .util import get_master_hub
@@ -65,7 +66,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             found_hub = False
             bridge_id = normalize_bridge_id(service_data[CONF_BRIDGE_ID])
 
-            for possible_hub in hass.data[DOMAIN].values():
+            entry: DeconzConfigEntry
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+                possible_hub = entry.runtime_data
                 if possible_hub.bridgeid == bridge_id:
                     hub = possible_hub
                     found_hub = True

@@ -28,7 +28,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -40,7 +39,7 @@ from homeassistant.util.color import (
 
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
-from .hub import DeconzHub
+from .hub import DeconzConfigEntry, DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {
@@ -141,11 +140,11 @@ def update_color_state(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DeconzConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
