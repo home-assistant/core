@@ -24,7 +24,7 @@ async def async_setup_entry(
     """Set up dvsportal sensors."""
 
     runtime_data = config_entry.runtime_data
-    coordinator = runtime_data["coordinator"]
+    coordinator = runtime_data.coordinator
 
     async def async_add_car(new_license_plate: str):
         """Add new DVSCarSensor."""
@@ -34,7 +34,7 @@ async def async_setup_entry(
         # license plates
 
         ha_registered_license_plates: set[str] = set(
-            runtime_data["ha_registered_license_plates"]
+            runtime_data.ha_registered_license_plates
         )
         known_license_plates: set[str] = set()
         if coordinator.data is not None:
@@ -48,7 +48,7 @@ async def async_setup_entry(
         for new_license_plate in new_license_plates:
             hass.async_create_task(async_add_car(new_license_plate))
 
-        runtime_data["ha_registered_license_plates"] = known_license_plates
+        runtime_data.ha_registered_license_plates = known_license_plates
 
     coordinator.async_add_listener(
         update_sensors_callback
@@ -67,7 +67,7 @@ class BalanceSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEntity):
 
     def __init__(self, config_entry: DVSPortalConfigEntry) -> None:
         """Initialize the sensor."""
-        super().__init__(config_entry.runtime_data["coordinator"])
+        super().__init__(config_entry.runtime_data.coordinator)
         self._attr_unique_id = f"dvsportal_{config_entry.entry_id}_balance"
 
     @property
@@ -110,7 +110,7 @@ class ActiveReservationsSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEn
 
     def __init__(self, config_entry: DVSPortalConfigEntry) -> None:
         """Initialize the sensor."""
-        super().__init__(config_entry.runtime_data["coordinator"])
+        super().__init__(config_entry.runtime_data.coordinator)
         self._attr_unique_id = f"dvsportal_{config_entry.entry_id}_active_reservations"
 
     @property

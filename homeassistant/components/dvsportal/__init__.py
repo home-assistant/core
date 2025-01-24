@@ -4,8 +4,8 @@ This integration allows Home Assistant to interact with the DVS Portal API,
 retrieving data such as parking balance, and managing car reservations.
 """
 
+from dataclasses import dataclass
 import logging
-from typing import TypedDict
 
 from dvsportal import DVSPortal, exceptions as dvs_exceptions
 
@@ -24,8 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-class DVSPortalRuntimeData(TypedDict):
-    """Typed runtime data for dvsportal."""
+@dataclass
+class DVSPortalRuntimeData:
+    """Data class for runtime data of DVSPortal."""
 
     coordinator: DVSPortalCoordinator
     ha_registered_license_plates: set[str]
@@ -42,7 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DVSPortalConfigEntry) ->
         runtime_data: DVSPortalRuntimeData = entry.runtime_data
 
         # Ensure dvs_portal.close() is called to clean up the session
-        if dvs_portal := runtime_data["coordinator"].dvs_portal:
+        if dvs_portal := runtime_data.coordinator.dvs_portal:
             try:
                 await dvs_portal.close()
             except Exception as ex:  # noqa: BLE001
