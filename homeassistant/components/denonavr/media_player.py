@@ -36,17 +36,16 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL
+from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
-from .config_flow import (
+from .const import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
-    CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
     DEFAULT_UPDATE_AUDYSSEY,
     DOMAIN,
