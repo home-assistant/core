@@ -40,15 +40,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: DynaliteConfigEntry) -> 
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
     bridge = DynaliteBridge(hass, convert_config(entry.data))
-    # need to do it before the listener
-    entry.runtime_data = bridge
-    entry.async_on_unload(entry.add_update_listener(async_entry_changed))
 
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
-        object.__delattr__(entry, "runtime_data")
         raise ConfigEntryNotReady
 
+    entry.runtime_data = bridge
+    entry.async_on_unload(entry.add_update_listener(async_entry_changed))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
