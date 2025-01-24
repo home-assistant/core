@@ -437,6 +437,7 @@ class ChatSession[_NativeT]:
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            LOGGER.debug("native_messages: %s", native_messages)
             try:
                 response = await native_model_call(
                     user_input, self.conversation_id, native_messages, native_tools
@@ -473,6 +474,7 @@ class ChatSession[_NativeT]:
                 native_tool_response = message_converter.convert_tool_response(
                     tool_input.tool_call_id, tool_response
                 )
+                native_messages.append(native_tool_response)
                 self.async_add_message(
                     ChatMessage(
                         role="native",
