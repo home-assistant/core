@@ -17,6 +17,8 @@ from .const import UPDATE_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
 
+type DormakabaDkeyConfigEntry = ConfigEntry[DormakabaDkeyCoordinator]
+
 
 class DormakabaDkeyCoordinator(DataUpdateCoordinator[None]):
     """DormakabaDkey coordinator."""
@@ -24,7 +26,7 @@ class DormakabaDkeyCoordinator(DataUpdateCoordinator[None]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: DormakabaDkeyConfigEntry,
         lock: DKEYLock,
     ) -> None:
         """Initialize the coordinator."""
