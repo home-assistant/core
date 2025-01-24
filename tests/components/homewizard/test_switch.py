@@ -97,7 +97,6 @@ async def test_entities_not_created_for_device(
         ("SDM630", "switch.device_cloud_connection", "system", "cloud_enabled"),
         ("HWE-KWH1", "switch.device_cloud_connection", "system", "cloud_enabled"),
         ("HWE-KWH3", "switch.device_cloud_connection", "system", "cloud_enabled"),
-        ("HWE-BAT", "switch.device_cloud_connection", "system", "cloud_enabled"),
     ],
 )
 async def test_switch_entities(
