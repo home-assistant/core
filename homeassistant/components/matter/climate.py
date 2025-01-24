@@ -187,7 +187,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.OFF
     _feature_map: int | None = None
-    _enable_turn_on_off_backwards_compatibility = False
+
     _platform_translation_key = "thermostat"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -310,13 +310,11 @@ class MatterClimate(MatterEntity, ClimateEntity):
             ):
                 match running_state_value:
                     case (
-                        ThermostatRunningState.Heat
-                        | ThermostatRunningState.HeatStage2
+                        ThermostatRunningState.Heat | ThermostatRunningState.HeatStage2
                     ):
                         self._attr_hvac_action = HVACAction.HEATING
                     case (
-                        ThermostatRunningState.Cool
-                        | ThermostatRunningState.CoolStage2
+                        ThermostatRunningState.Cool | ThermostatRunningState.CoolStage2
                     ):
                         self._attr_hvac_action = HVACAction.COOLING
                     case (

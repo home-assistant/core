@@ -5,15 +5,21 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "counter_id": "Counter id"
-        }
+          "counter_id": "Meter id"
+        },
+        "data_description": {
+          "username": "Enter your login associated with your {tout_sur_mon_eau} account",
+          "password": "Enter your password associated with your {tout_sur_mon_eau} account",
+          "counter_id": "Enter your meter id (ex: 12345678). Should be found automatically during setup, if not see integration documentation for more information"
+        },
+        "description": "Connect your suez water {tout_sur_mon_eau} account to retrieve your water consumption"
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "counter_not_found": "Could not find counter id automatically"
+      "counter_not_found": "Could not find meter id automatically"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"

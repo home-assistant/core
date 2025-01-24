@@ -31,7 +31,7 @@
     'supported_features': 0,
     'translation_key': 'categories',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_categories',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'categories',
   })
 # ---
 # name: test_entities[sensor.mealie_categories-state]
@@ -39,6 +39,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mealie Categories',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'categories',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_categories',
@@ -80,7 +81,7 @@
     'supported_features': 0,
     'translation_key': 'recipes',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_recipes',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'recipes',
   })
 # ---
 # name: test_entities[sensor.mealie_recipes-state]
@@ -88,6 +89,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mealie Recipes',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'recipes',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_recipes',
@@ -129,7 +131,7 @@
     'supported_features': 0,
     'translation_key': 'tags',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tags',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'tags',
   })
 # ---
 # name: test_entities[sensor.mealie_tags-state]
@@ -137,6 +139,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mealie Tags',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_tags',
@@ -178,7 +181,7 @@
     'supported_features': 0,
     'translation_key': 'tools',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_tools',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'tools',
   })
 # ---
 # name: test_entities[sensor.mealie_tools-state]
@@ -186,6 +189,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mealie Tools',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'tools',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_tools',
@@ -227,7 +231,7 @@
     'supported_features': 0,
     'translation_key': 'users',
     'unique_id': 'bf1c62fe-4941-4332-9886-e54e88dbdba0_users',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'users',
   })
 # ---
 # name: test_entities[sensor.mealie_users-state]
@@ -235,6 +239,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Mealie Users',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'users',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mealie_users',

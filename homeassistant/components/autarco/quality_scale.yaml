@@ -51,7 +51,7 @@ rules:
       This integration only polls data using a coordinator.
       Since the integration is read-only and poll-only (only provide sensor
       data), there is no need to implement parallel updates.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

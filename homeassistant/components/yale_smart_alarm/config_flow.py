@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
@@ -23,7 +23,6 @@ from .const import (
     CONF_AREA_ID,
     CONF_LOCK_CODE_DIGITS,
     DEFAULT_AREA_ID,
-    DEFAULT_NAME,
     DOMAIN,
     YALE_BASE_ERRORS,
 )
@@ -67,6 +66,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 2
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -146,7 +146,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            name = DEFAULT_NAME
             area = user_input.get(CONF_AREA_ID, DEFAULT_AREA_ID)
 
             errors = await self.hass.async_add_executor_job(
@@ -161,7 +160,6 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
-                        CONF_NAME: name,
                         CONF_AREA_ID: area,
                     },
                 )

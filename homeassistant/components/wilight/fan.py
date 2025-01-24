@@ -64,7 +64,6 @@ class WiLightFan(WiLightDevice, FanEntity):
         | FanEntityFeature.TURN_ON
         | FanEntityFeature.TURN_OFF
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, api_device: PyWiLightDevice, index: str, item_name: str) -> None:
         """Initialize the device."""

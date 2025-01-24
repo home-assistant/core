@@ -7,11 +7,10 @@ from typing import Any
 from aiowebostv import WebOsClient
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .const import DATA_CONFIG_ENTRY, DOMAIN
+from . import WebOsTvConfigEntry
 
 TO_REDACT = {
     CONF_CLIENT_SECRET,
@@ -25,10 +24,10 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: WebOsTvConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    client: WebOsClient = hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id]
+    client: WebOsClient = entry.runtime_data
 
     client_data = {
         "is_registered": client.is_registered(),

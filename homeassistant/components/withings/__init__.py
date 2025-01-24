@@ -16,6 +16,7 @@ from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
+from aiowithings.exceptions import WithingsError
 from aiowithings.util import to_enum
 from yarl import URL
 
@@ -223,10 +224,13 @@ class WithingsWebhookManager:
                 "Unregister Withings webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
             )
             webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
-            await async_unsubscribe_webhooks(self.withings_data.client)
             for coordinator in self.withings_data.coordinators:
                 coordinator.webhook_subscription_listener(False)
             self._webhooks_registered = False
+            try:
+                await async_unsubscribe_webhooks(self.withings_data.client)
+            except WithingsError as ex:
+                LOGGER.warning("Failed to unsubscribe from Withings webhook: %s", ex)
 
     async def register_webhook(
         self,

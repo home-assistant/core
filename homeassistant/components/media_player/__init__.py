@@ -21,7 +21,7 @@ import aiohttp
 from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 from yarl import URL
 
@@ -795,7 +795,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is int:  # noqa: E721
+        if type(features) is int:
             new_features = MediaPlayerEntityFeature(features)
             self._report_deprecated_supported_features_values(new_features)
             return new_features

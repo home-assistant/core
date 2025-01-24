@@ -11,7 +11,7 @@ from typing import Any
 from unittest.mock import MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from propcache import cached_property
+from propcache.api import cached_property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol

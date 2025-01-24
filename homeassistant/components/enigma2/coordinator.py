@@ -35,6 +35,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
     """The Enigma2 data update coordinator."""
 
     device: OpenWebIfDevice
+    unique_id: str | None
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Enigma2 data update coordinator."""
@@ -64,6 +65,10 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
             name=config_entry.data[CONF_HOST],
         )
 
+        # set the unique ID for the entities to the config entry unique ID
+        # for devices that don't report a MAC address
+        self.unique_id = config_entry.unique_id
+
     async def _async_setup(self) -> None:
         """Provide needed data to the device info."""
 
@@ -71,16 +76,20 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
         self.device.mac_address = about["info"]["ifaces"][0]["mac"]
         self.device_info["model"] = about["info"]["model"]
         self.device_info["manufacturer"] = about["info"]["brand"]
-        self.device_info[ATTR_IDENTIFIERS] = {
-            (DOMAIN, format_mac(iface["mac"]))
-            for iface in about["info"]["ifaces"]
-            if "mac" in iface and iface["mac"] is not None
-        }
-        self.device_info[ATTR_CONNECTIONS] = {
-            (CONNECTION_NETWORK_MAC, format_mac(iface["mac"]))
-            for iface in about["info"]["ifaces"]
-            if "mac" in iface and iface["mac"] is not None
-        }
+        if self.device.mac_address is not None:
+            self.device_info[ATTR_IDENTIFIERS] = {
+                (DOMAIN, format_mac(iface["mac"]))
+                for iface in about["info"]["ifaces"]
+                if "mac" in iface and iface["mac"] is not None
+            }
+            self.device_info[ATTR_CONNECTIONS] = {
+                (CONNECTION_NETWORK_MAC, format_mac(iface["mac"]))
+                for iface in about["info"]["ifaces"]
+                if "mac" in iface and iface["mac"] is not None
+            }
+            self.unique_id = self.device.mac_address
+        elif self.unique_id is not None:
+            self.device_info[ATTR_IDENTIFIERS] = {(DOMAIN, self.unique_id)}
 
     async def _async_update_data(self) -> OpenWebIfStatus:
         await self.device.update()

@@ -1,7 +1,7 @@
 """Test the Home Assistant Yellow config flow."""
 
 from collections.abc import Generator
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -36,6 +36,16 @@ def config_flow_handler(hass: HomeAssistant) -> Generator[None]:
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_get_supervisor_client(supervisor_client: AsyncMock) -> Generator[None]:
+    """Mock get_supervisor_client method."""
+    with patch(
+        "homeassistant.components.homeassistant_yellow.config_flow.get_supervisor_client",
+        return_value=supervisor_client,
+    ):
+        yield
+
+
 @pytest.fixture(name="get_yellow_settings")
 def mock_get_yellow_settings():
     """Mock getting yellow settings."""
@@ -56,12 +66,9 @@ def mock_set_yellow_settings():
 
 
 @pytest.fixture(name="reboot_host")
-def mock_reboot_host():
+def mock_reboot_host(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock rebooting host."""
-    with patch(
-        "homeassistant.components.homeassistant_yellow.config_flow.async_reboot_host",
-    ) as reboot_host:
-        yield reboot_host
+    return supervisor_client.host.reboot
 
 
 async def test_config_flow(hass: HomeAssistant) -> None:
@@ -130,11 +137,11 @@ async def test_config_flow_single_entry(hass: HomeAssistant) -> None:
 )
 async def test_option_flow_led_settings(
     hass: HomeAssistant,
-    get_yellow_settings,
-    set_yellow_settings,
-    reboot_host,
-    reboot_menu_choice,
-    reboot_calls,
+    get_yellow_settings: AsyncMock,
+    set_yellow_settings: AsyncMock,
+    reboot_host: AsyncMock,
+    reboot_menu_choice: str,
+    reboot_calls: int,
 ) -> None:
     """Test updating LED settings."""
     mock_integration(hass, MockModule("hassio"))
@@ -176,7 +183,7 @@ async def test_option_flow_led_settings(
         {"next_step_id": reboot_menu_choice},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert len(reboot_host.mock_calls) == reboot_calls
+    assert reboot_host.call_count == reboot_calls
 
 
 async def test_option_flow_led_settings_unchanged(

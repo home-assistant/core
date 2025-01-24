@@ -141,7 +141,7 @@ async def test_device_failure_update(
 
 
 async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None:
-    """Test updating unautherized triggers the reauth flow."""
+    """Test updating unauthorized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_firmware"

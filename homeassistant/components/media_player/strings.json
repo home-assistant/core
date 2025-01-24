@@ -296,7 +296,7 @@
     },
     "clear_playlist": {
       "name": "Clear playlist",
-      "description": "Clears the playlist."
+      "description": "Removes all items from the playlist."
     },
     "shuffle_set": {
       "name": "Shuffle",
@@ -324,7 +324,7 @@
       "fields": {
         "group_members": {
           "name": "Group members",
-          "description": "The players which will be synced with the playback specified in `target`."
+          "description": "The players which will be synced with the playback specified in 'Targets'."
         }
       }
     },

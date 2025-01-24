@@ -15,8 +15,8 @@ CONF_REFRESH_TOKEN_CREATION_TIME = "refresh_token_creation_time"
 REFRESH_TOKEN_EXPIRY_TIME = timedelta(days=30)
 
 SUPPORTED_DEVICE_TYPES = {
-    Platform.LIGHT: ["WallStation"],
-    Platform.SWITCH: ["WallStation"],
+    Platform.LIGHT: ["WallStation", "WallStation_ESP32"],
+    Platform.SWITCH: ["WallStation", "WallStation_ESP32"],
 }
 KNOWN_UNSUPPORTED_DEVICE_TYPES = {
     Platform.LIGHT: ["Mms100"],

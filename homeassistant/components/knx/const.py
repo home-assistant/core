@@ -104,7 +104,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     route_back: bool  # not required
     host: str  # only required for tunnelling
     port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None
+    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required
@@ -114,7 +114,7 @@ class KNXConfigEntryData(TypedDict, total=False):
     backbone_key: str | None  # not required
     sync_latency_tolerance: int | None  # not required
     # OptionsFlow only
-    state_updater: bool
+    state_updater: bool  # default state updater: True -> expire 60; False -> init
     rate_limit: int
     #   Integration only (not forwarded to xknx)
     telegram_log_size: int  # not required

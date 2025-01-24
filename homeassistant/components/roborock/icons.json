@@ -61,6 +61,9 @@
       "total_cleaning_area": {
         "default": "mdi:texture-box"
       },
+      "total_cleaning_count": {
+        "default": "mdi:counter"
+      },
       "vacuum_error": {
         "default": "mdi:alert-circle"
       },
@@ -121,6 +124,12 @@
   "services": {
     "get_maps": {
       "service": "mdi:floor-plan"
+    },
+    "set_vacuum_goto_position": {
+      "service": "mdi:map-marker"
+    },
+    "get_vacuum_current_position": {
+      "service": "mdi:map-marker"
     }
   }
 }
