@@ -23,7 +23,6 @@ class DVSPortalCoordinator(DataUpdateCoordinator[DVSPortalData]):
             hass,
             _LOGGER,
             name=f"{DOMAIN}_coordinator",
-            update_method=self.async_update_data,
             update_interval=timedelta(minutes=5),
         )
         self.dvs_portal = dvs_portal
