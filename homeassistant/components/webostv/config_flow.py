@@ -6,22 +6,23 @@ from collections.abc import Mapping
 from typing import Any, Self
 from urllib.parse import urlparse
 
-from aiowebostv import WebOsTvPairError
+from aiowebostv import WebOsClient, WebOsTvPairError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
 
-from . import WebOsTvConfigEntry, async_control_connect
+from . import WebOsTvConfigEntry
 from .const import CONF_SOURCES, DEFAULT_NAME, DOMAIN, WEBOSTV_EXCEPTIONS
-from .helpers import async_get_sources
+from .helpers import get_sources
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -29,6 +30,21 @@ DATA_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+async def async_control_connect(
+    hass: HomeAssistant, host: str, key: str | None
+) -> WebOsClient:
+    """Create LG WebOS client and connect to the TV."""
+    client = WebOsClient(
+        host,
+        key,
+        client_session=async_get_clientsession(hass),
+    )
+
+    await client.connect()
+
+    return client
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -69,7 +85,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self._host, None)
+                client = await async_control_connect(self.hass, self._host, None)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -130,7 +146,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                client = await async_control_connect(self._host, None)
+                client = await async_control_connect(self.hass, self._host, None)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -154,7 +170,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             client_key = reconfigure_entry.data.get(CONF_CLIENT_SECRET)
 
             try:
-                client = await async_control_connect(host, client_key)
+                client = await async_control_connect(self.hass, host, client_key)
             except WebOsTvPairError:
                 errors["base"] = "error_pairing"
             except WEBOSTV_EXCEPTIONS:
@@ -195,9 +211,14 @@ class OptionsFlowHandler(OptionsFlow):
             options_input = {CONF_SOURCES: user_input[CONF_SOURCES]}
             return self.async_create_entry(title="", data=options_input)
         # Get sources
-        sources_list = await async_get_sources(self.host, self.key)
-        if not sources_list:
-            errors["base"] = "cannot_retrieve"
+        sources_list = []
+        try:
+            client = await async_control_connect(self.hass, self.host, self.key)
+            sources_list = get_sources(client)
+        except WebOsTvPairError:
+            errors["base"] = "error_pairing"
+        except WEBOSTV_EXCEPTIONS:
+            errors["base"] = "cannot_connect"
 
         option_sources = self.config_entry.options.get(CONF_SOURCES, [])
         sources = [s for s in option_sources if s in sources_list]

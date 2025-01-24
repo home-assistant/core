@@ -9,7 +9,7 @@ from aiohttp import ClientResponseError
 from incomfortclient import (
     Gateway as InComfortGateway,
     Heater as InComfortHeater,
-    IncomfortError,
+    InvalidHeaterList,
 )
 
 from homeassistant.const import CONF_HOST
@@ -70,9 +70,10 @@ class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
                 await heater.update()
         except TimeoutError as exc:
             raise UpdateFailed("Timeout error") from exc
-        except IncomfortError as exc:
-            if isinstance(exc.message, ClientResponseError):
-                if exc.message.status == 401:
-                    raise ConfigEntryError("Incorrect credentials") from exc
+        except ClientResponseError as exc:
+            if exc.status == 401:
+                raise ConfigEntryError("Incorrect credentials") from exc
+            raise UpdateFailed(exc.message) from exc
+        except InvalidHeaterList as exc:
             raise UpdateFailed(exc.message) from exc
         return self.incomfort_data
