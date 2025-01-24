@@ -128,7 +128,7 @@ TravisPy==0.3.5
 TwitterAPI==2.7.12
 
 # homeassistant.components.onvif
-WSDiscovery==2.0.0
+WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
 accuweather==4.0.0
