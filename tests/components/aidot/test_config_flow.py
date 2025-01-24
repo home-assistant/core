@@ -1,228 +1,482 @@
 """Test the aidot config flow."""
 
-from unittest.mock import ANY, MagicMock, Mock, patch
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow
-from homeassistant.components.aidot.config_flow import (
-    CannotConnect,
-    ConfigFlow,
-    InvalidHost,
-    validate_input,
-)
+from homeassistant import config_entries
+from homeassistant.components.aidot.config_flow import CannotConnect, InvalidHost
 from homeassistant.components.aidot.const import (
     CONF_CHOOSE_HOUSE,
     CONF_PASSWORD,
     CONF_SERVER_COUNTRY,
     CONF_USERNAME,
+    DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import TEST_COUNTRY, TEST_EMAIL, TEST_PASSWORD
+
+TEST_HOME = "Test Home"
+TEST_LOGIN_RESPONSE = {
+    "id": "314159263367458941151",
+    "accessToken": "1234567891011121314151617181920",
+    "refreshToken": "2021222324252627282930313233343",
+    "expiresIn": 10000,
+    "nickname": TEST_EMAIL,
+    "username": TEST_EMAIL,
+}
+
+TEST_HOUSES = [
+    {
+        "id": "123456789",
+        "name": TEST_HOME,
+        "isDefault": True,
+        "isOwner": True,
+        "owner": "a9d9dee885994b9fb46bba328ef6e808",
+        "roomCount": "1",
+        "deviceCount": "1",
+    }
+]
+
+TEST_HOUSES2 = [
+    {
+        "id": "123456789",
+        "name": TEST_HOME,
+        "isDefault": True,
+        "isOwner": True,
+        "owner": "a9d9dee885994b9fb46bba328ef6e808",
+        "roomCount": "1",
+        "deviceCount": "1",
+    },
+    {
+        "id": "123456780",
+        "name": "Test Home1",
+        "isDefault": True,
+        "isOwner": True,
+        "owner": "a9d9dee885994b9fb46bba328ef6e809",
+        "roomCount": "1",
+        "deviceCount": "1",
+    },
+]
+
+TEST_DEVICE_LIST = [
+    {
+        "id": "1592778822313467906",
+        "name": "Test Device",
+        "type": "light",
+        "aesKey": "1111111111111111",
+        "categoryId": "3",
+        "modelId": "LK.light.test1",
+        "isDirectDevice": 1,
+        "productId": "123456",
+    }
+]
+
+TEST_PRODUCT_LIST = [
+    {
+        "modelId": "LK.light.test",
+        "isDirectDevice": 1,
+        "powerType": 0,
+        "serviceModules": [
+            {"identity": "control.light.effect.mode"},
+            {"identity": "control.light.rgbw"},
+            {"identity": "control.light.cct"},
+            {"identity": "control.light.dimming"},
+        ],
+    }
+]
 
 
-@pytest.mark.asyncio
-async def test_validate_input_valid():
-    """Mock the HomeAssistant object (if needed)."""
-    hass = MagicMock()
-
-    # Test with valid data
-    data = {"host": "valid_host"}
-
-    # Call the function and assert it returns the correct output
-    result = await validate_input(hass, data)
-    assert result == {"title": "valid_host"}
-
-
-@pytest.mark.asyncio
-async def test_validate_input_invalid():
-    """Mock the HomeAssistant object (if needed)."""
-    hass = MagicMock()
-
-    # Test with invalid data (host length < 3)
-    data = {"host": "ab"}
-
-    # Assert that it raises the InvalidHost exception
-    with pytest.raises(InvalidHost):
-        await validate_input(hass, data)
-
-
-@pytest.fixture
-def mock_login_control():
-    """Fixture for mocking LoginControl."""
-    with patch(
-        "homeassistant.components.aidot.config_flow.LoginControl", autospec=True
-    ) as mock:
-        yield mock.return_value
+@pytest.fixture(name="aidot_login", autouse=True)
+def aidot_login_fixture():
+    """Aidot and entry setup."""
+    with (
+        patch(
+            "homeassistant.components.aidot.config_flow.LoginControl.async_post_login",
+            return_value=TEST_LOGIN_RESPONSE,
+        ),
+        patch(
+            "homeassistant.components.aidot.config_flow.LoginControl.async_get_houses",
+            return_value=TEST_HOUSES,
+        ),
+        patch(
+            "homeassistant.components.aidot.config_flow.LoginControl.async_get_devices",
+            return_value=TEST_DEVICE_LIST,
+        ),
+        patch(
+            "homeassistant.components.aidot.config_flow.LoginControl.async_get_products",
+            return_value=TEST_PRODUCT_LIST,
+        ),
+        patch("homeassistant.components.aidot.async_setup_entry", return_value=True),
+        patch("homeassistant.components.aidot.async_unload_entry", return_value=True),
+    ):
+        yield
 
 
-@pytest.fixture
-def hass():
-    """Fixture for HomeAssistant instance."""
-    return Mock(spec=HomeAssistant)
+async def test_config_flow_user_init(hass: HomeAssistant) -> None:
+    """Test a failed config flow user init."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-
-@pytest.mark.asyncio
-async def test_flow_user_init(mock_login_control) -> None:
-    """Test the initial user step of the config flow."""
-    flow = ConfigFlow()
-    flow.hass = hass
-
-    result = await flow.async_step_user()
-
-    # expected_countries = [item["name"] for item in CLOUD_SERVERS]
-    # expected_schema = vol.Schema(
-    #     {
-    #         vol.Required(CONF_SERVER_COUNTRY, default="United States"): vol.In(
-    #             expected_countries
-    #         ),
-    #         vol.Required(CONF_USERNAME): str,
-    #         vol.Required(CONF_PASSWORD): str,
-    #     }
-    # )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    # assert result["data_schema"].schema == expected_schema.schema
 
 
-@pytest.mark.asyncio
-async def test_flow_user_login_success(mock_login_control) -> None:
-    """Test user login and house selection."""
-    flow = ConfigFlow()
-    flow.hass = hass
+async def test_config_flow_cloud_login_success(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud login success."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    user_input = {
-        CONF_SERVER_COUNTRY: "United States",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["errors"] == {}
+
+
+async def test_config_flow_cloud_get_houses(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud get houses."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["errors"] == {}
+
+
+async def test_config_flow_cloud_multi_houses(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud multi houses choose."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_get_houses",
+        return_value=TEST_HOUSES2,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_USERNAME: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    houses_name = [item["name"] for item in TEST_HOUSES2]
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["data_schema"].schema["choose_house"].container == houses_name
+
+
+async def test_config_flow_cloud_get_device_list(hass: HomeAssistant) -> None:
+    """Test a successful config flow using cloud devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CHOOSE_HOUSE: TEST_HOME,
+        },
+    )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_EMAIL + " " + TEST_HOME
+    assert result["data"] == {
+        "login_response": TEST_LOGIN_RESPONSE,
+        "selected_house": TEST_HOUSES[0],
+        "device_list": TEST_DEVICE_LIST,
+        "product_list": TEST_PRODUCT_LIST,
     }
 
-    mock_login_response = {
-        "accessToken": "mock-access-token",
-        "username": "test-username",
+
+async def test_config_flow_cloud_not_devices(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud with no devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_get_devices",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CHOOSE_HOUSE: TEST_HOME,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_EMAIL + " " + TEST_HOME
+    assert result["data"]["device_list"] == []
+
+
+async def test_config_flow_cloud_not_houses(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud with no houses."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_get_houses",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_USERNAME: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "get_house_failed"}
+
+
+async def test_config_flow_cloud_not_products(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud with no products."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_get_products",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CHOOSE_HOUSE: TEST_HOME,
+            },
+        )
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_EMAIL + " " + TEST_HOME
+    assert result["data"] == {
+        "login_response": TEST_LOGIN_RESPONSE,
+        "selected_house": TEST_HOUSES[0],
+        "device_list": TEST_DEVICE_LIST,
+        "product_list": [],
     }
-    mock_house_list = [
-        {"name": "House 1", "id": "house1", "isDefault": True},
-        {"name": "House 2", "id": "house2"},
-    ]
 
-    mock_login_control.async_post_login.return_value = mock_login_response
-    mock_login_control.async_get_houses.return_value = mock_house_list
 
-    result = await flow.async_step_user(user_input)
+async def test_config_flow_cloud_mission_token(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud with no devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_USERNAME: TEST_EMAIL,
+            CONF_PASSWORD: TEST_PASSWORD,
+        },
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "choose_house"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_get_devices",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_CHOOSE_HOUSE: TEST_HOME,
+            },
+        )
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"]["device_list"] is None
+
+
+async def test_async_show_country_form(hass: HomeAssistant) -> None:
+    """Test that async_show_form is called with correct parameters in user step."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    TEST_SERVERS = [{"name": "United States"}, {"name": "Canada"}]
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    with patch(
+        "homeassistant.components.aidot.config_flow.CLOUD_SERVERS",
+        TEST_SERVERS,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+        )
+    counties_name = [item["name"] for item in TEST_SERVERS]
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema["server_country"].container == counties_name
+
+
+async def test_config_flow_cloud_login_failed(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud login failed."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_post_login",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_USERNAME: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "login_failed"}
 
-    mock_login_control.change_country_code.assert_called_once()
-    mock_login_control.async_post_login.assert_called_once()
-    mock_login_control.async_get_houses.assert_called_once()
 
+async def test_config_flow_cloud_connect_error(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-@pytest.mark.asyncio
-async def test_flow_user_invalid_host(mock_login_control) -> None:
-    """Test handling invalid host error."""
-    flow = ConfigFlow()
-    flow.hass = hass
-
-    user_input = {
-        CONF_SERVER_COUNTRY: "United States",
-        CONF_USERNAME: "t",
-        CONF_PASSWORD: "test-password",
-    }
-
-    result = await flow.async_step_user(user_input)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "login_failed"}
+    assert result["errors"] == {}
 
+    with patch(
+        "homeassistant.components.aidot.config_flow.LoginControl.async_post_login",
+        side_effect=CannotConnect(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_USERNAME: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
 
-@pytest.mark.asyncio
-async def test_flow_user_cannot_connect(mock_login_control) -> None:
-    """Test handling cannot connect error."""
-    flow = ConfigFlow()
-    flow.hass = hass
-
-    user_input = {
-        CONF_SERVER_COUNTRY: "United States",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-
-    mock_login_control.async_post_login.side_effect = CannotConnect
-
-    result = await flow.async_step_user(user_input)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
     assert result["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.asyncio
-async def test_flow_choose_house(mock_login_control) -> None:
-    """Test house selection step."""
-    flow = ConfigFlow()
-    flow.hass = hass
+async def test_config_flow_cloud_invalid_host(hass: HomeAssistant) -> None:
+    """Test a failed config flow using cloud invalid host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    flow.login_response = {
-        "accessToken": "mock-access-token",
-        "username": "test-username",
-    }
-    flow.house_list = [
-        {"name": "House 1", "id": "house1", "isDefault": True},
-        {"name": "House 2", "id": "house2"},
-    ]
-
-    user_input = {CONF_CHOOSE_HOUSE: "House 1"}
-
-    mock_device_list = [{"productId": "product1"}, {"productId": "product2"}]
-    mock_product_list = [{"id": "product1"}, {"id": "product2"}]
-
-    mock_login_control.async_get_devices.return_value = mock_device_list
-    mock_login_control.async_get_products.return_value = mock_product_list
-
-    result = await flow.async_step_choose_house(user_input)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test-username House 1"
-    assert result["data"] == {
-        "login_response": flow.login_response,
-        "selected_house": {"name": "House 1", "id": "house1", "isDefault": True},
-        "device_list": mock_device_list,
-        "product_list": mock_product_list,
-    }
-
-    mock_login_control.async_get_devices.assert_called_once()
-    mock_login_control.async_get_products.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_async_show_form_called_correctly(mock_login_control) -> None:
-    """Test that async_show_form is called with correct parameters in user step."""
-    flow = ConfigFlow()
-    flow.hass = hass
-
-    # Mock the async_show_form method
-    flow.async_show_form = MagicMock()
-
-    # Mock CLOUD_SERVERS
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
     with patch(
-        "homeassistant.components.aidot.config_flow.CLOUD_SERVERS",
-        [{"name": "United States"}, {"name": "Canada"}],
+        "homeassistant.components.aidot.config_flow.LoginControl.async_post_login",
+        side_effect=InvalidHost(),
     ):
-        user_input = None
-
-        await flow.async_step_user(user_input)
-
-        # Ensure async_show_form was called
-        flow.async_show_form.assert_called_once()
-
-        # Check the parameters passed to async_show_form
-        flow.async_show_form.assert_called_with(
-            step_id="user",
-            data_schema=ANY,  # data_schema can be matched using ANY since it's dynamically generated
-            errors={},  # Initially, there are no errors
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_USERNAME: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
         )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"host": "cannot_connect"}

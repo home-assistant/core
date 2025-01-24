@@ -9,6 +9,7 @@ from aidot.login_control import LoginControl
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -49,9 +50,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.product_list: list[Any] = []
         self.selected_house: dict[Any, Any] = {}
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 # get ContryCode
@@ -68,12 +69,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME],
                     user_input[CONF_PASSWORD],
                 )
+                if self.login_response is None:
+                    errors["base"] = "login_failed"
+                    return self.async_show_form(
+                        step_id="user", data_schema=None, errors=errors
+                    )
                 self.accessToken = self.login_response["accessToken"]
 
                 # get houses
                 self.house_list = await self.__login_control.async_get_houses(
                     self.hass, self.accessToken
                 )
+                if self.house_list is None or len(self.house_list) == 0:
+                    errors["base"] = "get_house_failed"
+                    return self.async_show_form(
+                        step_id="user", data_schema=None, errors=errors
+                    )
 
                 return await self.async_step_choose_house()
 
@@ -108,29 +119,34 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_choose_house(self, user_input=None):
+    async def async_step_choose_house(self, user_input=None) -> ConfigFlowResult:
         """Please select a room."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is None:
             user_input = {}
 
         if user_input.get(CONF_CHOOSE_HOUSE) is not None:
-            # get all house name
-            for item in self.house_list:
-                if item["name"] == user_input.get(CONF_CHOOSE_HOUSE):
-                    self.selected_house = item
+            try:
+                # get all house name
+                for item in self.house_list:
+                    if item["name"] == user_input.get(CONF_CHOOSE_HOUSE):
+                        self.selected_house = item
 
-            # get device_list
-            self.device_list = await self.__login_control.async_get_devices(
-                self.hass, self.accessToken, self.selected_house["id"]
-            )
+                # get device_list
+                self.device_list = await self.__login_control.async_get_devices(
+                    self.hass, self.accessToken, self.selected_house["id"]
+                )
+                if self.device_list is not None:
+                    # get product_list
+                    productIds = ",".join(
+                        [item["productId"] for item in self.device_list]
+                    )
+                    self.product_list = await self.__login_control.async_get_products(
+                        self.hass, self.accessToken, productIds
+                    )
 
-            # get product_list
-            productIds = ",".join([item["productId"] for item in self.device_list])
-            self.product_list = await self.__login_control.async_get_products(
-                self.hass, self.accessToken, productIds
-            )
-
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
             title = self.login_response["username"] + " " + self.selected_house["name"]
             return self.async_create_entry(
                 title=title,
