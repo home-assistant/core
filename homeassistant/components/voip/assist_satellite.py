@@ -313,15 +313,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         self.async_set_context(Context(user_id=self.config_entry.data["user"]))
 
-        async def stt_stream():
-            while True:
-                async with asyncio.timeout(self._audio_chunk_timeout):
-                    chunk = await self._audio_queue.get()
-                    if not chunk:
-                        break
-
-                    yield chunk
-
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.PROCESSING, silence_before=0.2)
 
