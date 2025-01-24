@@ -98,23 +98,3 @@ def mock_test_rtsp_auth() -> Generator[MagicMock]:
         instance.main.return_value = True
 
         yield instance
-
-
-# @pytest.fixture
-# def ezviz_config_flow() -> Generator[MagicMock]:
-#     """Mock the EzvizAPI for easier config flow testing."""
-#     with (
-#         patch.object(EzvizClient, "login", return_value=True),
-#         patch("homeassistant.components.ezviz.config_flow.EzvizClient") as mock_ezviz,
-#     ):
-#         instance = mock_ezviz.return_value = EzvizClient(
-#             "test-username",
-#             "test-password",
-#             "local.host",
-#             "1",
-#         )
-#
-#         instance.login = MagicMock(return_value=ezviz_login_token_return)
-#         instance.get_detection_sensibility = MagicMock(return_value=True)
-#
-#         yield mock_ezviz
