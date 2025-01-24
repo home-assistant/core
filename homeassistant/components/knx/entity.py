@@ -15,6 +15,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import DOMAIN
+from .schema import PlatformConfigSchema
 from .storage.config_store import PlatformControllerBase
 from .storage.const import CONF_DEVICE_INFO
 
@@ -139,20 +140,20 @@ class BasePlatformConfiguration(ABC):
 
     @classmethod
     @abstractmethod
-    def get_schema(cls) -> Any:
+    def get_schema(cls) -> PlatformConfigSchema:
         """Retrieve a schema definition used for validation.
 
         Subclasses must provide a Voluptuous complatible schema object that defines
         the structure and validation rules for the configuration.
 
         Returns:
-            Any: The schema object for validation.
+            PlatformConfigSchema: The schema object for validation.
 
         """
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, data: dict[str, Any]) -> Any:
+    def from_dict(cls, data: dict[str, Any]) -> Self:
         """Create an instance from a schema-compliant dictionary.
 
         This method is mandatory for all subclasses and should validate the input
@@ -162,7 +163,7 @@ class BasePlatformConfiguration(ABC):
             data (dict[str, Any]): A dictionary adhering to the schema.
 
         Returns:
-            Any: An instance of the subclass.
+            Self: An instance of the subclass.
 
         """
 
@@ -172,8 +173,6 @@ class BasePlatformConfiguration(ABC):
         This method performs reverse serialization, converting the instance into
         a schema-compliant dictionary. While not abstract, subclasses must override
         this method if reverse serialization is necessary for their use case.
-
-        The default implementation uses `asdict` to serialize all dataclass fields.
 
         Returns:
             dict[str, Any]: A dictionary representation of the instance, aligned
