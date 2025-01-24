@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, Literal, TypeVar
+from typing import Any, Literal, TypeVar
 
 import voluptuous as vol
 
@@ -235,18 +235,6 @@ class ChatMessageConverter[_NativeT, _NativeToolT, _NativeResponseT](ABC):
     ) -> _NativeToolT:
         """Convert a tool to the native format."""
 
-    @abstractmethod
-    def convert_response(
-        self, agent_id: str | None, response: _NativeResponseT
-    ) -> tuple[ChatMessage[_NativeT], list[llm.ToolInput] | None]:
-        """Convert a native response to the Home Assistant LLM format."""
-
-    @abstractmethod
-    def convert_tool_response(
-        self, tool_call_id: str | None, tool_response: JsonObjectType
-    ) -> _NativeT:
-        """Convert a Home Assistant tool call response to the native format."""
-
 
 @dataclass
 class ChatSession[_NativeT]:
@@ -400,8 +388,9 @@ class ChatSession[_NativeT]:
                 str,
                 list[_NativeT],
                 list[_NativeToolT] | None,
+                ChatSession[_NativeT],
             ],
-            Awaitable[_NativeResponseT],
+            Awaitable[bool],
         ],
         message_converter: ChatMessageConverter[
             _NativeT, _NativeToolT, _NativeResponseT
@@ -418,13 +407,6 @@ class ChatSession[_NativeT]:
                 for tool in tools
             ]
 
-        native_messages: list[_NativeT] = []
-        for message in self.messages:
-            if message.native is not None and message.agent_id == user_input.agent_id:
-                native_messages.append(message.native)
-            else:
-                native_messages.append(message_converter.convert(message))
-
         LOGGER.debug("Prompt: %s", self.messages)
         LOGGER.debug("Tools: %s", tools)
         trace.async_conversation_trace_append(
@@ -437,60 +419,49 @@ class ChatSession[_NativeT]:
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            native_messages: list[_NativeT] = []
+            for message in self.messages:
+                if (
+                    message.native is not None
+                    and message.agent_id == user_input.agent_id
+                ):
+                    native_messages.append(message.native)
+                else:
+                    native_messages.append(message_converter.convert(message))
             LOGGER.debug("native_messages: %s", native_messages)
             try:
-                response = await native_model_call(
-                    user_input, self.conversation_id, native_messages, native_tools
+                should_loop = await native_model_call(
+                    user_input,
+                    self.conversation_id,
+                    native_messages,
+                    native_tools,
+                    self,
                 )
             except ConversationAgentError as err:
                 return err.as_conversation_result()
 
-            chat_message, tool_inputs = message_converter.convert_response(
-                user_input.agent_id, response
-            )
-            LOGGER.debug("Response %s", chat_message)
-            if chat_message.native is None:
-                raise ValueError("Converted chat message had no native value")
-            native_messages.append(chat_message.native)
-            self.async_add_message(chat_message)
-
-            if not tool_inputs or not self.llm_api:
+            if not should_loop:
                 break
 
-            tool_responses = await self.async_call_tools(tool_inputs)
-
-            tool_response_messages = [
-                ChatMessage(
-                    role="native",
-                    agent_id=user_input.agent_id,
-                    content="",
-                    native=message_converter.convert_tool_response(
-                        tool_input.tool_call_id, tool_response
-                    ),
-                )
-                for tool_input, tool_response in zip(
-                    tool_inputs, tool_responses, strict=True
-                )
-            ]
-            for message in tool_response_messages:
-                if TYPE_CHECKING:
-                    assert message.native is not None
-                native_messages.append(message.native)
-                self.async_add_message(message)
+        if self.messages[-1].role != "assistant":
+            raise ValueError("Final message must be an assistant message")
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(chat_message.content or "")
+        intent_response.async_set_speech(self.messages[-1].content or "")
         return ConversationResult(
             response=intent_response, conversation_id=self.conversation_id
         )
 
     async def async_call_tools(
-        self, tool_inputs: list[llm.ToolInput]
-    ) -> list[JsonObjectType]:
+        self,
+        agent_id: str | None,
+        tool_inputs: list[llm.ToolInput],
+        response_converter: Callable[[str | None, JsonObjectType], _NativeResponseT],
+    ) -> list[ChatMessage[_NativeResponseT]]:
         """Invoke LLM tools for the configured LLM API."""
         if not self.llm_api:
             raise ValueError("No LLM API configured")
-        tool_responses: list[JsonObjectType] = []
+        tool_responses: list[ChatMessage[_NativeResponseT]] = []
         for tool_input in tool_inputs:
             LOGGER.debug(
                 "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
@@ -504,5 +475,12 @@ class ChatSession[_NativeT]:
                     tool_response["error_text"] = str(e)
 
             LOGGER.debug("Tool response: %s", tool_response)
-            tool_responses.append(tool_response)
+            chat_message = ChatMessage(
+                role="native",
+                agent_id=agent_id,
+                content="",
+                native=response_converter(tool_input.tool_call_id, tool_response),
+            )
+
+            tool_responses.append(chat_message)
         return tool_responses
