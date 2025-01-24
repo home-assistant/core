@@ -36,7 +36,7 @@ async def test_entities(
     """Test the number entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # Ensure all entities are correctly assigned to the Peblar device
+    # Ensure all entities are correctly assigned to the Peblar EV charger
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "23-45-A4O-MOF")}
     )
@@ -80,7 +80,7 @@ async def test_number_set_value(
             PeblarConnectionError("Could not connect"),
             (
                 r"An error occurred while communicating "
-                r"with the Peblar device: Could not connect"
+                r"with the Peblar EV charger: Could not connect"
             ),
             "communication_error",
             {"error": "Could not connect"},
@@ -89,7 +89,7 @@ async def test_number_set_value(
             PeblarError("Unknown error"),
             (
                 r"An unknown error occurred while communicating "
-                r"with the Peblar device: Unknown error"
+                r"with the Peblar EV charger: Unknown error"
             ),
             "unknown_error",
             {"error": "Unknown error"},
@@ -143,7 +143,7 @@ async def test_number_set_value_authentication_error(
         HomeAssistantError,
         match=(
             r"An authentication failure occurred while communicating "
-            r"with the Peblar device"
+            r"with the Peblar EV charger"
         ),
     ) as excinfo:
         await hass.services.async_call(

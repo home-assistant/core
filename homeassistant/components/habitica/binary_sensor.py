@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+
+from habiticalib import UserData
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -18,13 +19,15 @@ from .const import ASSETS_URL
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(kw_only=True, frozen=True)
 class HabiticaBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Habitica Binary Sensor Description."""
 
-    value_fn: Callable[[dict[str, Any]], bool | None]
-    entity_picture: Callable[[dict[str, Any]], str | None]
+    value_fn: Callable[[UserData], bool | None]
+    entity_picture: Callable[[UserData], str | None]
 
 
 class HabiticaBinarySensor(StrEnum):
@@ -33,10 +36,10 @@ class HabiticaBinarySensor(StrEnum):
     PENDING_QUEST = "pending_quest"
 
 
-def get_scroll_image_for_pending_quest_invitation(user: dict[str, Any]) -> str | None:
+def get_scroll_image_for_pending_quest_invitation(user: UserData) -> str | None:
     """Entity picture for pending quest invitation."""
-    if user["party"]["quest"].get("key") and user["party"]["quest"]["RSVPNeeded"]:
-        return f"inventory_quest_scroll_{user["party"]["quest"]["key"]}.png"
+    if user.party.quest.key and user.party.quest.RSVPNeeded:
+        return f"inventory_quest_scroll_{user.party.quest.key}.png"
     return None
 
 
@@ -44,7 +47,7 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[HabiticaBinarySensorEntityDescription, ...] = 
     HabiticaBinarySensorEntityDescription(
         key=HabiticaBinarySensor.PENDING_QUEST,
         translation_key=HabiticaBinarySensor.PENDING_QUEST,
-        value_fn=lambda user: user["party"]["quest"]["RSVPNeeded"],
+        value_fn=lambda user: user.party.quest.RSVPNeeded,
         entity_picture=get_scroll_image_for_pending_quest_invitation,
     ),
 )
