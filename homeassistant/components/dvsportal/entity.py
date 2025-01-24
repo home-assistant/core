@@ -54,11 +54,9 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
     def _reset_attributes(self):
         self._attr_extra_state_attributes = {
             "license_plate": self._license_plate,
-            "name": self.coordinator.data.get("known_license_plates", {}).get(
-                self._license_plate
-            ),
+            "name": self.coordinator.data.known_license_plates.get(self._license_plate),
         }
-        history = self.coordinator.data.get("historic_reservations", {}).get(
+        history = self.coordinator.data.historic_reservations.get(
             self._license_plate, {}
         )
         self._attr_extra_state_attributes.update(
@@ -70,9 +68,7 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
 
         The state can be present, reserved or not present.
         """
-        reservation = self.coordinator.data.get("active_reservations", {}).get(
-            self._license_plate
-        )
+        reservation = self.coordinator.data.active_reservations.get(self._license_plate)
         if reservation is None:
             self._reset_attributes()
             self._attr_state = "not present"

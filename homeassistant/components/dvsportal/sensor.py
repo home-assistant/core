@@ -40,7 +40,7 @@ async def async_setup_entry(
         if coordinator.data is not None:
             # sometimes coordinator.data is still None, if upstream api is slow..
             known_license_plates: set[str] = set(
-                coordinator.data.get("known_license_plates", {}).keys()
+                coordinator.data.known_license_plates.keys()
             )
 
         new_license_plates = known_license_plates - ha_registered_license_plates
@@ -84,7 +84,7 @@ class BalanceSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        self._attr_native_value = self.coordinator.data["balance"]
+        self._attr_native_value = self.coordinator.data.balance
         self.async_write_ha_state()
 
     @property
@@ -125,9 +125,7 @@ class ActiveReservationsSensor(CoordinatorEntity[DVSPortalCoordinator], SensorEn
 
     def _set_state(self) -> None:
         """Calculate count of current and future reservations."""
-        active_reservations = [
-            v for k, v in self.coordinator.data.get("active_reservations", {}).items()
-        ]
+        active_reservations = list(self.coordinator.data.active_reservations.values())
 
         now = datetime.now()
 

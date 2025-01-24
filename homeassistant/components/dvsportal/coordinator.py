@@ -1,17 +1,29 @@
 """Coordinator for DVSPortal integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from dvsportal import DVSPortal
+from dvsportal import DVSPortal, HistoricReservation, Reservation
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
-from .types import DVSPortalData
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class DVSPortalData:
+    """Data class for DVSPortal coordinator data."""
+
+    default_code: str | None
+    default_type_id: int | None
+    balance: float | None
+    active_reservations: dict[str, Reservation]
+    historic_reservations: dict[str, HistoricReservation]
+    known_license_plates: dict[str, str]  # historic, saved or reserved license plates
 
 
 class DVSPortalCoordinator(DataUpdateCoordinator[DVSPortalData]):
@@ -34,11 +46,12 @@ class DVSPortalCoordinator(DataUpdateCoordinator[DVSPortalData]):
         except Exception as e:
             _LOGGER.exception("Error communicating with API")
             raise UpdateFailed("Error communicating with API") from e
-        return {
-            "default_code": self.dvs_portal.default_code,
-            "default_type_id": self.dvs_portal.default_type_id,
-            "balance": self.dvs_portal.balance,
-            "active_reservations": self.dvs_portal.active_reservations,
-            "historic_reservations": self.dvs_portal.historic_reservations,
-            "known_license_plates": self.dvs_portal.known_license_plates,
-        }
+
+        return DVSPortalData(
+            default_code=self.dvs_portal.default_code,
+            default_type_id=self.dvs_portal.default_type_id,
+            balance=self.dvs_portal.balance,
+            active_reservations=self.dvs_portal.active_reservations,
+            historic_reservations=self.dvs_portal.historic_reservations,
+            known_license_plates=self.dvs_portal.known_license_plates,
+        )
