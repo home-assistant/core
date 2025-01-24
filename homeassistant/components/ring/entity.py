@@ -62,14 +62,34 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
             return await async_func(self, *args, **kwargs)
         except AuthenticationError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(err) from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_api_authentication",
+                translation_placeholders={
+                    "func": async_func.__name__,
+                    "exc": str(err),
+                    "device": self._device.name,
+                },
+            ) from err
         except RingTimeout as err:
             raise HomeAssistantError(
-                f"Timeout communicating with API {async_func}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="device_api_timeout",
+                translation_placeholders={
+                    "func": async_func.__name__,
+                    "exc": str(err),
+                    "device": self._device.name,
+                },
             ) from err
         except RingError as err:
             raise HomeAssistantError(
-                f"Error communicating with API{async_func}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="device_api_error",
+                translation_placeholders={
+                    "func": async_func.__name__,
+                    "exc": str(err),
+                    "device": self._device.name,
+                },
             ) from err
 
     return _wrap

@@ -24,7 +24,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,20 +33,45 @@ async def _call_api[*_Ts, _R](
     hass: HomeAssistant,
     target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
     *args: *_Ts,
-    msg_suffix: str = "",
+    func_name: str,
+    device_name: str | None = None,
 ) -> _R:
+    device_placeholder = {"device": device_name} if device_name else {}
+    translation_prefix = "device_api_" if device_name else "api_"
     try:
         return await target(*args)
     except AuthenticationError as err:
         # Raising ConfigEntryAuthFailed will cancel future updates
         # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key=f"{translation_prefix}authentication",
+            translation_placeholders={
+                "func": func_name,
+                "exc": str(err),
+                **device_placeholder,
+            },
+        ) from err
     except RingTimeout as err:
         raise UpdateFailed(
-            f"Timeout communicating with API{msg_suffix}: {err}"
+            translation_domain=DOMAIN,
+            translation_key=f"{translation_prefix}timeout",
+            translation_placeholders={
+                "func": func_name,
+                "exc": str(err),
+                **device_placeholder,
+            },
         ) from err
     except RingError as err:
-        raise UpdateFailed(f"Error communicating with API{msg_suffix}: {err}") from err
+        raise UpdateFailed(
+            translation_domain=DOMAIN,
+            translation_key=f"{translation_prefix}error",
+            translation_placeholders={
+                "func": func_name,
+                "exc": str(err),
+                **device_placeholder,
+            },
+        ) from err
 
 
 class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
@@ -72,7 +97,9 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         update_method: str = (
             "async_update_data" if self.first_call else "async_update_devices"
         )
-        await _call_api(self.hass, getattr(self.ring_api, update_method))
+        await _call_api(
+            self.hass, getattr(self.ring_api, update_method), func_name=update_method
+        )
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
         subscribed_device_ids = set(self.async_contexts())
@@ -88,14 +115,16 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                                     self.hass,
                                     lambda device: device.async_history(limit=10),
                                     device,
-                                    msg_suffix=f" for device {device.name}",  # device_id is the mac
+                                    func_name="async_history",
+                                    device_name=device.name,
                                 )
                             )
                         tg.create_task(
                             _call_api(
                                 self.hass,
                                 device.async_update_health_data,
-                                msg_suffix=f" for device {device.name}",
+                                func_name="async_update_health_data",
+                                device_name=device.name,
                             )
                         )
                 except ExceptionGroup as eg:

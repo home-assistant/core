@@ -81,11 +81,11 @@ async def test_auth_failed_on_setup(
     [
         (
             RingTimeout,
-            "Timeout communicating with API: ",
+            "Timeout communicating with Ring API - async_update_data: ",
         ),
         (
             RingError,
-            "Error communicating with API: ",
+            "Error communicating with Ring API - async_update_data: ",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -166,11 +166,11 @@ async def test_auth_failure_on_device_update(
     [
         (
             RingTimeout,
-            "Error fetching devices data: Timeout communicating with API: ",
+            "Error fetching devices data: Timeout communicating with Ring API - async_update_devices: ",
         ),
         (
             RingError,
-            "Error fetching devices data: Error communicating with API: ",
+            "Error fetching devices data: Error communicating with Ring API - async_update_devices: ",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -205,11 +205,11 @@ async def test_error_on_global_update(
     [
         (
             RingTimeout,
-            "Error fetching devices data: Timeout communicating with API for device Front: ",
+            "Error fetching devices data: Timeout communicating with Ring API for device Front - async_history: ",
         ),
         (
             RingError,
-            "Error fetching devices data: Error communicating with API for device Front: ",
+            "Error fetching devices data: Error communicating with Ring API for device Front - async_history: ",
         ),
     ],
     ids=["timeout-error", "other-error"],

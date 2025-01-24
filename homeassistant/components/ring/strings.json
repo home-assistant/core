@@ -134,6 +134,29 @@
       }
     }
   },
+  "exceptions": {
+    "api_authentication": {
+      "message": "Authentication error communicating with Ring API - {func}: {exc}"
+    },
+    "api_timeout": {
+      "message": "Timeout communicating with Ring API - {func}: {exc}"
+    },
+    "api_error": {
+      "message": "Error communicating with Ring API - {func}: {exc}"
+    },
+    "device_api_authentication": {
+      "message": "Authentication error communicating with Ring API for device {device} - {func}: {exc}"
+    },
+    "device_api_timeout": {
+      "message": "Timeout communicating with Ring API for device {device} - {func}: {exc}"
+    },
+    "device_api_error": {
+      "message": "Error communicating with Ring API for device {device} - {func}: {exc}"
+    },
+    "sdp_m_line_index_required": {
+      "message": "The sdp_m_line_index is required for ring webrtc streaming from {device}"
+    }
+  },
   "issues": {
     "deprecated_entity": {
       "title": "Detected deprecated {platform} entity usage",
