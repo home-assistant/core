@@ -368,7 +368,9 @@ class ModbusHub:
         self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
-        kwargs = {"slave": slave} if slave else {}
+        kwargs: dict[str, Any] = (
+            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+        )
         entry = self._pb_request[use_call]
         try:
             result: ModbusPDU = await entry.func(address, value, **kwargs)
