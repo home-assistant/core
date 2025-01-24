@@ -35,7 +35,7 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         unique_id, errors = await _authenticate(username, password)
-        if unique_id is None:
+        if errors:
             return self._show_user_form(errors)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()

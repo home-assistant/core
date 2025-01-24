@@ -188,19 +188,14 @@ async def test_reauth_fails(
     )
     mock_config_entry.add_to_hass(hass)
 
-    mock_config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
+    result = await mock_config_entry.async_start_reauth(hass)
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    [result] = flows
     assert result["step_id"] == "reauth_confirm"
 
     mock_auth.token.side_effect = NotAuthorizedError
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -210,7 +205,6 @@ async def test_reauth_fails(
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: "__password__"}
     )
-    await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
