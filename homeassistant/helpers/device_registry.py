@@ -905,9 +905,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
-        extra_connections: set[tuple[str, str]] | None = None
-        extra_identifiers: set[tuple[str, str]] | None = None
-
         config_entries = old.config_entries
 
         if add_config_entry_id is not UNDEFINED:
@@ -994,6 +991,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 new_values[attr_name] = old_value | setvalue
                 old_values[attr_name] = old_value
 
+        added_connections: set[tuple[str, str]] | None = None
+        added_identifiers: set[tuple[str, str]] | None = None
+
         if merge_connections is not UNDEFINED:
             normalized_connections = self._validate_connections(
                 device_id,
@@ -1002,7 +1002,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_connections = old.connections
             if not normalized_connections.issubset(old_connections):
-                extra_connections = normalized_connections
+                added_connections = normalized_connections
                 new_values["connections"] = old_connections | normalized_connections
                 old_values["connections"] = old_connections
 
@@ -1012,18 +1012,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_identifiers = old.identifiers
             if not merge_identifiers.issubset(old_identifiers):
-                extra_identifiers = merge_identifiers
+                added_identifiers = merge_identifiers
                 new_values["identifiers"] = old_identifiers | merge_identifiers
                 old_values["identifiers"] = old_identifiers
 
         if new_connections is not UNDEFINED:
-            extra_connections = new_values["connections"] = self._validate_connections(
+            added_connections = new_values["connections"] = self._validate_connections(
                 device_id, new_connections, False
             )
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
-            extra_identifiers = new_values["identifiers"] = self._validate_identifiers(
+            added_identifiers = new_values["identifiers"] = self._validate_identifiers(
                 device_id, new_identifiers, False
             )
             old_values["identifiers"] = old.identifiers
@@ -1067,7 +1067,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.devices[device_id] = new
 
         for deleted_device in self._async_get_deleted_devices(
-            extra_identifiers, extra_connections
+            added_identifiers, added_connections
         ):
             del self.deleted_devices[deleted_device.id]
 
