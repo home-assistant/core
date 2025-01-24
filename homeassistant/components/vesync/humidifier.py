@@ -98,8 +98,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _attr_supported_features = HumidifierEntityFeature.MODES
 
     device: VeSyncHumidifierDevice
-    _ha_to_vs_mode_map: dict[str, str] = {}
-    _available_modes: list[str] = []
+    _ha_to_vs_mode_map: dict[str, str]
+    _available_modes: list[str]
 
     def __init__(
         self,
@@ -112,6 +112,9 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         # 2 Vesync humidifier modes (humidity and auto) maps to the HA mode auto.
         # They are on different devices though. We need to map HA mode to the
         # device specific mode when setting it.
+
+        self._ha_to_vs_mode_map = {}
+        self._available_modes = []
 
         # Populate maps once.
         for vs_mode in self.device.mist_modes:
