@@ -21,7 +21,7 @@ class DVSCarSensor(CoordinatorEntity[DVSPortalCoordinator], Entity):
 
     def __init__(self, config_entry: DVSPortalConfigEntry, license_plate: str) -> None:
         """Register a new Car as entity."""
-        super().__init__(config_entry.runtime_data["coordinator"])
+        super().__init__(config_entry.runtime_data.coordinator)
 
         self._license_plate = license_plate
         self._attr_unique_id = (
