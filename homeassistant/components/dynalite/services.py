@@ -27,7 +27,7 @@ def _get_bridges(service_call: ServiceCall) -> list[DynaliteBridge]:
         for bridge in service_call.hass.data[DOMAIN].values()
         if not host or bridge.host == host
     ]
-    LOGGER.debug("Selected bridged for service call: %s", bridges)
+    LOGGER.debug("Selected bridges for service call: %s", bridges)
     return bridges
 
 
