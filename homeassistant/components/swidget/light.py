@@ -68,13 +68,8 @@ class SwidgetSmartDimmer(CoordinatedSwidgetEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = bool(self.device.is_on)
+        self._attr_is_on = self.device.is_on
         self._attr_brightness = value_to_brightness(
             BRIGHTNESS_SCALE, self.device.brightness
         )
         self.async_write_ha_state()
-
-    async def set_default_brightness(self, **kwargs: Any) -> None:
-        """Set the default brightness of the light."""
-        if BRIGHTNESS in kwargs:
-            await self.device.set_default_brightness(kwargs[BRIGHTNESS])

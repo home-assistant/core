@@ -638,11 +638,8 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "swidget",
+        "hostname": "swidget*",
         "macaddress": "24A160*",
-    },
-    {
-        "domain": "swidget",
-        "macaddress": "94B97eE",
     },
     {
         "domain": "tado",

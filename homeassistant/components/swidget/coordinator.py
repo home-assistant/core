@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from swidget import SwidgetDevice, SwidgetException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -37,7 +37,7 @@ class SwidgetDataUpdateCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             name=device.ip_address,
             always_update=False,
-            update_interval=timedelta(seconds=300),
+            update_interval=timedelta(minutes=5),
             request_refresh_debouncer=Debouncer(
                 hass, _LOGGER, cooldown=0.35, immediate=False
             ),
@@ -45,9 +45,8 @@ class SwidgetDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def async_initialize(self) -> bool:
         """Initialize a callback for any websocket events received from the device."""
-        return cast(bool, self.device.add_event_callback(self.websocket_event_callback))
+        return self.device.add_event_callback(self.websocket_event_callback)
 
-    @callback
     async def websocket_event_callback(self, message: dict[Any, Any]) -> None:
         """Update the entity state."""
         self.async_update_listeners()
