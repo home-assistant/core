@@ -27,7 +27,7 @@ class DVSPortalCoordinator(DataUpdateCoordinator[DVSPortalData]):
         )
         self.dvs_portal = dvs_portal
 
-    async def async_update_data(self) -> DVSPortalData:
+    async def _async_update_data(self) -> DVSPortalData:
         """Fetch data from the DVSPortal API."""
         try:
             await self.dvs_portal.update()
