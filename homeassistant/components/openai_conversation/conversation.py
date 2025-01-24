@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import json
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import openai
 from openai._types import NOT_GIVEN
@@ -83,40 +83,40 @@ class OpenAIChatMessageConverter(
             tool_spec["description"] = tool.description
         return ChatCompletionToolParam(type="function", function=tool_spec)
 
-    def convert_response(
-        self, agent_id: str | None, response: ChatCompletionMessage
-    ) -> tuple[
-        conversation.ChatMessage[ChatCompletionMessageParam], list[llm.ToolInput]
-    ]:
-        """Convert a native response to the Home Assistant LLM format."""
-        response_message = _message_convert(response)
-        chat_message = conversation.ChatMessage[ChatCompletionMessageParam](
-            role=response.role,
-            agent_id=agent_id,
-            content=response.content or "",
-            native=response_message,
-        )
-        tool_inputs: list[llm.ToolInput] = [
-            llm.ToolInput(
-                tool_name=tool_call.function.name,
-                tool_args=json.loads(tool_call.function.arguments),
-                tool_call_id=tool_call.id,
-            )
-            for tool_call in response.tool_calls or ()
-        ]
-        return chat_message, tool_inputs
 
-    def convert_tool_response(
-        self, tool_call_id: str | None, tool_response: JsonObjectType
-    ) -> ChatCompletionMessageParam:
-        """Convert a Home Assistant tool call response to the native format."""
-        if tool_call_id is None:
-            raise ValueError("tool_call_id is required")
-        return ChatCompletionToolMessageParam(
-            role="tool",
-            tool_call_id=tool_call_id,
-            content=json.dumps(tool_response),
+def _convert_response(
+    agent_id: str | None, response: ChatCompletionMessage
+) -> tuple[conversation.ChatMessage[ChatCompletionMessageParam], list[llm.ToolInput]]:
+    """Convert a native response to the Home Assistant LLM format."""
+    response_message = _message_convert(response)
+    chat_message = conversation.ChatMessage[ChatCompletionMessageParam](
+        role=response.role,
+        agent_id=agent_id,
+        content=response.content or "",
+        native=response_message,
+    )
+    tool_inputs: list[llm.ToolInput] = [
+        llm.ToolInput(
+            tool_name=tool_call.function.name,
+            tool_args=json.loads(tool_call.function.arguments),
+            tool_call_id=tool_call.id,
         )
+        for tool_call in response.tool_calls or ()
+    ]
+    return chat_message, tool_inputs
+
+
+def _convert_tool_response(
+    tool_call_id: str | None, tool_response: JsonObjectType
+) -> ChatCompletionMessageParam:
+    """Convert a Home Assistant tool call response to the native format."""
+    if tool_call_id is None:
+        raise ValueError("tool_call_id is required")
+    return ChatCompletionToolMessageParam(
+        role="tool",
+        tool_call_id=tool_call_id,
+        content=json.dumps(tool_response),
+    )
 
 
 def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessageParam:
@@ -218,7 +218,8 @@ class OpenAIConversationEntity(
         conversation_id: str,
         messages: list[ChatCompletionMessageParam],
         tools: list[ChatCompletionToolParam] | None,
-    ) -> ChatCompletionMessage:
+        session: conversation.ChatSession[ChatCompletionMessageParam],
+    ) -> bool:
         """Send a message to the agent."""
         options = self.entry.options
         client = self.entry.runtime_data
@@ -240,7 +241,26 @@ class OpenAIConversationEntity(
                 user_input.language,
             ) from err
 
-        return result.choices[0].message
+        response = result.choices[0].message
+
+        chat_message, tool_inputs = _convert_response(user_input.agent_id, response)
+        LOGGER.debug("Response %s", chat_message)
+        if chat_message.native is None:
+            raise ValueError("Converted chat message had no native value")
+        session.async_add_message(chat_message)
+
+        if not tool_inputs:
+            return False
+
+        tool_responses = await session.async_call_tools(
+            user_input.agent_id, tool_inputs, _convert_tool_response
+        )
+        for message in tool_responses:
+            if TYPE_CHECKING:
+                assert message.native is not None
+            session.async_add_message(message)
+
+        return True
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
