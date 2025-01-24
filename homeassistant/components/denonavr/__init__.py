@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .config_flow import (
+from .const import (
     CONF_SHOW_ALL_SOURCES,
     CONF_UPDATE_AUDYSSEY,
     CONF_USE_TELNET,
