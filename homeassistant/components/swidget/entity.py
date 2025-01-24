@@ -23,13 +23,13 @@ class CoordinatedSwidgetEntity(CoordinatorEntity[SwidgetDataUpdateCoordinator]):
     ) -> None:
         """Initialize the Swidget device."""
         super().__init__(coordinator)
-        self.device: SwidgetDevice = device
-        self._attr_unique_id = self.device.id
+        self.device = device
+        self._attr_unique_id = device.id
         self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac_address)},
-            identifiers={(DOMAIN, str(self.device.id))},
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac_address)},
+            identifiers={(DOMAIN, str(device.id))},
             manufacturer="Swidget",
-            model=self.device.model,
-            name=self.device.friendly_name,
-            sw_version=self.device.version,
+            model=device.model,
+            name=device.friendly_name,
+            sw_version=device.version,
         )

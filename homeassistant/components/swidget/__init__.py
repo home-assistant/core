@@ -1,6 +1,5 @@
 """The swidget integration."""
 
-from datetime import timedelta
 import logging
 
 from swidget import (
@@ -15,16 +14,13 @@ from swidget.discovery import SwidgetDiscoveredDevice, discover_devices, discove
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import ConfigEntryError
 
-from .const import DOMAIN
+from .const import TOKEN_NAME
 from .coordinator import SwidgetDataUpdateCoordinator
 
 LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.LIGHT]
-DISCOVERY_INTERVAL = timedelta(minutes=15)
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 SwidgetConfigEntry = ConfigEntry[SwidgetDataUpdateCoordinator]
@@ -39,19 +35,13 @@ async def async_discover_devices(
     return devices
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Swidget component."""
-    hass.data[DOMAIN] = {}
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: SwidgetConfigEntry) -> bool:
     """Set up swidget from a config entry."""
 
     # Discover the device using provided host and password
     device = await discover_single(
         host=entry.data[CONF_HOST],
-        token_name="x-secret-key",
+        token_name=TOKEN_NAME,
         password=entry.data[CONF_PASSWORD],
         use_https=True,
         use_websockets=True,
@@ -67,38 +57,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwidgetConfigEntry) -> b
 
     # Check if the discovered device is of an expected type
     if not isinstance(device, valid_device_types):
-        LOGGER.error("Unsupported device type discovered: %s", {type(device).__name__})
-        return False
+        raise ConfigEntryError(
+            f"Unsupported device type discovered: {type(device).__name__}"
+        )
 
-    # Create the coordinator for managing updates
+    # Start the device and create a background task for websocket listening
+    await device.start()
+    entry.async_create_background_task(
+        hass,
+        device.get_websocket().run(),  # type: ignore[union-attr]
+        "websocket_connection",
+    )
+
     coordinator = SwidgetDataUpdateCoordinator(hass, device, config_entry=entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    # Forward the entry setup to other platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Start the device and create a background task for websocket listening
-    await device.start()
-
-    # # Start listening
-    if device.get_websocket() is not None:
-        entry.async_create_background_task(
-            hass,
-            device.get_websocket().listen(),  # type: ignore[union-attr]
-            "websocket_connection",
-        )
-
-    # Perform additional asynchronous initialization, return True if successful
-    if await coordinator.async_initialize():
-        entry.async_on_unload(entry.add_update_listener(config_entry_update_listener))
-        return True
-
-    return False
+    await coordinator.async_initialize()
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+    return True
 
 
-async def config_entry_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener, called when the config entry options are changed."""
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 

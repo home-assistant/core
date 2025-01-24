@@ -312,7 +312,9 @@ SSDP = {
     ],
     "swidget": [
         {
-            "manufacturer": "Swidget",
+            "nt": "urn:swidget:pico:1",
+        },
+        {
             "st": "urn:swidget:pico:1",
         },
     ],

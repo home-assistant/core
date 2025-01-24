@@ -21,7 +21,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import async_discover_devices
-from .const import DOMAIN
+from .const import DOMAIN, TOKEN_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +40,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    device: SwidgetDevice = SwidgetDevice(
-        host=data["host"],
-        token_name="x-secret-key",
-        secret_key=data.get("password"),
+    device = SwidgetDevice(
+        host=data.get(CONF_HOST),
+        token_name=TOKEN_NAME,
+        secret_key=data.get(CONF_PASSWORD),
         use_https=True,
         use_websockets=False,
     )
@@ -116,12 +116,9 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle any discovery."""
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured()
-
-        self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: host}, reload_on_update=True
+        )
         self._discovered_device = SwidgetDiscoveredDevice(
             mac, host, device_type, insert_type, friendly_name
         )
@@ -159,11 +156,11 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_pick_device()
             try:
                 info = await validate_input(self.hass, user_input)
-                mac_address = info["mac_address"]
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unable to validate Swidget device credentials")
+                _LOGGER.exception("Unable to connect to Swidget Device")
                 errors["base"] = "unknown"
             else:
+                mac_address = info["mac_address"]
                 await self.async_set_unique_id(format_mac(mac_address))
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
