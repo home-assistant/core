@@ -14,7 +14,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator
 
 type HomeWizardConfigEntry = ConfigEntry[HWEnergyDeviceUpdateCoordinator]
@@ -24,17 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
     """Set up Homewizard from a config entry."""
 
     api: HomeWizardEnergy
-    LOGGER.warning("Setting up Homewizard entry %s", entry.data)
 
     if token := entry.data.get(CONF_TOKEN):
-        LOGGER.warning("Using v2 API")
         api = HomeWizardEnergyV2(
             entry.data[CONF_IP_ADDRESS],
             token=token,
             clientsession=async_get_clientsession(hass),
         )
     else:
-        LOGGER.warning("Using v1 API")
         api = HomeWizardEnergyV1(
             entry.data[CONF_IP_ADDRESS],
             clientsession=async_get_clientsession(hass),
@@ -82,7 +79,6 @@ async def async_check_v2_support_and_create_issue(
     """Check if the device supports v2 and create an issue if not."""
 
     if not await has_v2_api(entry.data[CONF_IP_ADDRESS], async_get_clientsession(hass)):
-        LOGGER.warning("Device does not support v2 API")
         return
 
     async_create_issue(
@@ -99,4 +95,3 @@ async def async_check_v2_support_and_create_issue(
         severity=IssueSeverity.WARNING,
         data={"entry_id": entry.entry_id},
     )
-    LOGGER.warning("Done creating issue")
