@@ -12,12 +12,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import DormakabaDkeyCoordinator
+from .coordinator import DormakabaDkeyConfigEntry, DormakabaDkeyCoordinator
 from .entity import DormakabaDkeyEntity
 
 
@@ -46,11 +44,11 @@ BINARY_SENSOR_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DormakabaDkeyConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform for Dormakaba dKey."""
-    coordinator: DormakabaDkeyCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         DormakabaDkeyBinarySensor(coordinator, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
