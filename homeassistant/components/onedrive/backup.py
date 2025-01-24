@@ -94,6 +94,12 @@ def handle_backup_errors[_R, **P](
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError("Backup operation failed") from err
+        except TimeoutError as err:
+            _LOGGER.error(
+                "Error during backup in %s: Timeout",
+                func.__name__,
+            )
+            raise BackupAgentError("Backup operation timed out") from err
 
     return wrapper
 
