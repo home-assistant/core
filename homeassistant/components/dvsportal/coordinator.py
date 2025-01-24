@@ -7,7 +7,7 @@ import logging
 from dvsportal import DVSPortal, HistoricReservation, Reservation
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
@@ -41,11 +41,8 @@ class DVSPortalCoordinator(DataUpdateCoordinator[DVSPortalData]):
 
     async def _async_update_data(self) -> DVSPortalData:
         """Fetch data from the DVSPortal API."""
-        try:
-            await self.dvs_portal.update()
-        except Exception as e:
-            _LOGGER.exception("Error communicating with API")
-            raise UpdateFailed("Error communicating with API") from e
+
+        await self.dvs_portal.update()
 
         return DVSPortalData(
             default_code=self.dvs_portal.default_code,
