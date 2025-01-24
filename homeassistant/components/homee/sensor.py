@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pyHomee.const import AttributeType, NodeProtocol, NodeState
+from pyHomee.const import AttributeType, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.sensor import (
@@ -255,13 +255,6 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
         translation_key="node_sensor_state",
         value_fn=lambda node: get_name_for_enum(NodeState, node.state),
     ),
-    HomeeNodeSensorEntityDescription(
-        key="protocol",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        translation_key="node_sensor_protocol",
-        value_fn=lambda node: get_name_for_enum(NodeProtocol, node.protocol),
-    ),
 )
 
 
@@ -309,11 +302,6 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
-
-    @property
-    def old_unique_id(self) -> str:
-        """Return the old not so unique id of the sensor entity."""
-        return f"{self._attribute.node_id}-sensor-{self._attribute.id}"
 
     @property
     def native_value(self) -> float | str | None:
