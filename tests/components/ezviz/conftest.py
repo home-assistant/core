@@ -3,16 +3,16 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyezviz.test_cam_rtsp import TestRTSPAuth
 import pytest
 
 from homeassistant.components.ezviz import (
+    ATTR_TYPE_CAMERA,
     ATTR_TYPE_CLOUD,
     CONF_RFSESSION_ID,
     CONF_SESSION_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_TYPE, CONF_URL
+from homeassistant.const import CONF_PASSWORD, CONF_TYPE, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -50,6 +50,21 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_camera_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="C666666",
+        title="Camera 1",
+        data={
+            CONF_TYPE: ATTR_TYPE_CAMERA,
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+
+@pytest.fixture
 def mock_ezviz_client() -> Generator[AsyncMock]:
     """Mock the EzvizAPI for easier testing."""
     with (
@@ -71,23 +86,18 @@ def mock_ezviz_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def ezviz_test_rtsp_config_flow() -> Generator[MagicMock]:
+def mock_test_rtsp_auth() -> Generator[MagicMock]:
     """Mock the EzvizApi for easier testing."""
     with (
-        patch.object(TestRTSPAuth, "main", return_value=True),
         patch(
             "homeassistant.components.ezviz.config_flow.TestRTSPAuth"
         ) as mock_ezviz_test_rtsp,
     ):
-        instance = mock_ezviz_test_rtsp.return_value = TestRTSPAuth(
-            "test-ip",
-            "test-username",
-            "test-password",
-        )
+        instance = mock_ezviz_test_rtsp.return_value
 
-        instance.main = MagicMock(return_value=True)
+        instance.main.return_value = True
 
-        yield mock_ezviz_test_rtsp
+        yield instance
 
 
 # @pytest.fixture
