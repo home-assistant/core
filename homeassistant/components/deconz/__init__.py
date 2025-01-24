@@ -76,9 +76,9 @@ async def async_unload_entry(
         if e.entry_id != config_entry.entry_id
     ]
     if other_loaded_entries and hub.master:
-        await async_update_master_hub(hass, config_entry, as_master=False)
+        await async_update_master_hub(hass, config_entry, master=False)
         new_master_hub = next(iter(other_loaded_entries)).runtime_data
-        await async_update_master_hub(hass, new_master_hub.config_entry, as_master=True)
+        await async_update_master_hub(hass, new_master_hub.config_entry, master=True)
 
     return await hub.async_reset()
 
@@ -87,20 +87,20 @@ async def async_update_master_hub(
     hass: HomeAssistant,
     config_entry: DeconzConfigEntry,
     *,
-    as_master: bool | None = None,
+    master: bool | None = None,
 ) -> None:
     """Update master hub boolean.
 
     Called by setup_entry and unload_entry.
     Makes sure there is always one master available.
     """
-    if as_master is None:
+    if master is None:
         try:
             master_hub = get_master_hub(hass)
-            as_master = master_hub.config_entry == config_entry
+            master = master_hub.config_entry == config_entry
         except ValueError:
-            as_master = True
+            master = True
 
-    options = {**config_entry.options, CONF_MASTER_GATEWAY: as_master}
+    options = {**config_entry.options, CONF_MASTER_GATEWAY: master}
 
     hass.config_entries.async_update_entry(config_entry, options=options)
