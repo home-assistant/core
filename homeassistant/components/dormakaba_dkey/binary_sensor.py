@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from py_dormakaba_dkey import DKEYLock
 from py_dormakaba_dkey.commands import DoorPosition, Notifications, UnlockStatus
 
 from homeassistant.components.binary_sensor import (
@@ -16,11 +15,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .coordinator import DormakabaDkeyCoordinator
 from .entity import DormakabaDkeyEntity
-from .models import DormakabaDkeyData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -52,9 +50,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform for Dormakaba dKey."""
-    data: DormakabaDkeyData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: DormakabaDkeyCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DormakabaDkeyBinarySensor(data.coordinator, data.lock, description)
+        DormakabaDkeyBinarySensor(coordinator, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
     )
 
@@ -67,16 +65,15 @@ class DormakabaDkeyBinarySensor(DormakabaDkeyEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[None],
-        lock: DKEYLock,
+        coordinator: DormakabaDkeyCoordinator,
         description: DormakabaDkeyBinarySensorDescription,
     ) -> None:
         """Initialize a Dormakaba dKey binary sensor."""
         self.entity_description = description
-        self._attr_unique_id = f"{lock.address}_{description.key}"
-        super().__init__(coordinator, lock)
+        self._attr_unique_id = f"{coordinator.lock.address}_{description.key}"
+        super().__init__(coordinator)
 
     @callback
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
-        self._attr_is_on = self.entity_description.is_on(self._lock.state)
+        self._attr_is_on = self.entity_description.is_on(self.coordinator.lock.state)
