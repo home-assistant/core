@@ -239,13 +239,12 @@ class OneDriveBackupAgent(BackupAgent):
             client=get_async_client(self._hass),
         )
 
-        info = RequestInformation()
-        info.url = upload_url
-        info.http_method = Method.PUT
-
         async def async_upload(
             start: int, end: int, chunk_data: bytes
         ) -> LargeFileUploadSession:
+            info = RequestInformation()
+            info.url = upload_url
+            info.http_method = Method.PUT
             info.headers = HeadersCollection()
             info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
             info.headers.try_add("Content-Length", str(len(chunk_data)))

@@ -184,6 +184,14 @@ async def test_agents_upload(
     mock_drive_items.create_upload_session.post.assert_called_once()
     mock_drive_items.patch.assert_called_once()
     assert mock_adapter.send_async.call_count == 2
+    assert mock_adapter.method_calls[0].args[0].content == b"tes"
+    assert mock_adapter.method_calls[0].args[0].headers.get("Content-Range") == {
+        "bytes 0-2/34519040"
+    }
+    assert mock_adapter.method_calls[1].args[0].content == b"t"
+    assert mock_adapter.method_calls[1].args[0].headers.get("Content-Range") == {
+        "bytes 3-3/34519040"
+    }
 
 
 async def test_broken_upload_session(
