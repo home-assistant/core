@@ -29,7 +29,6 @@ from .const import (
 from .receiver import ConnectDenonAVR
 
 CONF_RECEIVER = "receiver"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,11 +55,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
 
-    undo_listener = entry.add_update_listener(update_listener)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     hass.data[DOMAIN][entry.entry_id] = {
         CONF_RECEIVER: receiver,
-        UNDO_UPDATE_LISTENER: undo_listener,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -88,8 +86,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if config_entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
         receiver: DenonAVR = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
         await receiver.async_telnet_disconnect()
-
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     # Remove zone2 and zone3 entities if needed
     entity_registry = er.async_get(hass)
