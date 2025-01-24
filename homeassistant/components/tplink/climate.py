@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 from typing import Any, cast
@@ -11,6 +12,7 @@ from kasa.smart.modules.temperaturecontrol import ThermostatState
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE,
+    DOMAIN as CLIMATE_DOMAIN,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -22,7 +24,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry
+from . import TPLinkConfigEntry, legacy_device_id
 from .const import DOMAIN, UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
@@ -51,6 +53,10 @@ class TPLinkClimateEntityDescription(
     ClimateEntityDescription, TPLinkModuleEntityDescription
 ):
     """Base class for climate entity description."""
+
+    unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
+        lambda device, desc: f"{legacy_device_id(device)}_{desc.key}"
+    )
 
 
 CLIMATE_DESCRIPTIONS: tuple[TPLinkClimateEntityDescription, ...] = (
@@ -81,6 +87,7 @@ async def async_setup_entry(
             coordinator=parent_coordinator,
             entity_class=TPLinkClimateEntity,
             descriptions=CLIMATE_DESCRIPTIONS,
+            platform_domain=CLIMATE_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )
@@ -182,7 +189,3 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             cast(ThermostatState, self._mode_feature.value)
         ]
         return True
-
-    def _get_unique_id(self) -> str:
-        """Return unique id."""
-        return f"{self._device.device_id}_climate"
