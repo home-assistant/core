@@ -197,7 +197,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                CONF_NAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
             },
         )
 
