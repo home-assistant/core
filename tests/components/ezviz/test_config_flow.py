@@ -39,9 +39,8 @@ from . import setup_integration
 from tests.common import MockConfigEntry, start_reauth_flow
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_ezviz_client: AsyncMock, mock_setup_entry: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_ezviz_client")
+async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test the full flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -73,8 +72,9 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_user_custom_url(
-    hass: HomeAssistant, mock_ezviz_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
     """Test custom url step."""
     result = await hass.config_entries.flow.async_init(
@@ -110,11 +110,9 @@ async def test_user_custom_url(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_ezviz_client", "mock_setup_entry")
 async def test_async_step_reauth(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the reauth step."""
     mock_config_entry.add_to_hass(hass)
@@ -136,10 +134,9 @@ async def test_async_step_reauth(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_ezviz_client")
 async def test_step_discovery_abort_if_cloud_account_missing(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_test_rtsp_auth: AsyncMock,
+    hass: HomeAssistant, mock_test_rtsp_auth: AsyncMock
 ) -> None:
     """Test discovery and confirm step, abort if cloud account was removed."""
 
@@ -169,11 +166,9 @@ async def test_step_discovery_abort_if_cloud_account_missing(
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
+@pytest.mark.usefixtures("mock_ezviz_client", "mock_test_rtsp_auth")
 async def test_step_reauth_abort_if_cloud_account_missing(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_test_rtsp_auth: AsyncMock,
-    mock_camera_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_camera_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth and confirm step, abort if cloud account was removed."""
 
@@ -184,12 +179,9 @@ async def test_step_reauth_abort_if_cloud_account_missing(
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
+@pytest.mark.usefixtures("mock_ezviz_client", "mock_test_rtsp_auth", "mock_setup_entry")
 async def test_async_step_integration_discovery(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_test_rtsp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test discovery and confirm step."""
     mock_config_entry.add_to_hass(hass)
@@ -313,8 +305,9 @@ async def test_user_flow_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_unknown_exception(
-    hass: HomeAssistant, mock_ezviz_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_ezviz_client: AsyncMock
 ) -> None:
     """Test the full flow."""
 
@@ -409,8 +402,9 @@ async def test_user_custom_url_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_custom_url_unknown_exception(
-    hass: HomeAssistant, mock_ezviz_client: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_ezviz_client: AsyncMock
 ) -> None:
     """Test the full flow."""
 
@@ -489,6 +483,7 @@ async def test_async_step_integration_discovery_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -502,7 +497,6 @@ async def test_camera_errors(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
     mock_test_rtsp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -559,11 +553,11 @@ async def test_camera_errors(
     assert result["result"].unique_id == "C666666"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_camera_unknown_error(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
     mock_test_rtsp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the camera flow with errors."""
@@ -598,6 +592,7 @@ async def test_camera_unknown_error(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -610,7 +605,6 @@ async def test_camera_unknown_error(
 async def test_reauth_errors(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -650,10 +644,10 @@ async def test_reauth_errors(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_unknown_exception(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the reauth step."""
