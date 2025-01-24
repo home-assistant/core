@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator, async_connect_gateway
-from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
+from .errors import InComfortTimeout, InComfortUnknownError, NoHeaters, NotFound
 
 PLATFORMS = (
     Platform.WATER_HEATER,
@@ -40,9 +40,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
     except ClientResponseError as exc:
         if exc.status == 404:
             raise NotFound from exc
-        raise InConfortUnknownError from exc
+        raise InComfortUnknownError from exc
     except TimeoutError as exc:
-        raise InConfortTimeout from exc
+        raise InComfortTimeout from exc
 
     # Register discovered gateway device
     device_registry = dr.async_get(hass)
