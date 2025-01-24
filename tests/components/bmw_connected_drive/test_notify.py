@@ -11,7 +11,11 @@ import respx
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 
 async def test_legacy_notify_service_simple(
@@ -68,21 +72,21 @@ async def test_legacy_notify_service_simple(
             {
                 "latitude": POI_DATA.get("lat"),
             },
-            "Invalid data for point of interest: required key not provided @ data['longitude']",
+            r"Invalid data for point of interest: required key not provided @ data\['longitude'\]",
         ),
         (
             {
                 "latitude": POI_DATA.get("lat"),
                 "longitude": "text",
             },
-            "Invalid data for point of interest: invalid longitude for dictionary value @ data['longitude']",
+            r"Invalid data for point of interest: invalid longitude for dictionary value @ data\['longitude'\]",
         ),
         (
             {
                 "latitude": POI_DATA.get("lat"),
                 "longitude": 9999,
             },
-            "Invalid data for point of interest: invalid longitude for dictionary value @ data['longitude']",
+            r"Invalid data for point of interest: invalid longitude for dictionary value @ data\['longitude'\]",
         ),
     ],
 )
@@ -96,7 +100,7 @@ async def test_service_call_invalid_input(
     # Setup component
     assert await setup_mocked_integration(hass)
 
-    with pytest.raises(ServiceValidationError) as exc:
+    with pytest.raises(ServiceValidationError, match=exc_translation):
         await hass.services.async_call(
             "notify",
             "bmw_connected_drive_ix_xdrive50",
@@ -106,7 +110,6 @@ async def test_service_call_invalid_input(
             },
             blocking=True,
         )
-    assert str(exc.value) == exc_translation
 
 
 @pytest.mark.usefixtures("bmw_fixture")
@@ -132,11 +135,11 @@ async def test_service_call_fail(
     monkeypatch.setattr(
         RemoteServices,
         "trigger_remote_service",
-        AsyncMock(side_effect=raised),
+        AsyncMock(side_effect=raised("HTTPStatusError: 502 Bad Gateway")),
     )
 
     # Test
-    with pytest.raises(expected):
+    with pytest.raises(expected, match=REMOTE_SERVICE_EXC_TRANSLATION):
         await hass.services.async_call(
             "notify",
             "bmw_connected_drive_ix_xdrive50",

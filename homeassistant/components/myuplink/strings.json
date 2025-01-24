@@ -1,6 +1,6 @@
 {
   "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) to give Home Assistant access to your myUplink account. You also need to create application credentials linked to your account:\n1. Go to [Applications at myUplink developer site]({create_creds_url}) and get credentials from an existing application or select **Create New Application**.\n1. Set appropriate Application name and Description\n2. Enter `{callback_url}` as Callback Url"
+    "description": "Follow the [instructions]({more_info_url}) to give Home Assistant access to your myUplink account. You also need to create application credentials linked to your account:\n1. Go to [Applications at myUplink developer site]({create_creds_url}) and get credentials from an existing application or select **Create New Application**.\n1. Set appropriate Application name and Description\n1. Enter `{callback_url}` as Callback URL"
   },
   "config": {
     "step": {
@@ -23,6 +23,8 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "account_mismatch": "The used account does not match the original account",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
@@ -39,6 +41,26 @@
       "status": {
         "name": "Status"
       }
+    }
+  },
+  "exceptions": {
+    "config_entry_auth_failed": {
+      "message": "Error while logging in to the API. Please check your credentials."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the integration."
+    },
+    "incorrect_oauth2_scope": {
+      "message": "Stored permissions are invalid. Please login again to update permissions."
+    },
+    "set_number_error": {
+      "message": "Failed to set new value {value} for {point}/{entity}."
+    },
+    "set_select_error": {
+      "message": "Failed to set new option {option} for {point}/{entity}."
+    },
+    "set_switch_error": {
+      "message": "Failed to set state for {entity}."
     }
   }
 }

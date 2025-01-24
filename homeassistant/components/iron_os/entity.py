@@ -31,7 +31,8 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
         )
         if TYPE_CHECKING:
             assert coordinator.config_entry.unique_id
-        self.device_info = DeviceInfo(
+
+        self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, coordinator.config_entry.unique_id)},
             manufacturer=MANUFACTURER,
             model=MODEL,

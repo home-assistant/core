@@ -13,11 +13,15 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("host", "expected_title"),
-    [("192.618.178.1", "192.618.178.1")],
+    ("host", "expected"),
+    [
+        ("192.618.178.1", "192.618.178.1"),
+        (" 192.618.178.1 ", "192.618.178.1"),
+        (" demo.host ", "demo.host"),
+    ],
 )
 @pytest.mark.usefixtures("patch_setup")
-async def test_form(hass: HomeAssistant, host, expected_title) -> None:
+async def test_form(hass: HomeAssistant, host, expected) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -35,21 +39,25 @@ async def test_form(hass: HomeAssistant, host, expected_title) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == expected_title
+    assert result["title"] == expected
     assert result["data"] == {}
     assert result["options"] == {
         "count": 5,
-        "host": host,
+        "host": expected,
         "consider_home": 180,
     }
 
 
 @pytest.mark.parametrize(
-    ("host", "count", "expected_title"),
-    [("192.618.178.1", 10, "192.618.178.1")],
+    ("host", "expected_host"),
+    [
+        ("192.618.178.1", "192.618.178.1"),
+        (" 192.618.178.1 ", "192.618.178.1"),
+        (" demo.host ", "demo.host"),
+    ],
 )
 @pytest.mark.usefixtures("patch_setup")
-async def test_options(hass: HomeAssistant, host, count, expected_title) -> None:
+async def test_options(hass: HomeAssistant, host: str, expected_host: str) -> None:
     """Test options flow."""
 
     config_entry = MockConfigEntry(
@@ -57,8 +65,8 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
         source=config_entries.SOURCE_USER,
         data={},
         domain=DOMAIN,
-        options={"count": count, "host": host, "consider_home": 180},
-        title=expected_title,
+        options={"count": 1, "host": "192.168.1.1", "consider_home": 180},
+        title="192.168.1.1",
     )
     config_entry.add_to_hass(hass)
 
@@ -72,15 +80,15 @@ async def test_options(hass: HomeAssistant, host, count, expected_title) -> None
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            "host": "10.10.10.1",
-            "count": count,
+            "host": host,
+            "count": 10,
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "count": count,
-        "host": "10.10.10.1",
+        "count": 10,
+        "host": expected_host,
         "consider_home": 180,
     }

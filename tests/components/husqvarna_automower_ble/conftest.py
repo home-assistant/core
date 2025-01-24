@@ -1,19 +1,16 @@
 """Common fixtures for the Husqvarna Automower Bluetooth tests."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
-from homeassistant.components.husqvarna_automower_ble.coordinator import SCAN_INTERVAL
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID
-from homeassistant.core import HomeAssistant
 
 from . import AUTOMOWER_SERVICE_INFO
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -26,25 +23,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-@pytest.fixture
-async def scan_step(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> Generator[None, None, Callable[[], Awaitable[None]]]:
-    """Step system time forward."""
-
-    freezer.move_to("2023-01-01T01:00:00Z")
-
-    async def delay() -> None:
-        """Trigger delay in system."""
-        freezer.tick(delta=SCAN_INTERVAL)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-
-    return delay
-
-
 @pytest.fixture(autouse=True)
-def mock_automower_client(enable_bluetooth: None, scan_step) -> Generator[AsyncMock]:
+def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
     """Mock a BleakClient client."""
     with (
         patch(

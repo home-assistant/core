@@ -4,6 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiostreammagic.models import (
+    AudioOutput,
     Display,
     Info,
     NowPlaying,
@@ -62,6 +63,9 @@ def mock_stream_magic_client() -> Generator[AsyncMock]:
         client.update = Update.from_json(load_fixture("get_update.json", DOMAIN))
         client.preset_list = PresetList.from_json(
             load_fixture("get_presets_list.json", DOMAIN)
+        )
+        client.audio_output = AudioOutput.from_json(
+            load_fixture("get_audio_output.json", DOMAIN)
         )
         client.is_connected = Mock(return_value=True)
         client.position_last_updated = client.play_state.position

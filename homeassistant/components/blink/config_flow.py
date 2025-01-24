@@ -10,7 +10,7 @@ from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -61,6 +61,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
             )
             await self.async_set_unique_id(user_input[CONF_USERNAME])
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
 
             try:
                 await validate_input(self.auth)

@@ -17,7 +17,6 @@ from tesla_powerwall import (
 )
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryState,
@@ -28,6 +27,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.util.network import is_ip_address
 
 from . import async_last_update_was_successful
@@ -116,7 +116,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         ) and not await _powerwall_is_reachable(ip_address, password)
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip
@@ -251,8 +251,8 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth confirmation."""
         errors: dict[str, str] | None = {}
         description_placeholders: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            reauth_entry = self._get_reauth_entry()
             errors, _, description_placeholders = await self._async_try_connect(
                 {CONF_IP_ADDRESS: reauth_entry.data[CONF_IP_ADDRESS], **user_input}
             )
@@ -261,6 +261,10 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry, data_updates=user_input
                 )
 
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "ip_address": reauth_entry.data[CONF_IP_ADDRESS],
+        }
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Optional(CONF_PASSWORD): str}),

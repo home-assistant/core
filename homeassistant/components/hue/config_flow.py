@@ -13,7 +13,6 @@ from aiohue.util import normalize_bridge_id
 import slugify as unicode_slug
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -27,6 +26,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     CONF_ALLOW_HUE_GROUPS,
@@ -57,8 +57,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
         """Get the options flow for this handler."""
         if config_entry.data.get(CONF_API_VERSION, 1) == 1:
-            return HueV1OptionsFlowHandler(config_entry)
-        return HueV2OptionsFlowHandler(config_entry)
+            return HueV1OptionsFlowHandler()
+        return HueV2OptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the Hue flow."""
@@ -214,7 +214,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Hue bridge.
 
@@ -243,7 +243,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Hue bridge on HomeKit.
 
@@ -280,10 +280,6 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 class HueV1OptionsFlowHandler(OptionsFlow):
     """Handle Hue options for V1 implementation."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Hue options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -314,10 +310,6 @@ class HueV1OptionsFlowHandler(OptionsFlow):
 
 class HueV2OptionsFlowHandler(OptionsFlow):
     """Handle Hue options for V2 implementation."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Hue options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

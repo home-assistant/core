@@ -129,15 +129,11 @@ class HoneywellConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> HoneywellOptionsFlowHandler:
         """Options callback for Honeywell."""
-        return HoneywellOptionsFlowHandler(config_entry)
+        return HoneywellOptionsFlowHandler()
 
 
 class HoneywellOptionsFlowHandler(OptionsFlow):
     """Config flow options for Honeywell."""
-
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize Honeywell options flow."""
-        self.config_entry = entry
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""

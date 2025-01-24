@@ -115,7 +115,7 @@
         },
         "volume": {
           "name": "Volume",
-          "description": "Speaker volume during playback."
+          "description": "Override the speaker volume during playback of this message only."
         },
         "repeat": {
           "name": "Repeat",

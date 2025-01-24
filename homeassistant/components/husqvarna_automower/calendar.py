@@ -15,6 +15,8 @@ from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -24,9 +26,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up lawn mower platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerCalendarEntity(mower_id, coordinator) for mower_id in coordinator.data
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerCalendarEntity(mower_id, coordinator) for mower_id in mower_ids
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
 class AutomowerCalendarEntity(AutomowerBaseEntity, CalendarEntity):

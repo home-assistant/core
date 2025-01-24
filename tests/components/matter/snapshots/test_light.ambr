@@ -59,15 +59,15 @@
       'rgb_color': tuple(
         255,
         193,
-        141,
+        142,
       ),
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 32>,
       'xy_color': tuple(
-        0.453,
-        0.374,
+        0.452,
+        0.373,
       ),
     }),
     'context': <ANY>,
@@ -252,7 +252,7 @@
       'rgb_color': tuple(
         255,
         247,
-        203,
+        204,
       ),
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -261,8 +261,8 @@
       ]),
       'supported_features': <LightEntityFeature: 32>,
       'xy_color': tuple(
-        0.363,
-        0.374,
+        0.362,
+        0.373,
       ),
     }),
     'context': <ANY>,

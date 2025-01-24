@@ -68,7 +68,8 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 
 _SENTINEL = object()
 
-DISCOVERY_COUNT = len(MQTT)
+DISCOVERY_COUNT = sum(len(discovery_topic) for discovery_topic in MQTT.values())
+DEVICE_DISCOVERY_COUNT = 2
 
 type _MqttMessageType = list[tuple[str, str]]
 type _AttributesType = list[tuple[str, Any]]
@@ -1189,7 +1190,10 @@ async def help_test_entity_id_update_subscriptions(
     assert state is not None
     assert (
         mqtt_mock.async_subscribe.call_count
-        == len(topics) + 2 * len(SUPPORTED_COMPONENTS) + DISCOVERY_COUNT
+        == len(topics)
+        + 2 * len(SUPPORTED_COMPONENTS)
+        + DISCOVERY_COUNT
+        + DEVICE_DISCOVERY_COUNT
     )
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(
@@ -1883,7 +1887,12 @@ async def help_test_reloadable(
         mqtt.DOMAIN: {domain: [old_config_1, old_config_2]},
     }
     # Start the MQTT entry with the old config
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     mqtt_client_mock.connect.return_value = 0
     with patch("homeassistant.config.load_yaml_config_file", return_value=old_config):
