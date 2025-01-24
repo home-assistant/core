@@ -70,17 +70,7 @@ async def test_form_invalid_auth(
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.parametrize(
-    ("exception", "expected_error"),
-    [
-        (aiohttp.ClientConnectionError, "cannot_connect"),
-        (TimeoutError, "cannot_connect"),
-        (Exception, "unknown"),
-    ],
-)
-async def test_form_auth_error(
-    exception: Exception,
-    expected_error: str,
+async def test_form_cannot_connect(
     hass: HomeAssistant,
     region,
     brand,
@@ -91,7 +81,7 @@ async def test_form_auth_error(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_auth_api.return_value.do_auth.side_effect = exception
+    mock_auth_api.return_value.do_auth.side_effect = aiohttp.ClientConnectionError
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         CONFIG_INPUT
@@ -101,7 +91,55 @@ async def test_form_auth_error(
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_auth_timeout(
+    hass: HomeAssistant,
+    region,
+    brand,
+    mock_auth_api: MagicMock,
+) -> None:
+    """Test we handle auth timeout error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_auth_api.return_value.do_auth.side_effect = TimeoutError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG_INPUT
+        | {
+            "region": region[0],
+            "brand": brand[0],
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_generic_auth_exception(
+    hass: HomeAssistant,
+    region,
+    brand,
+    mock_auth_api: MagicMock,
+) -> None:
+    """Test we handle cannot connect error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_auth_api.return_value.do_auth.side_effect = Exception
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG_INPUT
+        | {
+            "region": region[0],
+            "brand": brand[0],
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
