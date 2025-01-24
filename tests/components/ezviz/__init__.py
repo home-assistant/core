@@ -1,7 +1,5 @@
 """Tests for the EZVIZ integration."""
 
-from unittest.mock import _patch, patch
-
 from homeassistant.components.ezviz.const import (
     ATTR_SERIAL,
     ATTR_TYPE_CAMERA,
@@ -81,14 +79,6 @@ API_LOGIN_RETURN_VALIDATE = {
     CONF_URL: "apiieu.ezvizlife.com",
     CONF_TYPE: ATTR_TYPE_CLOUD,
 }
-
-
-def patch_async_setup_entry() -> _patch:
-    """Patch async_setup_entry."""
-    return patch(
-        "homeassistant.components.ezviz.async_setup_entry",
-        return_value=True,
-    )
 
 
 async def init_integration(hass: HomeAssistant) -> MockConfigEntry:
