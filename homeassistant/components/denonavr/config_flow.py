@@ -10,12 +10,7 @@ import denonavr
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
@@ -27,6 +22,7 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from . import DenonavrConfigEntry
 from .const import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -118,7 +114,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: DenonavrConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler()

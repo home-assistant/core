@@ -35,7 +35,6 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
@@ -251,7 +250,7 @@ class DenonDevice(MediaPlayerEntity):
         self,
         receiver: DenonAVR,
         unique_id: str,
-        config_entry: ConfigEntry,
+        config_entry: DenonavrConfigEntry,
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
