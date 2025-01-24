@@ -53,6 +53,20 @@
       "unknown": "Unknown error when connection to Lan2RF gateway."
     }
   },
+  "exceptions": {
+    "no_heaters": {
+      "message": "[%key:component::incomfort::config::error::no_heaters%]"
+    },
+    "not_found": {
+      "message": "[%key:component::incomfort::config::error::not_found%]"
+    },
+    "timeout_error": {
+      "message": "[%key:component::incomfort::config::error::timeout_error%]"
+    },
+    "unknown": {
+      "message": "[%key:component::incomfort::config::error::unknown%]"
+    }
+  },
   "options": {
     "step": {
       "init": {
