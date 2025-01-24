@@ -15,7 +15,6 @@ from aioshelly.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
@@ -25,6 +24,10 @@ from homeassistant.components.shelly.const import (
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -33,22 +36,22 @@ from . import init_integration
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-12345",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
     type="mock_type",
 )
-DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO_WITH_MAC = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-AABBCCDDEEFF",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
+    properties={ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
     type="mock_type",
 )
 
@@ -1459,13 +1462,13 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
             ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             name="shelly1pm-12345",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+            properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
             type="mock_type",
         ),
     )

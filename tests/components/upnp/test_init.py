@@ -22,6 +22,7 @@ from homeassistant.components.upnp.const import (
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
 
 from .conftest import (
     TEST_DISCOVERY,
@@ -125,7 +126,7 @@ async def test_async_setup_udn_mismatch(
 ) -> None:
     """Test async_setup_entry for a device which reports a different UDN from SSDP-discovery and device description."""
     test_discovery = copy.deepcopy(TEST_DISCOVERY)
-    test_discovery.upnp[ssdp.ATTR_UPNP_UDN] = "uuid:another_udn"
+    test_discovery.upnp[ATTR_UPNP_UDN] = "uuid:another_udn"
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -146,7 +147,7 @@ async def test_async_setup_udn_mismatch(
     async def register_callback(
         hass: HomeAssistant,
         callback: Callable[
-            [ssdp.SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
+            [SsdpServiceInfo, ssdp.SsdpChange], Coroutine[Any, Any, None] | None
         ],
         match_dict: dict[str, str] | None = None,
     ) -> MagicMock:

@@ -7,5 +7,5 @@
   "integration_type": "helper",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["numpy==2.2.1"]
+  "requirements": ["numpy==2.2.2"]
 }

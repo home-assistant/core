@@ -89,7 +89,7 @@
     },
     "alarm_arm_vacation": {
       "name": "Alarm arm vacation",
-      "description": "Arm the ElkM1 in vacation mode.",
+      "description": "Arms the ElkM1 in vacation mode.",
       "fields": {
         "code": {
           "name": "Code",

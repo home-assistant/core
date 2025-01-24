@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from habiticalib import (
     BadRequestError,
+    HabiticaCastSkillResponse,
     HabiticaContentResponse,
     HabiticaErrorResponse,
     HabiticaGroupMembersResponse,
@@ -31,11 +32,13 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="message")
+ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="reason")
 ERROR_NOT_AUTHORIZED = NotAuthorizedError(error=ERROR_RESPONSE, headers={})
 ERROR_NOT_FOUND = NotFoundError(error=ERROR_RESPONSE, headers={})
 ERROR_BAD_REQUEST = BadRequestError(error=ERROR_RESPONSE, headers={})
-ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(error=ERROR_RESPONSE, headers={})
+ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(
+    error=ERROR_RESPONSE, headers={"retry-after": 5}
+)
 
 
 @pytest.fixture(name="config_entry")
@@ -91,8 +94,8 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             load_fixture("user.json", DOMAIN)
         )
 
-        client.cast_skill.return_value = HabiticaUserResponse.from_json(
-            load_fixture("user.json", DOMAIN)
+        client.cast_skill.return_value = HabiticaCastSkillResponse.from_json(
+            load_fixture("cast_skill_response.json", DOMAIN)
         )
         client.toggle_sleep.return_value = HabiticaSleepResponse(
             success=True, data=True

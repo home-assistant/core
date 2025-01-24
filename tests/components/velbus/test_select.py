@@ -46,7 +46,7 @@ async def test_select_program(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.select", ATTR_OPTION: set_program},
+        {ATTR_ENTITY_ID: "select.kitchen_select", ATTR_OPTION: set_program},
         blocking=True,
     )
     mock_select.set_selected_program.assert_called_once_with(set_program)

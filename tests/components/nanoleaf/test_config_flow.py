@@ -9,11 +9,15 @@ from aionanoleaf import InvalidToken, Unauthorized, Unavailable
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -248,13 +252,13 @@ async def test_discovery_link_unavailable(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address(TEST_HOST),
                 ip_addresses=[ip_address(TEST_HOST)],
                 hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery_info}",
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                properties={ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
                 type=type_in_discovery_info,
             ),
         )
@@ -384,13 +388,13 @@ async def test_import_discovery_integration(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address(TEST_HOST),
                 ip_addresses=[ip_address(TEST_HOST)],
                 hostname="mock_hostname",
                 name=f"{TEST_NAME}.{type_in_discovery}",
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                properties={ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
                 type=type_in_discovery,
             ),
         )
@@ -432,7 +436,7 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 upnp={},

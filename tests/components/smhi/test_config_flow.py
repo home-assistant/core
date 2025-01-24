@@ -57,7 +57,6 @@ async def test_form(hass: HomeAssistant) -> None:
             "latitude": 0.0,
             "longitude": 0.0,
         },
-        "name": "Home",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -93,7 +92,6 @@ async def test_form(hass: HomeAssistant) -> None:
             "latitude": 1.0,
             "longitude": 1.0,
         },
-        "name": "Weather",
     }
 
 
@@ -150,7 +148,6 @@ async def test_form_invalid_coordinates(hass: HomeAssistant) -> None:
             "latitude": 2.0,
             "longitude": 2.0,
         },
-        "name": "Weather",
     }
 
 
@@ -201,8 +198,8 @@ async def test_reconfigure_flow(
         domain=DOMAIN,
         title="Home",
         unique_id="57.2898-13.6304",
-        data={"location": {"latitude": 57.2898, "longitude": 13.6304}, "name": "Home"},
-        version=2,
+        data={"location": {"latitude": 57.2898, "longitude": 13.6304}},
+        version=3,
     )
     entry.add_to_hass(hass)
 
@@ -269,7 +266,6 @@ async def test_reconfigure_flow(
             "latitude": 58.2898,
             "longitude": 14.6304,
         },
-        "name": "Home",
     }
     entity = entity_registry.async_get(entity.entity_id)
     assert entity

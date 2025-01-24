@@ -41,10 +41,12 @@ def websocket_list_areas(
         vol.Required("type"): "config/area_registry/create",
         vol.Optional("aliases"): list,
         vol.Optional("floor_id"): str,
+        vol.Optional("humidity_entity_id"): vol.Any(str, None),
         vol.Optional("icon"): str,
         vol.Optional("labels"): [str],
         vol.Required("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
+        vol.Optional("temperature_entity_id"): vol.Any(str, None),
     }
 )
 @websocket_api.require_admin
@@ -107,10 +109,12 @@ def websocket_delete_area(
         vol.Optional("aliases"): list,
         vol.Required("area_id"): str,
         vol.Optional("floor_id"): vol.Any(str, None),
+        vol.Optional("humidity_entity_id"): vol.Any(str, None),
         vol.Optional("icon"): vol.Any(str, None),
         vol.Optional("labels"): [str],
         vol.Optional("name"): str,
         vol.Optional("picture"): vol.Any(str, None),
+        vol.Optional("temperature_entity_id"): vol.Any(str, None),
     }
 )
 @websocket_api.require_admin

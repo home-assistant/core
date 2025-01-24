@@ -26,7 +26,7 @@ def _migrate_unique_id(
     for entity in entry_entities:
         if entity.unique_id.split("-")[0] == entry.entry_id:
             feed_id = entity.unique_id.split("-")[-1]
-            LOGGER.debug(f"moving feed {feed_id} to hardware uuid")
+            LOGGER.debug("moving feed %s to hardware uuid", feed_id)
             ent_reg.async_update_entity(
                 entity.entity_id, new_unique_id=f"{emoncms_unique_id}-{feed_id}"
             )

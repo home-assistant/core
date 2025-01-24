@@ -7,7 +7,7 @@ import functools as ft
 import logging
 from typing import Any, Literal, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

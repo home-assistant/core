@@ -32,11 +32,11 @@ from .util import (
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 __all__ = [
-    "async_browse_media",
     "DOMAIN",
-    "spotify_uri_from_media_browser_url",
+    "async_browse_media",
     "is_spotify_media_type",
     "resolve_spotify_media_type",
+    "spotify_uri_from_media_browser_url",
 ]
 
 

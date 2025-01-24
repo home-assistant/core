@@ -10,12 +10,12 @@ from google_nest_sdm.exceptions import AuthException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.nest.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .common import (
     CLIENT_ID,
@@ -36,7 +36,7 @@ WEB_REDIRECT_URL = "https://example.com/auth/external/callback"
 APP_REDIRECT_URL = "urn:ietf:wg:oauth:2.0:oob"
 RAND_SUBSCRIBER_SUFFIX = "ABCDEF"
 
-FAKE_DHCP_DATA = dhcp.DhcpServiceInfo(
+FAKE_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="fake_hostname"
 )
 

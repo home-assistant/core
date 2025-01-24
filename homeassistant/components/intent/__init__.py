@@ -65,11 +65,11 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 __all__ = [
-    "async_register_timer_handler",
-    "async_device_supports_timers",
-    "TimerInfo",
-    "TimerEventType",
     "DOMAIN",
+    "TimerEventType",
+    "TimerInfo",
+    "async_device_supports_timers",
+    "async_register_timer_handler",
 ]
 
 ONOFF_DEVICE_CLASSES = {

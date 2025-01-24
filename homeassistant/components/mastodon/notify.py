@@ -115,7 +115,7 @@ class MastodonNotificationService(BaseNotificationService):
         try:
             mediadata = self.client.media_post(media_path, mime_type=media_type)
         except MastodonAPIError:
-            LOGGER.error(f"Unable to upload image {media_path}")
+            LOGGER.error("Unable to upload image %s", media_path)
 
         return mediadata
 

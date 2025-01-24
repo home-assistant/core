@@ -1,9 +1,8 @@
 """Conversation support for OpenAI."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
 import json
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import openai
 from openai._types import NOT_GIVEN
@@ -12,10 +11,8 @@ from openai.types.chat import (
     ChatCompletionMessage,
     ChatCompletionMessageParam,
     ChatCompletionMessageToolCallParam,
-    ChatCompletionSystemMessageParam,
     ChatCompletionToolMessageParam,
     ChatCompletionToolParam,
-    ChatCompletionUserMessageParam,
 )
 from openai.types.chat.chat_completion_message_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition
@@ -27,10 +24,9 @@ from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import device_registry as dr, intent, llm, template
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
 
 from . import OpenAIConfigEntry
 from .const import (
@@ -74,12 +70,28 @@ def _format_tool(
     return ChatCompletionToolParam(type="function", function=tool_spec)
 
 
-@dataclass
-class ChatHistory:
-    """Class holding the chat history."""
-
-    extra_system_prompt: str | None = None
-    messages: list[ChatCompletionMessageParam] = field(default_factory=list)
+def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessageParam:
+    """Convert from class to TypedDict."""
+    tool_calls: list[ChatCompletionMessageToolCallParam] = []
+    if message.tool_calls:
+        tool_calls = [
+            ChatCompletionMessageToolCallParam(
+                id=tool_call.id,
+                function=Function(
+                    arguments=tool_call.function.arguments,
+                    name=tool_call.function.name,
+                ),
+                type=tool_call.type,
+            )
+            for tool_call in message.tool_calls
+        ]
+    param = ChatCompletionAssistantMessageParam(
+        role=message.role,
+        content=message.content,
+    )
+    if tool_calls:
+        param["tool_calls"] = tool_calls
+    return param
 
 
 class OpenAIConversationEntity(
@@ -93,7 +105,6 @@ class OpenAIConversationEntity(
     def __init__(self, entry: OpenAIConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        self.history: dict[str, ChatHistory] = {}
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -132,127 +143,56 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+        async with conversation.async_get_chat_session(
+            self.hass, user_input
+        ) as session:
+            return await self._async_call_api(user_input, session)
+
+    async def _async_call_api(
+        self,
+        user_input: conversation.ConversationInput,
+        session: conversation.ChatSession[ChatCompletionMessageParam],
+    ) -> conversation.ConversationResult:
+        """Call the API."""
         options = self.entry.options
-        intent_response = intent.IntentResponse(language=user_input.language)
-        llm_api: llm.APIInstance | None = None
-        tools: list[ChatCompletionToolParam] | None = None
-        user_name: str | None = None
-        llm_context = llm.LLMContext(
-            platform=DOMAIN,
-            context=user_input.context,
-            user_prompt=user_input.text,
-            language=user_input.language,
-            assistant=conversation.DOMAIN,
-            device_id=user_input.device_id,
-        )
-
-        if options.get(CONF_LLM_HASS_API):
-            try:
-                llm_api = await llm.async_get_api(
-                    self.hass,
-                    options[CONF_LLM_HASS_API],
-                    llm_context,
-                )
-            except HomeAssistantError as err:
-                LOGGER.error("Error getting LLM API: %s", err)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    "Error preparing LLM API",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=user_input.conversation_id
-                )
-            tools = [
-                _format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools
-            ]
-
-        history: ChatHistory | None = None
-
-        if user_input.conversation_id is None:
-            conversation_id = ulid.ulid_now()
-
-        elif user_input.conversation_id in self.history:
-            conversation_id = user_input.conversation_id
-            history = self.history.get(conversation_id)
-
-        else:
-            # Conversation IDs are ULIDs. We generate a new one if not provided.
-            # If an old OLID is passed in, we will generate a new one to indicate
-            # a new conversation was started. If the user picks their own, they
-            # want to track a conversation and we respect it.
-            try:
-                ulid.ulid_to_bytes(user_input.conversation_id)
-                conversation_id = ulid.ulid_now()
-            except ValueError:
-                conversation_id = user_input.conversation_id
-
-        if history is None:
-            history = ChatHistory(user_input.extra_system_prompt)
-
-        if (
-            user_input.context
-            and user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-        ):
-            user_name = user.name
 
         try:
-            prompt_parts = [
-                template.Template(
-                    llm.BASE_PROMPT
-                    + options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                    self.hass,
-                ).async_render(
-                    {
-                        "ha_name": self.hass.config.location_name,
-                        "user_name": user_name,
-                        "llm_context": llm_context,
-                    },
-                    parse_result=False,
-                )
+            await session.async_update_llm_data(
+                DOMAIN,
+                user_input,
+                options.get(CONF_LLM_HASS_API),
+                options.get(CONF_PROMPT),
+            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
+
+        tools: list[ChatCompletionToolParam] | None = None
+        if session.llm_api:
+            tools = [
+                _format_tool(tool, session.llm_api.custom_serializer)
+                for tool in session.llm_api.tools
             ]
 
-        except TemplateError as err:
-            LOGGER.error("Error rendering prompt: %s", err)
-            intent_response = intent.IntentResponse(language=user_input.language)
-            intent_response.async_set_error(
-                intent.IntentResponseErrorCode.UNKNOWN,
-                "Sorry, I had a problem with my template",
-            )
-            return conversation.ConversationResult(
-                response=intent_response, conversation_id=conversation_id
-            )
+        messages: list[ChatCompletionMessageParam] = []
+        for message in session.async_get_messages(user_input.agent_id):
+            if message.native is not None and message.agent_id == user_input.agent_id:
+                messages.append(message.native)
+            else:
+                messages.append(
+                    cast(
+                        ChatCompletionMessageParam,
+                        {"role": message.role, "content": message.content},
+                    )
+                )
 
-        if llm_api:
-            prompt_parts.append(llm_api.api_prompt)
-
-        extra_system_prompt = (
-            # Take new system prompt if one was given
-            user_input.extra_system_prompt or history.extra_system_prompt
-        )
-
-        if extra_system_prompt:
-            prompt_parts.append(extra_system_prompt)
-
-        prompt = "\n".join(prompt_parts)
-
-        # Create a copy of the variable because we attach it to the trace
-        history = ChatHistory(
-            extra_system_prompt,
-            [
-                ChatCompletionSystemMessageParam(role="system", content=prompt),
-                *history.messages[1:],
-                ChatCompletionUserMessageParam(role="user", content=user_input.text),
-            ],
-        )
-
-        LOGGER.debug("Prompt: %s", history.messages)
+        LOGGER.debug("Prompt: %s", messages)
         LOGGER.debug("Tools: %s", tools)
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL,
-            {"messages": history.messages, "tools": llm_api.tools if llm_api else None},
+            {
+                "messages": session.messages,
+                "tools": session.llm_api.tools if session.llm_api else None,
+            },
         )
 
         client = self.entry.runtime_data
@@ -262,12 +202,12 @@ class OpenAIConversationEntity(
             try:
                 result = await client.chat.completions.create(
                     model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                    messages=history.messages,
+                    messages=messages,
                     tools=tools or NOT_GIVEN,
                     max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
                     top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                     temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                    user=conversation_id,
+                    user=session.conversation_id,
                 )
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)
@@ -277,44 +217,26 @@ class OpenAIConversationEntity(
                     "Sorry, I had a problem talking to OpenAI",
                 )
                 return conversation.ConversationResult(
-                    response=intent_response, conversation_id=conversation_id
+                    response=intent_response, conversation_id=session.conversation_id
                 )
 
             LOGGER.debug("Response %s", result)
             response = result.choices[0].message
+            messages.append(_message_convert(response))
 
-            def message_convert(
-                message: ChatCompletionMessage,
-            ) -> ChatCompletionMessageParam:
-                """Convert from class to TypedDict."""
-                tool_calls: list[ChatCompletionMessageToolCallParam] = []
-                if message.tool_calls:
-                    tool_calls = [
-                        ChatCompletionMessageToolCallParam(
-                            id=tool_call.id,
-                            function=Function(
-                                arguments=tool_call.function.arguments,
-                                name=tool_call.function.name,
-                            ),
-                            type=tool_call.type,
-                        )
-                        for tool_call in message.tool_calls
-                    ]
-                param = ChatCompletionAssistantMessageParam(
-                    role=message.role,
-                    content=message.content,
-                )
-                if tool_calls:
-                    param["tool_calls"] = tool_calls
-                return param
+            session.async_add_message(
+                conversation.ChatMessage(
+                    role=response.role,
+                    agent_id=user_input.agent_id,
+                    content=response.content or "",
+                    native=messages[-1],
+                ),
+            )
 
-            history.messages.append(message_convert(response))
-            tool_calls = response.tool_calls
-
-            if not tool_calls or not llm_api:
+            if not response.tool_calls or not session.llm_api:
                 break
 
-            for tool_call in tool_calls:
+            for tool_call in response.tool_calls:
                 tool_input = llm.ToolInput(
                     tool_name=tool_call.function.name,
                     tool_args=json.loads(tool_call.function.arguments),
@@ -324,27 +246,33 @@ class OpenAIConversationEntity(
                 )
 
                 try:
-                    tool_response = await llm_api.async_call_tool(tool_input)
+                    tool_response = await session.llm_api.async_call_tool(tool_input)
                 except (HomeAssistantError, vol.Invalid) as e:
                     tool_response = {"error": type(e).__name__}
                     if str(e):
                         tool_response["error_text"] = str(e)
 
                 LOGGER.debug("Tool response: %s", tool_response)
-                history.messages.append(
+                messages.append(
                     ChatCompletionToolMessageParam(
                         role="tool",
                         tool_call_id=tool_call.id,
                         content=json.dumps(tool_response),
                     )
                 )
-
-        self.history[conversation_id] = history
+                session.async_add_message(
+                    conversation.ChatMessage(
+                        role="native",
+                        agent_id=user_input.agent_id,
+                        content="",
+                        native=messages[-1],
+                    )
+                )
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response.content or "")
         return conversation.ConversationResult(
-            response=intent_response, conversation_id=conversation_id
+            response=intent_response, conversation_id=session.conversation_id
         )
 
     async def _async_entry_update_listener(

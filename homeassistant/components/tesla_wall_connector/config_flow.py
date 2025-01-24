@@ -9,11 +9,11 @@ from tesla_wall_connector import WallConnector
 from tesla_wall_connector.exceptions import WallConnectorError
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, WALLCONNECTOR_DEVICE_NAME, WALLCONNECTOR_SERIAL_NUMBER
 
@@ -48,7 +48,7 @@ class TeslaWallConnectorConfigFlow(ConfigFlow, domain=DOMAIN):
         self.ip_address: str | None = None
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         self.ip_address = discovery_info.ip

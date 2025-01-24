@@ -6,7 +6,6 @@
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
-        'silent',
         '1',
         '2',
         '3',
@@ -56,7 +55,6 @@
       'current_temperature': 18,
       'fan_mode': '3',
       'fan_modes': list([
-        'silent',
         '1',
         '2',
         '3',

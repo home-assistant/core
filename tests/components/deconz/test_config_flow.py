@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pydeconz
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.deconz.config_flow import (
     CONF_MANUAL_INPUT,
     CONF_SERIAL,
@@ -20,12 +19,16 @@ from homeassistant.components.deconz.const import (
     DOMAIN as DECONZ_DOMAIN,
     HASSIO_CONFIGURATION_URL,
 )
-from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
 from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from .conftest import API_KEY, BRIDGE_ID
 
@@ -435,7 +438,7 @@ async def test_flow_ssdp_discovery(
     """Test that config flow for one discovered bridge works."""
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:80/",
@@ -483,7 +486,7 @@ async def test_ssdp_discovery_update_configuration(
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DECONZ_DOMAIN,
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 ssdp_location="http://2.3.4.5:80/",
@@ -509,7 +512,7 @@ async def test_ssdp_discovery_dont_update_configuration(
 
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:80/",
@@ -533,7 +536,7 @@ async def test_ssdp_discovery_dont_update_existing_hassio_configuration(
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
     result = await hass.config_entries.flow.async_init(
         DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://1.2.3.4:80/",

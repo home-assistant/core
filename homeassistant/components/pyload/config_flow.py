@@ -83,7 +83,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
     )
 
     url = (
-        f"{"https" if user_input[CONF_SSL] else "http"}://"
+        f"{'https' if user_input[CONF_SSL] else 'http'}://"
         f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/"
     )
     pyload = PyLoadAPI(

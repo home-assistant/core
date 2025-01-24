@@ -7,7 +7,7 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any, Final, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

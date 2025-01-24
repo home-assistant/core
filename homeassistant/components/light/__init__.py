@@ -10,7 +10,7 @@ import logging
 import os
 from typing import Any, Final, Self, cast, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -1388,7 +1388,7 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         Remove this compatibility shim in 2025.1 or later.
         """
         features = self.supported_features
-        if type(features) is not int:  # noqa: E721
+        if type(features) is not int:
             return features
         new_features = LightEntityFeature(features)
         if self._deprecated_supported_features_reported is True:

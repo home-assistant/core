@@ -39,6 +39,12 @@ class BluetoothStorage:
         return list(self._data.keys())
 
     @callback
+    def async_remove_advertisement_history(self, scanner: str) -> None:
+        """Remove discovered devices by scanner."""
+        if self._data.pop(scanner, None):
+            self._store.async_delay_save(self._async_get_data, SCANNER_SAVE_DELAY)
+
+    @callback
     def async_get_advertisement_history(
         self, scanner: str
     ) -> DiscoveredDeviceAdvertisementData | None:

@@ -17,7 +17,7 @@
       },
       "reset": {
         "title": "Unlock the device",
-        "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Click on the device.\n3. Click `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock."
+        "description": "{name} ({model} at {host}) is locked. You need to unlock the device in order to authenticate and complete the configuration. Instructions:\n1. Open the Broadlink app.\n2. Select the device.\n3. Select `...` in the upper right.\n4. Scroll to the bottom of the page.\n5. Disable the lock."
       },
       "unlock": {
         "title": "Unlock the device (optional)",

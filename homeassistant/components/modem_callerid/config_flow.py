@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DEFAULT_NAME, DOMAIN, EXCEPTIONS
 
@@ -30,9 +31,7 @@ class PhoneModemFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up flow instance."""
         self._device: str | None = None
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         dev_path = discovery_info.device
         unique_id = f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"

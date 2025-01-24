@@ -7,7 +7,6 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -16,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import configure_mydevolo
 from .const import DOMAIN, SUPPORTED_MODEL_TYPES
@@ -48,7 +48,7 @@ class DevoloHomeControlFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_form(step_id="user", errors={"base": "invalid_auth"})
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         # Check if it is a gateway

@@ -11,7 +11,7 @@ from letpot.exceptions import LetPotAuthenticationException, LetPotException
 from letpot.models import AuthenticationInfo, LetPotDevice, LetPotDeviceStatus
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import REQUEST_UPDATE_TIMEOUT
@@ -52,7 +52,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         try:
             await self.device_client.subscribe(self._handle_status_update)
         except LetPotAuthenticationException as exc:
-            raise ConfigEntryError from exc
+            raise ConfigEntryAuthFailed from exc
 
     async def _async_update_data(self) -> LetPotDeviceStatus:
         """Request an update from the device and wait for a status update or timeout."""

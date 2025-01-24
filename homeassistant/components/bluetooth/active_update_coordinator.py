@@ -132,7 +132,7 @@ class ActiveBluetoothDataUpdateCoordinator[_T](PassiveBluetoothDataUpdateCoordin
                 )
                 self.last_poll_successful = False
             return
-        except Exception:  # noqa: BLE001
+        except Exception:
             if self.last_poll_successful:
                 self.logger.exception("%s: Failure while polling", self.address)
                 self.last_poll_successful = False

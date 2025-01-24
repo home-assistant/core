@@ -43,7 +43,11 @@ def _check_requirements_are_typed(integration: Integration) -> list[str]:
 
         if not any(file for file in distribution.files if file.name == "py.typed"):
             # no py.typed file
-            invalid_requirements.append(requirement)
+            try:
+                metadata.distribution(f"types-{requirement_name}")
+            except metadata.PackageNotFoundError:
+                # also no stubs-only package
+                invalid_requirements.append(requirement)
 
     return invalid_requirements
 

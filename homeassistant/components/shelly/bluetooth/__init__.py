@@ -28,7 +28,13 @@ async def async_connect_scanner(
     source = format_mac(coordinator.mac).upper()
     scanner = create_scanner(source, entry.title)
     unload_callbacks = [
-        async_register_scanner(hass, scanner),
+        async_register_scanner(
+            hass,
+            scanner,
+            source_domain=entry.domain,
+            source_model=coordinator.model,
+            source_config_entry_id=entry.entry_id,
+        ),
         scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),
     ]

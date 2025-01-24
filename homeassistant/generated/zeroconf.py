@@ -733,6 +733,11 @@ ZEROCONF = {
             "domain": "octoprint",
         },
     ],
+    "_owserver._tcp.local.": [
+        {
+            "domain": "onewire",
+        },
+    ],
     "_plexmediasvr._tcp.local.": [
         {
             "domain": "plex",

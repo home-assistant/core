@@ -67,7 +67,7 @@ def get_queue_attr(queue: SonarrQueue) -> dict[str, str]:
         remaining = 1 if item.size == 0 else item.sizeleft / item.size
         remaining_pct = 100 * (1 - remaining)
         identifier = (
-            f"S{item.episode.seasonNumber:02d}E{item.episode. episodeNumber:02d}"
+            f"S{item.episode.seasonNumber:02d}E{item.episode.episodeNumber:02d}"
         )
         attrs[f"{item.series.title} {identifier}"] = f"{remaining_pct:.2f}%"
     return attrs
@@ -120,7 +120,8 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
         value_fn=len,
         attributes_fn=lambda data: {
             i.title: (
-                f"{getattr(i.statistics,'episodeFileCount', 0)}/{getattr(i.statistics, 'episodeCount', 0)} Episodes"
+                f"{getattr(i.statistics, 'episodeFileCount', 0)}/"
+                f"{getattr(i.statistics, 'episodeCount', 0)} Episodes"
             )
             for i in data
         },

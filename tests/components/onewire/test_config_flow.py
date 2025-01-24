@@ -1,5 +1,6 @@
 """Tests for 1-Wire config flow."""
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
 from pyownet import protocol
@@ -11,13 +12,31 @@ from homeassistant.components.onewire.const import (
     INPUT_ENTRY_DEVICE_SELECTION,
     MANUFACTURER_MAXIM,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_HASSIO, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
+
+_HASSIO_DISCOVERY = HassioServiceInfo(
+    config={"host": "1302b8e0-owserver", "port": 4304, "addon": "owserver (1-wire)"},
+    name="owserver (1-wire)",
+    slug="1302b8e0_owserver",
+    uuid="e3fa56560d93458b96a594cbcea3017e",
+)
+_ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
+    ip_address=ip_address("5.6.7.8"),
+    ip_addresses=[ip_address("5.6.7.8")],
+    hostname="ubuntu.local.",
+    name="OWFS (1-wire) Server",
+    port=4304,
+    type="_owserver._tcp.local.",
+    properties={},
+)
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
@@ -188,6 +207,110 @@ async def test_reconfigure_duplicate(
     assert len(mock_setup_entry.mock_calls) == 0
     assert config_entry.data == {CONF_HOST: "1.2.3.4", CONF_PORT: 1234}
     assert other_config_entry.data == {CONF_HOST: "2.3.4.5", CONF_PORT: 2345}
+
+
+async def test_hassio_flow(hass: HomeAssistant) -> None:
+    """Test HassIO discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=_HASSIO_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
+
+    # Cannot connect to server => retry
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        side_effect=protocol.ConnError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Connect OK
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    new_entry = result["result"]
+    assert new_entry.title == "owserver (1-wire)"
+    assert new_entry.data == {CONF_HOST: "1302b8e0-owserver", CONF_PORT: 4304}
+
+
+@pytest.mark.usefixtures("config_entry")
+async def test_hassio_duplicate(hass: HomeAssistant) -> None:
+    """Test HassIO discovery duplicate flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_HASSIO},
+        data=_HASSIO_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_flow(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert not result["errors"]
+
+    # Cannot connect to server => retry
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        side_effect=protocol.ConnError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Connect OK
+    with patch(
+        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    new_entry = result["result"]
+    assert new_entry.title == "OWFS (1-wire) Server"
+    assert new_entry.data == {CONF_HOST: "ubuntu.local.", CONF_PORT: 4304}
+
+
+@pytest.mark.usefixtures("config_entry")
+async def test_zeroconf_duplicate(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery duplicate flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=_ZEROCONF_DISCOVERY,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("filled_device_registry")

@@ -3396,7 +3396,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Heating',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority_2-entry]
@@ -3462,7 +3462,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Heating',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority_raw-entry]
@@ -3508,7 +3508,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30',
+    'state': '31',
   })
 # ---
 # name: test_sensor_states[sensor.gotham_city_priority_raw_2-entry]
@@ -3554,7 +3554,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30',
+    'state': '31',
   })
 # ---
 # name: test_sensor_states[sensor.gotham_city_r_start_diff_additional_heat-entry]

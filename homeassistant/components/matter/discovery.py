@@ -130,6 +130,15 @@ def async_discover_entities(
         ):
             continue
 
+        # check for value that may not be present
+        if schema.value_is_not is not None and (
+            schema.value_is_not == primary_value
+            or (
+                isinstance(primary_value, list) and schema.value_is_not in primary_value
+            )
+        ):
+            continue
+
         # check for required value in cluster featuremap
         if schema.featuremap_contains is not None and (
             not bool(

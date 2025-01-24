@@ -112,7 +112,6 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
                 "cognito_client_id": "cognito_client_id",
                 "user_pool_id": "user_pool_id",
                 "region": "region",
-                "alexa_server": "alexa-api.nabucasa.com",
                 "relayer_server": "relayer",
                 "accounts_server": "api-test.hass.io",
                 "google_actions": {"filter": {"include_domains": "light"}},

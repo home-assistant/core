@@ -10,12 +10,11 @@ import aiohttp
 import voluptuous as vol
 from wmspro.webcontrol import WebControlPro
 
-from homeassistant.components import dhcp
-from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_DHCP, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN, SUGGESTED_HOST
 
@@ -34,7 +33,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle the DHCP discovery step."""
         unique_id = format_mac(discovery_info.macaddress)
@@ -95,7 +94,7 @@ class WebControlProConfigFlow(ConfigFlow, domain=DOMAIN):
                             return self.async_abort(reason="already_configured")
                     return self.async_create_entry(title=host, data=user_input)
 
-        if self.source == dhcp.DOMAIN:
+        if self.source == SOURCE_DHCP:
             discovery_info: DhcpServiceInfo = self.init_data
             data_values = {CONF_HOST: discovery_info.ip}
         else:

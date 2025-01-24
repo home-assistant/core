@@ -10,7 +10,6 @@ import denonavr
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -20,6 +19,13 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from .receiver import ConnectDenonAVR
 
@@ -232,7 +238,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Denon AVR.
 
@@ -241,22 +247,20 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         # Filter out non-Denon AVRs#1
         if (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER)
+            discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
             not in SUPPORTED_MANUFACTURERS
         ):
             return self.async_abort(reason="not_denonavr_manufacturer")
 
         # Check if required information is present to set the unique_id
         if (
-            ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
+            ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
+            or ATTR_UPNP_SERIAL not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_denonavr_missing")
 
-        self.model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME].replace(
-            "*", ""
-        )
-        self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        self.model_name = discovery_info.upnp[ATTR_UPNP_MODEL_NAME].replace("*", "")
+        self.serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
         assert discovery_info.ssdp_location is not None
         self.host = urlparse(discovery_info.ssdp_location).hostname
 
@@ -270,9 +274,7 @@ class DenonAvrFlowHandler(ConfigFlow, domain=DOMAIN):
         self.context.update(
             {
                 "title_placeholders": {
-                    "name": discovery_info.upnp.get(
-                        ssdp.ATTR_UPNP_FRIENDLY_NAME, self.host
-                    )
+                    "name": discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME, self.host)
                 }
             }
         )

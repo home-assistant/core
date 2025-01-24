@@ -534,8 +534,7 @@ class OverkizStateSensor(OverkizDescriptiveEntity, SensorEntity):
             # This is probably incorrect and should be fixed in a follow up PR.
             # To ensure measurement sensors do not get an `unknown` state on
             # a falsy value (e.g. 0 or 0.0) we also check the state_class.
-            or self.state_class != SensorStateClass.MEASUREMENT
-            and not state.value
+            or (self.state_class != SensorStateClass.MEASUREMENT and not state.value)
         ):
             return None
 

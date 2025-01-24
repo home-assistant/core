@@ -8,7 +8,6 @@ from typing import Any
 from aiorussound import RussoundClient, RussoundTcpConnectionHandler
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
@@ -16,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, RUSSOUND_RIO_EXCEPTIONS
 
@@ -39,7 +39,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.data[CONF_HOST] = host = discovery_info.host

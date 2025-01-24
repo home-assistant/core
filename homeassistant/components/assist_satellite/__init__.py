@@ -30,8 +30,8 @@ from .websocket_api import async_register_websocket_api
 __all__ = [
     "DOMAIN",
     "AssistSatelliteAnnouncement",
-    "AssistSatelliteEntity",
     "AssistSatelliteConfiguration",
+    "AssistSatelliteEntity",
     "AssistSatelliteEntityDescription",
     "AssistSatelliteEntityFeature",
     "AssistSatelliteWakeWord",

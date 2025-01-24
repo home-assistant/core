@@ -673,7 +673,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         "instance_id": ANY,
         "with_automatic_settings": False,
     },
-    folders=None,
+    folders={"ssl"},
     homeassistant_exclude_database=False,
     homeassistant=True,
     location=[None],
@@ -704,7 +704,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         ),
         (
             {"include_folders": ["media", "share"]},
-            replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share"}),
+            replace(DEFAULT_BACKUP_OPTIONS, folders={"media", "share", "ssl"}),
         ),
         (
             {

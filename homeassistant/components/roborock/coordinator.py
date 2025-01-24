@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from propcache import cached_property
+from propcache.api import cached_property
 from roborock import HomeDataRoom
 from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo

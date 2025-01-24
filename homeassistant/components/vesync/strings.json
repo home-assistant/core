@@ -43,6 +43,11 @@
         "name": "Current voltage"
       }
     },
+    "number": {
+      "mist_level": {
+        "name": "Mist level"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {

@@ -24,7 +24,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
+    'original_icon': 'mdi:transmission-tower-import',
     'original_name': 'Energy delivery high',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -39,6 +39,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy delivery high',
+      'icon': 'mdi:transmission-tower-import',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -75,7 +76,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
+    'original_icon': 'mdi:transmission-tower-import',
     'original_name': 'Energy delivery low',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -90,6 +91,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy delivery low',
+      'icon': 'mdi:transmission-tower-import',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -126,7 +128,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
+    'original_icon': 'mdi:transmission-tower-export',
     'original_name': 'Energy high',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -141,6 +143,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy high',
+      'icon': 'mdi:transmission-tower-export',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -177,7 +180,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
+    'original_icon': 'mdi:transmission-tower-export',
     'original_name': 'Energy low',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -192,6 +195,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy low',
+      'icon': 'mdi:transmission-tower-export',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -228,7 +232,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
+    'original_icon': 'mdi:transmission-tower-export',
     'original_name': 'Energy total',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -243,6 +247,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Energy total',
+      'icon': 'mdi:transmission-tower-export',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -279,7 +284,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
-    'original_icon': None,
+    'original_icon': 'mdi:meter-electric',
     'original_name': 'Extra total',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -294,6 +299,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
       'friendly_name': 'Extra total',
+      'icon': 'mdi:meter-electric',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
@@ -330,7 +336,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
+    'original_icon': 'mdi:lightning-bolt',
     'original_name': 'Extra usage',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -345,6 +351,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Extra usage',
+      'icon': 'mdi:lightning-bolt',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -456,7 +463,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_1_power-entry]
@@ -507,7 +514,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_1_voltage-entry]
@@ -558,7 +565,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_2_current-entry]
@@ -609,7 +616,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_2_power-entry]
@@ -660,7 +667,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_2_voltage-entry]
@@ -711,7 +718,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_3_current-entry]
@@ -762,7 +769,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_3_power-entry]
@@ -813,7 +820,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.phase_3_voltage-entry]
@@ -864,7 +871,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.power_usage-entry]
@@ -892,7 +899,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
-    'original_icon': None,
+    'original_icon': 'mdi:meter-electric',
     'original_name': 'Power Usage',
     'platform': 'youless',
     'previous_unique_id': None,
@@ -907,6 +914,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Power Usage',
+      'icon': 'mdi:meter-electric',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),

@@ -31,6 +31,9 @@ from .const import (
 from .coordinator import WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class WeHeatSensorEntityDescription(SensorEntityDescription):

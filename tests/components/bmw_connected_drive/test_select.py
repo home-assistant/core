@@ -138,13 +138,6 @@ async def test_service_call_invalid_input(
             HomeAssistantError,
             REMOTE_SERVICE_EXC_TRANSLATION,
         ),
-        (
-            ServiceValidationError(
-                "Option 17 is not valid for entity select.i4_edrive40_ac_charging_limit"
-            ),
-            ServiceValidationError,
-            "Option 17 is not valid for entity select.i4_edrive40_ac_charging_limit",
-        ),
     ],
 )
 async def test_service_call_fail(

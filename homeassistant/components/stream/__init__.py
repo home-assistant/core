@@ -90,11 +90,11 @@ __all__ = [
     "OUTPUT_FORMATS",
     "RTSP_TRANSPORTS",
     "SOURCE_TIMEOUT",
+    "Orientation",
     "Stream",
     "StreamClientError",
     "StreamOpenClientError",
     "create_stream",
-    "Orientation",
 ]
 
 _LOGGER = logging.getLogger(__name__)

@@ -1,7 +1,13 @@
 {
   "domain": "vesync",
   "name": "VeSync",
-  "codeowners": ["@markperdue", "@webdjoe", "@thegardenmonkey", "@cdnninja"],
+  "codeowners": [
+    "@markperdue",
+    "@webdjoe",
+    "@thegardenmonkey",
+    "@cdnninja",
+    "@iprak"
+  ],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "iot_class": "cloud_polling",

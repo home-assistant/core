@@ -362,12 +362,11 @@ class EnergyCostSensor(SensorEntity):
             return
 
         if (
-            (
-                state_class != SensorStateClass.TOTAL_INCREASING
-                and energy_state.attributes.get(ATTR_LAST_RESET)
-                != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
-            )
-            or state_class == SensorStateClass.TOTAL_INCREASING
+            state_class != SensorStateClass.TOTAL_INCREASING
+            and energy_state.attributes.get(ATTR_LAST_RESET)
+            != self._last_energy_sensor_state.attributes.get(ATTR_LAST_RESET)
+        ) or (
+            state_class == SensorStateClass.TOTAL_INCREASING
             and reset_detected(
                 self.hass,
                 cast(str, self._config[self._adapter.stat_energy_key]),

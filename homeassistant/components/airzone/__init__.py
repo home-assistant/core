@@ -5,7 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aioairzone.const import AZD_MAC, AZD_WEBSERVER, DEFAULT_SYSTEM_ID
+from aioairzone.const import (
+    AZD_FIRMWARE,
+    AZD_FULL_NAME,
+    AZD_MAC,
+    AZD_MODEL,
+    AZD_WEBSERVER,
+    DEFAULT_SYSTEM_ID,
+)
 from aioairzone.localapi import AirzoneLocalApi, ConnectionOptions
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,6 +24,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 
+from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -78,7 +86,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
-        entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID),
+        entry.data[CONF_ID],
     )
 
     airzone = AirzoneLocalApi(aiohttp_client.async_get_clientsession(hass), options)
@@ -88,6 +96,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 
     entry.runtime_data = coordinator
 
+    device_registry = dr.async_get(hass)
+
+    ws_data: dict[str, Any] | None = coordinator.data.get(AZD_WEBSERVER)
+    if ws_data is not None:
+        mac = ws_data.get(AZD_MAC, "")
+
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+            identifiers={(DOMAIN, f"{entry.entry_id}_ws")},
+            manufacturer=MANUFACTURER,
+            model=ws_data.get(AZD_MODEL),
+            name=ws_data.get(AZD_FULL_NAME),
+            sw_version=ws_data.get(AZD_FIRMWARE),
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -96,3 +120,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AirzoneConfigEntry) -> bool:
+    """Migrate an old entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        # Add missing CONF_ID
+        system_id = entry.data.get(CONF_ID, DEFAULT_SYSTEM_ID)
+        new_data = entry.data.copy()
+        new_data[CONF_ID] = system_id
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            minor_version=2,
+        )
+
+    _LOGGER.info(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True

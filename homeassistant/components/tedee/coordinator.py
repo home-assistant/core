@@ -60,7 +60,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
 
         self._next_get_locks = time.time()
         self._locks_last_update: set[int] = set()
-        self.new_lock_callbacks: list[Callable[[int], None]] = []
+        self.new_lock_callbacks: list[Callable[[list[TedeeLock]], None]] = []
         self.tedee_webhook_id: int | None = None
 
     async def _async_setup(self) -> None:
@@ -158,8 +158,7 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         # add new locks
         if new_locks := current_locks - self._locks_last_update:
             _LOGGER.debug("New locks found: %s", ", ".join(map(str, new_locks)))
-            for lock_id in new_locks:
-                for callback in self.new_lock_callbacks:
-                    callback(lock_id)
+            for callback in self.new_lock_callbacks:
+                callback([self.data[lock_id] for lock_id in new_locks])
 
         self._locks_last_update = current_locks

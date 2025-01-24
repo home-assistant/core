@@ -1,6 +1,8 @@
 """Test Enphase Envoy runtime."""
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+import logging
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
@@ -15,7 +17,10 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DISABLE_KEEP_ALIVE,
     Platform,
 )
-from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
+from homeassistant.components.enphase_envoy.coordinator import (
+    FIRMWARE_REFRESH_INTERVAL,
+    SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -377,3 +382,82 @@ async def test_option_change_reload(
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
         OPTION_DISABLE_KEEP_ALIVE: False,
     }
+
+
+def mock_envoy_setup(mock_envoy: AsyncMock):
+    """Mock envoy.setup."""
+    mock_envoy.firmware = "9.9.9999"
+
+
+@patch(
+    "homeassistant.components.enphase_envoy.coordinator.SCAN_INTERVAL",
+    timedelta(days=1),
+)
+@respx.mock
+async def test_coordinator_firmware_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator scheduled firmware check."""
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Move time to next firmware check moment
+    # SCAN_INTERVAL is patched to 1 day to disable it's firmware detection
+    mock_envoy.setup.reset_mock()
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_envoy.setup.assert_called_once_with()
+    mock_envoy.setup.reset_mock()
+
+    envoy = config_entry.runtime_data.envoy
+    assert envoy.firmware == "7.6.175"
+
+    caplog.set_level(logging.WARNING)
+
+    with patch(
+        "homeassistant.components.enphase_envoy.Envoy.setup",
+        MagicMock(return_value=mock_envoy_setup(mock_envoy)),
+    ):
+        freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert (
+            "Envoy firmware changed from: 7.6.175 to: 9.9.9999, reloading config entry Envoy 1234"
+            in caplog.text
+        )
+        envoy = config_entry.runtime_data.envoy
+        assert envoy.firmware == "9.9.9999"
+
+
+@respx.mock
+async def test_coordinator_firmware_refresh_with_envoy_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator scheduled firmware check."""
+    await setup_integration(hass, config_entry)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    mock_envoy.setup.side_effect = EnvoyError
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error reading firmware:" in caplog.text

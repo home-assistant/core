@@ -96,6 +96,7 @@
           "installation_limit": "Installation limit",
           "local_modbus_api": "Modbus API",
           "local_rest_api": "REST API",
+          "local_scheduled_charging": "Scheduled charging",
           "ocpp_smart_charging": "OCPP smart charging",
           "overcurrent_protection": "Overcurrent protection",
           "phase_imbalance": "Phase imbalance",

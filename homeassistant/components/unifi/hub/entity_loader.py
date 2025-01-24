@@ -47,9 +47,13 @@ class UnifiEntityLoader:
             hub.api.sites.update,
             hub.api.system_information.update,
             hub.api.traffic_rules.update,
+            hub.api.traffic_routes.update,
             hub.api.wlans.update,
         )
-        self.polling_api_updaters = (hub.api.traffic_rules.update,)
+        self.polling_api_updaters = (
+            hub.api.traffic_rules.update,
+            hub.api.traffic_routes.update,
+        )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
         self._dataUpdateCoordinator = DataUpdateCoordinator(
