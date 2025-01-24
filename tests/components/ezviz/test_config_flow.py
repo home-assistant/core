@@ -136,21 +136,6 @@ async def test_async_step_reauth(
     assert result["reason"] == "reauth_successful"
 
 
-async def test_step_reauth_abort_if_cloud_account_missing(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_test_rtsp_auth: AsyncMock,
-    mock_camera_config_entry: MockConfigEntry,
-) -> None:
-    """Test reauth and confirm step, abort if cloud account was removed."""
-
-    mock_camera_config_entry.add_to_hass(hass)
-
-    result = await mock_camera_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "ezviz_cloud_account_missing"
-
-
 async def test_step_discovery_abort_if_cloud_account_missing(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
@@ -180,6 +165,21 @@ async def test_step_discovery_abort_if_cloud_account_missing(
         },
     )
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "ezviz_cloud_account_missing"
+
+
+async def test_step_reauth_abort_if_cloud_account_missing(
+    hass: HomeAssistant,
+    mock_ezviz_client: AsyncMock,
+    mock_test_rtsp_auth: AsyncMock,
+    mock_camera_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauth and confirm step, abort if cloud account was removed."""
+
+    mock_camera_config_entry.add_to_hass(hass)
+
+    result = await mock_camera_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ezviz_cloud_account_missing"
 
