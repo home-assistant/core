@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerAttributes, MowerModes, Zone
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from freezegun.api import FrozenDateTimeFactory
@@ -92,7 +92,7 @@ async def test_switch_commands(
     mocked_method = getattr(mock_automower_client.commands, aioautomower_command)
     mocked_method.assert_called_once_with(TEST_MOWER_ID)
 
-    mocked_method.side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -144,12 +144,12 @@ async def test_stay_out_zone_switch_commands(
     freezer.tick(timedelta(seconds=EXECUTION_TIME_DELAY))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_ZONE_ID, boolean)
+    mocked_method.assert_called_once_with(TEST_MOWER_ID, TEST_ZONE_ID, switch=boolean)
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == excepted_state
 
-    mocked_method.side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
@@ -207,7 +207,7 @@ async def test_work_area_switch_commands(
     assert state is not None
     assert state.state == excepted_state
 
-    mocked_method.side_effect = ApiException("Test error")
+    mocked_method.side_effect = ApiError("Test error")
     with pytest.raises(
         HomeAssistantError,
         match="Failed to send command: Test error",
