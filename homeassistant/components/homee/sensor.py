@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pyHomee.const import AttributeType, NodeState
+from pyHomee.const import AttributeType, NodeProtocol, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.sensor import (
@@ -99,14 +99,50 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    AttributeType.EXHAUST_MOTOR_REVS: HomeeSensorEntityDescription(
+        key="exhaust_motor_revs",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AttributeType.INDOOR_RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
+        key="indoor_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.INDOOR_TEMPERATURE: HomeeSensorEntityDescription(
+        key="indoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.INTAKE_MOTOR_REVS: HomeeSensorEntityDescription(
+        key="intake_motor_revs",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     AttributeType.LEVEL: HomeeSensorEntityDescription(
         key="level",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.LINK_QUALITY: HomeeSensorEntityDescription(
         key="link_quality",
         entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.OPERATING_HOURS: HomeeSensorEntityDescription(
+        key="operating_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AttributeType.OUTDOOR_RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
+        key="outdoor_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    AttributeType.OUTDOOR_TEMPERATURE: HomeeSensorEntityDescription(
+        key="outdoor_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.POSITION: HomeeSensorEntityDescription(
@@ -216,7 +252,15 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        translation_key="node_sensor_state",
         value_fn=lambda node: get_name_for_enum(NodeState, node.state),
+    ),
+    HomeeNodeSensorEntityDescription(
+        key="protocol",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        translation_key="node_sensor_protocol",
+        value_fn=lambda node: get_name_for_enum(NodeProtocol, node.protocol),
     ),
 )
 
@@ -267,6 +311,11 @@ class HomeeSensor(HomeeEntity, SensorEntity):
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
     @property
+    def old_unique_id(self) -> str:
+        """Return the old not so unique id of the sensor entity."""
+        return f"{self._attribute.node_id}-sensor-{self._attribute.id}"
+
+    @property
     def native_value(self) -> float | str | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._attribute)
@@ -293,7 +342,6 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
         """Initialize a homee node sensor entity."""
         super().__init__(node, entry)
         self.entity_description = description
-        self._attr_translation_key = f"node_{description.key}"
         self._node = node
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
