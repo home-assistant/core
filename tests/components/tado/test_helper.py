@@ -11,32 +11,34 @@ from homeassistant.components.tado.const import (
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TIMER,
+    DOMAIN,
 )
 from homeassistant.components.tado.helper import decide_duration, decide_overlay_mode
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def entry(request: pytest.FixtureRequest) -> ConfigEntry:
+def entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Fixture for ConfigEntry with optional fallback."""
     fallback = (
         request.param if hasattr(request, "param") else CONST_OVERLAY_TADO_DEFAULT
     )
-    return ConfigEntry(
+    return MockConfigEntry(
         version=1,
         minor_version=1,
-        domain="tado",
+        domain=DOMAIN,
         title="Tado",
         data={
-            "username": "test-username",
-            "password": "test-password",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
         },
         options={
             "fallback": fallback,
         },
-        unique_id="unique_id",
-        entry_id="entry_id",
     )
 
 
