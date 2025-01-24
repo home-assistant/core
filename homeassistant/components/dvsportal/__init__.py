@@ -30,7 +30,7 @@ class DVSPortalRuntimeData(TypedDict):
     ha_registered_license_plates: set[str]
 
 
-type DVSPortalConfigEntry = config_entries.ConfigEntry[DVSPortalRuntimeData]
+type DVSPortalConfigEntry = ConfigEntry[DVSPortalRuntimeData]
 
 
 async def async_setup_entry(
