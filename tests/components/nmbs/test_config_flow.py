@@ -68,7 +68,7 @@ async def test_full_flow(
     }
     assert (
         result["result"].unique_id
-        == f"{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
+        == f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
     )
 
 
@@ -247,14 +247,14 @@ async def test_sensor_id_migration_standardname(
 ) -> None:
     """Test migrating unique id."""
     old_unique_id = (
-        f"live_{DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA_IMPORT["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA_IMPORT["STAT_BRUSSELS_SOUTH"]}"
+        f"live_{DUMMY_DATA_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_IMPORT['STAT_BRUSSELS_SOUTH']}"
     )
     new_unique_id = (
-        f"nmbs_live_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
+        f"nmbs_live_{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
     )
     old_entry = entity_registry.async_get_or_create(
         SENSOR_DOMAIN, DOMAIN, old_unique_id
@@ -287,14 +287,14 @@ async def test_sensor_id_migration_localized_name(
 ) -> None:
     """Test migrating unique id."""
     old_unique_id = (
-        f"live_{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA_ALTERNATIVE_IMPORT["STAT_BRUSSELS_SOUTH"]}"
+        f"live_{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA_ALTERNATIVE_IMPORT['STAT_BRUSSELS_SOUTH']}"
     )
     new_unique_id = (
-        f"nmbs_live_{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA["STAT_BRUSSELS_NORTH"]}_"
-        f"{DUMMY_DATA["STAT_BRUSSELS_SOUTH"]}"
+        f"nmbs_live_{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_NORTH']}_"
+        f"{DUMMY_DATA['STAT_BRUSSELS_SOUTH']}"
     )
     old_entry = entity_registry.async_get_or_create(
         SENSOR_DOMAIN, DOMAIN, old_unique_id

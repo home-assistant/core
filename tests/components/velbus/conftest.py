@@ -96,7 +96,7 @@ def mock_module_subdevices() -> AsyncMock:
     """Mock a velbus module."""
     module = AsyncMock(spec=Module)
     module.get_type_name.return_value = "VMB2BLE"
-    module.get_addresses.return_value = [99]
+    module.get_addresses.return_value = [88]
     module.get_name.return_value = "Kitchen"
     module.get_sw_version.return_value = "2.0.0"
     module.is_loaded.return_value = True
@@ -114,7 +114,7 @@ def mock_button() -> AsyncMock:
     channel.get_channel_number.return_value = 1
     channel.get_module_type_name.return_value = "VMB4RYLD"
     channel.get_module_type.return_value = 99
-    channel.get_full_name.return_value = "Channel full name"
+    channel.get_full_name.return_value = "Bedroom kid 1"
     channel.get_module_sw_version.return_value = "1.0.0"
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = False
@@ -132,7 +132,7 @@ def mock_temperature() -> AsyncMock:
     channel.get_module_address.return_value = 88
     channel.get_channel_number.return_value = 3
     channel.get_module_type_name.return_value = "VMB4GPO"
-    channel.get_full_name.return_value = "Channel full name"
+    channel.get_full_name.return_value = "Living room"
     channel.get_module_sw_version.return_value = "3.0.0"
     channel.get_module_serial.return_value = "asdfghjk"
     channel.get_module_type.return_value = 1
@@ -160,7 +160,7 @@ def mock_relay() -> AsyncMock:
     channel.get_module_address.return_value = 88
     channel.get_channel_number.return_value = 55
     channel.get_module_type_name.return_value = "VMB4RYNO"
-    channel.get_full_name.return_value = "Full relay name"
+    channel.get_full_name.return_value = "Living room"
     channel.get_module_sw_version.return_value = "1.0.1"
     channel.get_module_serial.return_value = "qwerty123"
     channel.get_module_type.return_value = 2
@@ -179,7 +179,7 @@ def mock_select() -> AsyncMock:
     channel.get_channel_number.return_value = 33
     channel.get_module_type_name.return_value = "VMB4RYNO"
     channel.get_module_type.return_value = 3
-    channel.get_full_name.return_value = "Full module name"
+    channel.get_full_name.return_value = "Kitchen"
     channel.get_module_sw_version.return_value = "1.1.1"
     channel.get_module_serial.return_value = "qwerty1234567"
     channel.is_sub_device.return_value = False
@@ -198,7 +198,7 @@ def mock_buttoncounter() -> AsyncMock:
     channel.get_channel_number.return_value = 2
     channel.get_module_type_name.return_value = "VMB7IN"
     channel.get_module_type.return_value = 4
-    channel.get_full_name.return_value = "Channel full name"
+    channel.get_full_name.return_value = "Input"
     channel.get_module_sw_version.return_value = "1.0.0"
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = True
@@ -221,7 +221,7 @@ def mock_sensornumber() -> AsyncMock:
     channel.get_channel_number.return_value = 3
     channel.get_module_type_name.return_value = "VMB7IN"
     channel.get_module_type.return_value = 8
-    channel.get_full_name.return_value = "Channel full name"
+    channel.get_full_name.return_value = "Input"
     channel.get_module_sw_version.return_value = "1.0.0"
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = False
@@ -242,7 +242,7 @@ def mock_lightsensor() -> AsyncMock:
     channel.get_channel_number.return_value = 4
     channel.get_module_type_name.return_value = "VMB7IN"
     channel.get_module_type.return_value = 8
-    channel.get_full_name.return_value = "Channel full name"
+    channel.get_full_name.return_value = "Input"
     channel.get_module_sw_version.return_value = "1.0.0"
     channel.get_module_serial.return_value = "a1b2c3d4e5f6"
     channel.is_sub_device.return_value = False
@@ -282,7 +282,7 @@ def mock_cover() -> AsyncMock:
     channel.get_channel_number.return_value = 9
     channel.get_module_type_name.return_value = "VMB2BLE"
     channel.get_module_type.return_value = 10
-    channel.get_full_name.return_value = "Full cover name"
+    channel.get_full_name.return_value = "Basement"
     channel.get_module_sw_version.return_value = "1.0.1"
     channel.get_module_serial.return_value = "1234"
     channel.is_sub_device.return_value = True
@@ -305,7 +305,7 @@ def mock_cover_no_position() -> AsyncMock:
     channel.get_channel_number.return_value = 11
     channel.get_module_type_name.return_value = "VMB2BLE"
     channel.get_module_type.return_value = 10
-    channel.get_full_name.return_value = "Full cover name no position"
+    channel.get_full_name.return_value = "Basement"
     channel.get_module_sw_version.return_value = "1.0.1"
     channel.get_module_serial.return_value = "12345"
     channel.is_sub_device.return_value = True

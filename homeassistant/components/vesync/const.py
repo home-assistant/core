@@ -22,6 +22,7 @@ exceeds the quota of 7700.
 VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"
 VS_MANAGER = "manager"
+VS_NUMBERS = "numbers"
 
 VS_HUMIDIFIER_MODE_AUTO = "auto"
 VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
@@ -63,6 +64,7 @@ SKU_TO_BASE_DEVICE = {
     "Core300S": "Core300S",
     "LAP-C301S-WJP": "Core300S",  # Alt ID Model Core300S
     "LAP-C301S-WAAA": "Core300S",  # Alt ID Model Core300S
+    "LAP-C302S-WUSB": "Core300S",  # Alt ID Model Core300S
     "Core400S": "Core400S",
     "LAP-C401S-WJP": "Core400S",  # Alt ID Model Core400S
     "LAP-C401S-WUSR": "Core400S",  # Alt ID Model Core400S

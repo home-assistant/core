@@ -88,6 +88,6 @@ rules:
       While unlikely to happen. Check if it is easily integrated.
 
   # Platinum
-  async-dependency: todo
-  inject-websession: todo
+  async-dependency: done
+  inject-websession: done
   strict-typing: todo

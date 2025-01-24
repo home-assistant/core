@@ -10,6 +10,10 @@ from homeassistant.util.json import JsonObjectType
 
 from tests.common import load_fixture, load_json_object_fixture
 
+ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
+ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
+ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
+
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
 ALL_DEVICE_NAMES: list[str] = [
     dev["deviceName"] for dev in ALL_DEVICES["result"]["list"]

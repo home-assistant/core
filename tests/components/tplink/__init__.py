@@ -79,15 +79,15 @@ async def snapshot_platform(
     device_entries = dr.async_entries_for_config_entry(device_registry, config_entry_id)
     assert device_entries
     for device_entry in device_entries:
-        assert device_entry == snapshot(
-            name=f"{device_entry.name}-entry"
-        ), f"device entry snapshot failed for {device_entry.name}"
+        assert device_entry == snapshot(name=f"{device_entry.name}-entry"), (
+            f"device entry snapshot failed for {device_entry.name}"
+        )
 
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
     assert entity_entries
-    assert (
-        len({entity_entry.domain for entity_entry in entity_entries}) == 1
-    ), "Please limit the loaded platforms to 1 platform."
+    assert len({entity_entry.domain for entity_entry in entity_entries}) == 1, (
+        "Please limit the loaded platforms to 1 platform."
+    )
 
     translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
     unique_device_classes = []
@@ -99,18 +99,18 @@ async def snapshot_platform(
                 if entity_entry.original_device_class not in unique_device_classes:
                     single_device_class_translation = True
                     unique_device_classes.append(entity_entry.original_device_class)
-            assert (
-                (key in translations) or single_device_class_translation
-            ), f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
-        assert entity_entry == snapshot(
-            name=f"{entity_entry.entity_id}-entry"
-        ), f"entity entry snapshot failed for {entity_entry.entity_id}"
+            assert (key in translations) or single_device_class_translation, (
+                f"No translation or non unique device_class for entity {entity_entry.unique_id}, expected {key}"
+            )
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry"), (
+            f"entity entry snapshot failed for {entity_entry.entity_id}"
+        )
         if entity_entry.disabled_by is None:
             state = hass.states.get(entity_entry.entity_id)
             assert state, f"State not found for {entity_entry.entity_id}"
-            assert state == snapshot(
-                name=f"{entity_entry.entity_id}-state"
-            ), f"state snapshot failed for {entity_entry.entity_id}"
+            assert state == snapshot(name=f"{entity_entry.entity_id}-state"), (
+                f"state snapshot failed for {entity_entry.entity_id}"
+            )
 
 
 async def setup_automation(hass: HomeAssistant, alias: str, entity_id: str) -> None:
@@ -197,10 +197,12 @@ def _mocked_device(
         mod.get_feature.side_effect = device_features.get
         mod.has_feature.side_effect = lambda id: id in device_features
 
+    device.parent = None
     device.children = []
     if children:
         for child in children:
             child.mac = mac
+            child.parent = device
         device.children = children
     device.device_type = device_type if device_type else DeviceType.Unknown
     if (
@@ -242,12 +244,12 @@ def _mocked_feature(
     feature.name = name or id.upper()
     feature.set_value = AsyncMock()
     if not (fixture := FEATURES_FIXTURE.get(id)):
-        assert (
-            require_fixture is False
-        ), f"No fixture defined for feature {id} and require_fixture is True"
-        assert (
-            value is not UNDEFINED
-        ), f"Value must be provided if feature {id} not defined in features.json"
+        assert require_fixture is False, (
+            f"No fixture defined for feature {id} and require_fixture is True"
+        )
+        assert value is not UNDEFINED, (
+            f"Value must be provided if feature {id} not defined in features.json"
+        )
         fixture = {"value": value, "category": "Primary", "type": "Sensor"}
     elif value is not UNDEFINED:
         fixture["value"] = value
@@ -318,12 +320,12 @@ def _mocked_light_effect_module(device) -> LightEffect:
     effect.effect_list = ["Off", "Effect1", "Effect2"]
 
     async def _set_effect(effect_name, *_, **__):
-        assert (
-            effect_name in effect.effect_list
-        ), f"set_effect '{effect_name}' not in {effect.effect_list}"
-        assert device.modules[
-            Module.Light
-        ], "Need a light module to test set_effect method"
+        assert effect_name in effect.effect_list, (
+            f"set_effect '{effect_name}' not in {effect.effect_list}"
+        )
+        assert device.modules[Module.Light], (
+            "Need a light module to test set_effect method"
+        )
         device.modules[Module.Light].state.light_on = True
         effect.effect = effect_name
 

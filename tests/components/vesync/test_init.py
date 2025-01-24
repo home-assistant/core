@@ -51,6 +51,7 @@ async def test_async_setup_entry__no_devices(
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
+            Platform.NUMBER,
             Platform.SENSOR,
             Platform.SWITCH,
         ]
@@ -80,6 +81,7 @@ async def test_async_setup_entry__loads_fans(
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
+            Platform.NUMBER,
             Platform.SENSOR,
             Platform.SWITCH,
         ]
