@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, fields, is_dataclass
-from typing import TYPE_CHECKING, Any, Generic, Self, TypeVar, cast
+from dataclasses import asdict, dataclass, is_dataclass
+from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
 
 from xknx.devices import Device as XknxDevice
 
@@ -184,56 +184,6 @@ class BasePlatformConfiguration(ABC):
 
 
 InstanceType = TypeVar("InstanceType", bound=object)
-
-
-class StorageSerializationMixin(Generic[InstanceType], ABC):
-    """Adds storage-based serialization/deserialization to a dataclass.
-
-    This mixin provides two methods for converting between a dataclass
-    instance and a dictionary suitable for persistence in storage.
-    The target class must be a dataclass (i.e., support `fields(cls)`).
-    """
-
-    @classmethod
-    def from_storage_dict(
-        cls: type[InstanceType], data: dict[str, Any]
-    ) -> InstanceType:
-        """Instantiate the class from a storage-compatible dictionary.
-
-        This method filters out any keys not matching the dataclass fields
-        and then uses the remaining data to initialize an instance.
-
-        Args:
-            data (dict[str, Any]): A dictionary representing the object
-                in storage format.
-
-        Returns:
-            InstanceType: A newly instantiated object of this class.
-
-        """
-        if is_dataclass(cls):
-            field_names = {field.name for field in fields(cls)}
-            filtered_data: dict[str, Any] = {
-                key: value for key, value in data.items() if key in field_names
-            }
-            return cast(InstanceType, cls(**filtered_data))
-        raise TypeError(f"{cls} is not a dataclass.")
-
-    def to_storage_dict(self: InstanceType) -> dict[str, Any]:
-        """Convert the current instance into a dictionary suitable for storage.
-
-        Uses `asdict` to serialize all dataclass fields into a standard dictionary.
-
-        Returns:
-            dict[str, Any]: A dictionary representation of this instance
-            suitable for storing in databases, files, etc.
-
-        """
-        if is_dataclass(self) and not isinstance(self, type):
-            return asdict(self)
-        raise TypeError(
-            "to_storage_dict can only be used on dataclass instances, not types."
-        )
 
 
 class StorageSerialization(ABC):
