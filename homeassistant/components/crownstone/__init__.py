@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CrownstoneConfigEntry) -
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # HA specific listeners
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    entry.async_on_unload(entry.add_update_listener(async_update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.on_shutdown)
     )
@@ -36,7 +36,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: CrownstoneConfigEntry) 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def _async_update_listener(
+async def async_update_listener(
     hass: HomeAssistant, entry: CrownstoneConfigEntry
 ) -> None:
     """Handle options update."""
