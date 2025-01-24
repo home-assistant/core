@@ -1,4 +1,4 @@
-"""Config flows for the ENOcean integration."""
+"""Config flows for the EnOcean integration."""
 
 from typing import Any
 
