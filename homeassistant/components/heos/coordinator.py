@@ -288,7 +288,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self, player_id: int, member_entity_ids: list[str]
     ) -> None:
         """Join a player with a group of players."""
-        member_ids: list[int] = []
+        player_ids: list[int] = [player_id]
         # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
         for entity_id in member_entity_ids:
@@ -305,11 +305,10 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                     translation_key="not_heos_media_player",
                     translation_placeholders={"entity_id": entity_id},
                 )
-            member_ids.append(int(entity.unique_id))
-        # Remove leader from members, if present
-        if player_id in member_ids:
-            member_ids.remove(player_id)
-        await self.heos.set_group(player_id, member_ids)
+            player_id = int(entity.unique_id)
+            if player_id not in player_ids:
+                player_ids.append(player_id)
+        await self.heos.set_group(player_ids)
 
     async def async_unjoin_player(self, player_id: int) -> None:
         """Remove the player from any group."""

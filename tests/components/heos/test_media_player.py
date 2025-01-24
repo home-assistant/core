@@ -1157,9 +1157,9 @@ async def test_play_media_invalid_type(
 @pytest.mark.parametrize(
     ("members", "expected"),
     [
-        (["media_player.test_player_2"], (1, [2])),
-        (["media_player.test_player_2", "media_player.test_player"], (1, [2])),
-        (["media_player.test_player"], (1, [])),
+        (["media_player.test_player_2"], [1, 2]),
+        (["media_player.test_player_2", "media_player.test_player"], [1, 2]),
+        (["media_player.test_player"], [1]),
     ],
 )
 async def test_media_player_join_group(
@@ -1181,7 +1181,7 @@ async def test_media_player_join_group(
         },
         blocking=True,
     )
-    controller.set_group.assert_called_once_with(*expected)
+    controller.set_group.assert_called_once_with(expected)
 
 
 async def test_media_player_join_group_error(
