@@ -260,7 +260,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                 # We have a new valid connection, old cookie is no longer valid
                 user_input[CONFIG_ENTRY_COOKIE] = None
                 return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates=user_input
+                    reauth_entry, data_updates={**user_input, CONFIG_ENTRY_COOKIE: None}
                 )
 
         self.context["title_placeholders"] = {

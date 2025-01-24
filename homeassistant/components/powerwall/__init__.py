@@ -130,7 +130,8 @@ class PowerwallDataManager:
                 return data
         raise RuntimeError("unreachable")
 
-    async def save_auth_cookie(self) -> None:
+    @callback
+    def async_save_auth_cookie(self) -> None:
         """Save the auth cookie."""
         for cookie in self.cookie_jar:
             if cookie.key == AUTH_COOKIE_KEY:
@@ -139,6 +140,7 @@ class PowerwallDataManager:
                     data={**self.entry.data, CONFIG_ENTRY_COOKIE: cookie.value},
                 )
                 _LOGGER.debug("Saved auth cookie")
+                break
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) -> bool:
