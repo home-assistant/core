@@ -11,6 +11,9 @@
     },
     "add_meter_reading": {
       "service": "mdi:counter"
+    },
+    "set_zone_heating_circuit": {
+      "service": "mdi:water-boiler"
     }
   }
 }
