@@ -62,7 +62,7 @@ TEST_STATE = {
                         "title": "Test Title",
                         "artUrl": "http://localhost/test_art.jpg",
                         "albumArtist": ["Test Album Artist 1", "Test Album Artist 2"],
-                        "trackNumber": 1,
+                        "trackNumber": 10,
                         "duration": 60.0,
                     },
                 },
