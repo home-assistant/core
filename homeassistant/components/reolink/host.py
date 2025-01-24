@@ -32,7 +32,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_USE_HTTPS, DOMAIN, CONF_PRIVACY
+from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
@@ -174,8 +174,14 @@ class ReolinkHost:
 
         self.privacy_mode = self._api.baichuan.privacy_mode()
 
-        if store is not None and self._api.supported(None, "privacy_mode") and not self.privacy_mode:
-            # save the raw host data for next reload in case privacy mode is enabled
+        if (
+            store is not None
+            and self._api.supported(None, "privacy_mode")
+            and not self.privacy_mode
+        ):
+            _LOGGER.debug(
+                "Saving raw host data for next reload in case privacy mode is enabled"
+            )
             data = self._api.get_raw_host_data()
             await store.async_store(data)
 

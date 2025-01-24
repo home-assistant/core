@@ -1,16 +1,18 @@
 """Local storage for the Reolink integration."""
 
 import asyncio
-from pathlib import Path
-from homeassistant.core import HomeAssistant
 import logging
+from pathlib import Path
+
+from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class ReolinkStore:
     """Local storage for Reolink."""
 
-    def __init__(self, hass: HomeAssistant, config_id: str)) -> None:
+    def __init__(self, hass: HomeAssistant, config_id: str) -> None:
         """Initialize ReolinkStore."""
         self._hass = hass
         self._path = Path(hass.config.path(f".storage/reolink.{config_id}.json"))
@@ -28,7 +30,7 @@ class ReolinkStore:
             return "{}"
 
         try:
-            return self._path.read_text()
+            return self._path.read_text(encoding="utf-8")
         except OSError as err:
             _LOGGER.debug("Failed to load file %s: %s", self._path, err)
             return "{}"
@@ -40,4 +42,4 @@ class ReolinkStore:
 
     def _store(self, data: str) -> None:
         """Persist the data to storage."""
-        self._path.write_text(data)
+        self._path.write_text(data, encoding="utf-8")

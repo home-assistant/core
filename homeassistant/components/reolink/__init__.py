@@ -28,13 +28,12 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USE_HTTPS, DOMAIN, CONF_PRIVACY
+from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch
 from .views import PlaybackProxyView
-from .store import ReolinkStore
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +67,9 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(hass, config_entry.data, config_entry.options)
+    host = ReolinkHost(
+        hass, config_entry.data, config_entry.options, config_entry.entry_id
+    )
 
     try:
         await host.async_init()
@@ -97,7 +98,8 @@ async def async_setup_entry(
     if (
         host.api.port != config_entry.data[CONF_PORT]
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
-        or host.api.supported(None, "privacy_mode") != config_entry.data.get(CONF_PRIVACY)
+        or host.api.supported(None, "privacy_mode")
+        != config_entry.data.get(CONF_PRIVACY)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
