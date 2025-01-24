@@ -95,7 +95,7 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
-        if(re.search("^[0-9]", version)):
+        if version[:1].isdigit():
             version = f"v{version}"
         return f"https://github.com/Aircoookie/WLED/releases/tag/{version}"
 
