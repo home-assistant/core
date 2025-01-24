@@ -326,7 +326,7 @@ async def test_update_addon(
     hass_ws_client: WebSocketGenerator,
     update_addon: AsyncMock,
 ) -> None:
-    """Test updating addon update entity."""
+    """Test updating addon."""
     client = await hass_ws_client(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -421,7 +421,7 @@ async def test_update_addon_with_backup(
     default_mount: str | None,
     expected_kwargs: dict[str, Any],
 ) -> None:
-    """Test updating addon update entity."""
+    """Test updating addon with backup."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -459,7 +459,7 @@ async def test_update_core(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test updating core update entity."""
+    """Test updating core."""
     client = await hass_ws_client(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -555,7 +555,7 @@ async def test_update_core_with_backup(
     default_mount: str | None,
     expected_kwargs: dict[str, Any],
 ) -> None:
-    """Test updating core update entity."""
+    """Test updating core with backup."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -594,7 +594,7 @@ async def test_update_addon_with_error(
     hass_ws_client: WebSocketGenerator,
     update_addon: AsyncMock,
 ) -> None:
-    """Test updating addon update entity with error."""
+    """Test updating addon with error."""
     client = await hass_ws_client(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -624,7 +624,7 @@ async def test_update_addon_with_backup_and_error(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test updating addon update entity with error."""
+    """Test updating addon with backup and error."""
     client = await hass_ws_client(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -663,7 +663,7 @@ async def test_update_core_with_error(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test updating core update entity with error."""
+    """Test updating core with error."""
     client = await hass_ws_client(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -691,7 +691,7 @@ async def test_update_core_with_backup_and_error(
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test updating core update entity with error."""
+    """Test updating core with backup and error."""
     client = await hass_ws_client(hass)
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
