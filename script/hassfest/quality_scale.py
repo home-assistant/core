@@ -351,7 +351,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "energenie_power_sockets",
     "energy",
     "energyzero",
-    "enigma2",
     "enocean",
     "entur_public_transport",
     "environment_canada",

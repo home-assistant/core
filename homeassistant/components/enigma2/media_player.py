@@ -21,6 +21,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import Enigma2ConfigEntry
 from .coordinator import Enigma2UpdateCoordinator
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
 ATTR_MEDIA_DESCRIPTION = "media_description"
 ATTR_MEDIA_END_TIME = "media_end_time"
