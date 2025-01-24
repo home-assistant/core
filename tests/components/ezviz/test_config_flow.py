@@ -184,6 +184,71 @@ async def test_step_discovery_abort_if_cloud_account_missing(
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
+async def test_async_step_integration_discovery(
+    hass: HomeAssistant,
+    mock_ezviz_client: AsyncMock,
+    mock_test_rtsp_auth: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test discovery and confirm step."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            ATTR_SERIAL: "C666666",
+            CONF_USERNAME: None,
+            CONF_PASSWORD: None,
+            CONF_IP_ADDRESS: "127.0.0.1",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-user",
+            CONF_PASSWORD: "test-pass",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_PASSWORD: "test-pass",
+        CONF_TYPE: ATTR_TYPE_CAMERA,
+        CONF_USERNAME: "test-user",
+    }
+    assert result["result"].unique_id == "C666666"
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test updating options."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
+    assert mock_config_entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] is None
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_FFMPEG_ARGUMENTS: "/H.264", CONF_TIMEOUT: 25},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
+    assert result["data"][CONF_TIMEOUT] == 25
+
+
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
@@ -398,126 +463,6 @@ async def test_already_configured(
     assert result["reason"] == "already_configured_account"
 
 
-@pytest.mark.parametrize(
-    ("exception", "error"),
-    [
-        (InvalidURL, "invalid_host"),
-        (InvalidHost, "invalid_host"),
-        (EzvizAuthVerificationCode, "mfa_required"),
-        (PyEzvizError, "invalid_auth"),
-    ],
-)
-async def test_reauth_errors(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    exception: Exception,
-    error: str,
-) -> None:
-    """Test the reauth step."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await start_reauth_flow(hass, mock_config_entry)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
-
-    mock_ezviz_client.login.side_effect = exception
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": error}
-
-    mock_ezviz_client.login.side_effect = None
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-
-async def test_reauth_unknown_exception(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the reauth step."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await start_reauth_flow(hass, mock_config_entry)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
-
-    mock_ezviz_client.login.side_effect = Exception
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"
-
-
-async def test_async_step_integration_discovery(
-    hass: HomeAssistant,
-    mock_ezviz_client: AsyncMock,
-    mock_test_rtsp_auth: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test discovery and confirm step."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_INTEGRATION_DISCOVERY},
-        data={
-            ATTR_SERIAL: "C666666",
-            CONF_USERNAME: None,
-            CONF_PASSWORD: None,
-            CONF_IP_ADDRESS: "127.0.0.1",
-        },
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-user",
-            CONF_PASSWORD: "test-pass",
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_PASSWORD: "test-pass",
-        CONF_TYPE: ATTR_TYPE_CAMERA,
-        CONF_USERNAME: "test-user",
-    }
-    assert result["result"].unique_id == "C666666"
-
-
 async def test_async_step_integration_discovery_duplicate(
     hass: HomeAssistant,
     mock_ezviz_client: AsyncMock,
@@ -653,25 +598,80 @@ async def test_camera_unknown_error(
     assert result["reason"] == "unknown"
 
 
-async def test_options_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (InvalidURL, "invalid_host"),
+        (InvalidHost, "invalid_host"),
+        (EzvizAuthVerificationCode, "mfa_required"),
+        (PyEzvizError, "invalid_auth"),
+    ],
+)
+async def test_reauth_errors(
+    hass: HomeAssistant,
+    mock_ezviz_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    error: str,
 ) -> None:
-    """Test updating options."""
-    await setup_integration(hass, mock_config_entry)
+    """Test the reauth step."""
+    mock_config_entry.add_to_hass(hass)
 
-    assert mock_config_entry.options[CONF_FFMPEG_ARGUMENTS] == DEFAULT_FFMPEG_ARGUMENTS
-    assert mock_config_entry.options[CONF_TIMEOUT] == DEFAULT_TIMEOUT
-
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await start_reauth_flow(hass, mock_config_entry)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-    assert result["errors"] is None
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
 
-    result = await hass.config_entries.options.async_configure(
+    mock_ezviz_client.login.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_FFMPEG_ARGUMENTS: "/H.264", CONF_TIMEOUT: 25},
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": error}
+
+    mock_ezviz_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_FFMPEG_ARGUMENTS] == "/H.264"
-    assert result["data"][CONF_TIMEOUT] == 25
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_unknown_exception(
+    hass: HomeAssistant,
+    mock_ezviz_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauth step."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await start_reauth_flow(hass, mock_config_entry)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    mock_ezviz_client.login.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
