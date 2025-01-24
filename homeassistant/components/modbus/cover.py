@@ -39,7 +39,7 @@ async def async_setup_platform(
     if discovery_info is None or not (covers := discovery_info[CONF_COVERS]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusCover(hass, hub, entry) for entry in covers)
+    async_add_entities(ModbusCover(hass, hub, config) for config in covers)
 
 
 class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):

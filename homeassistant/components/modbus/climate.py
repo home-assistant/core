@@ -115,7 +115,7 @@ async def async_setup_platform(
     if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusThermostat(hass, hub, entry) for entry in climates)
+    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):

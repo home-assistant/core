@@ -26,7 +26,7 @@ async def async_setup_platform(
     if discovery_info is None or not (lights := discovery_info[CONF_LIGHTS]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusLight(hass, hub, entry) for entry in lights)
+    async_add_entities(ModbusLight(hass, hub, config) for config in lights)
 
 
 class ModbusLight(BaseSwitch, LightEntity):
