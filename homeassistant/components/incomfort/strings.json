@@ -49,8 +49,8 @@
       "auth_error": "Invalid credentials.",
       "no_heaters": "No heaters found.",
       "not_found": "No Lan2RF gateway found.",
-      "timeout_error": "Time out when connection to Lan2RF gateway.",
-      "unknown": "Unknown error when connection to Lan2RF gateway."
+      "timeout_error": "Time out when connecting to Lan2RF gateway.",
+      "unknown": "Unknown error when connecting to Lan2RF gateway."
     }
   },
   "exceptions": {
