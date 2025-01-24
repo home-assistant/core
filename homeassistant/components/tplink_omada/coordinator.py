@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 POLL_SWITCH_PORT = 300
 POLL_GATEWAY = 300
 POLL_CLIENTS = 300
-POLL_DEVICES = 900
+POLL_DEVICES = 300
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):

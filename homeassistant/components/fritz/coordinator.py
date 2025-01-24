@@ -214,6 +214,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._options = options
         await self.hass.async_add_executor_job(self.setup)
 
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            configuration_url=f"http://{self.host}",
+            connections={(dr.CONNECTION_NETWORK_MAC, self.mac)},
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="AVM",
+            model=self.model,
+            name=self.config_entry.title,
+            sw_version=self.current_firmware,
+        )
+
     def setup(self) -> None:
         """Set up FritzboxTools class."""
 
@@ -326,7 +338,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
 
         _LOGGER.debug("enity_data: %s", entity_data)
         return entity_data
@@ -425,7 +441,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 hosts_info = await self.hass.async_add_executor_job(
                     self.fritz_hosts.get_hosts_info
                 )
-        except Exception as ex:  # noqa: BLE001
+        except Exception as ex:
             if not self.hass.is_stopping:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
@@ -606,6 +622,9 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 dev_info: Device = hosts[dev_mac]
 
                 for link in interf["node_links"]:
+                    if link.get("state") != "CONNECTED":
+                        continue  # ignore orphan node links
+
                     intf = mesh_intf.get(link["node_interface_1_uid"])
                     if intf is not None:
                         if intf["op_mode"] == "AP_GUEST":

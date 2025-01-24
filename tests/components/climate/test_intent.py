@@ -371,7 +371,7 @@ async def test_not_exposed(
             {"name": {"value": climate_1.name}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
 
     # Expose first, hide second
     async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, True)

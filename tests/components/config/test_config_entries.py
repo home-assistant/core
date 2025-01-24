@@ -255,9 +255,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
 
 async def test_remove_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == HTTPStatus.OK
@@ -268,11 +266,9 @@ async def test_remove_entry(hass: HomeAssistant, client: TestClient) -> None:
 
 async def test_reload_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
-    hass.config.components.add("kitchen_sink")
+    hass.config.components.add("test")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -393,6 +389,10 @@ async def test_available_flows(
 ############################
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.error.Should be unique."],
+)
 async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can initialize a flow."""
     mock_platform(hass, "test.config_flow", None)
@@ -405,7 +405,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
                     "show_advanced_options": self.show_advanced_options,
@@ -500,6 +500,10 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.abort.bla"],
+)
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
@@ -768,6 +772,10 @@ async def test_get_progress_index_unauth(
     assert response["error"]["code"] == "unauthorized"
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.error.Should be unique."],
+)
 async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can query the API for same result as we get from init a flow."""
     mock_platform(hass, "test.config_flow", None)
@@ -780,7 +788,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -800,6 +808,10 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     assert data == data2
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.error.Should be unique."],
+)
 async def test_get_progress_flow_unauth(
     hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
@@ -814,7 +826,7 @@ async def test_get_progress_flow_unauth(
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -846,7 +858,7 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
                     schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=schema,
+                        data_schema=vol.Schema(schema),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1141,11 +1153,9 @@ async def test_update_prefrences(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
-    hass.config.components.add("kitchen_sink")
+    hass.config.components.add("test")
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is False
@@ -1241,12 +1251,10 @@ async def test_disable_entry(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
-    hass.config.components.add("kitchen_sink")
+    hass.config.components.add("test")
 
     # Disable
     await ws_client.send_json(
@@ -2351,6 +2359,10 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.test.config.abort.reconfigure_successful"],
+)
 @pytest.mark.usefixtures("enable_custom_integrations", "freezer")
 async def test_supports_reconfigure(
     hass: HomeAssistant,

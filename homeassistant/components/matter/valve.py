@@ -40,6 +40,7 @@ class MatterValve(MatterEntity, ValveEntity):
 
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
+    _platform_translation_key = "valve"
 
     async def send_device_command(
         self,
@@ -139,7 +140,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=ValveEntityDescription(
             key="MatterValve",
             device_class=ValveDeviceClass.WATER,
-            translation_key="valve",
+            name=None,
         ),
         entity_class=MatterValve,
         required_attributes=(

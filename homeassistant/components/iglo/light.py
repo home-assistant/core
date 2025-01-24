@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 from iglo import Lamp
@@ -11,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -83,23 +82,19 @@ class IGloLamp(LightEntity):
         return ColorMode.HS
 
     @property
-    def color_temp(self):
-        """Return the color temperature."""
-        return color_util.color_temperature_kelvin_to_mired(self._lamp.state()["white"])
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature value in Kelvin."""
+        return self._lamp.state()["white"]
 
     @property
-    def min_mireds(self) -> int:
-        """Return the coldest color_temp that this light supports."""
-        return math.ceil(
-            color_util.color_temperature_kelvin_to_mired(self._lamp.max_kelvin)
-        )
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        return self._lamp.max_kelvin
 
     @property
-    def max_mireds(self) -> int:
-        """Return the warmest color_temp that this light supports."""
-        return math.ceil(
-            color_util.color_temperature_kelvin_to_mired(self._lamp.min_kelvin)
-        )
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        return self._lamp.min_kelvin
 
     @property
     def hs_color(self):
@@ -135,11 +130,8 @@ class IGloLamp(LightEntity):
             self._lamp.rgb(*rgb)
             return
 
-        if ATTR_COLOR_TEMP in kwargs:
-            kelvin = int(
-                color_util.color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            )
-            self._lamp.white(kelvin)
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            self._lamp.white(kwargs[ATTR_COLOR_TEMP_KELVIN])
             return
 
         if ATTR_EFFECT in kwargs:

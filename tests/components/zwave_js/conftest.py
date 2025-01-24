@@ -133,9 +133,9 @@ def climate_radio_thermostat_ct100_plus_state_fixture() -> dict[str, Any]:
     name="climate_radio_thermostat_ct100_plus_different_endpoints_state",
     scope="package",
 )
-def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
+def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> dict[
+    str, Any
+]:
     """Load the thermostat fixture state with values on different endpoints.
 
     This device is a radio thermostat ct100.
@@ -336,9 +336,9 @@ def lock_id_lock_as_id150_state_fixture() -> dict[str, Any]:
 @pytest.fixture(
     name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="package"
 )
-def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> (
-    dict[str, Any]
-):
+def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
+    str, Any
+]:
     """Load the climate multiple temp units node state fixture data."""
     return load_json_object_fixture(
         "climate_radio_thermostat_ct101_multiple_temp_units_state.json", DOMAIN
@@ -495,6 +495,15 @@ def siren_neo_coolcam_state_state_fixture() -> NodeDataType:
     return cast(
         NodeDataType,
         load_json_object_fixture("siren_neo_coolcam_nas-ab01z_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="aeotec_smart_switch_7_state")
+def aeotec_smart_switch_7_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Aeotec Smart Switch 7."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("aeotec_smart_switch_7_state.json", DOMAIN),
     )
 
 
@@ -1210,5 +1219,15 @@ def siren_neo_coolcam_fixture(
 ) -> Node:
     """Load node for neo coolcam siren."""
     node = Node(client, siren_neo_coolcam_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="aeotec_smart_switch_7")
+def aeotec_smart_switch_7_fixture(
+    client: MagicMock, aeotec_smart_switch_7_state: NodeDataType
+) -> Node:
+    """Load node for Aeotec Smart Switch 7."""
+    node = Node(client, aeotec_smart_switch_7_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import (
+    DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
     DUMMY_TOKEN,
@@ -62,6 +63,7 @@ async def test_user_setup(
     [
         [
             DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
+            DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
         ]
     ],
     indirect=True,
@@ -106,6 +108,7 @@ async def test_user_setup_found_token_device_valid_token(
     [
         [
             DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
+            DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
         ]
     ],
     indirect=True,

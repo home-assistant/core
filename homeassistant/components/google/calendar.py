@@ -10,7 +10,14 @@ from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, Calendar, DateOrDatetime, Event, EventTypeEnum
+from gcal_sync.model import (
+    AccessRole,
+    Calendar,
+    DateOrDatetime,
+    Event,
+    EventTypeEnum,
+    ResponseStatus,
+)
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -132,7 +139,7 @@ def _get_entity_descriptions(
             )
         read_only = not (
             calendar_item.access_role.is_writer
-            and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+            and get_feature_access(config_entry) is FeatureAccess.read_write
         )
         # Prefer calendar sync down of resources when possible. However,
         # sync does not work for search. Also free-busy calendars denormalize
@@ -304,7 +311,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     if (
         any(calendar_item.access_role.is_writer for calendar_item in result.items)
-        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+        and get_feature_access(config_entry) is FeatureAccess.read_write
     ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
@@ -367,7 +374,14 @@ class GoogleCalendarEntity(
         return event
 
     def _event_filter(self, event: Event) -> bool:
-        """Return True if the event is visible."""
+        """Return True if the event is visible and not declined."""
+
+        if any(
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
+            for attendee in event.attendees
+        ):
+            return False
+
         if event.event_type == EventTypeEnum.WORKING_LOCATION:
             return self.entity_description.working_location
         if self._ignore_availability:

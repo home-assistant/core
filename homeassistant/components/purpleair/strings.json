@@ -6,7 +6,7 @@
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
           "longitude": "[%key:common::config_flow::data::longitude%]",
-          "distance": "Search Radius"
+          "distance": "Search radius"
         },
         "data_description": {
           "latitude": "The latitude around which to search for sensors",
@@ -53,7 +53,7 @@
   "options": {
     "step": {
       "add_sensor": {
-        "title": "Add Sensor",
+        "title": "Add sensor",
         "description": "[%key:component::purpleair::config::step::by_coordinates::description%]",
         "data": {
           "latitude": "[%key:common::config_flow::data::latitude%]",
@@ -67,7 +67,7 @@
         }
       },
       "choose_sensor": {
-        "title": "Choose Sensor to Add",
+        "title": "Choose sensor to add",
         "description": "[%key:component::purpleair::config::step::choose_sensor::description%]",
         "data": {
           "sensor_index": "[%key:component::purpleair::config::step::choose_sensor::data::sensor_index%]"
@@ -84,9 +84,9 @@
         }
       },
       "remove_sensor": {
-        "title": "Remove Sensor",
+        "title": "Remove sensor",
         "data": {
-          "sensor_device_id": "Sensor Name"
+          "sensor_device_id": "Sensor name"
         },
         "data_description": {
           "sensor_device_id": "The sensor to remove"

@@ -72,7 +72,14 @@ async def test_async_browse_media_with_subitems(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test each category with subitems."""
-    for category in ("Favorites", "Artists", "Albums", "Playlists", "Genres"):
+    for category in (
+        "Favorites",
+        "Artists",
+        "Albums",
+        "Playlists",
+        "Genres",
+        "New Music",
+    ):
         with patch(
             "homeassistant.components.squeezebox.browse_media.is_internal_request",
             return_value=False,

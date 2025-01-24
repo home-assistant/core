@@ -73,11 +73,11 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 BUCKET_KEY_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_BUCKET): cv.template, vol.Required(ATTR_KEY): cv.template}
+    {vol.Required(ATTR_BUCKET): cv.string, vol.Required(ATTR_KEY): cv.string}
 )
 
 BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
-    {vol.Required(ATTR_FILE_PATH): cv.template}
+    {vol.Required(ATTR_FILE_PATH): cv.string}
 )
 
 
@@ -125,15 +125,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         get_minio_endpoint(host, port), access_key, secret_key, secure
     )
 
-    def _render_service_value(service, key):
-        value = service.data[key]
-        return value.async_render(parse_result=False)
-
     def put_file(service: ServiceCall) -> None:
         """Upload file service."""
-        bucket = _render_service_value(service, ATTR_BUCKET)
-        key = _render_service_value(service, ATTR_KEY)
-        file_path = _render_service_value(service, ATTR_FILE_PATH)
+        bucket = service.data[ATTR_BUCKET]
+        key = service.data[ATTR_KEY]
+        file_path = service.data[ATTR_FILE_PATH]
 
         if not hass.config.is_allowed_path(file_path):
             raise ValueError(f"Invalid file_path {file_path}")
@@ -142,9 +138,9 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def get_file(service: ServiceCall) -> None:
         """Download file service."""
-        bucket = _render_service_value(service, ATTR_BUCKET)
-        key = _render_service_value(service, ATTR_KEY)
-        file_path = _render_service_value(service, ATTR_FILE_PATH)
+        bucket = service.data[ATTR_BUCKET]
+        key = service.data[ATTR_KEY]
+        file_path = service.data[ATTR_FILE_PATH]
 
         if not hass.config.is_allowed_path(file_path):
             raise ValueError(f"Invalid file_path {file_path}")
@@ -153,8 +149,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     def remove_file(service: ServiceCall) -> None:
         """Delete file service."""
-        bucket = _render_service_value(service, ATTR_BUCKET)
-        key = _render_service_value(service, ATTR_KEY)
+        bucket = service.data[ATTR_BUCKET]
+        key = service.data[ATTR_KEY]
 
         minio_client.remove_object(bucket, key)
 

@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_update.2
+  '**RELEASE_NOTES**'
+# ---
+# name: test_update[update.pinecil_firmware-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.pinecil_firmware',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
+    'original_icon': None,
+    'original_name': 'Firmware',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': <UpdateEntityFeature: 16>,
+    'translation_key': None,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_firmware',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[update.pinecil_firmware-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'device_class': 'firmware',
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/iron_os/icon.png',
+      'friendly_name': 'Pinecil Firmware',
+      'in_progress': False,
+      'installed_version': 'v2.22',
+      'latest_version': 'v2.22',
+      'release_summary': None,
+      'release_url': 'https://github.com/Ralim/IronOS/releases/tag/v2.22',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 16>,
+      'title': 'IronOS V2.22 | TS101 & S60 Added | PinecilV2 improved',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.pinecil_firmware',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

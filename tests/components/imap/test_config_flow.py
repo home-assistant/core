@@ -15,7 +15,7 @@ from homeassistant.components.imap.const import (
     DOMAIN,
 )
 from homeassistant.components.imap.errors import InvalidAuth, InvalidFolder
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -218,7 +218,10 @@ async def test_reauth_success(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {CONF_USERNAME: "email@email.com"}
+    assert result["description_placeholders"] == {
+        CONF_USERNAME: "email@email.com",
+        CONF_NAME: "Mock Title",
+    }
 
     with patch(
         "homeassistant.components.imap.config_flow.connect_to_server"

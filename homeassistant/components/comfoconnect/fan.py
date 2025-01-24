@@ -68,7 +68,7 @@ class ComfoConnectFan(FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
+
     _attr_preset_modes = PRESET_MODES
     current_speed: float | None = None
 

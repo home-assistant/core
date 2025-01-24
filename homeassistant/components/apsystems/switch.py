@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectionError
+from APsystemsEZ1 import InverterReturnedError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -40,7 +41,7 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
         """Update switch status and availability."""
         try:
             status = await self._api.get_device_power_status()
-        except (TimeoutError, ClientConnectionError):
+        except (TimeoutError, ClientConnectionError, InverterReturnedError):
             self._attr_available = False
         else:
             self._attr_available = True

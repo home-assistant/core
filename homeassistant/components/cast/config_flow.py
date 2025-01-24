@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 
@@ -41,24 +42,18 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return CastOptionsFlowHandler(config_entry)
+        return CastOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await self.async_step_config()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        if self._async_in_progress() or self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         await self.async_set_unique_id(DOMAIN)
 
         return await self.async_step_confirm()
@@ -115,9 +110,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize Google Cast options flow."""
-        self.config_entry = config_entry
         self.updated_config: dict[str, Any] = {}
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:

@@ -165,20 +165,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
-            key="MatterRvcRunMode",
-            translation_key="mode",
-        ),
-        entity_class=MatterModeSelectEntity,
-        required_attributes=(
-            clusters.RvcRunMode.Attributes.CurrentMode,
-            clusters.RvcRunMode.Attributes.SupportedModes,
-        ),
-    ),
-    MatterDiscoverySchema(
-        platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
             key="MatterRvcCleanMode",
-            translation_key="mode",
+            translation_key="clean_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -265,5 +253,26 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterSelectEntity,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="TrvTemperatureDisplayMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_display_mode",
+            options=["Celsius", "Fahrenheit"],
+            measurement_to_ha={
+                0: "Celsius",
+                1: "Fahrenheit",
+            }.get,
+            ha_to_native_value={
+                "Celsius": 0,
+                "Fahrenheit": 1,
+            }.get,
+        ),
+        entity_class=MatterSelectEntity,
+        required_attributes=(
+            clusters.ThermostatUserInterfaceConfiguration.Attributes.TemperatureDisplayMode,
+        ),
     ),
 ]

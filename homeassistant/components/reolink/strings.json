@@ -18,10 +18,6 @@
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Reolink integration needs to re-authenticate your connection details"
       }
     },
     "error": {
@@ -31,12 +27,14 @@
       "not_admin": "User needs to be admin, user \"{username}\" has authorisation level \"{userlevel}\"",
       "password_incompatible": "Password contains incompatible special character, only these characters are allowed: a-z, A-Z, 0-9 or {special_chars}",
       "unknown": "[%key:common::config_flow::error::unknown%]",
+      "update_needed": "Failed to login because of outdated firmware, please update the firmware to version {needed_firmware} using the Reolink Download Center: {download_center_url}, currently version {current_firmware} is installed",
       "webhook_exception": "Home Assistant URL is not available, go to Settings > System > Network > Home Assistant URL and correct the URLs, see {more_info}"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The MAC address of the device does not match the previous MAC address"
     }
   },
   "options": {
@@ -56,7 +54,49 @@
       "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
-      "message": "Reolink play_chime error: {device_name} is not a chime"
+      "message": "Reolink play_chime error: {device_name} is not a Chime"
+    },
+    "invalid_parameter": {
+      "message": "Invalid input parameter: {err}"
+    },
+    "api_error": {
+      "message": "The device responded with a error: {err}"
+    },
+    "invalid_content_type": {
+      "message": "Received a different content type than expected: {err}"
+    },
+    "invalid_credentials": {
+      "message": "Invalid credentials: {err}"
+    },
+    "login_error": {
+      "message": "Error during login attempt: {err}"
+    },
+    "no_data": {
+      "message": "Device returned no data: {err}"
+    },
+    "unexpected_data": {
+      "message": "Device returned unexpected data: {err}"
+    },
+    "not_supported": {
+      "message": "Function not supported by this device: {err}"
+    },
+    "subscription_error": {
+      "message": "Error during ONVIF subscription: {err}"
+    },
+    "connection_error": {
+      "message": "Could not connect to the device: {err}"
+    },
+    "timeout": {
+      "message": "Timeout waiting on a response: {err}"
+    },
+    "unexpected": {
+      "message": "Unexpected Reolink error: {err}"
+    },
+    "firmware_install_error": {
+      "message": "Error trying to update Reolink firmware: {err}"
+    },
+    "config_entry_not_ready": {
+      "message": "Error while trying to setup {host}: {err}"
     }
   },
   "issues": {
@@ -78,11 +118,7 @@
     },
     "firmware_update": {
       "title": "Reolink firmware update required",
-      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The latest firmware can be downloaded from the [Reolink download center]({download_link})."
-    },
-    "hdr_switch_deprecated": {
-      "title": "Reolink HDR switch deprecated",
-      "description": "The Reolink HDR switch entity is deprecated and will be removed in HA 2025.2.0. It has been replaced by a HDR select entity offering options `on`, `off` and `auto`. To remove this issue, please adjust automations accordingly and disable the HDR switch entity."
+      "description": "\"{name}\" with model \"{model}\" and hardware version \"{hw_version}\" is running a old firmware version \"{current_firmware}\", while at least firmware version \"{required_firmware}\" is required for proper operation of the Reolink integration. The firmware can be updated by pressing \"install\" in the more info dialog of the update entity of \"{name}\" from within Home Assistant. Alternatively, the latest firmware can be downloaded from the [Reolink download center]({download_link})."
     },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
@@ -92,7 +128,7 @@
   "services": {
     "ptz_move": {
       "name": "PTZ move",
-      "description": "Move the camera with a specific speed.",
+      "description": "Moves the camera with a specific speed.",
       "fields": {
         "speed": {
           "name": "Speed",
@@ -102,11 +138,11 @@
     },
     "play_chime": {
       "name": "Play chime",
-      "description": "Play a ringtone on a chime.",
+      "description": "Plays a ringtone on a Reolink Chime.",
       "fields": {
         "device_id": {
           "name": "Target chime",
-          "description": "The chime to play the ringtone on."
+          "description": "The Reolink Chime to play the ringtone on."
         },
         "ringtone": {
           "name": "Ringtone",
@@ -173,6 +209,13 @@
       },
       "package": {
         "name": "Package",
+        "state": {
+          "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
+          "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
+        }
+      },
+      "cry": {
+        "name": "Baby crying",
         "state": {
           "off": "[%key:component::binary_sensor::entity_component::gas::state::off%]",
           "on": "[%key:component::binary_sensor::entity_component::gas::state::on%]"
@@ -489,7 +532,7 @@
         "name": "Floodlight mode",
         "state": {
           "off": "[%key:common::state::off%]",
-          "auto": "Auto",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "onatnight": "On at night",
           "schedule": "Schedule",
           "adaptive": "Adaptive",
@@ -528,8 +571,9 @@
         "name": "Doorbell LED",
         "state": {
           "stayoff": "Stay off",
-          "auto": "Auto",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]",
           "alwaysonatnight": "Auto & always on at night",
+          "always": "Always on",
           "alwayson": "Always on"
         }
       },
@@ -538,7 +582,15 @@
         "state": {
           "off": "[%key:common::state::off%]",
           "on": "[%key:common::state::on%]",
-          "auto": "Auto"
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
+        }
+      },
+      "binning_mode": {
+        "name": "Binning mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:component::reolink::entity::select::day_night_mode::state::auto%]"
         }
       },
       "hub_alarm_ringtone": {
@@ -605,6 +657,22 @@
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
       },
+      "vehicle_tone": {
+        "name": "Vehicle ringtone",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "citybird": "[%key:component::reolink::entity::select::motion_tone::state::citybird%]",
+          "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
+          "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
+          "loop": "[%key:component::reolink::entity::select::motion_tone::state::loop%]",
+          "attraction": "[%key:component::reolink::entity::select::motion_tone::state::attraction%]",
+          "hophop": "[%key:component::reolink::entity::select::motion_tone::state::hophop%]",
+          "goodday": "[%key:component::reolink::entity::select::motion_tone::state::goodday%]",
+          "operetta": "[%key:component::reolink::entity::select::motion_tone::state::operetta%]",
+          "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
+          "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
       "visitor_tone": {
         "name": "Visitor ringtone",
         "state": {
@@ -636,6 +704,18 @@
           "moonlight": "[%key:component::reolink::entity::select::motion_tone::state::moonlight%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
         }
+      },
+      "main_frame_rate": {
+        "name": "Clear frame rate"
+      },
+      "sub_frame_rate": {
+        "name": "Fluent frame rate"
+      },
+      "main_bit_rate": {
+        "name": "Clear bit rate"
+      },
+      "sub_bit_rate": {
+        "name": "Fluent bit rate"
       }
     },
     "sensor": {
@@ -647,6 +727,9 @@
       },
       "ptz_pan_position": {
         "name": "PTZ pan position"
+      },
+      "ptz_tilt_position": {
+        "name": "PTZ tilt position"
       },
       "battery_temperature": {
         "name": "Battery temperature"

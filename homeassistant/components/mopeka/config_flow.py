@@ -58,7 +58,7 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: config_entries.ConfigEntry,
     ) -> MopekaOptionsFlow:
         """Return the options flow for this handler."""
-        return MopekaOptionsFlow(config_entry)
+        return MopekaOptionsFlow()
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
@@ -138,10 +138,6 @@ class MopekaConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class MopekaOptionsFlow(config_entries.OptionsFlow):
     """Handle options for the Mopeka component."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

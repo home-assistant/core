@@ -155,10 +155,6 @@ async def test_step_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
     new_api_key = "defgh67890"
 
     result = await hass.config_entries.flow.async_configure(

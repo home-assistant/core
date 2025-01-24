@@ -175,7 +175,7 @@ class NoboHubConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class NoboHubConnectError(HomeAssistantError):
@@ -189,10 +189,6 @@ class NoboHubConnectError(HomeAssistantError):
 
 class OptionsFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize the options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""

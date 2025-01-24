@@ -171,8 +171,7 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.data = dict(self.config_entry.data)
+        self.data = dict(config_entry.data)
 
         self._all_region_codes_sorted: dict[str, str] = {}
         self.regions: dict[str, dict[str, Any]] = {}
