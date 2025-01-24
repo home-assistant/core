@@ -27,6 +27,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    RestoreBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -47,6 +48,7 @@ __all__ = [
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
+    "RestoreBackupEvent",
     "WrittenBackup",
 ]
 
@@ -86,8 +88,26 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             password=None,
         )
 
+    async def async_handle_create_automatic_service(call: ServiceCall) -> None:
+        """Service handler for creating automatic backups."""
+        config_data = backup_manager.config.data
+        await backup_manager.async_create_backup(
+            agent_ids=config_data.create_backup.agent_ids,
+            include_addons=config_data.create_backup.include_addons,
+            include_all_addons=config_data.create_backup.include_all_addons,
+            include_database=config_data.create_backup.include_database,
+            include_folders=config_data.create_backup.include_folders,
+            include_homeassistant=True,  # always include HA
+            name=config_data.create_backup.name,
+            password=config_data.create_backup.password,
+            with_automatic_settings=True,
+        )
+
     if not with_hassio:
         hass.services.async_register(DOMAIN, "create", async_handle_create_service)
+    hass.services.async_register(
+        DOMAIN, "create_automatic", async_handle_create_automatic_service
+    )
 
     async_register_http_views(hass)
 

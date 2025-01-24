@@ -50,11 +50,11 @@ class HomeAssistantBluetoothManager(BluetoothManager):
     """Manage Bluetooth for Home Assistant."""
 
     __slots__ = (
-        "hass",
-        "storage",
-        "_integration_matcher",
         "_callback_index",
         "_cancel_logging_listener",
+        "_integration_matcher",
+        "hass",
+        "storage",
     )
 
     def __init__(
