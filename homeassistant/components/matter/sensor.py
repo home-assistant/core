@@ -244,6 +244,8 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PowerSource.Attributes.BatReplacementDescription,
         ),
+        # Some manufacturers returns an empty string
+        value_is_not="",
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

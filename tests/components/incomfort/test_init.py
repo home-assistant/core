@@ -5,10 +5,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError, RequestInfo
 from freezegun.api import FrozenDateTimeFactory
-from incomfortclient import IncomfortError
+from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
 
-from homeassistant.components.incomfort import InvalidHeaterList
 from homeassistant.components.incomfort.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -18,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import async_fire_time_changed
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_setup_platforms(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -29,6 +29,7 @@ async def test_setup_platforms(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_coordinator_updates(
     hass: HomeAssistant,
     mock_incomfort: MagicMock,
@@ -60,23 +61,31 @@ async def test_coordinator_updates(
     assert state.state == "1.84"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     "exc",
     [
-        IncomfortError(ClientResponseError(None, None, status=401)),
-        IncomfortError(
-            ClientResponseError(
-                RequestInfo(
-                    url="http://example.com",
-                    method="GET",
-                    headers=[],
-                    real_url="http://example.com",
-                ),
-                None,
-                status=500,
-            )
+        ClientResponseError(
+            RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers=[],
+                real_url="http://example.com",
+            ),
+            None,
+            status=401,
         ),
-        IncomfortError(ValueError("some_error")),
+        InvalidHeaterList,
+        ClientResponseError(
+            RequestInfo(
+                url="http://example.com",
+                method="GET",
+                headers=[],
+                real_url="http://example.com",
+            ),
+            None,
+            status=500,
+        ),
         TimeoutError,
     ],
 )
@@ -105,34 +114,41 @@ async def test_coordinator_update_fails(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("exc", "config_entry_state"),
     [
         (
-            IncomfortError(ClientResponseError(None, None, status=401)),
-            ConfigEntryState.SETUP_ERROR,
-        ),
-        (
-            IncomfortError(ClientResponseError(None, None, status=404)),
+            InvalidGateway,
             ConfigEntryState.SETUP_ERROR,
         ),
         (InvalidHeaterList, ConfigEntryState.SETUP_RETRY),
         (
-            IncomfortError(
-                ClientResponseError(
-                    RequestInfo(
-                        url="http://example.com",
-                        method="GET",
-                        headers=[],
-                        real_url="http://example.com",
-                    ),
-                    None,
-                    status=500,
-                )
+            ClientResponseError(
+                RequestInfo(
+                    url="http://example.com",
+                    method="GET",
+                    headers=[],
+                    real_url="http://example.com",
+                ),
+                None,
+                status=404,
+            ),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        (
+            ClientResponseError(
+                RequestInfo(
+                    url="http://example.com",
+                    method="GET",
+                    headers=[],
+                    real_url="http://example.com",
+                ),
+                None,
+                status=500,
             ),
             ConfigEntryState.SETUP_RETRY,
         ),
-        (IncomfortError(ValueError("some_error")), ConfigEntryState.SETUP_RETRY),
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
     ],
 )

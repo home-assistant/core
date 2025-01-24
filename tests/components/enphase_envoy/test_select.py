@@ -226,3 +226,28 @@ async def test_select_storage_modes(
     mock_envoy.set_storage_mode.assert_called_once_with(
         REVERSE_STORAGE_MODE_MAP[current_state]
     )
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "use_serial"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_select_storage_modes_if_none(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    use_serial: str,
+) -> None:
+    """Test select platform entity storage mode when tariff storage_mode is none."""
+    mock_envoy.data.tariff.storage_settings.mode = None
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, config_entry)
+
+    test_entity = f"{Platform.SELECT}.{use_serial}_storage_mode"
+
+    assert (entity_state := hass.states.get(test_entity))
+    assert entity_state.state == "unknown"
