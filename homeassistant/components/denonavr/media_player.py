@@ -42,7 +42,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CONF_RECEIVER
+from . import DenonavrConfigEntry
 from .const import (
     CONF_MANUFACTURER,
     CONF_SERIAL_NUMBER,
@@ -109,13 +109,12 @@ DENON_STATE_MAPPING = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DenonavrConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    receiver = data[CONF_RECEIVER]
+    receiver = config_entry.runtime_data
     update_audyssey = config_entry.options.get(
         CONF_UPDATE_AUDYSSEY, DEFAULT_UPDATE_AUDYSSEY
     )
