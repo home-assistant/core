@@ -17,7 +17,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
-from .mocks import _mock_powerwall_with_fixtures
+from .mocks import MOCK_GATEWAY_DIN, _mock_powerwall_with_fixtures
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -271,3 +271,37 @@ async def test_reauth_ignores_and_clears_cookie(hass: HomeAssistant) -> None:
 
         mock_powerwall.login.assert_called_with("somepassword")
         assert config_entry.data[CONFIG_ENTRY_COOKIE] is None
+
+
+async def test_init_retries_with_password(hass: HomeAssistant) -> None:
+    """Tests that the init retries with password if cookie fails."""
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_IP_ADDRESS: "1.2.3.4",
+            CONF_PASSWORD: "somepassword",
+            CONFIG_ENTRY_COOKIE: "somecookie",
+        },
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+    ):
+        mock_powerwall.get_gateway_din.side_effect = [
+            AccessDeniedError("get_gateway_din"),
+            MOCK_GATEWAY_DIN,
+        ]
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_powerwall.login.assert_called_with("somepassword")
+        assert mock_powerwall.get_gateway_din.call_count == 2

@@ -86,7 +86,7 @@ class PowerwallDataManager:
             await self.power_wall.logout()
         # Always use the password when recreating the login
         await self.power_wall.login(self.password or "")
-        await self.save_auth_cookie()
+        self.save_auth_cookie()
 
     async def async_update_data(self) -> PowerwallData:
         """Fetch data from API endpoint."""
@@ -131,7 +131,7 @@ class PowerwallDataManager:
         raise RuntimeError("unreachable")
 
     @callback
-    def async_save_auth_cookie(self) -> None:
+    def save_auth_cookie(self) -> None:
         """Save the auth cookie."""
         for cookie in self.cookie_jar:
             if cookie.key == AUTH_COOKIE_KEY:
@@ -169,27 +169,35 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
         power_wall = Powerwall(ip_address, http_session=http_session, verify_ssl=False)
         stack.push_async_callback(power_wall.close)
 
-        try:
-            base_info = await _login_and_fetch_base_info(
-                power_wall, ip_address, password, use_auth_cookie
-            )
+        for tries in range(2):
+            try:
+                base_info = await _login_and_fetch_base_info(
+                    power_wall, ip_address, password, use_auth_cookie
+                )
 
-            # Cancel closing power_wall on success
-            stack.pop_all()
-        except (TimeoutError, PowerwallUnreachableError) as err:
-            raise ConfigEntryNotReady from err
-        except MissingAttributeError as err:
-            # The error might include some important information about what exactly changed.
-            _LOGGER.error("The powerwall api has changed: %s", str(err))
-            persistent_notification.async_create(
-                hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
-            )
-            return False
-        except AccessDeniedError as err:
-            _LOGGER.debug("Authentication failed", exc_info=err)
-            raise ConfigEntryAuthFailed from err
-        except ApiError as err:
-            raise ConfigEntryNotReady from err
+                # Cancel closing power_wall on success
+                stack.pop_all()
+                break
+            except (TimeoutError, PowerwallUnreachableError) as err:
+                raise ConfigEntryNotReady from err
+            except MissingAttributeError as err:
+                # The error might include some important information about what exactly changed.
+                _LOGGER.error("The powerwall api has changed: %s", str(err))
+                persistent_notification.async_create(
+                    hass, API_CHANGED_ERROR_BODY, API_CHANGED_TITLE
+                )
+                return False
+            except AccessDeniedError as err:
+                if use_auth_cookie and tries == 0:
+                    _LOGGER.debug(
+                        "Authentication failed with cookie, retrying with password"
+                    )
+                    use_auth_cookie = False
+                    continue
+                _LOGGER.debug("Authentication failed", exc_info=err)
+                raise ConfigEntryAuthFailed from err
+            except ApiError as err:
+                raise ConfigEntryNotReady from err
 
     gateway_din = base_info.gateway_din
     if entry.unique_id is not None and is_ip_address(entry.unique_id):
@@ -211,7 +219,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerwallConfigEntry) ->
         password,
         runtime_data,
     )
-    await manager.save_auth_cookie()
+    manager.save_auth_cookie()
 
     coordinator = DataUpdateCoordinator(
         hass,
