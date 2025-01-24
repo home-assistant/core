@@ -21,23 +21,19 @@ from tests.typing import MqttMockHAClient
 _BRIGHTNESS = 186
 _BRIGHTNESS_PCT = 73
 
-_PAYLOAD_LIGHT_STATE_ON = '{"id":"UL15","properties":{"value":100},"type":"state"}'
+_PAYLOAD_LIGHT_STATE_ON = '{"id":"UL15","properties":{"value":60},"type":"state"}'
 _PAYLOAD_LIGHT_STATE_BRIGHTNESS = (
     '{"id":"UL15","properties":{"value":' + str(_BRIGHTNESS_PCT) + '},"type":"state"}'
 )
 _PAYLOAD_LIGHT_STATE_OFF = '{"id":"UL15","properties":{"value":0},"type":"state"}'
 
-_PAYLOAD_LIGHT_SET_STATE_ON = (
-    '{"id": "UL15", "type": "state", "properties": {"value": 100}}'
-)
+_PAYLOAD_LIGHT_SET_STATE_ON = '{"id": "UL15", "type": "action", "action": "on"}'
 _PAYLOAD_LIGHT_SET_STATE_BRIGHTNESS = (
     '{"id": "UL15", "type": "state", "properties": {"value": '
     + str(_BRIGHTNESS_PCT)
     + "}}"
 )
-_PAYLOAD_LIGHT_SET_STATE_OFF = (
-    '{"id": "UL15", "type": "state", "properties": {"value": 0}}'
-)
+_PAYLOAD_LIGHT_SET_STATE_OFF = '{"id": "UL15", "type": "action", "action": "off"}'
 
 _TOPIC_LIGHT_STATE = "cloudapp/QBUSMQTTGW/UL1/UL15/state"
 _TOPIC_LIGHT_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL15/setState"
