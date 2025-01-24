@@ -65,7 +65,9 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
-  docs-known-limitations: done
+  docs-known-limitations:
+    status: done
+    comment: There are no known limmitations,
   docs-troubleshooting: done
   docs-examples: done
 
