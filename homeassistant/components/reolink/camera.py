@@ -100,7 +100,7 @@ async def async_setup_entry(
             if not entity_description.supported(reolink_data.host.api, channel):
                 continue
             stream_url = await reolink_data.host.api.get_stream_source(
-                channel, entity_description.stream
+                channel, entity_description.stream, False
             )
             if stream_url is None and "snapshots" not in entity_description.stream:
                 continue

@@ -879,6 +879,12 @@
       },
       "regulator_set_point": {
         "name": "Regulator set point"
+      },
+      "detection_delay": {
+        "name": "Detection delay"
+      },
+      "fading_time": {
+        "name": "Fading time"
       }
     },
     "select": {
@@ -1039,6 +1045,12 @@
       },
       "instantaneous_demand": {
         "name": "Instantaneous demand"
+      },
+      "rms_current_ph_b": {
+        "name": "Current phase B"
+      },
+      "rms_current_ph_c": {
+        "name": "Current phase C"
       },
       "summation_delivered": {
         "name": "Summation delivered"
@@ -1237,6 +1249,9 @@
       },
       "local_temperature_floor": {
         "name": "Floor temperature"
+      },
+      "self_test": {
+        "name": "Self test result"
       }
     },
     "switch": {

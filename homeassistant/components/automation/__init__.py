@@ -9,7 +9,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Protocol, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -636,9 +636,9 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         alias = ""
         if "trigger" in run_variables:
             if "description" in run_variables["trigger"]:
-                reason = f' by {run_variables["trigger"]["description"]}'
+                reason = f" by {run_variables['trigger']['description']}"
             if "alias" in run_variables["trigger"]:
-                alias = f' trigger \'{run_variables["trigger"]["alias"]}\''
+                alias = f" trigger '{run_variables['trigger']['alias']}'"
         self._logger.debug("Automation%s triggered%s", alias, reason)
 
         # Create a new context referring to the old context.
