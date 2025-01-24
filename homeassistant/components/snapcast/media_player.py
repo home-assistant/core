@@ -318,7 +318,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     @property
     def media_track(self) -> int | None:
         """Track number of current playing media, music track only."""
-        if value := self.metadata.get("trackNumber") is not None:
+        if (value := self.metadata.get("trackNumber")) is not None:
             return int(value)
 
         return None
