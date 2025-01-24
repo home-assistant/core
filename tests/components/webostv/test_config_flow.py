@@ -1,4 +1,4 @@
-"""Test the WebOS Tv config flow."""
+"""Test the LG webOS TV config flow."""
 
 from aiowebostv import WebOsTvPairError
 import pytest
