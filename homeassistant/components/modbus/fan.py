@@ -28,7 +28,7 @@ async def async_setup_platform(
     if discovery_info is None or not (fans := discovery_info[CONF_FANS]):
         return
     hub = get_hub(hass, discovery_info[CONF_NAME])
-    async_add_entities(ModbusFan(hass, hub, entry) for entry in fans)
+    async_add_entities(ModbusFan(hass, hub, config) for config in fans)
 
 
 class ModbusFan(BaseSwitch, FanEntity):
