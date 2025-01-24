@@ -36,7 +36,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
         # return self.async_show_form(step_id="authorize", errors=errors)
         return self.async_show_form(
-            step_id="confirm",
+            step_id="confirm", description_placeholders={"title": self.entry.title}
         )
 
     async def async_step_authorize(

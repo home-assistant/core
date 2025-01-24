@@ -158,12 +158,12 @@
   },
   "issues": {
     "migrate_to_v2_api": {
-      "title": "API migration recommended",
+      "title": "Update authentication method",
       "fix_flow": {
         "step": {
           "confirm": {
             "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]",
-            "description": "Your has been updated and now supports more secure and future rich communication interface. To make use of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration."
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you can reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration."
           },
           "authorize": {
             "title": "[%key:component::homewizard::config::step::authorize::title%]",

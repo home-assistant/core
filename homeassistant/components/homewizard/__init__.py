@@ -94,7 +94,7 @@ async def async_check_v2_support_and_create_issue(
         learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",
         translation_key="migrate_to_v2_api",
         translation_placeholders={
-            "name": entry.title,
+            "title": entry.title,
         },
         severity=IssueSeverity.WARNING,
         data={"entry_id": entry.entry_id},
