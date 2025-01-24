@@ -15,6 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 
 _SCAN_INTERVAL = timedelta(seconds=180)
 
+type DexcomConfigEntry = ConfigEntry[DexcomCoordinator]
+
 
 class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading]):
     """Dexcom Coordinator."""
@@ -22,7 +24,7 @@ class DexcomCoordinator(DataUpdateCoordinator[GlucoseReading]):
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: DexcomConfigEntry,
         dexcom: Dexcom,
     ) -> None:
         """Initialize the coordinator."""
