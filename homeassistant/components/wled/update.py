@@ -16,7 +16,6 @@ from . import WLED_KEY, WLEDConfigEntry
 from .coordinator import WLEDDataUpdateCoordinator, WLEDReleasesDataUpdateCoordinator
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
-import re
 
 async def async_setup_entry(
     hass: HomeAssistant,
