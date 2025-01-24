@@ -18,9 +18,7 @@ type DuneHDConfigEntry = ConfigEntry[DuneHDPlayer]
 
 async def async_setup_entry(hass: HomeAssistant, entry: DuneHDConfigEntry) -> bool:
     """Set up a config entry."""
-    player = DuneHDPlayer(entry.data[CONF_HOST])
-
-    entry.runtime_data = player
+    entry.runtime_data = DuneHDPlayer(entry.data[CONF_HOST])
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
