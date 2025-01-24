@@ -15,7 +15,7 @@ from aiorefoss.exceptions import (
     RpcCallError,
 )
 from aiorefoss.rpc_device import RpcDevice, RpcUpdateType
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
