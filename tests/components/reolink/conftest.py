@@ -9,7 +9,7 @@ from reolink_aio.baichuan import Baichuan
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -43,6 +43,7 @@ TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 TEST_DUO_MODEL = "Reolink Duo PoE"
+TEST_PRIVACY = True
 
 
 @pytest.fixture
@@ -59,12 +60,16 @@ def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
         patch(
+            "homeassistant.components.reolink.store.Path", autospec=True
+        ) as path_mock_class,
+        patch(
             "homeassistant.components.reolink.host.Host", autospec=True
         ) as host_mock_class,
     ):
         host_mock = host_mock_class.return_value
         host_mock.get_host_data.return_value = None
         host_mock.get_states.return_value = None
+        host_mock.supported.return_value = True
         host_mock.check_new_firmware.return_value = False
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
@@ -126,7 +131,12 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.baichuan = create_autospec(Baichuan)
         # Disable tcp push by default for tests
         host_mock.baichuan.events_active = False
+        host_mock.baichuan.privacy_mode.return_value = False
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
+
+        # store path_mock
+        host_mock.path_mock = path_mock_class.return_value
+
         yield host_mock_class
 
 
@@ -157,6 +167,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_PRIVACY: TEST_PRIVACY,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

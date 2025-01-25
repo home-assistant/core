@@ -17,7 +17,7 @@ from reolink_aio.exceptions import (
 from homeassistant import config_entries
 from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.reolink.exceptions import ReolinkWebhookException
 from homeassistant.components.reolink.host import DEFAULT_TIMEOUT
 from homeassistant.config_entries import ConfigEntryState
@@ -42,6 +42,7 @@ from .conftest import (
     TEST_PASSWORD,
     TEST_PASSWORD2,
     TEST_PORT,
+    TEST_PRIVACY,
     TEST_USE_HTTPS,
     TEST_USERNAME,
     TEST_USERNAME2,
@@ -81,6 +82,7 @@ async def test_config_flow_manual_success(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: TEST_PORT,
         CONF_USE_HTTPS: TEST_USE_HTTPS,
+        CONF_PRIVACY: TEST_PRIVACY,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -240,6 +242,7 @@ async def test_config_flow_errors(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: TEST_PORT,
         CONF_USE_HTTPS: TEST_USE_HTTPS,
+        CONF_PRIVACY: TEST_PRIVACY,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -411,6 +414,7 @@ async def test_dhcp_flow(hass: HomeAssistant, mock_setup_entry: MagicMock) -> No
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: TEST_PORT,
         CONF_USE_HTTPS: TEST_USE_HTTPS,
+        CONF_PRIVACY: TEST_PRIVACY,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
