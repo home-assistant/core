@@ -14,9 +14,8 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
 from .entity import LitterRobotEntity, _RobotT
-from .hub import LitterRobotHub
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
@@ -72,14 +71,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        LitterRobotSelectEntity(robot=robot, hub=hub, description=description)
-        for robot in hub.account.robots
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotSelectEntity(
+            robot=robot, coordinator=coordinator, description=description
+        )
+        for robot in coordinator.account.robots
         for robot_type, description in ROBOT_SELECT_MAP.items()
         if isinstance(robot, robot_type)
-    ]
-    async_add_entities(entities)
+    )
 
 
 class LitterRobotSelectEntity(
@@ -92,11 +92,11 @@ class LitterRobotSelectEntity(
     def __init__(
         self,
         robot: _RobotT,
-        hub: LitterRobotHub,
+        coordinator: LitterRobotDataUpdateCoordinator,
         description: RobotSelectEntityDescription[_RobotT, _CastTypeT],
     ) -> None:
         """Initialize a Litter-Robot select entity."""
-        super().__init__(robot, hub, description)
+        super().__init__(robot, coordinator, description)
         options = self.entity_description.options_fn(self.robot)
         self._attr_options = list(map(str, options))
 

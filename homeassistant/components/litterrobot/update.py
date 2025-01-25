@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
 
 SCAN_INTERVAL = timedelta(days=1)
@@ -34,12 +34,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot update platform."""
-    hub = entry.runtime_data
-    entities = [
-        RobotUpdateEntity(robot=robot, hub=hub, description=FIRMWARE_UPDATE_ENTITY)
-        for robot in hub.litter_robots()
+    coordinator = entry.runtime_data
+    entities = (
+        RobotUpdateEntity(
+            robot=robot, coordinator=coordinator, description=FIRMWARE_UPDATE_ENTITY
+        )
+        for robot in coordinator.litter_robots()
         if isinstance(robot, LitterRobot4)
-    ]
+    )
     async_add_entities(entities, True)
 
 

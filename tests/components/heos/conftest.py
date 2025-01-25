@@ -91,7 +91,7 @@ async def controller_fixture(
     new_mock = Mock(return_value=mock_heos)
     mock_heos.new_mock = new_mock
     with (
-        patch("homeassistant.components.heos.Heos", new=new_mock),
+        patch("homeassistant.components.heos.coordinator.Heos", new=new_mock),
         patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
     ):
         yield mock_heos
@@ -139,7 +139,7 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
         player.mute = AsyncMock()
         player.pause = AsyncMock()
         player.play = AsyncMock()
-        player.play_input_source = AsyncMock()
+        player.play_media = AsyncMock()
         player.play_next = AsyncMock()
         player.play_previous = AsyncMock()
         player.play_preset_station = AsyncMock()
@@ -193,17 +193,28 @@ def favorites_fixture() -> dict[int, MediaItem]:
 @pytest.fixture(name="input_sources")
 def input_sources_fixture() -> list[MediaItem]:
     """Create a set of input sources for testing."""
-    source = MediaItem(
-        source_id=1,
-        name="HEOS Drive - Line In 1",
-        media_id=const.INPUT_AUX_IN_1,
-        type=MediaType.STATION,
-        playable=True,
-        browsable=False,
-        image_url="",
-        heos=None,
-    )
-    return [source]
+    return [
+        MediaItem(
+            source_id=const.MUSIC_SOURCE_AUX_INPUT,
+            name="HEOS Drive - Line In 1",
+            media_id=const.INPUT_AUX_IN_1,
+            type=MediaType.STATION,
+            playable=True,
+            browsable=False,
+            image_url="",
+            heos=None,
+        ),
+        MediaItem(
+            source_id=const.MUSIC_SOURCE_AUX_INPUT,
+            name="Speaker - Line In 1",
+            media_id=const.INPUT_AUX_IN_1,
+            type=MediaType.STATION,
+            playable=True,
+            browsable=False,
+            image_url="",
+            heos=None,
+        ),
+    ]
 
 
 @pytest.fixture(name="discovery_data")
