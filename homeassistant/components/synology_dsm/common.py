@@ -224,9 +224,6 @@ class SynoApi:
             self.dsm.reset(self.surveillance_station)
 
         # Determine if we should fetch an API
-        self._with_file_station = bool(
-            self._fetching_entities.get(SynoFileStation.API_KEY)
-        )
         self._with_information = bool(
             self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
