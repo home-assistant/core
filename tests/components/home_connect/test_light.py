@@ -258,7 +258,7 @@ async def test_light_color_different_than_custom(
         [
             EventMessage(
                 appliance_ha_id,
-                EventType.STATUS,
+                EventType.NOTIFY,
                 ArrayOfEvents(
                     [
                         Event(

@@ -1,20 +1,19 @@
 """Home Connect entity base class."""
 
 from abc import abstractmethod
-import logging
 
-from aiohomeconnect.model import Event, EventKey, HomeAppliance
+from aiohomeconnect.model import EventKey, HomeAppliance
 
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
 
-_LOGGER = logging.getLogger(__name__)
 
-
-class HomeConnectEntity(Entity):
+class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator], Entity):
     """Generic Home Connect entity (base class)."""
 
     _attr_should_poll = False
@@ -32,7 +31,7 @@ class HomeConnectEntity(Entity):
         desc: EntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self.coordinator = coordinator
+        super().__init__(coordinator, (appliance.info.ha_id, EventKey(desc.key)))
         self.appliance = appliance
         self.entity_description = desc
         self._attr_unique_id = HomeConnectEntity.create_unique_id(
@@ -44,28 +43,17 @@ class HomeConnectEntity(Entity):
             model=appliance.info.vib,
             name=appliance.info.name,
         )
-
-    async def async_added_to_hass(self) -> None:
-        """Register listener."""
-        await super().async_added_to_hass()
-        self.coordinator.add_home_appliances_event_listener(
-            self.appliance.info.ha_id,
-            EventKey(self.bsh_key),
-            self._async_event_update_listener,
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister listener."""
-        await super().async_will_remove_from_hass()
-        self.coordinator.delete_home_appliances_event_listener(
-            self.appliance.info.ha_id,
-            EventKey(self.bsh_key),
-            self._async_event_update_listener,
-        )
+        self.update_native_value()
 
     @abstractmethod
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update status when an event for the entity is received."""
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.update_native_value()
+        self.async_write_ha_state()
 
     @property
     def bsh_key(self) -> str:

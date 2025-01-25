@@ -4,7 +4,7 @@ from datetime import time
 import logging
 from typing import cast
 
-from aiohomeconnect.model import Event, SettingKey
+from aiohomeconnect.model import SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
@@ -48,7 +48,6 @@ async def async_setup_entry(
             for appliance in entry.runtime_data.data.values()
             if description.key in appliance.settings
         ],
-        True,
     )
 
 
@@ -93,18 +92,8 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
                 },
             ) from err
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update status when an event for the entity is received."""
-        seconds = event.value
-        self.set_native_value(cast(int, seconds))
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the Time setting status."""
-        data = self.appliance.settings[SettingKey(self.bsh_key)]
-        self.set_native_value(data.value)
-
-    def set_native_value(self, seconds: int) -> None:
+    def update_native_value(self) -> None:
         """Set the value of the entity."""
-        self._attr_native_value = seconds_to_time(seconds)
+        data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
+        self._attr_native_value = seconds_to_time(data.value)
         _LOGGER.debug("Updated, new value: %s", self._attr_native_value)

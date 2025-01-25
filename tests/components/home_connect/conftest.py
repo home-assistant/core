@@ -168,8 +168,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     async def stream_all_events() -> AsyncGenerator[EventMessage]:
         """Mock stream_all_events."""
         while True:
-            a = await event_queue.get()
-            for event in a:
+            for event in await event_queue.get():
                 yield event
 
     def set_program_side_effect(event_key: EventKey):
@@ -188,7 +187,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
                                     0,
                                     "",
                                     "",
-                                    cast(str, kwargs["program_key"]),
+                                    str(kwargs["program_key"]),
                                 ),
                                 *[
                                     Event(
@@ -196,7 +195,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
                                         0,
                                         "",
                                         "",
-                                        option.key,
+                                        str(option.key),
                                     )
                                     for option in cast(
                                         list[Option], kwargs.get("options", [])

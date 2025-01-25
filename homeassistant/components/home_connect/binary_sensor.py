@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import cast
 
-from aiohomeconnect.model import Event, StatusKey
+from aiohomeconnect.model import StatusKey
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -140,7 +140,7 @@ async def async_setup_entry(
         for appliance in entry.runtime_data.data.values()
         for entity in get_entities_for_appliance(appliance)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
@@ -148,17 +148,9 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
 
     entity_description: HomeConnectBinarySensorEntityDescription
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update status when an event for the entity is received."""
-        self.set_native_value(cast(str | bool, event.value))
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the binary sensor's status."""
-        self.set_native_value(self.appliance.status[StatusKey(self.bsh_key)].value)
-
-    def set_native_value(self, status: str | bool) -> None:
+    def update_native_value(self) -> None:
         """Set the native value of the binary sensor."""
+        status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
         if isinstance(status, bool):
             self._attr_is_on = status
         elif self.entity_description.boolean_map:

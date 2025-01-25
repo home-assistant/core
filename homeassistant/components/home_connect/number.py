@@ -3,7 +3,7 @@
 import logging
 from typing import cast
 
-from aiohomeconnect.model import Event, GetSetting, SettingKey
+from aiohomeconnect.model import GetSetting, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.number import (
@@ -91,7 +91,6 @@ async def async_setup_entry(
             for appliance in entry.runtime_data.data.values()
             if description.key in appliance.settings
         ],
-        True,
     )
 
 
@@ -148,19 +147,18 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
         else:
             self._attr_native_step = 0.1 if setting.type == "Double" else 1
 
-    async def _async_event_update_listener(self, event: Event) -> None:
+    def update_native_value(self) -> None:
         """Update status when an event for the entity is received."""
-        self._attr_native_value = cast(float, event.value)
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the number setting status."""
-        data = self.appliance.settings[SettingKey(self.bsh_key)]
-        self._attr_native_value = data.value
-        self._attr_native_unit_of_measurement = data.unit
-        self.set_constraints(data)
+        data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
+        self._attr_native_value = cast(float, data.value)
         _LOGGER.debug("Updated, new value: %s", self._attr_native_value)
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
+        self._attr_native_unit_of_measurement = data.unit
+        self.set_constraints(data)
         if (
             not hasattr(self, "_attr_native_min_value")
             or not hasattr(self, "_attr_native_max_value")

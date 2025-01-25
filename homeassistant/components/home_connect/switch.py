@@ -4,7 +4,7 @@ import contextlib
 import logging
 from typing import Any, cast
 
-from aiohomeconnect.model import Event, EventKey, ProgramKey, SettingKey
+from aiohomeconnect.model import EventKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import EnumerateAvailableProgram
 
@@ -145,7 +145,7 @@ async def async_setup_entry(
         for appliance in entry.runtime_data.data.values()
         for entity in await get_entities_for_appliance(appliance)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
@@ -196,17 +196,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update status when an event for the entity is received."""
-        self._attr_is_on = cast(bool, event.value)
-        _LOGGER.debug(
-            "Updated %s, new state: %s",
-            self.entity_description.key,
-            self._attr_is_on,
-        )
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
+    def update_native_value(self) -> None:
         """Update the switch's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
         _LOGGER.debug(
@@ -241,10 +231,14 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
         """Call when entity is added to hass."""
-        self.coordinator.add_home_appliances_event_listener(
-            self.appliance.info.ha_id,
-            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-            self._async_event_update_listener,
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update,
+                (
+                    self.appliance.info.ha_id,
+                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                ),
+            )
         )
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
@@ -288,11 +282,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity will be removed from hass."""
-        self.coordinator.delete_home_appliances_event_listener(
-            self.appliance.info.ha_id,
-            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-            self._async_event_update_listener,
-        )
         async_delete_issue(
             self.hass, DOMAIN, f"deprecated_program_switch_{self.entity_id}"
         )
@@ -328,18 +317,10 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update the switch's status."""
-        program = cast(str, event.value)
-        self.set_native_value(program)
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-
-    def set_native_value(self, program: str | None) -> None:
-        """Set the value of the entity."""
-        if program == self.program.key:
+    def update_native_value(self) -> None:
+        """Update the switch's status based on if the program related to this entity is currently active."""
+        event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
+        if event and event.value == self.program.key:
             self._attr_is_on = True
         else:
             self._attr_is_on = False
@@ -350,6 +331,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
     power_off_state: str | None
+
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        if not hasattr(self, "power_off_state"):
+            await self.async_fetch_power_off_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
@@ -409,20 +396,10 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update status when an event for the entity is received."""
-        self.set_native_value(cast(str, event.value))
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the switch's status."""
-        power_state = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
-        self.set_native_value(cast(str, power_state.value))
-        if not hasattr(self, "power_off_state"):
-            await self.async_fetch_power_off_state()
-
-    def set_native_value(self, value: str) -> None:
+    def update_native_value(self) -> None:
         """Set the value of the entity."""
+        power_state = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
+        value = cast(str, power_state.value)
         if value == BSH_POWER_ON:
             self._attr_is_on = True
         elif (

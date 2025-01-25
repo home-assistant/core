@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
-from aiohomeconnect.model import Event, EventKey, SettingKey
+from aiohomeconnect.model import EventKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.light import (
@@ -92,7 +92,6 @@ async def async_setup_entry(
             for appliance in entry.runtime_data.data.values()
             if description.key in appliance.settings
         ],
-        True,
     )
 
 
@@ -108,7 +107,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         desc: HomeConnectLightEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator, appliance, desc)
 
         def get_setting_key_if_setting_exists(
             setting_key: SettingKey | None,
@@ -127,6 +125,8 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             desc.custom_color_key
         )
         self._brightness_scale = desc.brightness_scale
+
+        super().__init__(coordinator, appliance, desc)
 
         match (self._brightness_key, self._custom_color_key):
             case (None, None):
@@ -276,63 +276,36 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         """Register listener."""
         await super().async_added_to_hass()
         if self._brightness_key:
-            self.coordinator.add_home_appliances_event_listener(
-                self.appliance.info.ha_id,
-                EventKey(self._brightness_key),
-                self._async_event_update_brightness_listener,
+            self.async_on_remove(
+                self.coordinator.async_add_listener(
+                    self._handle_coordinator_update,
+                    (
+                        self.appliance.info.ha_id,
+                        EventKey(self._brightness_key),
+                    ),
+                )
             )
         if self._color_key and self._custom_color_key:
-            self.coordinator.add_home_appliances_event_listener(
-                self.appliance.info.ha_id,
-                EventKey(self._color_key),
-                self._async_event_update_color_listener,
+            self.async_on_remove(
+                self.coordinator.async_add_listener(
+                    self._handle_coordinator_update,
+                    (
+                        self.appliance.info.ha_id,
+                        EventKey(self._color_key),
+                    ),
+                )
             )
-            self.coordinator.add_home_appliances_event_listener(
-                self.appliance.info.ha_id,
-                EventKey(self._custom_color_key),
-                self._async_event_update_custom_color_listener,
-            )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Unregister listener."""
-        await super().async_will_remove_from_hass()
-        if self._brightness_key:
-            self.coordinator.delete_home_appliances_event_listener(
-                self.appliance.info.ha_id,
-                EventKey(self._brightness_key),
-                self._async_event_update_brightness_listener,
-            )
-        if self._color_key and self._custom_color_key:
-            self.coordinator.delete_home_appliances_event_listener(
-                self.appliance.info.ha_id,
-                EventKey(self._color_key),
-                self._async_event_update_color_listener,
-            )
-            self.coordinator.delete_home_appliances_event_listener(
-                self.appliance.info.ha_id,
-                EventKey(self._custom_color_key),
-                self._async_event_update_custom_color_listener,
+            self.async_on_remove(
+                self.coordinator.async_add_listener(
+                    self._handle_coordinator_update,
+                    (
+                        self.appliance.info.ha_id,
+                        EventKey(self._custom_color_key),
+                    ),
+                )
             )
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        self._attr_is_on = cast(bool, event.value)
-        self.async_write_ha_state()
-
-    async def _async_event_update_brightness_listener(self, event: Event) -> None:
-        self.update_brightness(cast(float, event.value))
-        self.async_write_ha_state()
-
-    async def _async_event_update_color_listener(self, event: Event) -> None:
-        if event.value != self._enable_custom_color_value_key:
-            self._attr_rgb_color = None
-            self._attr_hs_color = None
-            self.async_write_ha_state()
-
-    async def _async_event_update_custom_color_listener(self, event: Event) -> None:
-        self.update_color(cast(str, event.value))
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
+    def update_native_value(self) -> None:
         """Update the light's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
 
@@ -341,7 +314,10 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             brightness = cast(
                 float, self.appliance.settings[self._brightness_key].value
             )
-            self.update_brightness(brightness)
+            self._attr_brightness = color_util.value_to_brightness(
+                self._brightness_scale, brightness
+            )
+            _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
         if self._color_key and self._custom_color_key:
             color = cast(str, self.appliance.settings[self._color_key].value)
             if color != self._enable_custom_color_value_key:
@@ -351,27 +327,16 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 custom_color = cast(
                     str, self.appliance.settings[self._custom_color_key].value
                 )
-                self.update_color(custom_color)
-
-    def update_brightness(self, brightness: float) -> None:
-        """Update brightness value of the light."""
-        self._attr_brightness = color_util.value_to_brightness(
-            self._brightness_scale, brightness
-        )
-        _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
-
-    def update_color(self, color: str) -> None:
-        """Update color value of the light."""
-        color_value = color[1:]
-        rgb = color_util.rgb_hex_to_rgb_list(color_value)
-        self._attr_rgb_color = (rgb[0], rgb[1], rgb[2])
-        hsv = color_util.color_RGB_to_hsv(*rgb)
-        self._attr_hs_color = (hsv[0], hsv[1])
-        self._attr_brightness = color_util.value_to_brightness(
-            self._brightness_scale, hsv[2]
-        )
-        _LOGGER.debug(
-            "Updated, new color (%s) and new brightness (%s) ",
-            color_value,
-            self._attr_brightness,
-        )
+                color_value = custom_color[1:]
+                rgb = color_util.rgb_hex_to_rgb_list(color_value)
+                self._attr_rgb_color = (rgb[0], rgb[1], rgb[2])
+                hsv = color_util.color_RGB_to_hsv(*rgb)
+                self._attr_hs_color = (hsv[0], hsv[1])
+                self._attr_brightness = color_util.value_to_brightness(
+                    self._brightness_scale, hsv[2]
+                )
+                _LOGGER.debug(
+                    "Updated, new color (%s) and new brightness (%s) ",
+                    color_value,
+                    self._attr_brightness,
+                )

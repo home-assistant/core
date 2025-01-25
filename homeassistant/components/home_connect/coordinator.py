@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from typing import Any
 
@@ -24,9 +24,10 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     HomeConnectRequestError,
 )
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -46,6 +47,7 @@ class HomeConnectApplianceData:
     info: HomeAppliance
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
+    events: dict[EventKey, Event] = field(default_factory=dict)
 
 
 class HomeConnectCoordinator(
@@ -72,6 +74,29 @@ class HomeConnectCoordinator(
         self._home_appliances_event_listeners: dict[
             str, dict[EventKey, list[Callable[[Event], Coroutine[Any, Any, None]]]]
         ] = {}
+
+    @cached_property
+    def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
+        """Return a dict of all listeners registered for a given context."""
+        listeners: dict[tuple[str, EventKey], list[CALLBACK_TYPE]] = {}
+        for listener, context in list(self._listeners.values()):
+            assert isinstance(context, tuple)
+            listeners.setdefault(context, []).append(listener)
+        return listeners
+
+    @callback
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
+        """Listen for data updates."""
+        remove_listener = super().async_add_listener(update_callback, context)
+
+        def remove_listener_and_invalidate_context_listeners() -> None:
+            remove_listener()
+            if hasattr(self, "context_listeners"):
+                del self.context_listeners
+
+        return remove_listener_and_invalidate_context_listeners
 
     async def start_event_listener(self) -> None:
         """Start event listener."""
@@ -106,22 +131,26 @@ class HomeConnectCoordinator(
 
                         case EventType.NOTIFY:
                             settings = self.data[event_message.ha_id].settings
+                            events = self.data[event_message.ha_id].events
                             for event in event_message.data.items:
-                                if (
-                                    event.key not in SettingKey
-                                    or event.key is EventKey.UNKNOWN
-                                ):
+                                if event.key is EventKey.UNKNOWN:
                                     continue
-                                setting_key = SettingKey(event.key)
-                                if setting_key in settings:
-                                    settings[setting_key].value = event.value
+                                if event.key in SettingKey:
+                                    setting_key = SettingKey(event.key)
+                                    if setting_key in settings:
+                                        settings[setting_key].value = event.value
+                                    else:
+                                        settings[setting_key] = GetSetting(
+                                            setting_key, event.value
+                                        )
                                 else:
-                                    settings[setting_key] = GetSetting(
-                                        setting_key, event.value
-                                    )
+                                    events[event.key] = event
                             await self._call_event_listener(event_message)
 
                         case EventType.EVENT:
+                            events = self.data[event_message.ha_id].events
+                            for event in event_message.data.items:
+                                events[event.key] = event
                             await self._call_event_listener(event_message)
 
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
@@ -140,46 +169,13 @@ class HomeConnectCoordinator(
 
     async def _call_event_listener(self, event_message: EventMessage):
         """Call listener for event."""
-        listeners = self._home_appliances_event_listeners.get(event_message.ha_id, {})
-        if not listeners:
-            return
         for event in event_message.data.items:
             if event.key is EventKey.UNKNOWN:
                 continue
-            for listener in listeners.get(event.key, []):
-                await listener(event)
-
-    def add_home_appliances_event_listener(
-        self,
-        ha_id: str,
-        event_key: EventKey,
-        cb: Callable[[Event], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Register a event listener for a specific home appliance and event key."""
-        self._home_appliances_event_listeners.setdefault(ha_id, {}).setdefault(
-            event_key, []
-        ).append(cb)
-
-    def delete_home_appliances_event_listener(
-        self,
-        ha_id: str,
-        event_key: EventKey,
-        cb: Callable[[Event], Coroutine[Any, Any, None]],
-    ) -> None:
-        """Deregister event listener for a specific home appliance and event key."""
-        if (
-            ha_id in self._home_appliances_event_listeners
-            and event_key in self._home_appliances_event_listeners[ha_id]
-        ):
-            appliance_listeners = self._home_appliances_event_listeners[ha_id]
-            if cb in (
-                listeners := self._home_appliances_event_listeners[ha_id][event_key]
+            for listener in self.context_listeners.get(
+                (event_message.ha_id, event.key), []
             ):
-                listeners.remove(cb)
-            if not listeners:
-                self._home_appliances_event_listeners[ha_id].pop(event_key)
-            if not appliance_listeners:
-                self._home_appliances_event_listeners.pop(ha_id)
+                listener()
 
     async def _async_update_data(self) -> dict[str, HomeConnectApplianceData]:
         """Fetch data from Home Connect."""

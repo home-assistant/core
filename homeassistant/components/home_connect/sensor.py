@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 from typing import cast
 
-from aiohomeconnect.model import Event, EventKey, StatusKey
+from aiohomeconnect.model import EventKey, StatusKey
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
@@ -287,7 +287,7 @@ async def async_setup_entry(
         for appliance in entry.runtime_data.data.values()
         for entity in await get_entities_for_appliance(appliance)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
@@ -295,21 +295,17 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     entity_description: HomeConnectSensorEntityDescription
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update status when an event for the entity is received."""
-        self.set_native_value(event.value)
-        self.async_write_ha_state()
-
-    async def async_update(self) -> None:
-        """Update the sensor's status."""
-        self.set_native_value(self.appliance.status[StatusKey(self.bsh_key)].value)
-
-    def set_native_value(self, status: str | float) -> None:
+    def update_native_value(self) -> None:
         """Set the value of the sensor."""
+        status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
+        self._update_native_value(status)
+
+    def _update_native_value(self, status: str | float) -> None:
+        """Set the value of the sensor based on the given value."""
         match self.device_class:
             case SensorDeviceClass.TIMESTAMP:
                 self._attr_native_value = dt_util.utcnow() + timedelta(
-                    seconds=float(status)
+                    seconds=cast(float, status)
                 )
             case SensorDeviceClass.ENUM:
                 # Value comes back as an enum, we only really care about the
@@ -329,13 +325,15 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     async def async_added_to_hass(self) -> None:
         """Register listener."""
         await super().async_added_to_hass()
-        self.coordinator.add_home_appliances_event_listener(
-            self.appliance.info.ha_id,
-            EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
-            self._async_event_update_operation_state_listener,
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_operation_state_event,
+                (self.appliance.info.ha_id, EventKey.BSH_COMMON_STATUS_OPERATION_STATE),
+            )
         )
 
-    async def _async_event_update_operation_state_listener(self, _: Event) -> None:
+    @callback
+    def _handle_operation_state_event(self) -> None:
         """Update status when an event for the entity is received."""
         self.program_running = (
             status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
@@ -356,16 +354,20 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         # Otherwise, some sensors report erroneous values.
         return super().available and self.program_running
 
-    async def async_update(self) -> None:
-        """Update the sensor's status."""
-        # Program sensors value is not fetchable from the status endpoint,
-        # so we can only wait for the event to update the value.
+    def update_native_value(self) -> None:
+        """Update the program sensor's status."""
+        event = self.appliance.events.get(cast(EventKey, self.bsh_key))
+        if event:
+            self._update_native_value(event.value)
 
 
 class HomeConnectEventSensor(HomeConnectSensor):
     """Sensor class for Home Connect events."""
 
-    async def async_update(self) -> None:
+    def update_native_value(self) -> None:
         """Update the sensor's status."""
-        if not self._attr_native_value:
+        event = self.appliance.events.get(cast(EventKey, self.bsh_key))
+        if event:
+            self._update_native_value(event.value)
+        elif not self._attr_native_value:
             self._attr_native_value = self.entity_description.default_value

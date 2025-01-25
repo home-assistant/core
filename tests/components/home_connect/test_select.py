@@ -146,7 +146,7 @@ async def test_select_program_functionality(
         [
             EventMessage(
                 appliance_ha_id,
-                EventType.STATUS,
+                EventType.NOTIFY,
                 ArrayOfEvents(
                     [
                         Event(

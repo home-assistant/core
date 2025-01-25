@@ -80,7 +80,7 @@ async def test_coordinator_update_failing_get_settings_status(
     [
         (EventType.STATUS, EventKey.BSH_COMMON_STATUS_DOOR_STATE),
         (EventType.NOTIFY, EventKey.BSH_COMMON_SETTING_POWER_STATE),
-        (EventType.EVENT, EventKey.BSH_COMMON_STATUS_OPERATION_STATE),
+        (EventType.EVENT, EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY),
     ],
 )
 async def test_event_listener(
@@ -98,36 +98,37 @@ async def test_event_listener(
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    listener = AsyncMock()
+    listener = MagicMock()
     coordinator = cast(HomeConnectConfigEntry, config_entry).runtime_data
-    coordinator.add_home_appliances_event_listener(appliance_ha_id, event_key, listener)
-
-    event = Event(
-        event_key,
-        0,
-        "",
-        "",
-        "some value",
+    remove_listener = coordinator.async_add_listener(
+        listener, (appliance_ha_id, event_key)
     )
+
     event_message = EventMessage(
         appliance_ha_id,
         event_type,
         ArrayOfEvents(
-            [event],
+            [
+                Event(
+                    event_key,
+                    0,
+                    "",
+                    "",
+                    "some value",
+                )
+            ],
         ),
     )
     await client.add_events([event_message])
     await hass.async_block_till_done()
 
-    listener.assert_awaited_once_with(event)
+    listener.assert_called_once()
 
-    coordinator.delete_home_appliances_event_listener(
-        appliance_ha_id, event_key, listener
-    )
+    remove_listener()
     await client.add_events([event_message])
     await hass.async_block_till_done()
 
-    listener.assert_awaited_once()
+    listener.assert_called_once()
     assert coordinator._home_appliances_event_listeners == {}
 
 
@@ -156,7 +157,7 @@ async def test_event_listener_ignore_unknowns(
 
     listener = AsyncMock()
     coordinator = cast(HomeConnectConfigEntry, config_entry).runtime_data
-    coordinator.add_home_appliances_event_listener(appliance_ha_id, event_key, listener)
+    coordinator.async_add_listener(listener, (appliance_ha_id, event_key))
 
     await client.add_events(
         [
@@ -293,25 +294,26 @@ async def test_event_listener_resilience(
     event_key = EventKey.BSH_COMMON_STATUS_DOOR_STATE
     listener = AsyncMock()
     coordinator = cast(HomeConnectConfigEntry, config_entry).runtime_data
-    coordinator.add_home_appliances_event_listener(appliance_ha_id, event_key, listener)
+    coordinator.async_add_listener(listener, (appliance_ha_id, event_key))
 
-    event = Event(
-        event_key,
-        0,
-        "",
-        "",
-        "some value",
-    )
     await client.add_events(
         [
             EventMessage(
                 appliance_ha_id,
                 EventType.STATUS,
                 ArrayOfEvents(
-                    [event],
+                    [
+                        Event(
+                            event_key,
+                            0,
+                            "",
+                            "",
+                            "some value",
+                        )
+                    ],
                 ),
             ),
         ]
     )
     await hass.async_block_till_done()
-    listener.assert_awaited_once_with(event)
+    listener.assert_called_once()

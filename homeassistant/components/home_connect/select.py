@@ -4,7 +4,7 @@ import contextlib
 import logging
 from typing import cast
 
-from aiohomeconnect.model import Event, EventKey, ProgramKey
+from aiohomeconnect.model import EventKey, ProgramKey
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import EnumerateAvailableProgram
 
@@ -78,7 +78,7 @@ async def async_setup_entry(
         for appliance in entry.runtime_data.data.values()
         for entity in await get_entities_for_appliance(appliance)
     ]
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
@@ -105,14 +105,14 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self.start_on_select = desc.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
         self._attr_current_option = None
 
-    async def _async_event_update_listener(self, event: Event) -> None:
-        """Update the program selection status when an event for the entity is received."""
-        self.set_native_value(ProgramKey(cast(str, event.value)))
-        self.async_write_ha_state()
-
-    def set_native_value(self, program_key: ProgramKey) -> None:
-        """Set the value of the entity."""
-        self._attr_current_option = PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key)
+    def update_native_value(self) -> None:
+        """Set the program value."""
+        event = self.appliance.events.get(cast(EventKey, self.bsh_key))
+        self._attr_current_option = (
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(cast(ProgramKey, event.value), None)
+            if event
+            else None
+        )
         _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
 
     async def async_select_option(self, option: str) -> None:
