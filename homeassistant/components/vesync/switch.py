@@ -96,7 +96,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         self.entity_description = description
         if is_outlet(self.device):
             self._attr_device_class = SwitchDeviceClass.OUTLET
-        if is_wall_switch(self.device):
+        elif is_wall_switch(self.device):
             self._attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
