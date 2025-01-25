@@ -17,6 +17,8 @@ from . import OhmeConfigEntry
 from .const import DOMAIN
 from .entity import OhmeEntity, OhmeEntityDescription
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class OhmeSelectDescription(OhmeEntityDescription, SelectEntityDescription):
