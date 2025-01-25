@@ -1,14 +1,13 @@
 """Tests for selects."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
+
+from ohme import ChargerMode
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import Platform, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from ohme import ChargerMode
 
 from . import setup_integration
 

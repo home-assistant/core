@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Awaitable, Final
+from typing import Any, Final
 
-from ohme import ApiException, OhmeApiClient, ChargerMode
+from ohme import ApiException, ChargerMode, OhmeApiClient
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
