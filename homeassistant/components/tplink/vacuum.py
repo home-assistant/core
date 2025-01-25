@@ -28,6 +28,11 @@ from .entity import (
     async_refresh_after,
 )
 
+# Coordinator is used to centralize the data updates
+# For actions the integration handles locking of concurrent device request
+PARALLEL_UPDATES = 0
+
+# Upstream state to VacuumActivity
 STATUS_TO_ACTIVITY = {
     Status.Idle: VacuumActivity.IDLE,
     Status.Cleaning: VacuumActivity.CLEANING,
