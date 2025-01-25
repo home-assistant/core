@@ -173,10 +173,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         # Resolve player_ids to entity_ids
         entity_registry = er.async_get(self.hass)
         entity_ids = [
-            entity
+            entity_id
             for member_id in player_ids
             if (
-                entity := entity_registry.async_get_entity_id(
+                entity_id := entity_registry.async_get_entity_id(
                     Platform.MEDIA_PLAYER, HEOS_DOMAIN, str(member_id)
                 )
             )
