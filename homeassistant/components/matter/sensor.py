@@ -149,23 +149,6 @@ class MatterOperationalStateSensor(MatterSensor):
         )
 
 
-class MatterOperationalStateCurrentPhaseSensor(MatterSensor):
-    """Representation of a CurrentPhase sensor for Matter Operational State."""
-
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        operational_state_phase_list = self.get_matter_attribute_value(
-            clusters.OperationalState.Attributes.PhaseList
-        )
-        current_phase = self.get_matter_attribute_value(
-            clusters.OperationalState.Attributes.CurrentPhase
-        )
-        current_phase_str = operational_state_phase_list[current_phase]
-        self._attr_options = operational_state_phase_list
-        self._attr_native_value = current_phase_str
-
-
 class MatterListSensor(MatterSensor):
     """Representation of a sensor entity from Matter list from Cluster attribute(s)."""
 
