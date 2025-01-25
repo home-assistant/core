@@ -90,11 +90,11 @@ class HomeConnectCoordinator(
     ) -> Callable[[], None]:
         """Listen for data updates."""
         remove_listener = super().async_add_listener(update_callback, context)
+        self.__dict__.pop("context_callbacks", None)
 
         def remove_listener_and_invalidate_context_listeners() -> None:
             remove_listener()
-            if hasattr(self, "context_listeners"):
-                del self.context_listeners
+            self.__dict__.pop("context_callbacks", None)
 
         return remove_listener_and_invalidate_context_listeners
 
