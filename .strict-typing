@@ -224,6 +224,7 @@ homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
+homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
 homeassistant.components.here_travel_time.*
@@ -236,6 +237,7 @@ homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*
 homeassistant.components.homeassistant_yellow.*
+homeassistant.components.homee.*
 homeassistant.components.homekit.*
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
@@ -261,6 +263,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
+homeassistant.components.incomfort.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
@@ -306,6 +309,7 @@ homeassistant.components.logbook.*
 homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
+homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*

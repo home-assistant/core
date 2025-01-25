@@ -8,6 +8,7 @@ from typing import Final, cast
 from kasa import Feature
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -73,19 +74,28 @@ async def async_setup_entry(
     """Set up sensors."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
 
-    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        hass=hass,
-        device=device,
-        coordinator=parent_coordinator,
-        feature_type=Feature.Type.BinarySensor,
-        entity_class=TPLinkBinarySensorEntity,
-        descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
-        child_coordinators=children_coordinators,
-    )
-    async_add_entities(entities)
+    known_child_device_ids: set[str] = set()
+    first_check = True
+
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.BinarySensor,
+            entity_class=TPLinkBinarySensorEntity,
+            descriptions=BINARYSENSOR_DESCRIPTIONS_MAP,
+            platform_domain=BINARY_SENSOR_DOMAIN,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkBinarySensorEntity(CoordinatedTPLinkFeatureEntity, BinarySensorEntity):

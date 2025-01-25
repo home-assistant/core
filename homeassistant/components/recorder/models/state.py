@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
 from homeassistant.const import (
