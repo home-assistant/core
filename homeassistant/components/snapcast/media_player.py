@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -19,7 +19,6 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
@@ -31,17 +30,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_LATENCY,
-    ATTR_MASTER,
     CLIENT_PREFIX,
     CLIENT_SUFFIX,
+    CONF_CREATE_GROUP_ENTITIES,
     DOMAIN,
     GROUP_PREFIX,
     GROUP_SUFFIX,
-    SERVICE_JOIN,
     SERVICE_RESTORE,
     SERVICE_SET_LATENCY,
     SERVICE_SNAPSHOT,
-    SERVICE_UNJOIN,
 )
 from .coordinator import SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
@@ -52,6 +49,12 @@ STREAM_STATUS = {
     "unknown": None,
 }
 
+_SUPPORTED_FEATURES = (
+    MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -61,10 +64,6 @@ def register_services() -> None:
 
     platform.async_register_entity_service(SERVICE_SNAPSHOT, None, "snapshot")
     platform.async_register_entity_service(SERVICE_RESTORE, None, "async_restore")
-    platform.async_register_entity_service(
-        SERVICE_JOIN, {vol.Required(ATTR_MASTER): cv.entity_id}, "async_join"
-    )
-    platform.async_register_entity_service(SERVICE_UNJOIN, None, "async_unjoin")
     platform.async_register_entity_service(
         SERVICE_SET_LATENCY,
         {vol.Required(ATTR_LATENCY): cv.positive_int},
@@ -82,106 +81,94 @@ async def async_setup_entry(
     # Fetch coordinator from global data
     coordinator: SnapcastUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Create an ID for the Snapserver
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    host_id = f"{host}:{port}"
-
     register_services()
 
     _known_group_ids: set[str] = set()
     _known_client_ids: set[str] = set()
 
     @callback
-    def _check_entities() -> None:
-        nonlocal _known_group_ids, _known_client_ids
+    def _update_entities(
+        entity_class: type[SnapcastClientDevice | SnapcastGroupDevice],
+        known_ids: set[str],
+        get_device: Callable[[str], Snapclient | Snapgroup],
+        get_devices: Callable[[], list[Snapclient] | list[Snapgroup]],
+    ) -> None:
+        # Get IDs of current devices on server
+        snapcast_ids = {d.identifier for d in get_devices()}
 
-        def _update_known_ids(known_ids, ids) -> tuple[set[str], set[str]]:
-            ids_to_add = ids - known_ids
-            ids_to_remove = known_ids - ids
+        # Update known IDs
+        ids_to_add = snapcast_ids - known_ids
+        ids_to_remove = known_ids - snapcast_ids
 
-            # Update known IDs
-            known_ids.difference_update(ids_to_remove)
-            known_ids.update(ids_to_add)
-
-            return ids_to_add, ids_to_remove
-
-        group_ids = {g.identifier for g in coordinator.server.groups}
-        groups_to_add, groups_to_remove = _update_known_ids(_known_group_ids, group_ids)
-
-        client_ids = {c.identifier for c in coordinator.server.clients}
-        clients_to_add, clients_to_remove = _update_known_ids(
-            _known_client_ids, client_ids
-        )
+        known_ids.difference_update(ids_to_remove)
+        known_ids.update(ids_to_add)
 
         # Exit early if no changes
-        if not (groups_to_add | groups_to_remove | clients_to_add | clients_to_remove):
+        if not (ids_to_add | ids_to_remove):
             return
 
         _LOGGER.debug(
-            "New clients: %s",
-            str([coordinator.server.client(c).friendly_name for c in clients_to_add]),
+            "New %s: %s",
+            entity_class,
+            str([get_device(d).friendly_name for d in ids_to_add]),
         )
         _LOGGER.debug(
-            "New groups: %s",
-            str([coordinator.server.group(g).friendly_name for g in groups_to_add]),
-        )
-        _LOGGER.debug(
-            "Remove client IDs: %s",
-            str([list(clients_to_remove)]),
-        )
-        _LOGGER.debug(
-            "Remove group IDs: %s",
-            str(list(groups_to_remove)),
+            "Remove %s IDs: %s",
+            entity_class,
+            str([list(ids_to_remove)]),
         )
 
         # Add new entities
         async_add_entities(
             [
-                SnapcastGroupDevice(
-                    coordinator, coordinator.server.group(group_id), host_id
-                )
-                for group_id in groups_to_add
-            ]
-            + [
-                SnapcastClientDevice(
-                    coordinator, coordinator.server.client(client_id), host_id
-                )
-                for client_id in clients_to_add
+                entity_class(coordinator, get_device(snapcast_id))
+                for snapcast_id in ids_to_add
             ]
         )
 
         # Remove stale entities
         entity_registry = er.async_get(hass)
-        for group_id in groups_to_remove:
+        for snapcast_id in ids_to_remove:
             if entity_id := entity_registry.async_get_entity_id(
                 MEDIA_PLAYER_DOMAIN,
                 DOMAIN,
-                SnapcastGroupDevice.get_unique_id(host_id, group_id),
+                entity_class.get_unique_id(coordinator.host_id, snapcast_id),
             ):
                 entity_registry.async_remove(entity_id)
 
-        for client_id in clients_to_remove:
-            if entity_id := entity_registry.async_get_entity_id(
-                MEDIA_PLAYER_DOMAIN,
-                DOMAIN,
-                SnapcastClientDevice.get_unique_id(host_id, client_id),
-            ):
-                entity_registry.async_remove(entity_id)
+    def _update_clients() -> None:
+        _update_entities(
+            SnapcastClientDevice,
+            _known_client_ids,
+            coordinator.server.client,
+            lambda: coordinator.server.clients,
+        )
 
-    coordinator.async_add_listener(_check_entities)
-    _check_entities()
+    # Create client entities and add listener to update clients on server update
+    _update_clients()
+    coordinator.async_add_listener(_update_clients)
+
+    # Enable group entities
+    if config_entry.options.get(CONF_CREATE_GROUP_ENTITIES):
+
+        def _update_groups() -> None:
+            _update_entities(
+                SnapcastGroupDevice,
+                _known_group_ids,
+                coordinator.server.group,
+                lambda: coordinator.server.groups,
+            )
+
+        # Create group entities and add listener to update groups on server update
+        _update_groups()
+        coordinator.async_add_listener(_update_groups)
 
 
 class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
     """Base class representing a Snapcast device."""
 
     _attr_should_poll = False
-    _attr_supported_features = (
-        MediaPlayerEntityFeature.VOLUME_MUTE
-        | MediaPlayerEntityFeature.VOLUME_SET
-        | MediaPlayerEntityFeature.SELECT_SOURCE
-    )
+    _attr_supported_features = _SUPPORTED_FEATURES
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
@@ -189,13 +176,14 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
         self,
         coordinator: SnapcastUpdateCoordinator,
         device: Snapgroup | Snapclient,
-        host_id: str,
     ) -> None:
         """Initialize the base device."""
         super().__init__(coordinator)
 
         self._device = device
-        self._attr_unique_id = self.get_unique_id(host_id, device.identifier)
+        self._attr_unique_id = self.get_unique_id(
+            coordinator.host_id, device.identifier
+        )
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
@@ -269,14 +257,6 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
     async def async_set_latency(self, latency) -> None:
         """Handle the set_latency service."""
-        raise NotImplementedError
-
-    async def async_join(self, master) -> None:
-        """Handle the join service."""
-        raise NotImplementedError
-
-    async def async_unjoin(self) -> None:
-        """Handle the unjoin service."""
         raise NotImplementedError
 
     @property
@@ -381,19 +361,14 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
         """Handle the set_latency service."""
         raise ServiceValidationError("Latency can only be set for a Snapcast client.")
 
-    async def async_join(self, master) -> None:
-        """Handle the join service."""
-        raise ServiceValidationError("Entity is not a client. Can only join clients.")
-
-    async def async_unjoin(self) -> None:
-        """Handle the unjoin service."""
-        raise ServiceValidationError("Entity is not a client. Can only unjoin clients.")
-
 
 class SnapcastClientDevice(SnapcastBaseDevice):
     """Representation of a Snapcast client device."""
 
     _device: Snapclient
+    _attr_supported_features = (
+        _SUPPORTED_FEATURES | MediaPlayerEntityFeature.GROUPING
+    )  # Clients support grouping
 
     @classmethod
     def get_unique_id(cls, host, id) -> str:
@@ -437,31 +412,47 @@ class SnapcastClientDevice(SnapcastBaseDevice):
         await self._device.set_latency(latency)
         self.async_write_ha_state()
 
-    async def async_join(self, master) -> None:
-        """Join the group of the master player."""
+    @property
+    def group_members(self) -> list[str] | None:
+        """List of player entities which are currently grouped together for synchronous playback."""
         entity_registry = er.async_get(self.hass)
-        master_entity = entity_registry.async_get(master)
-        if master_entity is None:
-            raise ServiceValidationError(f"Master entity '{master}' not found.")
-
-        # Validate master entity is a client
-        unique_id = master_entity.unique_id
-        if not unique_id.startswith(CLIENT_PREFIX):
-            raise ServiceValidationError(
-                "Master is not a client device. Can only join clients."
+        return [
+            entity_id
+            for client_id in self._current_group.clients
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    MEDIA_PLAYER_DOMAIN,
+                    DOMAIN,
+                    self.get_unique_id(self.coordinator.host_id, client_id),
+                )
             )
+        ]
 
-        # Extract the client ID and locate it's group
-        identifier = unique_id.split("_")[-1]
-        master_group = next(
-            group
-            for group in self._device.groups_available()
-            if identifier in group.clients
-        )
-        await master_group.add_client(self._device.identifier)
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Add `group_members` to this client's current group."""
+        # Get the client entity for each group member excluding self
+        entity_registry = er.async_get(self.hass)
+        clients = [
+            entity
+            for entity_id in group_members
+            if (entity := entity_registry.async_get(entity_id))
+            and entity.unique_id != self.unique_id
+        ]
+
+        for client in clients:
+            # Valid entity is a snapcast client
+            if not client.unique_id.startswith(CLIENT_PREFIX):
+                raise ServiceValidationError(
+                    f"Entity '{client.entity_id}' is not a Snapcast client device."
+                )
+
+            # Extract client ID and join it to the current group
+            identifier = client.unique_id.split("_")[-1]
+            await self._current_group.add_client(identifier)
+
         self.async_write_ha_state()
 
-    async def async_unjoin(self) -> None:
-        """Unjoin the group the player is currently in."""
+    async def async_unjoin_player(self) -> None:
+        """Remove this client from it's current group."""
         await self._current_group.remove_client(self._device.identifier)
         self.async_write_ha_state()
