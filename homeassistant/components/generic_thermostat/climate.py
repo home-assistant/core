@@ -254,6 +254,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._cold_tolerance = cold_tolerance
         self._cycle_timer = datetime.now() - self.cycle_cooldown
         self._cycle_callback: CALLBACK_TYPE | None = None
+        self._check_callback: CALLBACK_TYPE | None = None
         self._hot_tolerance = hot_tolerance
         self._keep_alive = keep_alive
         self._hvac_mode = initial_hvac_mode
@@ -307,6 +308,19 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     self.hass, self._async_control_heating, self._keep_alive
                 )
             )
+
+        if self.platform.config_entry is not None:
+
+            @callback
+            def _async_unload_entry() -> None:
+                """Tear-down on unload."""
+                if self._cycle_callback:
+                    _LOGGER.debug("Cancelling scheduled shut-off")
+                    self._cycle_callback()
+                if self._check_callback:
+                    self._check_callback()
+
+            self.platform.config_entry.async_on_unload(_async_unload_entry)
 
         @callback
         def _async_startup(_: Event | None = None) -> None:
@@ -551,12 +565,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                     if self._cycle_timer + self.min_cycle_duration <= now:
                         _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                         await self._async_heater_turn_off()
-                    else:
+                    elif self._check_callback is None:
                         _LOGGER.debug(
                             "Minimum cycle time not reached, check again at %s",
                             self._cycle_timer + self.min_cycle_duration,
                         )
-                        async_call_later(
+                        self._check_callback = async_call_later(
                             self.hass,
                             now - self._cycle_timer + self.min_cycle_duration,
                             self._async_control_heating,
@@ -573,12 +587,12 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 if self._cycle_timer + self.cycle_cooldown <= now:
                     _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                     await self._async_heater_turn_on()
-                else:
+                elif self._check_callback is None:
                     _LOGGER.debug(
                         "Cooldown time not reached, check again at %s",
                         self._cycle_timer + self.cycle_cooldown,
                     )
-                    async_call_later(
+                    self._check_callback = async_call_later(
                         self.hass,
                         now - self._cycle_timer + self.cycle_cooldown,
                         self._async_control_heating,
@@ -606,6 +620,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if not keepalive:
             self._cycle_timer = datetime.now()
+            if self._check_callback:
+                self._check_callback()
+                self._check_callback = None
             if self.max_cycle_duration:
                 _LOGGER.debug(
                     "Scheduling maximum run-time shut-off for %s",
@@ -629,6 +646,9 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         )
         if not keepalive:
             self._cycle_timer = datetime.now()
+            if self._check_callback:
+                self._check_callback()
+                self._check_callback = None
             if self._cycle_callback:
                 _LOGGER.debug("Cancelling scheduled shut-off")
                 self._cycle_callback()
