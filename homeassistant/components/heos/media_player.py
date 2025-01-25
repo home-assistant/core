@@ -29,8 +29,10 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -161,11 +163,29 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._update_attributes()
         super()._handle_coordinator_update()
 
+    def _get_group_members(self, group_id: int | None) -> list[str] | None:
+        """Get group member entity IDs for the group."""
+        if group_id is None:
+            return None
+        if not (group := self.coordinator.heos.groups.get(group_id)):
+            return None
+        player_ids = [group.lead_player_id, *group.member_player_ids]
+        # Resolve player_ids to entity_ids
+        entity_registry = er.async_get(self.hass)
+        entity_ids = [
+            entity
+            for member_id in player_ids
+            if (
+                entity := entity_registry.async_get_entity_id(
+                    Platform.MEDIA_PLAYER, HEOS_DOMAIN, str(member_id)
+                )
+            )
+        ]
+        return entity_ids or None
+
     def _update_attributes(self) -> None:
         """Update core attributes of the media player."""
-        self._attr_group_members = self.coordinator.async_get_group_members(
-            self._player.group_id
-        )
+        self._attr_group_members = self._get_group_members(self._player.group_id)
         self._attr_source_list = self.coordinator.async_get_source_list()
         self._attr_source = self.coordinator.async_get_current_source(
             self._player.now_playing_media
@@ -192,11 +212,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._player.clear_queue()
-
-    @catch_action_error("join players")
-    async def async_join_players(self, group_members: list[str]) -> None:
-        """Join `group_members` as a player group with the current player."""
-        await self.coordinator.async_join_players(self._player.player_id, group_members)
 
     @catch_action_error("pause")
     async def async_media_pause(self) -> None:
@@ -308,10 +323,45 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
 
+    @catch_action_error("join players")
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        player_ids: list[int] = [self._player.player_id]
+        # Resolve entity_ids to player_ids
+        entity_registry = er.async_get(self.hass)
+        for entity_id in group_members:
+            entity_entry = entity_registry.async_get(entity_id)
+            if entity_entry is None:
+                raise ServiceValidationError(
+                    translation_domain=HEOS_DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if entity_entry.platform != HEOS_DOMAIN:
+                raise ServiceValidationError(
+                    translation_domain=HEOS_DOMAIN,
+                    translation_key="not_heos_media_player",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            player_id = int(entity_entry.unique_id)
+            if player_id not in player_ids:
+                player_ids.append(player_id)
+        await self.coordinator.heos.set_group(player_ids)
+
     @catch_action_error("unjoin player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self.coordinator.async_unjoin_player(self._player.player_id)
+        for group in self.coordinator.heos.groups.values():
+            if group.lead_player_id == self._player.player_id:
+                # Player is the group leader, this effectively removes the group.
+                await self.coordinator.heos.set_group([self._player.player_id])
+                return
+            if self._player.player_id in group.member_player_ids:
+                # Player is a group member, update the group to exclude it
+                new_members = [group.lead_player_id, *group.member_player_ids]
+                new_members.remove(self._player.player_id)
+                await self.coordinator.heos.set_group(new_members)
+                return
 
     @property
     def available(self) -> bool:
