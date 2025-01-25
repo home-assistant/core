@@ -335,7 +335,7 @@ async def test_operational_state_sensor(
     assert state.state == "extra_state"
 
 
-@pytest.mark.parametrize("node_fixture", ["laundrywasher"])
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
 async def test_operational_state_phase_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
@@ -343,13 +343,13 @@ async def test_operational_state_phase_sensor(
 ) -> None:
     """Test laundry washer sensor."""
     # OperationalState Cluster / CurrentPhase attribute (1/96/1)
-    state = hass.states.get("sensor.laundry_washer_current_phase")
+    state = hass.states.get("sensor.laundrywasher_current_phase")
     assert state
     assert state.state == "pre-soak"
 
     set_node_attribute(matter_node, 1, 96, 1, 1)
     await trigger_subscription_callback(hass, matter_client)
 
-    state = hass.states.get("sensor.laundry_washer_current_phase")
+    state = hass.states.get("sensor.laundrywasher_current_phase")
     assert state
     assert state.state == "rinse"
