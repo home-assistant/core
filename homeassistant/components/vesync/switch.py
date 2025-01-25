@@ -31,6 +31,8 @@ class VeSyncSwitchEntityDescription(SwitchEntityDescription):
 
     is_on: Callable[[VeSyncBaseDevice], bool]
     exists_fn: Callable[[VeSyncBaseDevice], bool]
+    on_fn: Callable[[VeSyncBaseDevice], bool]
+    off_fn: Callable[[VeSyncBaseDevice], bool]
 
 
 SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
@@ -40,6 +42,8 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         # Other types of wall switches support dimming.  Those use light.py platform.
         exists_fn=lambda device: is_wall_switch(device) or is_outlet(device),
         name=None,
+        on_fn=lambda device: device.turn_on(),
+        off_fn=lambda device: device.turn_off(),
     ),
 )
 
@@ -106,10 +110,10 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        self.device.turn_off()
+        self.entity_description.off_fn(self.device)
         self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        self.device.turn_on()
+        self.entity_description.on_fn(self.device)
         self.schedule_update_ha_state()
