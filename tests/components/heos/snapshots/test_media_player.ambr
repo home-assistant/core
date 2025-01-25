@@ -25,6 +25,7 @@
         "Today's Hits Radio",
         'Classical MPR (Classical Music)',
         'HEOS Drive - Line In 1',
+        'Speaker - Line In 1',
       ]),
       'supported_features': <MediaPlayerEntityFeature: 3079741>,
       'volume_level': 0.25,

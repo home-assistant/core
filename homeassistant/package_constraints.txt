@@ -11,7 +11,7 @@ aiohttp_cors==0.7.0
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
-async-upnp-client==0.42.0
+async-upnp-client==0.43.0
 atomicwrites-homeassistant==1.4.1
 attrs==24.2.0
 audioop-lts==0.2.1;python_version>='3.13'
@@ -36,7 +36,7 @@ habluetooth==3.12.0
 hass-nabucasa==0.88.1
 hassil==2.1.0
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20250109.0
+home-assistant-frontend==20250109.2
 home-assistant-intents==2025.1.1
 httpx==0.28.1
 ifaddr==0.2.0
@@ -128,7 +128,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.4
+pydantic==2.10.6
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
