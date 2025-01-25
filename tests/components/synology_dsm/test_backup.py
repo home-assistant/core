@@ -130,7 +130,7 @@ def mock_dsm_with_filestation():
             upload_file=AsyncMock(return_value=True),
             delete_file=AsyncMock(return_value=True),
         )
-
+        dsm.logout = AsyncMock(return_value=True)
         yield dsm
 
 
@@ -226,6 +226,44 @@ async def test_agents_not_loaded(
         client = await hass_ws_client(hass)
 
         await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [
+            {"agent_id": "backup.local"},
+        ],
+    }
+
+
+async def test_agents_on_unload(
+    hass: HomeAssistant,
+    setup_dsm_with_filestation: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test backup agent on un-loading config entry."""
+    # config entry is loaded
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agents": [
+            {"agent_id": "synology_dsm.Mock Title"},
+            {"agent_id": "backup.local"},
+        ],
+    }
+
+    # unload config entry
+    entries = hass.config_entries.async_loaded_entries(DOMAIN)
+    await hass.config_entries.async_unload(entries[0].entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/agents/info"})
     response = await client.receive_json()
 
     assert response["success"]
