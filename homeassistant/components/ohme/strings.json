@@ -50,6 +50,11 @@
         "name": "Approve charge"
       }
     },
+    "number": {
+      "target_percentage": {
+        "name": "Target percentage"
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -77,6 +82,11 @@
       },
       "sleep_when_inactive": {
         "name": "Sleep when inactive"
+      }
+    },
+    "time": {
+      "target_time": {
+        "name": "Target time"
       }
     }
   },

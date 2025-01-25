@@ -5,20 +5,21 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
-from typing import Any
+from typing import Any, cast
 
 import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.climate import INTENT_GET_TEMPERATURE
-from homeassistant.components.conversation import (
-    ConversationTraceEventType,
-    async_conversation_trace_append,
+from homeassistant.components.calendar import (
+    DOMAIN as CALENDAR_DOMAIN,
+    SERVICE_GET_EVENTS,
 )
+from homeassistant.components.climate import INTENT_GET_TEMPERATURE
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
@@ -32,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import yaml
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
@@ -171,6 +172,12 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
+        # pylint: disable=import-outside-toplevel
+        from homeassistant.components.conversation import (
+            ConversationTraceEventType,
+            async_conversation_trace_append,
+        )
+
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
             {"tool_name": tool_input.tool_name, "tool_args": tool_input.tool_args},
@@ -368,7 +375,7 @@ class AssistAPI(API):
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml.dump(list(exposed_entities.values())))
+            prompt.append(yaml_util.dump(list(exposed_entities.values())))
 
         return "\n".join(prompt)
 
@@ -413,6 +420,8 @@ class AssistAPI(API):
             IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
             for intent_handler in intent_handlers
         ]
+        if exposed_domains and CALENDAR_DOMAIN in exposed_domains:
+            tools.append(CalendarGetEventsTool())
 
         if llm_context.assistant is not None:
             for state in self.hass.states.async_all(SCRIPT_DOMAIN):
@@ -753,3 +762,66 @@ class ScriptTool(Tool):
         )
 
         return {"success": True, "result": result}
+
+
+class CalendarGetEventsTool(Tool):
+    """LLM Tool allowing querying a calendar."""
+
+    name = "calendar_get_events"
+    description = (
+        "Get events from a calendar. "
+        "When asked when something happens, search the whole week. "
+        "Results are RFC 5545 which means 'end' is exclusive."
+    )
+    parameters = vol.Schema(
+        {
+            vol.Required("calendar"): cv.string,
+            vol.Required("range"): vol.In(["today", "week"]),
+        }
+    )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Query a calendar."""
+        data = self.parameters(tool_input.tool_args)
+        result = intent.async_match_targets(
+            hass,
+            intent.MatchTargetsConstraints(
+                name=data["calendar"],
+                domains=[CALENDAR_DOMAIN],
+                assistant=llm_context.assistant,
+            ),
+        )
+        if not result.is_match:
+            return {"success": False, "error": "Calendar not found"}
+
+        entity_id = result.states[0].entity_id
+        if data["range"] == "today":
+            start = dt_util.now()
+            end = dt_util.start_of_local_day() + timedelta(days=1)
+        elif data["range"] == "week":
+            start = dt_util.now()
+            end = dt_util.start_of_local_day() + timedelta(days=7)
+
+        service_data = {
+            "entity_id": entity_id,
+            "start_date_time": start.isoformat(),
+            "end_date_time": end.isoformat(),
+        }
+
+        service_result = await hass.services.async_call(
+            CALENDAR_DOMAIN,
+            SERVICE_GET_EVENTS,
+            service_data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+
+        events = [
+            event if "T" in event["start"] else {**event, "all_day": True}
+            for event in cast(dict, service_result)[entity_id]["events"]
+        ]
+
+        return {"success": True, "result": events}

@@ -345,6 +345,11 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
         self._state = device.get(attribute)
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._device.get(self._attribute) is not None
+
+    @property
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
