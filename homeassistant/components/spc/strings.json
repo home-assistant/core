@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up SPC integration",
+        "data": {
+          "api_url": "API URL",
+          "ws_url": "Websocket URL"
+        },
+        "data_description": {
+          "api_url": "SPC Web Gateway API URL e.g. https://192.168.1.200:8088",
+          "ws_url": "SPC Web Gateway WebSocket URL e.g. wss://192.168.1.200:8088/ws/spc"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect, please check the URL"
+    },
+    "abort": {
+      "already_configured": "Device is already configured"
+    }
+  }
+}
