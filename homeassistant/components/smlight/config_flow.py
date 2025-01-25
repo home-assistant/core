@@ -6,6 +6,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pysmlight import Api2
+from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
@@ -51,6 +52,11 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             self.client = Api2(self.host, session=async_get_clientsession(self.hass))
 
             try:
+                info = await self.client.get_info()
+
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
@@ -70,6 +76,11 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                info = await self.client.get_info()
+
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
@@ -116,6 +127,11 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = self.host
             try:
+                info = await self.client.get_info()
+
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
 

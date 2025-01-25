@@ -848,6 +848,21 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         unit_getter=lambda api: api.getSupplyPressureUnit(),
     ),
     ViCareSensorEntityDescription(
+        key="heating_rod_starts",
+        translation_key="heating_rod_starts",
+        value_getter=lambda api: api.getHeatingRodStarts(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_hours",
+        translation_key="heating_rod_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getHeatingRodHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
         key="spf-total",
         translation_key="spf-total",
         state_class=SensorStateClass.MEASUREMENT,
