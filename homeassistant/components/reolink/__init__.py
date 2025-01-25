@@ -22,7 +22,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -61,7 +61,9 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> bool:
     """Set up Reolink from a config entry."""
-    host = ReolinkHost(hass, config_entry.data, config_entry.options)
+    host = ReolinkHost(
+        hass, config_entry.data, config_entry.options, config_entry.entry_id
+    )
 
     try:
         await host.async_init()
@@ -86,21 +88,25 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
-    # update the port info if needed for the next time
+    # update the config info if needed for the next time
     if (
         host.api.port != config_entry.data[CONF_PORT]
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
+        or host.api.supported(None, "privacy_mode")
+        != config_entry.data.get(CONF_PRIVACY)
     ):
-        _LOGGER.warning(
-            "HTTP(s) port of Reolink %s, changed from %s to %s",
-            host.api.nvr_name,
-            config_entry.data[CONF_PORT],
-            host.api.port,
-        )
+        if host.api.port != config_entry.data[CONF_PORT]:
+            _LOGGER.warning(
+                "HTTP(s) port of Reolink %s, changed from %s to %s",
+                host.api.nvr_name,
+                config_entry.data[CONF_PORT],
+                host.api.port,
+            )
         data = {
             **config_entry.data,
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
+            CONF_PRIVACY: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 

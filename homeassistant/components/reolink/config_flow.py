@@ -35,7 +35,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkException,
@@ -260,6 +260,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 user_input[CONF_PORT] = host.api.port
                 user_input[CONF_USE_HTTPS] = host.api.use_https
+                user_input[CONF_PRIVACY] = host.api.supported(None, "privacy_mode")
 
                 mac_address = format_mac(host.api.mac_address)
                 await self.async_set_unique_id(mac_address, raise_on_progress=False)
