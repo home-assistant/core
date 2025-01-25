@@ -73,7 +73,7 @@ def config_entry_options_fixture() -> dict[str, Any]:
 @pytest.fixture(name="get_sensors_response", scope="package")
 def get_sensors_response_fixture() -> GetSensorsResponse:
     """Define a fixture to mock an aiopurpleair GetSensorsResponse object."""
-    return GetSensorsResponse.parse_raw(
+    return GetSensorsResponse.model_validate_json(
         load_fixture("get_sensors_response.json", "purpleair")
     )
 

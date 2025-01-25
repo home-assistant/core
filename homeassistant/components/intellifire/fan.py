@@ -81,7 +81,6 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def is_on(self) -> bool:

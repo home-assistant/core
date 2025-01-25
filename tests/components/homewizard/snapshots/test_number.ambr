@@ -14,7 +14,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_number_entities[HWE-SKT-11].1
@@ -106,7 +106,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '100.0',
+    'state': '100',
   })
 # ---
 # name: test_number_entities[HWE-SKT-21].1

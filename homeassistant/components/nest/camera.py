@@ -17,7 +17,6 @@ from google_nest_sdm.camera_traits import (
     WebRtcStream,
 )
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
 from webrtc_models import RTCIceCandidateInit
 
@@ -29,15 +28,14 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,15 +51,12 @@ BACKOFF_MULTIPLIER = 1.5
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the cameras."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
     entities: list[NestCameraBaseEntity] = []
-    for device in device_manager.devices.values():
+    for device in entry.runtime_data.device_manager.devices.values():
         if (live_stream := device.traits.get(CameraLiveStreamTrait.NAME)) is None:
             continue
         if StreamingProtocol.WEB_RTC in live_stream.supported_protocols:

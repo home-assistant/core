@@ -69,6 +69,7 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterCommandButton,
         required_attributes=(clusters.Identify.Attributes.AcceptedCommandList,),
         value_contains=clusters.Identify.Commands.Identify.command_id,
+        allow_multi=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.BUTTON,

@@ -26,8 +26,7 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-DOMAIN = "kitchen_sink"
-
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.BUTTON,
@@ -88,7 +87,25 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Start a reauth flow
     config_entry.async_start_reauth(hass)
 
+    # Notify backup listeners
+    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload config entry."""
+    # Notify backup listeners
+    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+
+    return await hass.config_entries.async_unload_platforms(
+        entry, COMPONENTS_WITH_DEMO_PLATFORM
+    )
+
+
+async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+        listener()
 
 
 def _create_issues(hass: HomeAssistant) -> None:

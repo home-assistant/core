@@ -17,23 +17,29 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
 
+from .actions import register_actions
 from .const import DOMAIN, LOGGER
 
 if TYPE_CHECKING:
     from music_assistant_models.event import MassEvent
 
-type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
+    from homeassistant.helpers.typing import ConfigType
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
 
 
 @dataclass
@@ -44,10 +50,16 @@ class MusicAssistantEntryData:
     listen_task: asyncio.Task
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Music Assistant component."""
+    register_actions(hass)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: MusicAssistantConfigEntry
 ) -> bool:
-    """Set up from a config entry."""
+    """Set up Music Assistant from a config entry."""
     http_session = async_get_clientsession(hass, verify_ssl=False)
     mass_url = entry.data[CONF_URL]
     mass = MusicAssistantClient(mass_url, http_session)
@@ -97,6 +109,7 @@ async def async_setup_entry(
         listen_task.cancel()
         raise ConfigEntryNotReady("Music Assistant client not ready") from err
 
+    # store the listen task and mass client in the entry data
     entry.runtime_data = MusicAssistantEntryData(mass, listen_task)
 
     # If the listen task is already failed, we need to raise ConfigEntryNotReady

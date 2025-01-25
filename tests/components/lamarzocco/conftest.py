@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import FirmwareType, MachineModel, SteamLevel
-from pylamarzocco.lm_machine import LaMarzoccoMachine
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
@@ -135,7 +135,10 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
         serial_number=serial_number,
         name=serial_number,
     )
-    config = load_json_object_fixture("config.json", DOMAIN)
+    if device_fixture == MachineModel.LINEA_MINI:
+        config = load_json_object_fixture("config_mini.json", DOMAIN)
+    else:
+        config = load_json_object_fixture("config.json", DOMAIN)
     statistics = json.loads(load_fixture("statistics.json", DOMAIN))
 
     dummy_machine.parse_config(config)
@@ -143,7 +146,7 @@ def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine",
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine",
             autospec=True,
         ) as lamarzocco_mock,
     ):

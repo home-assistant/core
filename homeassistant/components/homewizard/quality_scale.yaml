@@ -46,11 +46,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
-    comment: |
-      The integration doesn't update the device info based on DHCP discovery
-      of known existing devices.
+  discovery-update-info: done
   discovery: done
   docs-data-update: done
   docs-examples: done
@@ -69,7 +65,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
