@@ -299,7 +299,8 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
             # AKA `HF-LPB100-ZJ200`
             return device
         bulb = async_wifi_bulb_for_host(host, discovery=device)
-        bulb.discovery = discovery
+        if discovery is not None:
+            bulb.discovery = discovery
         try:
             await bulb.async_setup(lambda: None)
         finally:
