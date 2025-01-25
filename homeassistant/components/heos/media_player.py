@@ -149,7 +149,6 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             sw_version=player.version,
         )
         super().__init__(coordinator, context=player.player_id)
-        self._update_attributes()
 
     async def _player_update(self, event):
         """Handle player attribute updated."""
@@ -163,11 +162,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         self._update_attributes()
         super()._handle_coordinator_update()
 
-    def _get_group_members(self, group_id: int | None) -> list[str] | None:
+    @callback
+    def _get_group_members(self) -> list[str] | None:
         """Get group member entity IDs for the group."""
-        if group_id is None:
+        if self._player.group_id is None:
             return None
-        if not (group := self.coordinator.heos.groups.get(group_id)):
+        if not (group := self.coordinator.heos.groups.get(self._player.group_id)):
             return None
         player_ids = [group.lead_player_id, *group.member_player_ids]
         # Resolve player_ids to entity_ids
@@ -183,9 +183,10 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         ]
         return entity_ids or None
 
+    @callback
     def _update_attributes(self) -> None:
         """Update core attributes of the media player."""
-        self._attr_group_members = self._get_group_members(self._player.group_id)
+        self._attr_group_members = self._get_group_members()
         self._attr_source_list = self.coordinator.async_get_source_list()
         self._attr_source = self.coordinator.async_get_current_source(
             self._player.now_playing_media
@@ -205,6 +206,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
         # Update state when attributes of the player change
+        self._update_attributes()
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
         await super().async_added_to_hass()
 
