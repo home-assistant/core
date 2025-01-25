@@ -5,6 +5,7 @@ The coordinator is responsible for refreshing data in response to system-wide ev
 entities to update. Entities subscribe to entity-specific updates within the entity class itself.
 """
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 
@@ -81,6 +82,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
             )
         # Retrieve initial data
+        await self._async_update_groups()
         await self._async_update_sources()
         # Attach event callbacks
         self.heos.add_on_disconnected(self._async_on_disconnected)
@@ -92,6 +94,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self.heos.dispatcher.disconnect_all()  # Removes all connected through heos.add_on_* and player.add_on_*
         await self.heos.disconnect()
         await super().async_shutdown()
+
+    def async_add_listener(self, update_callback, context=None) -> Callable[[], None]:
+        """Add a listener for the coordinator."""
+        remove_listener = super().async_add_listener(update_callback, context)
+        # Update entities so group_member entity_ids fully populate.
+        self.async_update_listeners()
+        return remove_listener
 
     async def _async_on_auth_failure(self) -> None:
         """Handle when the user credentials are no longer valid."""
@@ -118,6 +127,8 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             assert data is not None
             if data.updated_player_ids:
                 self._async_update_player_ids(data.updated_player_ids)
+        elif event == const.EVENT_GROUPS_CHANGED:
+            await self._async_update_players()
         elif (
             event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED)
             and not self._update_sources_pending
@@ -175,6 +186,13 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                     entity_id, new_unique_id=str(new_id)
                 )
                 _LOGGER.debug("Updated entity %s unique id to %s", entity_id, new_id)
+
+    async def _async_update_groups(self) -> None:
+        """Update group information."""
+        try:
+            await self.heos.get_groups(refresh=True)
+        except HeosError as error:
+            _LOGGER.error("Unable to retrieve groups: %s", error)
 
     async def _async_update_sources(self) -> None:
         """Build source list for entities."""
