@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
+from pysmlight import Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 
@@ -154,9 +155,96 @@ async def test_zeroconf_flow_auth(
     assert len(mock_smlight_client.get_info.mock_calls) == 3
 
 
+async def test_zeroconf_unsupported_abort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we abort zeroconf flow if device unsupported."""
+    mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
+    )
+
+    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unsupported_device"
+
+
+async def test_user_unsupported_abort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we abort user flow if unsupported device."""
+    mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unsupported_device"
+
+
+async def test_user_unsupported_abort_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we abort user flow if unsupported device (with auth)."""
+    mock_smlight_client.check_auth_needed.return_value = True
+    mock_smlight_client.authenticate.side_effect = SmlightAuthError
+    mock_smlight_client.get_info.side_effect = SmlightAuthError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unsupported_device"
+
+
 @pytest.mark.usefixtures("mock_smlight_client")
 async def test_user_device_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort user flow if device already configured."""
     mock_config_entry.add_to_hass(hass)
