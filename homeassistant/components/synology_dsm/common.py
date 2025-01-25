@@ -224,18 +224,18 @@ class SynoApi:
             self.dsm.reset(self.surveillance_station)
 
         # Determine if we should fetch an API
-        self._with_information = bool(
-            self._fetching_entities.get(SynoDSMInformation.API_KEY)
-        )
-        self._with_photos = bool(self._fetching_entities.get(SynoStorage.API_KEY))
+        self._with_system = bool(self.dsm.apis.get(SynoCoreSystem.API_KEY))
         self._with_security = bool(
             self._fetching_entities.get(SynoCoreSecurity.API_KEY)
         )
         self._with_storage = bool(self._fetching_entities.get(SynoStorage.API_KEY))
-        self._with_system = bool(self.dsm.apis.get(SynoCoreSystem.API_KEY))
+        self._with_photos = bool(self._fetching_entities.get(SynoStorage.API_KEY))
         self._with_upgrade = bool(self._fetching_entities.get(SynoCoreUpgrade.API_KEY))
         self._with_utilisation = bool(
             self._fetching_entities.get(SynoCoreUtilization.API_KEY)
+        )
+        self._with_information = bool(
+            self._fetching_entities.get(SynoDSMInformation.API_KEY)
         )
 
         # Reset not used API, information is not reset since it's used in device_info
