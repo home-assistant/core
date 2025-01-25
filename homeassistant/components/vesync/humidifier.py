@@ -87,7 +87,6 @@ def _get_ha_mode(vs_mode: str) -> str | None:
     return ha_mode
 
 
-
 class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
@@ -138,7 +137,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def mode(self) -> str | None:
         """Get the current preset mode."""
-        return _get_ha_mode(self.device.mode)
+        return None if self.device.mode is None else _get_ha_mode(self.device.mode)
 
     def set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
