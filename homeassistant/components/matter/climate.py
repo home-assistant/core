@@ -424,7 +424,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
 
 class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
-    """Representation of a Matter climate entity."""
+    """Representation of a climate entity from the Matter TemperatureControl cluster."""
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
     _attr_hvac_mode: HVACMode = HVACMode.HEAT_COOL
