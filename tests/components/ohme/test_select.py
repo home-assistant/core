@@ -54,7 +54,7 @@ async def test_select_option(
     )
 
     mock_client.async_set_mode.assert_called_once_with("max_charge")
-    assert state.state == "smart_charge"  # State updates after coordinator refresh
+    assert state.state == "smart_charge"
 
 
 async def test_select_unavailable(
@@ -63,7 +63,7 @@ async def test_select_unavailable(
     mock_client: MagicMock,
 ) -> None:
     """Test that the select entity shows as unavailable when no mode is set."""
-    mock_client.mode = None  # Simulate mode being unavailable
+    mock_client.mode = None
 
     await setup_integration(hass, mock_config_entry)
 
