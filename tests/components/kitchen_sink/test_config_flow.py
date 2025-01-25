@@ -132,6 +132,7 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
         subentry_id: config_entries.ConfigSubentry(
             data={"state": 15},
             subentry_id=subentry_id,
+            subentry_type="add_entity",
             title="Sensor 1",
             unique_id=None,
         )
@@ -150,6 +151,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
             config_entries.ConfigSubentryData(
                 data={"state": 15},
                 subentry_id="mock_id",
+                subentry_type="add_entity",
                 title="Sensor 1",
                 unique_id=None,
             )
@@ -177,6 +179,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant) -> None:
         subentry_id: config_entries.ConfigSubentry(
             data={"state": 5},
             subentry_id=subentry_id,
+            subentry_type="add_entity",
             title="Renamed sensor 1",
             unique_id=None,
         )
