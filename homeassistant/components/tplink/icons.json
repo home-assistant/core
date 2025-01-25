@@ -145,9 +145,6 @@
       "temperature_offset": {
         "default": "mdi:contrast"
       },
-      "target_temperature": {
-        "default": "mdi:thermometer"
-      },
       "pan_step": {
         "default": "mdi:unfold-more-vertical"
       },
