@@ -370,5 +370,80 @@
     "value": 10,
     "type": "Number",
     "category": "Config"
+  },
+  "main_brush_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "side_brush_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "sensor_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "filter_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "charging_contacts_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "main_brush_remaining": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "main_brush_used": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "side_brush_remaining": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "side_brush_used": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "filter_remaining": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "filter_used": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "sensor_remaining": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "sensor_used": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "charging_contacts_remaining": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
+  },
+  "charging_contacts_used": {
+    "value": "1234",
+    "type": "Sensor",
+    "category": "Debug"
   }
 }
