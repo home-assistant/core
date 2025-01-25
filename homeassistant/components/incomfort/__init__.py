@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from aiohttp import ClientResponseError
-from incomfortclient import IncomfortError, InvalidHeaterList
+from incomfortclient import InvalidGateway, InvalidHeaterList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
 from .coordinator import InComfortDataCoordinator, async_connect_gateway
-from .errors import InConfortTimeout, InConfortUnknownError, NoHeaters, NotFound
+from .errors import InComfortTimeout, InComfortUnknownError, NoHeaters, NotFound
 
 PLATFORMS = (
     Platform.WATER_HEATER,
@@ -35,15 +35,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
             await heater.update()
     except InvalidHeaterList as exc:
         raise NoHeaters from exc
-    except IncomfortError as exc:
-        if isinstance(exc.message, ClientResponseError):
-            if exc.message.status == 401:
-                raise ConfigEntryAuthFailed("Incorrect credentials") from exc
-            if exc.message.status == 404:
-                raise NotFound from exc
-        raise InConfortUnknownError from exc
+    except InvalidGateway as exc:
+        raise ConfigEntryAuthFailed("Incorrect credentials") from exc
+    except ClientResponseError as exc:
+        if exc.status == 404:
+            raise NotFound from exc
+        raise InComfortUnknownError from exc
     except TimeoutError as exc:
-        raise InConfortTimeout from exc
+        raise InComfortTimeout from exc
 
     # Register discovered gateway device
     device_registry = dr.async_get(hass)
@@ -64,6 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: InComfortConfigEntry) -> bool:
     """Unload config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
