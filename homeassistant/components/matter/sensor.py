@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.common.custom_clusters import (
     EveCluster,
@@ -87,6 +88,14 @@ class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescrip
     """Describe Matter sensor entities."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterListSensorEntityDescription(MatterSensorEntityDescription):
+    """Describe Matter sensor entities from MatterListSensor."""
+
+    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    list_attribute: type[ClusterAttributeDescriptor]
+
+
 class MatterSensor(MatterEntity, SensorEntity):
     """Representation of a Matter sensor."""
 
@@ -155,6 +164,26 @@ class MatterOperationalStateCurrentPhaseSensor(MatterSensor):
         current_phase_str = operational_state_phase_list[current_phase]
         self._attr_options = operational_state_phase_list
         self._attr_native_value = current_phase_str
+
+
+class MatterListSensor(MatterSensor):
+    """Representation of a sensor entity from Matter list from Cluster attribute(s)."""
+
+    entity_description: MatterListSensorEntityDescription
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        list_values = cast(
+            list[str],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        current_value: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        current_value_str = list_values[current_value]
+        self._attr_options = list_values
+        self._attr_native_value = current_value_str
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -694,13 +723,14 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
+        entity_description=MatterListSensorEntityDescription(
             key="OperationalStateCurrentPhase",
             translation_key="current_phase",
             native_unit_of_measurement=None,
             device_class=SensorDeviceClass.ENUM,
+            list_attribute=clusters.OperationalState.Attributes.PhaseList,
         ),
-        entity_class=MatterOperationalStateCurrentPhaseSensor,
+        entity_class=MatterListSensor,
         required_attributes=(
             clusters.OperationalState.Attributes.CurrentPhase,
             clusters.OperationalState.Attributes.PhaseList,
