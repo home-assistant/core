@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from collections.abc import AsyncGenerator, Awaitable, Callable
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
+import json
 import logging
-from typing import Any, Literal, TypeVar
+from typing import Literal, TypeVar
 
 import voluptuous as vol
 
@@ -26,7 +26,6 @@ from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
-from homeassistant.util.json import JsonObjectType
 
 from . import trace
 from .const import DOMAIN
@@ -45,8 +44,6 @@ CONVERSATION_TIMEOUT = timedelta(minutes=5)
 MAX_TOOL_ITERATIONS = 10
 
 _NativeT = TypeVar("_NativeT")
-_NativeToolT = TypeVar("_NativeToolT")
-_NativeResponseT = TypeVar("_NativeResponseT")
 
 
 class SessionCleanup:
@@ -210,30 +207,17 @@ class ChatMessage[_NativeT]:
     is only meant for storing the native object.
     """
 
-    role: Literal["system", "assistant", "user", "native"]
+    role: Literal["system", "assistant", "user", "native", "tool"]
     agent_id: str | None
     content: str
     native: _NativeT | None = field(default=None)
+    tool_call_id: str | None = None
 
     # Validate in post-init that if role is native, there is no content and a native object exists
     def __post_init__(self) -> None:
         """Validate native message."""
         if self.role == "native" and self.native is None:
             raise ValueError("Native message must have a native object")
-
-
-class ChatMessageConverter[_NativeT, _NativeToolT, _NativeResponseT](ABC):
-    """Class to convert chat messages to the native format."""
-
-    @abstractmethod
-    def convert(self, message: ChatMessage[_NativeT]) -> _NativeT:
-        """Convert a chat message to the native format."""
-
-    @abstractmethod
-    def convert_tool(
-        self, tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
-    ) -> _NativeToolT:
-        """Convert a tool to the native format."""
 
 
 @dataclass
@@ -379,89 +363,21 @@ class ChatSession[_NativeT]:
             content=prompt,
         )
 
-    async def async_model_loop(
-        self,
-        user_input: ConversationInput,
-        native_model_call: Callable[
-            [
-                ConversationInput,
-                str,
-                list[_NativeT],
-                list[_NativeToolT] | None,
-                ChatSession[_NativeT],
-            ],
-            Awaitable[bool],
-        ],
-        message_converter: ChatMessageConverter[
-            _NativeT, _NativeToolT, _NativeResponseT
-        ],
-    ) -> ConversationResult:
-        """Invoke the native model loop call in a loop."""
+    async def async_get_tools(self) -> list[llm.Tool] | None:
+        """Get the tools for the agent."""
+        if not self.llm_api:
+            return None
+        return self.llm_api.tools
 
-        tools: list[llm.Tool] | None = None
-        native_tools: list[_NativeToolT] | None = None
-        if self.llm_api:
-            tools = self.llm_api.tools
-            native_tools = [
-                message_converter.convert_tool(tool, self.llm_api.custom_serializer)
-                for tool in tools
-            ]
-
-        LOGGER.debug("Prompt: %s", self.messages)
-        LOGGER.debug("Tools: %s", tools)
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
-            {
-                "messages": self.messages,
-                "tools": self.llm_api.tools if self.llm_api else None,
-            },
-        )
-
-        # To prevent infinite loops, we limit the number of iterations
-        for _iteration in range(MAX_TOOL_ITERATIONS):
-            native_messages: list[_NativeT] = []
-            for message in self.messages:
-                if (
-                    message.native is not None
-                    and message.agent_id == user_input.agent_id
-                ):
-                    native_messages.append(message.native)
-                else:
-                    native_messages.append(message_converter.convert(message))
-            LOGGER.debug("native_messages: %s", native_messages)
-            try:
-                should_loop = await native_model_call(
-                    user_input,
-                    self.conversation_id,
-                    native_messages,
-                    native_tools,
-                    self,
-                )
-            except ConversationAgentError as err:
-                return err.as_conversation_result()
-
-            if not should_loop:
-                break
-
-        if self.messages[-1].role != "assistant":
-            raise ValueError("Final message must be an assistant message")
-
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(self.messages[-1].content or "")
-        return ConversationResult(
-            response=intent_response, conversation_id=self.conversation_id
-        )
-
-    async def async_call_tools(
+    async def _async_call_tools(
         self,
         agent_id: str | None,
         tool_inputs: list[llm.ToolInput],
-        response_converter: Callable[[str | None, JsonObjectType], _NativeResponseT],
-    ) -> list[ChatMessage[_NativeResponseT]]:
+    ) -> list[ChatMessage[_NativeT]]:
         """Invoke LLM tools for the configured LLM API."""
         if not self.llm_api:
             raise ValueError("No LLM API configured")
-        tool_responses: list[ChatMessage[_NativeResponseT]] = []
+        tool_responses: list[ChatMessage[_NativeT]] = []
         for tool_input in tool_inputs:
             LOGGER.debug(
                 "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
@@ -475,12 +391,62 @@ class ChatSession[_NativeT]:
                     tool_response["error_text"] = str(e)
 
             LOGGER.debug("Tool response: %s", tool_response)
-            chat_message = ChatMessage(
-                role="native",
+            chat_message = ChatMessage[_NativeT](
+                role="tool",
                 agent_id=agent_id,
-                content="",
-                native=response_converter(tool_input.tool_call_id, tool_response),
+                content=json.dumps(tool_response),
+                tool_call_id=tool_input.tool_call_id,
             )
 
             tool_responses.append(chat_message)
         return tool_responses
+
+    async def stream(
+        self,
+        user_input: ConversationInput,
+        stream: AsyncGenerator[
+            tuple[ChatMessage[_NativeT] | None, llm.ToolInput | None],
+            list[ChatMessage[_NativeT]],
+        ],
+    ) -> ConversationResult:
+        """Run model in a streaming loop."""
+
+        await stream.asend(None)  # type: ignore[arg-type]
+
+        tools = await self.async_get_tools()
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                "messages": self.messages,
+                "tools": tools,
+            },
+        )
+
+        message_batch = [*self.messages]
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            try:
+                chat_message, tool_inputs = await stream.asend(message_batch)
+            except ConversationAgentError as err:
+                return err.as_conversation_result()
+            LOGGER.debug("Stream result: %s - %s", chat_message, tool_inputs)
+            message_batch.clear()
+            if chat_message:
+                self.async_add_message(chat_message)
+                message_batch.append(chat_message)
+            if not tool_inputs:
+                if not chat_message:
+                    raise ValueError("Stream did not return a response")
+                intent_response = intent.IntentResponse(language=user_input.language)
+                intent_response.async_set_speech(chat_message.content or "")
+                return ConversationResult(
+                    response=intent_response, conversation_id=self.conversation_id
+                )
+            LOGGER.debug("Stream tools: %s", tool_inputs)
+            tool_responses = await self._async_call_tools(
+                user_input.agent_id,
+                tool_inputs,
+            )
+            LOGGER.debug("Stream tool responses: %s", tool_responses)
+            message_batch.extend(tool_responses)
+
+        raise ValueError("Exceeded max number of iterations")
