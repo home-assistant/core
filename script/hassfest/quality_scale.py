@@ -499,7 +499,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "http",
     "huawei_lte",
     "hue",
-    "hue_ble",
     "huisbaasje",
     "hunterdouglas_powerview",
     "husqvarna_automower_ble",
