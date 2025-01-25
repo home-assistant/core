@@ -12,7 +12,7 @@ from homeassistant.helpers import intent
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from . import SERVICE_GET_EVENTS, CalendarEvent
+from . import SERVICE_GET_EVENTS
 from .const import DOMAIN
 
 INTENT_CALENDAR_GET_EVENTS = "HassCalendarGetEvents"
@@ -44,7 +44,7 @@ class CalendarGetEvents(intent.IntentHandler):
 
         slots = self.async_validate_slots(intent_obj.slots)
         match_constraints = intent.MatchTargetsConstraints(
-            name=slots["calendar"],
+            name=slots["calendar"]["value"],
             domains=[DOMAIN],
         )
         match_result = intent.async_match_targets(hass, match_constraints)
@@ -54,7 +54,7 @@ class CalendarGetEvents(intent.IntentHandler):
             )
 
         entity_id = match_result.states[0].entity_id
-        start, end = self._get_date_range(slots["range"])
+        start, end = self._get_date_range(slots["range"]["value"])
 
         service_data = {
             "entity_id": entity_id,
@@ -71,7 +71,7 @@ class CalendarGetEvents(intent.IntentHandler):
         )
 
         events = [
-            CalendarEvent(**{**event, "all_day": "T" not in event["start"]})
+            event if "T" in event["start"] else {**event, "all_day": True}
             for event in cast(dict, service_result)[entity_id]["events"]
         ]
 
@@ -87,20 +87,24 @@ class CalendarGetEvents(intent.IntentHandler):
         raise ValueError(f"Invalid range: {range_value}")
 
     def _create_response(
-        self, intent_obj: intent.Intent, events: list[CalendarEvent]
+        self, intent_obj: intent.Intent, events: list[dict]
     ) -> intent.IntentResponse:
         """Create response with event details."""
         response = intent_obj.create_response()
         response.response_type = intent.IntentResponseType.QUERY_ANSWER
 
-        success_results = [
-            intent.IntentResponseTarget(
-                type=intent.IntentResponseTargetType.ENTITY,
-                name=event.summary,
-                id=event.uid,
-            )
+        statuses = [
+            {
+                "start": event["start"],
+                "end": event["end"],
+                "all_day": "T" not in event["start"],
+                "summary": event["summary"],
+                "description": event["description"],
+                "location": event.get("location", ""),
+                "recurring": event.get("recurring"),
+            }
             for event in events
         ]
 
-        response.async_set_results(success_results=success_results)
+        response.async_set_speech_slots({"events": statuses})
         return response
