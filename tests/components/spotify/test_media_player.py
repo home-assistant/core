@@ -678,6 +678,7 @@ async def test_smart_polling_interval(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Spotify media player polling interval."""
+    freezer.move_to("2023-10-21")
     mock_spotify.return_value.get_playback.return_value.progress_ms = 10000
     mock_spotify.return_value.get_playback.return_value.item.duration_ms = 30000
 
