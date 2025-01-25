@@ -292,20 +292,20 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         # Resolve entity_ids to player_ids
         entity_registry = er.async_get(self.hass)
         for entity_id in member_entity_ids:
-            entity = entity_registry.async_get(entity_id)
-            if entity is None:
+            entity_entry = entity_registry.async_get(entity_id)
+            if entity_entry is None:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="entity_not_found",
                     translation_placeholders={"entity_id": entity_id},
                 )
-            if entity.platform != DOMAIN:
+            if entity_entry.platform != DOMAIN:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="not_heos_media_player",
                     translation_placeholders={"entity_id": entity_id},
                 )
-            player_id = int(entity.unique_id)
+            player_id = int(entity_entry.unique_id)
             if player_id not in player_ids:
                 player_ids.append(player_id)
         await self.heos.set_group(player_ids)
