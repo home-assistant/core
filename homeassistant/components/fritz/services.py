@@ -6,15 +6,12 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import DOMAIN, SERVICE_SET_GUEST_WIFI_PW
 from .coordinator import AvmWrapper
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 SERVICE_SCHEMA_SET_GUEST_WIFI_PW = vol.Schema(
     {
