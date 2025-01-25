@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
+from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
@@ -88,8 +89,9 @@ class SynologyDSMBackupAgent(BackupAgent):
 
     @property
     def _file_station(self) -> SynoFileStation:
-        if not self.api.file_station:
-            raise BackupAgentError("Synology FileStation API not available")
+        if TYPE_CHECKING:
+            # we ensure that file_station exist already in async_get_backup_agents
+            assert self.api.file_station
         return self.api.file_station
 
     async def async_download_backup(
@@ -110,8 +112,8 @@ class SynologyDSMBackupAgent(BackupAgent):
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to download backup") from err
 
-        if isinstance(resp, bool) or resp is None:
-            raise BackupAgentError("Failed to download backup")
+        if TYPE_CHECKING:
+            assert isinstance(resp, StreamReader)
 
         return ChunkAsyncStreamIterator(resp)
 
@@ -183,8 +185,8 @@ class SynologyDSMBackupAgent(BackupAgent):
             except SynologyDSMAPIErrorException as err:
                 raise BackupAgentError("Failed to download meta data") from err
 
-            if isinstance(resp, bool) or resp is None:
-                raise BackupAgentError("Failed to download meta data")
+            if TYPE_CHECKING:
+                assert isinstance(resp, StreamReader)
 
             try:
                 return json_loads_object(await resp.read())
@@ -196,8 +198,8 @@ class SynologyDSMBackupAgent(BackupAgent):
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to list backups") from err
 
-        if files is None:
-            raise BackupAgentError("Failed to list backups")
+        if TYPE_CHECKING:
+            assert files
 
         backups: dict[str, AgentBackup] = {}
         for file in files:

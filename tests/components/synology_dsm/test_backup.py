@@ -58,6 +58,29 @@ async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
     raise MockStreamReaderChunked(b"")
 
 
+async def _mock_download_file_meta_ok_tar_missing(
+    path: str, filename: str
+) -> MockStreamReader:
+    if filename == "abcd12ef_meta.json":
+        return MockStreamReader(
+            b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
+            b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
+            b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
+            b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
+        )
+    if filename == "abcd12ef.tar":
+        raise SynologyDSMAPIErrorException("api", "404", "not found")
+    raise MockStreamReaderChunked(b"")
+
+
+async def _mock_download_file_meta_defect(path: str, filename: str) -> MockStreamReader:
+    if filename == "abcd12ef_meta.json":
+        return MockStreamReader(b"im not a json")
+    if filename == "abcd12ef.tar":
+        return MockStreamReaderChunked(b"backup data")
+    raise MockStreamReaderChunked(b"")
+
+
 @pytest.fixture
 def mock_dsm_with_filestation():
     """Mock a successful service with filestation support."""
@@ -107,6 +130,29 @@ def mock_dsm_with_filestation():
             upload_file=AsyncMock(return_value=True),
             delete_file=AsyncMock(return_value=True),
         )
+
+        yield dsm
+
+
+@pytest.fixture
+def mock_dsm_without_filestation():
+    """Mock a successful service with filestation support."""
+
+    with patch("homeassistant.components.synology_dsm.common.SynologyDSM") as dsm:
+        dsm.login = AsyncMock(return_value=True)
+        dsm.update = AsyncMock(return_value=True)
+
+        dsm.surveillance_station.update = AsyncMock(return_value=True)
+        dsm.upgrade.update = AsyncMock(return_value=True)
+        dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
+        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.storage = Mock(
+            disks_ids=["sda", "sdb", "sdc"],
+            volumes_ids=["volume_1"],
+            update=AsyncMock(return_value=True),
+        )
+        dsm.information = Mock(serial=SERIAL)
+        dsm.file = None
 
         yield dsm
 
@@ -248,6 +294,20 @@ async def test_agents_list_backups_error(
     }
 
 
+async def test_agents_list_backups_disabled_filestation(
+    hass: HomeAssistant,
+    mock_dsm_without_filestation: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test agent error while list backups when file station is disabled."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+
+
 @pytest.mark.parametrize(
     ("backup_id", "expected_result"),
     [
@@ -336,6 +396,24 @@ async def test_agents_get_backup_error(
     }
 
 
+async def test_agents_get_backup_defect_meta(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    setup_dsm_with_filestation: MagicMock,
+) -> None:
+    """Test agent error while get backup."""
+    client = await hass_ws_client(hass)
+    backup_id = "ef34ab12"
+
+    setup_dsm_with_filestation.file.download_file = _mock_download_file_meta_defect
+
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}, "backup": None}
+
+
 async def test_agents_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -361,15 +439,15 @@ async def test_agents_download_not_existing(
     client = await hass_client()
     backup_id = "abcd12ef"
 
-    setup_dsm_with_filestation.file.download_file = AsyncMock(
-        side_effect=SynologyDSMAPIErrorException("api", "404", "not found")
+    setup_dsm_with_filestation.file.download_file = (
+        _mock_download_file_meta_ok_tar_missing
     )
 
     resp = await client.get(
         f"/api/backup/download/{backup_id}?agent_id=synology_dsm.Mock Title"
     )
-    assert resp.reason == "Not Found"
-    assert resp.status == 404
+    assert resp.reason == "Internal Server Error"
+    assert resp.status == 500
 
 
 async def test_agents_upload(
@@ -445,6 +523,7 @@ async def test_agents_upload_error(
         size=0,
     )
 
+    # fail to upload the tar file
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
@@ -472,6 +551,39 @@ async def test_agents_upload_error(
     assert len(mock.mock_calls) == 1
     assert mock.call_args_list[0].kwargs["filename"] == "test-backup.tar"
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
+
+    # fail to upload the meta json file
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        setup_dsm_with_filestation.file.upload_file.side_effect = [
+            True,
+            SynologyDSMAPIErrorException("api", "500", "error"),
+        ]
+
+        resp = await client.post(
+            "/api/backup/upload?agent_id=synology_dsm.Mock Title",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup {backup_id}" in caplog.text
+    assert "Failed to upload backup" in caplog.text
+    mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
+    assert len(mock.mock_calls) == 3
+    assert mock.call_args_list[1].kwargs["filename"] == "test-backup.tar"
+    assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
+    assert mock.call_args_list[2].kwargs["filename"] == "test-backup_meta.json"
+    assert mock.call_args_list[2].kwargs["path"] == "/ha_backup/my_backup_path"
 
 
 async def test_agents_delete(
