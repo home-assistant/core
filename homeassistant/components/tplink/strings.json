@@ -138,6 +138,21 @@
       },
       "tilt_down": {
         "name": "Tilt down"
+      },
+      "main_brush_reset": {
+        "name": "Reset main brush consumable"
+      },
+      "side_brush_reset": {
+        "name": "Reset side brush consumable"
+      },
+      "sensor_reset": {
+        "name": "Reset sensor consumable"
+      },
+      "filter_reset": {
+        "name": "Reset filter consumable"
+      },
+      "charging_contacts_reset": {
+        "name": "Reset charging contacts consumable"
       }
     },
     "camera": {
@@ -192,6 +207,36 @@
       },
       "alarm_source": {
         "name": "Alarm source"
+      },
+      "main_brush_remaining": {
+        "name": "Main brush remaining"
+      },
+      "main_brush_used": {
+        "name": "Main brush used"
+      },
+      "side_brush_remaining": {
+        "name": "Side brush remaining"
+      },
+      "side_brush_used": {
+        "name": "Side brush used"
+      },
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
+      "filter_used": {
+        "name": "Filter used"
+      },
+      "sensor_remaining": {
+        "name": "Sensor remaining"
+      },
+      "sensor_used": {
+        "name": "Sensor used"
+      },
+      "charging_contacts_remaining": {
+        "name": "Charging contacts remaining"
+      },
+      "charging_contacts_used": {
+        "name": "Charging contacts used"
       }
     },
     "switch": {

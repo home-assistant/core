@@ -115,6 +115,66 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="alarm_source",
     ),
+    TPLinkSensorEntityDescription(
+        key="main_brush_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="main_brush_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="side_brush_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="side_brush_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="filter_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="filter_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="sensor_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="sensor_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="charging_contacts_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
+    TPLinkSensorEntityDescription(
+        key="charging_contacts_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=lambda x: x.total_seconds() / 3600,
+    ),
 )
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
