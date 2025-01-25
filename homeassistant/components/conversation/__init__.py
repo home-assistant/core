@@ -50,7 +50,6 @@ from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .session import (
     ChatMessage,
-    ChatMessageConverter,
     ChatSession,
     ConversationAgentError,
     ConverseError,

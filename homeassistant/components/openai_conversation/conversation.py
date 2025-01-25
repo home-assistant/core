@@ -1,8 +1,8 @@
 """Conversation support for OpenAI."""
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import json
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import Any, Literal, cast
 
 import openai
 from openai._types import NOT_GIVEN
@@ -24,7 +24,6 @@ from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.json import JsonObjectType
 
 from . import OpenAIConfigEntry
 from .const import (
@@ -55,33 +54,35 @@ async def async_setup_entry(
     async_add_entities([agent])
 
 
-class OpenAIChatMessageConverter(
-    conversation.ChatMessageConverter[
-        ChatCompletionMessageParam, ChatCompletionToolParam, ChatCompletionMessage
-    ]
-):
-    """Class to convert chat messages to the native format."""
-
-    def convert(
-        self, message: conversation.ChatMessage[ChatCompletionMessageParam]
-    ) -> ChatCompletionMessageParam:
-        """Convert a chat message to the native format."""
-        return cast(
-            ChatCompletionMessageParam,
-            {"role": message.role, "content": message.content},
+def _convert_message(
+    message: conversation.ChatMessage[ChatCompletionMessageParam],
+) -> ChatCompletionMessageParam:
+    """Convert a chat message to the native format."""
+    if message.native is not None:
+        return message.native
+    if message.role == "tool":
+        return ChatCompletionToolMessageParam(
+            role=message.role,
+            tool_call_id=message.tool_call_id,
+            content=message.content,
         )
+    return cast(
+        ChatCompletionMessageParam,
+        {"role": message.role, "content": message.content},
+    )
 
-    def convert_tool(
-        self, tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
-    ) -> ChatCompletionToolParam:
-        """Convert a tool to the native format."""
-        tool_spec = FunctionDefinition(
-            name=tool.name,
-            parameters=convert(tool.parameters, custom_serializer=custom_serializer),
-        )
-        if tool.description:
-            tool_spec["description"] = tool.description
-        return ChatCompletionToolParam(type="function", function=tool_spec)
+
+def _convert_tool(
+    tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
+) -> ChatCompletionToolParam:
+    """Convert a tool to the native format."""
+    tool_spec = FunctionDefinition(
+        name=tool.name,
+        parameters=convert(tool.parameters, custom_serializer=custom_serializer),
+    )
+    if tool.description:
+        tool_spec["description"] = tool.description
+    return ChatCompletionToolParam(type="function", function=tool_spec)
 
 
 def _convert_response(
@@ -104,19 +105,6 @@ def _convert_response(
         for tool_call in response.tool_calls or ()
     ]
     return chat_message, tool_inputs
-
-
-def _convert_tool_response(
-    tool_call_id: str | None, tool_response: JsonObjectType
-) -> ChatCompletionMessageParam:
-    """Convert a Home Assistant tool call response to the native format."""
-    if tool_call_id is None:
-        raise ValueError("tool_call_id is required")
-    return ChatCompletionToolMessageParam(
-        role="tool",
-        tool_call_id=tool_call_id,
-        content=json.dumps(tool_response),
-    )
 
 
 def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessageParam:
@@ -192,6 +180,7 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
+
         async with conversation.async_get_chat_session(
             self.hass,
             user_input,
@@ -208,59 +197,65 @@ class OpenAIConversationEntity(
             except conversation.ConverseError as err:
                 return err.as_conversation_result()
 
-            return await session.async_model_loop(
-                user_input, self._async_call_native_api, OpenAIChatMessageConverter()
-            )
+            conversation_id = session.conversation_id
+            options = self.entry.options
+            client = self.entry.runtime_data
 
-    async def _async_call_native_api(
-        self,
-        user_input: conversation.ConversationInput,
-        conversation_id: str,
-        messages: list[ChatCompletionMessageParam],
-        tools: list[ChatCompletionToolParam] | None,
-        session: conversation.ChatSession[ChatCompletionMessageParam],
-    ) -> bool:
-        """Send a message to the agent."""
-        options = self.entry.options
-        client = self.entry.runtime_data
-        try:
-            result = await client.chat.completions.create(
-                model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                messages=messages,
-                tools=tools or NOT_GIVEN,
-                max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                user=conversation_id,
-            )
-        except openai.OpenAIError as err:
-            LOGGER.error("Error talking to OpenAI: %s", err)
-            raise conversation.ConversationAgentError(
-                "Sorry, I had a problem talking to OpenAI",
-                conversation_id,
-                user_input.language,
-            ) from err
+            tools = self._get_tools(session)
 
-        response = result.choices[0].message
+            async def stream_chat() -> AsyncGenerator[
+                tuple[
+                    conversation.ChatMessage[ChatCompletionMessageParam] | None,
+                    list[llm.ToolInput] | None,
+                ],
+                list[conversation.ChatMessage[ChatCompletionMessageParam]],
+            ]:
+                native_messages = []
+                messages = yield (None, None)
+                if not messages:
+                    raise ValueError("No messages to send")
+                for _iteration in range(MAX_TOOL_ITERATIONS):
+                    LOGGER.debug("Iteration %s", _iteration)
+                    LOGGER.debug("New chat messages %s", messages)
+                    native_messages.extend(
+                        [_convert_message(message) for message in messages]
+                    )
+                    LOGGER.debug("Native messages %s", native_messages)
+                    try:
+                        result = await client.chat.completions.create(
+                            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+                            messages=native_messages,
+                            tools=tools or NOT_GIVEN,
+                            max_tokens=options.get(
+                                CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                            ),
+                            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                            temperature=options.get(
+                                CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                            ),
+                            user=conversation_id,
+                        )
+                    except openai.OpenAIError as err:
+                        LOGGER.error("Error talking to OpenAI: %s", err)
+                        raise conversation.ConversationAgentError(
+                            "Sorry, I had a problem talking to OpenAI",
+                            conversation_id,
+                            user_input.language,
+                        ) from err
+                    response = result.choices[0].message
+                    chat_message, tool_inputs = _convert_response(
+                        user_input.agent_id, response
+                    )
+                    LOGGER.debug("Response %s", chat_message)
+                    native_messages.append(chat_message.native)
+                    # Note: We're currently ignoring the chat response when tools are returned
+                    if tool_inputs:
+                        messages = yield (None, tool_inputs)
+                    else:
+                        messages = yield (chat_message, None)
+                        break
 
-        chat_message, tool_inputs = _convert_response(user_input.agent_id, response)
-        LOGGER.debug("Response %s", chat_message)
-        if chat_message.native is None:
-            raise ValueError("Converted chat message had no native value")
-        session.async_add_message(chat_message)
-
-        if not tool_inputs:
-            return False
-
-        tool_responses = await session.async_call_tools(
-            user_input.agent_id, tool_inputs, _convert_tool_response
-        )
-        for message in tool_responses:
-            if TYPE_CHECKING:
-                assert message.native is not None
-            session.async_add_message(message)
-
-        return True
+            return await session.stream(user_input, stream_chat())
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
@@ -268,3 +263,14 @@ class OpenAIConversationEntity(
         """Handle options update."""
         # Reload as we update device info + entity name + supported features
         await hass.config_entries.async_reload(entry.entry_id)
+
+    def _get_tools(
+        self, session: conversation.ChatSession
+    ) -> list[ChatCompletionToolParam] | None:
+        """Get the tools for the agent."""
+        if not session.llm_api:
+            return None
+        return [
+            _convert_tool(tool, session.llm_api.custom_serializer)
+            for tool in session.llm_api.tools
+        ]
