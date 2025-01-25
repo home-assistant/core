@@ -1,11 +1,5 @@
 {
   "services": {
-    "join": {
-      "service": "mdi:music-note-plus"
-    },
-    "unjoin": {
-      "service": "mdi:music-note-minus"
-    },
     "snapshot": {
       "service": "mdi:camera"
     },

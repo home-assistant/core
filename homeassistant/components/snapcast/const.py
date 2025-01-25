@@ -11,12 +11,11 @@ CLIENT_SUFFIX = "Snapcast Client"
 
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
-SERVICE_JOIN = "join"
-SERVICE_UNJOIN = "unjoin"
 SERVICE_SET_LATENCY = "set_latency"
 
-ATTR_MASTER = "master"
 ATTR_LATENCY = "latency"
 
 DOMAIN = "snapcast"
 DEFAULT_TITLE = "Snapcast"
+
+CONF_CREATE_GROUP_ENTITIES = "create_group_entities"
