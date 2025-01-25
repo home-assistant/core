@@ -46,7 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hub = hass.data[DOMAIN][config_entry.entry_id] = DeconzHub(hass, config_entry, api)
     await hub.async_update_device_registry()
 
-    config_entry.add_update_listener(hub.async_config_entry_updated)
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(hub.async_config_entry_updated)
+    )
 
     await async_setup_events(hub)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
