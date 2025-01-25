@@ -125,6 +125,7 @@ def humidifier_fixture():
         device_status="on",
         mist_level=6,
         mist_modes=["auto", "manual"],
+        mode=None,
         sub_device_no=0,
         config_module="configModule",
         connection_status="online",
