@@ -29,7 +29,7 @@ from .util import (
     spotify_uri_from_media_browser_url,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.SWITCH]
 
 __all__ = [
     "DOMAIN",

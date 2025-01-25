@@ -1,5 +1,6 @@
 """Coordinator for Spotify."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -7,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from spotifyaio import (
     ContextType,
+    ItemType,
     PlaybackState,
     Playlist,
     SpotifyClient,
@@ -14,6 +16,7 @@ from spotifyaio import (
     SpotifyNotFoundError,
     UserProfile,
 )
+from spotifyaio.util import get_identifier
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -41,6 +44,7 @@ class SpotifyCoordinatorData:
     current_playback: PlaybackState | None
     position_updated_at: datetime | None
     playlist: Playlist | None
+    in_library: bool | None = None
     dj_playlist: bool = False
 
 
@@ -131,9 +135,23 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             )
             if time_left < UPDATE_INTERVAL:
                 self.update_interval = time_left + timedelta(seconds=1)
+        in_library = False
+        if current.item is not None:
+            func: Callable[[list[str]], Awaitable[dict[str, bool]]] = (
+                self.client.are_episodes_saved
+                if current.item.type is ItemType.EPISODE
+                else self.client.are_tracks_saved
+            )
+            try:
+                saved_items = await func([current.item.uri])
+            except SpotifyConnectionError as err:
+                _LOGGER.debug("Error checking if item is saved: %s", err)
+            else:
+                in_library = saved_items.get(get_identifier(current.item.uri), False)
         return SpotifyCoordinatorData(
             current_playback=current,
             position_updated_at=position_updated_at,
             playlist=self._playlist,
+            in_library=in_library,
             dj_playlist=dj_playlist,
         )

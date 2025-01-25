@@ -69,7 +69,7 @@ class SpotifyFlowHandler(
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": reauth_entry.data["id"]},
+                description_placeholders={"account": reauth_entry.title},
                 errors={},
             )
 

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any
 
 from spotifyaio import (
     Device,
@@ -38,6 +37,7 @@ from .browse_media import async_browse_media_internal
 from .const import MEDIA_PLAYER_PREFIX, PLAYABLE_MEDIA_TYPES
 from .coordinator import SpotifyConfigEntry, SpotifyCoordinator
 from .entity import SpotifyEntity
+from .util import async_refresh_after
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,6 @@ REPEAT_MODE_MAPPING_TO_HA = {
 REPEAT_MODE_MAPPING_TO_SPOTIFY = {
     value: key for key, value in REPEAT_MODE_MAPPING_TO_HA.items()
 }
-AFTER_REQUEST_SLEEP = 1
 
 
 async def async_setup_entry(
@@ -93,19 +92,6 @@ def ensure_item[_R](
         return func(self, self.currently_playing.item)
 
     return wrapper
-
-
-def async_refresh_after[_T: SpotifyEntity, **_P](
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
-    """Define a wrapper to yield and refresh after."""
-
-    async def _async_wrap(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        await func(self, *args, **kwargs)
-        await asyncio.sleep(AFTER_REQUEST_SLEEP)
-        await self.coordinator.async_refresh()
-
-    return _async_wrap
 
 
 class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
