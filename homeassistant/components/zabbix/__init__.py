@@ -163,7 +163,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return metrics
 
     if publish_states_host:
-        zabbix_sender = Sender(server=conf[CONF_HOST], port=DEFAULT_SENDER_PORT)
+        zabbix_sender = Sender(server=conf[CONF_HOST], port=DEFAULT_SENDER_PORT, timeout=60)
         instance = ZabbixThread(zabbix_sender, event_to_metrics)
         instance.setup(hass)
 
@@ -269,6 +269,9 @@ class ZabbixThread(threading.Thread):
         while not self.shutdown:
             count, metrics = self.get_metrics()
             if metrics:
-                self.write_to_zabbix(metrics)
+                try:
+                  self.write_to_zabbix(metrics)
+                except Exception as err: # pylint: disable=broad-exception-caught
+                    _LOGGER.error("Error writing to zabbix: %s", err)
             for _ in range(count):
                 self.queue.task_done()
