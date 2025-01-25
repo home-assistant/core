@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.webhook import async_generate_id
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
@@ -16,8 +16,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle Minut Point OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -32,9 +30,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -48,8 +43,8 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         user_id = str(data[CONF_TOKEN]["user_id"])
-        if not self.reauth_entry:
-            await self.async_set_unique_id(user_id)
+        await self.async_set_unique_id(user_id)
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
@@ -57,15 +52,11 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data={**data, CONF_WEBHOOK_ID: async_generate_id()},
             )
 
-        if (
-            self.reauth_entry.unique_id is None
-            or self.reauth_entry.unique_id == user_id
-        ):
-            logging.debug("user_id: %s", user_id)
-            return self.async_update_reload_and_abort(
-                self.reauth_entry,
-                data={**self.reauth_entry.data, **data},
-                unique_id=user_id,
-            )
+        reauth_entry = self._get_reauth_entry()
+        if reauth_entry.unique_id is not None:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
 
-        return self.async_abort(reason="wrong_account")
+        logging.debug("user_id: %s", user_id)
+        return self.async_update_reload_and_abort(
+            reauth_entry, data_updates=data, unique_id=user_id
+        )

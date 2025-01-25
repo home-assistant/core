@@ -56,6 +56,7 @@ from .const import (
     MODEL_FAN_P9,
     MODEL_FAN_P10,
     MODEL_FAN_P11,
+    MODEL_FAN_P18,
     MODEL_FAN_ZA5,
     MODELS_AIR_MONITOR,
     MODELS_FAN,
@@ -118,6 +119,7 @@ MODEL_TO_CLASS_MAP = {
     MODEL_FAN_P9: FanMiot,
     MODEL_FAN_P10: FanMiot,
     MODEL_FAN_P11: FanMiot,
+    MODEL_FAN_P18: FanMiot,
     MODEL_FAN_P5: FanP5,
     MODEL_FAN_ZA5: FanZA5,
 }
@@ -306,6 +308,7 @@ async def async_create_miio_device_and_coordinator(
         "zhimi.fan.za3": True,
         "zhimi.fan.za5": True,
         "zhimi.airpurifier.za1": True,
+        "dmaker.fan.1c": True,
     }
     lazy_discover = LAZY_DISCOVER_FOR_MODEL.get(model, False)
 
@@ -385,6 +388,7 @@ async def async_create_miio_device_and_coordinator(
     coordinator = coordinator_class(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=name,
         update_method=update_method(hass, device),
         # Polling interval. Will only be polled if there are subscribers.
@@ -450,6 +454,7 @@ async def async_setup_gateway_entry(hass: HomeAssistant, entry: ConfigEntry) -> 
         coordinator_dict[sub_device.sid] = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=name,
             update_method=update_data_factory(sub_device),
             # Polling interval. Will only be polled if there are subscribers.

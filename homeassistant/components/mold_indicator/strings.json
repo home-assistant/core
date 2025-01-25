@@ -1,4 +1,5 @@
 {
+  "title": "Mold Indicator",
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -8,7 +9,7 @@
     },
     "step": {
       "user": {
-        "description": "Add Mold indicator helper",
+        "description": "Create Mold indicator helper",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "indoor_humidity_sensor": "Indoor humidity sensor",

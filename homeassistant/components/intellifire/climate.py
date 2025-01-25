@@ -58,7 +58,6 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     last_temp = DEFAULT_THERMOSTAT_TEMP
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

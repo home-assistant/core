@@ -157,7 +157,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     type=selector.TextSelectorType.TEXT, multiline=False
                 )
             ),
-            vol.Optional(CONF_SET_VALUE): selector.ActionSelector(),
+            vol.Required(CONF_SET_VALUE): selector.ActionSelector(),
         }
 
     if domain == Platform.SELECT:
@@ -235,8 +235,12 @@ def _validate_unit(options: dict[str, Any]) -> None:
         and (units := DEVICE_CLASS_UNITS.get(device_class)) is not None
         and (unit := options.get(CONF_UNIT_OF_MEASUREMENT)) not in units
     ):
+        # Sort twice to make sure strings with same case-insensitive order of
+        # letters are sorted consistently still.
         sorted_units = sorted(
-            [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            sorted(
+                [f"'{unit!s}'" if unit else "no unit of measurement" for unit in units],
+            ),
             key=str.casefold,
         )
         if len(sorted_units) == 1:

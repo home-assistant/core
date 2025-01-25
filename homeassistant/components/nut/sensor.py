@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     ATTR_SW_VERSION,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -42,6 +43,7 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "manufacturer": ATTR_MANUFACTURER,
     "model": ATTR_MODEL,
     "firmware": ATTR_SW_VERSION,
+    "serial": ATTR_SERIAL_NUMBER,
 }
 
 _LOGGER = logging.getLogger(__name__)

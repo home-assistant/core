@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.loader import (
@@ -136,7 +137,7 @@ class Analytics:
     @property
     def supervisor(self) -> bool:
         """Return bool if a supervisor is present."""
-        return hassio.is_hassio(self.hass)
+        return is_hassio(self.hass)
 
     async def load(self) -> None:
         """Load preferences."""

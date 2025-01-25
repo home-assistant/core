@@ -22,6 +22,38 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "state_e_activated": {
+        "name": "Ev error"
+      },
+      "overtemp": {
+        "name": "Thermal throttling"
+      },
+      "critical_temp": {
+        "name": "Overheating"
+      },
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "meter_fault": {
+        "name": "Metering error"
+      },
+      "undervoltage": {
+        "name": "Undervoltage"
+      },
+      "overvoltage": {
+        "name": "Overvoltage"
+      },
+      "rcd_error": {
+        "name": "Rcd error"
+      },
+      "cp_diode_failure": {
+        "name": "Ev diode short"
+      },
+      "contactor_failure": {
+        "name": "Relay contacts welded"
+      }
+    },
     "button": {
       "charge_start": {
         "name": "Charge start"
@@ -54,11 +86,13 @@
         "name": "State",
         "state": {
           "available": "Available",
+          "charging": "Charging",
           "connected": "Connected",
+          "error": "Error",
+          "locked": "Locked",
           "need_auth": "Waiting for authentication",
           "paused": "Paused",
-          "charging": "Charging",
-          "error": "Error",
+          "paused_by_scheduler": "Paused by scheduler",
           "updating_firmware": "Updating firmware"
         }
       },
@@ -125,6 +159,17 @@
       },
       "pf_l3": {
         "name": "Power factor L3"
+      }
+    },
+    "switch": {
+      "authentication": {
+        "name": "Authentication"
+      },
+      "force_single_phase": {
+        "name": "Force single phase"
+      },
+      "lock": {
+        "name": "Lock"
       }
     }
   }

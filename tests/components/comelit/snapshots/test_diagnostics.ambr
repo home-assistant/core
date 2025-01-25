@@ -1,0 +1,144 @@
+# serializer version: 1
+# name: test_entry_diagnostics_bridge
+  dict({
+    'device_info': dict({
+      'devices': list([
+        dict({
+          'clima': list([
+          ]),
+        }),
+        dict({
+          'shutter': list([
+            dict({
+              '0': dict({
+                'human_status': 'closed',
+                'name': 'Cover0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': 0,
+                'zone': 'Open space',
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'light': list([
+            dict({
+              '0': dict({
+                'human_status': 'off',
+                'name': 'Light0',
+                'power': 0.0,
+                'power_unit': 'W',
+                'protected': 0,
+                'status': 0,
+                'val': 0,
+                'zone': 'Bathroom',
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'other': list([
+          ]),
+        }),
+        dict({
+          'irrigation': list([
+          ]),
+        }),
+        dict({
+          'scenario': list([
+          ]),
+        }),
+      ]),
+      'last_exception': 'None',
+      'last_update success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_host',
+        'pin': '**REDACTED**',
+        'port': 80,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'comelit',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'type': 'Serial bridge',
+  })
+# ---
+# name: test_entry_diagnostics_vedo
+  dict({
+    'device_info': dict({
+      'devices': list([
+        dict({
+          'aree': list([
+            dict({
+              '0': dict({
+                'alarm': False,
+                'alarm_memory': False,
+                'anomaly': False,
+                'armed': False,
+                'human_status': 'unknown',
+                'in_time': False,
+                'name': 'Area0',
+                'out_time': False,
+                'p1': True,
+                'p2': False,
+                'ready': False,
+                'sabotage': False,
+              }),
+            }),
+          ]),
+        }),
+        dict({
+          'zone': list([
+            dict({
+              '0': dict({
+                'human_status': 'rest',
+                'name': 'Zone0',
+                'status': 0,
+                'status_api': '0x000',
+              }),
+            }),
+          ]),
+        }),
+      ]),
+      'last_exception': 'None',
+      'last_update success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'fake_vedo_host',
+        'pin': '**REDACTED**',
+        'port': 8080,
+        'type': 'Vedo system',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'comelit',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'type': 'Vedo system',
+  })
+# ---

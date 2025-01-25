@@ -136,6 +136,9 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
             ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS
         ),
         fan_speed_mode=config[ClimateSchema.CONF_FAN_SPEED_MODE],
+        group_address_humidity_state=config.get(
+            ClimateSchema.CONF_HUMIDITY_STATE_ADDRESS
+        ),
     )
 
 
@@ -145,7 +148,6 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
     _device: XknxClimate
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "knx_climate"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
@@ -398,6 +400,11 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         await self._device.set_fan_speed(self._fan_modes_percentages[fan_mode_index])
 
     @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        return self._device.humidity.value
+
+    @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
         attr: dict[str, Any] = {}
@@ -420,7 +427,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             self._device.mode.xknx.devices.async_remove(self._device.mode)
         await super().async_will_remove_from_hass()
 
-    def after_update_callback(self, _device: XknxDevice) -> None:
+    def after_update_callback(self, device: XknxDevice) -> None:
         """Call after device was updated."""
         if self._device.mode is not None and self._device.mode.supports_controller_mode:
             hvac_mode = CONTROLLER_MODES.get(
@@ -428,4 +435,4 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             )
             if hvac_mode is not HVACMode.OFF:
                 self._last_hvac_mode = hvac_mode
-        super().after_update_callback(_device)
+        super().after_update_callback(device)

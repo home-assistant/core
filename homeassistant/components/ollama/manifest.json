@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ollama",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "requirements": ["ollama==0.3.3"]
+  "requirements": ["ollama==0.4.7"]
 }

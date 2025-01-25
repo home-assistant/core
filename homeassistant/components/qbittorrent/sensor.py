@@ -100,13 +100,11 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ALL_TORRENTS,
         translation_key="all_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(coordinator, []),
     ),
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_ACTIVE_TORRENTS,
         translation_key="active_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
             coordinator, ["downloading", "uploading"]
         ),
@@ -114,7 +112,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_INACTIVE_TORRENTS,
         translation_key="inactive_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
             coordinator, ["stalledDL", "stalledUP"]
         ),
@@ -122,7 +119,6 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
     QBittorrentSensorEntityDescription(
         key=SENSOR_TYPE_PAUSED_TORRENTS,
         translation_key="paused_torrents",
-        native_unit_of_measurement="torrents",
         value_fn=lambda coordinator: count_torrents_in_states(
             coordinator, ["pausedDL", "pausedUP"]
         ),

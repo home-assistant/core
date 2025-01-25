@@ -1,12 +1,13 @@
 """Test for the alarm control panel const module."""
 
-from types import ModuleType
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import alarm_control_panel
-from homeassistant.components.alarm_control_panel.const import (
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     AlarmControlPanelEntityFeature,
     CodeFormat,
 )
@@ -22,12 +23,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, frame
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
+from . import help_async_setup_entry_init, help_async_unload_entry
 from .conftest import MockAlarmControlPanel
 
-from tests.common import help_test_all, import_and_test_deprecated_constant_enum
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_integration,
+    setup_test_component_platform,
+)
 
 
 async def help_test_async_alarm_control_panel_service(
@@ -45,76 +52,6 @@ async def help_test_async_alarm_control_panel_service(
         alarm_control_panel.DOMAIN, service, data, blocking=True
     )
     await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    "module",
-    [alarm_control_panel, alarm_control_panel.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    "code_format",
-    list(alarm_control_panel.CodeFormat),
-)
-@pytest.mark.parametrize(
-    "module",
-    [alarm_control_panel, alarm_control_panel.const],
-)
-def test_deprecated_constant_code_format(
-    caplog: pytest.LogCaptureFixture,
-    code_format: alarm_control_panel.CodeFormat,
-    module: ModuleType,
-) -> None:
-    """Test deprecated format constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, code_format, "FORMAT_", "2025.1"
-    )
-
-
-@pytest.mark.parametrize(
-    "entity_feature",
-    list(alarm_control_panel.AlarmControlPanelEntityFeature),
-)
-@pytest.mark.parametrize(
-    "module",
-    [alarm_control_panel, alarm_control_panel.const],
-)
-def test_deprecated_support_alarm_constants(
-    caplog: pytest.LogCaptureFixture,
-    entity_feature: alarm_control_panel.AlarmControlPanelEntityFeature,
-    module: ModuleType,
-) -> None:
-    """Test deprecated support alarm constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, entity_feature, "SUPPORT_ALARM_", "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockAlarmControlPanelEntity(alarm_control_panel.AlarmControlPanelEntity):
-        _attr_supported_features = 1
-
-    entity = MockAlarmControlPanelEntity()
-    assert (
-        entity.supported_features
-        is alarm_control_panel.AlarmControlPanelEntityFeature(1)
-    )
-    assert "MockAlarmControlPanelEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "AlarmControlPanelEntityFeature.ARM_HOME" in caplog.text
-    caplog.clear()
-    assert (
-        entity.supported_features
-        is alarm_control_panel.AlarmControlPanelEntityFeature(1)
-    )
-    assert "is using deprecated supported features values" not in caplog.text
 
 
 async def test_set_mock_alarm_control_panel_options(
@@ -283,3 +220,228 @@ async def test_alarm_control_panel_with_default_code(
         hass, mock_alarm_control_panel_entity.entity_id, SERVICE_ALARM_DISARM
     )
     mock_alarm_control_panel_entity.calls_disarm.assert_called_with("1234")
+
+
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_alarm_control_panel_not_log_deprecated_state_warning(
+    hass: HomeAssistant,
+    mock_alarm_control_panel_entity: MockAlarmControlPanel,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test correctly using alarm_state doesn't log issue or raise repair."""
+    state = hass.states.get(mock_alarm_control_panel_entity.entity_id)
+    assert state is not None
+    assert (
+        "the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
+        not in caplog.text
+    )
+
+
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_alarm_control_panel_log_deprecated_state_warning_using_state_prop(
+    hass: HomeAssistant,
+    code_format: CodeFormat | None,
+    supported_features: AlarmControlPanelEntityFeature,
+    code_arm_required: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test incorrectly using state property does log issue and raise repair."""
+
+    class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
+        """Mocked alarm control entity."""
+
+        def __init__(
+            self,
+            supported_features: AlarmControlPanelEntityFeature = AlarmControlPanelEntityFeature(
+                0
+            ),
+            code_format: CodeFormat | None = None,
+            code_arm_required: bool = True,
+        ) -> None:
+            """Initialize the alarm control."""
+            super().__init__(supported_features, code_format, code_arm_required)
+
+        @property
+        def state(self) -> str:
+            """Return the state of the entity."""
+            return "disarmed"
+
+    entity = MockLegacyAlarmControlPanel(
+        supported_features=supported_features,
+        code_format=code_format,
+        code_arm_required=code_arm_required,
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+        built_in=False,
+    )
+    setup_test_component_platform(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state"
+        " directly. Entity None (<class 'tests.components.alarm_control_panel."
+        "test_init.test_alarm_control_panel_log_deprecated_state_warning_using"
+        "_state_prop.<locals>.MockLegacyAlarmControlPanel'>) should implement"
+        " the 'alarm_state' property and return its state using the AlarmControlPanelState"
+        " enum at test_init.py, line 123: yield. This will stop working in Home Assistant"
+        " 2025.11, please create a bug report at" in caplog.text
+    )
+
+
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr(
+    hass: HomeAssistant,
+    code_format: CodeFormat | None,
+    supported_features: AlarmControlPanelEntityFeature,
+    code_arm_required: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test incorrectly using _attr_state attribute does log issue and raise repair."""
+
+    class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
+        """Mocked alarm control entity."""
+
+        def __init__(
+            self,
+            supported_features: AlarmControlPanelEntityFeature = AlarmControlPanelEntityFeature(
+                0
+            ),
+            code_format: CodeFormat | None = None,
+            code_arm_required: bool = True,
+        ) -> None:
+            """Initialize the alarm control."""
+            super().__init__(supported_features, code_format, code_arm_required)
+
+        def alarm_disarm(self, code: str | None = None) -> None:
+            """Mock alarm disarm calls."""
+            self._attr_state = "disarmed"
+
+    entity = MockLegacyAlarmControlPanel(
+        supported_features=supported_features,
+        code_format=code_format,
+        code_arm_required=code_arm_required,
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        not in caplog.text
+    )
+
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
+
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        " Entity alarm_control_panel.test_alarm_control_panel"
+        " (<class 'tests.components.alarm_control_panel.test_init."
+        "test_alarm_control_panel_log_deprecated_state_warning_using_attr_state_attr."
+        "<locals>.MockLegacyAlarmControlPanel'>) should implement the 'alarm_state' property"
+        " and return its state using the AlarmControlPanelState enum at test_init.py, line 123:"
+        " yield. This will stop working in Home Assistant 2025.11,"
+        " please create a bug report at" in caplog.text
+    )
+    caplog.clear()
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
+    # Test we only log once
+    assert (
+        "Detected that custom integration 'alarm_control_panel' is setting state directly."
+        not in caplog.text
+    )
+
+
+@pytest.mark.usefixtures("mock_as_custom_component")
+@patch.object(frame, "_REPORTED_INTEGRATIONS", set())
+async def test_alarm_control_panel_deprecated_state_does_not_break_state(
+    hass: HomeAssistant,
+    code_format: CodeFormat | None,
+    supported_features: AlarmControlPanelEntityFeature,
+    code_arm_required: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test using _attr_state attribute does not break state."""
+
+    class MockLegacyAlarmControlPanel(MockAlarmControlPanel):
+        """Mocked alarm control entity."""
+
+        def __init__(
+            self,
+            supported_features: AlarmControlPanelEntityFeature = AlarmControlPanelEntityFeature(
+                0
+            ),
+            code_format: CodeFormat | None = None,
+            code_arm_required: bool = True,
+        ) -> None:
+            """Initialize the alarm control."""
+            self._attr_state = "armed_away"
+            super().__init__(supported_features, code_format, code_arm_required)
+
+        def alarm_disarm(self, code: str | None = None) -> None:
+            """Mock alarm disarm calls."""
+            self._attr_state = "disarmed"
+
+    entity = MockLegacyAlarmControlPanel(
+        supported_features=supported_features,
+        code_format=code_format,
+        code_arm_required=code_arm_required,
+    )
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(
+        hass, ALARM_CONTROL_PANEL_DOMAIN, [entity], from_config_entry=True
+    )
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "armed_away"
+
+    await help_test_async_alarm_control_panel_service(
+        hass, entity.entity_id, SERVICE_ALARM_DISARM
+    )
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    assert state.state == "disarmed"

@@ -14,13 +14,12 @@ from androidtvremote2 import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
@@ -31,6 +30,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_APP_ICON, CONF_APP_NAME, CONF_APPS, CONF_ENABLE_IME, DOMAIN
 from .helpers import create_api, get_enable_ime
@@ -142,7 +142,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Android TV device found via zeroconf: %s", discovery_info)
@@ -151,7 +151,23 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if not (mac := discovery_info.properties.get("bt")):
             return self.async_abort(reason="cannot_connect")
         self.mac = mac
-        await self.async_set_unique_id(format_mac(self.mac))
+        existing_config_entry = await self.async_set_unique_id(format_mac(mac))
+        # Sometimes, devices send an invalid zeroconf message with multiple addresses
+        # and one of them, which could end up being in discovery_info.host, is from a
+        # different device. If any of the discovery_info.ip_addresses matches the
+        # existing host, don't update the host.
+        if (
+            existing_config_entry
+            # Ignored entries don't have host
+            and CONF_HOST in existing_config_entry.data
+            and len(discovery_info.ip_addresses) > 1
+        ):
+            existing_host = existing_config_entry.data[CONF_HOST]
+            if existing_host != self.host:
+                if existing_host in [
+                    str(ip_address) for ip_address in discovery_info.ip_addresses
+                ]:
+                    self.host = existing_host
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self.host, CONF_NAME: self.name}
         )
@@ -210,13 +226,12 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         return AndroidTVRemoteOptionsFlowHandler(config_entry)
 
 
-class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
     """Android TV Remote options flow."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        super().__init__(config_entry)
-        self._apps: dict[str, Any] = self.options.setdefault(CONF_APPS, {})
+        self._apps: dict[str, Any] = dict(config_entry.options.get(CONF_APPS, {}))
         self._conf_app_id: str | None = None
 
     @callback

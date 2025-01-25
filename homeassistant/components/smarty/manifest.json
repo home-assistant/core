@@ -2,6 +2,7 @@
   "domain": "smarty",
   "name": "Salda Smarty",
   "codeowners": ["@z0mbieprocess"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/smarty",
   "integration_type": "hub",
   "iot_class": "local_polling",

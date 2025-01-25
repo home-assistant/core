@@ -112,6 +112,7 @@ async def test_send_batch_error(
     )
     await hass.async_block_till_done()
     mock_send_batch.assert_called_once()
+    mock_send_batch.side_effect = None  # Reset to avoid error in teardown
 
 
 async def test_late_event(

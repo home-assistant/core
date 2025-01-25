@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import logging
 from typing import Any
 import urllib.error
@@ -10,23 +11,19 @@ import feedparser
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
-    OptionsFlowWithConfigEntry,
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util import slugify
 
 from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN
 
@@ -42,13 +39,14 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1
-    _max_entries: int | None = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return FeedReaderOptionsFlowHandler(config_entry)
+        return FeedReaderOptionsFlowHandler()
 
     def show_user_form(
         self,
@@ -73,21 +71,6 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    def abort_on_import_error(self, url: str, error: str) -> ConfigFlowResult:
-        """Abort import flow on error."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            f"import_yaml_error_{DOMAIN}_{error}_{slugify(url)}",
-            breaks_in_ha_version="2025.1.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=f"import_yaml_error_{error}",
-            translation_placeholders={"url": url},
-        )
-        return self.async_abort(reason=error)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -102,22 +85,15 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         if feed.bozo:
             LOGGER.debug("feed bozo_exception: %s", feed.bozo_exception)
             if isinstance(feed.bozo_exception, urllib.error.URLError):
-                if self.context["source"] == SOURCE_IMPORT:
-                    return self.abort_on_import_error(user_input[CONF_URL], "url_error")
                 return self.show_user_form(user_input, {"base": "url_error"})
 
-        feed_title = feed["feed"]["title"]
+        feed_title = html.unescape(feed["feed"]["title"])
 
         return self.async_create_entry(
             title=feed_title,
             data=user_input,
-            options={CONF_MAX_ENTRIES: self._max_entries or DEFAULT_MAX_ENTRIES},
+            options={CONF_MAX_ENTRIES: DEFAULT_MAX_ENTRIES},
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle an import flow."""
-        self._max_entries = import_data[CONF_MAX_ENTRIES]
-        return await self.async_step_user({CONF_URL: import_data[CONF_URL]})
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -147,7 +123,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reconfigure_successful")
 
 
-class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class FeedReaderOptionsFlowHandler(OptionsFlow):
     """Handle an options flow."""
 
     async def async_step_init(
@@ -162,7 +138,9 @@ class FeedReaderOptionsFlowHandler(OptionsFlowWithConfigEntry):
             {
                 vol.Optional(
                     CONF_MAX_ENTRIES,
-                    default=self.options.get(CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES),
+                    default=self.config_entry.options.get(
+                        CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES
+                    ),
                 ): cv.positive_int,
             }
         )

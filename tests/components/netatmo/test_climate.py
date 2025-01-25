@@ -282,7 +282,7 @@ async def test_service_preset_mode_frost_guard_thermostat(
     assert hass.states.get(climate_entity_livingroom).state == "auto"
     assert (
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"]
-        == "Frost Guard"
+        == "frost_guard"
     )
 
     # Test service setting the preset mode to "frost guard"
@@ -779,7 +779,7 @@ async def test_service_preset_mode_already_boost_valves(
     assert hass.states.get(climate_entity_entrada).state == "auto"
     assert (
         hass.states.get(climate_entity_entrada).attributes["preset_mode"]
-        == "Frost Guard"
+        == "frost_guard"
     )
     assert hass.states.get(climate_entity_entrada).attributes["temperature"] == 7
 

@@ -9,24 +9,24 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VelbusConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
+    await entry.runtime_data.scan_task
     entities = []
-    for channel in cntrl.get_all("sensor"):
+    for channel in entry.runtime_data.controller.get_all_sensor():
         entities.append(VelbusSensor(channel))
         if channel.is_counter_channel():
             entities.append(VelbusSensor(channel, True))

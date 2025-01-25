@@ -2,17 +2,18 @@
 
 from typing import Any
 
-from pytedee_async import TedeeClientException, TedeeLock, TedeeLockState
+from aiotedee import TedeeClientException, TedeeLock, TedeeLockState
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TedeeConfigEntry
 from .const import DOMAIN
-from .coordinator import TedeeApiCoordinator
+from .coordinator import TedeeApiCoordinator, TedeeConfigEntry
 from .entity import TedeeEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -23,23 +24,18 @@ async def async_setup_entry(
     """Set up the Tedee lock entity."""
     coordinator = entry.runtime_data
 
-    entities: list[TedeeLockEntity] = []
-    for lock in coordinator.data.values():
-        if lock.is_enabled_pullspring:
-            entities.append(TedeeLockWithLatchEntity(lock, coordinator))
-        else:
-            entities.append(TedeeLockEntity(lock, coordinator))
-
-    def _async_add_new_lock(lock_id: int) -> None:
-        lock = coordinator.data[lock_id]
-        if lock.is_enabled_pullspring:
-            async_add_entities([TedeeLockWithLatchEntity(lock, coordinator)])
-        else:
-            async_add_entities([TedeeLockEntity(lock, coordinator)])
+    def _async_add_new_lock(locks: list[TedeeLock]) -> None:
+        entities: list[TedeeLockEntity] = []
+        for lock in locks:
+            if lock.is_enabled_pullspring:
+                entities.append(TedeeLockWithLatchEntity(lock, coordinator))
+            else:
+                entities.append(TedeeLockEntity(lock, coordinator))
+        async_add_entities(entities)
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
 
-    async_add_entities(entities)
+    _async_add_new_lock(list(coordinator.data.values()))
 
 
 class TedeeLockEntity(TedeeEntity, LockEntity):
