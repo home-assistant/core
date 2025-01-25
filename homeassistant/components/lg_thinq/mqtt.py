@@ -168,7 +168,7 @@ class ThinQMQTT:
     async def async_handle_device_event(self, message: dict) -> None:
         """Handle received mqtt message."""
         unique_id = (
-            f"{message["deviceId"]}_{list(message["report"].keys())[0]}"
+            f"{message['deviceId']}_{list(message['report'].keys())[0]}"
             if message["deviceType"] == DeviceType.WASHTOWER
             else message["deviceId"]
         )

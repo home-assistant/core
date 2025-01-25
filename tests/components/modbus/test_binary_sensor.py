@@ -422,9 +422,9 @@ async def test_virtual_binary_sensor(
     assert hass.states.get(ENTITY_ID).state == expected
 
     for i, slave in enumerate(slaves):
-        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i+1}".replace(" ", "_")
+        entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}_{i + 1}".replace(" ", "_")
         assert hass.states.get(entity_id).state == slave
-        unique_id = f"{SLAVE_UNIQUE_ID}_{i+1}"
+        unique_id = f"{SLAVE_UNIQUE_ID}_{i + 1}"
         entry = entity_registry.async_get(entity_id)
         assert entry.unique_id == unique_id
 
