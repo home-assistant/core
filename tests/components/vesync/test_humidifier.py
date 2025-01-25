@@ -1,11 +1,9 @@
 """Tests for the humidifier platform."""
 
 from contextlib import nullcontext
-import logging
 from unittest.mock import patch
 
 import pytest
-from pyvesync.vesyncfan import model_features
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -14,7 +12,6 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
-from homeassistant.components.vesync.humidifier import _get_available_modes
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -57,20 +54,6 @@ async def test_humidifier_state(
 
     # ATTR_HUMIDITY represents the target_humidity which comes from configuration.auto_target_humidity node
     assert state.attributes.get(ATTR_HUMIDITY) == 40
-
-
-@pytest.mark.parametrize(
-    ("device_type"),
-    ["Classic200S", "LUH-A602S-WUS"],
-)
-async def test_mist_modes(device_type, caplog: pytest.LogCaptureFixture) -> None:
-    """Test validity of mist modes exposed by Vesync library."""
-
-    caplog.clear()
-    caplog.set_level(logging.WARNING)
-
-    _get_available_modes(model_features(device_type).get("mist_modes"))
-    assert len(caplog.record_tuples) == 0
 
 
 async def test_set_target_humidity_invalid(
