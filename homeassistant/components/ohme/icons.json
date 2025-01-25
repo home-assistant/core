@@ -41,6 +41,11 @@
           "off": "mdi:sleep-off"
         }
       }
+    },
+    "time": {
+      "target_time": {
+        "default": "mdi:clock-end"
+      }
     }
   },
   "services": {
