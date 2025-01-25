@@ -505,7 +505,7 @@ asmog==0.0.6
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.42.0
+async-upnp-client==0.43.0
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -2303,7 +2303,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.5
+pysmlight==0.1.6
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2596,7 +2596,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.11.6
+reolink-aio==0.11.8
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2934,7 +2934,7 @@ typedmonarchmoney==0.3.1
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.4.1
+uiprotect==7.5.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
