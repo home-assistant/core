@@ -55,6 +55,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
+from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address as is_ip
 
 from .const import (
@@ -422,7 +423,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                         ),
                         vol.Required(
                             CONF_BACKUP_PATH,
-                            default=DEFAULT_BACKUP_PATH,
+                            default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
                         ): str,
                     }
                 ),
