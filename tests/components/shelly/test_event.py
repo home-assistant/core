@@ -5,6 +5,7 @@ from unittest.mock import Mock
 from aioshelly.const import MODEL_I3
 import pytest
 from pytest_unordered import unordered
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -70,23 +71,17 @@ async def test_rpc_script_event(
     mock_rpc_device: Mock,
     entity_registry: EntityRegistry,
     monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test script event."""
     await init_integration(hass, 2)
-    entity_id = "event.test_script_js"
+    entity_id = "event.test_name_test_script_js"
 
     state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_EVENT_TYPES) == unordered(
-        ["input_event", "script_start"]
-    )
-    assert state.attributes.get(ATTR_EVENT_TYPE) is None
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state == snapshot(name=f"{entity_id}-state")
 
     entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-script:1"
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
     inject_rpc_device_event(
         monkeypatch,

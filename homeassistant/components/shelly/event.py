@@ -74,6 +74,7 @@ SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     translation_key="script",
     device_class=None,
     entity_registry_enabled_default=False,
+    has_entity_name=True,
 )
 
 
@@ -110,6 +111,9 @@ async def async_setup_entry(
             event_types = await get_rpc_script_event_types(
                 coordinator.device, int(script.split(":")[-1])
             )
+            if not event_types:
+                continue
+
             entities.append(
                 ShellyRpcEvent(coordinator, script, SCRIPT_EVENT, event_types)
             )

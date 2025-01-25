@@ -599,4 +599,4 @@ async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     """Return a list of event types for a specific script."""
     code_response = await device.script_getcode(id)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
-    return [*{str(event_type.group(1)) for event_type in matches}]
+    return sorted([*{str(event_type.group(1)) for event_type in matches}])
