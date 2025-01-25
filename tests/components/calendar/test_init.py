@@ -71,7 +71,16 @@ async def setup_intents(hass: HomeAssistant) -> None:
     await calendar_intent.async_setup_intents(hass)
 
 
-async def test_calendar_get_events_intent(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("range_value"),
+    [
+        ("today"),
+        ("week"),
+    ],
+)
+async def test_calendar_get_events_intent(
+    hass: HomeAssistant, range_value: str
+) -> None:
     """Test the calendar get events intent."""
     calls = async_mock_service(
         hass,
@@ -100,25 +109,25 @@ async def test_calendar_get_events_intent(hass: HomeAssistant) -> None:
     )
 
     now = dt_util.now()
-    with (
-        patch.multiple(
-            "homeassistant.util.dt",
-            now=Mock(return_value=now),
+    patch_now = patch.multiple(
+        "homeassistant.util.dt",
+        now=Mock(return_value=now),
+    )
+    patch_match_targets = patch(
+        "homeassistant.helpers.intent.async_match_targets",
+        return_value=Mock(
+            is_match=True, states=[Mock(entity_id="calendar.test_calendar")]
         ),
-        patch(
-            "homeassistant.helpers.intent.async_match_targets",
-            return_value=Mock(
-                is_match=True, states=[Mock(entity_id="calendar.test_calendar")]
-            ),
-        ),
-    ):
+    )
+
+    with patch_now, patch_match_targets:
         response = await intent.async_handle(
             hass,
             DOMAIN,
             INTENT_CALENDAR_GET_EVENTS,
             {
                 "calendar": {"value": "test_calendar"},
-                "range": {"value": "today"},
+                "range": {"value": range_value},
             },
             assistant=conversation.DOMAIN,
         )
@@ -130,7 +139,10 @@ async def test_calendar_get_events_intent(hass: HomeAssistant) -> None:
         assert call.data == {
             "entity_id": ["calendar.test_calendar"],
             "start_date_time": now,
-            "end_date_time": dt_util.start_of_local_day() + timedelta(days=1),
+            "end_date_time": (
+                dt_util.start_of_local_day()
+                + (timedelta(days=1) if range_value == "today" else timedelta(days=7))
+            ),
         }
 
         assert response.speech_slots["events"] == [
