@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, cast
 
 from kasa import Device, Feature, Module
@@ -9,16 +11,22 @@ from kasa.smart.modules.clean import Clean, Status
 from kasa.smart.modules.speaker import Speaker
 
 from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
     StateVacuumEntity,
+    StateVacuumEntityDescription,
     VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry
+from . import TPLinkConfigEntry, legacy_device_id
 from .coordinator import TPLinkDataUpdateCoordinator
-from .entity import CoordinatedTPLinkEntity, async_refresh_after
+from .entity import (
+    CoordinatedTPLinkModuleEntity,
+    TPLinkModuleEntityDescription,
+    async_refresh_after,
+)
 
 STATUS_TO_ACTIVITY = {
     Status.Idle: VacuumActivity.IDLE,
@@ -32,6 +40,25 @@ STATUS_TO_ACTIVITY = {
 }
 
 
+@dataclass(frozen=True, kw_only=True)
+class TPLinkVacuumEntityDescription(
+    StateVacuumEntityDescription, TPLinkModuleEntityDescription
+):
+    """Base class for vacuum entity description."""
+
+    unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
+        lambda device, desc: f"{legacy_device_id(device)}_{desc.key}"
+    )
+
+
+VACUUM_DESCRIPTIONS: tuple[TPLinkVacuumEntityDescription, ...] = (
+    TPLinkVacuumEntityDescription(
+        key="vacuum",
+        exists_fn=lambda dev, _: Module.Clean in dev.modules,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
@@ -42,11 +69,28 @@ async def async_setup_entry(
     parent_coordinator = data.parent_coordinator
     device = parent_coordinator.device
 
-    if Module.Clean in device.modules:
-        async_add_entities([TPLinkVacuumEntity(device, parent_coordinator)])
+    known_child_device_ids: set[str] = set()
+    first_check = True
+
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            entity_class=TPLinkVacuumEntity,
+            descriptions=VACUUM_DESCRIPTIONS,
+            platform_domain=VACUUM_DOMAIN,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
-class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
+class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
     """Representation of a tplink vacuum."""
 
     _attr_name = None
@@ -60,15 +104,22 @@ class TPLinkVacuumEntity(CoordinatedTPLinkEntity, StateVacuumEntity):
         | VacuumEntityFeature.LOCATE
     )
 
+    entity_description: TPLinkVacuumEntityDescription
+
     def __init__(
         self,
         device: Device,
         coordinator: TPLinkDataUpdateCoordinator,
+        description: TPLinkVacuumEntityDescription,
+        *,
+        parent: Device,
     ) -> None:
         """Initialize the vacuum entity."""
+        super().__init__(device, coordinator, description, parent=parent)
         self._vacuum_module: Clean = device.modules[Module.Clean]
         self._speaker_module: Speaker = device.modules[Module.Speaker]
-        super().__init__(device, coordinator)
+        # Needs to be initialized empty, as vacuumentity's capability_attributes accesses it
+        self._attr_fan_speed_list: list[str] = []
 
     @async_refresh_after
     async def async_start(self) -> None:
