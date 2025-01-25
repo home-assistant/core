@@ -157,14 +157,14 @@ class OpenAIConversationEntity(
         options = self.entry.options
 
         try:
-            await session.async_process_llm_message(
+            await session.async_update_llm_data(
                 DOMAIN,
                 user_input,
                 options.get(CONF_LLM_HASS_API),
                 options.get(CONF_PROMPT),
             )
         except conversation.ConverseError as err:
-            return err.as_converstation_result()
+            return err.as_conversation_result()
 
         tools: list[ChatCompletionToolParam] | None = None
         if session.llm_api:

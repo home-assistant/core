@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from homeassistant.components import zeroconf
 from homeassistant.components.forked_daapd.const import (
     CONF_LIBRESPOT_JAVA_PORT,
     CONF_MAX_PLAYLISTS,
@@ -19,6 +18,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -109,7 +109,7 @@ async def test_zeroconf_updates_title(
     MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "different host"}).add_to_hass(hass)
     config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    discovery_info = zeroconf.ZeroconfServiceInfo(
+    discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.1"),
         ip_addresses=[ip_address("192.168.1.1")],
         hostname="mock_hostname",
@@ -146,7 +146,7 @@ async def test_config_flow_no_websocket(
 async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     """Test that an invalid zeroconf entry doesn't work."""
     # test with no discovery properties
-    discovery_info = zeroconf.ZeroconfServiceInfo(
+    discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("127.0.0.1"),
         ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
@@ -161,7 +161,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with forked-daapd version < 27
-    discovery_info = zeroconf.ZeroconfServiceInfo(
+    discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("127.0.0.1"),
         ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
@@ -176,7 +176,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with verbose mtd-version from Firefly
-    discovery_info = zeroconf.ZeroconfServiceInfo(
+    discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("127.0.0.1"),
         ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
@@ -191,7 +191,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_forked_daapd"
     # test with svn mtd-version from Firefly
-    discovery_info = zeroconf.ZeroconfServiceInfo(
+    discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("127.0.0.1"),
         ip_addresses=[ip_address("127.0.0.1")],
         hostname="mock_hostname",
@@ -209,7 +209,7 @@ async def test_config_flow_zeroconf_invalid(hass: HomeAssistant) -> None:
 
 async def test_config_flow_zeroconf_valid(hass: HomeAssistant) -> None:
     """Test that a valid zeroconf entry works."""
-    discovery_info = zeroconf.ZeroconfServiceInfo(
+    discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.1"),
         ip_addresses=[ip_address("192.168.1.1")],
         hostname="mock_hostname",
