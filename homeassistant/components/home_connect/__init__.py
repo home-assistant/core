@@ -6,7 +6,7 @@ import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
-from aiohomeconnect.model import CommandKey, Option
+from aiohomeconnect.model import CommandKey, Option, OptionKey
 from aiohomeconnect.model.error import HomeConnectError
 import voluptuous as vol
 
@@ -141,7 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         options = (
             [
                 Option(
-                    option_key,
+                    OptionKey(option_key),
                     call.data[ATTR_VALUE],
                     unit=call.data.get(ATTR_UNIT),
                 )
@@ -178,14 +178,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if active:
                 await client.set_active_program_option(
                     ha_id,
-                    option_key=option_key,
+                    option_key=OptionKey(option_key),
                     value=value,
                     unit=unit,
                 )
             else:
                 await client.set_selected_program_option(
                     ha_id,
-                    option_key=option_key,
+                    option_key=OptionKey(option_key),
                     value=value,
                     unit=unit,
                 )
