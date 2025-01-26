@@ -172,33 +172,6 @@ class ConverseError(HomeAssistantError):
         )
 
 
-class ConversationAgentError(HomeAssistantError):
-    """Error while communicating with the ConvesationAgent."""
-
-    def __init__(
-        self,
-        message: str,
-        conversation_id: str,
-        language: str,
-    ) -> None:
-        """Initialize the error."""
-        super().__init__(message)
-        self.message = message
-        self.conversation_id = conversation_id
-        self.language = language
-
-    def as_conversation_result(self) -> ConversationResult:
-        """Return the error as a conversation result."""
-        intent_response = intent.IntentResponse(language=self.language)
-        intent_response.async_set_error(
-            intent.IntentResponseErrorCode.UNKNOWN,
-            self.message,
-        )
-        return ConversationResult(
-            response=intent_response, conversation_id=self.conversation_id
-        )
-
-
 @dataclass
 class ChatMessage[_NativeT]:
     """Base class for chat messages.
