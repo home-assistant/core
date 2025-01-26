@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -17,6 +18,7 @@ from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
+from homeassistant.util import slugify
 
 from . import dashboard, resources, websocket
 from .const import (  # noqa: F401
@@ -40,11 +42,24 @@ from .const import (  # noqa: F401
     SERVICE_RELOAD_RESOURCES,
     STORAGE_DASHBOARD_CREATE_FIELDS,
     STORAGE_DASHBOARD_UPDATE_FIELDS,
-    url_slug,
 )
 from .system_health import system_health_info  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _validate_url_slug(value: Any) -> str:
+    """Validate value is a valid url slug."""
+    if value is None:
+        raise vol.Invalid("Slug should not be None")
+    if "-" not in value:
+        raise vol.Invalid("Url path needs to contain a hyphen (-)")
+    str_value = str(value)
+    slg = slugify(str_value, separator="-")
+    if str_value == slg:
+        return str_value
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
+
 
 CONF_DASHBOARDS = "dashboards"
 
@@ -65,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
                 ),
                 vol.Optional(CONF_DASHBOARDS): cv.schema_with_slug_keys(
                     YAML_DASHBOARD_SCHEMA,
-                    slug_validator=url_slug,
+                    slug_validator=_validate_url_slug,
                 ),
                 vol.Optional(CONF_RESOURCES): [RESOURCE_SCHEMA],
             }
@@ -81,7 +96,7 @@ class LovelaceData:
 
     mode: str
     dashboards: dict[str | None, dashboard.LovelaceConfig]
-    resources: resources.ResourceStorageCollection
+    resources: resources.ResourceYAMLCollection | resources.ResourceStorageCollection
     yaml_dashboards: dict[str | None, ConfigType]
 
 
@@ -115,6 +130,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass.data[LOVELACE_DATA].resources = resource_collection
 
     default_config: dashboard.LovelaceConfig
+    resource_collection: (
+        resources.ResourceYAMLCollection | resources.ResourceStorageCollection
+    )
     if mode == MODE_YAML:
         default_config = dashboard.LovelaceYAML(hass, None, None)
         resource_collection = await create_yaml_resource_col(hass, yaml_resources)
@@ -174,7 +192,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if hass.config.recovery_mode:
         return True
 
-    async def storage_dashboard_changed(change_type, item_id, item):
+    async def storage_dashboard_changed(
+        change_type: str, item_id: str, item: dict
+    ) -> None:
         """Handle a storage dashboard change."""
         url_path = item[CONF_URL_PATH]
 
@@ -236,7 +256,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def create_yaml_resource_col(hass, yaml_resources):
+async def create_yaml_resource_col(
+    hass: HomeAssistant, yaml_resources: list[ConfigType] | None
+) -> resources.ResourceYAMLCollection:
     """Create yaml resources collection."""
     if yaml_resources is None:
         default_config = dashboard.LovelaceYAML(hass, None, None)
@@ -256,7 +278,9 @@ async def create_yaml_resource_col(hass, yaml_resources):
 
 
 @callback
-def _register_panel(hass, url_path, mode, config, update):
+def _register_panel(
+    hass: HomeAssistant, url_path: str | None, mode: str, config: dict, update: bool
+) -> None:
     """Register a panel."""
     kwargs = {
         "frontend_url_path": url_path,

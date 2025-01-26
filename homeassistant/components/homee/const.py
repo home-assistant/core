@@ -3,6 +3,7 @@
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -24,6 +25,7 @@ HOMEE_UNIT_TO_HA_UNIT = {
     "%": PERCENTAGE,
     "lx": LIGHT_LUX,
     "klx": LIGHT_LUX,
+    "1/min": REVOLUTIONS_PER_MINUTE,
     "A": UnitOfElectricCurrent.AMPERE,
     "V": UnitOfElectricPotential.VOLT,
     "kWh": UnitOfEnergy.KILO_WATT_HOUR,
