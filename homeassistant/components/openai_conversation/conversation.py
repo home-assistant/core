@@ -54,28 +54,10 @@ async def async_setup_entry(
     async_add_entities([agent])
 
 
-def _convert_message(
-    message: conversation.ChatMessage[ChatCompletionMessageParam],
-) -> ChatCompletionMessageParam:
-    """Convert a chat message to the native format."""
-    if message.native is not None:
-        return message.native
-    if message.role == "tool":
-        return ChatCompletionToolMessageParam(
-            role=message.role,
-            tool_call_id=message.tool_call_id or "",
-            content=message.content,
-        )
-    return cast(
-        ChatCompletionMessageParam,
-        {"role": message.role, "content": message.content},
-    )
-
-
-def _convert_tool(
+def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
 ) -> ChatCompletionToolParam:
-    """Convert a tool to the native format."""
+    """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
         parameters=convert(tool.parameters, custom_serializer=custom_serializer),
@@ -118,6 +100,24 @@ def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessagePar
     if tool_calls:
         param["tool_calls"] = tool_calls
     return param
+
+
+def _chat_message_convert(
+    message: conversation.ChatMessage[ChatCompletionMessageParam],
+) -> ChatCompletionMessageParam:
+    """Convert a chat message to the native format."""
+    if message.native is not None:
+        return message.native
+    if message.role == "tool":
+        return ChatCompletionToolMessageParam(
+            role=message.role,
+            tool_call_id=message.tool_call_id or "",
+            content=message.content,
+        )
+    return cast(
+        ChatCompletionMessageParam,
+        {"role": message.role, "content": message.content},
+    )
 
 
 class OpenAIConversationEntity(
@@ -171,8 +171,7 @@ class OpenAIConversationEntity(
         """Process a sentence."""
 
         async with conversation.async_get_chat_session(
-            self.hass,
-            user_input,
+            self.hass, user_input
         ) as session:
             options = self.entry.options
 
@@ -196,7 +195,7 @@ class OpenAIConversationEntity(
             chat_messages = await stream.asend(None)  # type: ignore[arg-type]
             while True:
                 messages.extend(
-                    [_convert_message(message) for message in chat_messages]
+                    [_chat_message_convert(message) for message in chat_messages]
                 )
                 try:
                     result = await client.chat.completions.create(
@@ -254,6 +253,6 @@ class OpenAIConversationEntity(
         if not session.llm_api:
             return None
         return [
-            _convert_tool(tool, session.llm_api.custom_serializer)
+            _format_tool(tool, session.llm_api.custom_serializer)
             for tool in session.llm_api.tools
         ]
