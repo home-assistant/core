@@ -812,6 +812,9 @@
       },
       "led": {
         "name": "LED"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
       }
     }
   }
