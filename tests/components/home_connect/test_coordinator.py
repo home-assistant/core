@@ -21,11 +21,29 @@ from aiohomeconnect.model.error import (
 )
 import pytest
 
+from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE_OPEN,
+    BSH_EVENT_PRESENT_STATE_PRESENT,
+    BSH_POWER_OFF,
+)
 from homeassistant.components.home_connect.coordinator import HomeConnectConfigEntry
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_STATE_REPORTED, Platform
+from homeassistant.core import (
+    Event as HassEvent,
+    EventStateReportedData,
+    HomeAssistant,
+    callback,
+)
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR, Platform.SWITCH]
 
 
 async def test_coordinator_update(
@@ -75,35 +93,50 @@ async def test_coordinator_update_failing_get_settings_status(
     assert cast(HomeConnectConfigEntry, config_entry).runtime_data.data
 
 
+@pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)
 @pytest.mark.parametrize(
-    ("event_type", "event_key"),
+    ("event_type", "event_key", "event_value", "entity_id"),
     [
-        (EventType.STATUS, EventKey.BSH_COMMON_STATUS_DOOR_STATE),
-        (EventType.NOTIFY, EventKey.BSH_COMMON_SETTING_POWER_STATE),
-        (EventType.EVENT, EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY),
+        (
+            EventType.STATUS,
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            BSH_DOOR_STATE_OPEN,
+            "sensor.dishwasher_door",
+        ),
+        (
+            EventType.NOTIFY,
+            EventKey.BSH_COMMON_SETTING_POWER_STATE,
+            BSH_POWER_OFF,
+            "switch.dishwasher_power",
+        ),
+        (
+            EventType.EVENT,
+            EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
+            BSH_EVENT_PRESENT_STATE_PRESENT,
+            "sensor.dishwasher_salt_nearly_empty",
+        ),
     ],
 )
 async def test_event_listener(
     event_type: EventType,
     event_key: EventKey,
+    event_value: str,
+    entity_id: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
     appliance_ha_id: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that the event listener works."""
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    listener = MagicMock()
-    coordinator = cast(HomeConnectConfigEntry, config_entry).runtime_data
-    remove_listener = coordinator.async_add_listener(
-        listener, (appliance_ha_id, event_key)
-    )
-
+    state = hass.states.get(entity_id)
+    assert state
     event_message = EventMessage(
         appliance_ha_id,
         event_type,
@@ -114,7 +147,7 @@ async def test_event_listener(
                     0,
                     "",
                     "",
-                    "some value",
+                    event_value,
                 )
             ],
         ),
@@ -122,65 +155,33 @@ async def test_event_listener(
     await client.add_events([event_message])
     await hass.async_block_till_done()
 
-    listener.assert_called_once()
+    new_state = hass.states.get(entity_id)
+    assert new_state
+    assert new_state.state != state.state
 
-    remove_listener()
+    # Following, we are gonna check that the listeners are clean up correctly
+    new_entity_id = entity_id + "_new"
+    listener = MagicMock()
+
+    @callback
+    def listener_callback(event: HassEvent[EventStateReportedData]) -> None:
+        listener(event.data["entity_id"])
+
+    @callback
+    def event_filter(_: EventStateReportedData) -> bool:
+        return True
+
+    hass.bus.async_listen(EVENT_STATE_REPORTED, listener_callback, event_filter)
+
+    entity_registry.async_update_entity(entity_id, new_entity_id=new_entity_id)
+    await hass.async_block_till_done()
     await client.add_events([event_message])
     await hass.async_block_till_done()
 
-    listener.assert_called_once()
-    assert coordinator._home_appliances_event_listeners == {}
-
-
-@pytest.mark.parametrize(
-    ("event_type", "event_key"),
-    [
-        (EventType.STATUS, EventKey.UNKNOWN),
-        (EventType.NOTIFY, EventKey.UNKNOWN),
-        (EventType.EVENT, EventKey.UNKNOWN),
-    ],
-)
-async def test_event_listener_ignore_unknowns(
-    event_type: EventType,
-    event_key: EventKey,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-    appliance_ha_id: str,
-) -> None:
-    """Test that the event listener works."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    listener = AsyncMock()
-    coordinator = cast(HomeConnectConfigEntry, config_entry).runtime_data
-    coordinator.async_add_listener(listener, (appliance_ha_id, event_key))
-
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                event_type,
-                ArrayOfEvents(
-                    [
-                        Event(
-                            event_key,
-                            0,
-                            "",
-                            "",
-                            "some value",
-                        )
-                    ],
-                ),
-            ),
-        ]
-    )
-    await hass.async_block_till_done()
-
-    listener.assert_not_awaited()
+    # Because the entity's id has been updated, the entity has been unloaded
+    # and the listener has been removed, and the new entity adds a new listener,
+    # so the only entity that should report states is the one with the new entity id
+    listener.assert_called_once_with(new_entity_id)
 
 
 async def tests_receive_setting_and_status_for_first_time_at_events(
@@ -266,10 +267,25 @@ async def test_event_listener_error(
     "exception",
     [HomeConnectRequestError(), EventStreamInterruptedError()],
 )
+@pytest.mark.parametrize(
+    ("event_type", "event_key", "event_value", "entity_id"),
+    [
+        (
+            EventType.STATUS,
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            BSH_DOOR_STATE_OPEN,
+            "sensor.washer_door",
+        ),
+    ],
+)
 @patch(
     "homeassistant.components.home_connect.coordinator.EVENT_STREAM_RECONNECT_DELAY", 0
 )
 async def test_event_listener_resilience(
+    event_type: EventType,
+    event_key: EventKey,
+    event_value: str,
+    entity_id: str,
     exception: HomeConnectError,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -291,10 +307,8 @@ async def test_event_listener_resilience(
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(config_entry._background_tasks) == 1
 
-    event_key = EventKey.BSH_COMMON_STATUS_DOOR_STATE
-    listener = AsyncMock()
-    coordinator = cast(HomeConnectConfigEntry, config_entry).runtime_data
-    coordinator.async_add_listener(listener, (appliance_ha_id, event_key))
+    state = hass.states.get(entity_id)
+    assert state
 
     await client.add_events(
         [
@@ -308,7 +322,7 @@ async def test_event_listener_resilience(
                             0,
                             "",
                             "",
-                            "some value",
+                            event_value,
                         )
                     ],
                 ),
@@ -316,4 +330,7 @@ async def test_event_listener_resilience(
         ]
     )
     await hass.async_block_till_done()
-    listener.assert_called_once()
+
+    new_state = hass.states.get(entity_id)
+    assert new_state
+    assert new_state.state != state.state

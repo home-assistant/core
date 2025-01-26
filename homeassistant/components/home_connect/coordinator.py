@@ -1,7 +1,7 @@
 """Coordinator for Home Connect."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging
 from typing import Any
@@ -44,10 +44,10 @@ EVENT_STREAM_RECONNECT_DELAY = 30
 class HomeConnectApplianceData:
     """Class to hold Home Connect appliance data."""
 
+    events: dict[EventKey, Event] = field(default_factory=dict)
     info: HomeAppliance
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
-    events: dict[EventKey, Event] = field(default_factory=dict)
 
 
 class HomeConnectCoordinator(
@@ -71,9 +71,6 @@ class HomeConnectCoordinator(
             name=config_entry.entry_id,
         )
         self.client: HomeConnectClient = client
-        self._home_appliances_event_listeners: dict[
-            str, dict[EventKey, list[Callable[[Event], Coroutine[Any, Any, None]]]]
-        ] = {}
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -98,7 +95,8 @@ class HomeConnectCoordinator(
 
         return remove_listener_and_invalidate_context_listeners
 
-    async def start_event_listener(self) -> None:
+    @callback
+    def start_event_listener(self) -> None:
         """Start event listener."""
         self.config_entry.async_create_background_task(
             self.hass,
@@ -115,11 +113,6 @@ class HomeConnectCoordinator(
                         case EventType.STATUS:
                             statuses = self.data[event_message.ha_id].status
                             for event in event_message.data.items:
-                                if (
-                                    event.key not in StatusKey
-                                    or event.key is EventKey.UNKNOWN
-                                ):
-                                    continue
                                 status_key = StatusKey(event.key)
                                 if status_key in statuses:
                                     statuses[status_key].value = event.value
@@ -127,14 +120,12 @@ class HomeConnectCoordinator(
                                     statuses[status_key] = Status(
                                         status_key, event.value
                                     )
-                            await self._call_event_listener(event_message)
+                            self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
                             settings = self.data[event_message.ha_id].settings
                             events = self.data[event_message.ha_id].events
                             for event in event_message.data.items:
-                                if event.key is EventKey.UNKNOWN:
-                                    continue
                                 if event.key in SettingKey:
                                     setting_key = SettingKey(event.key)
                                     if setting_key in settings:
@@ -145,13 +136,13 @@ class HomeConnectCoordinator(
                                         )
                                 else:
                                     events[event.key] = event
-                            await self._call_event_listener(event_message)
+                            self._call_event_listener(event_message)
 
                         case EventType.EVENT:
                             events = self.data[event_message.ha_id].events
                             for event in event_message.data.items:
                                 events[event.key] = event
-                            await self._call_event_listener(event_message)
+                            self._call_event_listener(event_message)
 
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(
@@ -167,11 +158,10 @@ class HomeConnectCoordinator(
                 )
                 break
 
-    async def _call_event_listener(self, event_message: EventMessage):
+    @callback
+    def _call_event_listener(self, event_message: EventMessage):
         """Call listener for event."""
         for event in event_message.data.items:
-            if event.key is EventKey.UNKNOWN:
-                continue
             for listener in self.context_listeners.get(
                 (event_message.ha_id, event.key), []
             ):

@@ -325,7 +325,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await entry.runtime_data.start_event_listener()
+    entry.runtime_data.start_event_listener()
 
     return True
 
