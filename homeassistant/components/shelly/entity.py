@@ -395,10 +395,11 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
     ) -> Any:
         """Call RPC method."""
         LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s",
+            "Call RPC for entity %s, method: %s, params: %s, timeout: %s",
             self.name,
             method,
             params,
+            timeout,
         )
         try:
             if timeout:
