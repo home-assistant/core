@@ -60,7 +60,7 @@ def _create_mocked_owm_factory(is_valid: bool):
         wind_speed=9.83,
         wind_bearing=199,
         wind_gust=None,
-        rain=None,
+        rain={"1h": 1.21},
         snow=None,
         condition=WeatherCondition(
             id=803,
