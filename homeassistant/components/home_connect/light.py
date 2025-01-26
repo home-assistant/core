@@ -275,32 +275,18 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
     async def async_added_to_hass(self) -> None:
         """Register listener."""
         await super().async_added_to_hass()
+        keys_to_listen = []
         if self._brightness_key:
-            self.async_on_remove(
-                self.coordinator.async_add_listener(
-                    self._handle_coordinator_update,
-                    (
-                        self.appliance.info.ha_id,
-                        EventKey(self._brightness_key),
-                    ),
-                )
-            )
+            keys_to_listen.append(self._brightness_key)
         if self._color_key and self._custom_color_key:
+            keys_to_listen.extend([self._color_key, self._custom_color_key])
+        for key in keys_to_listen:
             self.async_on_remove(
                 self.coordinator.async_add_listener(
                     self._handle_coordinator_update,
                     (
                         self.appliance.info.ha_id,
-                        EventKey(self._color_key),
-                    ),
-                )
-            )
-            self.async_on_remove(
-                self.coordinator.async_add_listener(
-                    self._handle_coordinator_update,
-                    (
-                        self.appliance.info.ha_id,
-                        EventKey(self._custom_color_key),
+                        EventKey(key),
                     ),
                 )
             )
