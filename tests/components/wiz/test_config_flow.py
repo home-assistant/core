@@ -6,13 +6,13 @@ import pytest
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import (
     FAKE_DIMMABLE_BULB,
@@ -32,7 +32,7 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-DHCP_DISCOVERY = dhcp.DhcpServiceInfo(
+DHCP_DISCOVERY = DhcpServiceInfo(
     hostname="wiz_abcabc",
     ip=FAKE_IP,
     macaddress=FAKE_MAC,

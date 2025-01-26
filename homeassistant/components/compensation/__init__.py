@@ -42,7 +42,7 @@ def datapoints_greater_than_degree(value: dict) -> dict:
     if len(value[CONF_DATAPOINTS]) <= value[CONF_DEGREE]:
         raise vol.Invalid(
             f"{CONF_DATAPOINTS} must have at least"
-            f" {value[CONF_DEGREE]+1} {CONF_DATAPOINTS}"
+            f" {value[CONF_DEGREE] + 1} {CONF_DATAPOINTS}"
         )
 
     return value
