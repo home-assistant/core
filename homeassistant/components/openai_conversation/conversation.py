@@ -165,7 +165,6 @@ class OpenAIConversationEntity(
         session: conversation.ChatSession[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
-
         options = self.entry.options
 
         try:
@@ -185,12 +184,14 @@ class OpenAIConversationEntity(
                 for tool in session.llm_api.tools
             ]
 
-        client = self.entry.runtime_data
         messages = [
             _chat_message_convert(message) for message in session.async_get_messages()
         ]
+
+        client = self.entry.runtime_data
+
+        # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            LOGGER.debug("Request %s", messages)
             try:
                 result = await client.chat.completions.create(
                     model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
@@ -207,9 +208,16 @@ class OpenAIConversationEntity(
 
             LOGGER.debug("Response %s", result)
             response = result.choices[0].message
-            # Note: We are not adding this response to the session
             messages.append(_message_convert(response))
 
+            session.async_add_message(
+                conversation.ChatMessage(
+                    role=response.role,
+                    agent_id=user_input.agent_id,
+                    content=response.content or "",
+                    native=messages[-1],
+                ),
+            )
             if not response.tool_calls or not session.llm_api:
                 break
 

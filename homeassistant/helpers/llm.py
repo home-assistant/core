@@ -134,7 +134,6 @@ class ToolInput:
 
     tool_name: str
     tool_args: dict[str, Any]
-    tool_call_id: str | None = None
 
 
 class Tool:
