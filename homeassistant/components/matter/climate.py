@@ -482,6 +482,11 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
                 clusters.TemperatureControl.Attributes.FeatureMap
             )
         )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        # work out supported features and presets from matter featuremap
+        if self._feature_map == feature_map:
+            return
         self._feature_map = feature_map
         self._attr_hvac_modes: list[HVACMode] = [HVACMode.HEAT_COOL]
         if feature_map & TemperatureControlFeature.kTemperatureNumber:
