@@ -9,6 +9,7 @@ from homeassistant.const import CONF_PATH, CONF_VARIABLES, EVENT_HOMEASSISTANT_S
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
 from homeassistant.helpers import condition, discovery, trigger as trigger_helper
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -33,10 +34,10 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self._unsub_start: Callable[[], None] | None = None
         self._unsub_trigger: Callable[[], None] | None = None
         self._script: Script | None = None
-        self._run_variables = {}
+        self._run_variables: ScriptVariables | None = None
         self._blueprint_inputs: dict | None = None
         if config is not None:
-            self._run_variables = config.get(CONF_VARIABLES, {})
+            self._run_variables = config.get(CONF_VARIABLES)
             self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
     @property
@@ -81,13 +82,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
                     eager_start=True,
                 )
 
-    def _render_variables(self, run_variables: TemplateVarsType) -> TemplateVarsType:
-        """Render configured variables."""
-        if isinstance(self._run_variables, dict):
-            return self._run_variables
-
-        return self._run_variables.async_render(self.hass, run_variables)
-
     async def _attach_triggers(self, start_event: Event | None = None) -> None:
         """Attach the triggers."""
         if CONF_ACTION in self.config:
@@ -125,7 +119,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
         # Render run variables after the trigger, before checking conditions.
-        run_variables = self._render_variables(run_variables)
+        if self._run_variables:
+            run_variables = self._run_variables.async_render(self.hass, run_variables)
+
         if not self._check_condition(run_variables):
             return
         # Create a context referring to the trigger context.
