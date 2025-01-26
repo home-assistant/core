@@ -177,7 +177,10 @@ class OpenAIConversationEntity(
                 ]
 
             client = self.entry.runtime_data
-            messages = [_chat_message_convert(message) for message in session.messages]
+            messages = [
+                _chat_message_convert(message)
+                for message in session.async_get_messages()
+            ]
             for _iteration in range(MAX_TOOL_ITERATIONS):
                 LOGGER.debug("Request %s", messages)
                 try:
