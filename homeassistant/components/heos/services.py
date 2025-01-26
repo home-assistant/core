@@ -1,7 +1,6 @@
 """Services for the HEOS integration."""
 
 import logging
-from typing import cast
 
 from pyheos import CommandAuthenticationError, Heos, HeosError
 import voluptuous as vol
@@ -61,10 +60,10 @@ def _get_controller(hass: HomeAssistant) -> Heos:
         translation_key="sign_in_out_deprecated",
     )
 
-    entry = cast(
-        HeosConfigEntry,
-        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN),
+    entry: HeosConfigEntry | None = (
+        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
     )
+
     if not entry or not entry.state == ConfigEntryState.LOADED:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="integration_not_loaded"
