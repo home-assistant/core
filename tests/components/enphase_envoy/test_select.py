@@ -93,7 +93,10 @@ async def test_select_relay_actions(
             assert (entity_state := hass.states.get(test_entity))
             assert RELAY_ACTION_MAP[target[1]] == (current_state := entity_state.state)
             # set all relay modes except current mode
-            for action in [action for action in ACTION_OPTIONS if not current_state]:
+            for action in [
+                action for action in ACTION_OPTIONS if action != current_state
+            ]:
+                mock_envoy.update_dry_contact.reset_mock()
                 await hass.services.async_call(
                     SELECT_DOMAIN,
                     SERVICE_SELECT_OPTION,
@@ -106,8 +109,10 @@ async def test_select_relay_actions(
                 mock_envoy.update_dry_contact.assert_called_once_with(
                     {"id": contact_id, target[2]: REVERSE_RELAY_ACTION_MAP[action]}
                 )
-                mock_envoy.update_dry_contact.reset_mock()
+            # make sure above loop is executed at least once
+            assert mock_envoy.update_dry_contact.called
             # and finally back to original
+            mock_envoy.update_dry_contact.reset_mock()
             await hass.services.async_call(
                 SELECT_DOMAIN,
                 SERVICE_SELECT_OPTION,
@@ -142,7 +147,8 @@ async def test_select_relay_modes(
         test_entity = f"{entity_base}{name}_mode"
         assert (entity_state := hass.states.get(test_entity))
         assert RELAY_MODE_MAP[dry_contact.mode] == (current_state := entity_state.state)
-        for mode in [mode for mode in MODE_OPTIONS if not current_state]:
+        for mode in [mode for mode in MODE_OPTIONS if mode != current_state]:
+            mock_envoy.update_dry_contact.reset_mock()
             await hass.services.async_call(
                 SELECT_DOMAIN,
                 SERVICE_SELECT_OPTION,
@@ -155,9 +161,11 @@ async def test_select_relay_modes(
             mock_envoy.update_dry_contact.assert_called_once_with(
                 {"id": contact_id, "mode": REVERSE_RELAY_MODE_MAP[mode]}
             )
-            mock_envoy.update_dry_contact.reset_mock()
+        # make sure above loop is executed at least once
+        assert mock_envoy.update_dry_contact.called
 
         # and finally current mode again
+        mock_envoy.update_dry_contact.reset_mock()
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -170,7 +178,6 @@ async def test_select_relay_modes(
         mock_envoy.update_dry_contact.assert_called_once_with(
             {"id": contact_id, "mode": REVERSE_RELAY_MODE_MAP[current_state]}
         )
-        mock_envoy.update_dry_contact.reset_mock()
 
 
 @pytest.mark.parametrize(
@@ -198,7 +205,8 @@ async def test_select_storage_modes(
         current_state := entity_state.state
     )
 
-    for mode in [mode for mode in STORAGE_MODE_OPTIONS if not current_state]:
+    for mode in [mode for mode in STORAGE_MODE_OPTIONS if mode != current_state]:
+        mock_envoy.set_storage_mode.reset_mock()
         await hass.services.async_call(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
@@ -211,9 +219,11 @@ async def test_select_storage_modes(
         mock_envoy.set_storage_mode.assert_called_once_with(
             REVERSE_STORAGE_MODE_MAP[mode]
         )
-        mock_envoy.set_storage_mode.reset_mock()
+    # make sure above loop is executed at least once
+    assert mock_envoy.set_storage_mode.called
 
     # and finally with original mode
+    mock_envoy.set_storage_mode.reset_mock()
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
