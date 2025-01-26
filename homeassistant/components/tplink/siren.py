@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from kasa import Device, Module
-from kasa.smart.modules.alarm import Alarm
 
 from homeassistant.components.siren import (
     DOMAIN as SIREN_DOMAIN,
@@ -101,7 +100,7 @@ class TPLinkSirenEntity(CoordinatedTPLinkModuleEntity, SirenEntity):
     ) -> None:
         """Initialize the siren entity."""
         super().__init__(device, coordinator, description, parent=parent)
-        self._alarm_module: Alarm = device.modules[Module.Alarm]
+        self._alarm_module = device.modules[Module.Alarm]
 
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
