@@ -405,7 +405,7 @@ def get_influx_connection(  # noqa: C901
         return InfluxClient(buckets, write_v2, query_v2, close_v2)
 
     # Else it's a V1 client
-    if CONF_SSL_CA_CERT in conf and conf[CONF_VERIFY_SSL]:
+    if conf.get(CONF_SSL_CA_CERT) is not None and conf[CONF_VERIFY_SSL]:
         kwargs[CONF_VERIFY_SSL] = conf[CONF_SSL_CA_CERT]
     else:
         kwargs[CONF_VERIFY_SSL] = conf[CONF_VERIFY_SSL]
@@ -479,7 +479,10 @@ def get_influx_connection(  # noqa: C901
 
 async def async_setup_entry(hass: HomeAssistant, entry: InfluxDBConfigEntry) -> bool:
     """Set up InfluxDB from a config entry."""
-    config = dict(entry.data.items())
+    data = entry.data
+    options = entry.options
+
+    config = data | options
 
     try:
         influx = await hass.async_add_executor_job(get_influx_connection, config, True)
