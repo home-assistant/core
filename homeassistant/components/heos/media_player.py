@@ -279,13 +279,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             return
 
         if media_type == MediaType.PLAYLIST:
-            playlists = await self._player.heos.get_playlists()
+            playlists = await self.coordinator.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
                 raise ValueError(f"Invalid playlist '{media_id}'")
-            add_queue_option = HA_HEOS_ENQUEUE_MAP.get(kwargs.get(ATTR_MEDIA_ENQUEUE))
-
-            await self._player.add_to_queue(playlist, add_queue_option)
+            add_queue_option = HA_HEOS_ENQUEUE_MAP[kwargs.get(ATTR_MEDIA_ENQUEUE)]
+            await self._player.play_media(playlist, add_queue_option)
             return
 
         if media_type == "favorite":

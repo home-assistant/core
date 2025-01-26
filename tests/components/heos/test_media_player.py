@@ -1054,7 +1054,7 @@ async def test_play_media_playlist(
         service_data,
         blocking=True,
     )
-    player.add_to_queue.assert_called_once_with(playlist, criteria)
+    player.play_media.assert_called_once_with(playlist, criteria)
 
 
 async def test_play_media_playlist_error(
