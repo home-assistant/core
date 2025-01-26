@@ -132,9 +132,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
                 SZ_LOCATION_ID: self.loc.id,
-                SZ_TIME_ZONE: self.loc.config[SZ_TIME_ZONE],  # type: ignore[typeddict-item]
+                SZ_TIME_ZONE: self.loc.config[SZ_TIME_ZONE],
                 SZ_USE_DAYLIGHT_SAVE_SWITCHING: self.loc.config[
-                    SZ_USE_DAYLIGHT_SAVE_SWITCHING  # type: ignore[typeddict-item]
+                    SZ_USE_DAYLIGHT_SAVE_SWITCHING
                 ],
             }
             gwy_info = {
@@ -241,4 +241,4 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 await self._update_v1_api_temps()
             async_dispatcher_send(self.hass, DOMAIN)
 
-        return self.loc.status  # type: ignore[return-value]
+        return self.loc.status

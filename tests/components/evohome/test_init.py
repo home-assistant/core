@@ -42,8 +42,7 @@ LOG_HINT_USR_AUTH = ("evohome.auth", logging.ERROR, _MSG_USR)
 LOG_FAIL_CONNECTION = (
     "homeassistant.components.evohome",
     logging.ERROR,
-    "Failed to fetch initial data: "
-    "Authenticator response is invalid: Connection error",
+    "Failed to fetch initial data: Authenticator response is invalid: Connection error",
 )
 LOG_FAIL_CREDENTIALS = (
     "homeassistant.components.evohome",
