@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.28
+AIOSomecomfort==0.0.30
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -1288,7 +1288,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ohme
-ohme==1.2.5
+ohme==1.2.6
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -2024,7 +2024,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.15
 
 # homeassistant.components.vesync
-pyvesync==2.1.15
+pyvesync==2.1.16
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
