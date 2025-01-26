@@ -113,6 +113,9 @@
         "state": {
           "on": "mdi:baby-face"
         }
+      },
+      "carpet_boost": {
+        "default": "mdi:rug"
       }
     },
     "sensor": {

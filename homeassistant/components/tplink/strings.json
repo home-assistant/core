@@ -227,6 +227,9 @@
       },
       "baby_cry_detection": {
         "name": "Baby cry detection"
+      },
+      "carpet_boost": {
+        "name": "Carpet boost"
       }
     },
     "number": {

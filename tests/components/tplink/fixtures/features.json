@@ -375,5 +375,10 @@
     "value": 1,
     "type": "Number",
     "category": "Config"
+  },
+  "carpet_boost": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
   }
 }
