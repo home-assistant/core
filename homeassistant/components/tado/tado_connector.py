@@ -4,8 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from PyTado.http import Http
-from PyTado.interface.api.my_tado import Tado
+from PyTado.interface import Tado
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
@@ -62,8 +61,7 @@ class TadoConnector:
 
     def setup(self):
         """Connect to Tado and fetch the zones."""
-        http = Http(username=self._username, password=self._password)
-        self.tado = Tado(http=http)
+        self.tado = Tado(username=self._username, password=self._password)
         # Load zones and devices
         self.zones = self.tado.get_zones()
         self.devices = self.tado.get_devices()
