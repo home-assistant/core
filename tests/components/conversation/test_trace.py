@@ -100,7 +100,7 @@ async def test_converation_trace_homeassistant_error(
     with (
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent.async_process",
-            side_effect=HomeAssistantError("Unexpected error"),
+            side_effect=HomeAssistantError("Failed to talk to agent"),
         ),
     ):
         await conversation.async_converse(
@@ -118,4 +118,4 @@ async def test_converation_trace_homeassistant_error(
     )
     result = last_trace.get("result")
     assert result
-    assert result["response"]["speech"]["plain"]["speech"] == "Unexpected error"
+    assert result["response"]["speech"]["plain"]["speech"] == "Failed to talk to agent"

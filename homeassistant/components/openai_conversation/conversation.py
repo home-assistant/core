@@ -164,7 +164,6 @@ class OpenAIConversationEntity(
         session: conversation.ChatSession[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
-
         options = self.entry.options
 
         try:
