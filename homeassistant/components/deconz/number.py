@@ -21,8 +21,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
-from .hub import DeconzConfigEntry, DeconzHub
+from .hub import DeconzHub
 
 
 @dataclass(frozen=True, kw_only=True)

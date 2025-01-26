@@ -19,8 +19,9 @@ from homeassistant.util.percentage import (
     percentage_to_ordered_list_item,
 )
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
-from .hub import DeconzConfigEntry, DeconzHub
+from .hub import DeconzHub
 
 ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
     LightFanSpeed.PERCENT_25,

@@ -15,7 +15,7 @@ from ..errors import AuthenticationRequired, CannotConnect
 from .config import DeconzConfig
 
 if TYPE_CHECKING:
-    from .hub import DeconzConfigEntry
+    from .. import DeconzConfigEntry
 
 
 async def get_deconz_api(

@@ -37,9 +37,10 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
+from . import DeconzConfigEntry
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
-from .hub import DeconzConfigEntry, DeconzHub
+from .hub import DeconzHub
 
 DECONZ_GROUP = "is_deconz_group"
 EFFECT_TO_DECONZ = {

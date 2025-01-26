@@ -54,9 +54,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
+from . import DeconzConfigEntry
 from .const import ATTR_DARK, ATTR_ON
 from .entity import DeconzDevice
-from .hub import DeconzConfigEntry, DeconzHub
+from .hub import DeconzHub
 
 PROVIDES_EXTRA_ATTRIBUTES = (
     "battery",

@@ -17,7 +17,7 @@ from ..const import (
 )
 
 if TYPE_CHECKING:
-    from .hub import DeconzConfigEntry
+    from .. import DeconzConfigEntry
 
 
 @dataclass

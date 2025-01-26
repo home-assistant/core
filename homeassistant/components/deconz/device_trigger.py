@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import DOMAIN, DeconzConfigEntry
 from .deconz_event import (
     CONF_DECONZ_EVENT,
     CONF_GESTURE,
@@ -31,7 +31,6 @@ from .deconz_event import (
     DeconzPresenceEvent,
     DeconzRelativeRotaryEvent,
 )
-from .hub import DeconzConfigEntry
 
 CONF_SUBTYPE = "subtype"
 

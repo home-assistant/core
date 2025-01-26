@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
-from .hub import DeconzConfigEntry
+from . import DeconzConfigEntry
 
 REDACT_CONFIG = {CONF_API_KEY, CONF_UNIQUE_ID}
 REDACT_DECONZ_CONFIG = {"bridgeid", "mac", "panid"}

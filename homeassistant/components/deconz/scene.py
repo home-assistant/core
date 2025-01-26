@@ -10,8 +10,8 @@ from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, Scene
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzSceneMixin
-from .hub import DeconzConfigEntry
 
 
 async def async_setup_entry(

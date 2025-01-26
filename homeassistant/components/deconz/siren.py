@@ -16,8 +16,8 @@ from homeassistant.components.siren import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
-from .hub import DeconzConfigEntry
 
 
 async def async_setup_entry(

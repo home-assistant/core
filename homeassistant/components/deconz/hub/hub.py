@@ -11,7 +11,7 @@ from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.models.event import EventType
 
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -26,6 +26,7 @@ from ..const import (
 from .config import DeconzConfig
 
 if TYPE_CHECKING:
+    from .. import DeconzConfigEntry
     from ..deconz_event import (
         DeconzAlarmEvent,
         DeconzEvent,
@@ -61,8 +62,6 @@ SENSORS = (
     sensors.VibrationHandler,
     sensors.WaterHandler,
 )
-
-type DeconzConfigEntry = ConfigEntry[DeconzHub]
 
 
 class DeconzHub:

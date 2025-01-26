@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -11,11 +12,13 @@ from homeassistant.helpers.typing import ConfigType
 from .const import CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
 from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
-from .hub import DeconzConfigEntry, DeconzHub, get_deconz_api
+from .hub import DeconzHub, get_deconz_api
 from .services import async_setup_services
 from .util import get_master_hub
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+type DeconzConfigEntry = ConfigEntry[DeconzHub]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

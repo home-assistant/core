@@ -19,8 +19,9 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
-from .hub import DeconzConfigEntry, DeconzHub
+from .hub import DeconzHub
 
 DECONZ_TO_ALARM_STATE = {
     AncillaryControlPanel.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
