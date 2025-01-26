@@ -40,8 +40,6 @@ DATA_CHAT_HISTORY_CLEANUP: HassKey[SessionCleanup] = HassKey(
 
 LOGGER = logging.getLogger(__name__)
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
-# Max number of back and forth with the LLM to generate a response
-MAX_TOOL_ITERATIONS = 10
 
 
 class SessionCleanup:
