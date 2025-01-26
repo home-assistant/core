@@ -27,6 +27,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import TessieConfigEntry
 from .entity import TessieEnergyEntity, TessieEntity
@@ -40,6 +41,7 @@ class TessieSwitchEntityDescription(SwitchEntityDescription):
 
     on_func: Callable
     off_func: Callable
+    value_func: Callable[[StateType], bool] = bool
 
 
 DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
@@ -47,6 +49,7 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         key="climate_state_defrost_mode",
         on_func=lambda: start_defrost,
         off_func=lambda: stop_defrost,
+        value_func=lambda state: state in ("Starting", "Charging"),
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_sentry_mode",
@@ -121,7 +124,7 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the Switch."""
-        return self._value
+        return self.entity_description.value_func(self._value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""

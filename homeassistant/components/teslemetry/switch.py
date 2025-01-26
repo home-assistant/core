@@ -16,6 +16,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from . import TeslemetryConfigEntry
 from .entity import TeslemetryEnergyInfoEntity, TeslemetryVehicleEntity
@@ -31,6 +32,7 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
 
     on_func: Callable
     off_func: Callable
+    value_func: Callable[[StateType], bool] = bool
     scopes: list[Scope]
 
 
@@ -39,6 +41,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         key="vehicle_state_sentry_mode",
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
+        value_func=lambda state: state in ("Starting", "Charging"),
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
@@ -144,7 +147,7 @@ class TeslemetryVehicleSwitchEntity(TeslemetryVehicleEntity, TeslemetrySwitchEnt
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_is_on = bool(self._value)
+        self._attr_is_on = self.entity_description.value_func(self._value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
