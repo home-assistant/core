@@ -64,7 +64,7 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         off_func=lambda: stop_steering_wheel_heater,
     ),
     TessieSwitchEntityDescription(
-        key="charge_state_charge_enable_request",
+        key="charge_state_charging_state",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
     ),
