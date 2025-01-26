@@ -306,7 +306,21 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     @catch_action_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self.coordinator.async_play_source(source, self._player)
+        # Favorite
+        if (index := self.coordinator.async_get_favorite_index(source)) is not None:
+            await self._player.play_preset_station(index)
+            return
+        # Input source
+        for input_source in self.coordinator.inputs:
+            if input_source.name == source:
+                await self._player.play_media(input_source)
+                return
+
+        raise ServiceValidationError(
+            translation_domain=HEOS_DOMAIN,
+            translation_key="unknown_source",
+            translation_placeholders={"source": source},
+        )
 
     @catch_action_error("set repeat")
     async def async_set_repeat(self, repeat: RepeatMode) -> None:

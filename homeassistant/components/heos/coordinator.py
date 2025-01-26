@@ -15,7 +15,6 @@ from pyheos import (
     HeosError,
     HeosNowPlayingMedia,
     HeosOptions,
-    HeosPlayer,
     MediaItem,
     MediaType,
     PlayerUpdateResult,
@@ -25,12 +24,12 @@ from pyheos import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HassJob, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +60,11 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self._favorites: dict[int, MediaItem] = {}
         self._inputs: list[MediaItem] = []
         super().__init__(hass, _LOGGER, config_entry=config_entry, name=DOMAIN)
+
+    @property
+    def inputs(self) -> list[MediaItem]:
+        """Get input sources across all devices."""
+        return self._inputs
 
     async def async_setup(self) -> None:
         """Set up the coordinator; connect to the host; and retrieve initial data."""
@@ -265,21 +269,3 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 ):
                     return favorite.name
         return None
-
-    async def async_play_source(self, source: str, player: HeosPlayer) -> None:
-        """Determine type of source and play it."""
-        # Favorite
-        if (index := self.async_get_favorite_index(source)) is not None:
-            await player.play_preset_station(index)
-            return
-        # Input source
-        for input_source in self._inputs:
-            if input_source.name == source:
-                await player.play_media(input_source)
-                return
-
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unknown_source",
-            translation_placeholders={"source": source},
-        )
