@@ -349,7 +349,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 device_id,
                 enabled,
             )
-            await self._async_update_devices()
         except RequestException as exc:
             raise UpdateFailed(f"Error setting Tado child lock: {exc}") from exc
 

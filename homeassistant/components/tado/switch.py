@@ -50,10 +50,12 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self._tado.set_child_lock(self._device_id, True)
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._tado.set_child_lock(self._device_id, False)
+        await self.coordinator.async_request_refresh()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -78,19 +80,17 @@ async def async_setup_entry(
     """Set up the Tado climate platform."""
 
     tado = entry.runtime_data.coordinator
-    entities: list[TadoChildLockSwitchEntity] = await hass.async_add_executor_job(
-        _generate_entities, tado
-    )
+    entities: list[TadoChildLockSwitchEntity] = await _generate_entities(tado)
 
     async_add_entities(entities, True)
 
 
-def _generate_entities(
+async def _generate_entities(
     tado: TadoDataUpdateCoordinator,
 ) -> list[TadoChildLockSwitchEntity]:
     """Create all climate entities."""
     entities: list[TadoChildLockSwitchEntity] = []
-    for zone in tado.data["zones"]:
+    for zone in tado.zones:
         zoneChildLockSupported = (
             zone["type"] in [TYPE_HEATING]
             and len(zone["devices"]) > 0
