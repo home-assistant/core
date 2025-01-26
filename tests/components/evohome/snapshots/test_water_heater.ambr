@@ -27,7 +27,7 @@
       'status': dict({
         'active_faults': tuple(
         ),
-        'dhw_id': '3933910',
+        'id': '3933910',
         'setpoints': dict({
           'next_sp_from': '2024-07-10T13:00:00+01:00',
           'next_sp_state': 'Off',
@@ -74,7 +74,7 @@
       'status': dict({
         'active_faults': tuple(
         ),
-        'dhw_id': '3933910',
+        'id': '3933910',
         'setpoints': dict({
           'next_sp_from': '2024-07-10T13:00:00+01:00',
           'next_sp_state': 'Off',

@@ -40,7 +40,7 @@ def OUT_convert_until(status_dict: dict, until_key: str) -> None:
         status_dict[until_key] = dt_util.as_local(dt_utc_naive).isoformat()
 
 
-def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
+def OUT_convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     """Recursively convert a dict's keys to snake_case."""
 
     def convert_key(key: str) -> str:
@@ -57,7 +57,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
 
     return {
         (convert_key(k) if isinstance(k, str) else k): (
-            convert_dict(v) if isinstance(v, dict) else v
+            OUT_convert_dict(v) if isinstance(v, dict) else v
         )
         for k, v in dictionary.items()
     }

@@ -11,7 +11,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
-from .helpers import convert_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +63,7 @@ class EvoDevice(Entity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the evohome-specific state attributes."""
-        return {"status": convert_dict(self._device_state_attrs)}
+        return {"status": self._device_state_attrs}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

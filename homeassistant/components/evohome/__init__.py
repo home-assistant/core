@@ -19,7 +19,7 @@ from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_M
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
     S2_PERIOD as SZ_PERIOD,
-    SystemMode,
+    SystemMode as EvoSystemMode,
 )
 import voluptuous as vol
 
@@ -179,7 +179,7 @@ def setup_service_functions(
         assert coordinator.tcs is not None  # mypy
 
         payload = {
-            "unique_id": coordinator.tcs.systemId,
+            "unique_id": coordinator.tcs.id,
             "service": call.service,
             "data": call.data,
         }
@@ -215,15 +215,15 @@ def setup_service_functions(
     modes = list(coordinator.tcs.allowed_system_modes)
 
     # Not all systems support "AutoWithReset": register this handler only if required
-    if [
+    if any(
         m[SZ_SYSTEM_MODE]
         for m in modes
-        if m[SZ_SYSTEM_MODE] == SystemMode.AUTO_WITH_RESET
-    ]:
+        if m[SZ_SYSTEM_MODE] == EvoSystemMode.AUTO_WITH_RESET
+    ):
         hass.services.async_register(DOMAIN, EvoService.RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
-    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != SystemMode.AUTO_WITH_RESET]
+    modes = [m for m in modes if m[SZ_SYSTEM_MODE] != EvoSystemMode.AUTO_WITH_RESET]
 
     # Permanent-only modes will use this schema
     perm_modes = [m[SZ_SYSTEM_MODE] for m in modes if not m[SZ_CAN_BE_TEMPORARY]]

@@ -14,9 +14,12 @@ import evohomeasync2 as ec2
 from evohomeasync2.const import (
     SZ_GATEWAY_ID,
     SZ_GATEWAY_INFO,
+    SZ_GATEWAYS,
     SZ_LOCATION_ID,
     SZ_LOCATION_INFO,
+    SZ_TEMPERATURE_CONTROL_SYSTEMS,
     SZ_TIME_ZONE,
+    SZ_USE_DAYLIGHT_SAVE_SWITCHING,
 )
 from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT
 
@@ -25,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS
+from .const import CONF_LOCATION_IDX, DOMAIN
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -128,16 +131,21 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         if self.logger.isEnabledFor(logging.DEBUG):
             loc_info = {
-                SZ_LOCATION_ID: self.loc.locationId,
-                SZ_TIME_ZONE: self.loc.time_zone_info,
+                SZ_LOCATION_ID: self.loc.id,
+                SZ_TIME_ZONE: self.loc.config[SZ_TIME_ZONE],  # type: ignore[typeddict-item]
+                SZ_USE_DAYLIGHT_SAVE_SWITCHING: self.loc.config[
+                    SZ_USE_DAYLIGHT_SAVE_SWITCHING  # type: ignore[typeddict-item]
+                ],
             }
             gwy_info = {
-                SZ_GATEWAY_ID: self.loc.gateways[0].gatewayId,
-                TCS: [self.loc.gateways[0].systems[0].config],
+                SZ_GATEWAY_ID: self.loc.gateways[0].id,
+                SZ_TEMPERATURE_CONTROL_SYSTEMS: [
+                    self.loc.gateways[0].systems[0].config
+                ],
             }
             config = {
                 SZ_LOCATION_INFO: loc_info,
-                GWS: [{SZ_GATEWAY_INFO: gwy_info}],
+                SZ_GATEWAYS: [{SZ_GATEWAY_INFO: gwy_info}],
             }
             self.logger.debug("Config = %s", config)
 
