@@ -9,6 +9,7 @@ from bleak_retry_connector import Allocations
 from freezegun import freeze_time
 import pytest
 
+from homeassistant.components.bluetooth import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import utcnow
 
@@ -22,7 +23,7 @@ from . import (
     inject_advertisement_with_source,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -206,12 +207,16 @@ async def test_subscribe_subscribe_connection_allocations_specific_scanner(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test bluetooth subscribe_connection_allocations for a specific source address."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS
+    )
+    entry.add_to_hass(hass)
     client = await hass_ws_client()
     await client.send_json(
         {
             "id": 1,
             "type": "bluetooth/subscribe_connection_allocations",
-            "source": NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
+            "config_entry_id": entry.entry_id,
         }
     )
     async with asyncio.timeout(1):
@@ -232,21 +237,44 @@ async def test_subscribe_subscribe_connection_allocations_specific_scanner(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subscribe_subscribe_connection_allocations_invalid_scanner(
+async def test_subscribe_subscribe_connection_allocations_invalid_config_entry_id(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test bluetooth subscribe_connection_allocations for an invalid source address."""
+    """Test bluetooth subscribe_connection_allocations for an invalid config entry id."""
     client = await hass_ws_client()
     await client.send_json(
         {
             "id": 1,
             "type": "bluetooth/subscribe_connection_allocations",
-            "source": "90:00:00:00:00:00",
+            "config_entry_id": "non_existent",
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_config_entry_id"
+    assert response["error"]["message"] == "Config entry non_existent not found"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_subscribe_connection_allocations_invalid_scanner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_connection_allocations for an invalid source address."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="invalid")
+    entry.add_to_hass(hass)
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_connection_allocations",
+            "config_entry_id": entry.entry_id,
         }
     )
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "invalid_source"
-    assert response["error"]["message"] == "Invalid source"
+    assert response["error"]["message"] == "Source invalid not found"

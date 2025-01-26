@@ -18,6 +18,7 @@ from homeassistant.helpers.json import json_bytes
 from .api import _get_manager, async_register_callback
 from .match import BluetoothCallbackMatcher
 from .models import BluetoothChange
+from .util import InvalidConfigEntryID, InvalidSource, config_entry_id_to_source
 
 
 @callback
@@ -154,7 +155,7 @@ async def ws_subscribe_advertisements(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "bluetooth/subscribe_connection_allocations",
-        vol.Optional("source"): str,
+        vol.Optional("config_entry_id"): str,
     }
 )
 @websocket_api.async_response
@@ -163,17 +164,23 @@ async def ws_subscribe_connection_allocations(
 ) -> None:
     """Handle subscribe advertisements websocket command."""
     ws_msg_id = msg["id"]
-    source = msg.get("source")
-    manager = _get_manager(hass)
-    if source and not manager.async_scanner_by_source(source):
-        connection.send_error(ws_msg_id, "invalid_source", "Invalid source")
-        return
+    source: str | None = None
+    if config_entry_id := msg.get("config_entry_id"):
+        try:
+            source = config_entry_id_to_source(hass, config_entry_id)
+        except InvalidConfigEntryID as err:
+            connection.send_error(ws_msg_id, "invalid_config_entry_id", str(err))
+            return
+        except InvalidSource as err:
+            connection.send_error(ws_msg_id, "invalid_source", str(err))
+            return
 
     def _async_allocations_changed(allocations: HaBluetoothSlotAllocations) -> None:
         connection.send_message(
             json_bytes(websocket_api.event_message(ws_msg_id, [allocations]))
         )
 
+    manager = _get_manager(hass)
     connection.subscriptions[ws_msg_id] = manager.async_register_allocation_callback(
         _async_allocations_changed, source
     )
