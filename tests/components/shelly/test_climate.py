@@ -804,6 +804,7 @@ async def test_blu_trv_climate_set_temperature(
             "method": "Trv.SetTarget",
             "params": {"id": 0, "target_C": 28.0},
         },
+        60,
     )
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 28
