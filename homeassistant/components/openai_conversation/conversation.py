@@ -22,6 +22,7 @@ from homeassistant.components import assist_pipeline, conversation
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -97,12 +98,6 @@ def _chat_message_convert(
     """Convert a chat message to the native format."""
     if message.native is not None:
         return message.native
-    if message.role == "tool":
-        return ChatCompletionToolMessageParam(
-            role=message.role,
-            tool_call_id=message.tool_call_id or "",
-            content=message.content,
-        )
     return cast(
         ChatCompletionMessageParam,
         {"role": message.role, "content": message.content},
@@ -181,15 +176,10 @@ class OpenAIConversationEntity(
                     for tool in session.llm_api.tools
                 ]
 
-            messages: list[ChatCompletionMessageParam] = []
             client = self.entry.runtime_data
-
-            stream = session.async_stream_chat_messages()
-            chat_messages = await stream.asend(None)  # type: ignore[arg-type]
-            while True:
-                messages.extend(
-                    [_chat_message_convert(message) for message in chat_messages]
-                )
+            messages = [_chat_message_convert(message) for message in session.messages]
+            for _iteration in range(MAX_TOOL_ITERATIONS):
+                LOGGER.debug("Request %s", messages)
                 try:
                     result = await client.chat.completions.create(
                         model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
@@ -204,36 +194,37 @@ class OpenAIConversationEntity(
                     )
                 except openai.OpenAIError as err:
                     LOGGER.error("Error talking to OpenAI: %s", err)
-                    intent_response = intent.IntentResponse(
-                        language=user_input.language
-                    )
-                    intent_response.async_set_error(
-                        intent.IntentResponseErrorCode.UNKNOWN,
-                        "Sorry, I had a problem talking to OpenAI",
-                    )
-                    return conversation.ConversationResult(
-                        response=intent_response,
-                        conversation_id=session.conversation_id,
-                    )
+                    raise HomeAssistantError("Error talking to OpenAI") from err
 
                 LOGGER.debug("Response %s", result)
                 response = result.choices[0].message
+                # Note: We are not adding this response to the session
                 messages.append(_message_convert(response))
 
                 if not response.tool_calls or not session.llm_api:
-                    await stream.aclose()
                     break
 
-                tool_inputs = [
-                    llm.ToolInput(
+                for tool_call in response.tool_calls:
+                    tool_input = llm.ToolInput(
                         tool_name=tool_call.function.name,
                         tool_args=json.loads(tool_call.function.arguments),
-                        tool_call_id=tool_call.id,
                     )
-                    for tool_call in response.tool_calls
-                ]
-                # Note: This currently ignores the chat response when tools are returned
-                chat_messages = await stream.asend((None, tool_inputs))
+                    tool_response = await session.async_call_tool(tool_input)
+                    messages.append(
+                        ChatCompletionToolMessageParam(
+                            role="tool",
+                            tool_call_id=tool_call.id,
+                            content=json.dumps(tool_response),
+                        )
+                    )
+                    session.async_add_message(
+                        conversation.ChatMessage(
+                            role="native",
+                            agent_id=user_input.agent_id,
+                            content="",
+                            native=messages[-1],
+                        )
+                    )
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response.content or "")
