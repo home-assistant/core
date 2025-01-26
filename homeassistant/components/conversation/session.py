@@ -8,7 +8,7 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
 import json
 import logging
-from typing import Literal, TypeVar
+from typing import Literal
 
 import voluptuous as vol
 
@@ -42,8 +42,6 @@ LOGGER = logging.getLogger(__name__)
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
-
-_NativeT = TypeVar("_NativeT")
 
 
 class SessionCleanup:
