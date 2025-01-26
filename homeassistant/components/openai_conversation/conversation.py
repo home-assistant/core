@@ -218,6 +218,7 @@ class OpenAIConversationEntity(
                     native=messages[-1],
                 ),
             )
+
             if not response.tool_calls or not session.llm_api:
                 break
 
