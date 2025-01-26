@@ -337,11 +337,38 @@ class ChatSession[_NativeT]:
             content=prompt,
         )
 
-    async def async_get_tools(self) -> list[llm.Tool] | None:
-        """Get the tools for the agent."""
-        if not self.llm_api:
-            return None
-        return self.llm_api.tools
+    async def async_stream_chat_messages(
+        self,
+    ) -> AsyncGenerator[
+        list[ChatMessage[_NativeT]],
+        tuple[ChatMessage[_NativeT] | None, list[llm.ToolInput] | None],
+    ]:
+        """Run model in a streaming loop."""
+
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                "messages": self.messages,
+                "tools": self.llm_api.tools if self.llm_api else None,
+            },
+        )
+
+        message_batch = [*self.messages]
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            response = yield message_batch
+            if response is None:
+                break
+            (chat_message, tool_inputs) = response
+            message_batch.clear()
+            if chat_message:
+                self.async_add_message(chat_message)
+                message_batch.append(chat_message)
+
+            if not tool_inputs:
+                continue
+
+            tool_responses = await self._async_call_tools(tool_inputs)
+            message_batch.extend(tool_responses)
 
     async def _async_call_tools(
         self, tool_inputs: list[llm.ToolInput]
@@ -372,37 +399,3 @@ class ChatSession[_NativeT]:
             self.async_add_message(chat_message)
             tool_responses.append(chat_message)
         return tool_responses
-
-    async def async_stream_chat_messages(
-        self,
-    ) -> AsyncGenerator[
-        list[ChatMessage[_NativeT]],
-        tuple[ChatMessage[_NativeT] | None, list[llm.ToolInput] | None],
-    ]:
-        """Run model in a streaming loop."""
-
-        tools = await self.async_get_tools()
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
-            {
-                "messages": self.messages,
-                "tools": tools,
-            },
-        )
-
-        message_batch = [*self.messages]
-        for _iteration in range(MAX_TOOL_ITERATIONS):
-            response = yield message_batch
-            if response is None:
-                break
-            (chat_message, tool_inputs) = response
-            message_batch.clear()
-            if chat_message:
-                self.async_add_message(chat_message)
-                message_batch.append(chat_message)
-
-            if not tool_inputs:
-                continue
-
-            tool_responses = await self._async_call_tools(tool_inputs)
-            message_batch.extend(tool_responses)
