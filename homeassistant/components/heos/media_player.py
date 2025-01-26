@@ -29,18 +29,18 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import GroupManager, HeosConfigEntry, SourceManager
-from .const import DOMAIN as HEOS_DOMAIN, SIGNAL_HEOS_PLAYER_ADDED, SIGNAL_HEOS_UPDATED
+from . import HeosConfigEntry
+from .const import DOMAIN as HEOS_DOMAIN
+from .coordinator import HeosCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -90,14 +90,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: HeosConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Add media players for a config entry."""
-    players = entry.runtime_data.players
     devices = [
-        HeosMediaPlayer(
-            player, entry.runtime_data.source_manager, entry.runtime_data.group_manager
-        )
-        for player in players.values()
+        HeosMediaPlayer(entry.runtime_data, player)
+        for player in entry.runtime_data.heos.players.values()
     ]
-    async_add_entities(devices, True)
+    async_add_entities(devices)
 
 
 type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
@@ -126,27 +123,19 @@ def catch_action_error[**_P](
     return decorator
 
 
-class HeosMediaPlayer(MediaPlayerEntity):
+class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     """The HEOS player."""
 
     _attr_media_content_type = MediaType.MUSIC
-    _attr_should_poll = False
     _attr_supported_features = BASE_SUPPORTED_FEATURES
     _attr_media_image_remotely_accessible = True
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(
-        self,
-        player: HeosPlayer,
-        source_manager: SourceManager,
-        group_manager: GroupManager,
-    ) -> None:
+    def __init__(self, coordinator: HeosCoordinator, player: HeosPlayer) -> None:
         """Initialize."""
         self._media_position_updated_at = None
         self._player: HeosPlayer = player
-        self._source_manager = source_manager
-        self._group_manager = group_manager
         self._attr_unique_id = str(player.player_id)
         model_parts = player.model.split(maxsplit=1)
         manufacturer = model_parts[0] if len(model_parts) == 2 else "HEOS"
@@ -159,44 +148,72 @@ class HeosMediaPlayer(MediaPlayerEntity):
             serial_number=player.serial,  # Only available for some models
             sw_version=player.version,
         )
+        super().__init__(coordinator, context=player.player_id)
 
     async def _player_update(self, event):
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
-        await self.async_update_ha_state(True)
+        self._handle_coordinator_update()
 
-    async def _heos_updated(self) -> None:
-        """Handle sources changed."""
-        await self.async_update_ha_state(True)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attributes()
+        super()._handle_coordinator_update()
+
+    @callback
+    def _get_group_members(self) -> list[str] | None:
+        """Get group member entity IDs for the group."""
+        if self._player.group_id is None:
+            return None
+        if not (group := self.coordinator.heos.groups.get(self._player.group_id)):
+            return None
+        player_ids = [group.lead_player_id, *group.member_player_ids]
+        # Resolve player_ids to entity_ids
+        entity_registry = er.async_get(self.hass)
+        entity_ids = [
+            entity_id
+            for member_id in player_ids
+            if (
+                entity_id := entity_registry.async_get_entity_id(
+                    Platform.MEDIA_PLAYER, HEOS_DOMAIN, str(member_id)
+                )
+            )
+        ]
+        return entity_ids or None
+
+    @callback
+    def _update_attributes(self) -> None:
+        """Update core attributes of the media player."""
+        self._attr_group_members = self._get_group_members()
+        self._attr_source_list = self.coordinator.async_get_source_list()
+        self._attr_source = self.coordinator.async_get_current_source(
+            self._player.now_playing_media
+        )
+        self._attr_repeat = HEOS_HA_REPEAT_TYPE_MAP[self._player.repeat]
+        controls = self._player.now_playing_media.supported_controls
+        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
+        self._attr_supported_features = reduce(
+            ior, current_support, BASE_SUPPORTED_FEATURES
+        )
+        if self.support_next_track and self.support_previous_track:
+            self._attr_supported_features |= (
+                MediaPlayerEntityFeature.REPEAT_SET
+                | MediaPlayerEntityFeature.SHUFFLE_SET
+            )
 
     async def async_added_to_hass(self) -> None:
         """Device added to hass."""
         # Update state when attributes of the player change
+        self._update_attributes()
         self.async_on_remove(self._player.add_on_player_event(self._player_update))
-        # Update state when heos changes
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, SIGNAL_HEOS_UPDATED, self._heos_updated)
-        )
-        # Register this player's entity_id so it can be resolved by the group manager
-        self.async_on_remove(
-            self._group_manager.register_media_player(
-                self._player.player_id, self.entity_id
-            )
-        )
-        async_dispatcher_send(self.hass, SIGNAL_HEOS_PLAYER_ADDED)
+        await super().async_added_to_hass()
 
     @catch_action_error("clear playlist")
     async def async_clear_playlist(self) -> None:
         """Clear players playlist."""
         await self._player.clear_queue()
-
-    @catch_action_error("join players")
-    async def async_join_players(self, group_members: list[str]) -> None:
-        """Join `group_members` as a player group with the current player."""
-        await self._group_manager.async_join_players(
-            self._player.player_id, group_members
-        )
 
     @catch_action_error("pause")
     async def async_media_pause(self) -> None:
@@ -278,14 +295,7 @@ class HeosMediaPlayer(MediaPlayerEntity):
                 index = int(media_id)
             except ValueError:
                 # Try finding index by name
-                index = next(
-                    (
-                        index
-                        for index, favorite in self._source_manager.favorites.items()
-                        if favorite.name == media_id
-                    ),
-                    None,
-                )
+                index = self.coordinator.async_get_favorite_index(media_id)
             if index is None:
                 raise ValueError(f"Invalid favorite '{media_id}'")
             await self._player.play_preset_station(index)
@@ -296,7 +306,21 @@ class HeosMediaPlayer(MediaPlayerEntity):
     @catch_action_error("select source")
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._source_manager.play_source(source, self._player)
+        # Favorite
+        if (index := self.coordinator.async_get_favorite_index(source)) is not None:
+            await self._player.play_preset_station(index)
+            return
+        # Input source
+        for input_source in self.coordinator.inputs:
+            if input_source.name == source:
+                await self._player.play_media(input_source)
+                return
+
+        raise ServiceValidationError(
+            translation_domain=HEOS_DOMAIN,
+            translation_key="unknown_source",
+            translation_placeholders={"source": source},
+        )
 
     @catch_action_error("set repeat")
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
@@ -315,24 +339,45 @@ class HeosMediaPlayer(MediaPlayerEntity):
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
 
-    async def async_update(self) -> None:
-        """Update supported features of the player."""
-        self._attr_repeat = HEOS_HA_REPEAT_TYPE_MAP[self._player.repeat]
-        controls = self._player.now_playing_media.supported_controls
-        current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
-        self._attr_supported_features = reduce(
-            ior, current_support, BASE_SUPPORTED_FEATURES
-        )
-        if self.support_next_track and self.support_previous_track:
-            self._attr_supported_features |= (
-                MediaPlayerEntityFeature.REPEAT_SET
-                | MediaPlayerEntityFeature.SHUFFLE_SET
-            )
+    @catch_action_error("join players")
+    async def async_join_players(self, group_members: list[str]) -> None:
+        """Join `group_members` as a player group with the current player."""
+        player_ids: list[int] = [self._player.player_id]
+        # Resolve entity_ids to player_ids
+        entity_registry = er.async_get(self.hass)
+        for entity_id in group_members:
+            entity_entry = entity_registry.async_get(entity_id)
+            if entity_entry is None:
+                raise ServiceValidationError(
+                    translation_domain=HEOS_DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if entity_entry.platform != HEOS_DOMAIN:
+                raise ServiceValidationError(
+                    translation_domain=HEOS_DOMAIN,
+                    translation_key="not_heos_media_player",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            player_id = int(entity_entry.unique_id)
+            if player_id not in player_ids:
+                player_ids.append(player_id)
+        await self.coordinator.heos.set_group(player_ids)
 
     @catch_action_error("unjoin player")
     async def async_unjoin_player(self) -> None:
         """Remove this player from any group."""
-        await self._group_manager.async_unjoin_player(self._player.player_id)
+        for group in self.coordinator.heos.groups.values():
+            if group.lead_player_id == self._player.player_id:
+                # Player is the group leader, this effectively removes the group.
+                await self.coordinator.heos.set_group([self._player.player_id])
+                return
+            if self._player.player_id in group.member_player_ids:
+                # Player is a group member, update the group to exclude it
+                new_members = [group.lead_player_id, *group.member_player_ids]
+                new_members.remove(self._player.player_id)
+                await self.coordinator.heos.set_group(new_members)
+                return
 
     @property
     def available(self) -> bool:
@@ -349,11 +394,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
             "media_station": self._player.now_playing_media.station,
             "media_type": self._player.now_playing_media.type,
         }
-
-    @property
-    def group_members(self) -> list[str]:
-        """List of players which are grouped together."""
-        return self._group_manager.group_membership.get(self.entity_id, [])
 
     @property
     def is_volume_muted(self) -> bool:
@@ -415,16 +455,6 @@ class HeosMediaPlayer(MediaPlayerEntity):
     def shuffle(self) -> bool:
         """Boolean if shuffle is enabled."""
         return self._player.shuffle
-
-    @property
-    def source(self) -> str:
-        """Name of the current input source."""
-        return self._source_manager.get_current_source(self._player.now_playing_media)
-
-    @property
-    def source_list(self) -> list[str]:
-        """List of available input sources."""
-        return self._source_manager.source_list
 
     @property
     def state(self) -> MediaPlayerState:

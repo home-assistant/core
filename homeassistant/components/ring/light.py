@@ -18,6 +18,9 @@ from .entity import RingEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
 
 # It takes a few seconds for the API to correctly return an update indicating
 # that the changes have been made. Once we request a change (i.e. a light

@@ -39,6 +39,9 @@
     "select": {
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
+      },
+      "temperature_level": {
+        "default": "mdi:thermometer"
       }
     },
     "sensor": {

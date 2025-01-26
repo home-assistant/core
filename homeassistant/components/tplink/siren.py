@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -9,6 +10,7 @@ from kasa import Device, Module
 from kasa.smart.modules.alarm import Alarm
 
 from homeassistant.components.siren import (
+    DOMAIN as SIREN_DOMAIN,
     SirenEntity,
     SirenEntityDescription,
     SirenEntityFeature,
@@ -16,7 +18,7 @@ from homeassistant.components.siren import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry
+from . import TPLinkConfigEntry, legacy_device_id
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
@@ -34,6 +36,12 @@ class TPLinkSirenEntityDescription(
     SirenEntityDescription, TPLinkModuleEntityDescription
 ):
     """Base class for siren entity description."""
+
+    unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
+        lambda device, desc: legacy_device_id(device)
+        if desc.key == "siren"
+        else f"{legacy_device_id(device)}-{desc.key}"
+    )
 
 
 SIREN_DESCRIPTIONS: tuple[TPLinkSirenEntityDescription, ...] = (
@@ -64,6 +72,7 @@ async def async_setup_entry(
             coordinator=parent_coordinator,
             entity_class=TPLinkSirenEntity,
             descriptions=SIREN_DESCRIPTIONS,
+            platform_domain=SIREN_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )

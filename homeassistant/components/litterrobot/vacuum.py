@@ -20,7 +20,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity
 
 SERVICE_SET_SLEEP_MODE = "set_sleep_mode"
@@ -49,12 +49,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        LitterRobotCleaner(robot=robot, hub=hub, description=LITTER_BOX_ENTITY)
-        for robot in hub.litter_robots()
-    ]
-    async_add_entities(entities)
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotCleaner(
+            robot=robot, coordinator=coordinator, description=LITTER_BOX_ENTITY
+        )
+        for robot in coordinator.litter_robots()
+    )
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

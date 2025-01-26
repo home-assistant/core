@@ -6,7 +6,7 @@
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "device_class": "Device Type",
+          "device_class": "Device type",
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
         "data_description": {
@@ -14,25 +14,25 @@
         }
       },
       "pair_tv": {
-        "title": "Complete Pairing Process",
+        "title": "Complete pairing process",
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "pairing_complete": {
-        "title": "Pairing Complete",
-        "description": "Your VIZIO SmartCast Device is now connected to Home Assistant."
+        "title": "Pairing complete",
+        "description": "Your VIZIO SmartCast device is now connected to Home Assistant."
       },
       "pairing_complete_import": {
         "title": "[%key:component::vizio::config::step::pairing_complete::title%]",
-        "description": "Your VIZIO SmartCast Device is now connected to Home Assistant.\n\nYour access token is '**{access_token}**'."
+        "description": "Your VIZIO SmartCast device is now connected to Home Assistant.\n\nYour access token is '**{access_token}**'."
       }
     },
     "error": {
       "complete_pairing_failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "existing_config_entry_found": "An existing VIZIO SmartCast Device config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one."
+      "existing_config_entry_found": "An existing VIZIO SmartCast device config entry with the same serial number has already been configured. You must delete the existing entry in order to configure this one."
     },
     "abort": {
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -43,12 +43,12 @@
   "options": {
     "step": {
       "init": {
-        "title": "Update VIZIO SmartCast Device Options",
+        "title": "Update VIZIO SmartCast device options",
         "description": "If you have a Smart TV, you can optionally filter your source list by choosing which apps to include or exclude in your source list.",
         "data": {
-          "volume_step": "Volume Step Size",
-          "include_or_exclude": "Include or Exclude Apps?",
-          "apps_to_include_or_exclude": "Apps to Include or Exclude"
+          "volume_step": "Volume step size",
+          "include_or_exclude": "Include or exclude apps?",
+          "apps_to_include_or_exclude": "Apps to include or exclude"
         }
       }
     }
