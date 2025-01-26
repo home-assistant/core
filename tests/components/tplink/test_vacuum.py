@@ -41,7 +41,7 @@ async def mocked_vacuum(hass: HomeAssistant) -> Device:
     # as we are going to read its choices through it
     feats = [
         _mocked_feature(
-            "fan_speed_preset",
+            "vacuum_fan_speed",
             type_=Feature.Type.Choice,
             category=Feature.Category.Config,
             choices=["Quiet", "Max"],
