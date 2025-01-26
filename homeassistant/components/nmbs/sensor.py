@@ -170,8 +170,10 @@ async def async_setup_entry(
             NMBSSensor(
                 api_client, name, show_on_map, station_from, station_to, excl_vias
             ),
-            NMBSLiveBoard(api_client, station_from, station_from, station_to),
-            NMBSLiveBoard(api_client, station_to, station_from, station_to),
+            NMBSLiveBoard(
+                api_client, station_from, station_from, station_to, excl_vias
+            ),
+            NMBSLiveBoard(api_client, station_to, station_from, station_to, excl_vias),
         ]
     )
 
@@ -187,12 +189,15 @@ class NMBSLiveBoard(SensorEntity):
         live_station: dict[str, Any],
         station_from: dict[str, Any],
         station_to: dict[str, Any],
+        excl_vias: bool,
     ) -> None:
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
         self._station_from = station_from
         self._station_to = station_to
+
+        self._excl_vias = excl_vias
         self._attrs: dict[str, Any] | None = {}
         self._state: str | None = None
 
@@ -210,7 +215,8 @@ class NMBSLiveBoard(SensorEntity):
         unique_id = (
             f"{self._station['id']}_{self._station_from['id']}_{self._station_to['id']}"
         )
-        return f"nmbs_live_{unique_id}"
+        vias = "_excl_vias" if self._excl_vias else ""
+        return f"nmbs_live_{unique_id}{vias}"
 
     @property
     def icon(self) -> str:
@@ -303,7 +309,8 @@ class NMBSSensor(SensorEntity):
         """Return the unique ID."""
         unique_id = f"{self._station_from['id']}_{self._station_to['id']}"
 
-        return f"nmbs_connection_{unique_id}"
+        vias = "_excl_vias" if self._excl_vias else ""
+        return f"nmbs_connection_{unique_id}{vias}"
 
     @property
     def name(self) -> str:
