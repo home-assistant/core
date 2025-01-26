@@ -32,8 +32,9 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
 
     on_func: Callable
     off_func: Callable
-    value_func: Callable[[StateType], bool] = bool
     scopes: list[Scope]
+    value_func: Callable[[StateType], bool] = bool
+    unique_id: str | None = None
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
@@ -82,6 +83,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="charge_state_charging_state",
+        unique_id="charge_state_charge_enable_request",
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
         scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
@@ -141,9 +143,11 @@ class TeslemetryVehicleSwitchEntity(TeslemetryVehicleEntity, TeslemetrySwitchEnt
         scopes: list[Scope],
     ) -> None:
         """Initialize the Switch."""
-        super().__init__(data, description.key)
         self.entity_description = description
         self.scoped = any(scope in scopes for scope in description.scopes)
+        super().__init__(data, description.key)
+        if description.unique_id:
+            self._attr_unique_id = f"{data.vin}-{description.unique_id}"
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""

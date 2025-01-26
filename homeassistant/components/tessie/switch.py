@@ -42,6 +42,7 @@ class TessieSwitchEntityDescription(SwitchEntityDescription):
     on_func: Callable
     off_func: Callable
     value_func: Callable[[StateType], bool] = bool
+    unique_id: str | None = None
 
 
 DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
@@ -68,6 +69,7 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
     ),
     TessieSwitchEntityDescription(
         key="charge_state_charging_state",
+        unique_id="charge_state_charge_enable_request",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
     ),
@@ -118,8 +120,10 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
         description: TessieSwitchEntityDescription,
     ) -> None:
         """Initialize the Switch."""
-        super().__init__(vehicle, description.key)
         self.entity_description = description
+        super().__init__(vehicle, description.key)
+        if description.unique_id:
+            self._attr_unique_id = f"{vehicle.vin}-{description.unique_id}"
 
     @property
     def is_on(self) -> bool:

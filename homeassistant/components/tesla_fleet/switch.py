@@ -32,8 +32,9 @@ class TeslaFleetSwitchEntityDescription(SwitchEntityDescription):
 
     on_func: Callable
     off_func: Callable
-    value_func: Callable[[StateType], bool] = bool
     scopes: list[Scope]
+    value_func: Callable[[StateType], bool] = bool
+    unique_id: str | None = None
 
 
 VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
@@ -41,7 +42,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
         key="vehicle_state_sentry_mode",
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
-        value_func=lambda state: state in ("Starting", "Charging"),
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslaFleetSwitchEntityDescription(
@@ -82,8 +82,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
     ),
     TeslaFleetSwitchEntityDescription(
         key="charge_state_charging_state",
+        unique_id="charge_state_charge_enable_request",
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
+        value_func=lambda state: state in {"Starting", "Charging"},
         scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
     ),
 )
@@ -140,9 +142,11 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         scopes: list[Scope],
     ) -> None:
         """Initialize the Switch."""
-        super().__init__(data, description.key)
         self.entity_description = description
         self.scoped = any(scope in scopes for scope in description.scopes)
+        super().__init__(data, description.key)
+        if description.unique_id:
+            self._attr_unique_id = f"{data.vin}-{description.unique_id}"
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
