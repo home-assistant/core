@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Any, Self
 
+from homeassistant.exceptions import HomeAssistantError
+
 
 @dataclass(frozen=True, kw_only=True)
 class AddonInfo:
@@ -67,3 +69,7 @@ class AgentBackup:
             protected=data["protected"],
             size=data["size"],
         )
+
+
+class BackupManagerError(HomeAssistantError):
+    """Backup manager error."""

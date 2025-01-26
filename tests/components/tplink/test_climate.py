@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from kasa import Device, Feature
+from kasa import Device, Feature, Module
 from kasa.smart.modules.temperaturecontrol import ThermostatState
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -27,12 +27,12 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import (
-    DEVICE_ID,
     _mocked_device,
     _mocked_feature,
     setup_platform_for_device,
     snapshot_platform,
 )
+from .const import DEVICE_ID
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -41,35 +41,28 @@ ENTITY_ID = "climate.thermostat"
 
 @pytest.fixture
 async def mocked_hub(hass: HomeAssistant) -> Device:
-    """Return mocked tplink binary sensor feature."""
+    """Return mocked tplink hub."""
 
     features = [
         _mocked_feature(
-            "temperature", value=20.2, category=Feature.Category.Primary, unit="celsius"
-        ),
-        _mocked_feature(
-            "target_temperature",
-            value=22.2,
+            "temperature",
             type_=Feature.Type.Number,
             category=Feature.Category.Primary,
             unit="celsius",
         ),
         _mocked_feature(
-            "state",
-            value=True,
-            type_=Feature.Type.Switch,
+            "target_temperature",
+            type_=Feature.Type.Number,
             category=Feature.Category.Primary,
-        ),
-        _mocked_feature(
-            "thermostat_mode",
-            value=ThermostatState.Heating,
-            type_=Feature.Type.Choice,
-            category=Feature.Category.Primary,
+            unit="celsius",
         ),
     ]
 
     thermostat = _mocked_device(
-        alias="thermostat", features=features, device_type=Device.Type.Thermostat
+        alias="thermostat",
+        features=features,
+        modules=[Module.Thermostat],
+        device_type=Device.Type.Thermostat,
     )
 
     return _mocked_device(
@@ -121,7 +114,9 @@ async def test_set_temperature(
 ) -> None:
     """Test that set_temperature service calls the setter."""
     mocked_thermostat = mocked_hub.children[0]
-    mocked_thermostat.features["target_temperature"].minimum_value = 0
+
+    therm_module = mocked_thermostat.modules.get(Module.Thermostat)
+    assert therm_module
 
     await setup_platform_for_device(
         hass, mock_config_entry, Platform.CLIMATE, mocked_hub
@@ -133,8 +128,8 @@ async def test_set_temperature(
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: 10},
         blocking=True,
     )
-    target_temp_feature = mocked_thermostat.features["target_temperature"]
-    target_temp_feature.set_value.assert_called_with(10)
+
+    therm_module.set_target_temperature.assert_called_with(10)
 
 
 async def test_set_hvac_mode(
@@ -146,8 +141,8 @@ async def test_set_hvac_mode(
     )
 
     mocked_thermostat = mocked_hub.children[0]
-    mocked_state = mocked_thermostat.features["state"]
-    assert mocked_state is not None
+    therm_module = mocked_thermostat.modules.get(Module.Thermostat)
+    assert therm_module
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -156,7 +151,7 @@ async def test_set_hvac_mode(
         blocking=True,
     )
 
-    mocked_state.set_value.assert_called_with(False)
+    therm_module.set_state.assert_called_with(False)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -164,9 +159,10 @@ async def test_set_hvac_mode(
         {ATTR_ENTITY_ID: [ENTITY_ID], ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    mocked_state.set_value.assert_called_with(True)
+    therm_module.set_state.assert_called_with(True)
 
-    with pytest.raises(ServiceValidationError):
+    msg = "Tried to set unsupported mode: dry"
+    with pytest.raises(ServiceValidationError, match=msg):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -184,7 +180,8 @@ async def test_turn_on_and_off(
     )
 
     mocked_thermostat = mocked_hub.children[0]
-    mocked_state = mocked_thermostat.features["state"]
+    therm_module = mocked_thermostat.modules.get(Module.Thermostat)
+    assert therm_module
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -193,7 +190,7 @@ async def test_turn_on_and_off(
         blocking=True,
     )
 
-    mocked_state.set_value.assert_called_with(False)
+    therm_module.set_state.assert_called_with(False)
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -202,7 +199,7 @@ async def test_turn_on_and_off(
         blocking=True,
     )
 
-    mocked_state.set_value.assert_called_with(True)
+    therm_module.set_state.assert_called_with(True)
 
 
 async def test_unknown_mode(
@@ -217,11 +214,31 @@ async def test_unknown_mode(
     )
 
     mocked_thermostat = mocked_hub.children[0]
-    mocked_state = mocked_thermostat.features["thermostat_mode"]
-    mocked_state.value = ThermostatState.Unknown
+    therm_module = mocked_thermostat.modules.get(Module.Thermostat)
+    assert therm_module
+
+    therm_module.mode = ThermostatState.Unknown
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert "Unknown thermostat state, defaulting to OFF" in caplog.text
+
+
+async def test_missing_feature_attributes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mocked_hub: Device,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a module missing the min/max and unit feature logs an error."""
+    mocked_thermostat = mocked_hub.children[0]
+    mocked_thermostat.features.pop("target_temperature")
+    mocked_thermostat.features.pop("temperature")
+
+    await setup_platform_for_device(
+        hass, mock_config_entry, Platform.CLIMATE, mocked_hub
+    )
+    assert "Unable to get min/max target temperature" in caplog.text
+    assert "Unable to get correct temperature unit" in caplog.text

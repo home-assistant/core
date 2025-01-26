@@ -12,7 +12,7 @@ import logging
 from math import ceil, floor, isfinite, log10
 from typing import Any, Final, Self, cast, final, override
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -67,8 +67,8 @@ __all__ = [
     "CONF_STATE_CLASS",
     "DEVICE_CLASS_STATE_CLASSES",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
     "RestoreSensor",
     "SensorDeviceClass",
     "SensorEntity",

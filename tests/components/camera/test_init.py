@@ -41,6 +41,7 @@ from homeassistant.util import dt as dt_util
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
 from tests.common import (
+    MockEntityPlatform,
     async_fire_time_changed,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -824,6 +825,30 @@ def test_deprecated_state_constants(
 ) -> None:
     """Test deprecated stream type constants."""
     import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
+
+
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockCamera(camera.Camera):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockCamera()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "MockCamera" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "CameraEntityFeature.ON_OFF" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is camera.CameraEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera")

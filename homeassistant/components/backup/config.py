@@ -5,8 +5,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
+import datetime as dt
 from datetime import datetime, timedelta
 from enum import StrEnum
+import random
 from typing import TYPE_CHECKING, Self, TypedDict
 
 from cronsim import CronSim
@@ -17,16 +19,22 @@ from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import LOGGER
-from .models import Folder
+from .models import BackupManagerError, Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
 
-# The time of the automatic backup event should be compatible with
-# the time of the recorder's nightly job which runs at 04:12.
-# Run the backup at 04:45.
-CRON_PATTERN_DAILY = "45 4 * * *"
-CRON_PATTERN_WEEKLY = "45 4 * * {}"
+CRON_PATTERN_DAILY = "{m} {h} * * *"
+CRON_PATTERN_WEEKLY = "{m} {h} * * {d}"
+
+# The default time for automatic backups to run is at 04:45.
+# This time is chosen to be compatible with the time of the recorder's
+# nightly job which runs at 04:12.
+DEFAULT_BACKUP_TIME = dt.time(4, 45)
+
+# Randomize the start time of the backup by up to 60 minutes to avoid
+# all backups running at the same time.
+BACKUP_START_TIME_JITTER = 60 * 60
 
 
 class StoredBackupConfig(TypedDict):
@@ -69,6 +77,12 @@ class BackupConfigData:
         else:
             last_completed = None
 
+        if time_str := data["schedule"]["time"]:
+            time = dt_util.parse_time(time_str)
+        else:
+            time = None
+        days = [Day(day) for day in data["schedule"]["days"]]
+
         return cls(
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
@@ -85,7 +99,12 @@ class BackupConfigData:
                 copies=retention["copies"],
                 days=retention["days"],
             ),
-            schedule=BackupSchedule(state=ScheduleState(data["schedule"]["state"])),
+            schedule=BackupSchedule(
+                days=days,
+                recurrence=ScheduleRecurrence(data["schedule"]["recurrence"]),
+                state=ScheduleState(data["schedule"].get("state", ScheduleState.NEVER)),
+                time=time,
+            ),
         )
 
     def to_dict(self) -> StoredBackupConfig:
@@ -124,6 +143,7 @@ class BackupConfig:
     def load(self, stored_config: StoredBackupConfig) -> None:
         """Load config."""
         self.data = BackupConfigData.from_dict(stored_config)
+        self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
     async def update(
@@ -131,7 +151,7 @@ class BackupConfig:
         *,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         retention: RetentionParametersDict | UndefinedType = UNDEFINED,
-        schedule: ScheduleState | UndefinedType = UNDEFINED,
+        schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
         if create_backup is not UNDEFINED:
@@ -142,7 +162,7 @@ class BackupConfig:
                 self.data.retention = new_retention
                 self.data.retention.apply(self._manager)
         if schedule is not UNDEFINED:
-            new_schedule = BackupSchedule(state=schedule)
+            new_schedule = BackupSchedule(**schedule)
             if new_schedule.to_dict() != self.data.schedule.to_dict():
                 self.data.schedule = new_schedule
                 self.data.schedule.apply(self._manager)
@@ -160,8 +180,13 @@ class RetentionConfig:
     def apply(self, manager: BackupManager) -> None:
         """Apply backup retention configuration."""
         if self.days is not None:
+            LOGGER.debug(
+                "Scheduling next automatic delete of backups older than %s in 1 day",
+                self.days,
+            )
             self._schedule_next(manager)
         else:
+            LOGGER.debug("Unscheduling next automatic delete")
             self._unschedule_next(manager)
 
     def to_dict(self) -> StoredRetentionConfig:
@@ -231,11 +256,46 @@ class RetentionParametersDict(TypedDict, total=False):
 class StoredBackupSchedule(TypedDict):
     """Represent the stored backup schedule configuration."""
 
+    days: list[Day]
+    recurrence: ScheduleRecurrence
     state: ScheduleState
+    time: str | None
+
+
+class ScheduleParametersDict(TypedDict, total=False):
+    """Represent parameters for backup schedule."""
+
+    days: list[Day]
+    recurrence: ScheduleRecurrence
+    state: ScheduleState
+    time: dt.time | None
+
+
+class Day(StrEnum):
+    """Represent the day(s) in a custom schedule recurrence."""
+
+    MONDAY = "mon"
+    TUESDAY = "tue"
+    WEDNESDAY = "wed"
+    THURSDAY = "thu"
+    FRIDAY = "fri"
+    SATURDAY = "sat"
+    SUNDAY = "sun"
+
+
+class ScheduleRecurrence(StrEnum):
+    """Represent the schedule recurrence."""
+
+    NEVER = "never"
+    DAILY = "daily"
+    CUSTOM_DAYS = "custom_days"
 
 
 class ScheduleState(StrEnum):
-    """Represent the schedule state."""
+    """Represent the schedule recurrence.
+
+    This is deprecated and can be remove in HA Core 2025.8.
+    """
 
     NEVER = "never"
     DAILY = "daily"
@@ -252,8 +312,15 @@ class ScheduleState(StrEnum):
 class BackupSchedule:
     """Represent the backup schedule."""
 
+    days: list[Day] = field(default_factory=list)
+    recurrence: ScheduleRecurrence = ScheduleRecurrence.NEVER
+    # Although no longer used, state is kept for backwards compatibility.
+    # It can be removed in HA Core 2025.8.
     state: ScheduleState = ScheduleState.NEVER
+    time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
+    next_automatic_backup: datetime | None = field(init=False, default=None)
+    next_automatic_backup_additional = False
 
     @callback
     def apply(
@@ -262,17 +329,27 @@ class BackupSchedule:
     ) -> None:
         """Apply a new schedule.
 
-        There are only three possible state types: never, daily, or weekly.
+        There are only three possible recurrence types: never, daily, or custom_days
         """
-        if self.state is ScheduleState.NEVER:
+        if self.recurrence is ScheduleRecurrence.NEVER or (
+            self.recurrence is ScheduleRecurrence.CUSTOM_DAYS and not self.days
+        ):
             self._unschedule_next(manager)
             return
 
-        if self.state is ScheduleState.DAILY:
-            self._schedule_next(CRON_PATTERN_DAILY, manager)
-        else:
+        time = self.time if self.time is not None else DEFAULT_BACKUP_TIME
+        if self.recurrence is ScheduleRecurrence.DAILY:
             self._schedule_next(
-                CRON_PATTERN_WEEKLY.format(self.state.value),
+                CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour),
+                manager,
+            )
+        else:  # ScheduleRecurrence.CUSTOM_DAYS
+            self._schedule_next(
+                CRON_PATTERN_WEEKLY.format(
+                    m=time.minute,
+                    h=time.hour,
+                    d=",".join(day.value for day in self.days),
+                ),
                 manager,
             )
 
@@ -293,11 +370,22 @@ class BackupSchedule:
         if next_time < now:
             # schedule a backup at next daily time once
             # if we missed the last scheduled backup
-            cron_event = CronSim(CRON_PATTERN_DAILY, now)
+            time = self.time if self.time is not None else DEFAULT_BACKUP_TIME
+            cron_event = CronSim(
+                CRON_PATTERN_DAILY.format(m=time.minute, h=time.hour), now
+            )
             next_time = next(cron_event)
             # reseed the cron event attribute
             # add a day to the next time to avoid scheduling at the same time again
             self.cron_event = CronSim(cron_pattern, now + timedelta(days=1))
+
+            # Compare the computed next time with the next time from the cron pattern
+            # to determine if an additional backup has been scheduled
+            cron_event_configured = CronSim(cron_pattern, now)
+            next_configured_time = next(cron_event_configured)
+            self.next_automatic_backup_additional = next_time < next_configured_time
+        else:
+            self.next_automatic_backup_additional = False
 
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
@@ -318,22 +406,34 @@ class BackupSchedule:
                     password=config_data.create_backup.password,
                     with_automatic_settings=True,
                 )
+            except BackupManagerError as err:
+                LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001
-                # another more specific exception will be added
-                # and handled in the future
                 LOGGER.exception("Unexpected error creating automatic backup")
 
+        if self.time is None:
+            # randomize the start time of the backup by up to 60 minutes if the time is
+            # not set to avoid all backups running at the same time
+            next_time += timedelta(seconds=random.randint(0, BACKUP_START_TIME_JITTER))
+        LOGGER.debug("Scheduling next automatic backup at %s", next_time)
+        self.next_automatic_backup = next_time
         manager.remove_next_backup_event = async_track_point_in_time(
             manager.hass, _create_backup, next_time
         )
 
     def to_dict(self) -> StoredBackupSchedule:
         """Convert backup schedule to a dict."""
-        return StoredBackupSchedule(state=self.state)
+        return StoredBackupSchedule(
+            days=self.days,
+            recurrence=self.recurrence,
+            state=self.state,
+            time=self.time.isoformat() if self.time else None,
+        )
 
     @callback
     def _unschedule_next(self, manager: BackupManager) -> None:
         """Unschedule the next backup."""
+        self.next_automatic_backup = None
         if (remove_next_event := manager.remove_next_backup_event) is not None:
             remove_next_event()
             manager.remove_next_backup_event = None
