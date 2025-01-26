@@ -173,7 +173,7 @@
     },
     "set_sensors_used_in_climate": {
       "name": "Set sensors used in climate",
-      "description": "Sets the participating sensors for a climate.",
+      "description": "Sets the participating sensors for a climate program.",
       "fields": {
         "entity_id": {
           "name": "Entity",
