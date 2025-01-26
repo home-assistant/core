@@ -5,9 +5,14 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from reolink_aio.api import RETRY_ATTEMPTS
-from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    CredentialsInvalidError,
+    LoginPrivacyModeError,
+    ReolinkError,
+)
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -19,6 +24,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -121,6 +127,8 @@ async def async_setup_entry(
                     await host.stop()
                     raise ConfigEntryAuthFailed(err) from err
                 raise UpdateFailed(str(err)) from err
+            except LoginPrivacyModeError:
+                pass  # HTTP API is shutdown when privacy mode is active
             except ReolinkError as err:
                 host.credential_errors = 0
                 raise UpdateFailed(str(err)) from err
@@ -198,6 +206,23 @@ async def async_setup_entry(
 
     hass.http.register_view(PlaybackProxyView(hass))
 
+    async def refresh(*args: Any) -> None:
+        """Request refresh of coordinator."""
+        await device_coordinator.async_request_refresh()
+        host.cancel_refresh_privacy_mode = None
+
+    def async_privacy_mode_change() -> None:
+        """Request update when privacy mode is turned off."""
+        if host.privacy_mode and not host.api.baichuan.privacy_mode():
+            # The privacy mode just turned off, give the API 2 seconds to start
+            if host.cancel_refresh_privacy_mode is None:
+                host.cancel_refresh_privacy_mode = async_call_later(hass, 2, refresh)
+        host.privacy_mode = host.api.baichuan.privacy_mode()
+
+    host.api.baichuan.register_callback(
+        "privacy_mode_change", async_privacy_mode_change, 623
+    )
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     config_entry.async_on_unload(
@@ -221,6 +246,10 @@ async def async_unload_entry(
     host: ReolinkHost = config_entry.runtime_data.host
 
     await host.stop()
+
+    host.api.baichuan.unregister_callback("privacy_mode_change")
+    if host.cancel_refresh_privacy_mode is not None:
+        host.cancel_refresh_privacy_mode()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 

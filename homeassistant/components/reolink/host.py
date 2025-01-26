@@ -117,7 +117,9 @@ class ReolinkHost:
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
         self._fast_poll_error: bool = False
         self._long_poll_task: asyncio.Task | None = None
+        self._lost_subscription_start: bool = False
         self._lost_subscription: bool = False
+        self.cancel_refresh_privacy_mode: CALLBACK_TYPE | None = None
 
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:
@@ -257,6 +259,8 @@ class ReolinkHost:
                 self._hass, FIRST_TCP_PUSH_TIMEOUT, self._async_check_tcp_push
             )
 
+        self.privacy_mode = self._api.baichuan.privacy_mode()
+
         ch_list: list[int | None] = [None]
         if self._api.is_nvr:
             ch_list.extend(self._api.channels)
@@ -324,7 +328,7 @@ class ReolinkHost:
                 )
 
         # start long polling if ONVIF push failed immediately
-        if not self._onvif_push_supported:
+        if not self._onvif_push_supported and not self._api.baichuan.privacy_mode():
             _LOGGER.debug(
                 "Camera model %s does not support ONVIF push, using ONVIF long polling instead",
                 self._api.model,
@@ -441,6 +445,11 @@ class ReolinkHost:
             wake = True
             self.last_wake = time()
 
+        if self._api.baichuan.privacy_mode():
+            await self._api.baichuan.get_privacy_mode()
+            if self._api.baichuan.privacy_mode():
+                return  # API is shutdown, no need to check states
+
         await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
     async def disconnect(self) -> None:
@@ -484,8 +493,8 @@ class ReolinkHost:
                 if initial:
                     raise
                 # make sure the long_poll_task is always created to try again later
-                if not self._lost_subscription:
-                    self._lost_subscription = True
+                if not self._lost_subscription_start:
+                    self._lost_subscription_start = True
                     _LOGGER.error(
                         "Reolink %s event long polling subscription lost: %s",
                         self._api.nvr_name,
@@ -493,15 +502,15 @@ class ReolinkHost:
                     )
             except ReolinkError as err:
                 # make sure the long_poll_task is always created to try again later
-                if not self._lost_subscription:
-                    self._lost_subscription = True
+                if not self._lost_subscription_start:
+                    self._lost_subscription_start = True
                     _LOGGER.error(
                         "Reolink %s event long polling subscription lost: %s",
                         self._api.nvr_name,
                         err,
                     )
             else:
-                self._lost_subscription = False
+                self._lost_subscription_start = False
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
     async def _async_stop_long_polling(self) -> None:
@@ -567,6 +576,9 @@ class ReolinkHost:
             # TCP push active, unsubscribe from ONVIF push because not needed
             self.unregister_webhook()
             await self._api.unsubscribe()
+
+        if self._api.baichuan.privacy_mode():
+            return  # API is shutdown, no need to subscribe
 
         try:
             if self._onvif_push_supported and not self._api.baichuan.events_active:
@@ -691,7 +703,9 @@ class ReolinkHost:
             try:
                 channels = await self._api.pull_point_request()
             except ReolinkError as ex:
-                if not self._long_poll_error:
+                if not self._long_poll_error and self._api.subscribed(
+                    SubType.long_poll
+                ):
                     _LOGGER.error("Error while requesting ONVIF pull point: %s", ex)
                     await self._api.unsubscribe(sub_type=SubType.long_poll)
                 self._long_poll_error = True
