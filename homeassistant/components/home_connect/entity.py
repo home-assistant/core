@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 
-from aiohomeconnect.model import EventKey, HomeAppliance
+from aiohomeconnect.model import EventKey
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -19,11 +19,6 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    @staticmethod
-    def create_unique_id(appliance: HomeAppliance, key: str) -> str:
-        """Create unique id for entity."""
-        return f"{appliance.ha_id}-{key}"
-
     def __init__(
         self,
         coordinator: HomeConnectCoordinator,
@@ -34,9 +29,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         super().__init__(coordinator, (appliance.info.ha_id, EventKey(desc.key)))
         self.appliance = appliance
         self.entity_description = desc
-        self._attr_unique_id = HomeConnectEntity.create_unique_id(
-            appliance.info, desc.key
-        )
+        self._attr_unique_id = f"{appliance.info.ha_id}-{desc.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, appliance.info.ha_id)},
             manufacturer=appliance.info.brand,
