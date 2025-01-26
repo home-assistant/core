@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.28
+AIOSomecomfort==0.0.30
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -1199,7 +1199,7 @@ ifaddr==0.2.0
 iglo==1.2.7
 
 # homeassistant.components.igloohome
-igloohome-api==0.0.6
+igloohome-api==0.1.0
 
 # homeassistant.components.ihc
 ihcsdk==2.8.5
@@ -1540,7 +1540,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.2.5
+ohme==1.2.6
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -2506,7 +2506,7 @@ pyvera==0.3.15
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.15
+pyvesync==2.1.16
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
