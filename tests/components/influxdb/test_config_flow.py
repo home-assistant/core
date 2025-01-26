@@ -13,6 +13,7 @@ from homeassistant.components.influxdb import (
     DOMAIN,
     ApiException,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -148,13 +149,16 @@ async def test_import_connection_error(
 
 
 @pytest.mark.parametrize(
-    ("config_base", "db_name"),
+    ("mock_client", "config_base", "db_name"),
     [
-        (BASE_V1_CONFIG, BASE_V1_CONFIG["database"]),
-        (BASE_V2_CONFIG, BASE_V2_CONFIG["bucket"]),
+        (DEFAULT_API_VERSION, BASE_V1_CONFIG, BASE_V1_CONFIG["database"]),
+        (API_VERSION_2, BASE_V2_CONFIG, BASE_V2_CONFIG["bucket"]),
     ],
+    indirect=["mock_client"],
 )
-async def test_import_update(hass: HomeAssistant, config_base, db_name) -> None:
+async def test_import_update(
+    hass: HomeAssistant, mock_client, config_base, db_name
+) -> None:
     """Test we can import and update the config."""
     config_ext = {
         "include": {
@@ -179,24 +183,26 @@ async def test_import_update(hass: HomeAssistant, config_base, db_name) -> None:
     )
     entry.add_to_hass(hass)
 
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state == ConfigEntryState.LOADED
+
     config = config_base.copy()
     config.update(config_ext)
 
     conf_verify = _split_config(config)
 
-    with patch(
-        "homeassistant.components.influxdb.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=config,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=config,
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
-    await hass.async_block_till_done()
-
+    assert entry.state == ConfigEntryState.LOADED
     assert entry.data == conf_verify["data"]
     assert entry.options == conf_verify["options"]
