@@ -26,7 +26,7 @@
           "profiles": "Default audio profiles",
           "text_type": "Default text type",
           "stt_model": "STT model",
-          "tts_timeout": "TTS timeout, seconds"
+          "tts_timeout": "TTS timeout, seconds",
         }
       }
     }

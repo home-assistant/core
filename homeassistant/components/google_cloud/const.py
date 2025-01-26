@@ -19,7 +19,7 @@ CONF_PITCH = "pitch"
 CONF_GAIN = "gain"
 CONF_PROFILES = "profiles"
 CONF_TEXT_TYPE = "text_type"
-CONF_TIMEOUT= "TTS timeout, seconds"
+CONF_TIMEOUT= "tts_timeout"
 
 DEFAULT_TIMEOUT = 10
 DEFAULT_SPEED = 1.0
