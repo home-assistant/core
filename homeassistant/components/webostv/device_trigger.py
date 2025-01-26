@@ -1,4 +1,4 @@
-"""Provides device automations for control of LG webOS Smart TV."""
+"""Provides device automations for control of LG webOS TV."""
 
 from __future__ import annotations
 

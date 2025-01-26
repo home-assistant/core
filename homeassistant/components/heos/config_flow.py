@@ -188,9 +188,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         entry: HeosConfigEntry = self._get_reauth_entry()
         if user_input is not None:
             assert entry.state is ConfigEntryState.LOADED
-            if await _validate_auth(
-                user_input, entry.runtime_data.coordinator.heos, errors
-            ):
+            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
                 return self.async_update_reload_and_abort(entry, options=user_input)
 
         return self.async_show_form(
@@ -212,9 +210,7 @@ class HeosOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             entry: HeosConfigEntry = self.config_entry
-            if await _validate_auth(
-                user_input, entry.runtime_data.coordinator.heos, errors
-            ):
+            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(
