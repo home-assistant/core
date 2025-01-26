@@ -336,14 +336,14 @@ class ChatSession[_NativeT]:
             content=prompt,
         )
 
-        trace_details = {
-            "messages": self.messages,
-            "tools": self.llm_api.tools if self.llm_api else None,
-        }
-        LOGGER.debug("Chat session started: %s", trace_details)
+        LOGGER.debug("Prompt: %s", self.messages)
+        LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL,
-            trace_details,
+            {
+                "messages": self.messages,
+                "tools": self.llm_api.tools if self.llm_api else None,
+            },
         )
 
     async def async_call_tool(self, tool_input: llm.ToolInput) -> JsonObjectType:
