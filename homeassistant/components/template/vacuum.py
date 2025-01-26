@@ -138,7 +138,8 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        assert name is not None
 
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
@@ -147,18 +148,18 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             VacuumEntityFeature.START | VacuumEntityFeature.STATE
         )
 
-        self.add_script(SERVICE_START, config[SERVICE_START], friendly_name, DOMAIN)
+        self.add_script(hass, SERVICE_START, config[SERVICE_START], name, DOMAIN)
 
-        for action_id, supported_feature in [
+        for action_id, supported_feature in (
             (SERVICE_PAUSE, VacuumEntityFeature.PAUSE),
             (SERVICE_STOP, VacuumEntityFeature.STOP),
             (SERVICE_RETURN_TO_BASE, VacuumEntityFeature.RETURN_HOME),
             (SERVICE_CLEAN_SPOT, VacuumEntityFeature.CLEAN_SPOT),
             (SERVICE_LOCATE, VacuumEntityFeature.LOCATE),
             (SERVICE_SET_FAN_SPEED, VacuumEntityFeature.FAN_SPEED),
-        ]:
+        ):
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, friendly_name, DOMAIN)
+                self.add_script(hass, action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
         self._state = None

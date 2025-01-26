@@ -6,17 +6,19 @@ from collections.abc import Callable, Mapping
 import contextlib
 import itertools
 import logging
-from typing import Any
+from typing import Any, cast
 
 from propcache.api import under_cached_property
 import voluptuous as vol
 
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_PATH,
     CONF_VARIABLES,
     STATE_UNKNOWN,
 )
@@ -265,7 +267,7 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
         unique_id: str | None = None,
     ) -> None:
         """Template Entity."""
-        super().__init__(hass, config)
+        super().__init__()
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
@@ -289,12 +291,16 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
+            self._run_variables = {}
+            self._blueprint_inputs = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
             self._availability_template = config.get(CONF_AVAILABILITY)
             self._icon_template = config.get(CONF_ICON)
             self._entity_picture_template = config.get(CONF_PICTURE)
             self._friendly_name_template = config.get(CONF_NAME)
+            self._run_variables = config.get(CONF_VARIABLES, {})
+            self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -360,6 +366,25 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
 
         self.add_template_attribute(
             attribute_key, attribute_template, None, _update_attribute
+        )
+
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+
+    def _render_script_variables(self) -> dict:
+        """Render configured variables."""
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(
+            self.hass,
+            {
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            },
         )
 
     def add_template_attribute(
@@ -463,7 +488,7 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
 
         variables = {
             "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-            **self._render_variables(),
+            **self._render_script_variables(),
         }
 
         for template, attributes in self._template_attrs.items():

@@ -139,7 +139,8 @@ class TemplateFan(TemplateEntity, FanEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        assert name is not None
 
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._percentage_template = config.get(CONF_PERCENTAGE_TEMPLATE)
@@ -147,29 +148,29 @@ class TemplateFan(TemplateEntity, FanEntity):
         self._oscillating_template = config.get(CONF_OSCILLATING_TEMPLATE)
         self._direction_template = config.get(CONF_DIRECTION_TEMPLATE)
 
-        for action_id in [CONF_ON_ACTION, CONF_OFF_ACTION]:
-            self.add_script(action_id, config[action_id], friendly_name, DOMAIN)
+        for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION):
+            self.add_script(hass, action_id, config[action_id], name, DOMAIN)
 
-        for action_id in [
+        for action_id in (
             CONF_SET_PERCENTAGE_ACTION,
             CONF_SET_PRESET_MODE_ACTION,
             CONF_SET_OSCILLATING_ACTION,
             CONF_SET_DIRECTION_ACTION,
-        ]:
+        ):
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, friendly_name, DOMAIN)
+                self.add_script(hass, action_id, action_config, name, DOMAIN)
 
         self._state: bool | None = False
-        self._percentage = None
-        self._preset_mode = None
-        self._oscillating = None
-        self._direction = None
+        self._percentage: int | None = None
+        self._preset_mode: str | None = None
+        self._oscillating: bool | None = None
+        self._direction: str | None = None
 
         # Number of valid speeds
         self._speed_count = config.get(CONF_SPEED_COUNT)
 
         # List of valid preset modes
-        self._preset_modes = config.get(CONF_PRESET_MODES)
+        self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
 
         if self._percentage_template:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
@@ -191,7 +192,7 @@ class TemplateFan(TemplateEntity, FanEntity):
         return self._speed_count or 100
 
     @property
-    def preset_modes(self) -> list[str]:
+    def preset_modes(self) -> list[str] | None:
         """Get the list of available preset modes."""
         return self._preset_modes
 
@@ -228,7 +229,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     ) -> None:
         """Turn on the fan."""
         await self.async_run_script(
-            self._action_scripts.get(CONF_ON_ACTION),
+            self._action_scripts[CONF_ON_ACTION],
             run_variables={
                 ATTR_PERCENTAGE: percentage,
                 ATTR_PRESET_MODE: preset_mode,
@@ -248,7 +249,7 @@ class TemplateFan(TemplateEntity, FanEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.async_run_script(
-            self._action_scripts.get(CONF_OFF_ACTION), context=self._context
+            self._action_scripts[CONF_OFF_ACTION], context=self._context
         )
 
         if self._template is None:

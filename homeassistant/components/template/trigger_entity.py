@@ -27,7 +27,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
-        AbstractTemplateEntity.__init__(self, hass, config)
+        AbstractTemplateEntity.__init__(self)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -42,13 +42,15 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         else:
             self._unique_id = unique_id
 
-    @callback
-    def _render_variables(self) -> dict:
-        run_variables = self.coordinator.data["run_variables"]
-        if isinstance(run_variables, dict):
-            return run_variables
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        return self.coordinator.referenced_blueprint
 
-        return {}
+    @callback
+    def _render_script_variables(self) -> dict:
+        """Render configured variables."""
+        return self.coordinator.data["run_variables"]
 
     @callback
     def _process_data(self) -> None:

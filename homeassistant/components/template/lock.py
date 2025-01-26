@@ -91,10 +91,10 @@ class TemplateLock(TemplateEntity, LockEntity):
         name = self._attr_name
         assert name
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
-        self.add_script(CONF_LOCK, config[CONF_LOCK], name, DOMAIN)
-        self.add_script(CONF_UNLOCK, config[CONF_UNLOCK], name, DOMAIN)
+        self.add_script(hass, CONF_LOCK, config[CONF_LOCK], name, DOMAIN)
+        self.add_script(hass, CONF_UNLOCK, config[CONF_UNLOCK], name, DOMAIN)
         if (action_id := CONF_OPEN) in config:
-            self.add_script(action_id, config[action_id], name, DOMAIN)
+            self.add_script(hass, action_id, config[action_id], name, DOMAIN)
             self._attr_supported_features |= LockEntityFeature.OPEN
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
         self._code_format: str | None = None

@@ -175,7 +175,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        assert name is not None
 
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._level_template = config.get(CONF_LEVEL_TEMPLATE)
@@ -191,11 +192,11 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._min_mireds_template = config.get(CONF_MIN_MIREDS_TEMPLATE)
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
-        for action_id in [CONF_ON_ACTION, CONF_OFF_ACTION]:
-            self.add_script(action_id, config[action_id], friendly_name, DOMAIN)
+        for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION):
+            self.add_script(hass, action_id, config[action_id], name, DOMAIN)
 
         color_modes = {ColorMode.ONOFF}
-        for action_id, color_mode in [
+        for action_id, color_mode in (
             (CONF_TEMPERATURE_ACTION, ColorMode.COLOR_TEMP),
             (CONF_LEVEL_ACTION, ColorMode.BRIGHTNESS),
             (CONF_COLOR_ACTION, ColorMode.HS),
@@ -203,17 +204,17 @@ class LightTemplate(TemplateEntity, LightEntity):
             (CONF_RGB_ACTION, ColorMode.RGB),
             (CONF_RGBW_ACTION, ColorMode.RGBW),
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
-        ]:
+        ):
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, friendly_name, DOMAIN)
+                self.add_script(hass, action_id, action_config, name, DOMAIN)
                 color_modes.add(color_mode)
 
         if (effect_config := config.get(CONF_EFFECT_ACTION)) is not None:
-            self.add_script(CONF_EFFECT_ACTION, effect_config, friendly_name, DOMAIN)
+            self.add_script(hass, CONF_EFFECT_ACTION, effect_config, name, DOMAIN)
 
         self._state = False
         self._brightness = None
-        self._temperature = None
+        self._temperature: int | None = None
         self._hs_color = None
         self._rgb_color = None
         self._rgbw_color = None
@@ -552,6 +553,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             and (effect_script := self._action_scripts.get(CONF_EFFECT_ACTION))
             is not None
         ):
+            assert self._effect_list is list
             effect = kwargs[ATTR_EFFECT]
             if effect not in self._effect_list:
                 _LOGGER.error(
