@@ -76,7 +76,7 @@ async def test_import(
     config = _split_config(config_base)
 
     assert result["type"] == "create_entry"
-    assert result["title"] == f"{db_name} ({config_base["host"]})"
+    assert result["title"] == f"{db_name} ({config_base['host']})"
     assert result["data"] == config["data"]
     assert result["options"] == config["options"]
 
@@ -179,7 +179,7 @@ async def test_import_update(
         domain=DOMAIN,
         data=split_config["data"],
         options=split_config["options"],
-        unique_id=f"{config_base["host"]}_{db_name}",
+        unique_id=f"{config_base['host']}_{db_name}",
     )
     entry.add_to_hass(hass)
 
