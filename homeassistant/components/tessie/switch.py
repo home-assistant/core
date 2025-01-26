@@ -63,12 +63,11 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         on_func=lambda: start_steering_wheel_heater,
         off_func=lambda: stop_steering_wheel_heater,
     ),
-)
-
-CHARGE_DESCRIPTION: TessieSwitchEntityDescription = TessieSwitchEntityDescription(
-    key="charge_state_charge_enable_request",
-    on_func=lambda: start_charging,
-    off_func=lambda: stop_charging,
+    TessieSwitchEntityDescription(
+        key="charge_state_charge_enable_request",
+        on_func=lambda: start_charging,
+        off_func=lambda: stop_charging,
+    ),
 )
 
 PARALLEL_UPDATES = 0
@@ -88,10 +87,6 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 for description in DESCRIPTIONS
                 if description.key in vehicle.data_coordinator.data
-            ),
-            (
-                TessieChargeSwitchEntity(vehicle, CHARGE_DESCRIPTION)
-                for vehicle in entry.runtime_data.vehicles
             ),
             (
                 TessieChargeFromGridSwitchEntity(energysite)
@@ -137,18 +132,6 @@ class TessieSwitchEntity(TessieEntity, SwitchEntity):
         """Turn off the Switch."""
         await self.run(self.entity_description.off_func())
         self.set((self.entity_description.key, False))
-
-
-class TessieChargeSwitchEntity(TessieSwitchEntity):
-    """Entity class for Tessie charge switch."""
-
-    @property
-    def is_on(self) -> bool:
-        """Return the state of the Switch."""
-
-        if (charge := self.get("charge_state_user_charge_enable_request")) is not None:
-            return charge
-        return self._value
 
 
 class TessieChargeFromGridSwitchEntity(TessieEnergyEntity, SwitchEntity):

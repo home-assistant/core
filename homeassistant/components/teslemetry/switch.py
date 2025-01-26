@@ -77,13 +77,12 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),
-)
-
-VEHICLE_CHARGE_DESCRIPTION = TeslemetrySwitchEntityDescription(
-    key="charge_state_user_charge_enable_request",
-    on_func=lambda api: api.charge_start(),
-    off_func=lambda api: api.charge_stop(),
-    scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
+    TeslemetrySwitchEntityDescription(
+        key="charge_state_charging_state",
+        on_func=lambda api: api.charge_start(),
+        off_func=lambda api: api.charge_stop(),
+        scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
+    ),
 )
 
 
@@ -103,12 +102,6 @@ async def async_setup_entry(
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
                 if description.key in vehicle.coordinator.data
-            ),
-            (
-                TeslemetryChargeSwitchEntity(
-                    vehicle, VEHICLE_CHARGE_DESCRIPTION, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
             ),
             (
                 TeslemetryChargeFromGridSwitchEntity(

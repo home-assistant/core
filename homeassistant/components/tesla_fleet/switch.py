@@ -77,13 +77,12 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),
-)
-
-VEHICLE_CHARGE_DESCRIPTION = TeslaFleetSwitchEntityDescription(
-    key="charge_state_user_charge_enable_request",
-    on_func=lambda api: api.charge_start(),
-    off_func=lambda api: api.charge_stop(),
-    scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
+    TeslaFleetSwitchEntityDescription(
+        key="charge_state_charging_state",
+        on_func=lambda api: api.charge_start(),
+        off_func=lambda api: api.charge_stop(),
+        scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
+    ),
 )
 
 
@@ -102,12 +101,6 @@ async def async_setup_entry(
                 )
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
-            ),
-            (
-                TeslaFleetChargeSwitchEntity(
-                    vehicle, VEHICLE_CHARGE_DESCRIPTION, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
             ),
             (
                 TeslaFleetChargeFromGridSwitchEntity(
@@ -170,17 +163,6 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         await handle_vehicle_command(self.entity_description.off_func(self.api))
         self._attr_is_on = False
         self.async_write_ha_state()
-
-
-class TeslaFleetChargeSwitchEntity(TeslaFleetVehicleSwitchEntity):
-    """Entity class for TeslaFleet charge switch."""
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-        if self._value is None:
-            self._attr_is_on = self.get("charge_state_charge_enable_request")
-        else:
-            self._attr_is_on = self._value
 
 
 class TeslaFleetChargeFromGridSwitchEntity(
