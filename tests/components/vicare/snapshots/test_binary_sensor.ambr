@@ -373,7 +373,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_all_entities[binary_sensor.model0_running-entry]
+# name: test_all_entities[binary_sensor.model0_one_time_charge-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -385,7 +385,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.model0_running',
+    'entity_id': 'binary_sensor.model0_one_time_charge',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -397,7 +397,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Running',
+    'original_name': 'One-time charge',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -406,14 +406,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[binary_sensor.model0_running-state]
+# name: test_all_entities[binary_sensor.model0_one_time_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'model0 Running',
+      'friendly_name': 'model0 One-time charge',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.model0_running',
+    'entity_id': 'binary_sensor.model0_one_time_charge',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
