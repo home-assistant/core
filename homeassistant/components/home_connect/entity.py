@@ -6,14 +6,14 @@ from aiohomeconnect.model import EventKey, HomeAppliance
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
 
 
-class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator], Entity):
+class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     """Generic Home Connect entity (base class)."""
 
     _attr_should_poll = False
