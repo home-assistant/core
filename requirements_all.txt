@@ -1585,7 +1585,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.7
+opower==0.8.8
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -1763,7 +1763,7 @@ pyEmby==1.10
 pyHik==0.3.2
 
 # homeassistant.components.homee
-pyHomee==1.2.3
+pyHomee==1.2.5
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
