@@ -25,7 +25,8 @@
           "gain": "Default volume gain (in dB) of the voice",
           "profiles": "Default audio profiles",
           "text_type": "Default text type",
-          "stt_model": "STT model"
+          "stt_model": "STT model",
+          "tts_timeout": "TTS timeout, seconds"
         }
       }
     }
