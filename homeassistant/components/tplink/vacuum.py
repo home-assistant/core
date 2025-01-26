@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -20,7 +19,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TPLinkConfigEntry, legacy_device_id
+from . import TPLinkConfigEntry
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
@@ -50,10 +49,6 @@ class TPLinkVacuumEntityDescription(
     StateVacuumEntityDescription, TPLinkModuleEntityDescription
 ):
     """Base class for vacuum entity description."""
-
-    unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
-        lambda device, desc: f"{legacy_device_id(device)}_{desc.key}"
-    )
 
 
 VACUUM_DESCRIPTIONS: tuple[TPLinkVacuumEntityDescription, ...] = (
@@ -98,7 +93,6 @@ async def async_setup_entry(
 class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
     """Representation of a tplink vacuum."""
 
-    _attr_name = None
     _attr_supported_features = (
         VacuumEntityFeature.STATE
         | VacuumEntityFeature.BATTERY
