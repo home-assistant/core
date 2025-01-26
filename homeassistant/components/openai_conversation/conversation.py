@@ -185,12 +185,16 @@ class OpenAIConversationEntity(
             except conversation.ConverseError as err:
                 return err.as_conversation_result()
 
-            options = self.entry.options
-            client = self.entry.runtime_data
-
-            tools = self._get_tools(session)
+            tools: list[ChatCompletionToolParam] | None = None
+            if session.llm_api:
+                tools = [
+                    _format_tool(tool, session.llm_api.custom_serializer)
+                    for tool in session.llm_api.tools
+                ]
 
             messages: list[ChatCompletionMessageParam] = []
+            client = self.entry.runtime_data
+
             stream = session.async_stream_chat_messages()
             chat_messages = await stream.asend(None)  # type: ignore[arg-type]
             while True:
@@ -245,14 +249,3 @@ class OpenAIConversationEntity(
         """Handle options update."""
         # Reload as we update device info + entity name + supported features
         await hass.config_entries.async_reload(entry.entry_id)
-
-    def _get_tools(
-        self, session: conversation.ChatSession
-    ) -> list[ChatCompletionToolParam] | None:
-        """Get the tools for the agent."""
-        if not session.llm_api:
-            return None
-        return [
-            _format_tool(tool, session.llm_api.custom_serializer)
-            for tool in session.llm_api.tools
-        ]

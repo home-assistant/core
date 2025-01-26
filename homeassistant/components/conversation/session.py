@@ -369,7 +369,7 @@ class ChatSession[_NativeT]:
                 content=json.dumps(tool_response),
                 tool_call_id=tool_input.tool_call_id,
             )
-
+            self.async_add_message(chat_message)
             tool_responses.append(chat_message)
         return tool_responses
 
@@ -405,6 +405,4 @@ class ChatSession[_NativeT]:
                 continue
 
             tool_responses = await self._async_call_tools(tool_inputs)
-            for tool_response in tool_responses:
-                self.async_add_message(tool_response)
             message_batch.extend(tool_responses)
