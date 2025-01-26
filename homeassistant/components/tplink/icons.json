@@ -133,6 +133,9 @@
       },
       "water_alert_timestamp": {
         "default": "mdi:clock-alert-outline"
+      },
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
       }
     },
     "number": {

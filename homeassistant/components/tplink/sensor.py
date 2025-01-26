@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Feature
+from kasa.smart.modules.clean import ErrorCode as VacuumError
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -118,6 +119,12 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     ),
     TPLinkSensorEntityDescription(
         key="alarm_source",
+    ),
+    TPLinkSensorEntityDescription(
+        key="vacuum_error",
+        device_class=SensorDeviceClass.ENUM,
+        options=[name.lower() for name in VacuumError._member_names_],
+        convert_fn=lambda x: x.name.lower(),
     ),
 )
 
