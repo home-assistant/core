@@ -7,6 +7,7 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyheos"],
+  "quality_scale": "silver",
   "requirements": ["pyheos==1.0.0"],
   "single_config_entry": true,
   "ssdp": [
