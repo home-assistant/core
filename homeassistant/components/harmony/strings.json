@@ -53,7 +53,7 @@
     },
     "change_channel": {
       "name": "Change channel",
-      "description": "Sends the change channel command to the Harmony Hub.",
+      "description": "Sends a change channel command to the Harmony Hub.",
       "fields": {
         "channel": {
           "name": "Channel",
