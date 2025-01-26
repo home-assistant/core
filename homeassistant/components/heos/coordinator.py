@@ -33,11 +33,13 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type HeosConfigEntry = ConfigEntry[HeosCoordinator]
+
 
 class HeosCoordinator(DataUpdateCoordinator[None]):
     """Define the HEOS integration coordinator."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: HeosConfigEntry) -> None:
         """Set up the coordinator and set in config_entry."""
         self.host: str = config_entry.data[CONF_HOST]
         credentials: Credentials | None = None

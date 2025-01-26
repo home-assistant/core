@@ -1763,7 +1763,7 @@ pyEmby==1.10
 pyHik==0.3.2
 
 # homeassistant.components.homee
-pyHomee==1.2.3
+pyHomee==1.2.5
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -3106,7 +3106,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.01.15
+yt-dlp[default]==2025.01.26
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
