@@ -104,7 +104,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
         self._pipeline_task_queue: asyncio.Queue[Coroutine] = asyncio.Queue()
-        self._audio_chunk_timeout: float = 3.0
+        self._audio_chunk_timeout: float = 2.0
         self._run_pipeline_task: asyncio.Task | None = None
         self._pipeline_had_error: bool = False
         self._tts_done = asyncio.Event()
@@ -296,11 +296,14 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 await self._tts_done.wait()
 
             await self._pipeline_task_queue.put(self._run_pipeline())
+
         except TimeoutError:
             if self.voip_device.current_call is not None:
                 self.hass.data[DOMAIN].protocol.hang_up(self.voip_device.current_call)
             self.disconnect()  # caller hung up
             self._clear_pipeline_task_queue()
+        except asyncio.exceptions.CancelledError:
+            _LOGGER.exception("Pipeline task cancelled")
         finally:
             # Stop audio stream
             await self._audio_queue.put(None)

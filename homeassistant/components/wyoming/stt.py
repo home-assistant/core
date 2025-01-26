@@ -1,5 +1,6 @@
 """Support for Wyoming speech-to-text services."""
 
+import asyncio
 from collections.abc import AsyncIterable
 import logging
 
@@ -116,7 +117,11 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                 await client.write_event(AudioStop().event())
 
                 while True:
-                    event = await client.read_event()
+                    try:
+                        event = await client.read_event()
+                    except asyncio.exceptions.CancelledError:
+                        _LOGGER.debug("Event read cancelled, try again I guess?")
+                        continue
                     if event is None:
                         _LOGGER.debug("Connection lost")
                         return stt.SpeechResult(None, stt.SpeechResultState.ERROR)
