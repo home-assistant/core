@@ -1,0 +1,199 @@
+# serializer version: 1
+# name: test_all_sensors[sensor.ijdok_long_parking_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ijdok_long_parking_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Long parking capacity',
+    'platform': 'garages_amsterdam',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'long_capacity',
+    'unique_id': 'IJDok-long_capacity',
+    'unit_of_measurement': 'cars',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_long_parking_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by municipality of Amsterdam',
+      'friendly_name': 'IJDok Long parking capacity',
+      'unit_of_measurement': 'cars',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ijdok_long_parking_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_long_parking_free_space-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ijdok_long_parking_free_space',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Long parking free space',
+    'platform': 'garages_amsterdam',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'free_space_long',
+    'unique_id': 'IJDok-free_space_long',
+    'unit_of_measurement': 'cars',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_long_parking_free_space-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by municipality of Amsterdam',
+      'friendly_name': 'IJDok Long parking free space',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'cars',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ijdok_long_parking_free_space',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_short_parking_capacity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ijdok_short_parking_capacity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Short parking capacity',
+    'platform': 'garages_amsterdam',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'short_capacity',
+    'unique_id': 'IJDok-short_capacity',
+    'unit_of_measurement': 'cars',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_short_parking_capacity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by municipality of Amsterdam',
+      'friendly_name': 'IJDok Short parking capacity',
+      'unit_of_measurement': 'cars',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ijdok_short_parking_capacity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_short_parking_free_space-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ijdok_short_parking_free_space',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Short parking free space',
+    'platform': 'garages_amsterdam',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'free_space_short',
+    'unique_id': 'IJDok-free_space_short',
+    'unit_of_measurement': 'cars',
+  })
+# ---
+# name: test_all_sensors[sensor.ijdok_short_parking_free_space-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by municipality of Amsterdam',
+      'friendly_name': 'IJDok Short parking free space',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'cars',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ijdok_short_parking_free_space',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---

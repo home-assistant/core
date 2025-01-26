@@ -84,14 +84,18 @@ def mock_async_subprocess() -> Generator[MagicMock]:
     return async_popen
 
 
-@pytest.mark.usefixtures("mock_sys", "mock_venv")
-def test_install(mock_popen: MagicMock, mock_env_copy: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_venv")
+def test_install(
+    mock_popen: MagicMock, mock_env_copy: MagicMock, mock_sys: MagicMock
+) -> None:
     """Test an install attempt on a package that doesn't exist."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ, False)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
+            mock_sys.executable,
+            "-m",
             "uv",
             "pip",
             "install",
@@ -109,8 +113,10 @@ def test_install(mock_popen: MagicMock, mock_env_copy: MagicMock) -> None:
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_sys", "mock_venv")
-def test_install_with_timeout(mock_popen: MagicMock, mock_env_copy: MagicMock) -> None:
+@pytest.mark.usefixtures("mock_venv")
+def test_install_with_timeout(
+    mock_popen: MagicMock, mock_env_copy: MagicMock, mock_sys: MagicMock
+) -> None:
     """Test an install attempt on a package that doesn't exist with a timeout set."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ, False, timeout=10)
@@ -118,6 +124,8 @@ def test_install_with_timeout(mock_popen: MagicMock, mock_env_copy: MagicMock) -
     env["HTTP_TIMEOUT"] = "10"
     assert mock_popen.mock_calls[0] == call(
         [
+            mock_sys.executable,
+            "-m",
             "uv",
             "pip",
             "install",
@@ -135,14 +143,16 @@ def test_install_with_timeout(mock_popen: MagicMock, mock_env_copy: MagicMock) -
     assert mock_popen.return_value.communicate.call_count == 1
 
 
-@pytest.mark.usefixtures("mock_sys", "mock_venv")
-def test_install_upgrade(mock_popen, mock_env_copy) -> None:
+@pytest.mark.usefixtures("mock_venv")
+def test_install_upgrade(mock_popen, mock_env_copy, mock_sys) -> None:
     """Test an upgrade attempt on a package."""
     env = mock_env_copy()
     assert package.install_package(TEST_NEW_REQ)
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
+            mock_sys.executable,
+            "-m",
             "uv",
             "pip",
             "install",
@@ -183,6 +193,8 @@ def test_install_target(
     mock_venv.return_value = is_venv
     mock_sys.platform = "linux"
     args = [
+        mock_sys.executable,
+        "-m",
         "uv",
         "pip",
         "install",
@@ -226,6 +238,8 @@ def test_install_pip_compatibility_no_workaround(
     mock_venv.return_value = in_venv
     mock_sys.platform = "linux"
     args = [
+        mock_sys.executable,
+        "-m",
         "uv",
         "pip",
         "install",
@@ -257,6 +271,8 @@ def test_install_pip_compatibility_use_workaround(
     mock_sys.executable = python
     site_dir = "/site_dir"
     args = [
+        mock_sys.executable,
+        "-m",
         "uv",
         "pip",
         "install",
@@ -292,8 +308,8 @@ def test_install_error(caplog: pytest.LogCaptureFixture, mock_popen) -> None:
         assert record.levelname == "ERROR"
 
 
-@pytest.mark.usefixtures("mock_sys", "mock_venv")
-def test_install_constraint(mock_popen, mock_env_copy) -> None:
+@pytest.mark.usefixtures("mock_venv")
+def test_install_constraint(mock_popen, mock_env_copy, mock_sys) -> None:
     """Test install with constraint file on not installed package."""
     env = mock_env_copy()
     constraints = "constraints_file.txt"
@@ -301,6 +317,8 @@ def test_install_constraint(mock_popen, mock_env_copy) -> None:
     assert mock_popen.call_count == 2
     assert mock_popen.mock_calls[0] == call(
         [
+            mock_sys.executable,
+            "-m",
             "uv",
             "pip",
             "install",
@@ -392,3 +410,47 @@ def test_check_package_previous_failed_install() -> None:
     with patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")
+
+
+@pytest.mark.parametrize("dockerenv", [True, False], ids=["dockerenv", "not_dockerenv"])
+@pytest.mark.parametrize(
+    "containerenv", [True, False], ids=["containerenv", "not_containerenv"]
+)
+@pytest.mark.parametrize(
+    "kubernetes_service_host", [True, False], ids=["kubernetes", "not_kubernetes"]
+)
+@pytest.mark.parametrize(
+    "is_official_image", [True, False], ids=["official_image", "not_official_image"]
+)
+async def test_is_docker_env(
+    dockerenv: bool,
+    containerenv: bool,
+    kubernetes_service_host: bool,
+    is_official_image: bool,
+) -> None:
+    """Test is_docker_env."""
+
+    def new_path_mock(path: str):
+        mock = Mock()
+        if path == "/.dockerenv":
+            mock.exists.return_value = dockerenv
+        elif path == "/run/.containerenv":
+            mock.exists.return_value = containerenv
+        return mock
+
+    env = {}
+    if kubernetes_service_host:
+        env["KUBERNETES_SERVICE_HOST"] = "True"
+
+    package.is_docker_env.cache_clear()
+    with (
+        patch("homeassistant.util.package.Path", side_effect=new_path_mock),
+        patch(
+            "homeassistant.util.package.is_official_image",
+            return_value=is_official_image,
+        ),
+        patch.dict(os.environ, env),
+    ):
+        assert package.is_docker_env() is any(
+            [dockerenv, containerenv, kubernetes_service_host, is_official_image]
+        )

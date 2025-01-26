@@ -120,7 +120,7 @@ class ElkCounter(ElkSensor):
     _attr_icon = "mdi:numeric"
     _element: Counter
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
 
 
@@ -153,7 +153,7 @@ class ElkKeypad(ElkSensor):
         attrs["last_keypress"] = self._element.last_keypress
         return attrs
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = temperature_to_state(
             self._element.temperature, UNDEFINED_TEMPERATURE
         )
@@ -173,7 +173,7 @@ class ElkPanel(ElkSensor):
         attrs["system_trouble_status"] = self._element.system_trouble_status
         return attrs
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         if self._elk.is_connected():
             self._attr_native_value = (
                 "Paused" if self._element.remote_programming_status else "Connected"
@@ -188,7 +188,7 @@ class ElkSetting(ElkSensor):
     _attr_translation_key = "setting"
     _element: Setting
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         self._attr_native_value = self._element.value
 
     @property
@@ -257,7 +257,7 @@ class ElkZone(ElkSensor):
             return UnitOfElectricPotential.VOLT
         return None
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         if self._element.definition == ZoneType.TEMPERATURE:
             self._attr_native_value = temperature_to_state(
                 self._element.temperature, UNDEFINED_TEMPERATURE

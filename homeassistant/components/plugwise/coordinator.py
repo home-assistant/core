@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 
+from packaging.version import Version
 from plugwise import PlugwiseData, Smile
 from plugwise.exceptions import (
     ConnectionFailedError,
@@ -53,7 +54,6 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
             username=self.config_entry.data.get(CONF_USERNAME, DEFAULT_USERNAME),
             password=self.config_entry.data[CONF_PASSWORD],
             port=self.config_entry.data.get(CONF_PORT, DEFAULT_PORT),
-            timeout=30,
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
         self._current_devices: set[str] = set()
@@ -61,31 +61,44 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[PlugwiseData]):
 
     async def _connect(self) -> None:
         """Connect to the Plugwise Smile."""
-        self._connected = await self.api.connect()
-        self.api.get_all_devices()
+        version = await self.api.connect()
+        self._connected = isinstance(version, Version)
+        if self._connected:
+            self.api.get_all_gateway_entities()
 
     async def _async_update_data(self) -> PlugwiseData:
         """Fetch data from Plugwise."""
-        data = PlugwiseData({}, {})
         try:
             if not self._connected:
                 await self._connect()
             data = await self.api.async_update()
         except ConnectionFailedError as err:
-            raise UpdateFailed("Failed to connect") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_connect",
+            ) from err
         except InvalidAuthentication as err:
-            raise ConfigEntryError("Authentication failed") from err
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
-                "Invalid XML data, or error indication received from the Plugwise Adam/Smile/Stretch"
+                translation_domain=DOMAIN,
+                translation_key="invalid_xml_data",
             ) from err
         except PlugwiseError as err:
-            raise UpdateFailed("Data incomplete or missing") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="data_incomplete_or_missing",
+            ) from err
         except UnsupportedDeviceError as err:
-            raise ConfigEntryError("Device with unsupported firmware") from err
-        else:
-            self._async_add_remove_devices(data, self.config_entry)
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_firmware",
+            ) from err
 
+        self._async_add_remove_devices(data, self.config_entry)
         return data
 
     def _async_add_remove_devices(self, data: PlugwiseData, entry: ConfigEntry) -> None:

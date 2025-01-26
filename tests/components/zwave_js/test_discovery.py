@@ -1,9 +1,12 @@
 """Test entity discovery for device-specific schemas for the Z-Wave JS integration."""
 
 import pytest
+from zwave_js_server.event import Event
+from zwave_js_server.model.node import Node
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -27,6 +30,8 @@ from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 async def test_aeon_smart_switch_6_state(
@@ -380,3 +385,61 @@ async def test_light_device_class_is_null(
     node = light_device_class_is_null
     assert node.device_class is None
     assert hass.states.get("light.bar_display_cases")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rediscovery(
+    hass: HomeAssistant,
+    siren_neo_coolcam: Node,
+    integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that we don't rediscover known values."""
+    node = siren_neo_coolcam
+    entity_id = "select.siren_alarm_doorbell_sound_selection"
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "Beep"
+
+    event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": 36,
+            "args": {
+                "commandClassName": "Configuration",
+                "commandClass": 112,
+                "endpoint": 0,
+                "property": 6,
+                "newValue": 9,
+                "prevValue": 10,
+                "propertyName": "Doorbell Sound Selection",
+            },
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == "Beep Beep"
+    assert "Platform zwave_js does not generate unique IDs" not in caplog.text
+
+
+async def test_aeotec_smart_switch_7(
+    hass: HomeAssistant,
+    aeotec_smart_switch_7: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that Smart Switch 7 has a light and a switch entity."""
+    state = hass.states.get("light.smart_switch_7")
+    assert state
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.HS,
+    ]
+
+    state = hass.states.get("switch.smart_switch_7")
+    assert state

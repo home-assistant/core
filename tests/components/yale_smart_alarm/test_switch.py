@@ -8,8 +8,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient import YaleSmartAlarmData
 
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SERVICE_TURN_OFF
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -44,3 +48,15 @@ async def test_switch(
 
     state = hass.states.get("switch.device1_autolock")
     assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "switch.device1_autolock",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("switch.device1_autolock")
+    assert state.state == STATE_ON

@@ -95,7 +95,7 @@ async def async_setup_entry(
 
 
 class EcovacsNumberEntity(
-    EcovacsDescriptionEntity[CapabilitySet[EventT, int]],
+    EcovacsDescriptionEntity[CapabilitySet[EventT, [int]]],
     NumberEntity,
 ):
     """Ecovacs number entity."""

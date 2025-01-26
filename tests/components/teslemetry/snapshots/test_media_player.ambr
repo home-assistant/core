@@ -29,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': <MediaPlayerEntityFeature: 16437>,
     'translation_key': 'media',
-    'unique_id': 'LRWXF7EK4KC700000-media',
+    'unique_id': 'LRW3F7EK4NC700000-media',
     'unit_of_measurement': None,
   })
 # ---
@@ -67,7 +67,6 @@
       'media_title': '',
       'source': 'Spotify',
       'supported_features': <MediaPlayerEntityFeature: 16437>,
-      'volume_level': 0.25806775026025003,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.test_media_player',
@@ -107,7 +106,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'media',
-    'unique_id': 'LRWXF7EK4KC700000-media',
+    'unique_id': 'LRW3F7EK4NC700000-media',
     'unit_of_measurement': None,
   })
 # ---

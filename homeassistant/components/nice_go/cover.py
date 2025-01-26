@@ -2,17 +2,27 @@
 
 from typing import Any
 
+from aiohttp import ClientError
+from nice_go import ApiError
+
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NiceGOConfigEntry
+from .const import DOMAIN
 from .entity import NiceGOEntity
 
+DEVICE_CLASSES = {
+    "WallStation": CoverDeviceClass.GARAGE,
+    "Mms100": CoverDeviceClass.GATE,
+    "WallStation_ESP32": CoverDeviceClass.GARAGE,
+}
 PARALLEL_UPDATES = 1
 
 
@@ -35,7 +45,11 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_name = None
-    _attr_device_class = CoverDeviceClass.GARAGE
+
+    @property
+    def device_class(self) -> CoverDeviceClass:
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASSES.get(self.data.type, CoverDeviceClass.GARAGE)
 
     @property
     def is_closed(self) -> bool:
@@ -62,11 +76,25 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
         if self.is_closed:
             return
 
-        await self.coordinator.api.close_barrier(self._device_id)
+        try:
+            await self.coordinator.api.close_barrier(self._device_id)
+        except (ApiError, ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="close_cover_error",
+                translation_placeholders={"exception": str(err)},
+            ) from err
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
         if self.is_opened:
             return
 
-        await self.coordinator.api.open_barrier(self._device_id)
+        try:
+            await self.coordinator.api.open_barrier(self._device_id)
+        except (ApiError, ClientError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="open_cover_error",
+                translation_placeholders={"exception": str(err)},
+            ) from err

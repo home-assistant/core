@@ -17,6 +17,7 @@ from homeassistant.components.nina.const import (
     ATTR_SENT,
     ATTR_SEVERITY,
     ATTR_START,
+    ATTR_WEB,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -77,6 +78,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         assert state_w1.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
         assert state_w1.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w1.attributes.get(ATTR_RECOMMENDED_ACTIONS) == ""
+        assert state_w1.attributes.get(ATTR_WEB) == "https://www.wettergefahren.de"
         assert (
             state_w1.attributes.get(ATTR_AFFECTED_AREAS)
             == "Gemeinde Oberreichenbach, Gemeinde Neuweiler, Stadt Nagold, Stadt Neubulach, Gemeinde Schömberg, Gemeinde Simmersfeld, Gemeinde Simmozheim, Gemeinde Rohrdorf, Gemeinde Ostelsheim, Gemeinde Ebhausen, Gemeinde Egenhausen, Gemeinde Dobel, Stadt Bad Liebenzell, Stadt Solingen, Stadt Haiterbach, Stadt Bad Herrenalb, Gemeinde Höfen an der Enz, Gemeinde Gechingen, Gemeinde Enzklösterle, Gemeinde Gutach (Schwarzwaldbahn) und 3392 weitere."
@@ -98,6 +100,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         assert state_w2.attributes.get(ATTR_SENDER) is None
         assert state_w2.attributes.get(ATTR_SEVERITY) is None
         assert state_w2.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w2.attributes.get(ATTR_WEB) is None
         assert state_w2.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w2.attributes.get(ATTR_ID) is None
         assert state_w2.attributes.get(ATTR_SENT) is None
@@ -116,6 +119,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         assert state_w3.attributes.get(ATTR_SENDER) is None
         assert state_w3.attributes.get(ATTR_SEVERITY) is None
         assert state_w3.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w3.attributes.get(ATTR_WEB) is None
         assert state_w3.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
@@ -134,6 +138,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         assert state_w4.attributes.get(ATTR_SENDER) is None
         assert state_w4.attributes.get(ATTR_SEVERITY) is None
         assert state_w4.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w4.attributes.get(ATTR_WEB) is None
         assert state_w4.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
@@ -152,6 +157,7 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         assert state_w5.attributes.get(ATTR_SENDER) is None
         assert state_w5.attributes.get(ATTR_SEVERITY) is None
         assert state_w5.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w5.attributes.get(ATTR_WEB) is None
         assert state_w5.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None
@@ -199,6 +205,7 @@ async def test_sensors_without_corona_filter(
             state_w1.attributes.get(ATTR_RECOMMENDED_ACTIONS)
             == "Waschen sich regelmäßig und gründlich die Hände."
         )
+        assert state_w1.attributes.get(ATTR_WEB) == ""
         assert (
             state_w1.attributes.get(ATTR_AFFECTED_AREAS)
             == "Bundesland: Freie Hansestadt Bremen, Land Berlin, Land Hessen, Land Nordrhein-Westfalen, Land Brandenburg, Freistaat Bayern, Land Mecklenburg-Vorpommern, Land Rheinland-Pfalz, Freistaat Sachsen, Land Schleswig-Holstein, Freie und Hansestadt Hamburg, Freistaat Thüringen, Land Niedersachsen, Land Saarland, Land Sachsen-Anhalt, Land Baden-Württemberg"
@@ -227,6 +234,7 @@ async def test_sensors_without_corona_filter(
         assert state_w2.attributes.get(ATTR_SENDER) == "Deutscher Wetterdienst"
         assert state_w2.attributes.get(ATTR_SEVERITY) == "Minor"
         assert state_w2.attributes.get(ATTR_RECOMMENDED_ACTIONS) == ""
+        assert state_w2.attributes.get(ATTR_WEB) == "https://www.wettergefahren.de"
         assert state_w2.attributes.get(ATTR_ID) == "mow.DE-NW-BN-SE030-20201014-30-000"
         assert state_w2.attributes.get(ATTR_SENT) == "2021-10-11T05:20:00+01:00"
         assert state_w2.attributes.get(ATTR_START) == "2021-11-01T05:20:00+01:00"
@@ -244,6 +252,7 @@ async def test_sensors_without_corona_filter(
         assert state_w3.attributes.get(ATTR_SENDER) is None
         assert state_w3.attributes.get(ATTR_SEVERITY) is None
         assert state_w3.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w3.attributes.get(ATTR_WEB) is None
         assert state_w3.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w3.attributes.get(ATTR_ID) is None
         assert state_w3.attributes.get(ATTR_SENT) is None
@@ -262,6 +271,7 @@ async def test_sensors_without_corona_filter(
         assert state_w4.attributes.get(ATTR_SENDER) is None
         assert state_w4.attributes.get(ATTR_SEVERITY) is None
         assert state_w4.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w4.attributes.get(ATTR_WEB) is None
         assert state_w4.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w4.attributes.get(ATTR_ID) is None
         assert state_w4.attributes.get(ATTR_SENT) is None
@@ -280,6 +290,7 @@ async def test_sensors_without_corona_filter(
         assert state_w5.attributes.get(ATTR_SENDER) is None
         assert state_w5.attributes.get(ATTR_SEVERITY) is None
         assert state_w5.attributes.get(ATTR_RECOMMENDED_ACTIONS) is None
+        assert state_w5.attributes.get(ATTR_WEB) is None
         assert state_w5.attributes.get(ATTR_AFFECTED_AREAS) is None
         assert state_w5.attributes.get(ATTR_ID) is None
         assert state_w5.attributes.get(ATTR_SENT) is None

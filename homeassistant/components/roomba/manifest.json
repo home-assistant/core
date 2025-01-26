@@ -1,7 +1,7 @@
 {
   "domain": "roomba",
   "name": "iRobot Roomba and Braava",
-  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn", "@Xitee1", "@Orhideous"],
+  "codeowners": ["@pschmitt", "@cyr-ius", "@shenxn", "@Orhideous"],
   "config_flow": true,
   "dhcp": [
     {

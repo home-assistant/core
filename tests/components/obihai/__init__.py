@@ -1,7 +1,7 @@
 """Tests for the Obihai Integration."""
 
-from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 USER_INPUT = {
     CONF_HOST: "10.10.10.30",
@@ -9,7 +9,7 @@ USER_INPUT = {
     CONF_USERNAME: "admin",
 }
 
-DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="obi200",
     ip="192.168.1.100",
     macaddress="9cadef000000",

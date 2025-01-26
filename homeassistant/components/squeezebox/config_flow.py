@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -18,6 +17,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
 
@@ -200,7 +200,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_edit()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(

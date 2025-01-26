@@ -81,6 +81,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name="Node/Pro data",
         update_interval=UPDATE_INTERVAL,
         update_method=async_get_data,

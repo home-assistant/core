@@ -1,0 +1,48 @@
+{
+  "entity": {
+    "sensor": {
+      "power_production": {
+        "default": "mdi:flash"
+      },
+      "energy_production_today": {
+        "default": "mdi:solar-power"
+      },
+      "energy_production_month": {
+        "default": "mdi:solar-power"
+      },
+      "energy_production_total": {
+        "default": "mdi:solar-power"
+      },
+      "out_ac_power": {
+        "default": "mdi:flash"
+      },
+      "out_ac_energy_total": {
+        "default": "mdi:solar-power"
+      },
+      "flow_now": {
+        "default": "mdi:flash"
+      },
+      "state_of_charge": {
+        "default": "mdi:home-battery"
+      },
+      "discharged_today": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "discharged_month": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "discharged_total": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "charged_today": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "charged_month": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "charged_total": {
+        "default": "mdi:battery-arrow-up"
+      }
+    }
+  }
+}

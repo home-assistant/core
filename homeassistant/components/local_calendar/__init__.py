@@ -11,15 +11,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import slugify
 
-from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN, STORAGE_PATH
 from .store import LocalCalendarStore
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
-
-STORAGE_PATH = ".storage/local_calendar.{key}.ics"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

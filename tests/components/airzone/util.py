@@ -28,6 +28,7 @@ from aioairzone.const import (
     API_HEAT_STAGES,
     API_HUMIDITY,
     API_MAC,
+    API_MASTER_ZONE_ID,
     API_MAX_TEMP,
     API_MIN_TEMP,
     API_MODE,
@@ -54,6 +55,7 @@ from aioairzone.const import (
     API_WS_AZ,
     API_WS_TYPE,
     API_ZONE_ID,
+    DEFAULT_SYSTEM_ID,
 )
 
 from homeassistant.components.airzone.const import DOMAIN
@@ -62,13 +64,18 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-CONFIG = {
+USER_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 3000,
 }
 
+CONFIG = {
+    **USER_INPUT,
+    CONF_ID: DEFAULT_SYSTEM_ID,
+}
+
 CONFIG_ID1 = {
-    **CONFIG,
+    **USER_INPUT,
     CONF_ID: 1,
 }
 
@@ -214,6 +221,7 @@ HVAC_MOCK = {
                     API_FLOOR_DEMAND: 0,
                     API_HEAT_ANGLE: 0,
                     API_COLD_ANGLE: 0,
+                    API_MASTER_ZONE_ID: None,
                 },
             ]
         },
@@ -272,6 +280,37 @@ HVAC_MOCK = {
                 },
             ]
         },
+        {
+            API_DATA: [
+                {
+                    API_SYSTEM_ID: 4,
+                    API_ZONE_ID: 1,
+                    API_NAME: "Aux Heat",
+                    API_ON: 1,
+                    API_COOL_SET_POINT: 20,
+                    API_COOL_MAX_TEMP: 30,
+                    API_COOL_MIN_TEMP: 15,
+                    API_HEAT_SET_POINT: 20,
+                    API_HEAT_MAX_TEMP: 30,
+                    API_HEAT_MIN_TEMP: 15,
+                    API_MAX_TEMP: 30,
+                    API_MIN_TEMP: 15,
+                    API_SET_POINT: 20,
+                    API_ROOM_TEMP: 22,
+                    API_MODES: [1, 2, 3, 4, 5, 6],
+                    API_MODE: 6,
+                    API_COLD_STAGES: 0,
+                    API_COLD_STAGE: 0,
+                    API_HEAT_STAGES: 0,
+                    API_HEAT_STAGE: 0,
+                    API_HUMIDITY: 0,
+                    API_UNITS: 0,
+                    API_ERRORS: [],
+                    API_AIR_DEMAND: 0,
+                    API_FLOOR_DEMAND: 0,
+                },
+            ]
+        },
     ]
 }
 
@@ -326,6 +365,7 @@ async def async_init_integration(
     """Set up the Airzone integration in Home Assistant."""
 
     config_entry = MockConfigEntry(
+        minor_version=2,
         data=CONFIG,
         entry_id="6e7a0798c1734ba81d26ced0e690eaec",
         domain=DOMAIN,

@@ -17,7 +17,7 @@
       'pref_disable_polling': False,
       'source': 'user',
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': 'AA:BB:CC:DD:EE:FF',
       'version': 1,
     }),
     'device': dict({

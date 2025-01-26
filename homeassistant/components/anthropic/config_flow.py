@@ -87,10 +87,13 @@ class AnthropicConfigFlow(ConfigFlow, domain=DOMAIN):
             except anthropic.APIConnectionError:
                 errors["base"] = "cannot_connect"
             except anthropic.APIStatusError as e:
-                if isinstance(e.body, dict):
-                    errors["base"] = e.body.get("error", {}).get("type", "unknown")
-                else:
-                    errors["base"] = "unknown"
+                errors["base"] = "unknown"
+                if (
+                    isinstance(e.body, dict)
+                    and (error := e.body.get("error"))
+                    and error.get("type") == "authentication_error"
+                ):
+                    errors["base"] = "authentication_error"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -118,7 +121,6 @@ class AnthropicOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )

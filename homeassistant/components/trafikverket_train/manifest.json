@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_train",
   "iot_class": "cloud_polling",
   "loggers": ["pytrafikverket"],
-  "requirements": ["pytrafikverket==1.0.0"]
+  "requirements": ["pytrafikverket==1.1.1"]
 }

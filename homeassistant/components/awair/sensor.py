@@ -46,7 +46,7 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
 )
-from .coordinator import AwairDataUpdateCoordinator, AwairResult
+from .coordinator import AwairConfigEntry, AwairDataUpdateCoordinator
 
 DUST_ALIASES = [API_PM25, API_PM10]
 
@@ -132,15 +132,14 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AwairConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Awair sensor entity based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entities = []
 
-    data: list[AwairResult] = coordinator.data.values()
-    for result in data:
+    for result in coordinator.data.values():
         if result.air_data:
             entities.append(AwairSensor(result.device, coordinator, SENSOR_TYPE_SCORE))
             device_sensors = result.air_data.sensors.keys()

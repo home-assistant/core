@@ -1,0 +1,127 @@
+# serializer version: 1
+# name: test_record_service[/test/recording_{{ entity_id }}.mpg-/test/recording_<entity camera.demo_camera=streaming>.mpg-expected_issues1]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'camera',
+    'is_fixable': True,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'deprecated_filename_template_camera.demo_camera_record',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_filename_template',
+    'translation_placeholders': dict({
+      'entity_id': 'camera.demo_camera',
+      'service': 'camera.record',
+    }),
+  })
+# ---
+# name: test_record_service[/test/recording_{{ entity_id.entity_id }}.mpg-/test/recording_camera.demo_camera.mpg-expected_issues3]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'camera',
+    'is_fixable': True,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'deprecated_filename_template_camera.demo_camera_record',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_filename_template',
+    'translation_placeholders': dict({
+      'entity_id': 'camera.demo_camera',
+      'service': 'camera.record',
+    }),
+  })
+# ---
+# name: test_record_service[/test/recording_{{ entity_id.name }}.mpg-/test/recording_Demo camera.mpg-expected_issues2]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'camera',
+    'is_fixable': True,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'deprecated_filename_template_camera.demo_camera_record',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_filename_template',
+    'translation_placeholders': dict({
+      'entity_id': 'camera.demo_camera',
+      'service': 'camera.record',
+    }),
+  })
+# ---
+# name: test_snapshot_service[/test/snapshot_{{ entity_id }}.jpg-/test/snapshot_<entity camera.demo_camera=streaming>.jpg-expected_issues1]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'camera',
+    'is_fixable': True,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'deprecated_filename_template_camera.demo_camera_snapshot',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_filename_template',
+    'translation_placeholders': dict({
+      'entity_id': 'camera.demo_camera',
+      'service': 'camera.snapshot',
+    }),
+  })
+# ---
+# name: test_snapshot_service[/test/snapshot_{{ entity_id.entity_id }}.jpg-/test/snapshot_camera.demo_camera.jpg-expected_issues3]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'camera',
+    'is_fixable': True,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'deprecated_filename_template_camera.demo_camera_snapshot',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_filename_template',
+    'translation_placeholders': dict({
+      'entity_id': 'camera.demo_camera',
+      'service': 'camera.snapshot',
+    }),
+  })
+# ---
+# name: test_snapshot_service[/test/snapshot_{{ entity_id.name }}.jpg-/test/snapshot_Demo camera.jpg-expected_issues2]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'camera',
+    'is_fixable': True,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'deprecated_filename_template_camera.demo_camera_snapshot',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'deprecated_filename_template',
+    'translation_placeholders': dict({
+      'entity_id': 'camera.demo_camera',
+      'service': 'camera.snapshot',
+    }),
+  })
+# ---

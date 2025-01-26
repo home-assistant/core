@@ -40,6 +40,8 @@ from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 CONF_MAX = "max"
 CONF_MIN = "min"
 CONF_PATTERN = "pattern"

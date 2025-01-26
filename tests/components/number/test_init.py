@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -834,6 +834,69 @@ async def test_custom_unit_change(
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(default_value))
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == default_unit
+
+
+async def test_translated_unit(
+    hass: HomeAssistant,
+) -> None:
+    """Test translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = common.MockNumberEntity(
+            name="Test",
+            native_value=123,
+            unique_id="very_unique",
+        )
+        entity0.entity_description = NumberEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+        )
+        setup_test_component_platform(hass, DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+
+        entity_id = entity0.entity_id
+        state = hass.states.get(entity_id)
+        assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "Tests"
+
+
+async def test_translated_unit_with_native_unit_raises(
+    hass: HomeAssistant,
+) -> None:
+    """Test that translated unit."""
+
+    with patch(
+        "homeassistant.helpers.service.translation.async_get_translations",
+        return_value={
+            "component.test.entity.number.test_translation_key.unit_of_measurement": "Tests"
+        },
+    ):
+        entity0 = common.MockNumberEntity(
+            name="Test",
+            native_value=123,
+            unique_id="very_unique",
+        )
+        entity0.entity_description = NumberEntityDescription(
+            "test",
+            translation_key="test_translation_key",
+            native_unit_of_measurement="bad_unit",
+        )
+        setup_test_component_platform(hass, DOMAIN, [entity0])
+
+        assert await async_setup_component(
+            hass, "number", {"number": {"platform": "test"}}
+        )
+        await hass.async_block_till_done()
+        # Setup fails so entity_id is None
+        assert entity0.entity_id is None
 
 
 def test_device_classes_aligned() -> None:

@@ -35,7 +35,7 @@ class MockRow:
         self.event_data = json.dumps(data, cls=JSONEncoder)
         self.data = data
         self.time_fired = dt_util.utcnow()
-        self.time_fired_ts = dt_util.utc_to_timestamp(self.time_fired)
+        self.time_fired_ts = self.time_fired.timestamp()
         self.context_parent_id_bin = (
             ulid_to_bytes_or_none(context.parent_id) if context else None
         )

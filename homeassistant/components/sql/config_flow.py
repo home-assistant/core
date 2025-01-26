@@ -23,7 +23,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -144,7 +144,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SQLOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SQLOptionsFlowHandler(config_entry)
+        return SQLOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -209,7 +209,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class SQLOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class SQLOptionsFlowHandler(OptionsFlow):
     """Handle SQL options."""
 
     async def async_step_init(
@@ -223,7 +223,7 @@ class SQLOptionsFlowHandler(OptionsFlowWithConfigEntry):
             db_url = user_input.get(CONF_DB_URL)
             query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
-            name = self.options.get(CONF_NAME, self.config_entry.title)
+            name = self.config_entry.options.get(CONF_NAME, self.config_entry.title)
 
             try:
                 query = validate_sql_select(query)
@@ -275,7 +275,7 @@ class SQLOptionsFlowHandler(OptionsFlowWithConfigEntry):
         return self.async_show_form(
             step_id="init",
             data_schema=self.add_suggested_values_to_schema(
-                OPTIONS_SCHEMA, user_input or self.options
+                OPTIONS_SCHEMA, user_input or self.config_entry.options
             ),
             errors=errors,
             description_placeholders=description_placeholders,

@@ -9,17 +9,7 @@ import pytest
 from homeassistant.components import hassio
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info, is_official_image
-
-
-async def test_is_official_image() -> None:
-    """Test is_official_image."""
-    is_official_image.cache_clear()
-    with patch("homeassistant.helpers.system_info.os.path.isfile", return_value=True):
-        assert is_official_image() is True
-    is_official_image.cache_clear()
-    with patch("homeassistant.helpers.system_info.os.path.isfile", return_value=False):
-        assert is_official_image() is False
+from homeassistant.helpers.system_info import async_get_system_info
 
 
 async def test_get_system_info(hass: HomeAssistant) -> None:
@@ -93,10 +83,9 @@ async def test_container_installationtype(hass: HomeAssistant) -> None:
         assert info["installation_type"] == "Unsupported Third Party Container"
 
 
-async def test_getuser_keyerror(hass: HomeAssistant) -> None:
-    """Test getuser keyerror."""
-    with patch(
-        "homeassistant.helpers.system_info.cached_get_user", side_effect=KeyError
-    ):
+@pytest.mark.parametrize("error", [KeyError, OSError])
+async def test_getuser_oserror(hass: HomeAssistant, error: Exception) -> None:
+    """Test getuser oserror."""
+    with patch("homeassistant.helpers.system_info.cached_get_user", side_effect=error):
         info = await async_get_system_info(hass)
         assert info["user"] is None

@@ -5,10 +5,18 @@ from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.workday.binary_sensor import SERVICE_CHECK_DATE
-from homeassistant.components.workday.const import DOMAIN
+from homeassistant.components.workday.const import (
+    DEFAULT_EXCLUDES,
+    DEFAULT_NAME,
+    DEFAULT_OFFSET,
+    DEFAULT_WORKDAYS,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import UTC
@@ -422,3 +430,34 @@ async def test_optional_category(
     state = hass.states.get("binary_sensor.workday_sensor")
     assert state is not None
     assert state.state == end_state
+
+
+async def test_only_repairs_for_current_next_year(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test only repairs are raised for current and next year."""
+    freezer.move_to(datetime(2024, 8, 15, 12, tzinfo=UTC))
+    remove_dates = [
+        # None of these dates are holidays
+        "2024-08-15",  # Creates issue
+        "2025-08-15",  # Creates issue
+        "2026-08-15",  # No issue
+    ]
+    config = {
+        "name": DEFAULT_NAME,
+        "country": "DE",
+        "province": "BW",
+        "excludes": DEFAULT_EXCLUDES,
+        "days_offset": DEFAULT_OFFSET,
+        "workdays": DEFAULT_WORKDAYS,
+        "add_holidays": [],
+        "remove_holidays": remove_dates,
+        "language": "de",
+    }
+    await init_integration(hass, config)
+
+    assert len(issue_registry.issues) == 2
+    assert issue_registry.issues == snapshot

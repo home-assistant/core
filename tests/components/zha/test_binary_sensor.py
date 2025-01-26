@@ -14,6 +14,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .common import find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
@@ -37,6 +38,7 @@ def binary_sensor_platform_only():
 
 async def test_binary_sensor(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     setup_zha,
     zigpy_device_mock,
 ) -> None:
@@ -77,3 +79,20 @@ async def test_binary_sensor(
         hass, cluster, {general.OnOff.AttributeDefs.on_off.id: OFF}
     )
     assert hass.states.get(entity_id).state == STATE_OFF
+
+    # test enable / disable sync w/ ZHA library
+    entity_entry = entity_registry.async_get(entity_id)
+    entity_key = (Platform.BINARY_SENSOR, entity_entry.unique_id)
+    assert zha_device_proxy.device.platform_entities.get(entity_key).enabled
+
+    entity_registry.async_update_entity(
+        entity_id=entity_id, disabled_by=er.RegistryEntryDisabler.USER
+    )
+    await hass.async_block_till_done()
+
+    assert not zha_device_proxy.device.platform_entities.get(entity_key).enabled
+
+    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+    await hass.async_block_till_done()
+
+    assert zha_device_proxy.device.platform_entities.get(entity_key).enabled

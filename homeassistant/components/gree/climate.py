@@ -126,7 +126,6 @@ class GreeClimateEntity(GreeEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_min_temp = TEMP_MIN
     _attr_max_temp = TEMP_MAX
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""

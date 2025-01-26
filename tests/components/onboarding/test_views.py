@@ -5,7 +5,7 @@ from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import os
 from typing import Any
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -70,23 +70,13 @@ async def no_rpi_fixture(
 @pytest.fixture(name="mock_supervisor")
 async def mock_supervisor_fixture(
     aioclient_mock: AiohttpClientMocker,
+    store_info: AsyncMock,
+    supervisor_is_connected: AsyncMock,
+    resolution_info: AsyncMock,
 ) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
-    )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",
         json={
@@ -100,19 +90,11 @@ async def mock_supervisor_fixture(
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
         patch(
-            "homeassistant.components.hassio.HassIO.is_connected",
-            return_value=True,
-        ),
-        patch(
             "homeassistant.components.hassio.HassIO.get_info",
             return_value={},
         ),
         patch(
             "homeassistant.components.hassio.HassIO.get_host_info",
-            return_value={},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_store",
             return_value={},
         ),
         patch(

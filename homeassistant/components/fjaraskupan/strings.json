@@ -24,5 +24,19 @@
         "name": "Periodic venting"
       }
     }
+  },
+  "exceptions": {
+    "write_error": {
+      "message": "Failed to write data to device"
+    },
+    "read_error": {
+      "message": "Failed to read data from device"
+    },
+    "connection_error": {
+      "message": "Failed to connect to device"
+    },
+    "unexpected_error": {
+      "message": "Unexpected error occurred: {msg}"
+    }
   }
 }

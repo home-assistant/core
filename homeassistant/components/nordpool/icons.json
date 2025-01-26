@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "sensor": {
+      "updated_at": {
+        "default": "mdi:clock-outline"
+      },
+      "currency": {
+        "default": "mdi:currency-usd"
+      },
+      "exchange_rate": {
+        "default": "mdi:currency-usd"
+      },
+      "current_price": {
+        "default": "mdi:cash"
+      },
+      "last_price": {
+        "default": "mdi:cash"
+      },
+      "next_price": {
+        "default": "mdi:cash"
+      },
+      "block_average": {
+        "default": "mdi:cash-multiple"
+      },
+      "block_min": {
+        "default": "mdi:cash-multiple"
+      },
+      "block_max": {
+        "default": "mdi:cash-multiple"
+      },
+      "block_start_time": {
+        "default": "mdi:clock-time-twelve-outline"
+      },
+      "block_end_time": {
+        "default": "mdi:clock-time-two-outline"
+      },
+      "daily_average": {
+        "default": "mdi:cash-multiple"
+      }
+    }
+  },
+  "services": {
+    "get_prices_for_date": {
+      "service": "mdi:cash-multiple"
+    }
+  }
+}

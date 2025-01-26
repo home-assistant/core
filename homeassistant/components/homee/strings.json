@@ -1,0 +1,140 @@
+{
+  "config": {
+    "flow_title": "Homee {name} ({host})",
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "title": "Configure homee",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "The IP address of your Homee.",
+          "username": "The username for your Homee.",
+          "password": "The password for your Homee."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "brightness_instance": {
+        "name": "Illuminance {instance}"
+      },
+      "current_instance": {
+        "name": "Current {instance}"
+      },
+      "dawn": {
+        "name": "Dawn"
+      },
+      "device_temperature": {
+        "name": "Device temperature"
+      },
+      "energy_instance": {
+        "name": "Energy {instance}"
+      },
+      "exhaust_motor_revs": {
+        "name": "Exhaust motor speed"
+      },
+      "indoor_humidity": {
+        "name": "Indoor humidity"
+      },
+      "indoor_humidity_instance": {
+        "name": "Indoor humidity {instance}"
+      },
+      "indoor_temperature": {
+        "name": "Indoor temperature"
+      },
+      "indoor_temperature_instance": {
+        "name": "Indoor temperature {instance}"
+      },
+      "intake_motor_revs": {
+        "name": "Intake motor speed"
+      },
+      "level": {
+        "name": "Level"
+      },
+      "link_quality": {
+        "name": "Link quality"
+      },
+      "node_state": {
+        "name": "Node state"
+      },
+      "operating_hours": {
+        "name": "Operating hours"
+      },
+      "outdoor_humidity": {
+        "name": "Outdoor humidity"
+      },
+      "outdoor_humidity_instance": {
+        "name": "Outdoor humidity {instance}"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      },
+      "outdoor_temperature_instance": {
+        "name": "Outdoor temperature {instance}"
+      },
+      "position": {
+        "name": "Position"
+      },
+      "power_instance": {
+        "name": "Power {instance}"
+      },
+      "rainfall_hour": {
+        "name": "Rainfall last hour"
+      },
+      "rainfall_day": {
+        "name": "Rainfall today"
+      },
+      "total_current": {
+        "name": "Total current"
+      },
+      "total_energy": {
+        "name": "Total energy"
+      },
+      "total_power": {
+        "name": "Total power"
+      },
+      "total_voltage": {
+        "name": "Total voltage"
+      },
+      "up_down": {
+        "name": "State",
+        "state": {
+          "open": "[%key:common::state::open%]",
+          "closed": "[%key:common::state::closed%]",
+          "partial": "Partially open",
+          "opening": "Opening",
+          "closing": "Closing"
+        }
+      },
+      "uv": {
+        "name": "Ultraviolet"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "voltage_instance": {
+        "name": "Voltage {instance}"
+      },
+      "window_position": {
+        "name": "Window position",
+        "state": {
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]",
+          "tilted": "Tilted"
+        }
+      }
+    }
+  }
+}

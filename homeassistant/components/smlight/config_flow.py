@@ -6,16 +6,16 @@ from collections.abc import Mapping
 from typing import Any
 
 from pysmlight import Api2
+from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import SmConfigEntry
 from .const import DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -35,11 +35,11 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
 class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMLIGHT Zigbee."""
 
+    host: str
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.client: Api2
-        self.host: str | None = None
-        self._reauth_entry: SmConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -48,11 +48,15 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            self.client = Api2(host, session=async_get_clientsession(self.hass))
-            self.host = host
+            self.host = user_input[CONF_HOST]
+            self.client = Api2(self.host, session=async_get_clientsession(self.hass))
 
             try:
+                info = await self.client.get_info()
+
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
@@ -72,6 +76,11 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
+                info = await self.client.get_info()
+
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
@@ -84,7 +93,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Lan coordinator."""
         local_name = discovery_info.hostname[:-1]
@@ -118,6 +127,11 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HOST] = self.host
             try:
+                info = await self.client.get_info()
+
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
                 if not await self._async_check_auth_required(user_input):
                     return await self._async_complete_entry(user_input)
 
@@ -140,12 +154,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth when API Authentication failed."""
 
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
-        host = entry_data[CONF_HOST]
-        self.client = Api2(host, session=async_get_clientsession(self.hass))
-        self.host = host
+        self.host = entry_data[CONF_HOST]
+        self.client = Api2(self.host, session=async_get_clientsession(self.hass))
 
         return await self.async_step_reauth_confirm()
 
@@ -164,11 +174,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")
             else:
-                assert self._reauth_entry is not None
-
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry,
-                    data={**self._reauth_entry.data, **user_input},
+                    self._get_reauth_entry(), data_updates=user_input
                 )
 
         return self.async_show_form(

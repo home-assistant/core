@@ -1,0 +1,18 @@
+blueprint:
+  name: "Call service based on event"
+  domain: automation
+  input:
+    trigger_event:
+      selector:
+        text:
+    service_to_call:
+    a_number:
+      selector:
+        number:
+          mode: "box"
+trigger:
+  platform: event
+  event_type: !input trigger_event
+action:
+  service: !input service_to_call
+  entity_id: light.kitchen

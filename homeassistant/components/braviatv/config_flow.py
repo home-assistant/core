@@ -3,18 +3,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import CookieJar
 from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSupported
 import voluptuous as vol
 
-from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 from homeassistant.util.network import is_host_valid
 
 from .const import (
@@ -37,7 +42,6 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.client: BraviaClient | None = None
         self.device_config: dict[str, Any] = {}
-        self.entry: ConfigEntry | None = None
 
     def create_client(self) -> None:
         """Create Bravia TV client from config."""
@@ -86,13 +90,12 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_reauth_device(self) -> ConfigFlowResult:
         """Reauthorize Bravia TV device from config."""
-        assert self.entry
         assert self.client
         await self.async_connect_device()
 
-        self.hass.config_entries.async_update_entry(self.entry, data=self.device_config)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data=self.device_config
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -147,7 +150,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
             self.device_config[CONF_CLIENT_ID] = client_id
             self.device_config[CONF_NICKNAME] = nickname
             try:
-                if self.entry:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_reauth_device()
                 return await self.async_create_device()
             except BraviaAuthError:
@@ -183,7 +186,7 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.device_config[CONF_PIN] = user_input[CONF_PIN]
             try:
-                if self.entry:
+                if self.source == SOURCE_REAUTH:
                     return await self.async_reauth_device()
                 return await self.async_create_device()
             except BraviaAuthError:
@@ -204,13 +207,14 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered device."""
-        parsed_url = urlparse(discovery_info.ssdp_location)
-        host = parsed_url.hostname
+        # We can cast the hostname to str because the ssdp_location is not bytes and
+        # not a relative url
+        host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
 
-        await self.async_set_unique_id(discovery_info.upnp[ssdp.ATTR_UPNP_UDN])
+        await self.async_set_unique_id(discovery_info.upnp[ATTR_UPNP_UDN])
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -222,8 +226,8 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         if "videoScreen" not in service_types:
             return self.async_abort(reason="not_bravia_device")
 
-        model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
-        friendly_name = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        model_name = discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
+        friendly_name = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
 
         self.context["title_placeholders"] = {
             CONF_NAME: f"{model_name} ({friendly_name})",
@@ -246,6 +250,5 @@ class BraviaTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         self.device_config = {**entry_data}
         return await self.async_step_authorize()

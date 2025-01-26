@@ -55,7 +55,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         client: speech_v1.SpeechAsyncClient,
     ) -> None:
         """Init Google Cloud STT entity."""
-        self._attr_unique_id = f"{entry.entry_id}-stt"
+        self._attr_unique_id = f"{entry.entry_id}"
         self._attr_name = entry.title
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -114,9 +114,9 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             )
         )
 
-        async def request_generator() -> (
-            AsyncGenerator[speech_v1.StreamingRecognizeRequest]
-        ):
+        async def request_generator() -> AsyncGenerator[
+            speech_v1.StreamingRecognizeRequest
+        ]:
             # The first request must only contain a streaming_config
             yield speech_v1.StreamingRecognizeRequest(streaming_config=streaming_config)
             # All subsequent requests must only contain audio_content

@@ -48,8 +48,9 @@ def setup_comp(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_bool(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on boolean change."""
     assert len(calls) == 0
@@ -271,8 +272,9 @@ async def test_if_fires_on_change_bool(
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_general(
-    hass: HomeAssistant, call_setup, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, call_setup, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change."""
     assert len(calls) == 0
@@ -308,8 +310,9 @@ async def test_general(
         ),
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_not_fires_because_fail(
-    hass: HomeAssistant, call_setup, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, call_setup, calls: list[ServiceCall]
 ) -> None:
     """Test for not firing after TemplateError."""
     assert len(calls) == 0
@@ -346,8 +349,9 @@ async def test_if_not_fires_because_fail(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_template_advanced(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with template advanced."""
     context = Context()
@@ -378,9 +382,8 @@ async def test_if_fires_on_change_with_template_advanced(
         },
     ],
 )
-async def test_if_action(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_if_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
     """Test for firing if action."""
     # Condition is not true yet
     hass.bus.async_fire("test_event")
@@ -410,8 +413,9 @@ async def test_if_action(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_bad_template(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with bad template."""
     assert hass.states.get("automation.automation_0").state == STATE_UNAVAILABLE
@@ -447,8 +451,9 @@ async def test_if_fires_on_change_with_bad_template(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_wait_template_with_trigger(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test using wait template with 'trigger.entity_id'."""
     await hass.async_block_till_done()
@@ -519,8 +524,9 @@ async def test_if_fires_on_change_with_for(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_for_advanced(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for advanced."""
     context = Context()
@@ -563,8 +569,9 @@ async def test_if_fires_on_change_with_for_advanced(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_for_0_advanced(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for: 0 advanced."""
     context = Context()
@@ -604,8 +611,9 @@ async def test_if_fires_on_change_with_for_0_advanced(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_for_2(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for."""
     context = Context()
@@ -635,8 +643,9 @@ async def test_if_fires_on_change_with_for_2(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_not_fires_on_change_with_for(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for."""
     hass.states.async_set("test.entity", "world")
@@ -669,8 +678,9 @@ async def test_if_not_fires_on_change_with_for(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_not_fires_when_turned_off_with_for(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for."""
     hass.states.async_set("test.entity", "world")
@@ -707,8 +717,9 @@ async def test_if_not_fires_when_turned_off_with_for(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_for_template_1(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for template."""
     hass.states.async_set("test.entity", "world")
@@ -735,8 +746,9 @@ async def test_if_fires_on_change_with_for_template_1(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_for_template_2(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for template."""
     hass.states.async_set("test.entity", "world")
@@ -763,8 +775,9 @@ async def test_if_fires_on_change_with_for_template_2(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_if_fires_on_change_with_for_template_3(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for firing on change with for template."""
     hass.states.async_set("test.entity", "world")
@@ -791,8 +804,9 @@ async def test_if_fires_on_change_with_for_template_3(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_invalid_for_template_1(
-    hass: HomeAssistant, start_ha, calls: list[ServiceCall]
+    hass: HomeAssistant, calls: list[ServiceCall]
 ) -> None:
     """Test for invalid for template."""
     with mock.patch.object(template_trigger, "_LOGGER") as mock_logger:

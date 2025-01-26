@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, TRANSLATED_ERRORS
 from .coordinator import (
     TessieEnergySiteInfoCoordinator,
     TessieEnergySiteLiveCoordinator,
@@ -107,10 +107,11 @@ class TessieEntity(TessieBaseEntity):
         if response["result"] is False:
             name: str = getattr(self, "name", self.entity_id)
             reason: str = response.get("reason", "unknown")
+            translation_key = TRANSLATED_ERRORS.get(reason, "command_failed")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=reason.replace(" ", "_"),
-                translation_placeholders={"name": name},
+                translation_key=translation_key,
+                translation_placeholders={"name": name, "message": reason},
             )
 
     def _async_update_attrs(self) -> None:

@@ -13,14 +13,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricPotential, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import AsekoDataUpdateCoordinator
+from .coordinator import AsekoConfigEntry
 from .entity import AsekoEntity
 
 
@@ -39,6 +37,13 @@ SENSORS: list[AsekoSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda unit: unit.air_temperature,
+    ),
+    AsekoSensorEntityDescription(
+        key="electrolyzer",
+        translation_key="electrolyzer",
+        native_unit_of_measurement="g/h",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda unit: unit.electrolyzer,
     ),
     AsekoSensorEntityDescription(
         key="free_chlorine",
@@ -80,11 +85,11 @@ SENSORS: list[AsekoSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AsekoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aseko Pool Live sensors."""
-    coordinator: AsekoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     units = coordinator.data.values()
     async_add_entities(
         AsekoSensorEntity(unit, coordinator, description)

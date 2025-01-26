@@ -55,10 +55,14 @@ class TypeHintMatch:
         """Confirm if function should be checked."""
         return (
             self.function_name == node.name
-            or self.has_async_counterpart
-            and node.name == f"async_{self.function_name}"
-            or self.function_name.endswith("*")
-            and node.name.startswith(self.function_name[:-1])
+            or (
+                self.has_async_counterpart
+                and node.name == f"async_{self.function_name}"
+            )
+            or (
+                self.function_name.endswith("*")
+                and node.name.startswith(self.function_name[:-1])
+            )
         )
 
 
@@ -102,7 +106,8 @@ _TEST_FIXTURES: dict[str, list[str] | str] = {
     "aiohttp_client": "ClientSessionGenerator",
     "aiohttp_server": "Callable[[], TestServer]",
     "area_registry": "AreaRegistry",
-    "async_test_recorder": "RecorderInstanceGenerator",
+    "async_test_recorder": "RecorderInstanceContextManager",
+    "async_setup_recorder_instance": "RecorderInstanceGenerator",
     "caplog": "pytest.LogCaptureFixture",
     "capsys": "pytest.CaptureFixture[str]",
     "current_request_with_host": "None",
@@ -1017,6 +1022,34 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=None,
                     has_async_counterpart=True,
                 ),
+                TypeHintMatch(
+                    function_name="async_handle_async_webrtc_offer",
+                    arg_types={
+                        1: "str",
+                        2: "str",
+                        3: "WebRTCSendMessage",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_on_webrtc_candidate",
+                    arg_types={
+                        1: "str",
+                        2: "RTCIceCandidateInit",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="close_webrtc_session",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="_async_get_webrtc_client_configuration",
+                    return_type="WebRTCClientConfiguration",
+                ),
             ],
         ),
     ],
@@ -1318,7 +1351,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="source_type",
-                    return_type=["SourceType", "str"],
+                    return_type="SourceType",
                 ),
             ],
         ),
@@ -2970,8 +3003,8 @@ def _is_valid_type(
         isinstance(node, nodes.Subscript)
         and isinstance(node.value, nodes.Name)
         and node.value.name in _KNOWN_GENERIC_TYPES
-        or isinstance(node, nodes.Name)
-        and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
+    ) or (
+        isinstance(node, nodes.Name) and node.name.endswith(_KNOWN_GENERIC_TYPES_TUPLE)
     ):
         return True
 
@@ -3093,11 +3126,6 @@ class HassTypeHintChecker(BaseChecker):
             "hass-consider-usefixtures-decorator",
             "Used when an argument type is None and could be a fixture",
         ),
-        "W7434": (
-            "A coroutine function should not be decorated with @callback",
-            "hass-async-callback-decorator",
-            "Used when a coroutine function has an invalid @callback decorator",
-        ),
     }
     options = (
         (
@@ -3200,14 +3228,6 @@ class HassTypeHintChecker(BaseChecker):
                 self._check_function(function_node, match, annotations)
                 checked_class_methods.add(function_node.name)
 
-    def visit_asyncfunctiondef(self, node: nodes.AsyncFunctionDef) -> None:
-        """Apply checks on an AsyncFunctionDef node."""
-        if (
-            decoratornames := node.decoratornames()
-        ) and "homeassistant.core.callback" in decoratornames:
-            self.add_message("hass-async-callback-decorator", node=node)
-        self.visit_functiondef(node)
-
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Apply relevant type hint checks on a FunctionDef node."""
         annotations = _get_all_annotations(node)
@@ -3246,6 +3266,8 @@ class HassTypeHintChecker(BaseChecker):
             if not match.need_to_check_function(node):
                 continue
             self._check_function(node, match, annotations)
+
+    visit_asyncfunctiondef = visit_functiondef
 
     def _check_function(
         self,

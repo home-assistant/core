@@ -34,14 +34,13 @@ from .const import (
     RGBW_MODELS,
     RPC_MIN_TRANSITION_TIME_SEC,
     SHBLB_1_RGB_EFFECTS,
-    SHELLY_PLUS_RGBW_CHANNELS,
     STANDARD_RGB_EFFECTS,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import ShellyBlockEntity, ShellyRpcEntity
 from .utils import (
+    async_remove_orphaned_entities,
     async_remove_shelly_entity,
-    async_remove_shelly_rpc_entities,
     brightness_to_percentage,
     get_device_entry_gen,
     get_rpc_key_ids,
@@ -119,30 +118,25 @@ def async_setup_rpc_entry(
         )
         return
 
+    entities: list[RpcShellyLightBase] = []
     if light_key_ids := get_rpc_key_ids(coordinator.device.status, "light"):
-        # Light mode remove RGB & RGBW entities, add light entities
-        async_remove_shelly_rpc_entities(
-            hass, LIGHT_DOMAIN, coordinator.mac, ["rgb:0", "rgbw:0"]
-        )
-        async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
-        return
-
-    light_keys = [f"light:{i}" for i in range(SHELLY_PLUS_RGBW_CHANNELS)]
-
+        entities.extend(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
+    if cct_key_ids := get_rpc_key_ids(coordinator.device.status, "cct"):
+        entities.extend(RpcShellyCctLight(coordinator, id_) for id_ in cct_key_ids)
     if rgb_key_ids := get_rpc_key_ids(coordinator.device.status, "rgb"):
-        # RGB mode remove light & RGBW entities, add RGB entity
-        async_remove_shelly_rpc_entities(
-            hass, LIGHT_DOMAIN, coordinator.mac, [*light_keys, "rgbw:0"]
-        )
-        async_add_entities(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
-        return
-
+        entities.extend(RpcShellyRgbLight(coordinator, id_) for id_ in rgb_key_ids)
     if rgbw_key_ids := get_rpc_key_ids(coordinator.device.status, "rgbw"):
-        # RGBW mode remove light & RGB entities, add RGBW entity
-        async_remove_shelly_rpc_entities(
-            hass, LIGHT_DOMAIN, coordinator.mac, [*light_keys, "rgb:0"]
-        )
-        async_add_entities(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
+        entities.extend(RpcShellyRgbwLight(coordinator, id_) for id_ in rgbw_key_ids)
+
+    async_add_entities(entities)
+
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        LIGHT_DOMAIN,
+        coordinator.device.status,
+    )
 
 
 class BlockShellyLight(ShellyBlockEntity, LightEntity):
@@ -427,6 +421,9 @@ class RpcShellyLightBase(ShellyRpcEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             params["brightness"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
 
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            params["ct"] = kwargs[ATTR_COLOR_TEMP_KELVIN]
+
         if ATTR_TRANSITION in kwargs:
             params["transition_duration"] = max(
                 kwargs[ATTR_TRANSITION], RPC_MIN_TRANSITION_TIME_SEC
@@ -470,6 +467,29 @@ class RpcShellyLight(RpcShellyLightBase):
     _attr_color_mode = ColorMode.BRIGHTNESS
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_supported_features = LightEntityFeature.TRANSITION
+
+
+class RpcShellyCctLight(RpcShellyLightBase):
+    """Entity that controls a CCT light on RPC based Shelly devices."""
+
+    _component = "CCT"
+
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+        """Initialize light."""
+        color_temp_range = coordinator.device.config[f"cct:{id_}"]["ct_range"]
+        self._attr_min_color_temp_kelvin = color_temp_range[0]
+        self._attr_max_color_temp_kelvin = color_temp_range[1]
+
+        super().__init__(coordinator, id_)
+
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
 
 
 class RpcShellyRgbLight(RpcShellyLightBase):

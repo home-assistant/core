@@ -24,7 +24,7 @@ async def test_config_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
     result = await hass.config_entries.flow.async_configure(
@@ -33,7 +33,7 @@ async def test_config_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My NEW_DOMAIN"
     assert result["data"] == {}
     assert result["options"] == {
@@ -83,7 +83,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_suggested(schema, "entity_id") == input_sensor_1_entity_id
@@ -94,7 +94,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "entity_id": input_sensor_2_entity_id,
         },
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "entity_id": input_sensor_2_entity_id,
         "name": "My NEW_DOMAIN",

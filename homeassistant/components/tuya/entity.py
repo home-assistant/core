@@ -17,6 +17,17 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, LOGGER, TUYA_HA_SIGNAL_UPDATE_ENTITY, DPCode, DPType
 from .util import remap_value
 
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "Bitmap": DPType.RAW,
+    "bitmap": DPType.RAW,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
+    "raw": DPType.RAW,
+    "string": DPType.STRING,
+    "value": DPType.INTEGER,
+}
+
 
 @dataclass
 class IntegerTypeData:
@@ -256,7 +267,13 @@ class TuyaEntity(Entity):
             order = ["function", "status_range"]
         for key in order:
             if dpcode in getattr(self.device, key):
-                return DPType(getattr(self.device, key)[dpcode].type)
+                current_type = getattr(self.device, key)[dpcode].type
+                try:
+                    return DPType(current_type)
+                except ValueError:
+                    # Sometimes, we get ill-formed DPTypes from the cloud,
+                    # this fixes them and maps them to the correct DPType.
+                    return _DPTYPE_MAPPING.get(current_type)
 
         return None
 
@@ -266,9 +283,14 @@ class TuyaEntity(Entity):
             async_dispatcher_connect(
                 self.hass,
                 f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{self.device.id}",
-                self.async_write_ha_state,
+                self._handle_state_update,
             )
         )
+
+    async def _handle_state_update(
+        self, updated_status_properties: list[str] | None
+    ) -> None:
+        self.async_write_ha_state()
 
     def _send_command(self, commands: list[dict[str, Any]]) -> None:
         """Send command to the device."""

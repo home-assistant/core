@@ -8,10 +8,11 @@ from aioguardian import Client
 from aioguardian.errors import GuardianError
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_UID, DOMAIN, LOGGER
 
@@ -101,7 +102,7 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle the configuration via dhcp."""
         self.discovery_info = {
@@ -111,10 +112,10 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
         await self._async_set_unique_id(
             async_get_pin_from_uid(discovery_info.macaddress.replace(":", "").upper())
         )
-        return await self._async_handle_discovery()
+        return await self.async_step_discovery_confirm()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle the configuration via zeroconf."""
         self.discovery_info = {
@@ -123,17 +124,6 @@ class GuardianConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         pin = async_get_pin_from_discovery_hostname(discovery_info.hostname)
         await self._async_set_unique_id(pin)
-        return await self._async_handle_discovery()
-
-    async def _async_handle_discovery(self) -> ConfigFlowResult:
-        """Handle any discovery."""
-        self.context[CONF_IP_ADDRESS] = self.discovery_info[CONF_IP_ADDRESS]
-        if any(
-            self.context[CONF_IP_ADDRESS] == flow["context"][CONF_IP_ADDRESS]
-            for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
-
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

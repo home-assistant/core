@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from telegram import Chat, Message, User
+from telegram import Bot, Chat, Message, User
 from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot import (
@@ -89,23 +89,30 @@ def mock_external_calls() -> Generator[None]:
         date=datetime.now(),
         chat=Chat(id=123456, type=ChatType.PRIVATE),
     )
+
+    class BotMock(Bot):
+        """Mock bot class."""
+
+        __slots__ = ()
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            """Initialize BotMock instance."""
+            super().__init__(*args, **kwargs)
+            self._bot_user = test_user
+
     with (
-        patch(
-            "telegram.Bot.get_me",
-            return_value=test_user,
-        ),
-        patch(
-            "telegram.Bot._bot_user",
-            test_user,
-        ),
-        patch(
-            "telegram.Bot.bot",
-            test_user,
-        ),
-        patch(
-            "telegram.Bot.send_message",
-            return_value=message,
-        ),
+        patch("homeassistant.components.telegram_bot.Bot", BotMock),
+        patch.object(BotMock, "get_me", return_value=test_user),
+        patch.object(BotMock, "bot", test_user),
+        patch.object(BotMock, "send_message", return_value=message),
+        patch.object(BotMock, "send_photo", return_value=message),
+        patch.object(BotMock, "send_sticker", return_value=message),
+        patch.object(BotMock, "send_video", return_value=message),
+        patch.object(BotMock, "send_document", return_value=message),
+        patch.object(BotMock, "send_voice", return_value=message),
+        patch.object(BotMock, "send_animation", return_value=message),
+        patch.object(BotMock, "send_location", return_value=message),
+        patch.object(BotMock, "send_poll", return_value=message),
         patch("telegram.ext.Updater._bootstrap"),
     ):
         yield

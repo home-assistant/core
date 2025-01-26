@@ -17,9 +17,9 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
-    STATE_OPEN,
+    CoverState,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_CLOSED, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -118,26 +118,26 @@ async def test_cover_callbacks(
     await _call_zone_status_callback(0.7)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 70
 
     # Fully open
     await _call_zone_status_callback(1)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 100
 
     # Fully closed
     await _call_zone_status_callback(0.0)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 0
 
     # Partly reopened
     await _call_zone_status_callback(0.3)
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 30

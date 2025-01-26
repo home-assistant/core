@@ -317,9 +317,8 @@ async def async_enable_proactive_mode(
 
         if should_doorbell:
             old_state = data["old_state"]
-            if (
-                new_state.domain == event.DOMAIN
-                or new_state.state == STATE_ON
+            if new_state.domain == event.DOMAIN or (
+                new_state.state == STATE_ON
                 and (old_state is None or old_state.state != STATE_ON)
             ):
                 await async_send_doorbell_event_message(

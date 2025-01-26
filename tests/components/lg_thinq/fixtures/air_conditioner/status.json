@@ -1,0 +1,43 @@
+{
+  "airConJobMode": {
+    "currentJobMode": "COOL"
+  },
+  "airFlow": {
+    "windStrength": "MID"
+  },
+  "airQualitySensor": {
+    "PM1": 12,
+    "PM10": 7,
+    "PM2": 24,
+    "humidity": 40,
+    "monitoringEnabled": "ON_WORKING",
+    "totalPollution": 3,
+    "totalPollutionLevel": "GOOD"
+  },
+  "filterInfo": {
+    "filterLifetime": 540,
+    "usedTime": 180
+  },
+  "operation": {
+    "airConOperationMode": "POWER_ON"
+  },
+  "powerSave": {
+    "powerSaveEnabled": false
+  },
+  "sleepTimer": {
+    "relativeStopTimer": "UNSET"
+  },
+  "temperature": {
+    "currentTemperature": 25,
+    "targetTemperature": 19,
+    "unit": "C"
+  },
+  "timer": {
+    "relativeStartTimer": "UNSET",
+    "relativeStopTimer": "UNSET",
+    "absoluteStartTimer": "SET",
+    "absoluteStopTimer": "UNSET",
+    "absoluteHourToStart": 13,
+    "absoluteMinuteToStart": 14
+  }
+}

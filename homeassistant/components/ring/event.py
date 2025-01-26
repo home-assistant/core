@@ -18,6 +18,9 @@ from . import RingConfigEntry
 from .coordinator import RingListenCoordinator
 from .entity import RingBaseEntity, RingDeviceT
 
+# Event entity does not perform updates or actions.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):
@@ -96,7 +99,7 @@ class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity)
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if alert := self._get_coordinator_alert():
+        if (alert := self._get_coordinator_alert()) and not alert.is_update:
             self._async_handle_event(alert.kind)
         super()._handle_coordinator_update()
 

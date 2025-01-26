@@ -15,7 +15,6 @@ from .const import (
     DOMAIN,
     SERVICE_ADD_METER_READING,
 )
-from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 SCHEMA_ADD_METER_READING = vol.Schema(
@@ -44,11 +43,8 @@ def setup_services(hass: HomeAssistant) -> None:
         if entry is None:
             raise ServiceValidationError("Config entry not found")
 
-        tadoconnector: TadoConnector = entry.runtime_data.tadoconnector
-
-        response: dict = await hass.async_add_executor_job(
-            tadoconnector.set_meter_reading, call.data[CONF_READING]
-        )
+        coordinator = entry.runtime_data.coordinator
+        response: dict = await coordinator.set_meter_reading(call.data[CONF_READING])
 
         if ATTR_MESSAGE in response:
             raise HomeAssistantError(response[ATTR_MESSAGE])

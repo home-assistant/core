@@ -16,7 +16,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenThermGatewayHub
-from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, GATEWAY_DEVICE_DESCRIPTION
+from .const import (
+    DATA_GATEWAYS,
+    DATA_OPENTHERM_GW,
+    GATEWAY_DEVICE_DESCRIPTION,
+    THERMOSTAT_DEVICE_DESCRIPTION,
+)
 from .entity import OpenThermEntity, OpenThermEntityDescription
 
 
@@ -30,6 +35,12 @@ class OpenThermButtonEntityDescription(
 
 
 BUTTON_DESCRIPTIONS: tuple[OpenThermButtonEntityDescription, ...] = (
+    OpenThermButtonEntityDescription(
+        key="cancel_room_setpoint_override",
+        translation_key="cancel_room_setpoint_override",
+        device_description=THERMOSTAT_DEVICE_DESCRIPTION,
+        action=lambda hub: hub.set_room_setpoint(0),
+    ),
     OpenThermButtonEntityDescription(
         key="restart_button",
         device_class=ButtonDeviceClass.RESTART,

@@ -85,7 +85,7 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "queue": LidarrSensorEntityDescription[LidarrQueue](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Albums",
+        native_unit_of_measurement="albums",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         attributes_fn=lambda data: {i.title: queue_str(i) for i in data.records},
@@ -93,13 +93,21 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
     "wanted": LidarrSensorEntityDescription[LidarrQueue](
         key="wanted",
         translation_key="wanted",
-        native_unit_of_measurement="Albums",
+        native_unit_of_measurement="albums",
         value_fn=lambda data, _: data.totalRecords,
         state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=False,
         attributes_fn=lambda data: {
             album.title: album.artist.artistName for album in data.records
         },
+    ),
+    "albums": LidarrSensorEntityDescription[int](
+        key="albums",
+        translation_key="albums",
+        native_unit_of_measurement="albums",
+        value_fn=lambda data, _: data,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
     ),
 }
 
@@ -152,10 +160,8 @@ class LidarrSensor(LidarrEntity[T], SensorEntity):
 
 def queue_str(item: LidarrQueueItem) -> str:
     """Return string description of queue item."""
-    if (
-        item.sizeleft > 0
-        and item.timeleft == "00:00:00"
-        or not hasattr(item, "trackedDownloadState")
+    if (item.sizeleft > 0 and item.timeleft == "00:00:00") or not hasattr(
+        item, "trackedDownloadState"
     ):
         return "stopped"
     return item.trackedDownloadState

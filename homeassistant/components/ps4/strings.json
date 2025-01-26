@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "creds": {
-        "description": "Credentials needed. Press 'Submit' and then in the PS4 2nd Screen App, refresh devices and select the 'Home-Assistant' device to continue."
+        "description": "Credentials needed. Select **Submit** and then in the PS4 2nd Screen App, refresh devices and select the **Home-Assistant** device to continue."
       },
       "mode": {
         "data": {
@@ -21,12 +21,12 @@
           "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "code": "Navigate to 'Settings' on your PlayStation 4 console. Then navigate to 'Mobile App Connection Settings' and select 'Add Device' to get the pin."
+          "code": "On your PlayStation 4 console, go to **Settings**. Then, go to **Mobile App Connection Settings** and select **Add Device** to get the PIN."
         }
       }
     },
     "error": {
-      "credential_timeout": "Credential service timed out. Press submit to restart.",
+      "credential_timeout": "Credential service timed out. Select **Submit** to restart.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "login_failed": "Failed to pair to PlayStation 4. Verify PIN is correct.",
       "no_ipaddress": "Enter the IP address of the PlayStation 4 you would like to configure."

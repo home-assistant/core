@@ -55,7 +55,6 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
         SensorDeviceClass.BATTERY: "CONF_BATTERY_LEVEL",
         SensorDeviceClass.CO: "CONF_CO",
         SensorDeviceClass.CO2: "CONF_CO2",
-        SensorDeviceClass.CONDUCTIVITY: "CONF_CONDUCTIVITY",
         SensorDeviceClass.ENERGY_STORAGE: "CONF_ENERGY",
         SensorDeviceClass.VOLUME_STORAGE: "CONF_VOLUME",
     }.get(device_class, f"CONF_{device_class.value.upper()}")
@@ -64,7 +63,6 @@ def test_matches_device_classes(device_class: SensorDeviceClass) -> None:
     # Ensure it has correct value
     constant_value = {
         SensorDeviceClass.BATTERY: "battery_level",
-        SensorDeviceClass.CONDUCTIVITY: "conductivity",
         SensorDeviceClass.ENERGY_STORAGE: "energy",
         SensorDeviceClass.VOLUME_STORAGE: "volume",
     }.get(device_class, device_class.value)

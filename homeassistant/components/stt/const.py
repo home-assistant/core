@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from .legacy import Provider
 
 DOMAIN = "stt"
-DOMAIN_DATA: HassKey[EntityComponent[SpeechToTextEntity]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[SpeechToTextEntity]] = HassKey(DOMAIN)
 DATA_PROVIDERS: HassKey[dict[str, Provider]] = HassKey(f"{DOMAIN}_providers")
 
 

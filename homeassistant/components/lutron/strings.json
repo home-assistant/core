@@ -17,9 +17,6 @@
         "description": "Please enter the main repeater login information",
         "title": "Main repeater setup"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {

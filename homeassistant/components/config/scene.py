@@ -47,7 +47,7 @@ def async_setup(hass: HomeAssistant) -> bool:
             "config",
             SCENE_CONFIG_PATH,
             cv.string,
-            PLATFORM_SCHEMA,
+            data_schema=PLATFORM_SCHEMA,
             post_write_hook=hook,
         )
     )

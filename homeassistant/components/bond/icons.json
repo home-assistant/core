@@ -84,6 +84,12 @@
       },
       "decrease_position": {
         "default": "mdi:minus-box"
+      },
+      "open_next": {
+        "default": "mdi:plus-box"
+      },
+      "close_next": {
+        "default": "mdi:minus-box"
       }
     },
     "light": {

@@ -73,7 +73,6 @@ class ThermostatDevice(ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, thermostat, name):
         """Initialize the device."""

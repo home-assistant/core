@@ -36,22 +36,6 @@ create_event:
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
-list_events:
-  target:
-    entity:
-      domain: calendar
-  fields:
-    start_date_time:
-      example: "2022-03-22 20:00:00"
-      selector:
-        datetime:
-    end_date_time:
-      example: "2022-03-22 22:00:00"
-      selector:
-        datetime:
-    duration:
-      selector:
-        duration:
 get_events:
   target:
     entity:

@@ -11,15 +11,15 @@
     },
     "step": {
       "auth": {
-        "description": "To link your TelldusLive account:\n 1. Click the link below\n 2. Login to Telldus Live\n 3. Authorize **{app_name}** (click **Yes**).\n 4. Come back here and click **SUBMIT**.\n\n [Link TelldusLive account]({auth_url})",
-        "title": "Authenticate against TelldusLive"
+        "description": "To link your TelldusLive account:\n1. Open the link below\n2. Log in to Telldus Live\n3. Authorize **{app_name}** (select **Yes**).\n4. Come back here and select **Submit**.\n\n [Link TelldusLive account]({auth_url})",
+        "title": "Authenticate with TelldusLive"
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Hostname or IP address to Tellstick Net or Tellstick ZNet for Local API."
+          "host": "Hostname or IP address to Tellstick Net or Tellstick ZNet for local API."
         }
       }
     }

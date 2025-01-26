@@ -192,12 +192,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
     @staticmethod
     def _get_precipitation_value(precipitation):
         """Get precipitation value from weather data."""
-        if "all" in precipitation:
-            return round(precipitation["all"], 2)
-        if "3h" in precipitation:
-            return round(precipitation["3h"], 2)
-        if "1h" in precipitation:
-            return round(precipitation["1h"], 2)
+        if precipitation is not None:
+            if "all" in precipitation:
+                return round(precipitation["all"], 2)
+            if "3h" in precipitation:
+                return round(precipitation["3h"], 2)
+            if "1h" in precipitation:
+                return round(precipitation["1h"], 2)
         return 0
 
     def _get_condition(self, weather_code, timestamp=None):

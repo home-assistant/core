@@ -15,17 +15,19 @@ from aioshelly.exceptions import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
-from homeassistant.components.shelly import config_flow
+from homeassistant.components.shelly import MacAddressMismatchError, config_flow
 from homeassistant.components.shelly.const import (
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
     BLEScannerMode,
 )
 from homeassistant.components.shelly.coordinator import ENTRY_RELOAD_COOLDOWN
-from homeassistant.config_entries import SOURCE_RECONFIGURE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -34,22 +36,22 @@ from . import init_integration
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-12345",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
     type="mock_type",
 )
-DISCOVERY_INFO_WITH_MAC = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO_WITH_MAC = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="mock_hostname",
     name="shelly1pm-AABBCCDDEEFF",
     port=None,
-    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
+    properties={ATTR_PROPERTIES_ID: "shelly1pm-AABBCCDDEEFF"},
     type="mock_type",
 )
 
@@ -332,6 +334,7 @@ async def test_form_missing_model_key_zeroconf(
     ("exc", "base_error"),
     [
         (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -437,6 +440,7 @@ async def test_user_setup_ignored_device(
     [
         (InvalidAuthError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -474,6 +478,7 @@ async def test_form_auth_errors_test_connection_gen1(
     [
         (DeviceConnectionError, "cannot_connect"),
         (InvalidAuthError, "invalid_auth"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
         (ValueError, "unknown"),
     ],
 )
@@ -845,8 +850,19 @@ async def test_reauth_successful(
         (3, {"password": "test2 password"}),
     ],
 )
+@pytest.mark.parametrize(
+    ("exc", "abort_reason"),
+    [
+        (DeviceConnectionError, "reauth_unsuccessful"),
+        (MacAddressMismatchError, "mac_address_mismatch"),
+    ],
+)
 async def test_reauth_unsuccessful(
-    hass: HomeAssistant, gen: int, user_input: dict[str, str]
+    hass: HomeAssistant,
+    gen: int,
+    user_input: dict[str, str],
+    exc: Exception,
+    abort_reason: str,
 ) -> None:
     """Test reauthentication flow failed."""
     entry = MockConfigEntry(
@@ -863,13 +879,9 @@ async def test_reauth_unsuccessful(
             return_value={"mac": "test-mac", "type": MODEL_1, "auth": True, "gen": gen},
         ),
         patch(
-            "aioshelly.block_device.BlockDevice.create",
-            new=AsyncMock(side_effect=InvalidAuthError),
+            "aioshelly.block_device.BlockDevice.create", new=AsyncMock(side_effect=exc)
         ),
-        patch(
-            "aioshelly.rpc_device.RpcDevice.create",
-            new=AsyncMock(side_effect=InvalidAuthError),
-        ),
+        patch("aioshelly.rpc_device.RpcDevice.create", new=AsyncMock(side_effect=exc)),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -877,7 +889,7 @@ async def test_reauth_unsuccessful(
         )
 
         assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_unsuccessful"
+        assert result["reason"] == abort_reason
 
 
 async def test_reauth_get_info_error(hass: HomeAssistant) -> None:
@@ -1362,17 +1374,10 @@ async def test_reconfigure_successful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1401,17 +1406,10 @@ async def test_reconfigure_unsuccessful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch(
         "homeassistant.components.shelly.config_flow.get_info",
@@ -1445,17 +1443,10 @@ async def test_reconfigure_with_exception(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_RECONFIGURE,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reconfigure_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_confirm"
+    assert result["step_id"] == "reconfigure"
 
     with patch("homeassistant.components.shelly.config_flow.get_info", side_effect=exc):
         result = await hass.config_entries.flow.async_configure(
@@ -1471,13 +1462,13 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
             ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
             name="shelly1pm-12345",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+            properties={ATTR_PROPERTIES_ID: "shelly1pm-12345"},
             type="mock_type",
         ),
     )

@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) -> 
         model=coordinator.api.smile_model,
         model_id=coordinator.api.smile_model_id,
         name=coordinator.api.smile_name,
-        sw_version=coordinator.api.smile_version[0],
+        sw_version=str(coordinator.api.smile_version),
     )  # required for adding the entity-less P1 Gateway
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -83,7 +83,7 @@ def migrate_sensor_entities(
     # Migrating opentherm_outdoor_temperature
     # to opentherm_outdoor_air_temperature sensor
     for device_id, device in coordinator.data.devices.items():
-        if device.get("dev_class") != "heater_central":
+        if device["dev_class"] != "heater_central":
             continue
 
         old_unique_id = f"{device_id}-outdoor_temperature"

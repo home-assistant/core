@@ -245,7 +245,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
@@ -259,7 +259,6 @@
 # name: test_entity_state_attrs[sensor.i3_rex_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'i3 (+ REX) Charging target',
       'unit_of_measurement': '%',
     }),
@@ -894,7 +893,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
@@ -908,7 +907,6 @@
 # name: test_entity_state_attrs[sensor.i4_edrive40_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'i4 eDrive40 Charging target',
       'unit_of_measurement': '%',
     }),
@@ -1900,7 +1898,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Charging target',
     'platform': 'bmw_connected_drive',
@@ -1914,7 +1912,6 @@
 # name: test_entity_state_attrs[sensor.ix_xdrive50_charging_target-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'iX xDrive50 Charging target',
       'unit_of_measurement': '%',
     }),

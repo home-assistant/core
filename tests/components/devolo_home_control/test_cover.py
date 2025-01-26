@@ -8,13 +8,13 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverState,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
-    STATE_CLOSED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -46,7 +46,7 @@ async def test_cover(
     test_gateway.publisher.dispatch("Test", ("devolo.Blinds", 0.0))
     await hass.async_block_till_done()
     state = hass.states.get(f"{COVER_DOMAIN}.test")
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0.0
 
     # Test setting position

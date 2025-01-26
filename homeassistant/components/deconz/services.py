@@ -12,9 +12,9 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .config_flow import get_master_hub
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
 from .hub import DeconzHub
+from .util import get_master_hub
 
 DECONZ_SERVICES = "deconz_services"
 

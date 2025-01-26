@@ -9,6 +9,7 @@ from typing import Any
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -21,6 +22,8 @@ RETRY_CONNECTION_INTERVAL = 10
 WAIT_TIMEOUT = 30
 
 _LOGGER = logging.getLogger(__name__)
+
+type AprilaireConfigEntry = ConfigEntry[AprilaireCoordinator]
 
 
 class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
@@ -112,11 +115,13 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         self.client.stop_listen()
 
     async def wait_for_ready(
-        self, ready_callback: Callable[[bool], Awaitable[bool]]
+        self, ready_callback: Callable[[bool], Awaitable[None]]
     ) -> bool:
         """Wait for the client to be ready."""
 
         if not self.data or Attribute.MAC_ADDRESS not in self.data:
+            await self.client.read_mac_address()
+
             data = await self.client.wait_for_response(
                 FunctionalDomain.IDENTIFICATION, 2, WAIT_TIMEOUT
             )
@@ -127,12 +132,9 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
                 return False
 
-        if not self.data or Attribute.NAME not in self.data:
-            await self.client.wait_for_response(
-                FunctionalDomain.IDENTIFICATION, 4, WAIT_TIMEOUT
-            )
-
         if not self.data or Attribute.THERMOSTAT_MODES not in self.data:
+            await self.client.read_thermostat_iaq_available()
+
             await self.client.wait_for_response(
                 FunctionalDomain.CONTROL, 7, WAIT_TIMEOUT
             )
@@ -141,9 +143,15 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             not self.data
             or Attribute.INDOOR_TEMPERATURE_CONTROLLING_SENSOR_STATUS not in self.data
         ):
+            await self.client.read_sensors()
+
             await self.client.wait_for_response(
                 FunctionalDomain.SENSORS, 2, WAIT_TIMEOUT
             )
+
+        await self.client.read_thermostat_status()
+
+        await self.client.read_iaq_status()
 
         await ready_callback(True)
 

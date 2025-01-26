@@ -19,7 +19,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry
 from .const import DOMAIN, PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -216,6 +218,7 @@ class AirGradientSelect(AirGradientEntity, SelectEntity):
         """Return the state of the select."""
         return self.entity_description.value_fn(self.coordinator.data.config)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.set_value_fn(self.coordinator.client, option)

@@ -9,6 +9,7 @@ import dataclasses
 from functools import wraps
 from http import HTTPStatus
 import logging
+import time
 from typing import Any, Concatenate
 
 import aiohttp
@@ -31,7 +32,9 @@ from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.location import async_detect_location_info
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
@@ -39,9 +42,12 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    EVENT_CLOUD_EVENT,
+    LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
     PREF_ENABLE_ALEXA,
+    PREF_ENABLE_CLOUD_ICE_SERVERS,
     PREF_ENABLE_GOOGLE,
     PREF_GOOGLE_REPORT_STATE,
     PREF_GOOGLE_SECURE_DEVICES_PIN,
@@ -66,6 +72,10 @@ _CLOUD_ERRORS: dict[type[Exception], tuple[HTTPStatus, str]] = {
         "Error making internal request",
     ),
 }
+
+
+class MFAExpiredOrNotStarted(auth.CloudError):
+    """Multi-factor authentication expired, or not started."""
 
 
 @callback
@@ -100,6 +110,11 @@ def async_setup(hass: HomeAssistant) -> None:
 
     _CLOUD_ERRORS.update(
         {
+            auth.InvalidTotpCode: (HTTPStatus.BAD_REQUEST, "Invalid TOTP code."),
+            auth.MFARequired: (
+                HTTPStatus.UNAUTHORIZED,
+                "Multi-factor authentication required.",
+            ),
             auth.UserNotFound: (HTTPStatus.BAD_REQUEST, "User does not exist."),
             auth.UserNotConfirmed: (HTTPStatus.BAD_REQUEST, "Email not confirmed."),
             auth.UserExists: (
@@ -110,6 +125,10 @@ def async_setup(hass: HomeAssistant) -> None:
             auth.PasswordChangeRequired: (
                 HTTPStatus.BAD_REQUEST,
                 "Password change required.",
+            ),
+            MFAExpiredOrNotStarted: (
+                HTTPStatus.BAD_REQUEST,
+                "Multi-factor authentication expired, or not started. Please try again.",
             ),
         }
     )
@@ -205,24 +224,64 @@ class GoogleActionsSyncView(HomeAssistantView):
 class CloudLoginView(HomeAssistantView):
     """Login to Home Assistant cloud."""
 
+    _mfa_tokens: dict[str, str] = {}
+    _mfa_tokens_set_time: float = 0
+
     url = "/api/cloud/login"
     name = "api:cloud:login"
 
     @require_admin
     @_handle_cloud_errors
     @RequestDataValidator(
-        vol.Schema({vol.Required("email"): str, vol.Required("password"): str})
+        vol.Schema(
+            vol.All(
+                {
+                    vol.Required("email"): str,
+                    vol.Exclusive("password", "login"): str,
+                    vol.Exclusive("code", "login"): str,
+                },
+                cv.has_at_least_one_key("password", "code"),
+            )
+        )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle login request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
-        await cloud.login(data["email"], data["password"])
+
+        try:
+            email = data["email"]
+            password = data.get("password")
+            code = data.get("code")
+
+            if email and password:
+                await cloud.login(email, password)
+
+            else:
+                if (
+                    not self._mfa_tokens
+                    or time.time() - self._mfa_tokens_set_time > LOGIN_MFA_TIMEOUT
+                ):
+                    raise MFAExpiredOrNotStarted
+
+                # Voluptuous should ensure that code is not None because password is
+                assert code is not None
+
+                await cloud.login_verify_totp(email, code, self._mfa_tokens)
+                self._mfa_tokens = {}
+                self._mfa_tokens_set_time = 0
+
+        except auth.MFARequired as mfa_err:
+            self._mfa_tokens = mfa_err.mfa_tokens
+            self._mfa_tokens_set_time = time.time()
+            raise
 
         if "assist_pipeline" in hass.config.components:
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
         else:
             new_cloud_pipeline_id = None
+
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
@@ -242,6 +301,7 @@ class CloudLogoutView(HomeAssistantView):
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
         return self.json_message("ok")
 
 
@@ -439,15 +499,16 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "cloud/update_prefs",
-        vol.Optional(PREF_ENABLE_GOOGLE): bool,
-        vol.Optional(PREF_ENABLE_ALEXA): bool,
         vol.Optional(PREF_ALEXA_REPORT_STATE): bool,
+        vol.Optional(PREF_ENABLE_ALEXA): bool,
+        vol.Optional(PREF_ENABLE_CLOUD_ICE_SERVERS): bool,
+        vol.Optional(PREF_ENABLE_GOOGLE): bool,
         vol.Optional(PREF_GOOGLE_REPORT_STATE): bool,
         vol.Optional(PREF_GOOGLE_SECURE_DEVICES_PIN): vol.Any(None, str),
+        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
         vol.Optional(PREF_TTS_DEFAULT_VOICE): vol.All(
             vol.Coerce(tuple), validate_language_voice
         ),
-        vol.Optional(PREF_REMOTE_ALLOW_REMOTE_ENABLE): bool,
     }
 )
 @websocket_api.async_response

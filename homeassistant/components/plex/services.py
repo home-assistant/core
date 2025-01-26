@@ -133,6 +133,8 @@ def process_plex_payload(
     elif content_id.startswith(PLEX_URI_SCHEME):
         # Handle standard media_browser payloads
         plex_url = URL(content_id)
+        # https://github.com/pylint-dev/pylint/issues/3484
+        # pylint: disable-next=using-constant-test
         if plex_url.name:
             if len(plex_url.parts) == 2:
                 if plex_url.name == "search":

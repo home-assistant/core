@@ -1,161 +1,36 @@
 """The tests for the nexbus sensor component."""
 
-from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from urllib.error import HTTPError
 
 from freezegun.api import FrozenDateTimeFactory
 from py_nextbus.client import NextBusFormatError, NextBusHTTPError
 import pytest
 
-from homeassistant.components import sensor
-from homeassistant.components.nextbus.const import CONF_AGENCY, CONF_ROUTE, DOMAIN
+from homeassistant.components.nextbus.const import DOMAIN
 from homeassistant.components.nextbus.coordinator import NextBusDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_NAME, CONF_STOP
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from . import assert_setup_sensor
+from .const import (
+    BASIC_RESULTS,
+    CONFIG_BASIC,
+    CONFIG_BASIC_2,
+    NO_UPCOMING,
+    ROUTE_TITLE_2,
+    SENSOR_ID,
+    SENSOR_ID_2,
+    VALID_AGENCY,
+    VALID_COORDINATOR_KEY,
+    VALID_ROUTE_TITLE,
+    VALID_STOP_TITLE,
+)
 
-VALID_AGENCY = "sfmta-cis"
-VALID_ROUTE = "F"
-VALID_STOP = "5184"
-VALID_COORDINATOR_KEY = f"{VALID_AGENCY}-{VALID_STOP}"
-VALID_AGENCY_TITLE = "San Francisco Muni"
-VALID_ROUTE_TITLE = "F-Market & Wharves"
-VALID_STOP_TITLE = "Market St & 7th St"
-SENSOR_ID = "sensor.san_francisco_muni_f_market_wharves_market_st_7th_st"
-
-ROUTE_2 = "G"
-ROUTE_TITLE_2 = "G-Market & Wharves"
-SENSOR_ID_2 = "sensor.san_francisco_muni_g_market_wharves_market_st_7th_st"
-
-PLATFORM_CONFIG = {
-    sensor.DOMAIN: {
-        "platform": DOMAIN,
-        CONF_AGENCY: VALID_AGENCY,
-        CONF_ROUTE: VALID_ROUTE,
-        CONF_STOP: VALID_STOP,
-    },
-}
-
-
-CONFIG_BASIC = {
-    DOMAIN: {
-        CONF_AGENCY: VALID_AGENCY,
-        CONF_ROUTE: VALID_ROUTE,
-        CONF_STOP: VALID_STOP,
-    }
-}
-
-CONFIG_BASIC_2 = {
-    DOMAIN: {
-        CONF_AGENCY: VALID_AGENCY,
-        CONF_ROUTE: ROUTE_2,
-        CONF_STOP: VALID_STOP,
-    }
-}
-
-BASIC_RESULTS = [
-    {
-        "route": {
-            "title": VALID_ROUTE_TITLE,
-            "id": VALID_ROUTE,
-        },
-        "stop": {
-            "name": VALID_STOP_TITLE,
-            "id": VALID_STOP,
-        },
-        "values": [
-            {"minutes": 1, "timestamp": 1553807371000},
-            {"minutes": 2, "timestamp": 1553807372000},
-            {"minutes": 3, "timestamp": 1553807373000},
-            {"minutes": 10, "timestamp": 1553807380000},
-        ],
-    },
-    {
-        "route": {
-            "title": ROUTE_TITLE_2,
-            "id": ROUTE_2,
-        },
-        "stop": {
-            "name": VALID_STOP_TITLE,
-            "id": VALID_STOP,
-        },
-        "values": [
-            {"minutes": 90, "timestamp": 1553807379000},
-        ],
-    },
-]
-
-NO_UPCOMING = [
-    {
-        "route": {
-            "title": VALID_ROUTE_TITLE,
-            "id": VALID_ROUTE,
-        },
-        "stop": {
-            "name": VALID_STOP_TITLE,
-            "id": VALID_STOP,
-        },
-        "values": [],
-    },
-    {
-        "route": {
-            "title": ROUTE_TITLE_2,
-            "id": ROUTE_2,
-        },
-        "stop": {
-            "name": VALID_STOP_TITLE,
-            "id": VALID_STOP,
-        },
-        "values": [],
-    },
-]
-
-
-@pytest.fixture
-def mock_nextbus() -> Generator[MagicMock]:
-    """Create a mock py_nextbus module."""
-    with patch("homeassistant.components.nextbus.coordinator.NextBusClient") as client:
-        yield client
-
-
-@pytest.fixture
-def mock_nextbus_predictions(
-    mock_nextbus: MagicMock,
-) -> Generator[MagicMock]:
-    """Create a mock of NextBusClient predictions."""
-    instance = mock_nextbus.return_value
-    instance.predictions_for_stop.return_value = BASIC_RESULTS
-
-    return instance.predictions_for_stop
-
-
-async def assert_setup_sensor(
-    hass: HomeAssistant,
-    config: dict[str, dict[str, str]],
-    expected_state=ConfigEntryState.LOADED,
-    route_title: str = VALID_ROUTE_TITLE,
-) -> MockConfigEntry:
-    """Set up the sensor and assert it's been created."""
-    unique_id = f"{config[DOMAIN][CONF_AGENCY]}_{config[DOMAIN][CONF_ROUTE]}_{config[DOMAIN][CONF_STOP]}"
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=config[DOMAIN],
-        title=f"{VALID_AGENCY_TITLE} {route_title} {VALID_STOP_TITLE}",
-        unique_id=unique_id,
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry.state is expected_state
-
-    return config_entry
+from tests.common import async_fire_time_changed
 
 
 async def test_predictions(

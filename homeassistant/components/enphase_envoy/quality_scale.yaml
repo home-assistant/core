@@ -1,0 +1,94 @@
+rules:
+  # Bronze
+  action-setup:
+    status: done
+    comment: only actions implemented are platform native ones.
+  appropriate-polling:
+    status: done
+    comment: fixed 1 minute cycle based on Enphase Envoy device characteristics
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy/#actions
+  docs-high-level-description:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy
+  docs-installation-instructions:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#prerequisites
+  docs-removal-instructions:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#removing-the-integration
+  entity-event-setup:
+    status: done
+    comment: no events used.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      needs to raise appropriate error when exception occurs.
+      Pending https://github.com/pyenphase/pyenphase/pull/194
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#configuration
+  docs-installation-parameters:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#required-manual-input
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: done
+    comment: pending https://github.com/home-assistant/core/pull/132373
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#data-updates
+  docs-examples:
+    status: todo
+    comment: add blue-print examples, if any
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#supported-devices
+  docs-supported-functions: todo
+  docs-troubleshooting:
+    status: done
+    comment: https://www.home-assistant.io/integrations/enphase_envoy#troubleshooting
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: no general issues or repair.py
+  stale-devices: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

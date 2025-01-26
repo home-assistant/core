@@ -48,7 +48,7 @@ async def test_get_triggers(
     )
     hass.states.async_set(
         entity_entry.entity_id,
-        const.HVAC_MODE_COOL,
+        HVACMode.COOL,
         {
             const.ATTR_HVAC_ACTION: HVACAction.IDLE,
             const.ATTR_CURRENT_HUMIDITY: 23,

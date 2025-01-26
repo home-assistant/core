@@ -1,0 +1,16 @@
+# serializer version: 1
+# name: test_change_valve_state_snapshot
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Sonic',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.sonic',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---

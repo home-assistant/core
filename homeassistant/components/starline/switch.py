@@ -72,14 +72,13 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
     def extra_state_attributes(self):
         """Return the state attributes of the switch."""
         if self._key == "ign":
+            # Deprecated and should be removed in 2025.8
             return self._account.engine_attrs(self._device)
         return None
 
     @property
     def is_on(self):
         """Return True if entity is on."""
-        if self._key == "poke":
-            return False
         return self._device.car_state.get(self._key)
 
     def turn_on(self, **kwargs: Any) -> None:
@@ -88,6 +87,4 @@ class StarlineSwitch(StarlineEntity, SwitchEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if self._key == "poke":
-            return
         self._account.api.set_car_state(self._device.device_id, self._key, False)

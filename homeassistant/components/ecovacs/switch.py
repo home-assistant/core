@@ -131,7 +131,7 @@ class EcovacsSwitchEntity(
         await super().async_added_to_hass()
 
         async def on_event(event: EnableEvent) -> None:
-            self._attr_is_on = event.enable
+            self._attr_is_on = event.enabled
             self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)

@@ -42,6 +42,25 @@
       "current_voltage": {
         "name": "Current voltage"
       }
+    },
+    "number": {
+      "mist_level": {
+        "name": "Mist level"
+      }
+    },
+    "fan": {
+      "vesync": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "Auto",
+              "sleep": "Sleep",
+              "pet": "Pet",
+              "turbo": "Turbo"
+            }
+          }
+        }
+      }
     }
   },
   "services": {

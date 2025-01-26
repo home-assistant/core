@@ -35,33 +35,38 @@ from .const import (
     ATTR_CONVERSATION_ID,
     ATTR_LANGUAGE,
     ATTR_TEXT,
+    DATA_COMPONENT,
     DATA_DEFAULT_ENTITY,
     DOMAIN,
-    DOMAIN_DATA,
     HOME_ASSISTANT_AGENT,
     OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
 )
-from .default_agent import async_setup_default_agent
+from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
+from .session import ChatMessage, ChatSession, ConverseError, async_get_chat_session
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
+    "ChatMessage",
+    "ChatSession",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
     "ConversationTraceEventType",
+    "ConverseError",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
+    "async_get_chat_session",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
@@ -149,7 +154,7 @@ def async_get_conversation_languages(
         agents = [agent]
 
     else:
-        agents = list(hass.data[DOMAIN_DATA].entities)
+        agents = list(hass.data[DATA_COMPONENT].entities)
         for info in agent_manager.async_get_agent_info():
             agent = agent_manager.async_get_agent(info.id)
             assert agent is not None
@@ -207,10 +212,36 @@ async def async_prepare_agent(
     await agent.async_prepare(language)
 
 
+async def async_handle_sentence_triggers(
+    hass: HomeAssistant, user_input: ConversationInput
+) -> str | None:
+    """Try to match input against sentence triggers and return response text.
+
+    Returns None if no match occurred.
+    """
+    default_agent = async_get_agent(hass)
+    assert isinstance(default_agent, DefaultAgent)
+
+    return await default_agent.async_handle_sentence_triggers(user_input)
+
+
+async def async_handle_intents(
+    hass: HomeAssistant, user_input: ConversationInput
+) -> intent.IntentResponse | None:
+    """Try to match input against registered intents and return response.
+
+    Returns None if no match occurred.
+    """
+    default_agent = async_get_agent(hass)
+    assert isinstance(default_agent, DefaultAgent)
+
+    return await default_agent.async_handle_intents(user_input)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
     entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
-    hass.data[DOMAIN_DATA] = entity_component
+    hass.data[DATA_COMPONENT] = entity_component
 
     await async_setup_default_agent(
         hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
@@ -269,9 +300,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    return await hass.data[DOMAIN_DATA].async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.data[DOMAIN_DATA].async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)

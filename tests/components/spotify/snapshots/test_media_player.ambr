@@ -1,0 +1,137 @@
+# serializer version: 1
+# name: test_entities[media_player.spotify_spotify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.spotify_spotify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'spotify',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 444983>,
+    'translation_key': 'spotify',
+    'unique_id': '1112264111',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[media_player.spotify_spotify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=7bb89748322acb6c',
+      'friendly_name': 'Spotify spotify_1',
+      'media_album_name': 'Permanent Waves',
+      'media_artist': 'Rush',
+      'media_content_id': 'spotify:track:4e9hUiLsN4mx61ARosFi7p',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_duration': 296,
+      'media_playlist': 'Spotify Web API Testing playlist',
+      'media_position': 249,
+      'media_position_updated_at': HAFakeDatetime(2023, 10, 21, 0, 0, tzinfo=datetime.timezone.utc),
+      'media_title': 'The Spirit Of Radio',
+      'media_track': 1,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'source': 'Master Bathroom Speaker',
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 444983>,
+      'volume_level': 0.25,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.spotify_spotify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---
+# name: test_podcast[media_player.spotify_spotify_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'media_player',
+    'entity_category': None,
+    'entity_id': 'media_player.spotify_spotify_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'spotify',
+    'previous_unique_id': None,
+    'supported_features': <MediaPlayerEntityFeature: 2048>,
+    'translation_key': 'spotify',
+    'unique_id': '1112264111',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_podcast[media_player.spotify_spotify_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': '/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=cf1e6e1e830f08d3',
+      'friendly_name': 'Spotify spotify_1',
+      'media_album_name': 'Safety Third',
+      'media_artist': 'Safety Third ',
+      'media_content_id': 'spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
+      'media_content_type': <MediaType.PODCAST: 'podcast'>,
+      'media_duration': 3690,
+      'media_position': 5,
+      'media_position_updated_at': HAFakeDatetime(2023, 10, 21, 0, 0, tzinfo=datetime.timezone.utc),
+      'media_title': 'My Squirrel Has Brain Damage - Safety Third 119',
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'source': 'Sonos Roam SL',
+      'source_list': list([
+        'DESKTOP-BKC5SIK',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 2048>,
+      'volume_level': 0.46,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.spotify_spotify_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---

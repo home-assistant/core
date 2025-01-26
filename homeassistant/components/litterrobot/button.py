@@ -4,18 +4,45 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import itertools
 from typing import Any, Generic
 
-from pylitterbot import FeederRobot, LitterRobot3
+from pylitterbot import FeederRobot, LitterRobot3, LitterRobot4, Robot
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
+
+
+@dataclass(frozen=True, kw_only=True)
+class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_RobotT]):
+    """A class that describes robot button entities."""
+
+    press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
+
+
+ROBOT_BUTTON_MAP: dict[type[Robot], RobotButtonEntityDescription] = {
+    LitterRobot3: RobotButtonEntityDescription[LitterRobot3](
+        key="reset_waste_drawer",
+        translation_key="reset_waste_drawer",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.reset_waste_drawer(),
+    ),
+    LitterRobot4: RobotButtonEntityDescription[LitterRobot4](
+        key="reset",
+        translation_key="reset",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.reset(),
+    ),
+    FeederRobot: RobotButtonEntityDescription[FeederRobot](
+        key="give_snack",
+        translation_key="give_snack",
+        press_fn=lambda robot: robot.give_snack(),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -24,50 +51,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
-    entities: list[LitterRobotButtonEntity] = list(
-        itertools.chain(
-            (
-                LitterRobotButtonEntity(
-                    robot=robot, hub=hub, description=LITTER_ROBOT_BUTTON
-                )
-                for robot in hub.litter_robots()
-                if isinstance(robot, LitterRobot3)
-            ),
-            (
-                LitterRobotButtonEntity(
-                    robot=robot, hub=hub, description=FEEDER_ROBOT_BUTTON
-                )
-                for robot in hub.feeder_robots()
-            ),
+    coordinator = entry.runtime_data
+    async_add_entities(
+        LitterRobotButtonEntity(
+            robot=robot, coordinator=coordinator, description=description
         )
+        for robot in coordinator.account.robots
+        for robot_type, description in ROBOT_BUTTON_MAP.items()
+        if isinstance(robot, robot_type)
     )
-    async_add_entities(entities)
-
-
-@dataclass(frozen=True)
-class RequiredKeysMixin(Generic[_RobotT]):
-    """A class that describes robot button entity required keys."""
-
-    press_fn: Callable[[_RobotT], Coroutine[Any, Any, bool]]
-
-
-@dataclass(frozen=True)
-class RobotButtonEntityDescription(ButtonEntityDescription, RequiredKeysMixin[_RobotT]):
-    """A class that describes robot button entities."""
-
-
-LITTER_ROBOT_BUTTON = RobotButtonEntityDescription[LitterRobot3](
-    key="reset_waste_drawer",
-    translation_key="reset_waste_drawer",
-    entity_category=EntityCategory.CONFIG,
-    press_fn=lambda robot: robot.reset_waste_drawer(),
-)
-FEEDER_ROBOT_BUTTON = RobotButtonEntityDescription[FeederRobot](
-    key="give_snack",
-    translation_key="give_snack",
-    press_fn=lambda robot: robot.give_snack(),
-)
 
 
 class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
@@ -78,4 +70,4 @@ class LitterRobotButtonEntity(LitterRobotEntity[_RobotT], ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         await self.entity_description.press_fn(self.robot)
-        self.coordinator.async_set_updated_data(True)
+        self.coordinator.async_set_updated_data(None)

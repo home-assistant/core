@@ -51,7 +51,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_p
         },
     ],
 )
-async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -102,7 +103,8 @@ async def test_reloadable(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_can_remove(hass: HomeAssistant) -> None:
     """Test that we can reload and remove all template sensors."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -132,9 +134,8 @@ async def test_reloadable_can_remove(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
-async def test_reloadable_stops_on_invalid_config(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
     """Test we stop the reload if configuration.yaml is completely broken."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -162,9 +163,8 @@ async def test_reloadable_stops_on_invalid_config(
         },
     ],
 )
-async def test_reloadable_handles_partial_valid_config(
-    hass: HomeAssistant, start_ha
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
     """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
@@ -195,7 +195,8 @@ async def test_reloadable_handles_partial_valid_config(
         },
     ],
 )
-async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     """Test that we can reload."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await async_setup_component(
@@ -239,8 +240,9 @@ async def test_reloadable_multiple_platforms(hass: HomeAssistant, start_ha) -> N
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_reload_sensors_that_reference_other_template_sensors(
-    hass: HomeAssistant, start_ha
+    hass: HomeAssistant,
 ) -> None:
     """Test that we can reload sensor that reference other template sensors."""
     await async_yaml_patch_helper(hass, "ref_configuration.yaml")

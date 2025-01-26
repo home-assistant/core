@@ -12,7 +12,7 @@
         },
         "title": "Connect to your Tado account"
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure your Tado",
         "description": "Reconfigure the entry, for your account: `{username}`.",
         "data": {
@@ -135,12 +135,12 @@
       }
     },
     "add_meter_reading": {
-      "name": "Add meter readings",
-      "description": "Add meter readings to Tado Energy IQ.",
+      "name": "Add meter reading",
+      "description": "Adds a meter reading to Tado Energy IQ.",
       "fields": {
         "config_entry": {
           "name": "Config Entry",
-          "description": "Config entry to add meter readings to."
+          "description": "Config entry to add meter reading to."
         },
         "reading": {
           "name": "Reading",

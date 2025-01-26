@@ -32,8 +32,10 @@ async def test_add_item(hass: HomeAssistant, sl_setup) -> None:
     """Test adding an item intent."""
 
     response = await intent.async_handle(
-        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": " beer "}}
     )
+    assert len(hass.data[DOMAIN].items) == 1
+    assert hass.data[DOMAIN].items[0]["name"] == "beer"  # name was trimmed
 
     # Response text is now handled by default conversation agent
     assert response.response_type == intent.IntentResponseType.ACTION_DONE

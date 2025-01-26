@@ -1,6 +1,7 @@
 """Tests for the SMLIGHT update platform."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pysmlight import Firmware, Info
@@ -14,6 +15,7 @@ from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
     ATTR_LATEST_VERSION,
+    ATTR_UPDATE_PERCENTAGE,
     DOMAIN as PLATFORM,
     SERVICE_INSTALL,
 )
@@ -87,7 +89,9 @@ async def test_update_setup(
     await hass.config_entries.async_unload(entry.entry_id)
 
 
+@patch("homeassistant.components.smlight.update.asyncio.sleep", return_value=None)
 async def test_update_firmware(
+    mock_sleep: MagicMock,
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
@@ -114,7 +118,8 @@ async def test_update_firmware(
 
     event_function(MOCK_FIRMWARE_PROGRESS)
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_IN_PROGRESS] == 50
+    assert state.attributes[ATTR_IN_PROGRESS] is True
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
 
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
 
@@ -124,7 +129,7 @@ async def test_update_firmware(
         sw_version="v2.5.2",
     )
 
-    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    freezer.tick(timedelta(seconds=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -211,6 +216,55 @@ async def test_update_firmware_failed(
         await _call_event_function(MOCK_FIRMWARE_FAIL)
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_IN_PROGRESS] is False
+    assert state.attributes[ATTR_UPDATE_PERCENTAGE] is None
+
+
+@patch("homeassistant.components.smlight.const.LOGGER.warning")
+async def test_update_reboot_timeout(
+    mock_warning: MagicMock,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test firmware updates."""
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_core_firmware"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+    with (
+        patch(
+            "homeassistant.components.smlight.update.asyncio.timeout",
+            side_effect=TimeoutError,
+        ),
+        patch(
+            "homeassistant.components.smlight.update.asyncio.sleep",
+            return_value=None,
+        ),
+    ):
+        await hass.services.async_call(
+            PLATFORM,
+            SERVICE_INSTALL,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=False,
+        )
+
+        assert len(mock_smlight_client.fw_update.mock_calls) == 1
+
+        event_function = get_mock_event_function(
+            mock_smlight_client, SmEvents.FW_UPD_done
+        )
+
+        event_function(MOCK_FIRMWARE_DONE)
+
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        mock_warning.assert_called_once()
 
 
 async def test_update_release_notes(

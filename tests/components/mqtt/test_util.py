@@ -231,13 +231,14 @@ async def test_waiting_for_client_not_loaded(
         domain=mqtt.DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
     unsubs: list[Callable[[], None]] = []
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
-        nonlocal unsub
+    async def _async_just_in_time_subscribe() -> None:
         assert await mqtt.async_wait_for_mqtt_client(hass)
         # Awaiting a second time should work too and return True
         assert await mqtt.async_wait_for_mqtt_client(hass)
@@ -261,12 +262,12 @@ async def test_waiting_for_client_loaded(
     """Test waiting for client where mqtt entry is loaded."""
     unsub: Callable[[], None] | None = None
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+    async def _async_just_in_time_subscribe() -> None:
         nonlocal unsub
         assert await mqtt.async_wait_for_mqtt_client(hass)
         unsub = await mqtt.async_subscribe(hass, "test_topic", lambda msg: None)
 
-    entry = hass.config_entries.async_entries(mqtt.DATA_MQTT)[0]
+    entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     assert entry.state is ConfigEntryState.LOADED
 
     await _async_just_in_time_subscribe()
@@ -287,10 +288,12 @@ async def test_waiting_for_client_entry_fails(
         domain=mqtt.DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+    async def _async_just_in_time_subscribe() -> None:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
     hass.async_create_task(_async_just_in_time_subscribe())
@@ -300,7 +303,7 @@ async def test_waiting_for_client_entry_fails(
         side_effect=Exception,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR  # type:ignore[comparison-overlap]
 
 
 async def test_waiting_for_client_setup_fails(
@@ -315,10 +318,12 @@ async def test_waiting_for_client_setup_fails(
         domain=mqtt.DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
-    async def _async_just_in_time_subscribe() -> Callable[[], None]:
+    async def _async_just_in_time_subscribe() -> None:
         assert not await mqtt.async_wait_for_mqtt_client(hass)
 
     hass.async_create_task(_async_just_in_time_subscribe())
@@ -327,7 +332,7 @@ async def test_waiting_for_client_setup_fails(
     # Simulate MQTT setup fails before the client would become available
     mqtt_client_mock.connect.side_effect = Exception
     assert not await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_ERROR  # type:ignore[comparison-overlap]
 
 
 @patch("homeassistant.components.mqtt.util.AVAILABILITY_TIMEOUT", 0.01)
@@ -342,6 +347,8 @@ async def test_waiting_for_client_timeout(
         domain=mqtt.DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 
@@ -361,6 +368,8 @@ async def test_waiting_for_client_with_disabled_entry(
         domain=mqtt.DOMAIN,
         data={"broker": "test-broker"},
         state=ConfigEntryState.NOT_LOADED,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
 

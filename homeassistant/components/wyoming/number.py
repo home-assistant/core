@@ -30,13 +30,12 @@ async def async_setup_entry(
     item: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
 
     # Setup is only forwarded for satellites
-    assert item.satellite is not None
+    assert item.device is not None
 
-    device = item.satellite.device
     async_add_entities(
         [
-            WyomingSatelliteAutoGainNumber(device),
-            WyomingSatelliteVolumeMultiplierNumber(device),
+            WyomingSatelliteAutoGainNumber(item.device),
+            WyomingSatelliteVolumeMultiplierNumber(item.device),
         ]
     )
 

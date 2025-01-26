@@ -423,25 +423,22 @@ async def async_create_or_update_device_in_config_entry(
         device_connection.is_group,
     )
 
-    device_configs = [*config_entry.data[CONF_DEVICES]]
-    data = {**config_entry.data, CONF_DEVICES: device_configs}
-    for device_config in data[CONF_DEVICES]:
-        if tuple(device_config[CONF_ADDRESS]) == address:
-            break  # device already in config_entry
-    else:
-        # create new device_entry
-        device_config = {
-            CONF_ADDRESS: address,
-            CONF_NAME: "",
-            CONF_HARDWARE_SERIAL: -1,
-            CONF_SOFTWARE_SERIAL: -1,
-            CONF_HARDWARE_TYPE: -1,
-        }
-        data[CONF_DEVICES].append(device_config)
+    device_config = {
+        CONF_ADDRESS: address,
+        CONF_NAME: "",
+        CONF_HARDWARE_SERIAL: -1,
+        CONF_SOFTWARE_SERIAL: -1,
+        CONF_HARDWARE_TYPE: -1,
+    }
 
-    # update device_entry
+    device_configs = [
+        device
+        for device in config_entry.data[CONF_DEVICES]
+        if tuple(device[CONF_ADDRESS]) != address
+    ]
+    data = {**config_entry.data, CONF_DEVICES: [*device_configs, device_config]}
+
     await async_update_device_config(device_connection, device_config)
-
     hass.config_entries.async_update_entry(config_entry, data=data)
 
 

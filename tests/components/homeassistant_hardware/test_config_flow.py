@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
-from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -17,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     BaseFirmwareOptionsFlow,
 )
 from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
     get_otbr_addon_manager,
     get_zigbee_flasher_addon_manager,
 )
@@ -118,6 +118,11 @@ def mock_test_firmware_platform(
 
     with mock_config_flow(TEST_DOMAIN, FakeFirmwareConfigFlow):
         yield
+
+
+@pytest.fixture(autouse=True)
+async def fixture_mock_supervisor_client(supervisor_client: AsyncMock):
+    """Mock supervisor client in tests."""
 
 
 def delayed_side_effect() -> Callable[..., Awaitable[None]]:

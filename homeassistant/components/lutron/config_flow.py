@@ -26,11 +26,6 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """First step in the config flow."""
-
-        # Check if a configuration entry already exists
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors = {}
 
         if user_input is not None:

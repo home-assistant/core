@@ -58,6 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=entry.title,
         update_interval=DEFAULT_UPDATE_INTERVAL,
         update_method=async_update_data,

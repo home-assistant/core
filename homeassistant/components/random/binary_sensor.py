@@ -59,10 +59,9 @@ class RandomBinarySensor(BinarySensorEntity):
 
     def __init__(self, config: Mapping[str, Any], entry_id: str | None = None) -> None:
         """Initialize the Random binary sensor."""
-        self._attr_name = config.get(CONF_NAME)
+        self._attr_name = config[CONF_NAME]
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        if entry_id:
-            self._attr_unique_id = entry_id
+        self._attr_unique_id = entry_id
 
     async def async_update(self) -> None:
         """Get new state and update the sensor's state."""

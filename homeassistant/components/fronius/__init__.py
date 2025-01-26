@@ -60,7 +60,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FroniusConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: FroniusConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True
@@ -199,7 +199,10 @@ class FroniusSolarNet:
                 name=_inverter_name,
                 inverter_info=_inverter_info,
             )
-            await _coordinator.async_config_entry_first_refresh()
+            if self.config_entry.state == ConfigEntryState.LOADED:
+                await _coordinator.async_refresh()
+            else:
+                await _coordinator.async_config_entry_first_refresh()
             self.inverter_coordinators.append(_coordinator)
 
             # Only for re-scans. Initial setup adds entities through sensor.async_setup_entry
@@ -223,7 +226,14 @@ class FroniusSolarNet:
                 _LOGGER.debug("Re-scan failed for %s", self.host)
                 return inverter_infos
 
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="entry_cannot_connect",
+                translation_placeholders={
+                    "host": self.host,
+                    "fronius_error": str(err),
+                },
+            ) from err
 
         for inverter in _inverter_info["inverters"]:
             solar_net_id = inverter["device_id"]["value"]

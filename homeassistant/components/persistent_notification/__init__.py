@@ -184,8 +184,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         create_service,
         vol.Schema(
             {
-                vol.Required(ATTR_MESSAGE): vol.Any(cv.dynamic_template, cv.string),
-                vol.Optional(ATTR_TITLE): vol.Any(cv.dynamic_template, cv.string),
+                vol.Required(ATTR_MESSAGE): cv.string,
+                vol.Optional(ATTR_TITLE): cv.string,
                 vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
             }
         ),

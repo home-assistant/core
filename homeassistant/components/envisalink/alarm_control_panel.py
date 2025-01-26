@@ -9,20 +9,10 @@ import voluptuous as vol
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_CODE,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_CODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -144,24 +134,24 @@ class EnvisalinkAlarm(EnvisalinkEntity, AlarmControlPanelEntity):
             self.async_write_ha_state()
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
-        state = STATE_UNKNOWN
+        state = None
 
         if self._info["status"]["alarm"]:
-            state = STATE_ALARM_TRIGGERED
+            state = AlarmControlPanelState.TRIGGERED
         elif self._info["status"]["armed_zero_entry_delay"]:
-            state = STATE_ALARM_ARMED_NIGHT
+            state = AlarmControlPanelState.ARMED_NIGHT
         elif self._info["status"]["armed_away"]:
-            state = STATE_ALARM_ARMED_AWAY
+            state = AlarmControlPanelState.ARMED_AWAY
         elif self._info["status"]["armed_stay"]:
-            state = STATE_ALARM_ARMED_HOME
+            state = AlarmControlPanelState.ARMED_HOME
         elif self._info["status"]["exit_delay"]:
-            state = STATE_ALARM_ARMING
+            state = AlarmControlPanelState.ARMING
         elif self._info["status"]["entry_delay"]:
-            state = STATE_ALARM_PENDING
+            state = AlarmControlPanelState.PENDING
         elif self._info["status"]["alpha"]:
-            state = STATE_ALARM_DISARMED
+            state = AlarmControlPanelState.DISARMED
         return state
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:

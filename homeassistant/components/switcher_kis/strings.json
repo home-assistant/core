@@ -43,12 +43,33 @@
         "name": "Vertical swing off"
       }
     },
+    "cover": {
+      "cover": {
+        "name": "Cover {cover_id}"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light {light_id}"
+      }
+    },
     "sensor": {
       "remaining_time": {
         "name": "Remaining time"
       },
       "auto_shutdown": {
         "name": "Auto shutdown"
+      },
+      "temperature": {
+        "name": "Current temperature"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
+      "multi_child_lock": {
+        "name": "Child lock {cover_id}"
       }
     }
   },

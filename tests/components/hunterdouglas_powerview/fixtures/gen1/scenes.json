@@ -1,0 +1,188 @@
+{
+  "sceneIds": [
+    19831, 4068, 55363, 43508, 59372, 48243, 54636, 20625, 4034, 59103, 61648,
+    24626, 64679, 22498, 28856, 25458, 51159, 959
+  ],
+  "sceneData": [
+    {
+      "id": 19831,
+      "networkNumber": 0,
+      "name": "Q2xvc2UgTG91bmdlIFJvb20=",
+      "roomId": 4896,
+      "order": 0,
+      "colorId": 7,
+      "iconId": 171,
+      "name_unicode": "Close Lounge Room"
+    },
+    {
+      "id": 4068,
+      "networkNumber": 1,
+      "name": "Q2xvc2UgQmVkIDQ=",
+      "roomId": 4896,
+      "order": 1,
+      "colorId": 7,
+      "iconId": 10,
+      "name_unicode": "Close Bed 4"
+    },
+    {
+      "id": 55363,
+      "networkNumber": 2,
+      "name": "Q2xvc2UgQmVkIDI=",
+      "roomId": 4896,
+      "order": 2,
+      "colorId": 11,
+      "iconId": 171,
+      "name_unicode": "Close Bed 2"
+    },
+    {
+      "id": 43508,
+      "networkNumber": 3,
+      "name": "Q2xvc2UgTWFzdGVyIEJlZA==",
+      "roomId": 4896,
+      "order": 3,
+      "colorId": 11,
+      "iconId": 10,
+      "name_unicode": "Close Master Bed"
+    },
+    {
+      "id": 59372,
+      "networkNumber": 4,
+      "name": "Q2xvc2UgRmFtaWx5",
+      "roomId": 4896,
+      "order": 4,
+      "colorId": 0,
+      "iconId": 171,
+      "name_unicode": "Close Family"
+    },
+    {
+      "id": 48243,
+      "networkNumber": 5,
+      "name": "T3BlbiBCZWQgNA==",
+      "roomId": 4896,
+      "order": 5,
+      "colorId": 0,
+      "iconId": 10,
+      "name_unicode": "Open Bed 4"
+    },
+    {
+      "id": 54636,
+      "networkNumber": 6,
+      "name": "T3BlbiBNYXN0ZXIgQmVk",
+      "roomId": 4896,
+      "order": 6,
+      "colorId": 0,
+      "iconId": 26,
+      "name_unicode": "Open Master Bed"
+    },
+    {
+      "id": 20625,
+      "networkNumber": 7,
+      "name": "T3BlbiBCZWQgMw==",
+      "roomId": 4896,
+      "order": 7,
+      "colorId": 7,
+      "iconId": 26,
+      "name_unicode": "Open Bed 3"
+    },
+    {
+      "id": 4034,
+      "networkNumber": 8,
+      "name": "T3BlbiBGYW1pbHk=",
+      "roomId": 4896,
+      "order": 8,
+      "colorId": 11,
+      "iconId": 26,
+      "name_unicode": "Open Family"
+    },
+    {
+      "id": 59103,
+      "networkNumber": 9,
+      "name": "Q2xvc2UgU3R1ZHk=",
+      "roomId": 4896,
+      "order": 9,
+      "colorId": 0,
+      "iconId": 171,
+      "name_unicode": "Close Study"
+    },
+    {
+      "id": 61648,
+      "networkNumber": 10,
+      "name": "T3BlbiBBbGw=",
+      "roomId": 4896,
+      "order": 10,
+      "colorId": 11,
+      "iconId": 26,
+      "name_unicode": "Open All"
+    },
+    {
+      "id": 24626,
+      "networkNumber": 11,
+      "name": "Q2xvc2UgQWxs",
+      "roomId": 4896,
+      "order": 11,
+      "colorId": 0,
+      "iconId": 171,
+      "name_unicode": "Close All"
+    },
+    {
+      "id": 64679,
+      "networkNumber": 12,
+      "name": "T3BlbiBLaXRjaGVu",
+      "roomId": 4896,
+      "order": 12,
+      "colorId": 7,
+      "iconId": 26,
+      "name_unicode": "Open Kitchen"
+    },
+    {
+      "id": 22498,
+      "networkNumber": 13,
+      "name": "T3BlbiBMb3VuZ2UgUm9vbQ==",
+      "roomId": 4896,
+      "order": 13,
+      "colorId": 7,
+      "iconId": 26,
+      "name_unicode": "Open Lounge Room"
+    },
+    {
+      "id": 25458,
+      "networkNumber": 14,
+      "name": "T3BlbiBCZWQgMg==",
+      "roomId": 4896,
+      "order": 14,
+      "colorId": 0,
+      "iconId": 26,
+      "name_unicode": "Open Bed 2"
+    },
+    {
+      "id": 46225,
+      "networkNumber": 15,
+      "name": "Q2xvc2UgQmVkIDM=",
+      "roomId": 4896,
+      "order": 15,
+      "colorId": 0,
+      "iconId": 26,
+      "name_unicode": "Close Bed 3"
+    },
+    {
+      "id": 51159,
+      "networkNumber": 16,
+      "name": "Q2xvc2UgS2l0Y2hlbg==",
+      "roomId": 4896,
+      "order": 16,
+      "colorId": 0,
+      "iconId": 26,
+      "name_unicode": "Close Kitchen"
+    },
+    {
+      "id": 959,
+      "networkNumber": 17,
+      "name": "T3BlbiBTdHVkeQ==",
+      "roomId": 4896,
+      "order": 17,
+      "colorId": 0,
+      "iconId": 26,
+      "name_unicode": "Open Study"
+    }
+  ]
+}

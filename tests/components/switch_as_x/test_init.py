@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.homeassistant import exposed_entities
+from homeassistant.components.lock import LockState
 from homeassistant.components.switch_as_x.config_flow import SwitchAsXConfigFlowHandler
 from homeassistant.components.switch_as_x.const import (
     CONF_INVERT,
@@ -17,11 +18,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ENTITY_ID,
     STATE_CLOSED,
-    STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
     STATE_OPEN,
-    STATE_UNLOCKED,
     EntityCategory,
     Platform,
 )
@@ -74,7 +73,7 @@ async def test_config_entry_unregistered_uuid(
         (Platform.COVER, STATE_OPEN, STATE_CLOSED),
         (Platform.FAN, STATE_ON, STATE_OFF),
         (Platform.LIGHT, STATE_ON, STATE_OFF),
-        (Platform.LOCK, STATE_UNLOCKED, STATE_LOCKED),
+        (Platform.LOCK, LockState.UNLOCKED, LockState.LOCKED),
         (Platform.SIREN, STATE_ON, STATE_OFF),
         (Platform.VALVE, STATE_OPEN, STATE_CLOSED),
     ],

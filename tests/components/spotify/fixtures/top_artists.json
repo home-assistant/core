@@ -1,0 +1,76 @@
+{
+  "items": [
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/74Yus6IHfa3tWZzXXAYtS2"
+      },
+      "followers": {
+        "href": null,
+        "total": 488
+      },
+      "genres": [],
+      "href": "https://api.spotify.com/v1/artists/74Yus6IHfa3tWZzXXAYtS2",
+      "id": "74Yus6IHfa3tWZzXXAYtS2",
+      "images": [
+        {
+          "height": 640,
+          "url": "https://i.scdn.co/image/ab6761610000e5ebf749f53f8bb5ffccf6105ce3",
+          "width": 640
+        },
+        {
+          "height": 320,
+          "url": "https://i.scdn.co/image/ab67616100005174f749f53f8bb5ffccf6105ce3",
+          "width": 320
+        },
+        {
+          "height": 160,
+          "url": "https://i.scdn.co/image/ab6761610000f178f749f53f8bb5ffccf6105ce3",
+          "width": 160
+        }
+      ],
+      "name": "Onkruid",
+      "popularity": 7,
+      "type": "artist",
+      "uri": "spotify:artist:74Yus6IHfa3tWZzXXAYtS2"
+    },
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/6s5ubAp65wXoTZefE01RNR"
+      },
+      "followers": {
+        "href": null,
+        "total": 805497
+      },
+      "genres": [],
+      "href": "https://api.spotify.com/v1/artists/6s5ubAp65wXoTZefE01RNR",
+      "id": "6s5ubAp65wXoTZefE01RNR",
+      "images": [
+        {
+          "height": 640,
+          "url": "https://i.scdn.co/image/ab6761610000e5eb8e750249623067fe3c557cf0",
+          "width": 640
+        },
+        {
+          "height": 320,
+          "url": "https://i.scdn.co/image/ab676161000051748e750249623067fe3c557cf0",
+          "width": 320
+        },
+        {
+          "height": 160,
+          "url": "https://i.scdn.co/image/ab6761610000f1788e750249623067fe3c557cf0",
+          "width": 160
+        }
+      ],
+      "name": "Joost",
+      "popularity": 69,
+      "type": "artist",
+      "uri": "spotify:artist:6s5ubAp65wXoTZefE01RNR"
+    }
+  ],
+  "total": 192,
+  "limit": 20,
+  "offset": 0,
+  "href": "https://api.spotify.com/v1/me/top/artists?locale=en-US,en;q%3D0.5",
+  "next": "https://api.spotify.com/v1/me/top/artists?offset=20&limit=20&locale=en-US,en;q%3D0.5",
+  "previous": null
+}

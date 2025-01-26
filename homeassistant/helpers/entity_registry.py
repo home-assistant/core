@@ -14,7 +14,6 @@ from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
@@ -65,7 +64,12 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache.api import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
+else:
+    from propcache.api import under_cached_property
 
 DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
@@ -162,7 +166,7 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -201,6 +205,7 @@ class RegistryEntry:
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
@@ -247,7 +252,7 @@ class RegistryEntry:
                 display_dict["dp"] = precision
         return display_dict
 
-    @cached_property
+    @under_cached_property
     def display_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry.
 
@@ -267,7 +272,7 @@ class RegistryEntry:
             return None
         return json_repr
 
-    @cached_property
+    @under_cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         # Convert sets and tuples to lists
@@ -296,7 +301,7 @@ class RegistryEntry:
             "unique_id": self.unique_id,
         }
 
-    @cached_property
+    @under_cached_property
     def extended_dict(self) -> dict[str, Any]:
         """Return a extended dict representation of the entry."""
         # Convert sets and tuples to lists
@@ -311,7 +316,7 @@ class RegistryEntry:
             "original_icon": self.original_icon,
         }
 
-    @cached_property
+    @under_cached_property
     def partial_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry."""
         try:
@@ -327,7 +332,7 @@ class RegistryEntry:
             )
         return None
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -394,7 +399,7 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
 
@@ -407,13 +412,14 @@ class DeletedRegistryEntry:
     orphaned_timestamp: float | None = attr.ib()
     created_at: datetime = attr.ib(factory=utcnow)
     modified_at: datetime = attr.ib(factory=utcnow)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
         """Compute domain value."""
         return split_entity_id(self.entity_id)[0]
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -642,6 +648,8 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
+    config_entry_id: str | None | UndefinedType = None,
+    device_id: str | None | UndefinedType = None,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
@@ -659,12 +667,21 @@ def _validate_item(
         # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
-            ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
+            "'%s' from integration %s has a non string unique_id '%s', please %s",
             domain,
             platform,
             unique_id,
             report_issue,
         )
+    if config_entry_id and config_entry_id is not UNDEFINED:
+        if not hass.config_entries.async_get_entry(config_entry_id):
+            raise ValueError(
+                f"Can't link entity to unknown config entry {config_entry_id}"
+            )
+    if device_id and device_id is not UNDEFINED:
+        device_registry = dr.async_get(hass)
+        if not device_registry.async_get(device_id):
+            raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
         and disabled_by is not UNDEFINED
@@ -788,7 +805,7 @@ class EntityRegistry(BaseRegistry):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
-                f"{preferred_string[:MAX_LENGTH_STATE_ENTITY_ID-len_suffix]}_{tries}"
+                f"{preferred_string[: MAX_LENGTH_STATE_ENTITY_ID - len_suffix]}_{tries}"
             )
 
         return test_string
@@ -853,6 +870,8 @@ class EntityRegistry(BaseRegistry):
             self.hass,
             domain,
             platform,
+            config_entry_id=config_entry_id,
+            device_id=device_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
             hidden_by=hidden_by,
@@ -1084,6 +1103,8 @@ class EntityRegistry(BaseRegistry):
                 self.hass,
                 old.domain,
                 old.platform,
+                config_entry_id=config_entry_id,
+                device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity_category,
                 hidden_by=hidden_by,

@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_calendar_edge_cases[start_date0-end_date0]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -15,7 +15,7 @@
 # ---
 # name: test_calendar_edge_cases[start_date1-end_date1]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -29,7 +29,7 @@
 # ---
 # name: test_calendar_edge_cases[start_date2-end_date2]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -43,7 +43,7 @@
 # ---
 # name: test_calendar_edge_cases[start_date3-end_date3]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -57,7 +57,7 @@
 # ---
 # name: test_calendar_edge_cases[start_date4-end_date4]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
       ]),
     }),
@@ -65,7 +65,7 @@
 # ---
 # name: test_calendar_edge_cases[start_date5-end_date5]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -83,7 +83,7 @@
     }),
   })
 # ---
-# name: test_calendar_events[entry.GS01234_auto_on_off_schedule_axfz5bj]
+# name: test_calendar_events[entry.GS012345_auto_on_off_schedule_axfz5bj]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -95,7 +95,7 @@
     'disabled_by': None,
     'domain': 'calendar',
     'entity_category': None,
-    'entity_id': 'calendar.gs01234_auto_on_off_schedule_axfz5bj',
+    'entity_id': 'calendar.gs012345_auto_on_off_schedule_axfz5bj',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -112,11 +112,11 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off_schedule',
-    'unique_id': 'GS01234_auto_on_off_schedule_aXFz5bJ',
+    'unique_id': 'GS012345_auto_on_off_schedule_aXFz5bJ',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_calendar_events[entry.GS01234_auto_on_off_schedule_os2oswx]
+# name: test_calendar_events[entry.GS012345_auto_on_off_schedule_os2oswx]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -128,7 +128,7 @@
     'disabled_by': None,
     'domain': 'calendar',
     'entity_category': None,
-    'entity_id': 'calendar.gs01234_auto_on_off_schedule_os2oswx',
+    'entity_id': 'calendar.gs012345_auto_on_off_schedule_os2oswx',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -145,13 +145,13 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'auto_on_off_schedule',
-    'unique_id': 'GS01234_auto_on_off_schedule_Os2OswX',
+    'unique_id': 'GS012345_auto_on_off_schedule_Os2OswX',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_calendar_events[events.GS01234_auto_on_off_schedule_axfz5bj]
+# name: test_calendar_events[events.GS012345_auto_on_off_schedule_axfz5bj]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_axfz5bj': dict({
+    'calendar.gs012345_auto_on_off_schedule_axfz5bj': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -181,9 +181,9 @@
     }),
   })
 # ---
-# name: test_calendar_events[events.GS01234_auto_on_off_schedule_os2oswx]
+# name: test_calendar_events[events.GS012345_auto_on_off_schedule_os2oswx]
   dict({
-    'calendar.gs01234_auto_on_off_schedule_os2oswx': dict({
+    'calendar.gs012345_auto_on_off_schedule_os2oswx': dict({
       'events': list([
         dict({
           'description': 'Machine is scheduled to turn on at the start time and off at the end time',
@@ -327,38 +327,38 @@
     }),
   })
 # ---
-# name: test_calendar_events[state.GS01234_auto_on_off_schedule_axfz5bj]
+# name: test_calendar_events[state.GS012345_auto_on_off_schedule_axfz5bj]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'all_day': False,
       'description': 'Machine is scheduled to turn on at the start time and off at the end time',
       'end_time': '2024-01-14 07:30:00',
-      'friendly_name': 'GS01234 Auto on/off schedule (aXFz5bJ)',
+      'friendly_name': 'GS012345 Auto on/off schedule (aXFz5bJ)',
       'location': '',
       'message': 'Machine My LaMarzocco on',
       'start_time': '2024-01-14 07:00:00',
     }),
     'context': <ANY>,
-    'entity_id': 'calendar.gs01234_auto_on_off_schedule_axfz5bj',
+    'entity_id': 'calendar.gs012345_auto_on_off_schedule_axfz5bj',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_calendar_events[state.GS01234_auto_on_off_schedule_os2oswx]
+# name: test_calendar_events[state.GS012345_auto_on_off_schedule_os2oswx]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'all_day': False,
       'description': 'Machine is scheduled to turn on at the start time and off at the end time',
       'end_time': '2024-01-13 00:00:00',
-      'friendly_name': 'GS01234 Auto on/off schedule (Os2OswX)',
+      'friendly_name': 'GS012345 Auto on/off schedule (Os2OswX)',
       'location': '',
       'message': 'Machine My LaMarzocco on',
       'start_time': '2024-01-12 22:00:00',
     }),
     'context': <ANY>,
-    'entity_id': 'calendar.gs01234_auto_on_off_schedule_os2oswx',
+    'entity_id': 'calendar.gs012345_auto_on_off_schedule_os2oswx',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -367,7 +367,7 @@
 # ---
 # name: test_no_calendar_events_global_disable
   dict({
-    'calendar.gs01234_auto_on_off_schedule_os2oswx': dict({
+    'calendar.gs012345_auto_on_off_schedule_os2oswx': dict({
       'events': list([
       ]),
     }),

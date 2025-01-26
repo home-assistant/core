@@ -1,6 +1,6 @@
 """Test OTBR Websocket API."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import python_otbr_api
@@ -27,6 +27,11 @@ async def websocket_client(
 ) -> MockHAClientWebSocket:
     """Create a websocket client."""
     return await hass_ws_client(hass)
+
+
+@pytest.fixture(autouse=True)
+def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
+    """Mock supervisor client."""
 
 
 async def test_get_info(

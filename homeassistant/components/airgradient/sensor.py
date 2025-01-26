@@ -35,6 +35,8 @@ from .const import PM_STANDARD, PM_STANDARD_REVERSE
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirGradientMeasurementSensorEntityDescription(SensorEntityDescription):
@@ -136,6 +138,15 @@ MEASUREMENT_SENSOR_TYPES: tuple[AirGradientMeasurementSensorEntityDescription, .
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda status: status.raw_total_volatile_organic_component,
+    ),
+    AirGradientMeasurementSensorEntityDescription(
+        key="pm02_raw",
+        translation_key="raw_pm02",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda status: status.raw_pm02,
     ),
 )
 

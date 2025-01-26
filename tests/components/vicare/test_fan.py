@@ -25,7 +25,7 @@ async def test_all_entities(
     """Test all entities."""
     fixtures: list[Fixture] = [Fixture({"type:ventilation"}, "vicare/ViAir300F.json")]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.FAN]),
     ):
         await setup_integration(hass, mock_config_entry)

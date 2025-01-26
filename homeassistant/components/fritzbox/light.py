@@ -57,13 +57,32 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
     ) -> None:
         """Initialize the FritzboxLight entity."""
         super().__init__(coordinator, ain, None)
-        self._supported_hs: dict[int, list[int]] = {}
 
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         if self.data.has_color:
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
         elif self.data.has_level:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+        (supported_colors, supported_color_temps) = (
+            coordinator.data.supported_color_properties.get(self.data.ain, ({}, []))
+        )
+
+        # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
+        # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
+        self._supported_hs: dict[int, list[int]] = {}
+        for values in supported_colors.values():
+            hue = int(values[0][0])
+            self._supported_hs[hue] = [
+                int(values[0][1]),
+                int(values[1][1]),
+                int(values[2][1]),
+            ]
+
+        if supported_color_temps:
+            # only available for color bulbs
+            self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
+            self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
     @property
     def is_on(self) -> bool:
@@ -148,30 +167,3 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         """Turn the light off."""
         await self.hass.async_add_executor_job(self.data.set_state_off)
         await self.coordinator.async_refresh()
-
-    async def async_added_to_hass(self) -> None:
-        """Get light attributes from device after entity is added to hass."""
-        await super().async_added_to_hass()
-
-        def _get_color_data() -> tuple[dict, list]:
-            return (self.data.get_colors(), self.data.get_color_temps())
-
-        (
-            supported_colors,
-            supported_color_temps,
-        ) = await self.hass.async_add_executor_job(_get_color_data)
-
-        if supported_color_temps:
-            # only available for color bulbs
-            self._attr_max_color_temp_kelvin = int(max(supported_color_temps))
-            self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
-
-        # Fritz!DECT 500 only supports 12 values for hue, with 3 saturations each.
-        # Map supported colors to dict {hue: [sat1, sat2, sat3]} for easier lookup
-        for values in supported_colors.values():
-            hue = int(values[0][0])
-            self._supported_hs[hue] = [
-                int(values[0][1]),
-                int(values[1][1]),
-                int(values[2][1]),
-            ]

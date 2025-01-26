@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from pytedee_async import TedeeLock
+from aiotedee import TedeeLock
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -15,8 +15,11 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TedeeConfigEntry
+from .coordinator import TedeeConfigEntry
 from .entity import TedeeDescriptionEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -55,20 +58,15 @@ async def async_setup_entry(
     """Set up the Tedee sensor entity."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        TedeeSensorEntity(lock, coordinator, entity_description)
-        for lock in coordinator.data.values()
-        for entity_description in ENTITIES
-    )
-
-    def _async_add_new_lock(lock_id: int) -> None:
-        lock = coordinator.data[lock_id]
+    def _async_add_new_lock(locks: list[TedeeLock]) -> None:
         async_add_entities(
             TedeeSensorEntity(lock, coordinator, entity_description)
             for entity_description in ENTITIES
+            for lock in locks
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
+    _async_add_new_lock(list(coordinator.data.values()))
 
 
 class TedeeSensorEntity(TedeeDescriptionEntity, SensorEntity):

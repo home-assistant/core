@@ -176,7 +176,7 @@ class EvoSession:
         ):
             app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
 
-        user_data: dict[str, str] = app_storage.pop(USER_DATA, {})
+        user_data: dict[str, str] = app_storage.pop(USER_DATA, {}) or {}
 
         self.session_id = user_data.get(SZ_SESSION_ID)
         self._tokens = app_storage
@@ -223,7 +223,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_PASSWORD],
         )
 
-    except evo.AuthenticationFailed as err:
+    except (evo.AuthenticationFailed, evo.RequestFailed) as err:
         handle_evo_exception(err)
         return False
 
@@ -240,6 +240,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         update_method=broker.async_update,

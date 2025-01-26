@@ -9,21 +9,22 @@ from pyatv.const import PairingRequirement, Protocol
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.apple_tv import CONF_ADDRESS, config_flow
 from homeassistant.components.apple_tv.const import (
     CONF_IDENTIFIERS,
     CONF_START_OFF,
     DOMAIN,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import airplay_service, create_conf, mrp_service, raop_service
 
 from tests.common import MockConfigEntry
 
-DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
+DMAP_SERVICE = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
@@ -34,7 +35,7 @@ DMAP_SERVICE = zeroconf.ZeroconfServiceInfo(
 )
 
 
-RAOP_SERVICE = zeroconf.ZeroconfServiceInfo(
+RAOP_SERVICE = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
@@ -565,7 +566,7 @@ async def test_zeroconf_unsupported_service_aborts(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -585,7 +586,7 @@ async def test_zeroconf_add_mrp_device(hass: HomeAssistant) -> None:
     unrelated_result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.2"),
             ip_addresses=[ip_address("127.0.0.2")],
             hostname="mock_hostname",
@@ -600,7 +601,7 @@ async def test_zeroconf_add_mrp_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -882,7 +883,7 @@ async def test_zeroconf_abort_if_other_in_progress(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -905,7 +906,7 @@ async def test_zeroconf_abort_if_other_in_progress(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -932,7 +933,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -954,7 +955,7 @@ async def test_zeroconf_missing_device_during_protocol_resolve(
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -991,7 +992,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -1013,7 +1014,7 @@ async def test_zeroconf_additional_protocol_resolve_failure(
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -1052,7 +1053,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -1095,7 +1096,7 @@ async def test_zeroconf_pair_additionally_found_protocols(
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -1157,7 +1158,7 @@ async def test_zeroconf_mismatch(hass: HomeAssistant, mock_scan: AsyncMock) -> N
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -1189,18 +1190,17 @@ async def test_reconfigure_update_credentials(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "reauth"},
-        data={"identifier": "mrpid", "name": "apple tv"},
-    )
+    result = await config_entry.start_reauth_flow(hass, data={"name": "apple tv"})
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {},
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["description_placeholders"] == {"protocol": "MRP"}
+    assert result2["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        "protocol": "MRP",
+    }
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": 1111}
@@ -1242,7 +1242,7 @@ async def test_zeroconf_rejects_ipv6(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
             ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",

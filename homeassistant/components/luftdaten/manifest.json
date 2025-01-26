@@ -7,6 +7,5 @@
   "integration_type": "device",
   "iot_class": "cloud_polling",
   "loggers": ["luftdaten"],
-  "quality_scale": "gold",
   "requirements": ["luftdaten==0.7.4"]
 }

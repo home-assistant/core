@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -54,6 +55,38 @@ class VoIPCallInProgress(VoIPEntity, BinarySensorEntity):
 
         self.async_on_remove(
             self.voip_device.async_listen_update(self._is_active_changed)
+        )
+
+        await super().async_added_to_hass()
+        if TYPE_CHECKING:
+            assert self.registry_entry is not None
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"assist_in_progress_deprecated_{self.registry_entry.id}",
+            breaks_in_ha_version="2025.4",
+            data={
+                "entity_id": self.entity_id,
+                "entity_uuid": self.registry_entry.id,
+                "integration_name": "VoIP",
+            },
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="assist_in_progress_deprecated",
+            translation_placeholders={
+                "integration_name": "VoIP",
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove issue."""
+        await super().async_will_remove_from_hass()
+        if TYPE_CHECKING:
+            assert self.registry_entry is not None
+        ir.async_delete_issue(
+            self.hass,
+            DOMAIN,
+            f"assist_in_progress_deprecated_{self.registry_entry.id}",
         )
 
     @callback

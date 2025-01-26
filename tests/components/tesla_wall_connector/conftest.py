@@ -124,9 +124,9 @@ async def _test_sensors(
     for entity in entities_and_expected_values:
         state = hass.states.get(entity.entity_id)
         assert state, f"Unable to get state of {entity.entity_id}"
-        assert (
-            state.state == entity.first_value
-        ), f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
+        assert state.state == entity.first_value, (
+            f"First update: {entity.entity_id} is expected to have state {entity.first_value} but has {state.state}"
+        )
 
     # Simulate second data update
     with (
@@ -147,6 +147,6 @@ async def _test_sensors(
     # Verify expected vs actual values of second update
     for entity in entities_and_expected_values:
         state = hass.states.get(entity.entity_id)
-        assert (
-            state.state == entity.second_value
-        ), f"Second update: {entity.entity_id} is expected to have state {entity.second_value} but has {state.state}"
+        assert state.state == entity.second_value, (
+            f"Second update: {entity.entity_id} is expected to have state {entity.second_value} but has {state.state}"
+        )

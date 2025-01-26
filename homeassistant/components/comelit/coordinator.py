@@ -23,15 +23,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import _LOGGER, DOMAIN
 
+type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
+
 
 class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Base coordinator for Comelit Devices."""
 
     _hw_version: str
-    config_entry: ConfigEntry
+    config_entry: ComelitConfigEntry
     api: ComelitCommonApi
 
-    def __init__(self, hass: HomeAssistant, device: str, host: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ComelitConfigEntry, device: str, host: str
+    ) -> None:
         """Initialize the scanner."""
 
         self._device = device
@@ -40,13 +44,14 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=5),
         )
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, entry.entry_id)},
             model=device,
             name=f"{device} ({self._host})",
             manufacturer="Comelit",
@@ -98,10 +103,17 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
     _hw_version = "20003101"
     api: ComeliteSerialBridgeApi
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ComelitConfigEntry,
+        host: str,
+        port: int,
+        pin: int,
+    ) -> None:
         """Initialize the scanner."""
         self.api = ComeliteSerialBridgeApi(host, port, pin)
-        super().__init__(hass, BRIDGE, host)
+        super().__init__(hass, entry, BRIDGE, host)
 
     async def _async_update_system_data(self) -> dict[str, Any]:
         """Specific method for updating data."""
@@ -114,10 +126,17 @@ class ComelitVedoSystem(ComelitBaseCoordinator):
     _hw_version = "VEDO IP"
     api: ComelitVedoApi
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int, pin: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ComelitConfigEntry,
+        host: str,
+        port: int,
+        pin: int,
+    ) -> None:
         """Initialize the scanner."""
         self.api = ComelitVedoApi(host, port, pin)
-        super().__init__(hass, VEDO, host)
+        super().__init__(hass, entry, VEDO, host)
 
     async def _async_update_system_data(self) -> dict[str, Any]:
         """Specific method for updating data."""

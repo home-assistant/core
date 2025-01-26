@@ -51,7 +51,7 @@ async def test_scene_activate(
     assert state is not None
 
     activate_scene.assert_awaited_with(
-        0, 0, [OutputPort.OUTPUT1, OutputPort.OUTPUT2], [RelayPort.RELAY1], None
+        0, 0, [OutputPort.OUTPUT1, OutputPort.OUTPUT2], [RelayPort.RELAY1], 0.0
     )
 
 

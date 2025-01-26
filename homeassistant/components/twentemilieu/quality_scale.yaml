@@ -1,0 +1,109 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  parallel-updates:
+    status: exempt
+    comment: |
+      This integration only polls data using a coordinator.
+      Since the integration is read-only and poll-only (only provide sensor
+      data), there is no need to implement parallel updates.
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+
+  # Gold
+  entity-translations:
+    status: todo
+    comment: |
+      The calendar entity name isn't translated yet.
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a service
+      provider, which uses the users home address to get the data.
+  stale-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device which represents the service.
+  diagnostics: done
+  exception-translations:
+    status: todo
+    comment: |
+      The coordinator raises, and currently, doesn't provide a translation for it.
+  icon-translations: done
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This integration has a fixed single device which represents the service.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration cannot be discovered, it is a connecting to a service
+      provider, which uses the users home address to get the data.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  docs-use-cases: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This is an service, which doesn't integrate with any devices.
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

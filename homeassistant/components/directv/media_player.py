@@ -14,17 +14,16 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
+from . import DirecTVConfigEntry
 from .const import (
     ATTR_MEDIA_CURRENTLY_RECORDING,
     ATTR_MEDIA_RATING,
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
-    DOMAIN,
 )
 from .entity import DIRECTVEntity
 
@@ -55,11 +54,11 @@ SUPPORT_DTV_CLIENT = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DirecTVConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the DirecTV config entry."""
-    dtv = hass.data[DOMAIN][entry.entry_id]
+    dtv = entry.runtime_data
 
     async_add_entities(
         (

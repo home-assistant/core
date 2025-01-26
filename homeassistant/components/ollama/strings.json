@@ -11,9 +11,11 @@
         "title": "Downloading model"
       }
     },
+    "abort": {
+      "download_failed": "Model downloading failed"
+    },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "download_failed": "Model downloading failed",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "progress": {

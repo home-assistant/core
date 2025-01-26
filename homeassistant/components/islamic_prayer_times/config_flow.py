@@ -52,7 +52,7 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return IslamicPrayerOptionsFlowHandler(config_entry)
+        return IslamicPrayerOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -92,10 +92,6 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class IslamicPrayerOptionsFlowHandler(OptionsFlow):
     """Handle Islamic Prayer client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

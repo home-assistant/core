@@ -7,9 +7,7 @@ from collections.abc import Callable, Iterable
 from datetime import timedelta
 import logging
 from types import ModuleType
-from typing import Any, Generic
-
-from typing_extensions import TypeVar
+from typing import Any
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -39,8 +37,6 @@ from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 DATA_INSTANCES = "entity_components"
 
-_EntityT = TypeVar("_EntityT", bound=entity.Entity, default=entity.Entity)
-
 
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
@@ -64,11 +60,14 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     await entity_obj.async_update_ha_state(True)
 
 
-class EntityComponent(Generic[_EntityT]):
-    """The EntityComponent manages platforms that manages entities.
+class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
+    """The EntityComponent manages platforms that manage entities.
+
+    An example of an entity component is 'light', which manages platforms such
+    as 'hue.light'.
 
     This class has the following responsibilities:
-     - Process the configuration and set up a platform based component.
+     - Process the configuration and set up a platform based component, for example light.
      - Manage the platforms and their entities.
      - Help extract the entities from a service call.
      - Listen for discovery events for platforms related to the domain.

@@ -13,10 +13,10 @@ import yarl
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from .models import Blueprint
-from .schemas import is_blueprint_config
+from .schemas import BLUEPRINT_SCHEMA, is_blueprint_config
 
 COMMUNITY_TOPIC_PATTERN = re.compile(
     r"^https://community.home-assistant.io/t/[a-z0-9-]+/(?P<topic>\d+)(?:/(?P<post>\d+)|)$"
@@ -115,7 +115,7 @@ def _extract_blueprint_from_community_topic(
         block_content = html.unescape(block_content.strip())
 
         try:
-            data = yaml.parse_yaml(block_content)
+            data = yaml_util.parse_yaml(block_content)
         except HomeAssistantError:
             if block_syntax == "yaml":
                 raise
@@ -126,7 +126,7 @@ def _extract_blueprint_from_community_topic(
             continue
         assert isinstance(data, dict)
 
-        blueprint = Blueprint(data)
+        blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
         break
 
     if blueprint is None:
@@ -136,7 +136,7 @@ def _extract_blueprint_from_community_topic(
         )
 
     return ImportedBlueprint(
-        f'{post["username"]}/{topic["slug"]}', block_content, blueprint
+        f"{post['username']}/{topic['slug']}", block_content, blueprint
     )
 
 
@@ -167,14 +167,13 @@ async def fetch_blueprint_from_github_url(
 
     resp = await session.get(import_url, raise_for_status=True)
     raw_yaml = await resp.text()
-    data = yaml.parse_yaml(raw_yaml)
+    data = yaml_util.parse_yaml(raw_yaml)
     assert isinstance(data, dict)
-    blueprint = Blueprint(data)
+    blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
 
     parsed_import_url = yarl.URL(import_url)
     suggested_filename = f"{parsed_import_url.parts[1]}/{parsed_import_url.parts[-1]}"
-    if suggested_filename.endswith(".yaml"):
-        suggested_filename = suggested_filename[:-5]
+    suggested_filename = suggested_filename.removesuffix(".yaml")
 
     return ImportedBlueprint(suggested_filename, raw_yaml, blueprint)
 
@@ -205,13 +204,13 @@ async def fetch_blueprint_from_github_gist_url(
             continue
 
         content = info["content"]
-        data = yaml.parse_yaml(content)
+        data = yaml_util.parse_yaml(content)
 
         if not is_blueprint_config(data):
             continue
         assert isinstance(data, dict)
 
-        blueprint = Blueprint(data)
+        blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
         break
 
     if blueprint is None:
@@ -236,9 +235,9 @@ async def fetch_blueprint_from_website_url(
 
     resp = await session.get(url, raise_for_status=True)
     raw_yaml = await resp.text()
-    data = yaml.parse_yaml(raw_yaml)
+    data = yaml_util.parse_yaml(raw_yaml)
     assert isinstance(data, dict)
-    blueprint = Blueprint(data)
+    blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
 
     parsed_import_url = yarl.URL(url)
     suggested_filename = f"homeassistant/{parsed_import_url.parts[-1][:-5]}"
@@ -253,10 +252,10 @@ async def fetch_blueprint_from_generic_url(
 
     resp = await session.get(url, raise_for_status=True)
     raw_yaml = await resp.text()
-    data = yaml.parse_yaml(raw_yaml)
+    data = yaml_util.parse_yaml(raw_yaml)
 
     assert isinstance(data, dict)
-    blueprint = Blueprint(data)
+    blueprint = Blueprint(data, schema=BLUEPRINT_SCHEMA)
 
     parsed_import_url = yarl.URL(url)
     suggested_filename = f"{parsed_import_url.host}/{parsed_import_url.parts[-1][:-5]}"
@@ -273,7 +272,11 @@ FETCH_FUNCTIONS = (
 
 
 async def fetch_blueprint_from_url(hass: HomeAssistant, url: str) -> ImportedBlueprint:
-    """Get a blueprint from a url."""
+    """Get a blueprint from a url.
+
+    The returned blueprint will only be validated with BLUEPRINT_SCHEMA, not the domain
+    specific schema.
+    """
     for func in FETCH_FUNCTIONS:
         with suppress(UnsupportedUrl):
             imported_bp = await func(hass, url)

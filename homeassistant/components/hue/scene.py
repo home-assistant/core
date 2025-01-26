@@ -130,10 +130,15 @@ class HueSceneEntity(HueSceneEntityBase):
     @property
     def is_dynamic(self) -> bool:
         """Return if this scene has a dynamic color palette."""
-        if self.resource.palette.color and len(self.resource.palette.color) > 1:
+        if (
+            self.resource.palette
+            and self.resource.palette.color
+            and len(self.resource.palette.color) > 1
+        ):
             return True
         if (
-            self.resource.palette.color_temperature
+            self.resource.palette
+            and self.resource.palette.color_temperature
             and len(self.resource.palette.color_temperature) > 1
         ):
             return True

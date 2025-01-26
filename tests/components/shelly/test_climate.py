@@ -3,7 +3,12 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock
 
-from aioshelly.const import MODEL_VALVE, MODEL_WALL_DISPLAY
+from aioshelly.const import (
+    BLU_TRV_IDENTIFIER,
+    MODEL_BLU_GATEWAY_GEN3,
+    MODEL_VALVE,
+    MODEL_WALL_DISPLAY,
+)
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError
 import pytest
 
@@ -13,8 +18,6 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    ATTR_TARGET_TEMP_HIGH,
-    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_NONE,
     SERVICE_SET_HVAC_MODE,
@@ -39,7 +42,13 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from . import MOCK_MAC, init_integration, register_device, register_entity
+from . import (
+    MOCK_MAC,
+    get_entity_attribute,
+    init_integration,
+    register_device,
+    register_entity,
+)
 from .conftest import MOCK_STATUS_COAP
 
 from tests.common import mock_restore_cache, mock_restore_cache_with_extra_data
@@ -137,19 +146,6 @@ async def test_climate_set_temperature(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_TEMPERATURE] == 4
-
-    # Test set temperature without target temperature
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 30,
-        },
-        blocking=True,
-    )
-    mock_block_device.http_request.assert_not_called()
 
     # Test set temperature
     await hass.services.async_call(
@@ -309,13 +305,13 @@ async def test_block_restored_climate(
     assert hass.states.get(entity_id).attributes.get("temperature") == 22.0
 
 
-async def test_block_restored_climate_us_customery(
+async def test_block_restored_climate_us_customary(
     hass: HomeAssistant,
     mock_block_device: Mock,
     device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test block restored climate with US CUSTOMATY unit system."""
+    """Test block restored climate with US CUSTOMARY unit system."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     monkeypatch.delattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "targetTemp")
     monkeypatch.delattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "targetTemp")
@@ -684,19 +680,6 @@ async def test_rpc_climate_set_temperature(
     state = hass.states.get(entity_id)
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
-    # test set temperature without target temperature
-    await hass.services.async_call(
-        CLIMATE_DOMAIN,
-        SERVICE_SET_TEMPERATURE,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_TARGET_TEMP_LOW: 20,
-            ATTR_TARGET_TEMP_HIGH: 30,
-        },
-        blocking=True,
-    )
-    mock_rpc_device.call_rpc.assert_not_called()
-
     monkeypatch.setitem(mock_rpc_device.status["thermostat:0"], "target_C", 28)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
@@ -787,3 +770,82 @@ async def test_wall_display_thermostat_mode_external_actuator(
     entry = entity_registry.async_get(climate_entity_id)
     assert entry
     assert entry.unique_id == "123456789ABC-thermostat:0"
+
+
+async def test_blu_trv_climate_set_temperature(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV set target temperature."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
+
+    monkeypatch.setitem(
+        mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "target_C", 28
+    )
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 28},
+        blocking=True,
+    )
+    mock_blu_trv.mock_update()
+
+    mock_blu_trv.call_rpc.assert_called_once_with(
+        "BluTRV.Call",
+        {
+            "id": 200,
+            "method": "Trv.SetTarget",
+            "params": {"id": 0, "target_C": 28.0},
+        },
+    )
+
+    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 28
+
+
+async def test_blu_trv_climate_disabled(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV disabled."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
+
+    monkeypatch.setitem(
+        mock_blu_trv.config[f"{BLU_TRV_IDENTIFIER}:200"], "enable", False
+    )
+    mock_blu_trv.mock_update()
+
+    assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) is None
+
+
+async def test_blu_trv_climate_hvac_action(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test BLU TRV is heating."""
+
+    entity_id = "climate.trv_name"
+    monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
+
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.IDLE
+
+    monkeypatch.setitem(mock_blu_trv.status[f"{BLU_TRV_IDENTIFIER}:200"], "pos", 10)
+    mock_blu_trv.mock_update()
+
+    assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.HEATING

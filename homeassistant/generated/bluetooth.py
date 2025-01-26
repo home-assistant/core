@@ -9,6 +9,26 @@ from typing import Final
 
 BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
+        "domain": "acaia",
+        "manufacturer_id": 16962,
+    },
+    {
+        "domain": "acaia",
+        "local_name": "ACAIA*",
+    },
+    {
+        "domain": "acaia",
+        "local_name": "PYXIS-*",
+    },
+    {
+        "domain": "acaia",
+        "local_name": "LUNAR-*",
+    },
+    {
+        "domain": "acaia",
+        "local_name": "PROCHBT001",
+    },
+    {
         "domain": "airthings_ble",
         "manufacturer_id": 820,
         "service_uuid": "b42e1f6e-ade7-11e4-89d3-123b93f75cba",
@@ -175,6 +195,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GVH5130*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "manufacturer_id": 1,
         "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb",
     },
@@ -278,6 +303,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
             6,
         ],
         "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "husqvarna_automower_ble",
+        "service_uuid": "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
     },
     {
         "domain": "ibeacon",
@@ -406,7 +436,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "led_ble",
-        "local_name": "MELK-*",
+        "local_name": "LD-0003",
     },
     {
         "domain": "medcom_ble",

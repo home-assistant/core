@@ -1,32 +1,35 @@
 """The tests for the Ring sensor platform."""
 
 import logging
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from ring_doorbell import Ring
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ring.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.sensor import (
-    ATTR_STATE_CLASS,
-    DOMAIN as SENSOR_DOMAIN,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import setup_platform
-from .device_mocks import FRONT_DEVICE_ID, FRONT_DOOR_DEVICE_ID, INGRESS_DEVICE_ID
+from .common import MockConfigEntry, setup_platform
+from .device_mocks import (
+    DOWNSTAIRS_DEVICE_ID,
+    FRONT_DEVICE_ID,
+    FRONT_DOOR_DEVICE_ID,
+    INGRESS_DEVICE_ID,
+    INTERNAL_DEVICE_ID,
+)
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
-def create_deprecated_sensor_entities(
+def create_deprecated_and_disabled_sensor_entities(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
     entity_registry: er.EntityRegistry,
@@ -48,48 +51,34 @@ def create_deprecated_sensor_entities(
             config_entry=mock_config_entry,
         )
 
-    create_entry("downstairs", "volume", 123456)
-    create_entry("front_door", "volume", 987654)
-    create_entry("ingress", "doorbell_volume", 185036587)
-    create_entry("ingress", "mic_volume", 185036587)
-    create_entry("ingress", "voice_volume", 185036587)
+    # Deprecated
+    create_entry("downstairs", "volume", DOWNSTAIRS_DEVICE_ID)
+    create_entry("front_door", "volume", FRONT_DEVICE_ID)
+    create_entry("ingress", "doorbell_volume", INGRESS_DEVICE_ID)
+    create_entry("ingress", "mic_volume", INGRESS_DEVICE_ID)
+    create_entry("ingress", "voice_volume", INGRESS_DEVICE_ID)
+
+    # Disabled
+    for desc in ("wifi_signal_category", "wifi_signal_strength"):
+        create_entry("downstairs", desc, DOWNSTAIRS_DEVICE_ID)
+        create_entry("front", desc, FRONT_DEVICE_ID)
+        create_entry("ingress", desc, INGRESS_DEVICE_ID)
+        create_entry("front_door", desc, FRONT_DOOR_DEVICE_ID)
+        create_entry("internal", desc, INTERNAL_DEVICE_ID)
 
 
-async def test_sensor(
+async def test_states(
     hass: HomeAssistant,
-    mock_ring_client,
-    create_deprecated_sensor_entities,
+    mock_ring_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    create_deprecated_and_disabled_sensor_entities,
 ) -> None:
-    """Test the Ring sensors."""
-    await setup_platform(hass, "sensor")
-
-    front_battery_state = hass.states.get("sensor.front_battery")
-    assert front_battery_state is not None
-    assert front_battery_state.state == "80"
-    assert (
-        front_battery_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
-    )
-
-    front_door_battery_state = hass.states.get("sensor.front_door_battery")
-    assert front_door_battery_state is not None
-    assert front_door_battery_state.state == "100"
-    assert (
-        front_door_battery_state.attributes[ATTR_STATE_CLASS]
-        == SensorStateClass.MEASUREMENT
-    )
-
-    downstairs_volume_state = hass.states.get("sensor.downstairs_volume")
-    assert downstairs_volume_state is not None
-    assert downstairs_volume_state.state == "2"
-
-    ingress_mic_volume_state = hass.states.get("sensor.ingress_mic_volume")
-    assert ingress_mic_volume_state.state == "11"
-
-    ingress_doorbell_volume_state = hass.states.get("sensor.ingress_doorbell_volume")
-    assert ingress_doorbell_volume_state.state == "8"
-
-    ingress_voice_volume_state = hass.states.get("sensor.ingress_voice_volume")
-    assert ingress_voice_volume_state.state == "11"
+    """Test states."""
+    mock_config_entry.add_to_hass(hass)
+    await setup_platform(hass, Platform.SENSOR)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

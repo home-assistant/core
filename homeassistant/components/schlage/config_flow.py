@@ -9,7 +9,7 @@ import pyschlage
 from pyschlage.exceptions import NotAuthorizedError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DOMAIN, LOGGER
@@ -25,15 +25,13 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    reauth_entry: ConfigEntry | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self._show_user_form({})
-        username = user_input[CONF_USERNAME]
+        username = user_input[CONF_USERNAME].lower()
         password = user_input[CONF_PASSWORD]
         user_id, errors = await self.hass.async_add_executor_job(
             _authenticate, username, password
@@ -42,7 +40,14 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_user_form(errors)
 
         await self.async_set_unique_id(user_id)
-        return self.async_create_entry(title=username, data=user_input)
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=username,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            },
+        )
 
     def _show_user_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         """Show the user form."""
@@ -54,20 +59,17 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
-        assert self.reauth_entry is not None
         if user_input is None:
             return self._show_reauth_form({})
 
-        username = self.reauth_entry.data[CONF_USERNAME]
+        reauth_entry = self._get_reauth_entry()
+        username = reauth_entry.data[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         user_id, errors = await self.hass.async_add_executor_job(
             _authenticate, username, password
@@ -75,16 +77,14 @@ class SchlageConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_id is None:
             return self._show_reauth_form(errors)
 
-        if self.reauth_entry.unique_id != user_id:
-            return self.async_abort(reason="wrong_account")
+        await self.async_set_unique_id(user_id)
+        self._abort_if_unique_id_mismatch(reason="wrong_account")
 
         data = {
             CONF_USERNAME: username,
             CONF_PASSWORD: user_input[CONF_PASSWORD],
         }
-        self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-        await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-        return self.async_abort(reason="reauth_successful")
+        return self.async_update_reload_and_abort(reauth_entry, data=data)
 
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         """Show the reauth form."""

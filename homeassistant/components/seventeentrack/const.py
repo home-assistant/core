@@ -47,6 +47,3 @@ SERVICE_ARCHIVE_PACKAGE = "archive_package"
 ATTR_PACKAGE_STATE = "package_state"
 ATTR_PACKAGE_TRACKING_NUMBER = "package_tracking_number"
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
-
-
-DEPRECATED_KEY = "deprecated"

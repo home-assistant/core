@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .consts import (
+    DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
     DUMMY_TOKEN,
@@ -62,6 +63,7 @@ async def test_user_setup(
     [
         [
             DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
+            DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
         ]
     ],
     indirect=True,
@@ -106,6 +108,7 @@ async def test_user_setup_found_token_device_valid_token(
     [
         [
             DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE,
+            DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE,
         ]
     ],
     indirect=True,
@@ -193,15 +196,7 @@ async def test_reauth_successful(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -226,15 +221,7 @@ async def test_reauth_invalid_auth(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=entry.data,
-    )
-
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

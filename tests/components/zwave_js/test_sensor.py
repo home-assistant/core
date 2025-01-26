@@ -9,7 +9,6 @@ from zwave_js_server.exceptions import FailedZWaveCommand
 from zwave_js_server.model.node import Node
 
 from homeassistant.components.sensor import (
-    ATTR_OPTIONS,
     ATTR_STATE_CLASS,
     SensorDeviceClass,
     SensorStateClass,
@@ -54,7 +53,6 @@ from .common import (
     ENERGY_SENSOR,
     HUMIDITY_SENSOR,
     METER_ENERGY_SENSOR,
-    NOTIFICATION_MOTION_SENSOR,
     POWER_SENSOR,
     VOLTAGE_SENSOR,
 )
@@ -225,60 +223,6 @@ async def test_basic_cc_sensor(
     state = hass.states.get("sensor.foo_basic")
     assert state is not None
     assert state.state == "255.0"
-
-
-async def test_disabled_notification_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, multisensor_6, integration
-) -> None:
-    """Test sensor is created from Notification CC and is disabled."""
-    entity_entry = entity_registry.async_get(NOTIFICATION_MOTION_SENSOR)
-
-    assert entity_entry
-    assert entity_entry.disabled
-    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-
-    # Test enabling entity
-    updated_entry = entity_registry.async_update_entity(
-        entity_entry.entity_id, disabled_by=None
-    )
-    assert updated_entry != entity_entry
-    assert updated_entry.disabled is False
-
-    # reload integration and check if entity is correctly there
-    await hass.config_entries.async_reload(integration.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
-    assert state.state == "Motion detection"
-    assert state.attributes[ATTR_VALUE] == 8
-    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
-    assert state.attributes[ATTR_OPTIONS] == ["idle", "Motion detection"]
-
-    event = Event(
-        "value updated",
-        {
-            "source": "node",
-            "event": "value updated",
-            "nodeId": multisensor_6.node_id,
-            "args": {
-                "commandClassName": "Notification",
-                "commandClass": 113,
-                "endpoint": 0,
-                "property": "Home Security",
-                "propertyKey": "Motion sensor status",
-                "newValue": None,
-                "prevValue": 0,
-                "propertyName": "Home Security",
-                "propertyKeyName": "Motion sensor status",
-            },
-        },
-    )
-
-    multisensor_6.receive_event(event)
-    await hass.async_block_till_done()
-    state = hass.states.get(NOTIFICATION_MOTION_SENSOR)
-    assert state
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_config_parameter_sensor(

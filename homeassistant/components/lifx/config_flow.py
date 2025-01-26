@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import socket
-from typing import Any
+from typing import Any, Self
 
 from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import (
@@ -40,6 +40,8 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for LIFX."""
 
     VERSION = 1
+
+    host: str | None = None
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -70,7 +72,7 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_handle_discovery(host)
 
     async def async_step_homekit(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle HomeKit discovery."""
         return await self._async_handle_discovery(host=discovery_info.host)
@@ -90,11 +92,8 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle any discovery."""
         self._async_abort_entries_match({CONF_HOST: host})
-        self.context[CONF_HOST] = host
-        if any(
-            progress.get("context", {}).get(CONF_HOST) == host
-            for progress in self._async_in_progress()
-        ):
+        self.host = host
+        if self.hass.config_entries.flow.async_has_matching_flow(self):
             return self.async_abort(reason="already_in_progress")
         if not (
             device := await self._async_try_connect(
@@ -104,6 +103,10 @@ class LifXConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
+
+    def is_matching(self, other_flow: Self) -> bool:
+        """Return True if other_flow is matching this flow."""
+        return other_flow.host == self.host
 
     @callback
     def _async_discovered_pending_migration(self) -> bool:
