@@ -6,8 +6,16 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from kasa import BaseProtocol, Device, DeviceType, Feature, KasaException, Module
-from kasa.interfaces import Fan, Light, LightEffect, LightState
+from kasa import (
+    BaseProtocol,
+    Device,
+    DeviceType,
+    Feature,
+    KasaException,
+    Module,
+    ThermostatState,
+)
+from kasa.interfaces import Fan, Light, LightEffect, LightState, Thermostat
 from kasa.smart.modules.alarm import Alarm
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
@@ -197,10 +205,12 @@ def _mocked_device(
         mod.get_feature.side_effect = device_features.get
         mod.has_feature.side_effect = lambda id: id in device_features
 
+    device.parent = None
     device.children = []
     if children:
         for child in children:
             child.mac = mac
+            child.parent = device
         device.children = children
     device.device_type = device_type if device_type else DeviceType.Unknown
     if (
@@ -359,6 +369,18 @@ def _mocked_camera_module(device):
     return camera
 
 
+def _mocked_thermostat_module(device):
+    therm = MagicMock(auto_spec=Thermostat, name="Mocked thermostat")
+    therm.state = True
+    therm.temperature = 20.2
+    therm.target_temperature = 22.2
+    therm.mode = ThermostatState.Heating
+    therm.set_state = AsyncMock()
+    therm.set_target_temperature = AsyncMock()
+
+    return therm
+
+
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0" if alias is None else alias,
@@ -427,6 +449,7 @@ MODULE_TO_MOCK_GEN = {
     Module.Fan: _mocked_fan_module,
     Module.Alarm: _mocked_alarm_module,
     Module.Camera: _mocked_camera_module,
+    Module.Thermostat: _mocked_thermostat_module,
 }
 
 
