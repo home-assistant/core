@@ -150,6 +150,9 @@
       },
       "tilt_step": {
         "default": "mdi:unfold-more-horizontal"
+      },
+      "clean_count": {
+        "default": "mdi:counter"
       }
     }
   },

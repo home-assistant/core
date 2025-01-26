@@ -247,6 +247,9 @@
       },
       "tilt_step": {
         "name": "Tilt degrees"
+      },
+      "clean_count": {
+        "name": "Clean count"
       }
     }
   },

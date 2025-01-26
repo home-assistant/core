@@ -370,5 +370,10 @@
     "value": 10,
     "type": "Number",
     "category": "Config"
+  },
+  "clean_count": {
+    "value": 1,
+    "type": "Number",
+    "category": "Config"
   }
 }
