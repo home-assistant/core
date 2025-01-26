@@ -6,7 +6,6 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
-import json
 import logging
 from typing import Literal
 
@@ -26,6 +25,7 @@ from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonObjectType
 
 from . import trace
 from .const import DOMAIN
@@ -178,11 +178,10 @@ class ChatMessage[_NativeT]:
     is only meant for storing the native object.
     """
 
-    role: Literal["system", "assistant", "user", "native", "tool"]
+    role: Literal["system", "assistant", "user", "native"]
     agent_id: str | None
     content: str
     native: _NativeT | None = field(default=None)
-    tool_call_id: str | None = None
 
     # Validate in post-init that if role is native, there is no content and a native object exists
     def __post_init__(self) -> None:
@@ -335,65 +334,27 @@ class ChatSession[_NativeT]:
             content=prompt,
         )
 
-    async def async_stream_chat_messages(
-        self,
-    ) -> AsyncGenerator[
-        list[ChatMessage[_NativeT]],
-        tuple[ChatMessage[_NativeT] | None, list[llm.ToolInput] | None],
-    ]:
-        """Run model in a streaming loop."""
-
+        trace_details = {
+            "messages": self.messages,
+            "tools": self.llm_api.tools if self.llm_api else None,
+        }
+        LOGGER.debug("Chat session started: %s", trace_details)
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL,
-            {
-                "messages": self.messages,
-                "tools": self.llm_api.tools if self.llm_api else None,
-            },
+            trace_details,
         )
 
-        message_batch = [*self.messages]
-        for _iteration in range(MAX_TOOL_ITERATIONS):
-            response = yield message_batch
-            if response is None:
-                break
-            (chat_message, tool_inputs) = response
-            message_batch.clear()
-            if chat_message:
-                self.async_add_message(chat_message)
-                message_batch.append(chat_message)
-
-            if not tool_inputs:
-                continue
-
-            tool_responses = await self._async_call_tools(tool_inputs)
-            message_batch.extend(tool_responses)
-
-    async def _async_call_tools(
-        self, tool_inputs: list[llm.ToolInput]
-    ) -> list[ChatMessage[_NativeT]]:
-        """Invoke LLM tools for the configured LLM API."""
+    async def async_call_tool(self, tool_input: llm.ToolInput) -> JsonObjectType:
+        """Invoke LLM tool for the configured LLM API."""
         if not self.llm_api:
             raise ValueError("No LLM API configured")
-        tool_responses: list[ChatMessage[_NativeT]] = []
-        for tool_input in tool_inputs:
-            LOGGER.debug(
-                "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-            )
+        LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
 
-            try:
-                tool_response = await self.llm_api.async_call_tool(tool_input)
-            except (HomeAssistantError, vol.Invalid) as e:
-                tool_response = {"error": type(e).__name__}
-                if str(e):
-                    tool_response["error_text"] = str(e)
-
-            LOGGER.debug("Tool response: %s", tool_response)
-            chat_message = ChatMessage[_NativeT](
-                role="tool",
-                agent_id=self.agent_id,
-                content=json.dumps(tool_response),
-                tool_call_id=tool_input.tool_call_id,
-            )
-            self.async_add_message(chat_message)
-            tool_responses.append(chat_message)
-        return tool_responses
+        try:
+            tool_response = await self.llm_api.async_call_tool(tool_input)
+        except (HomeAssistantError, vol.Invalid) as e:
+            tool_response = {"error": type(e).__name__}
+            if str(e):
+                tool_response["error_text"] = str(e)
+        LOGGER.debug("Tool response: %s", tool_response)
+        return tool_response
