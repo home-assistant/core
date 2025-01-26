@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError, TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -92,10 +91,10 @@ class TemplateLock(TemplateEntity, LockEntity):
         name = self._attr_name
         assert name
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
-        self._command_lock = Script(hass, config[CONF_LOCK], name, DOMAIN)
-        self._command_unlock = Script(hass, config[CONF_UNLOCK], name, DOMAIN)
-        if CONF_OPEN in config:
-            self._command_open = Script(hass, config[CONF_OPEN], name, DOMAIN)
+        self.add_script(CONF_LOCK, config[CONF_LOCK], name, DOMAIN)
+        self.add_script(CONF_UNLOCK, config[CONF_UNLOCK], name, DOMAIN)
+        if (action_id := CONF_OPEN) in config:
+            self.add_script(action_id, config[action_id], name, DOMAIN)
             self._attr_supported_features |= LockEntityFeature.OPEN
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
         self._code_format: str | None = None
@@ -210,7 +209,9 @@ class TemplateLock(TemplateEntity, LockEntity):
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
-            self._command_lock, run_variables=tpl_vars, context=self._context
+            self._action_scripts[CONF_LOCK],
+            run_variables=tpl_vars,
+            context=self._context,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -226,7 +227,9 @@ class TemplateLock(TemplateEntity, LockEntity):
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
-            self._command_unlock, run_variables=tpl_vars, context=self._context
+            self._action_scripts[CONF_UNLOCK],
+            run_variables=tpl_vars,
+            context=self._context,
         )
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -242,7 +245,9 @@ class TemplateLock(TemplateEntity, LockEntity):
         tpl_vars = {ATTR_CODE: kwargs.get(ATTR_CODE) if kwargs else None}
 
         await self.async_run_script(
-            self._command_open, run_variables=tpl_vars, context=self._context
+            self._action_scripts[CONF_OPEN],
+            run_variables=tpl_vars,
+            context=self._context,
         )
 
     def _raise_template_error_if_available(self):

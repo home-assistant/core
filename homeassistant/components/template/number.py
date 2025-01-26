@@ -28,7 +28,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
@@ -154,9 +153,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        self._command_set_value = Script(
-            hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
-        )
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
 
         self._step_template = config[CONF_STEP]
         self._min_value_template = config[CONF_MIN]
@@ -207,9 +204,9 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         if self._optimistic:
             self._attr_native_value = value
             self.async_write_ha_state()
-        if self._command_set_value:
+        if (set_value := self._action_scripts.get(CONF_SET_VALUE)) is not None:
             await self.async_run_script(
-                self._command_set_value,
+                set_value,
                 run_variables={ATTR_VALUE: value},
                 context=self._context,
             )
@@ -235,12 +232,8 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         """Initialize the entity."""
         super().__init__(hass, coordinator, config)
 
-        self._command_set_value = Script(
-            hass,
-            config[CONF_SET_VALUE],
-            self._rendered.get(CONF_NAME, DEFAULT_NAME),
-            DOMAIN,
-        )
+        name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], name, DOMAIN)
 
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
 
@@ -275,6 +268,9 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         if self._config[CONF_OPTIMISTIC]:
             self._attr_native_value = value
             self.async_write_ha_state()
-        await self._command_set_value.async_run(
-            {ATTR_VALUE: value}, context=self._context
-        )
+        if (set_value := self._action_scripts.get(CONF_SET_VALUE)) is not None:
+            await self.async_run_script(
+                set_value,
+                run_variables={ATTR_VALUE: value},
+                context=self._context,
+            )

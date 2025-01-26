@@ -8,10 +8,13 @@ from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
+from .entity import AbstractTemplateEntity
 
 
 class TriggerEntity(  # pylint: disable=hass-enforce-class-module
-    TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]
+    TriggerBaseEntity,
+    CoordinatorEntity[TriggerUpdateCoordinator],
+    AbstractTemplateEntity,
 ):
     """Template entity based on trigger data."""
 
@@ -24,6 +27,7 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         """Initialize the entity."""
         CoordinatorEntity.__init__(self, coordinator)
         TriggerBaseEntity.__init__(self, hass, config)
+        AbstractTemplateEntity.__init__(self, hass, config)
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -37,6 +41,14 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
             self._unique_id = f"{self.coordinator.unique_id}-{unique_id}"
         else:
             self._unique_id = unique_id
+
+    @callback
+    def _render_variables(self) -> dict:
+        run_variables = self.coordinator.data["run_variables"]
+        if isinstance(run_variables, dict):
+            return run_variables
+
+        return {}
 
     @callback
     def _process_data(self) -> None:
