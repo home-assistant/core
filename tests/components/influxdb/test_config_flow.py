@@ -21,6 +21,7 @@ from . import (
     INFLUX_CLIENT_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
+    _split_config,
 )
 
 from tests.common import MockConfigEntry
@@ -71,9 +72,12 @@ async def test_import(
             data=config_base,
         )
 
+    config = _split_config(config_base)
+
     assert result["type"] == "create_entry"
     assert result["title"] == f"{db_name} ({config_base["host"]})"
-    assert result["data"] == config_base
+    assert result["data"] == config["data"]
+    assert result["options"] == config["options"]
 
     assert get_write_api(mock_client).call_count == 1
 
@@ -165,15 +169,20 @@ async def test_import_update(hass: HomeAssistant, config_base, db_name) -> None:
         },
     }
 
+    split_config = _split_config(config_base)
+
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=config_base,
+        data=split_config["data"],
+        options=split_config["options"],
         unique_id=f"{config_base["host"]}_{db_name}",
     )
     entry.add_to_hass(hass)
 
     config = config_base.copy()
     config.update(config_ext)
+
+    conf_verify = _split_config(config)
 
     with patch(
         "homeassistant.components.influxdb.async_setup_entry", return_value=True
@@ -186,4 +195,8 @@ async def test_import_update(hass: HomeAssistant, config_base, db_name) -> None:
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data == config
+
+    await hass.async_block_till_done()
+
+    assert entry.data == conf_verify["data"]
+    assert entry.options == conf_verify["options"]
