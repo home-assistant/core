@@ -553,7 +553,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             and (effect_script := self._action_scripts.get(CONF_EFFECT_ACTION))
             is not None
         ):
-            assert self._effect_list is list
+            assert self._effect_list is not None
             effect = kwargs[ATTR_EFFECT]
             if effect not in self._effect_list:
                 _LOGGER.error(

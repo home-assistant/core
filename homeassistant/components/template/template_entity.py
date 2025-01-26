@@ -40,6 +40,7 @@ from homeassistant.helpers.event import (
     TrackTemplateResultInfo,
     async_track_template_result,
 )
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
@@ -285,13 +286,13 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
             ]
             | None
         ) = None
+        self._run_variables: ScriptVariables | dict = {}
         if config is None:
             self._attribute_templates = attribute_templates
             self._availability_template = availability_template
             self._icon_template = icon_template
             self._entity_picture_template = entity_picture_template
             self._friendly_name_template = None
-            self._run_variables = {}
             self._blueprint_inputs = None
         else:
             self._attribute_templates = config.get(CONF_ATTRIBUTES)
@@ -375,7 +376,7 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
             return None
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
-    def _render_script_variables(self) -> dict:
+    def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
             return self._run_variables
