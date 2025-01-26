@@ -303,4 +303,3 @@
   "quality_scale": "platinum",
   "requirements": ["python-kasa[speedups]==0.10.0"]
 }
-
