@@ -13,7 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 from tests.common import snapshot_platform
 
@@ -81,11 +85,13 @@ async def test_service_call_fail(
     monkeypatch.setattr(
         RemoteServices,
         "trigger_remote_service",
-        AsyncMock(side_effect=MyBMWRemoteServiceError),
+        AsyncMock(
+            side_effect=MyBMWRemoteServiceError("HTTPStatusError: 502 Bad Gateway")
+        ),
     )
 
     # Test
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=REMOTE_SERVICE_EXC_TRANSLATION):
         await hass.services.async_call(
             "button",
             "press",

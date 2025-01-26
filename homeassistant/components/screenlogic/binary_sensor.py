@@ -49,26 +49,31 @@ SUPPORTED_CORE_SENSORS = [
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.ACTIVE_ALERT,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="active_alert",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.CLEANER_DELAY,
+        translation_key="cleaner_delay",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.FREEZE_MODE,
+        translation_key="freeze_mode",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.POOL_DELAY,
+        translation_key="pool_delay",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.SPA_DELAY,
+        translation_key="spa_delay",
     ),
 ]
 
@@ -85,75 +90,96 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.FLOW_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="flow_alarm",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.ORP_HIGH_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_high_alarm",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.ORP_LOW_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_low_alarm",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.ORP_SUPPLY_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_supply_alarm",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PH_HIGH_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_high_alarm",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PH_LOW_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_low_alarm",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PH_SUPPLY_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_supply_alarm",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PROBE_FAULT_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="probe_fault_alarm",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
         key=VALUE.ORP_LIMIT,
+        translation_key="chem_limit",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
         key=VALUE.PH_LIMIT,
+        translation_key="chem_limit",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
         key=VALUE.PH_LOCKOUT,
+        translation_key="ph_lockout",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.WATER_BALANCE),
         key=VALUE.CORROSIVE,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="corosive",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.WATER_BALANCE),
         key=VALUE.SCALING,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="scaling",
     ),
 ]
 
@@ -161,6 +187,7 @@ SUPPORTED_SCG_SENSORS = [
     ScreenLogicBinarySensorDescription(
         data_root=(DEVICE.SCG, GROUP.SENSOR),
         key=VALUE.STATE,
+        translation_key="scg_state",
     )
 ]
 

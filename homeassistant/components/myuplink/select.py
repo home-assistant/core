@@ -12,6 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .const import DOMAIN
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity
 
@@ -86,7 +87,13 @@ class MyUplinkSelect(MyUplinkEntity, SelectEntity):
             )
         except ClientError as err:
             raise HomeAssistantError(
-                f"Failed to set new option {self.options_rev[option]} for {self.point_id}/{self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="set_select_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "option": self.options_rev[option],
+                    "point": self.point_id,
+                },
             ) from err
 
         await self.coordinator.async_request_refresh()

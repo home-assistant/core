@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
-from .const import F_SERIES
+from .const import DOMAIN, F_SERIES
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
@@ -137,7 +137,13 @@ class MyUplinkNumber(MyUplinkEntity, NumberEntity):
             )
         except ClientError as err:
             raise HomeAssistantError(
-                f"Failed to set new value {value} for {self.point_id}/{self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="set_number_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                    "point": self.point_id,
+                    "value": str(value),
+                },
             ) from err
 
         await self.coordinator.async_request_refresh()

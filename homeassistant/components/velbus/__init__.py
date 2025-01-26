@@ -9,11 +9,12 @@ import os
 import shutil
 
 from velbusaio.controller import Velbus
+from velbusaio.exceptions import VelbusConnectionFailed
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, PlatformNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
@@ -44,19 +45,34 @@ class VelbusData:
     """Runtime data for the Velbus config entry."""
 
     controller: Velbus
-    connect_task: asyncio.Task
+    scan_task: asyncio.Task
 
 
-async def velbus_connect_task(
+async def velbus_scan_task(
     controller: Velbus, hass: HomeAssistant, entry_id: str
 ) -> None:
-    """Task to offload the long running connect."""
+    """Task to offload the long running scan."""
     try:
-        await controller.connect()
+        await controller.start()
     except ConnectionError as ex:
         raise PlatformNotReady(
             f"Connection error while connecting to Velbus {entry_id}: {ex}"
         ) from ex
+    # create all modules
+    dev_reg = dr.async_get(hass)
+    for module in controller.get_modules().values():
+        dev_reg.async_get_or_create(
+            config_entry_id=entry_id,
+            identifiers={
+                (DOMAIN, str(module.get_addresses()[0])),
+            },
+            manufacturer="Velleman",
+            model=module.get_type_name(),
+            model_id=str(module.get_type()),
+            name=f"{module.get_name()} ({module.get_type_name()})",
+            sw_version=module.get_sw_version(),
+            serial_number=module.get_serial(),
+        )
 
 
 def _migrate_device_identifiers(hass: HomeAssistant, entry_id: str) -> None:
@@ -85,8 +101,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
         entry.data[CONF_PORT],
         cache_dir=hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}"),
     )
-    task = hass.async_create_task(velbus_connect_task(controller, hass, entry.entry_id))
-    entry.runtime_data = VelbusData(controller=controller, connect_task=task)
+    try:
+        await controller.connect()
+    except VelbusConnectionFailed as error:
+        raise ConfigEntryNotReady("Cannot connect to Velbus") from error
+
+    task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
+    entry.runtime_data = VelbusData(controller=controller, scan_task=task)
 
     _migrate_device_identifiers(hass, entry.entry_id)
 

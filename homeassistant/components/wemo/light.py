@@ -11,6 +11,8 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityFeature,
@@ -77,6 +79,8 @@ def async_setup_bridge(
 class WemoLight(WemoEntity, LightEntity):
     """Representation of a WeMo light."""
 
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
     _attr_supported_features = LightEntityFeature.TRANSITION
 
     def __init__(self, coordinator: DeviceCoordinator, light: BridgeLight) -> None:

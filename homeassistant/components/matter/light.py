@@ -13,6 +13,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -38,9 +40,9 @@ from .util import (
 )
 
 COLOR_MODE_MAP = {
-    clusters.ColorControl.Enums.ColorMode.kCurrentHueAndCurrentSaturation: ColorMode.HS,
-    clusters.ColorControl.Enums.ColorMode.kCurrentXAndCurrentY: ColorMode.XY,
-    clusters.ColorControl.Enums.ColorMode.kColorTemperature: ColorMode.COLOR_TEMP,
+    clusters.ColorControl.Enums.ColorModeEnum.kCurrentHueAndCurrentSaturation: ColorMode.HS,
+    clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
+    clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
 
 # there's a bug in (at least) Espressif's implementation of light transitions
@@ -91,6 +93,8 @@ class MatterLight(MatterEntity, LightEntity):
     _supports_color_temperature = False
     _transitions_disabled = False
     _platform_translation_key = "light"
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     async def _set_xy_color(
         self, xy_color: tuple[float, float], transition: float = 0.0
@@ -351,21 +355,21 @@ class MatterLight(MatterEntity, LightEntity):
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kHueSaturationSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kHueSaturation
                 ):
                     supported_color_modes.add(ColorMode.HS)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kXYAttributesSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kXy
                 ):
                     supported_color_modes.add(ColorMode.XY)
                     self._supports_color = True
 
                 if (
                     capabilities
-                    & clusters.ColorControl.Bitmaps.ColorCapabilities.kColorTemperatureSupported
+                    & clusters.ColorControl.Bitmaps.ColorCapabilitiesBitmap.kColorTemperature
                 ):
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
                     self._supports_color_temperature = True

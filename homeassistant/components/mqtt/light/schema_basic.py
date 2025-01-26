@@ -9,23 +9,25 @@ from typing import Any, cast
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    _DEPRECATED_ATTR_COLOR_TEMP,
+    _DEPRECATED_ATTR_MAX_MIREDS,
+    _DEPRECATED_ATTR_MIN_MIREDS,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MAX_MIREDS,
     ATTR_MIN_COLOR_TEMP_KELVIN,
-    ATTR_MIN_MIREDS,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
@@ -49,7 +51,10 @@ import homeassistant.util.color as color_util
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
 from ..const import (
+    CONF_COLOR_TEMP_KELVIN,
     CONF_COMMAND_TOPIC,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
     PAYLOAD_NONE,
@@ -115,15 +120,15 @@ MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
         ATTR_COLOR_MODE,
         ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP,
+        _DEPRECATED_ATTR_COLOR_TEMP.value,
         ATTR_COLOR_TEMP_KELVIN,
         ATTR_EFFECT,
         ATTR_EFFECT_LIST,
         ATTR_HS_COLOR,
         ATTR_MAX_COLOR_TEMP_KELVIN,
-        ATTR_MAX_MIREDS,
+        _DEPRECATED_ATTR_MAX_MIREDS.value,
         ATTR_MIN_COLOR_TEMP_KELVIN,
-        ATTR_MIN_MIREDS,
+        _DEPRECATED_ATTR_MIN_MIREDS.value,
         ATTR_RGB_COLOR,
         ATTR_RGBW_COLOR,
         ATTR_RGBWW_COLOR,
@@ -180,6 +185,7 @@ PLATFORM_SCHEMA_MODERN_BASIC = (
             vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): valid_subscribe_topic,
             vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
             vol.Optional(CONF_EFFECT_COMMAND_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
@@ -191,6 +197,8 @@ PLATFORM_SCHEMA_MODERN_BASIC = (
             vol.Optional(CONF_HS_VALUE_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
+            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
             vol.Optional(CONF_NAME): vol.Any(cv.string, None),
             vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE): vol.In(
                 VALUES_ON_COMMAND_TYPE
@@ -237,6 +245,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     _attributes_extra_blocked = MQTT_LIGHT_ATTRIBUTES_BLOCKED
     _topic: dict[str, str | None]
     _payload: dict[str, str]
+    _color_temp_kelvin: bool
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
     ]
@@ -261,16 +270,18 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(max_mireds)
             if (max_mireds := config.get(CONF_MAX_MIREDS))
-            else super().min_color_temp_kelvin
+            else config.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN)
         )
         self._attr_max_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(min_mireds)
             if (min_mireds := config.get(CONF_MIN_MIREDS))
-            else super().max_color_temp_kelvin
+            else config.get(CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN)
         )
+
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
         topic: dict[str, str | None] = {
@@ -524,6 +535,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
 
         if self._optimistic_color_mode:
             self._attr_color_mode = ColorMode.COLOR_TEMP
+        if self._color_temp_kelvin:
+            self._attr_color_temp_kelvin = int(payload)
+            return
         self._attr_color_temp_kelvin = color_util.color_temperature_mired_to_kelvin(
             int(payload)
         )
@@ -573,7 +587,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_xy_color = cast(tuple[float, float], xy_color)
 
     @callback
-    def _prepare_subscribe_topics(self) -> None:  # noqa: C901
+    def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
         self.add_subscription(
@@ -816,7 +830,9 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         ):
             ct_command_tpl = self._command_templates[CONF_COLOR_TEMP_COMMAND_TEMPLATE]
             color_temp = ct_command_tpl(
-                color_util.color_temperature_kelvin_to_mired(
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                if self._color_temp_kelvin
+                else color_util.color_temperature_kelvin_to_mired(
                     kwargs[ATTR_COLOR_TEMP_KELVIN]
                 ),
                 None,
