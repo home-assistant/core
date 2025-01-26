@@ -535,10 +535,10 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterTemperatureControlClimate,
         required_attributes=(
+            clusters.TemperatureControl.Attributes.TemperatureSetpoint,
             clusters.TemperatureControl.Attributes.FeatureMap,
             clusters.TemperatureControl.Attributes.MinTemperature,
             clusters.TemperatureControl.Attributes.MaxTemperature,
-            clusters.TemperatureControl.Attributes.TemperatureSetpoint,
         ),
         optional_attributes=(clusters.TemperatureControl.Attributes.Step,),
     ),
