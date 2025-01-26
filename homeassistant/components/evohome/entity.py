@@ -5,21 +5,13 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
-from evohomeasync2.const import (
-    SZ_SETPOINT_STATUS,
-    SZ_STATE_STATUS,
-    SZ_SYSTEM_MODE_STATUS,
-    SZ_TIME_UNTIL,
-    SZ_UNTIL,
-)
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import EvoService
-from .const import DOMAIN
+from .const import DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
-from .helpers import convert_dict, convert_until
+from .helpers import convert_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +22,6 @@ class EvoDevice(Entity):
     This includes the controller, (1 to 12) heating zones and (optionally) a
     DHW controller.
     """
-
-    # self.schedule_update_ha_state()
 
     _attr_should_poll = False
 
@@ -48,6 +38,7 @@ class EvoDevice(Entity):
 
     async def async_refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
+
         if payload is None:
             # force_refresh invokes self.async_update() before self.async_write_ha_state()
             self.async_schedule_update_ha_state(force_refresh=True)
@@ -73,15 +64,7 @@ class EvoDevice(Entity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the evohome-specific state attributes."""
-        status = self._device_state_attrs
-        if SZ_SYSTEM_MODE_STATUS in status:
-            convert_until(status[SZ_SYSTEM_MODE_STATUS], SZ_TIME_UNTIL)
-        if SZ_SETPOINT_STATUS in status:
-            convert_until(status[SZ_SETPOINT_STATUS], SZ_UNTIL)
-        if SZ_STATE_STATUS in status:
-            convert_until(status[SZ_STATE_STATUS], SZ_UNTIL)
-
-        return {"status": convert_dict(status)}
+        return {"status": convert_dict(self._device_state_attrs)}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -154,12 +137,12 @@ class EvoChild(EvoDevice):
         if not self._schedule:
             await self._update_schedule()
 
-        if not self._schedule:
-            self._device_state_attrs = {}
-            return
+            if not self._schedule:
+                self._device_state_attrs = {}
+                return
 
-        if self._evo_device.next_switchpoint[0] > datetime.now(tz=UTC):
-            await self._update_schedule()  # no schedule, or it's out-of-date
+        elif self._evo_device.next_switchpoint[0] < datetime.now(tz=UTC):
+            await self._update_schedule()
 
         this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
         next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint

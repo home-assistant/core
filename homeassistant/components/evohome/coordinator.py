@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -19,12 +20,12 @@ from evohomeasync2.const import (
 )
 from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT
 
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_LOCATION_IDX, DOMAIN, GWS, TCS
-from .helpers import handle_evo_exception
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -56,11 +57,12 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.loc_idx = location_idx
 
-        # self.data: _DataT = None  # type: ignore[assignment]
-        self.temps: dict[str, float | None] = {}
+        # These will not be None after _async_setup())
+        self.loc: ec2.Location = None  # type: ignore[assignment]
+        self.tcs: ec2.ControlSystem = None  # type: ignore[assignment]
 
-        self.loc: ec2.Location | None = None
-        self.tcs: ec2.ControlSystem | None = None
+        self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
+        self.temps: dict[str, float | None] = {}
 
     async def async_first_refresh(self) -> None:
         """Refresh data for the first time when a config entry is setup.
@@ -69,12 +71,12 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         invoke `async_config_entry_first_refresh()`.
         """
 
-        if await self.__wrap_async_setup():
-            await self._async_refresh(
-                log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
-            )
-            if self.last_update_success:
-                return
+        if not await self.__wrap_async_setup():
+            return
+
+        await self._async_refresh(
+            log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
+        )
 
     def _async_unsub_shutdown(self) -> None:
         """Cancel any scheduled call."""
@@ -107,11 +109,11 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     async def _async_setup(self) -> None:
         """Set up the coordinator (fetch the configuration of a TCC Location)."""
 
-        await self.client.update(_dont_update_status=True)  # only need config
+        await self.client.update(dont_update_status=True)  # only need config for now
 
         try:
             self.loc = self.client.locations[self.loc_idx]
-        except IndexError as err:
+        except IndexError:
             self.logger.error(
                 (
                     "Config error: '%s' = %s, but the valid range is 0-%s. "
@@ -121,7 +123,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 self.loc_idx,
                 len(self.client.locations) - 1,
             )
-            raise ValueError("TODO") from err
 
         self.tcs = self.loc.gateways[0].systems[0]
 
@@ -151,11 +152,11 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             result = await client_api
 
         except ec2.ApiRequestFailedError as err:
-            handle_evo_exception(err)
+            self.logger.error(err)
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            await self.async_refresh()
+            await self.async_request_refresh()
 
         return result
 
@@ -164,64 +165,60 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         assert self.client_v1 is not None  # mypy check
 
-        # try:
-        #     temps = await self.client_v1.get_temperatures()
+        try:
+            await self.client_v1.update()
 
-        # except ec1.InvalidSchemaError as err:
-        #     self.logger.warning(
-        #         (
-        #             "Unable to obtain high-precision temperatures. "
-        #             "It appears the JSON schema is not as expected, "
-        #             "so the high-precision feature will be disabled until next restart."
-        #             "Message is: %s"
-        #         ),
-        #         err,
-        #     )
-        #     self.client_v1 = None
+        except ec1.BadUserCredentialsError as err:
+            self.logger.warning(
+                (
+                    "Unable to obtain high-precision temperatures. "
+                    "The high-precision feature will be disabled until next restart."
+                    "Message is: %s"
+                ),
+                err,
+            )
+            self.client_v1 = None
 
-        # except ec1.ApiRequestFailedError as err:
-        #     self.logger.warning(
-        #         (
-        #             "Unable to obtain the latest high-precision temperatures. "
-        #             "Check your network and the vendor's service status page. "
-        #             "Proceeding without high-precision temperatures for now. "
-        #             "Message is: %s"
-        #         ),
-        #         err,
-        #     )
-        #     self.temps = {}  # high-precision temps now considered stale
+        except ec1.EvohomeError as err:
+            self.logger.warning(
+                (
+                    "Unable to obtain the latest high-precision temperatures. "
+                    "Proceeding without high-precision temperatures for now. "
+                    "Message is: %s"
+                ),
+                err,
+            )
+            self.temps = {}  # high-precision temps now considered stale
 
-        # except Exception:
-        #     self.temps = {}  # high-precision temps now considered stale
-        #     raise
+        except Exception:
+            self.temps = {}  # high-precision temps now considered stale
+            raise
 
-        # else:
-        #     if str(self.client_v1.location_id) != self.loc.locationId:
-        #         self.logger.warning(
-        #             "The v2 API's configured location doesn't match "
-        #             "the v1 API's default location (there is more than one location), "
-        #             "so the high-precision feature will be disabled until next restart"
-        #         )
-        #         self.client_v1 = None
-        #     else:
-        #         self.temps = {str(i[SZ_ID]): i[SZ_TEMP] for i in temps}
+        else:
+            self.temps = await self.client_v1.location_by_id[
+                self.loc.id
+            ].get_temperatures(dont_update_status=True)
 
         self.logger.debug("Status (high-res temps) = %s", self.temps)
 
-    async def _update_v2_api_state(self, *args: Any) -> None:
+    async def _update_v2_api_state(self, *args: Any) -> bool:
         """Get the latest modes, temperatures, setpoints of a Location."""
-
-        assert self.loc is not None  # mypy
 
         try:
             status = await self.loc.update()
 
         except ec2.ApiRequestFailedError as err:
-            handle_evo_exception(err)
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS:
+                self.logger.warning(
+                    "The vendor's API rate limit has been exceeded. "  # noqa: G004
+                    f"Consider increasing the {CONF_SCAN_INTERVAL}."
+                )
+            else:
+                self.logger.error(err)
+            return False
 
-        else:
-            async_dispatcher_send(self.hass, DOMAIN)
-            self.logger.debug("Status = %s", status)
+        self.logger.debug("Status = %s", status)
+        return True
 
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
@@ -231,10 +228,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         Zones, DHW controller).
         """
 
-        await self._update_v2_api_state()
+        if await self._update_v2_api_state():
+            if self.client_v1:
+                await self._update_v1_api_temps()
+            async_dispatcher_send(self.hass, DOMAIN)
 
-        if self.client_v1:
-            await self._update_v1_api_temps()
-
-        assert self.loc is not None  # mypy
         return self.loc.status  # type: ignore[return-value]

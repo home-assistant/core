@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 
-def dt_local_to_aware(dt_naive: datetime) -> datetime:
+def OUT_dt_local_to_aware(dt_naive: datetime) -> datetime:
     """Convert a local/naive datetime to TZ-aware."""
     dt_aware = dt_util.now() + (dt_naive - datetime.now())
     if dt_aware.microsecond >= 500000:
@@ -24,7 +24,7 @@ def dt_local_to_aware(dt_naive: datetime) -> datetime:
     return dt_aware.replace(microsecond=0)
 
 
-def dt_aware_to_naive(dt_aware: datetime) -> datetime:
+def OUT_dt_aware_to_naive(dt_aware: datetime) -> datetime:
     """Convert a TZ-aware datetime to naive/local."""
     dt_naive = datetime.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
@@ -32,7 +32,7 @@ def dt_aware_to_naive(dt_aware: datetime) -> datetime:
     return dt_naive.replace(microsecond=0)
 
 
-def convert_until(status_dict: dict, until_key: str) -> None:
+def OUT_convert_until(status_dict: dict, until_key: str) -> None:
     """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
     if until_key in status_dict and (  # only present for certain modes
         dt_utc_naive := dt_util.parse_datetime(status_dict[until_key])
@@ -63,7 +63,7 @@ def convert_dict(dictionary: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def handle_evo_exception(err: evo.ApiRequestFailedError) -> None:
+def OUT_handle_evo_exception(err: evo.ApiRequestFailedError) -> None:
     """Return False if the exception can't be ignored."""
 
     try:

@@ -13,11 +13,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'away_mode': 'on',
-      'current_temperature': 23,
+      'current_temperature': 23.0,
       'friendly_name': 'Domestic Hot Water',
       'icon': 'mdi:thermometer-lines',
-      'max_temp': 60,
-      'min_temp': 43,
+      'max_temp': 60.0,
+      'min_temp': 43.3,
       'operation_list': list([
         'auto',
         'on',
@@ -60,11 +60,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'away_mode': 'on',
-      'current_temperature': 23,
+      'current_temperature': 23.0,
       'friendly_name': 'Domestic Hot Water',
       'icon': 'mdi:thermometer-lines',
-      'max_temp': 60,
-      'min_temp': 43,
+      'max_temp': 60.0,
+      'min_temp': 43.3,
       'operation_list': list([
         'auto',
         'on',

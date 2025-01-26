@@ -21,7 +21,7 @@ from .const import STORAGE_KEY, STORAGE_VER
 _LOGGER = logging.getLogger(__name__)
 
 
-class _SessionDataT(TypedDict):
+class _SessionIdEntryT(TypedDict):
     session_id: str
     session_id_expires: NotRequired[str]  # dt.isoformat()  # TZ-aware
 
@@ -31,7 +31,8 @@ class _TokenStoreT(TypedDict):
     refresh_token: str
     access_token: str
     access_token_expires: str  # dt.isoformat()  # TZ-aware
-    user_data: NotRequired[_SessionDataT]
+    session_id: NotRequired[str]
+    session_id_expires: NotRequired[str]  # dt.isoformat()  # TZ-aware
 
 
 class TokenManager(AbstractTokenManager, AbstractSessionManager):
@@ -83,13 +84,11 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         if not cache or cache["username"] != self._client_id:
             return
 
-        if user_data := cache.pop("user_data", None):
-            self._import_session_id(user_data)
+        if SZ_SESSION_ID in cache:
+            self._import_session_id(cache)  # type: ignore[arg-type]
+        self._import_access_token(cache)
 
-        if cache:
-            self._import_access_token(cache)
-
-    def _import_session_id(self, session: _SessionDataT) -> None:  # type: ignore[override]
+    def _import_session_id(self, session: _SessionIdEntryT) -> None:  # type: ignore[override]
         """Extract the session id from a (serialized) dictionary."""
         # base class method overridden because session_id_expired is NotRequired here
 
@@ -117,6 +116,6 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         cache = {"username": self._client_id} | self._export_access_token()
         if self._session_id:
-            cache |= self._export_access_token()
+            cache |= self._export_session_id()
 
         await self._store.async_save(cache)

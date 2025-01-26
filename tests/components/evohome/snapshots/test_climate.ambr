@@ -233,13 +233,13 @@
         'active_faults': tuple(
           dict({
             'fault_type': 'TempZoneActuatorLowBattery',
-            'since': '2022-03-02T04:50:20',
+            'since': '2022-03-02T04:50:20+00:00',
           }),
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
-          'until': '2022-03-07T20:00:00+01:00',
+          'until': '2022-03-07T19:00:00+00:00',
         }),
         'setpoints': dict({
           'next_sp_from': '2024-07-10T22:10:00+01:00',
@@ -426,7 +426,7 @@
         'active_faults': tuple(
           dict({
             'fault_type': 'TempZoneActuatorCommunicationLost',
-            'since': '2022-03-02T15:56:01',
+            'since': '2022-03-02T15:56:01+00:00',
           }),
         ),
         'setpoint_status': dict({
@@ -611,7 +611,7 @@
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
-          'until': '2022-03-07T20:00:00+01:00',
+          'until': '2022-03-07T19:00:00+00:00',
         }),
         'setpoints': dict({
           'next_sp_from': '2024-07-10T22:10:00+01:00',

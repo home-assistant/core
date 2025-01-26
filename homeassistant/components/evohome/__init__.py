@@ -2,6 +2,8 @@
 
 Such systems provide heating/cooling and DHW and include Evohome, Round Thermostat, and
 others.
+
+Note that the API used by this integration's client does not support cooling.
 """
 
 from __future__ import annotations
@@ -11,6 +13,7 @@ from datetime import timedelta
 import logging
 from typing import Final
 
+import evohomeasync as ec1
 import evohomeasync2 as ec2
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 from evohomeasync2.schemas.const import (
@@ -110,21 +113,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     config[DOMAIN][CONF_PASSWORD] = "REDACTED"
 
-    client_v2 = ec2.EvohomeClient(token_manager)
-
     coordinator = EvoDataUpdateCoordinator(
         hass,
         _LOGGER,
-        client_v2,
+        ec2.EvohomeClient(token_manager),
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         location_idx=config[DOMAIN][CONF_LOCATION_IDX],
+        client_v1=ec1.EvohomeClient(token_manager),
     )
 
     await coordinator.async_register_shutdown()
-
-    # without a listener, _schedule_refresh() won't be invoked by _async_refresh()
-    coordinator.async_add_listener(lambda: None)
 
     await coordinator.async_first_refresh()  # get initial state via _async_setup
 
@@ -133,6 +132,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return False
 
     assert coordinator.tcs is not None  # mypy
+
+    # without a listener, the coordinator will not periodically refresh
+    coordinator.async_add_listener(lambda: None)
 
     hass.data[EVOHOME_KEY] = EvoData(
         coordinator=coordinator,
