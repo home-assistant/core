@@ -101,9 +101,11 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         key="active_tariff",
         translation_key="active_tariff",
         has_fn=lambda data: data.measurement.tariff is not None,
-        value_fn=lambda data: None
-        if data.measurement.tariff is None
-        else str(data.measurement.tariff),
+        value_fn=(
+            lambda data: None
+            if data.measurement.tariff is None
+            else str(data.measurement.tariff)
+        ),
         device_class=SensorDeviceClass.ENUM,
         options=["1", "2", "3", "4"],
     ),
