@@ -247,10 +247,6 @@
 # name: test_sensors[sensor.gs012345_total_coffees_made-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'A': 1047,
-      'B': 560,
-      'C': 468,
-      'D': 312,
       'friendly_name': 'GS012345 Total coffees made',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'drinks',
