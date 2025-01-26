@@ -157,77 +157,83 @@ class OpenAIConversationEntity(
         async with conversation.async_get_chat_session(
             self.hass, user_input
         ) as session:
-            options = self.entry.options
+            return await self._async_call_api(user_input, session)
 
-            try:
-                await session.async_update_llm_data(
-                    DOMAIN,
-                    user_input,
-                    options.get(CONF_LLM_HASS_API),
-                    options.get(CONF_PROMPT),
-                )
-            except conversation.ConverseError as err:
-                return err.as_conversation_result()
+    async def _async_call_api(
+        self,
+        user_input: conversation.ConversationInput,
+        session: conversation.ChatSession[ChatCompletionMessageParam],
+    ) -> conversation.ConversationResult:
+        """Call the API."""
 
-            tools: list[ChatCompletionToolParam] | None = None
-            if session.llm_api:
-                tools = [
-                    _format_tool(tool, session.llm_api.custom_serializer)
-                    for tool in session.llm_api.tools
-                ]
+        options = self.entry.options
 
-            client = self.entry.runtime_data
-            messages = [
-                _chat_message_convert(message)
-                for message in session.async_get_messages()
+        try:
+            await session.async_update_llm_data(
+                DOMAIN,
+                user_input,
+                options.get(CONF_LLM_HASS_API),
+                options.get(CONF_PROMPT),
+            )
+        except conversation.ConverseError as err:
+            return err.as_conversation_result()
+
+        tools: list[ChatCompletionToolParam] | None = None
+        if session.llm_api:
+            tools = [
+                _format_tool(tool, session.llm_api.custom_serializer)
+                for tool in session.llm_api.tools
             ]
-            for _iteration in range(MAX_TOOL_ITERATIONS):
-                LOGGER.debug("Request %s", messages)
-                try:
-                    result = await client.chat.completions.create(
-                        model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                        messages=messages,
-                        tools=tools or NOT_GIVEN,
-                        max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                        temperature=options.get(
-                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-                        ),
-                        user=session.conversation_id,
-                    )
-                except openai.OpenAIError as err:
-                    LOGGER.error("Error talking to OpenAI: %s", err)
-                    raise HomeAssistantError("Error talking to OpenAI") from err
 
-                LOGGER.debug("Response %s", result)
-                response = result.choices[0].message
-                # Note: We are not adding this response to the session
-                messages.append(_message_convert(response))
+        client = self.entry.runtime_data
+        messages = [
+            _chat_message_convert(message) for message in session.async_get_messages()
+        ]
+        for _iteration in range(MAX_TOOL_ITERATIONS):
+            LOGGER.debug("Request %s", messages)
+            try:
+                result = await client.chat.completions.create(
+                    model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+                    messages=messages,
+                    tools=tools or NOT_GIVEN,
+                    max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                    top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                    temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+                    user=session.conversation_id,
+                )
+            except openai.OpenAIError as err:
+                LOGGER.error("Error talking to OpenAI: %s", err)
+                raise HomeAssistantError("Error talking to OpenAI") from err
 
-                if not response.tool_calls or not session.llm_api:
-                    break
+            LOGGER.debug("Response %s", result)
+            response = result.choices[0].message
+            # Note: We are not adding this response to the session
+            messages.append(_message_convert(response))
 
-                for tool_call in response.tool_calls:
-                    tool_input = llm.ToolInput(
-                        tool_name=tool_call.function.name,
-                        tool_args=json.loads(tool_call.function.arguments),
+            if not response.tool_calls or not session.llm_api:
+                break
+
+            for tool_call in response.tool_calls:
+                tool_input = llm.ToolInput(
+                    tool_name=tool_call.function.name,
+                    tool_args=json.loads(tool_call.function.arguments),
+                )
+                tool_response = await session.async_call_tool(tool_input)
+                messages.append(
+                    ChatCompletionToolMessageParam(
+                        role="tool",
+                        tool_call_id=tool_call.id,
+                        content=json.dumps(tool_response),
                     )
-                    tool_response = await session.async_call_tool(tool_input)
-                    messages.append(
-                        ChatCompletionToolMessageParam(
-                            role="tool",
-                            tool_call_id=tool_call.id,
-                            content=json.dumps(tool_response),
-                        )
+                )
+                session.async_add_message(
+                    conversation.ChatMessage(
+                        role="native",
+                        agent_id=user_input.agent_id,
+                        content="",
+                        native=messages[-1],
                     )
-                    session.async_add_message(
-                        conversation.ChatMessage(
-                            role="native",
-                            agent_id=user_input.agent_id,
-                            content="",
-                            native=messages[-1],
-                        )
-                    )
+                )
 
         intent_response = intent.IntentResponse(language=user_input.language)
         intent_response.async_set_speech(response.content or "")
