@@ -112,11 +112,11 @@ async def async_converse(
         )
         try:
             result = await method(conversation_input)
-        except HomeAssistantError:
+        except HomeAssistantError as err:
             intent_response = intent.IntentResponse(language=language)
             intent_response.async_set_error(
                 intent.IntentResponseErrorCode.UNKNOWN,
-                "Sorry, I had a problem talking to OpenAI",
+                str(err),
             )
             return ConversationResult(
                 response=intent_response,
