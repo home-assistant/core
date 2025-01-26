@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
+import copy
 import time
 from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -33,12 +34,17 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
-MOCK_APPLIANCES_PROPERTIES = {
-    x["name"]: x
-    for x in load_json_object_fixture("home_connect/appliances.json")["data"][
-        "homeappliances"
-    ]
-}
+MOCK_APPLIANCES = ArrayOfHomeAppliances.from_dict(
+    load_json_object_fixture("home_connect/appliances.json")["data"]
+)
+MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture(
+    "home_connect/programs-available.json"
+)
+MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
+MOCK_STATUS = ArrayOfStatus.from_dict(
+    load_json_object_fixture("home_connect/status.json")["data"]
+)
+
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -141,21 +147,109 @@ async def mock_integration_setup(
     return run
 
 
+def _get_set_program_side_effect(
+    event_queue: asyncio.Queue[list[EventMessage]], event_key: EventKey
+):
+    """Set program side effect."""
+
+    async def set_program_side_effect(ha_id: str, *_, **kwargs) -> None:
+        await event_queue.put(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                event_key,
+                                0,
+                                "",
+                                "",
+                                str(kwargs["program_key"]),
+                            ),
+                            *[
+                                Event(
+                                    EventKey(option.key),
+                                    0,
+                                    "",
+                                    "",
+                                    str(option.key),
+                                )
+                                for option in cast(
+                                    list[Option], kwargs.get("options", [])
+                                )
+                            ],
+                        ]
+                    ),
+                ),
+            ]
+        )
+
+    return set_program_side_effect
+
+
+def _get_set_key_value_side_effect(
+    event_queue: asyncio.Queue[list[EventMessage]], parameter_key: str
+):
+    """Set program options side effect."""
+
+    async def set_key_value_side_effect(ha_id: str, *_, **kwargs) -> None:
+        await event_queue.put(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                EventKey(kwargs[parameter_key]),
+                                0,
+                                "",
+                                "",
+                                kwargs["value"],
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+
+    return set_key_value_side_effect
+
+
+async def _get_available_programs_side_effect(ha_id: str) -> ArrayOfAvailablePrograms:
+    """Get available programs."""
+    appliance_type = next(
+        appliance
+        for appliance in MOCK_APPLIANCES.homeappliances
+        if appliance.ha_id == ha_id
+    ).type
+    if appliance_type not in MOCK_PROGRAMS:
+        raise HomeConnectApiError("error.key", "error description")
+
+    return ArrayOfAvailablePrograms.from_dict(MOCK_PROGRAMS[appliance_type]["data"])
+
+
+async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
+    """Get settings."""
+    return ArrayOfSettings.from_dict(
+        MOCK_SETTINGS.get(
+            next(
+                appliance
+                for appliance in MOCK_APPLIANCES.homeappliances
+                if appliance.ha_id == ha_id
+            ).type,
+            {},
+        ).get("data", {"settings": []})
+    )
+
+
 @pytest.fixture(name="client")
 def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     """Fixture to mock Client from HomeConnect."""
 
     mock = MagicMock(
         autospec=HomeConnectClient,
-    )
-
-    appliances = ArrayOfHomeAppliances.from_dict(
-        load_json_object_fixture("home_connect/appliances.json")["data"]
-    )
-
-    settings: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
-    programs_available: dict[str, Any] = load_json_object_fixture(
-        "home_connect/programs-available.json"
     )
 
     event_queue: asyncio.Queue[list[EventMessage]] = asyncio.Queue()
@@ -171,119 +265,32 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    def set_program_side_effect(event_key: EventKey):
-        """Set program side effect."""
-
-        async def set_program(ha_id: str, *_, **kwargs) -> None:
-            await event_queue.put(
-                [
-                    EventMessage(
-                        ha_id,
-                        EventType.NOTIFY,
-                        ArrayOfEvents(
-                            [
-                                Event(
-                                    event_key,
-                                    0,
-                                    "",
-                                    "",
-                                    str(kwargs["program_key"]),
-                                ),
-                                *[
-                                    Event(
-                                        EventKey(option.key),
-                                        0,
-                                        "",
-                                        "",
-                                        str(option.key),
-                                    )
-                                    for option in cast(
-                                        list[Option], kwargs.get("options", [])
-                                    )
-                                ],
-                            ]
-                        ),
-                    ),
-                ]
-            )
-
-        return set_program
-
-    def set_key_value_side_effect(parameter_key: str):
-        """Set program options side effect."""
-
-        async def set_key_value(ha_id: str, *_, **kwargs) -> None:
-            await event_queue.put(
-                [
-                    EventMessage(
-                        ha_id,
-                        EventType.NOTIFY,
-                        ArrayOfEvents(
-                            [
-                                Event(
-                                    EventKey(kwargs[parameter_key]),
-                                    0,
-                                    "",
-                                    "",
-                                    kwargs["value"],
-                                )
-                            ]
-                        ),
-                    ),
-                ]
-            )
-
-        return set_key_value
-
-    async def get_available_programs(ha_id: str) -> ArrayOfAvailablePrograms:
-        """Get available programs."""
-        appliance_type = next(
-            appliance
-            for appliance in appliances.homeappliances
-            if appliance.ha_id == ha_id
-        ).type
-        if appliance_type not in programs_available:
-            raise HomeConnectApiError("error.key", "error description")
-
-        return ArrayOfAvailablePrograms.from_dict(
-            programs_available[appliance_type]["data"]
-        )
-
-    mock.get_home_appliances = AsyncMock(return_value=appliances)
+    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
     mock.stream_all_events = stream_all_events
     mock.start_program = AsyncMock(
-        side_effect=set_program_side_effect(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
+        side_effect=_get_set_program_side_effect(
+            event_queue, EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+        )
     )
     mock.set_selected_program = AsyncMock(
-        side_effect=set_program_side_effect(EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM),
+        side_effect=_get_set_program_side_effect(
+            event_queue, EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+        ),
     )
     mock.set_active_program_option = AsyncMock(
-        side_effect=set_key_value_side_effect("option_key"),
+        side_effect=_get_set_key_value_side_effect(event_queue, "option_key"),
     )
     mock.set_selected_program_option = AsyncMock(
-        side_effect=set_key_value_side_effect("option_key"),
+        side_effect=_get_set_key_value_side_effect(event_queue, "option_key"),
     )
     mock.set_setting = AsyncMock(
-        side_effect=set_key_value_side_effect("setting_key"),
+        side_effect=_get_set_key_value_side_effect(event_queue, "setting_key"),
     )
-    mock.get_settings = AsyncMock(
-        side_effect=lambda ha_id: ArrayOfSettings.from_dict(
-            settings.get(
-                next(
-                    appliance
-                    for appliance in appliances.homeappliances
-                    if appliance.ha_id == ha_id
-                ).type,
-                {},
-            ).get("data", {"settings": []})
-        )
+    mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
+    mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
+    mock.get_available_programs = AsyncMock(
+        side_effect=_get_available_programs_side_effect
     )
-    mock.get_status = AsyncMock(
-        return_value=ArrayOfStatus.from_dict(
-            load_json_object_fixture("home_connect/status.json")["data"]
-        )
-    )
-    mock.get_available_programs = AsyncMock(side_effect=get_available_programs)
     mock.put_command = AsyncMock()
 
     mock.side_effect = mock
@@ -301,10 +308,6 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     if hasattr(request, "param") and request.param:
         exception = request.param
 
-    appliances = ArrayOfHomeAppliances.from_dict(
-        load_json_object_fixture("home_connect/appliances.json")["data"]
-    )
-
     event_queue: asyncio.Queue[list[EventMessage]] = asyncio.Queue()
 
     async def stream_all_events() -> AsyncGenerator[EventMessage]:
@@ -313,7 +316,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=appliances)
+    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
     mock.stream_all_events = stream_all_events
 
     mock.start_program = AsyncMock(side_effect=exception)
@@ -338,4 +341,7 @@ def mock_appliance_ha_id(request: pytest.FixtureRequest) -> str:
     app = "Washer"
     if hasattr(request, "param") and request.param:
         app = request.param
-    return MOCK_APPLIANCES_PROPERTIES[app]["haId"]
+    for appliance in MOCK_APPLIANCES.homeappliances:
+        if appliance.type == app:
+            return appliance.ha_id
+    raise ValueError(f"Appliance {app} not found")
