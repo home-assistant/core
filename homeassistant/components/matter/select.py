@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
@@ -47,7 +49,18 @@ class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescrip
     """Describe Matter select entities."""
 
 
-class MatterSelectEntity(MatterEntity, SelectEntity):
+@dataclass(frozen=True, kw_only=True)
+class MatterListSelectEntityDescription(MatterSelectEntityDescription):
+    """Describe Matter select entities for MatterListSelectEntity."""
+
+    # command: a callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    command: Callable[[int], ClusterCommand]
+    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    list_attribute: type[ClusterAttributeDescriptor]
+
+
+class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
     """Representation of a select entity from Matter Attribute read/write."""
 
     entity_description: MatterSelectEntityDescription
@@ -76,7 +89,7 @@ class MatterSelectEntity(MatterEntity, SelectEntity):
         self._attr_current_option = value_convert(value)
 
 
-class MatterModeSelectEntity(MatterSelectEntity):
+class MatterModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a select entity from Matter (Mode) Cluster attribute(s)."""
 
     async def async_select_option(self, option: str) -> None:
@@ -109,6 +122,37 @@ class MatterModeSelectEntity(MatterSelectEntity):
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
+
+
+class MatterListSelectEntity(MatterEntity, SelectEntity):
+    """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
+
+    entity_description: MatterListSelectEntityDescription
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        option_id = self._attr_options.index(option)
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=self.entity_description.command(option_id),
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        list_values = cast(
+            list[str],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        self._attr_options = list_values
+        current_option_idx: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        try:
+            self._attr_current_option = list_values[current_option_idx]
+        except IndexError:
+            self._attr_current_option = None
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -230,7 +274,7 @@ DISCOVERY_SCHEMAS = [
                 "previous": None,
             }.get,
         ),
-        entity_class=MatterSelectEntity,
+        entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
     ),
     MatterDiscoverySchema(
@@ -251,7 +295,44 @@ DISCOVERY_SCHEMAS = [
                 "low": 2,
             }.get,
         ),
-        entity_class=MatterSelectEntity,
+        entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.SmokeSensitivityLevel,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="TrvTemperatureDisplayMode",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_display_mode",
+            options=["Celsius", "Fahrenheit"],
+            measurement_to_ha={
+                0: "Celsius",
+                1: "Fahrenheit",
+            }.get,
+            ha_to_native_value={
+                "Celsius": 0,
+                "Fahrenheit": 1,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(
+            clusters.ThermostatUserInterfaceConfiguration.Attributes.TemperatureDisplayMode,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterListSelectEntityDescription(
+            key="TemperatureControlSelectedTemperatureLevel",
+            translation_key="temperature_level",
+            command=lambda selected_index: clusters.TemperatureControl.Commands.SetTemperature(
+                targetTemperatureLevel=selected_index
+            ),
+            list_attribute=clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
+        ),
+        entity_class=MatterListSelectEntity,
+        required_attributes=(
+            clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
+            clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
+        ),
     ),
 ]

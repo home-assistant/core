@@ -2,6 +2,9 @@
   "services": {
     "play_media": { "service": "mdi:play" },
     "play_announcement": { "service": "mdi:bullhorn" },
-    "transfer_queue": { "service": "mdi:transfer" }
+    "transfer_queue": { "service": "mdi:transfer" },
+    "search": { "service": "mdi:magnify" },
+    "get_queue": { "service": "mdi:playlist-music" },
+    "get_library": { "service": "mdi:music-box-multiple" }
   }
 }

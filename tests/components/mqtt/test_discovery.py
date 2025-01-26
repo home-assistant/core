@@ -195,8 +195,8 @@ async def mock_mqtt_flow(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
-    [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
+    [({mqtt.CONF_BROKER: "mock-broker"}, {mqtt.CONF_DISCOVERY: False})],
 )
 async def test_subscribing_config_topic(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -356,7 +356,7 @@ async def test_invalid_device_discovery_config(
     async_fire_mqtt_message(
         hass,
         "homeassistant/device/bla/config",
-        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, ' '"cmps": ""}',
+        '{ "o": {"name": "foobar"}, "dev": {"identifiers": ["ABDE03"]}, "cmps": ""}',
     )
     await hass.async_block_till_done()
     assert (
@@ -1946,7 +1946,12 @@ async def test_cleanup_device_multiple_config_entries(
     mqtt_mock = await mqtt_mock_entry()
     ws_client = await hass_ws_client(hass)
 
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(
+        domain="test",
+        data={},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2042,7 +2047,12 @@ async def test_cleanup_device_multiple_config_entries_mqtt(
 ) -> None:
     """Test discovered device is cleaned up when removed through MQTT."""
     mqtt_mock = await mqtt_mock_entry()
-    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry = MockConfigEntry(
+        domain="test",
+        data={},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -2437,12 +2447,14 @@ async def test_no_implicit_state_topic_switch(
 
 
 @pytest.mark.parametrize(
-    "mqtt_config_entry_data",
+    ("mqtt_config_entry_data", "mqtt_config_entry_options"),
     [
-        {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
-        }
+        (
+            {mqtt.CONF_BROKER: "mock-broker"},
+            {
+                mqtt.CONF_DISCOVERY_PREFIX: "my_home/homeassistant/register",
+            },
+        )
     ],
 )
 async def test_complex_discovery_topic_prefix(
@@ -2497,7 +2509,13 @@ async def test_mqtt_integration_discovery_flow_fitering_on_redundant_payload(
         """Handle birth message."""
         birth.set()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=ENTRY_DEFAULT_BIRTH_MESSAGE)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        options=ENTRY_DEFAULT_BIRTH_MESSAGE,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     with (
         patch(
@@ -2562,7 +2580,13 @@ async def test_mqtt_discovery_flow_starts_once(
         """Handle birth message."""
         birth.set()
 
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data=ENTRY_DEFAULT_BIRTH_MESSAGE)
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "mock-broker"},
+        options=ENTRY_DEFAULT_BIRTH_MESSAGE,
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
 
     with (

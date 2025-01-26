@@ -99,6 +99,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
 
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
+    "Tilt": LutronCasetaTiltOnlyBlind,
     "SerenaHoneycombShade": LutronCasetaShade,
     "SerenaRollerShade": LutronCasetaShade,
     "TriathlonHoneycombShade": LutronCasetaShade,

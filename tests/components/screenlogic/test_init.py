@@ -43,7 +43,7 @@ TEST_MIGRATING_ENTITIES = [
     EntityMigrationData(
         "Chemistry Alarm",
         "chem_alarm",
-        "Active Alert",
+        "Active alert",
         "active_alert",
         BINARY_SENSOR_DOMAIN,
     ),

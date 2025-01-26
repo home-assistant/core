@@ -2,21 +2,26 @@
 
 from unittest.mock import AsyncMock
 
+from aiorussound.const import FeatureFlag
 from aiorussound.exceptions import CommandError
 from aiorussound.models import PlayStatus
 import pytest
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MP_DOMAIN,
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    SERVICE_MEDIA_SEEK,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_BUFFERING,
@@ -106,6 +111,59 @@ async def test_media_volume(
     )
 
 
+async def test_volume_mute(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test mute service."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Test mute (w/ toggle mute support)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
+    )
+
+    mock_russound_client.controllers[1].zones[1].toggle_mute.assert_called_once()
+    mock_russound_client.controllers[1].zones[1].toggle_mute.reset_mock()
+
+    mock_russound_client.controllers[1].zones[1].is_mute = True
+
+    # Test mute when already muted (w/ toggle mute support)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
+    )
+
+    mock_russound_client.controllers[1].zones[1].toggle_mute.assert_not_called()
+    mock_russound_client.supported_features = [FeatureFlag.COMMANDS_ZONE_MUTE_OFF_ON]
+
+    # Test mute (w/ dedicated commands)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: True},
+        blocking=True,
+    )
+
+    mock_russound_client.controllers[1].zones[1].mute.assert_called_once()
+
+    # Test unmute (w/ dedicated commands)
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_MUTE,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_VOLUME_MUTED: False},
+        blocking=True,
+    )
+
+    mock_russound_client.controllers[1].zones[1].unmute.assert_called_once()
+
+
 @pytest.mark.parametrize(
     ("source_name", "source_id"),
     [
@@ -176,3 +234,22 @@ async def test_power_service(
     await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
 
     mock_russound_client.controllers[1].zones[1].zone_off.assert_called_once()
+
+
+async def test_media_seek(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_russound_client: AsyncMock,
+) -> None:
+    """Test media seek service."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_MEDIA_SEEK,
+        {ATTR_ENTITY_ID: ENTITY_ID_ZONE_1, ATTR_MEDIA_SEEK_POSITION: 100},
+    )
+
+    mock_russound_client.controllers[1].zones[1].set_seek_time.assert_called_once_with(
+        100
+    )

@@ -10,11 +10,16 @@ from homeassistant.components.home_connect.const import (
     BSH_ACTIVE_PROGRAM,
     BSH_SELECTED_PROGRAM,
 )
-from homeassistant.components.select import ATTR_OPTION, DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    ATTR_OPTIONS,
+    DOMAIN as SELECT_DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import get_all_appliances
 
@@ -50,6 +55,40 @@ async def test_select(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup()
     assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_filter_unknown_programs(
+    bypass_throttle: Generator[None],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
+    setup_credentials: None,
+    get_appliances: Mock,
+    appliance: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test select that programs that are not part of the official Home Connect API specification are filtered out.
+
+    We use two programs to ensure that programs are iterated over a copy of the list,
+    and it does not raise problems when removing an element from the original list.
+    """
+    appliance.status.update(SETTINGS_STATUS)
+    appliance.get_programs_available.return_value = [
+        PROGRAM,
+        "NonOfficialProgram",
+        "AntotherNonOfficialProgram",
+    ]
+    get_appliances.return_value = [appliance]
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity = entity_registry.async_get("select.washer_selected_program")
+    assert entity
+    assert entity.capabilities.get(ATTR_OPTIONS) == [
+        "dishcare_dishwasher_program_eco_50"
+    ]
 
 
 @pytest.mark.parametrize(

@@ -70,8 +70,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
                 waste_dates
                 and (
                     next_waste_pickup_date is None
-                    or waste_dates[0]  # type: ignore[unreachable]
-                    < next_waste_pickup_date
+                    or waste_dates[0] < next_waste_pickup_date
                 )
                 and waste_dates[0] >= dt_util.now().date()
             ):
