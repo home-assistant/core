@@ -21,7 +21,7 @@ class ObsoleteImportMatch:
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "functools": [
         ObsoleteImportMatch(
-            reason="replaced by propcache.cached_property",
+            reason="replaced by propcache.api.cached_property",
             constant=re.compile(r"^cached_property$"),
         ),
     ],
@@ -33,7 +33,7 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     ],
     "homeassistant.backports.functools": [
         ObsoleteImportMatch(
-            reason="replaced by propcache.cached_property",
+            reason="replaced by propcache.api.cached_property",
             constant=re.compile(r"^cached_property$"),
         ),
     ],
@@ -127,6 +127,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by US_CUSTOMARY_SYSTEM",
             constant=re.compile(r"^IMPERIAL_SYSTEM$"),
+        ),
+    ],
+    "propcache": [
+        ObsoleteImportMatch(
+            reason="importing from propcache.api recommended",
+            constant=re.compile(r"^(under_)?cached_property$"),
         ),
     ],
 }

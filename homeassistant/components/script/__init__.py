@@ -8,7 +8,7 @@ from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api

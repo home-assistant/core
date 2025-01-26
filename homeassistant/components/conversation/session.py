@@ -21,7 +21,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util, ulid
+from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -101,7 +101,7 @@ async def async_get_chat_session(
     history: ChatSession | None = None
 
     if user_input.conversation_id is None:
-        conversation_id = ulid.ulid_now()
+        conversation_id = ulid_util.ulid_now()
 
     elif history := all_history.get(user_input.conversation_id):
         conversation_id = user_input.conversation_id
@@ -112,8 +112,8 @@ async def async_get_chat_session(
         # a new conversation was started. If the user picks their own, they
         # want to track a conversation and we respect it.
         try:
-            ulid.ulid_to_bytes(user_input.conversation_id)
-            conversation_id = ulid.ulid_now()
+            ulid_util.ulid_to_bytes(user_input.conversation_id)
+            conversation_id = ulid_util.ulid_now()
         except ValueError:
             conversation_id = user_input.conversation_id
 
