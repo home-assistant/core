@@ -128,7 +128,7 @@ async def async_get_chat_session(
     if history:
         history = replace(history, messages=history.messages.copy())
     else:
-        history = ChatSession(hass, conversation_id)
+        history = ChatSession(hass, conversation_id, user_input.agent_id)
 
     message: ChatMessage = ChatMessage(
         role="user",
@@ -226,6 +226,7 @@ class ChatSession[_NativeT]:
 
     hass: HomeAssistant
     conversation_id: str
+    agent_id: str | None
     user_name: str | None = None
     messages: list[ChatMessage[_NativeT]] = field(
         default_factory=lambda: [ChatMessage(role="system", agent_id=None, content="")]
@@ -370,9 +371,7 @@ class ChatSession[_NativeT]:
         return self.llm_api.tools
 
     async def _async_call_tools(
-        self,
-        agent_id: str | None,
-        tool_inputs: list[llm.ToolInput],
+        self, tool_inputs: list[llm.ToolInput]
     ) -> list[ChatMessage[_NativeT]]:
         """Invoke LLM tools for the configured LLM API."""
         if not self.llm_api:
@@ -393,7 +392,7 @@ class ChatSession[_NativeT]:
             LOGGER.debug("Tool response: %s", tool_response)
             chat_message = ChatMessage[_NativeT](
                 role="tool",
-                agent_id=agent_id,
+                agent_id=self.agent_id,
                 content=json.dumps(tool_response),
                 tool_call_id=tool_input.tool_call_id,
             )
@@ -401,17 +400,13 @@ class ChatSession[_NativeT]:
             tool_responses.append(chat_message)
         return tool_responses
 
-    async def stream(
+    async def async_stream_chat_messages(
         self,
-        user_input: ConversationInput,
-        stream: AsyncGenerator[
-            tuple[ChatMessage[_NativeT] | None, llm.ToolInput | None],
-            list[ChatMessage[_NativeT]],
-        ],
-    ) -> ConversationResult:
+    ) -> AsyncGenerator[
+        list[ChatMessage[_NativeT]],
+        tuple[ChatMessage[_NativeT] | None, list[llm.ToolInput] | None],
+    ]:
         """Run model in a streaming loop."""
-
-        await stream.asend(None)  # type: ignore[arg-type]
 
         tools = await self.async_get_tools()
         trace.async_conversation_trace_append(
@@ -424,29 +419,19 @@ class ChatSession[_NativeT]:
 
         message_batch = [*self.messages]
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            try:
-                chat_message, tool_inputs = await stream.asend(message_batch)
-            except ConversationAgentError as err:
-                return err.as_conversation_result()
-            LOGGER.debug("Stream result: %s - %s", chat_message, tool_inputs)
+            response = yield message_batch
+            if response is None:
+                break
+            (chat_message, tool_inputs) = response
             message_batch.clear()
             if chat_message:
                 self.async_add_message(chat_message)
                 message_batch.append(chat_message)
-            if not tool_inputs:
-                if not chat_message:
-                    raise ValueError("Stream did not return a response")
-                intent_response = intent.IntentResponse(language=user_input.language)
-                intent_response.async_set_speech(chat_message.content or "")
-                return ConversationResult(
-                    response=intent_response, conversation_id=self.conversation_id
-                )
-            LOGGER.debug("Stream tools: %s", tool_inputs)
-            tool_responses = await self._async_call_tools(
-                user_input.agent_id,
-                tool_inputs,
-            )
-            LOGGER.debug("Stream tool responses: %s", tool_responses)
-            message_batch.extend(tool_responses)
 
-        raise ValueError("Exceeded max number of iterations")
+            if not tool_inputs:
+                continue
+
+            tool_responses = await self._async_call_tools(tool_inputs)
+            for tool_response in tool_responses:
+                self.async_add_message(tool_response)
+            message_batch.extend(tool_responses)
