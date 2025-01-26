@@ -118,7 +118,7 @@ async def async_converse(
                 intent.IntentResponseErrorCode.UNKNOWN,
                 str(err),
             )
-            return ConversationResult(
+            result = ConversationResult(
                 response=intent_response,
                 conversation_id=conversation_id,
             )
