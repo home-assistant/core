@@ -2732,7 +2732,7 @@ smhi-pkg==1.0.18
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.6
+soco==0.30.8
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
