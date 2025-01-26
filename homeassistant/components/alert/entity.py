@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, TypedDict
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -22,8 +22,21 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template
 from homeassistant.util.dt import now
+from homeassistant.util.event_type import EventType
 
 from .const import DOMAIN, LOGGER
+
+
+class EventAlertEventData(TypedDict):
+    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
+
+    entity_id: str
+    action: str
+    message: str
+    repeat: int
+
+
+EVENT_ALERT_NOTIFY: EventType[EventAlertEventData] = EventType("alert_notify")
 
 
 class AlertEntity(Entity):
@@ -147,6 +160,14 @@ class AlertEntity(Entity):
             else:
                 message = self._attr_name
 
+            alert_data = EventAlertEventData(
+                entity_id=self.entity_id,
+                action="generate",
+                message=message,
+                repeat=self._next_delay - int(self._skip_first),
+            )
+            self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
+
             await self._send_notification_message(message)
         await self._schedule_notify()
 
@@ -156,9 +177,17 @@ class AlertEntity(Entity):
         self._send_done_message = False
 
         if self._done_message_template is None:
+            alert_data = EventAlertEventData(
+                entity_id=self.entity_id, action="clear", message=None
+            )
+            self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
             return
 
         message = self._done_message_template.async_render(parse_result=False)
+        alert_data = EventAlertEventData(
+            entity_id=self.entity_id, action="clear", message=message
+        )
+        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
 
         await self._send_notification_message(message)
 
@@ -190,12 +219,20 @@ class AlertEntity(Entity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async Unacknowledge alert."""
         LOGGER.debug("Reset Alert: %s", self._attr_name)
+        alert_data = EventAlertEventData(
+            entity_id=self.entity_id, action="reset", message=None
+        )
+        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
         self._ack = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async Acknowledge alert."""
         LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
+        alert_data = EventAlertEventData(
+            entity_id=self.entity_id, action="acknowledge", message=None
+        )
+        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
         self._ack = True
         self.async_write_ha_state()
 
