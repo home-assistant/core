@@ -6,9 +6,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'none',
+        'free',
         'trial',
-        'regular',
+        'premium',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,9 +44,9 @@
       'device_class': 'enum',
       'friendly_name': 'Cookidoo Subscription',
       'options': list([
-        'none',
+        'free',
         'trial',
-        'regular',
+        'premium',
       ]),
     }),
     'context': <ANY>,
@@ -54,7 +54,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'regular',
+    'state': 'premium',
   })
 # ---
 # name: test_setup[sensor.cookidoo_subscription_expiration_date-entry]

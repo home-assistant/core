@@ -4,7 +4,7 @@
       "subscription": {
         "default": "mdi:account",
         "state": {
-          "none": "mdi:account",
+          "free": "mdi:account",
           "trial": "mdi:account-question",
           "regular": "mdi:account-star"
         }

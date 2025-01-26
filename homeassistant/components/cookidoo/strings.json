@@ -53,9 +53,9 @@
       "subscription": {
         "name": "Subscription",
         "state": {
-          "none": "None",
+          "free": "Free",
           "trial": "Trial",
-          "regular": "Premium"
+          "premium": "Premium"
         }
       },
       "expires": {

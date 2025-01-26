@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import SUBSCRIPTION_NONE, SUBSCRIPTION_REGULAR, SUBSCRIPTION_TRIAL
+from .const import SUBSCRIPTION_MAP
 from .coordinator import (
     CookidooConfigEntry,
     CookidooData,
@@ -47,13 +47,11 @@ SENSOR_DESCRIPTIONS: tuple[CookidooSensorEntityDescription, ...] = (
     CookidooSensorEntityDescription(
         key=CookidooSensor.SUBSCRIPTION,
         translation_key=CookidooSensor.SUBSCRIPTION,
-        value_fn=(
-            lambda data: data.subscription.type.lower()
-            if data.subscription
-            else SUBSCRIPTION_NONE
-        ),
+        value_fn=lambda data: SUBSCRIPTION_MAP[data.subscription.type]
+        if data.subscription
+        else SUBSCRIPTION_MAP["NONE"],
         entity_category=EntityCategory.DIAGNOSTIC,
-        options=[SUBSCRIPTION_NONE, SUBSCRIPTION_TRIAL, SUBSCRIPTION_REGULAR],
+        options=list(SUBSCRIPTION_MAP.values()),
         device_class=SensorDeviceClass.ENUM,
     ),
     CookidooSensorEntityDescription(

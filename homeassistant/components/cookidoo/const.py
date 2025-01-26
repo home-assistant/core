@@ -2,6 +2,8 @@
 
 DOMAIN = "cookidoo"
 
-SUBSCRIPTION_NONE = "none"
-SUBSCRIPTION_TRIAL = "trial"
-SUBSCRIPTION_REGULAR = "regular"
+SUBSCRIPTION_MAP = {
+    "NONE": "free",
+    "TRIAL": "trial",
+    "REGULAR": "premium",
+}
