@@ -30,6 +30,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -49,6 +50,7 @@ from .const import (
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixin
 from .utils import (
+    filter_state,
     get_burners,
     get_circuits,
     get_compressors,
@@ -796,7 +798,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="photovoltaic_status",
         device_class=SensorDeviceClass.ENUM,
         options=["ready", "production"],
-        value_getter=lambda api: _filter_states(api.getPhotovoltaicStatus()),
+        value_getter=lambda api: filter_state(api.getPhotovoltaicStatus()),
     ),
     ViCareSensorEntityDescription(
         key="room_temperature",
@@ -815,7 +817,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ventilation_level",
         translation_key="ventilation_level",
-        value_getter=lambda api: _filter_states(api.getVentilationLevel().lower()),
+        value_getter=lambda api: filter_state(api.getVentilationLevel().lower()),
         device_class=SensorDeviceClass.ENUM,
         options=["standby", "levelone", "leveltwo", "levelthree", "levelfour"],
     ),
@@ -834,6 +836,31 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             "silent",
             "forcedlevelfour",
         ],
+    ),
+    ViCareSensorEntityDescription(
+        key="supply_pressure",
+        translation_key="supply_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSupplyPressure(),
+        unit_getter=lambda api: api.getSupplyPressureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_starts",
+        translation_key="heating_rod_starts",
+        value_getter=lambda api: api.getHeatingRodStarts(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_hours",
+        translation_key="heating_rod_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getHeatingRodHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
@@ -941,10 +968,6 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
-
-
-def _filter_states(state: str) -> str | None:
-    return None if state in ("nothing", "unknown") else state
 
 
 def _build_entities(

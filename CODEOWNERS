@@ -682,8 +682,6 @@ build.json @home-assistant/supervisor
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
-/homeassistant/components/ibeacon/ @bdraco
-/tests/components/ibeacon/ @bdraco
 /homeassistant/components/icloud/ @Quentame @nzapponi
 /tests/components/icloud/ @Quentame @nzapponi
 /homeassistant/components/idasen_desk/ @abmantis
@@ -1269,8 +1267,8 @@ build.json @home-assistant/supervisor
 /tests/components/rituals_perfume_genie/ @milanmeu @frenck
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
-/homeassistant/components/roborock/ @Lash-L
-/tests/components/roborock/ @Lash-L
+/homeassistant/components/roborock/ @Lash-L @allenporter
+/tests/components/roborock/ @Lash-L @allenporter
 /homeassistant/components/roku/ @ctalkington
 /tests/components/roku/ @ctalkington
 /homeassistant/components/romy/ @xeniter
@@ -1289,6 +1287,7 @@ build.json @home-assistant/supervisor
 /tests/components/ruckus_unleashed/ @lanrat @ms264556 @gabe565
 /homeassistant/components/russound_rio/ @noahhusby
 /tests/components/russound_rio/ @noahhusby
+/homeassistant/components/russound_rnet/ @noahhusby
 /homeassistant/components/ruuvi_gateway/ @akx
 /tests/components/ruuvi_gateway/ @akx
 /homeassistant/components/ruuvitag_ble/ @akx
@@ -1409,8 +1408,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
 /homeassistant/components/solarlog/ @Ernst79 @dontinelli
 /tests/components/solarlog/ @Ernst79 @dontinelli
-/homeassistant/components/solax/ @squishykid
-/tests/components/solax/ @squishykid
+/homeassistant/components/solax/ @squishykid @Darsstar
+/tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept @sebfortier2288
 /tests/components/soma/ @ratsept @sebfortier2288
 /homeassistant/components/sonarr/ @ctalkington
