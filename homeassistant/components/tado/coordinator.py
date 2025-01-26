@@ -345,7 +345,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             raise HomeAssistantError("Tado client is not initialized")
         try:
             await self.hass.async_add_executor_job(
-                self.tado.set_child_lock,
+                self._tado.set_child_lock,
                 device_id,
                 enabled,
             )
