@@ -112,6 +112,11 @@ with contextlib.suppress(ImportError):
     # Ensure anyio backend is imported to avoid it being imported in the event loop
     from anyio._backends import _asyncio  # noqa: F401
 
+with contextlib.suppress(ImportError):
+    # httpx will import trio if it is installed which does
+    # blocking I/O in the event loop. We want to avoid that.
+    import trio  # noqa: F401
+
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig

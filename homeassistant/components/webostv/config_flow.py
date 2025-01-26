@@ -1,4 +1,4 @@
-"""Config flow to configure webostv component."""
+"""Config flow for LG webOS TV integration."""
 
 from __future__ import annotations
 
@@ -35,7 +35,7 @@ DATA_SCHEMA = vol.Schema(
 async def async_control_connect(
     hass: HomeAssistant, host: str, key: str | None
 ) -> WebOsClient:
-    """Create LG WebOS client and connect to the TV."""
+    """Create LG webOS client and connect to the TV."""
     client = WebOsClient(
         host,
         key,
@@ -48,7 +48,7 @@ async def async_control_connect(
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
-    """WebosTV configuration flow."""
+    """LG webOS TV configuration flow."""
 
     VERSION = 1
 
