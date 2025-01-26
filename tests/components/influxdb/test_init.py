@@ -23,6 +23,7 @@ from . import (
     INFLUX_PATH,
     _get_write_api_mock_v1,
     _get_write_api_mock_v2,
+    _split_config,
 )
 
 from tests.common import MockConfigEntry
@@ -146,8 +147,11 @@ async def test_setup_config_full(
     if "url" in full_config:
         full_config.update({"url": "http://host:123"})
 
+    config_verify = _split_config(full_config)
+
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.data == full_config
+    assert entry.data == config_verify["data"]
+    assert entry.options == config_verify["options"]
 
 
 @pytest.mark.parametrize(
@@ -272,13 +276,16 @@ async def test_setup_config_ssl(
     """Test the setup with various verify_ssl values."""
     config = config_base.copy()
     config.update(config_ext)
+    config = _split_config(config)
 
     with (
         patch("os.access", return_value=True),
         patch("os.path.isfile", return_value=True),
     ):
         mock_entry = MockConfigEntry(
-            domain="influxdb", unique_id=config["host"], data=config
+            domain="influxdb",
+            data=config["data"],
+            options=config["options"],
         )
 
         mock_entry.add_to_hass(hass)
@@ -329,8 +336,11 @@ async def test_setup_minimal_config(
 
     entry = conf_entries[0]
 
+    config_verify = _split_config(config_base)
+
     assert entry.state == ConfigEntryState.LOADED
-    assert entry.data == config_base
+    assert entry.data == config_verify["data"]
+    assert entry.options == config_verify["options"]
 
 
 @pytest.mark.parametrize(
@@ -380,8 +390,12 @@ async def _setup(
     hass: HomeAssistant, mock_influx_client, config, get_write_api
 ) -> None:
     """Prepare client for next test and return event handler method."""
+    config = _split_config(config)
+
     mock_entry = MockConfigEntry(
-        domain="influxdb", unique_id=config["host"], data=config
+        domain="influxdb",
+        data=config["data"],
+        options=config["options"],
     )
 
     mock_entry.add_to_hass(hass)
@@ -1594,12 +1608,15 @@ async def test_connection_failure_on_startup(
 ) -> None:
     """Test the event listener when it fails to connect to Influx on startup."""
     config = config_base
+    config = _split_config(config)
 
     write_api = get_write_api(mock_client)
     write_api.side_effect = test_exception
 
     mock_entry = MockConfigEntry(
-        domain="influxdb", unique_id=config["host"], data=config
+        domain="influxdb",
+        data=config["data"],
+        options=config["options"],
     )
 
     mock_entry.add_to_hass(hass)
