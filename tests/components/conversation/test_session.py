@@ -184,7 +184,7 @@ async def test_message_filtering(
         )
         assert messages[1] == session.ChatMessage(
             role="user",
-            agent_id=mock_conversation_input.agent_id,
+            agent_id="mock-agent-id",
             content=mock_conversation_input.text,
         )
         # Cannot add a second user message in a row
@@ -205,7 +205,7 @@ async def test_message_filtering(
                 native="assistant-reply-native",
             )
         )
-        # Different agent, will be filtered out.
+        # Different agent, native messages will be filtered out.
         chat_session.async_add_message(
             session.ChatMessage(
                 role="native", agent_id="another-mock-agent-id", content="", native=1
@@ -216,11 +216,20 @@ async def test_message_filtering(
                 role="native", agent_id="mock-agent-id", content="", native=1
             )
         )
+        # Different agent, message may be filtered depending on which call
+        chat_session.async_add_message(
+            session.ChatMessage(
+                role="assistant",
+                agent_id="another-mock-agent-id",
+                content="Hi!",
+                native=1,
+            )
+        )
 
-    assert len(chat_session.messages) == 5
+    assert len(chat_session.messages) == 6
 
     messages = chat_session.async_get_messages(agent_id="mock-agent-id")
-    assert len(messages) == 4
+    assert len(messages) == 5
 
     assert messages[2] == session.ChatMessage(
         role="assistant",
@@ -230,6 +239,17 @@ async def test_message_filtering(
     )
     assert messages[3] == session.ChatMessage(
         role="native", agent_id="mock-agent-id", content="", native=1
+    )
+    assert messages[4] == session.ChatMessage(
+        role="assistant", agent_id="another-mock-agent-id", content="Hi!", native=1
+    )
+
+    # Does not contain the "assistant" message from the other agent
+    messages = chat_session.async_get_agent_messages()
+    assert len(messages) == 4
+    assert all(
+        message.agent_id == "mock-agent-id" or message.agent_id is None
+        for message in messages
     )
 
 

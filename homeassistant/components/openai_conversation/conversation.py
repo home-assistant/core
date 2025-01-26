@@ -185,7 +185,8 @@ class OpenAIConversationEntity(
             ]
 
         messages = [
-            _chat_message_convert(message) for message in session.async_get_messages()
+            _chat_message_convert(message)
+            for message in session.async_get_agent_messages()
         ]
 
         client = self.entry.runtime_data
