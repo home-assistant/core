@@ -228,3 +228,33 @@ async def test_update_stay_beta(
     )
     assert mock_wled.upgrade.call_count == 1
     mock_wled.upgrade.assert_called_with(version="1.0.0b5")
+
+
+async def test_update_release_url_named(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the firmware update available."""
+    assert (state := hass.states.get("update.wled_rgb_light_firmware"))
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == UpdateDeviceClass.FIRMWARE
+    assert state.state == STATE_ON
+    assert (
+        state.attributes[ATTR_ENTITY_PICTURE]
+        == "https://brands.home-assistant.io/_/wled/icon.png"
+    )
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "0.14.4"
+    assert state.attributes[ATTR_LATEST_VERSION] == "mytag"
+    assert state.attributes[ATTR_RELEASE_SUMMARY] is None
+    assert (
+        state.attributes[ATTR_RELEASE_URL]
+        == "https://github.com/Aircoookie/WLED/releases/tag/mytag"
+    )
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == UpdateEntityFeature.INSTALL | UpdateEntityFeature.SPECIFIC_VERSION
+    )
+    assert state.attributes[ATTR_TITLE] == "WLED"
+    assert ATTR_ICON not in state.attributes
+
+    assert (entry := entity_registry.async_get("update.wled_rgb_light_firmware"))
+    assert entry.unique_id == "aabbccddeeff"
+    assert entry.entity_category is EntityCategory.CONFIG
