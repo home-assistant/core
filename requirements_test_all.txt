@@ -2335,7 +2335,7 @@ transmission-rpc==7.0.3
 triggercmd==0.0.27
 
 # homeassistant.components.twinkly
-ttls==1.8.3
+ttls==1.9.0
 
 # homeassistant.components.thethingsnetwork
 ttn_client==1.2.0
