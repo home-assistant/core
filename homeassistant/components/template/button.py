@@ -121,7 +121,7 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         if (action := config.get(CONF_PRESS)) is not None:
-            self.add_script(CONF_PRESS, action, self._attr_name, DOMAIN)
+            self.add_script(hass, CONF_PRESS, action, self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
         self._attr_device_info = async_device_info_to_link_from_device_id(

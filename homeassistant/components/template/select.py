@@ -143,7 +143,7 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         self._value_template = config[CONF_STATE]
         if (selection_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(
-                CONF_SELECT_OPTION, selection_option, self._attr_name, DOMAIN
+                hass, CONF_SELECT_OPTION, selection_option, self._attr_name, DOMAIN
             )
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config.get(CONF_OPTIMISTIC, False)
@@ -201,6 +201,7 @@ class TriggerSelectEntity(TriggerEntity, SelectEntity):
         super().__init__(hass, coordinator, config)
         if (selection_option := config.get(CONF_SELECT_OPTION)) is not None:
             self.add_script(
+                hass,
                 CONF_SELECT_OPTION,
                 selection_option,
                 self._rendered.get(CONF_NAME, DEFAULT_NAME),

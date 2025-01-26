@@ -146,13 +146,14 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             self.entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
-        friendly_name = self._attr_name
+        name = self._attr_name
+        assert name is not None
         self._template = config.get(CONF_VALUE_TEMPLATE)
 
         if (on_action := config.get(CONF_TURN_ON)) is not None:
-            self.add_script(CONF_TURN_ON, on_action, friendly_name, DOMAIN)
+            self.add_script(hass, CONF_TURN_ON, on_action, name, DOMAIN)
         if (off_action := config.get(CONF_TURN_OFF)) is not None:
-            self.add_script(CONF_TURN_OFF, off_action, friendly_name, DOMAIN)
+            self.add_script(hass, CONF_TURN_OFF, off_action, name, DOMAIN)
 
         self._state: bool | None = False
         self._attr_assumed_state = self._template is None

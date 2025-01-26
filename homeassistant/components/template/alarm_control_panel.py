@@ -202,10 +202,10 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
         self._attr_code_format = config[CONF_CODE_FORMAT].value
 
         if (disarm_config := config.get(CONF_DISARM_ACTION)) is not None:
-            self.add_script(CONF_DISARM_ACTION, disarm_config, name, DOMAIN)
+            self.add_script(hass, CONF_DISARM_ACTION, disarm_config, name, DOMAIN)
 
         self._attr_supported_features = AlarmControlPanelEntityFeature(0)
-        for action_id, supported_feature in [
+        for action_id, supported_feature in (
             (CONF_ARM_AWAY_ACTION, AlarmControlPanelEntityFeature.ARM_AWAY),
             (CONF_ARM_HOME_ACTION, AlarmControlPanelEntityFeature.ARM_HOME),
             (CONF_ARM_NIGHT_ACTION, AlarmControlPanelEntityFeature.ARM_NIGHT),
@@ -215,9 +215,9 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
                 AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
             ),
             (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
-        ]:
+        ):
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(action_id, action_config, name, DOMAIN)
+                self.add_script(hass, action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
         self._state: AlarmControlPanelState | None = None
