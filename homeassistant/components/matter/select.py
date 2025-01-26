@@ -50,8 +50,8 @@ class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescrip
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterBasicListSelectEntityDescription(MatterSelectEntityDescription):
-    """Describe Matter select entities for MatterBasicListSelectEntity."""
+class MatterDynamicListSelectEntityDescription(MatterSelectEntityDescription):
+    """Describe Matter select entities for MatterDynamicListSelectEntity."""
 
     # list attribute: the attribute descriptor to get the list of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
@@ -132,10 +132,10 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             self._attr_name = desc
 
 
-class MatterBasicListSelectEntity(MatterEntity, SelectEntity):
+class MatterDynamicListSelectEntity(MatterEntity, SelectEntity):
     """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
 
-    entity_description: MatterBasicListSelectEntityDescription
+    entity_description: MatterDynamicListSelectEntityDescription
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected mode."""
@@ -167,8 +167,8 @@ class MatterBasicListSelectEntity(MatterEntity, SelectEntity):
         except IndexError:
             self._attr_current_option = None
 
- 
-  class MatterListSelectEntity(MatterEntity, SelectEntity):
+
+class MatterListSelectEntity(MatterEntity, SelectEntity):
     """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
 
     entity_description: MatterListSelectEntityDescription
@@ -381,12 +381,12 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=MatterBasicListSelectEntityDescription(
+        entity_description=MatterDynamicListSelectEntityDescription(
             key="LaundryWasherControlsSpinSpeed",
             translation_key="laundry_washer_spin_speed",
             list_attribute=clusters.LaundryWasherControls.Attributes.SpinSpeeds,
         ),
-        entity_class=MatterBasicListSelectEntity,
+        entity_class=MatterDynamicListSelectEntity,
         required_attributes=(
             clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
             clusters.LaundryWasherControls.Attributes.SpinSpeeds,
@@ -411,7 +411,7 @@ DISCOVERY_SCHEMAS = [
                 "max": 3,
             }.get,
         ),
-        entity_class=MatterSelectEntity,
+        entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.LaundryWasherControls.Attributes.NumberOfRinses,),
     ),
 ]
