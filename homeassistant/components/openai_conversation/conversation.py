@@ -67,17 +67,6 @@ def _format_tool(
     return ChatCompletionToolParam(type="function", function=tool_spec)
 
 
-def _extract_tool_inputs(response: ChatCompletionMessage) -> list[llm.ToolInput]:
-    return [
-        llm.ToolInput(
-            tool_name=tool_call.function.name,
-            tool_args=json.loads(tool_call.function.arguments),
-            tool_call_id=tool_call.id,
-        )
-        for tool_call in response.tool_calls or ()
-    ]
-
-
 def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessageParam:
     """Convert from class to TypedDict."""
     tool_calls: list[ChatCompletionMessageToolCallParam] = []
@@ -226,14 +215,23 @@ class OpenAIConversationEntity(
                         response=intent_response,
                         conversation_id=session.conversation_id,
                     )
+
+                LOGGER.debug("Response %s", result)
                 response = result.choices[0].message
-                LOGGER.debug("Response %s", response)
                 messages.append(_message_convert(response))
 
-                if not (tool_inputs := _extract_tool_inputs(response)):
+                if not response.tool_calls or not session.llm_api:
                     await stream.aclose()
                     break
 
+                tool_inputs = [
+                    llm.ToolInput(
+                        tool_name=tool_call.function.name,
+                        tool_args=json.loads(tool_call.function.arguments),
+                        tool_call_id=tool_call.id,
+                    )
+                    for tool_call in response.tool_calls
+                ]
                 # Note: This currently ignores the chat response when tools are returned
                 chat_messages = await stream.asend((None, tool_inputs))
 
