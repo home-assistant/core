@@ -7,7 +7,6 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.conversation import trace
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 
@@ -70,9 +69,9 @@ async def test_converation_trace_error(
     with (
         patch(
             "homeassistant.components.conversation.default_agent.DefaultAgent.async_process",
-            side_effect=HomeAssistantError("Failed to talk to agent"),
+            side_effect=ValueError("Unexpected error"),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(ValueError),
     ):
         await conversation.async_converse(
             hass, "add apples to my shopping list", None, Context()
@@ -87,4 +86,4 @@ async def test_converation_trace_error(
     assert (
         trace_event.get("event_type") == trace.ConversationTraceEventType.ASYNC_PROCESS
     )
-    assert last_trace.get("error") == "Failed to talk to agent"
+    assert last_trace.get("error") == "Unexpected error"

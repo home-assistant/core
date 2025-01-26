@@ -2,13 +2,15 @@
 
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.conversation import ConversationInput, session
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.util import dt as dt_util
 
@@ -413,3 +415,81 @@ async def test_extra_systen_prompt(
 
     assert chat_session.extra_system_prompt == extra_system_prompt2
     assert chat_session.messages[0].content.endswith(extra_system_prompt2)
+
+
+async def test_tool_call(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test using the session tool calling API."""
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.return_value = "Test response"
+
+    with patch(
+        "homeassistant.components.conversation.session.llm.AssistAPI._async_get_tools",
+        return_value=[],
+    ) as mock_get_tools:
+        mock_get_tools.return_value = [mock_tool]
+
+        async with session.async_get_chat_session(
+            hass, mock_conversation_input
+        ) as chat_session:
+            await chat_session.async_update_llm_data(
+                conversing_domain="test",
+                user_input=mock_conversation_input,
+                user_llm_hass_api="assist",
+                user_llm_prompt=None,
+            )
+            result = await chat_session.async_call_tool(
+                llm.ToolInput(
+                    tool_name="test_tool",
+                    tool_args={"param1": "Test Param"},
+                )
+            )
+
+    assert result == "Test response"
+
+
+async def test_tool_call_exception(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test using the session tool calling API."""
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.side_effect = HomeAssistantError("Test error")
+
+    with patch(
+        "homeassistant.components.conversation.session.llm.AssistAPI._async_get_tools",
+        return_value=[],
+    ) as mock_get_tools:
+        mock_get_tools.return_value = [mock_tool]
+
+        async with session.async_get_chat_session(
+            hass, mock_conversation_input
+        ) as chat_session:
+            await chat_session.async_update_llm_data(
+                conversing_domain="test",
+                user_input=mock_conversation_input,
+                user_llm_hass_api="assist",
+                user_llm_prompt=None,
+            )
+            result = await chat_session.async_call_tool(
+                llm.ToolInput(
+                    tool_name="test_tool",
+                    tool_args={"param1": "Test Param"},
+                )
+            )
+
+    assert result == {"error": "HomeAssistantError", "error_text": "Test error"}
