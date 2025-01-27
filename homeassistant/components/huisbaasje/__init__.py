@@ -136,10 +136,6 @@ def _get_cumulative_value(
             and current_measurements[source_type][period_type] is not None
         ):
             return current_measurements[source_type][period_type]["value"]
-    else:
-        _LOGGER.error(
-            "Source type %s not present in %s", source_type, current_measurements
-        )
     return None
 
 
@@ -150,8 +146,4 @@ def _get_measurement_rate(current_measurements: dict, source_type: str):
             and current_measurements[source_type]["measurement"] is not None
         ):
             return current_measurements[source_type]["measurement"]["rate"]
-    else:
-        _LOGGER.error(
-            "Source type %s not present in %s", source_type, current_measurements
-        )
     return None
