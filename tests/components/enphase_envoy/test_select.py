@@ -25,9 +25,9 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"),
+    "mock_envoy",
     ["envoy_metered_batt_relay", "envoy_eu_batt"],
-    indirect=["mock_envoy"],
+    indirect=True,
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_select(
@@ -44,14 +44,14 @@ async def test_select(
 
 
 @pytest.mark.parametrize(
-    ("mock_envoy"),
+    "mock_envoy",
     [
         "envoy",
         "envoy_1p_metered",
         "envoy_nobatt_metered_3p",
         "envoy_tot_cons_metered",
     ],
-    indirect=["mock_envoy"],
+    indirect=True,
 )
 async def test_no_select(
     hass: HomeAssistant,
@@ -65,29 +65,29 @@ async def test_no_select(
     assert not er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
 
 
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
 @pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
-)
-@pytest.mark.parametrize(
-    ("relay", "target"),
+    ("relay", "target", "expected_state", "call_parameter"),
     [
-        ("NC1", ("generator_action", "shed", "generator_action")),
-        ("NC1", ("microgrid_action", "shed", "micro_grid_action")),
-        ("NC1", ("grid_action", "shed", "grid_action")),
-        ("NC2", ("generator_action", "shed", "generator_action")),
-        ("NC2", ("microgrid_action", "shed", "micro_grid_action")),
-        ("NC2", ("grid_action", "apply", "grid_action")),
-        ("NC3", ("generator_action", "apply", "generator_action")),
-        ("NC3", ("microgrid_action", "apply", "micro_grid_action")),
-        ("NC3", ("grid_action", "shed", "grid_action")),
+        ("NC1", "generator_action", "shed", "generator_action"),
+        ("NC1", "microgrid_action", "shed", "micro_grid_action"),
+        ("NC1", "grid_action", "shed", "grid_action"),
+        ("NC2", "generator_action", "shed", "generator_action"),
+        ("NC2", "microgrid_action", "shed", "micro_grid_action"),
+        ("NC2", "grid_action", "apply", "grid_action"),
+        ("NC3", "generator_action", "apply", "generator_action"),
+        ("NC3", "microgrid_action", "apply", "micro_grid_action"),
+        ("NC3", "grid_action", "shed", "grid_action"),
     ],
 )
-@pytest.mark.parametrize(("action"), ["powered", "not_powered", "schedule", "none"])
+@pytest.mark.parametrize("action", ["powered", "not_powered", "schedule", "none"])
 async def test_select_relay_actions(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     target: str,
+    expected_state: str,
+    call_parameter: str,
     relay: str,
     action: str,
 ) -> None:
@@ -100,10 +100,10 @@ async def test_select_relay_actions(
     assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
     assert (name := dry_contact.load_name.lower().replace(" ", "_"))
 
-    test_entity = f"{entity_base}{name}_{target[0]}"
+    test_entity = f"{entity_base}{name}_{target}"
 
     assert (entity_state := hass.states.get(test_entity))
-    assert RELAY_ACTION_MAP[target[1]] == entity_state.state
+    assert entity_state.state == RELAY_ACTION_MAP[expected_state]
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -115,15 +115,13 @@ async def test_select_relay_actions(
         blocking=True,
     )
     mock_envoy.update_dry_contact.assert_called_once_with(
-        {"id": relay, target[2]: REVERSE_RELAY_ACTION_MAP[action]}
+        {"id": relay, call_parameter: REVERSE_RELAY_ACTION_MAP[action]}
     )
 
 
-@pytest.mark.parametrize(
-    ("mock_envoy"), ["envoy_metered_batt_relay"], indirect=["mock_envoy"]
-)
-@pytest.mark.parametrize(("relay_mode"), ["battery", "standard"])
-@pytest.mark.parametrize(("relay"), ["NC1", "NC2", "NC3"])
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+@pytest.mark.parametrize("relay_mode", ["battery", "standard"])
+@pytest.mark.parametrize("relay", ["NC1", "NC2", "NC3"])
 async def test_select_relay_modes(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
@@ -183,8 +181,8 @@ async def test_select_storage_modes(
 
     assert (entity_state := hass.states.get(test_entity))
     assert (
-        STORAGE_MODE_MAP[mock_envoy.data.tariff.storage_settings.mode]
-        == entity_state.state
+        entity_state.state
+        == STORAGE_MODE_MAP[mock_envoy.data.tariff.storage_settings.mode]
     )
 
     await hass.services.async_call(
