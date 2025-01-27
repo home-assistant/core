@@ -354,12 +354,12 @@ async def test_operational_state_sensor(
 
 
 @pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
-async def test_yandex_smart_socket_power_sensor(
+async def test_draft_electrical_measurement_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Yandex Smart Socket."""
+    """Test Draft Electrical Measurement cluster sensors, using Yandex Smart Socket fixture."""
     state = hass.states.get("sensor.yndx_00540_power")
     assert state
     assert state.state == "70.0"
