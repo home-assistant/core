@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 type EafmConfigEntry = ConfigEntry[EafmCoordinator]
 
 
-def _get_measures(station_data):
+def _get_measures(station_data: dict[str, Any]) -> list[dict[str, Any]]:
     """Force measure key to always be a list."""
     if "measures" not in station_data:
         return []
