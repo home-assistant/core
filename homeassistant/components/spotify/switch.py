@@ -81,4 +81,3 @@ class SpotifyLibrarySwitch(SpotifyEntity, SwitchEntity):
             await self.coordinator.client.remove_saved_episodes(
                 [self.coordinator.data.current_playback.item.uri]
             )
-        await self.coordinator.async_request_refresh()

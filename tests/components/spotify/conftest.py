@@ -82,7 +82,9 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture(autouse=True)
 async def patch_sleep() -> Generator[AsyncMock]:
     """Fixture to setup credentials."""
-    with patch("homeassistant.components.spotify.media_player.AFTER_REQUEST_SLEEP", 0):
+    with patch(
+        "homeassistant.components.spotify.media_player.util.AFTER_REQUEST_SLEEP", 0
+    ):
         yield
 
 
