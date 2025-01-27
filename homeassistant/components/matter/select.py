@@ -22,10 +22,10 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 NUMBER_OF_RINSES_STATE_MAP = {
-    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "Off",
-    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNormal: "Normal",
-    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kExtra: "Extra",
-    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kMax: "Max",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "off",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNormal: "normal",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kExtra: "extra",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kMax: "max",
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kUnknownEnumValue: None,
 }
 
