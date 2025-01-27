@@ -66,6 +66,16 @@ class MatterDynamicListSelectEntityDescription(MatterSelectEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
+class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
+    """Describe Matter select entities for MatterMapSelectEntityDescription."""
+
+    # list_supported: the attribute descriptor to get the list of supported values (= list of integers)
+    list_supported: type[ClusterAttributeDescriptor]
+    # state_map: The MatterIntEnum dict
+    state_map: type[dict]
+
+
+@dataclass(frozen=True, kw_only=True)
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
@@ -74,6 +84,47 @@ class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     command: Callable[[int], ClusterCommand]
     # list attribute: the attribute descriptor to get the list of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
+
+
+class MatterMapSelectEntity(MatterEntity, SelectEntity):
+    """Representation of a Matter select entity where the options are dynamically defined in a State map and a Matter attribute."""
+
+    entity_description: MatterMapSelectEntityDescription
+
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        option_id = self._attr_options.index(option)
+
+        if TYPE_CHECKING:
+            assert option_id is not None
+        await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id, self._entity_info.primary_attribute
+            ),
+            value=option_id,
+        )
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        allowed_values = cast(
+            list[str],
+            self.get_matter_attribute_value(self.entity_description.list_supported),
+        )
+        map_values = self.entity_description.state_map
+        list_values = []
+        for key, value in map_values.items():
+            if key in allowed_values:
+                list_values.append(value)
+        self._attr_options = list_values
+        current_option_idx: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        try:
+            self._attr_current_option = map_values[current_option_idx]
+        except IndexError:
+            self._attr_current_option = None
 
 
 class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
@@ -402,13 +453,13 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=MatterSelectEntityDescription(
+        entity_description=MatterMapSelectEntityDescription(
             key="MatterLaundryWasherNumberOfRinses",
             translation_key="laundry_washer_number_of_rinses",
-            options=[x for x in NUMBER_OF_RINSES_STATE_MAP.values() if x is not None],
-            measurement_to_ha=lambda x: NUMBER_OF_RINSES_STATE_MAP[x],
+            list_supported=clusters.LaundryWasherControls.Attributes.SupportedRinses,
+            state_map=NUMBER_OF_RINSES_STATE_MAP,
         ),
-        entity_class=MatterAttributeSelectEntity,
+        entity_class=MatterMapSelectEntity,
         required_attributes=(
             clusters.LaundryWasherControls.Attributes.NumberOfRinses,
             clusters.LaundryWasherControls.Attributes.SupportedRinses,
