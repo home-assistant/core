@@ -21,6 +21,17 @@
           "otp_code": "Code"
         }
       },
+      "backup_share": {
+        "title": "Synology DSM: Backup location",
+        "data": {
+          "backup_share": "Shared folder",
+          "backup_path": "Path"
+        },
+        "data_description": {
+          "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored.",
+          "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist)."
+        }
+      },
       "link": {
         "description": "Do you want to set up {name} ({host})?",
         "data": {

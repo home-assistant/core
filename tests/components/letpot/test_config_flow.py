@@ -149,7 +149,7 @@ async def test_flow_duplicate(
 
 
 async def test_reauth_flow(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow with success."""
     mock_config_entry.add_to_hass(hass)
@@ -196,6 +196,7 @@ async def test_reauth_flow(
 )
 async def test_reauth_exceptions(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -249,7 +250,7 @@ async def test_reauth_exceptions(
 
 
 async def test_reauth_different_user_id_new(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow with different, new user ID updating the existing entry."""
     mock_config_entry.add_to_hass(hass)
@@ -288,7 +289,7 @@ async def test_reauth_different_user_id_new(
 
 
 async def test_reauth_different_user_id_existing(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow with different, existing user ID aborting."""
     mock_config_entry.add_to_hass(hass)
