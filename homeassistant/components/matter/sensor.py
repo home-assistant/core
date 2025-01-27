@@ -712,7 +712,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterListSensorEntityDescription(
             key="OperationalStateCurrentPhase",
             translation_key="current_phase",
-            native_unit_of_measurement=None,
             device_class=SensorDeviceClass.ENUM,
             list_attribute=clusters.OperationalState.Attributes.PhaseList,
         ),
