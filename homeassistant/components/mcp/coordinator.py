@@ -26,7 +26,7 @@ UPDATE_INTERVAL = datetime.timedelta(minutes=30)
 async def mcp_client(url: str) -> AsyncGenerator[ClientSession]:
     """Create a server-sent event MCP client.
 
-    This is an asynccontxt manager that wraps to other async context managers
+    This is an asynccontext manager that wraps to other async context managers
     so that the coordinator has a single object to manage.
     """
     try:
