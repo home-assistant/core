@@ -88,11 +88,11 @@ class AddConfigEntryEntitiesCallback(Protocol):
         new_entities: Iterable[Entity],
         update_before_add: bool = False,
         *,
-        subentry_id: str | None = None,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Define add_entities type.
 
-        :param subentry_id: subentry which the entities should be added to
+        :param config_subentry_id: subentry which the entities should be added to
         """
 
 
@@ -536,7 +536,7 @@ class EntityPlatform:
         new_entities: Iterable[Entity],
         update_before_add: bool = False,
         *,
-        subentry_id: str | None = None,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Schedule adding entities for a single platform async and track the task."""
         assert self.config_entry
@@ -545,7 +545,7 @@ class EntityPlatform:
             self.async_add_entities(
                 new_entities,
                 update_before_add=update_before_add,
-                subentry_id=subentry_id,
+                config_subentry_id=config_subentry_id,
             ),
             f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
             eager_start=True,
@@ -652,7 +652,7 @@ class EntityPlatform:
         new_entities: Iterable[Entity],
         update_before_add: bool = False,
         *,
-        subentry_id: str | None = None,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Add entities for a single platform async.
 
@@ -660,11 +660,12 @@ class EntityPlatform:
 
         :param subentry_id: subentry which the entities should be added to
         """
-        if subentry_id and (
-            not self.config_entry or subentry_id not in self.config_entry.subentries
+        if config_subentry_id and (
+            not self.config_entry
+            or config_subentry_id not in self.config_entry.subentries
         ):
             raise HomeAssistantError(
-                f"Can't add entities to unknown subentry {subentry_id} of config "
+                f"Can't add entities to unknown subentry {config_subentry_id} of config "
                 f"entry {self.config_entry.entry_id if self.config_entry else None}"
             )
 
@@ -679,7 +680,7 @@ class EntityPlatform:
         for entity in new_entities:
             coros.append(
                 self._async_add_entity(
-                    entity, update_before_add, entity_registry, subentry_id
+                    entity, update_before_add, entity_registry, config_subentry_id
                 )
             )
             entities.append(entity)
@@ -759,7 +760,7 @@ class EntityPlatform:
         entity: Entity,
         update_before_add: bool,
         entity_registry: EntityRegistry,
-        subentry_id: str | None,
+        config_subentry_id: str | None,
     ) -> None:
         """Add an entity to the platform."""
         if entity is None:
@@ -819,7 +820,7 @@ class EntityPlatform:
                 try:
                     device = dev_reg.async_get(self.hass).async_get_or_create(
                         config_entry_id=self.config_entry.entry_id,
-                        config_subentry_id=subentry_id,
+                        config_subentry_id=config_subentry_id,
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
@@ -866,7 +867,7 @@ class EntityPlatform:
                 entity.unique_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
-                config_subentry_id=subentry_id,
+                config_subentry_id=config_subentry_id,
                 device_id=device.id if device else None,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,

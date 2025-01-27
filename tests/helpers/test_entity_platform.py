@@ -871,7 +871,7 @@ async def test_setup_entry(
         async_add_entities([MockEntity(name="test1", unique_id="unique1")])
         async_add_entities(
             [MockEntity(name="test2", unique_id="unique2")],
-            subentry_id="mock-subentry-id-1",
+            config_subentry_id="mock-subentry-id-1",
         )
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -1229,7 +1229,7 @@ async def test_device_info_called(
                     },
                 ),
             ],
-            subentry_id="mock-subentry-id-1",
+            config_subentry_id="mock-subentry-id-1",
         )
 
     platform = MockPlatform(async_setup_entry=async_setup_entry)
@@ -1251,7 +1251,9 @@ async def test_device_info_called(
     device = device_registry.async_get_device(identifiers={("hue", "efgh")})
     assert device == snapshot
     assert device.config_entries == {config_entry.entry_id}
-    assert device.config_entries_subentries == {config_entry.entry_id: {"mock-subentry-id-1"}}
+    assert device.config_entries_subentries == {
+        config_entry.entry_id: {"mock-subentry-id-1"}
+    }
     assert device.primary_config_entry == config_entry.entry_id
     assert device.via_device_id == via.id
 
