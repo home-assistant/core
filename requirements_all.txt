@@ -514,7 +514,7 @@ async-upnp-client==0.43.0
 asyncarve==0.1.1
 
 # homeassistant.components.keyboard_remote
-asyncinotify==4.0.2
+asyncinotify==4.2.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
