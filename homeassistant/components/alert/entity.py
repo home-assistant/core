@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
+import enum
 from typing import Any, TypedDict
 
 from homeassistant.components.notify import (
@@ -27,11 +28,20 @@ from homeassistant.util.event_type import EventType
 from .const import DOMAIN, LOGGER
 
 
+class AlertAction(enum.StrEnum):
+    """Represent the origin of an event."""
+
+    generate = "generate"
+    acknowledge = "acknowledge"
+    done = "clear"
+    reset = "reset"
+
+
 class EventAlertEventData(TypedDict):
     """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    action: str
+    action: AlertAction
     message: str
     repeat: int
 
@@ -133,6 +143,19 @@ class AlertEntity(Entity):
             await self._notify_done_message()
         self.async_write_ha_state()
 
+    def _async_fire_event(
+        self, action: AlertAction, message: str | None = None, repeat: int | None = None
+    ):
+        alert_data = EventAlertEventData(
+            entity_id=self.entity_id, action=action, message=message, repeat=repeat
+        )
+        if self._title_template is not None:
+            title = self._title_template.async_render(parse_result=False)
+            alert_data[ATTR_TITLE] = title
+        if self._data:
+            alert_data[ATTR_DATA] = self._data
+        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
+
     async def _schedule_notify(self) -> None:
         """Schedule a notification."""
         delay = self._delay[self._next_delay]
@@ -160,13 +183,9 @@ class AlertEntity(Entity):
             else:
                 message = self._attr_name
 
-            alert_data = EventAlertEventData(
-                entity_id=self.entity_id,
-                action="generate",
-                message=message,
-                repeat=self._next_delay - int(self._skip_first),
+            self._async_fire_event(
+                AlertAction.generate, message, self._next_delay - int(self._skip_first)
             )
-            self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
 
             await self._send_notification_message(message)
         await self._schedule_notify()
@@ -177,17 +196,11 @@ class AlertEntity(Entity):
         self._send_done_message = False
 
         if self._done_message_template is None:
-            alert_data = EventAlertEventData(
-                entity_id=self.entity_id, action="clear", message=None
-            )
-            self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
+            self._async_fire_event(AlertAction.done)
             return
 
         message = self._done_message_template.async_render(parse_result=False)
-        alert_data = EventAlertEventData(
-            entity_id=self.entity_id, action="clear", message=message
-        )
-        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
+        self._async_fire_event(AlertAction.done, message)
 
         await self._send_notification_message(message)
 
@@ -219,20 +232,14 @@ class AlertEntity(Entity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Async Unacknowledge alert."""
         LOGGER.debug("Reset Alert: %s", self._attr_name)
-        alert_data = EventAlertEventData(
-            entity_id=self.entity_id, action="reset", message=None
-        )
-        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
+        self._async_fire_event(AlertAction.reset)
         self._ack = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async Acknowledge alert."""
         LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
-        alert_data = EventAlertEventData(
-            entity_id=self.entity_id, action="acknowledge", message=None
-        )
-        self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
+        self._async_fire_event(AlertAction.acknowledge)
         self._ack = True
         self.async_write_ha_state()
 
