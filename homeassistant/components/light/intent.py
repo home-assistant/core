@@ -11,7 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 import homeassistant.util.color as color_util
 
-from . import ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP_KELVIN, ATTR_RGB_COLOR, DOMAIN
+from . import ATTR_BRIGHTNESS_PCT, ATTR_COLOR_TEMP_KELVIN, ATTR_RGB_COLOR
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

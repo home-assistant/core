@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import functools
 from typing import Any, cast
 
 from pydantic import ValidationError
@@ -14,7 +13,13 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -22,9 +27,19 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.util.json import JsonValueType
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .const import ATTR_MESSAGE, DOMAIN
+from .const import (
+    ATTR_MESSAGE,
+    DOMAIN,
+    KEYRINGS_KEY_TYPE,
+    KEYRINGS_KEY_TYPE_ID_FINGERPRINT,
+    KEYRINGS_KEY_TYPE_ID_NFC,
+    KEYRINGS_ULP_ID,
+    KEYRINGS_USER_FULL_NAME,
+    KEYRINGS_USER_STATUS,
+)
 from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
@@ -32,12 +47,14 @@ SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
 SERVICE_SET_PRIVACY_ZONE = "set_privacy_zone"
 SERVICE_REMOVE_PRIVACY_ZONE = "remove_privacy_zone"
 SERVICE_SET_CHIME_PAIRED = "set_chime_paired_doorbells"
+SERVICE_GET_USER_KEYRING_INFO = "get_user_keyring_info"
 
 ALL_GLOBAL_SERIVCES = [
     SERVICE_ADD_DOORBELL_TEXT,
     SERVICE_REMOVE_DOORBELL_TEXT,
     SERVICE_SET_CHIME_PAIRED,
     SERVICE_REMOVE_PRIVACY_ZONE,
+    SERVICE_GET_USER_KEYRING_INFO,
 ]
 
 DOORBELL_TEXT_SCHEMA = vol.All(
@@ -70,6 +87,15 @@ REMOVE_PRIVACY_ZONE_SCHEMA = vol.All(
     cv.has_at_least_one_key(ATTR_DEVICE_ID),
 )
 
+GET_USER_KEYRING_INFO_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            **cv.ENTITY_SERVICE_FIELDS,
+        },
+    ),
+    cv.has_at_least_one_key(ATTR_DEVICE_ID),
+)
+
 
 @callback
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
@@ -88,9 +114,9 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
 
 
 @callback
-def _async_get_ufp_camera(hass: HomeAssistant, call: ServiceCall) -> Camera:
-    ref = async_extract_referenced_entity_ids(hass, call)
-    entity_registry = er.async_get(hass)
+def _async_get_ufp_camera(call: ServiceCall) -> Camera:
+    ref = async_extract_referenced_entity_ids(call.hass, call)
+    entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
     camera_entity = entity_registry.async_get(entity_id)
@@ -98,30 +124,27 @@ def _async_get_ufp_camera(hass: HomeAssistant, call: ServiceCall) -> Camera:
     assert camera_entity.device_id is not None
     camera_mac = _async_unique_id_to_mac(camera_entity.unique_id)
 
-    instance = _async_get_ufp_instance(hass, camera_entity.device_id)
+    instance = _async_get_ufp_instance(call.hass, camera_entity.device_id)
     return cast(Camera, instance.bootstrap.get_device_from_mac(camera_mac))
 
 
 @callback
-def _async_get_protect_from_call(
-    hass: HomeAssistant, call: ServiceCall
-) -> set[ProtectApiClient]:
+def _async_get_protect_from_call(call: ServiceCall) -> set[ProtectApiClient]:
     return {
-        _async_get_ufp_instance(hass, device_id)
+        _async_get_ufp_instance(call.hass, device_id)
         for device_id in async_extract_referenced_entity_ids(
-            hass, call
+            call.hass, call
         ).referenced_devices
     }
 
 
 async def _async_service_call_nvr(
-    hass: HomeAssistant,
     call: ServiceCall,
     method: str,
     *args: Any,
     **kwargs: Any,
 ) -> None:
-    instances = _async_get_protect_from_call(hass, call)
+    instances = _async_get_protect_from_call(call)
     try:
         await asyncio.gather(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
@@ -130,23 +153,23 @@ async def _async_service_call_nvr(
         raise HomeAssistantError(str(err)) from err
 
 
-async def add_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
+async def add_doorbell_text(call: ServiceCall) -> None:
     """Add a custom doorbell text message."""
     message: str = call.data[ATTR_MESSAGE]
-    await _async_service_call_nvr(hass, call, "add_custom_doorbell_message", message)
+    await _async_service_call_nvr(call, "add_custom_doorbell_message", message)
 
 
-async def remove_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> None:
+async def remove_doorbell_text(call: ServiceCall) -> None:
     """Remove a custom doorbell text message."""
     message: str = call.data[ATTR_MESSAGE]
-    await _async_service_call_nvr(hass, call, "remove_custom_doorbell_message", message)
+    await _async_service_call_nvr(call, "remove_custom_doorbell_message", message)
 
 
-async def remove_privacy_zone(hass: HomeAssistant, call: ServiceCall) -> None:
+async def remove_privacy_zone(call: ServiceCall) -> None:
     """Remove privacy zone from camera."""
 
     name: str = call.data[ATTR_NAME]
-    camera = _async_get_ufp_camera(hass, call)
+    camera = _async_get_ufp_camera(call)
 
     remove_index: int | None = None
     for index, zone in enumerate(camera.privacy_zones):
@@ -171,10 +194,10 @@ def _async_unique_id_to_mac(unique_id: str) -> str:
     return unique_id.split("_")[0]
 
 
-async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> None:
+async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
-    ref = async_extract_referenced_entity_ids(hass, call)
-    entity_registry = er.async_get(hass)
+    ref = async_extract_referenced_entity_ids(call.hass, call)
+    entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
     chime_button = entity_registry.async_get(entity_id)
@@ -182,13 +205,13 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     assert chime_button.device_id is not None
     chime_mac = _async_unique_id_to_mac(chime_button.unique_id)
 
-    instance = _async_get_ufp_instance(hass, chime_button.device_id)
+    instance = _async_get_ufp_instance(call.hass, chime_button.device_id)
     chime = instance.bootstrap.get_device_from_mac(chime_mac)
     chime = cast(Chime, chime)
     assert chime is not None
 
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
-    doorbell_refs = async_extract_referenced_entity_ids(hass, call)
+    doorbell_refs = async_extract_referenced_entity_ids(call.hass, call)
     doorbell_ids: set[str] = set()
     for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
         doorbell_sensor = entity_registry.async_get(camera_id)
@@ -209,31 +232,81 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     await chime.save_device(data_before_changed)
 
 
+async def get_user_keyring_info(call: ServiceCall) -> ServiceResponse:
+    """Get the user keyring info."""
+    camera = _async_get_ufp_camera(call)
+    ulp_users = camera.api.bootstrap.ulp_users.as_list()
+    if not ulp_users:
+        raise HomeAssistantError("No users found, please check Protect permissions.")
+
+    user_keyrings: list[JsonValueType] = [
+        {
+            KEYRINGS_USER_FULL_NAME: user.full_name,
+            KEYRINGS_USER_STATUS: user.status,
+            KEYRINGS_ULP_ID: user.ulp_id,
+            "keys": [
+                {
+                    KEYRINGS_KEY_TYPE: key.registry_type,
+                    **(
+                        {KEYRINGS_KEY_TYPE_ID_FINGERPRINT: key.registry_id}
+                        if key.registry_type == "fingerprint"
+                        else {}
+                    ),
+                    **(
+                        {KEYRINGS_KEY_TYPE_ID_NFC: key.registry_id}
+                        if key.registry_type == "nfc"
+                        else {}
+                    ),
+                }
+                for key in camera.api.bootstrap.keyrings.as_list()
+                if key.ulp_user == user.ulp_id
+            ],
+        }
+        for user in ulp_users
+    ]
+
+    response: ServiceResponse = {"users": user_keyrings}
+    return response
+
+
+SERVICES = [
+    (
+        SERVICE_ADD_DOORBELL_TEXT,
+        add_doorbell_text,
+        DOORBELL_TEXT_SCHEMA,
+        SupportsResponse.NONE,
+    ),
+    (
+        SERVICE_REMOVE_DOORBELL_TEXT,
+        remove_doorbell_text,
+        DOORBELL_TEXT_SCHEMA,
+        SupportsResponse.NONE,
+    ),
+    (
+        SERVICE_SET_CHIME_PAIRED,
+        set_chime_paired_doorbells,
+        CHIME_PAIRED_SCHEMA,
+        SupportsResponse.NONE,
+    ),
+    (
+        SERVICE_REMOVE_PRIVACY_ZONE,
+        remove_privacy_zone,
+        REMOVE_PRIVACY_ZONE_SCHEMA,
+        SupportsResponse.NONE,
+    ),
+    (
+        SERVICE_GET_USER_KEYRING_INFO,
+        get_user_keyring_info,
+        GET_USER_KEYRING_INFO_SCHEMA,
+        SupportsResponse.ONLY,
+    ),
+]
+
+
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the global UniFi Protect services."""
-    services = [
-        (
-            SERVICE_ADD_DOORBELL_TEXT,
-            functools.partial(add_doorbell_text, hass),
-            DOORBELL_TEXT_SCHEMA,
-        ),
-        (
-            SERVICE_REMOVE_DOORBELL_TEXT,
-            functools.partial(remove_doorbell_text, hass),
-            DOORBELL_TEXT_SCHEMA,
-        ),
-        (
-            SERVICE_SET_CHIME_PAIRED,
-            functools.partial(set_chime_paired_doorbells, hass),
-            CHIME_PAIRED_SCHEMA,
-        ),
-        (
-            SERVICE_REMOVE_PRIVACY_ZONE,
-            functools.partial(remove_privacy_zone, hass),
-            REMOVE_PRIVACY_ZONE_SCHEMA,
-        ),
-    ]
-    for name, method, schema in services:
-        if hass.services.has_service(DOMAIN, name):
-            continue
-        hass.services.async_register(DOMAIN, name, method, schema=schema)
+
+    for name, method, schema, supports_response in SERVICES:
+        hass.services.async_register(
+            DOMAIN, name, method, schema=schema, supports_response=supports_response
+        )

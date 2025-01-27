@@ -11,7 +11,7 @@ import pytest
 from syrupy import SnapshotAssertion
 import yaml
 
-from homeassistant.components import conversation, cover, media_player
+from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
@@ -30,6 +30,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     STATE_CLOSED,
+    STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
     EntityCategory,
@@ -398,9 +399,9 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
         result = await conversation.async_converse(hass, sentence, None, Context())
         assert callback.call_count == 1
         assert callback.call_args[0][0].text == sentence
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), sentence
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            sentence
+        )
         assert result.response.speech == {
             "plain": {"speech": trigger_response, "extra_data": None}
         }
@@ -411,9 +412,9 @@ async def test_trigger_sentences(hass: HomeAssistant) -> None:
     callback.reset_mock()
     for sentence in test_sentences:
         result = await conversation.async_converse(hass, sentence, None, Context())
-        assert (
-            result.response.response_type == intent.IntentResponseType.ERROR
-        ), sentence
+        assert result.response.response_type == intent.IntentResponseType.ERROR, (
+            sentence
+        )
 
     assert len(callback.mock_calls) == 0
 
@@ -3049,3 +3050,131 @@ async def test_entities_names_are_not_templates(hass: HomeAssistant) -> None:
 
     assert result is not None
     assert result.response.response_type == intent.IntentResponseType.ERROR
+
+
+@pytest.mark.parametrize(
+    ("language", "light_name", "on_sentence", "off_sentence"),
+    [
+        ("en", "test light", "turn on test light", "turn off test light"),
+        ("de", "Testlicht", "Schalte Testlicht ein", "Schalte Testlicht aus"),
+        (
+            "fr",
+            "lumière de test",
+            "Allumer la lumière de test",
+            "Éteindre la lumière de test",
+        ),
+        ("nl", "testlicht", "Zet testlicht aan", "Zet testlicht uit"),
+        ("zh-cn", "卧室灯", "打开卧室灯", "关闭卧室灯"),
+        ("zh-hk", "睡房燈", "打開睡房燈", "關閉睡房燈"),
+        ("zh-tw", "臥室檯燈", "打開臥室檯燈", "關臥室檯燈"),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_turn_on_off(
+    hass: HomeAssistant,
+    language: str,
+    light_name: str,
+    on_sentence: str,
+    off_sentence: str,
+) -> None:
+    """Test turn on/off in multiple languages."""
+    entity_id = "light.light1234"
+    hass.states.async_set(
+        entity_id, STATE_OFF, attributes={ATTR_FRIENDLY_NAME: light_name}
+    )
+
+    on_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+    await conversation.async_converse(
+        hass,
+        on_sentence,
+        None,
+        Context(),
+        language=language,
+    )
+    assert len(on_calls) == 1
+    assert on_calls[0].data.get("entity_id") == [entity_id]
+
+    off_calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_off")
+    await conversation.async_converse(
+        hass,
+        off_sentence,
+        None,
+        Context(),
+        language=language,
+    )
+    assert len(off_calls) == 1
+    assert off_calls[0].data.get("entity_id") == [entity_id]
+
+
+@pytest.mark.parametrize(
+    ("error_code", "return_response"),
+    [
+        (intent.IntentResponseErrorCode.NO_INTENT_MATCH, False),
+        (intent.IntentResponseErrorCode.NO_VALID_TARGETS, False),
+        (intent.IntentResponseErrorCode.FAILED_TO_HANDLE, True),
+        (intent.IntentResponseErrorCode.UNKNOWN, True),
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_handle_intents_with_response_errors(
+    hass: HomeAssistant,
+    init_components: None,
+    area_registry: ar.AreaRegistry,
+    error_code: intent.IntentResponseErrorCode,
+    return_response: bool,
+) -> None:
+    """Test that handle_intents does not return response errors."""
+    assert await async_setup_component(hass, "climate", {})
+    area_registry.async_create("living room")
+
+    agent: default_agent.DefaultAgent = hass.data[DATA_DEFAULT_ENTITY]
+
+    user_input = ConversationInput(
+        text="What is the temperature in the living room?",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    with patch(
+        "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
+        return_value=default_agent._make_error_result(
+            user_input.language, error_code, "Mock error message"
+        ),
+    ) as mock_process:
+        response = await agent.async_handle_intents(user_input)
+
+    assert len(mock_process.mock_calls) == 1
+
+    if return_response:
+        assert response is not None and response.error_code == error_code
+    else:
+        assert response is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_state_names_are_not_translated(
+    hass: HomeAssistant,
+    init_components: None,
+) -> None:
+    """Test that state names are not translated in responses."""
+    await async_setup_component(hass, "weather", {})
+
+    hass.states.async_set("weather.test_weather", weather.ATTR_CONDITION_PARTLYCLOUDY)
+    expose_entity(hass, "weather.test_weather", True)
+
+    with patch(
+        "homeassistant.helpers.template.Template.async_render"
+    ) as mock_async_render:
+        result = await conversation.async_converse(
+            hass, "what is the weather like?", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+        mock_async_render.assert_called_once()
+
+        assert (
+            mock_async_render.call_args.args[0]["state"].state
+            == weather.ATTR_CONDITION_PARTLYCLOUDY
+        )

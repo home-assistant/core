@@ -3,7 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
-    'configuration_url': 'http://127.0.0.1',
+    'configuration_url': 'http://192.168.20.75',
     'connections': set({
       tuple(
         'mac',

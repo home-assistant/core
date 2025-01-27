@@ -55,7 +55,6 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_translation_key = DOMAIN
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, device_url: str, coordinator: OverkizDataUpdateCoordinator

@@ -121,7 +121,10 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         """Update the image if it is not cached."""
         if self.is_map_valid():
             response = await asyncio.gather(
-                *(self.cloud_api.get_map_v1(), self.coordinator.get_rooms()),
+                *(
+                    self.cloud_api.get_map_v1(),
+                    self.coordinator.set_current_map_rooms(),
+                ),
                 return_exceptions=True,
             )
             if not isinstance(response[0], bytes):
@@ -174,7 +177,8 @@ async def create_coordinator_maps(
             await asyncio.sleep(MAP_SLEEP)
         # Get the map data
         map_update = await asyncio.gather(
-            *[coord.cloud_api.get_map_v1(), coord.get_rooms()], return_exceptions=True
+            *[coord.cloud_api.get_map_v1(), coord.set_current_map_rooms()],
+            return_exceptions=True,
         )
         # If we fail to get the map, we should set it to empty byte,
         # still create it, and set it as unavailable.

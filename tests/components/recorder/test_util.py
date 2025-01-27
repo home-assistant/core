@@ -35,7 +35,6 @@ from homeassistant.components.recorder.models import (
 from homeassistant.components.recorder.util import (
     MIN_VERSION_SQLITE,
     RETRYABLE_MYSQL_ERRORS,
-    UPCOMING_MIN_VERSION_SQLITE,
     database_job_retry_wrapper,
     end_incomplete_runs,
     is_second_sunday,
@@ -56,12 +55,12 @@ from .common import (
 )
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -236,7 +235,7 @@ def test_setup_connection_for_dialect_mysql(mysql_version) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    [str(UPCOMING_MIN_VERSION_SQLITE)],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
     """Test setting up the connection for a sqlite dialect."""
@@ -289,7 +288,7 @@ def test_setup_connection_for_dialect_sqlite(sqlite_version: str) -> None:
 
 @pytest.mark.parametrize(
     "sqlite_version",
-    [str(UPCOMING_MIN_VERSION_SQLITE)],
+    [str(MIN_VERSION_SQLITE)],
 )
 def test_setup_connection_for_dialect_sqlite_zero_commit_interval(
     sqlite_version: str,
@@ -502,7 +501,7 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
 
     assert "minimum supported version" not in caplog.text
     assert database_engine is not None
-    assert database_engine.optimizer.slow_range_in_select is False
+    assert database_engine.optimizer.slow_range_in_select is True
 
 
 @pytest.mark.parametrize(
@@ -510,11 +509,11 @@ def test_supported_pgsql(caplog: pytest.LogCaptureFixture, pgsql_version) -> Non
     [
         (
             "3.30.0",
-            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 3.30.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
         (
             "2.0.0",
-            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.31.0.",
+            "Version 2.0.0 of SQLite is not supported; minimum supported version is 3.40.1.",
         ),
     ],
 )
@@ -552,8 +551,8 @@ def test_fail_outdated_sqlite(
 @pytest.mark.parametrize(
     "sqlite_version",
     [
-        ("3.31.0"),
-        ("3.33.0"),
+        ("3.40.1"),
+        ("3.41.0"),
     ],
 )
 def test_supported_sqlite(caplog: pytest.LogCaptureFixture, sqlite_version) -> None:
@@ -732,63 +731,6 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
 
     assert database_engine is not None
     assert database_engine.optimizer.slow_range_in_select is False
-
-
-async def test_issue_for_old_sqlite(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test we create and delete an issue for old sqlite versions."""
-    instance_mock = MagicMock()
-    instance_mock.hass = hass
-    execute_args = []
-    close_mock = MagicMock()
-    min_version = str(MIN_VERSION_SQLITE)
-
-    def execute_mock(statement):
-        nonlocal execute_args
-        execute_args.append(statement)
-
-    def fetchall_mock():
-        nonlocal execute_args
-        if execute_args[-1] == "SELECT sqlite_version()":
-            return [[min_version]]
-        return None
-
-    def _make_cursor_mock(*_):
-        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
-
-    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
-
-    database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
-        instance_mock,
-        "sqlite",
-        dbapi_connection,
-        True,
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
-    assert issue is not None
-    assert issue.translation_placeholders == {
-        "min_version": str(UPCOMING_MIN_VERSION_SQLITE),
-        "server_version": min_version,
-    }
-
-    min_version = str(UPCOMING_MIN_VERSION_SQLITE)
-    database_engine = await hass.async_add_executor_job(
-        util.setup_connection_for_dialect,
-        instance_mock,
-        "sqlite",
-        dbapi_connection,
-        True,
-    )
-    await hass.async_block_till_done()
-
-    issue = issue_registry.async_get_issue(DOMAIN, "sqlite_too_old")
-    assert issue is None
-    assert database_engine is not None
 
 
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
@@ -1062,14 +1004,25 @@ async def test_execute_stmt_lambda_element(
             {
                 ("hour", 0): ("2022-10-21T07:00:00", "2022-10-21T08:00:00"),
                 ("hour", -1): ("2022-10-21T06:00:00", "2022-10-21T07:00:00"),
+                ("hour", 1): ("2022-10-21T08:00:00", "2022-10-21T09:00:00"),
                 ("day", 0): ("2022-10-21T07:00:00", "2022-10-22T07:00:00"),
                 ("day", -1): ("2022-10-20T07:00:00", "2022-10-21T07:00:00"),
+                ("day", 1): ("2022-10-22T07:00:00", "2022-10-23T07:00:00"),
                 ("week", 0): ("2022-10-17T07:00:00", "2022-10-24T07:00:00"),
                 ("week", -1): ("2022-10-10T07:00:00", "2022-10-17T07:00:00"),
+                ("week", 1): ("2022-10-24T07:00:00", "2022-10-31T07:00:00"),
                 ("month", 0): ("2022-10-01T07:00:00", "2022-11-01T07:00:00"),
                 ("month", -1): ("2022-09-01T07:00:00", "2022-10-01T07:00:00"),
+                ("month", -12): ("2021-10-01T07:00:00", "2021-11-01T07:00:00"),
+                ("month", 1): ("2022-11-01T07:00:00", "2022-12-01T08:00:00"),
+                ("month", 2): ("2022-12-01T08:00:00", "2023-01-01T08:00:00"),
+                ("month", 3): ("2023-01-01T08:00:00", "2023-02-01T08:00:00"),
+                ("month", 12): ("2023-10-01T07:00:00", "2023-11-01T07:00:00"),
+                ("month", 13): ("2023-11-01T07:00:00", "2023-12-01T08:00:00"),
+                ("month", 14): ("2023-12-01T08:00:00", "2024-01-01T08:00:00"),
                 ("year", 0): ("2022-01-01T08:00:00", "2023-01-01T08:00:00"),
                 ("year", -1): ("2021-01-01T08:00:00", "2022-01-01T08:00:00"),
+                ("year", 1): ("2023-01-01T08:00:00", "2024-01-01T08:00:00"),
             },
         ),
         (
@@ -1078,14 +1031,24 @@ async def test_execute_stmt_lambda_element(
             {
                 ("hour", 0): ("2024-02-28T08:00:00", "2024-02-28T09:00:00"),
                 ("hour", -1): ("2024-02-28T07:00:00", "2024-02-28T08:00:00"),
+                ("hour", 1): ("2024-02-28T09:00:00", "2024-02-28T10:00:00"),
                 ("day", 0): ("2024-02-28T08:00:00", "2024-02-29T08:00:00"),
                 ("day", -1): ("2024-02-27T08:00:00", "2024-02-28T08:00:00"),
+                ("day", 1): ("2024-02-29T08:00:00", "2024-03-01T08:00:00"),
                 ("week", 0): ("2024-02-26T08:00:00", "2024-03-04T08:00:00"),
                 ("week", -1): ("2024-02-19T08:00:00", "2024-02-26T08:00:00"),
+                ("week", 1): ("2024-03-04T08:00:00", "2024-03-11T07:00:00"),
                 ("month", 0): ("2024-02-01T08:00:00", "2024-03-01T08:00:00"),
                 ("month", -1): ("2024-01-01T08:00:00", "2024-02-01T08:00:00"),
+                ("month", -2): ("2023-12-01T08:00:00", "2024-01-01T08:00:00"),
+                ("month", -3): ("2023-11-01T07:00:00", "2023-12-01T08:00:00"),
+                ("month", -12): ("2023-02-01T08:00:00", "2023-03-01T08:00:00"),
+                ("month", -13): ("2023-01-01T08:00:00", "2023-02-01T08:00:00"),
+                ("month", -14): ("2022-12-01T08:00:00", "2023-01-01T08:00:00"),
+                ("month", 1): ("2024-03-01T08:00:00", "2024-04-01T07:00:00"),
                 ("year", 0): ("2024-01-01T08:00:00", "2025-01-01T08:00:00"),
                 ("year", -1): ("2023-01-01T08:00:00", "2024-01-01T08:00:00"),
+                ("year", 1): ("2025-01-01T08:00:00", "2026-01-01T08:00:00"),
             },
         ),
     ],

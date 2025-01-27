@@ -1,22 +1,38 @@
 {
-  "1": {
-    "name": "Backyard",
-    "volume": "10",
-    "status": "ON",
-    "enabled": "True",
-    "current_source": "1"
-  },
-  "2": {
-    "name": "Kitchen",
-    "volume": "50",
-    "status": "OFF",
-    "enabled": "True",
-    "current_source": "2"
-  },
-  "3": {
-    "name": "Bedroom",
-    "volume": "10",
-    "status": "OFF",
-    "enabled": "False"
+  "controllers": {
+    "1": {
+      "zones": {
+        "1": {
+          "name": "Backyard",
+          "volume": "10",
+          "status": "ON",
+          "enabled": "True",
+          "current_source": "1"
+        },
+        "2": {
+          "name": "Kitchen",
+          "volume": "50",
+          "status": "OFF",
+          "enabled": "True",
+          "current_source": "2"
+        },
+        "3": {
+          "name": "Bedroom",
+          "volume": "10",
+          "status": "OFF",
+          "enabled": "False"
+        }
+      }
+    },
+    "2": {
+      "zones": {
+        "9": {
+          "name": "Living Room",
+          "volume": "10",
+          "status": "OFF",
+          "enabled": "True"
+        }
+      }
+    }
   }
 }
