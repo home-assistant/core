@@ -1,0 +1,62 @@
+# serializer version: 1
+# name: test_fire
+  dict({
+    'action': <AlertAction.generate: 'generate'>,
+    'entity_id': 'alert.alert_test',
+    'message': 'alert_test',
+    'repeat': 0,
+    'title': 'sensor.test',
+  })
+# ---
+# name: test_notification
+  dict({
+    'action': <AlertAction.done: 'clear'>,
+    'entity_id': 'alert.alert_test',
+    'message': 'alert_gone',
+    'repeat': None,
+    'title': 'sensor.test',
+  })
+# ---
+# name: test_notification_no_done_message
+  dict({
+    'action': <AlertAction.done: 'clear'>,
+    'entity_id': 'alert.alert_test',
+    'message': None,
+    'repeat': None,
+    'title': 'sensor.test',
+  })
+# ---
+# name: test_reset
+  dict({
+    'action': <AlertAction.acknowledge: 'acknowledge'>,
+    'entity_id': 'alert.alert_test',
+    'message': None,
+    'repeat': None,
+    'title': 'sensor.test',
+  })
+# ---
+# name: test_sending_data_notification
+  dict({
+    'action': <AlertAction.generate: 'generate'>,
+    'data': dict({
+      'data': dict({
+        'inline_keyboard': list([
+          'Close garage:/close_garage',
+        ]),
+      }),
+    }),
+    'entity_id': 'alert.alert_test',
+    'message': 'alert_test',
+    'repeat': 0,
+    'title': 'sensor.test',
+  })
+# ---
+# name: test_silence
+  dict({
+    'action': <AlertAction.acknowledge: 'acknowledge'>,
+    'entity_id': 'alert.alert_test',
+    'message': None,
+    'repeat': None,
+    'title': 'sensor.test',
+  })
+# ---
