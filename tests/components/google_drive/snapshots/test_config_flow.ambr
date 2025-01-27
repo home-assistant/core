@@ -18,7 +18,7 @@
       dict({
         'params': dict({
           'fields': 'files(id,name)',
-          'q': "properties has { key='ha' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
         }),
       }),
     ),
@@ -31,7 +31,7 @@
           'mimeType': 'application/vnd.google-apps.folder',
           'name': 'Home Assistant',
           'properties': dict({
-            'ha': 'root',
+            'home_assistant': 'root',
             'instance_id': '0a123c',
           }),
         }),

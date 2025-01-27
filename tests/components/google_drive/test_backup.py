@@ -19,7 +19,7 @@ from homeassistant.components.google_drive import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import CONFIG_ENTRY_TITLE
+from .conftest import TEST_USER_EMAIL
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import mock_stream
@@ -73,7 +73,7 @@ async def test_agents_info(
     assert response["result"] == {
         "agents": [
             {"agent_id": "backup.local"},
-            {"agent_id": f"google_drive.{CONFIG_ENTRY_TITLE}"},
+            {"agent_id": f"google_drive.{TEST_USER_EMAIL}"},
         ],
     }
 
@@ -110,7 +110,7 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         TEST_AGENT_BACKUP.as_frontend_json()
         | {
-            "agent_ids": [f"google_drive.{CONFIG_ENTRY_TITLE}"],
+            "agent_ids": [f"google_drive.{TEST_USER_EMAIL}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -132,9 +132,7 @@ async def test_agents_list_backups_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            f"google_drive.{CONFIG_ENTRY_TITLE}": "Failed to list backups"
-        },
+        "agent_errors": {f"google_drive.{TEST_USER_EMAIL}": "Failed to list backups"},
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -148,7 +146,7 @@ async def test_agents_list_backups_fail(
             TEST_AGENT_BACKUP.backup_id,
             TEST_AGENT_BACKUP.as_frontend_json()
             | {
-                "agent_ids": [f"google_drive.{CONFIG_ENTRY_TITLE}"],
+                "agent_ids": [f"google_drive.{TEST_USER_EMAIL}"],
                 "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
@@ -201,7 +199,7 @@ async def test_agents_download(
 
     client = await hass_client()
     resp = await client.get(
-        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id=google_drive.{CONFIG_ENTRY_TITLE}"
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id=google_drive.{TEST_USER_EMAIL}"
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
@@ -227,7 +225,7 @@ async def test_agents_download_fail(
 
     client = await hass_client()
     resp = await client.get(
-        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id=google_drive.{CONFIG_ENTRY_TITLE}"
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id=google_drive.{TEST_USER_EMAIL}"
     )
     assert resp.status == 500
     content = await resp.content.read()
@@ -249,7 +247,7 @@ async def test_agents_download_file_not_found(
 
     client = await hass_client()
     resp = await client.get(
-        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id=google_drive.{CONFIG_ENTRY_TITLE}"
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id=google_drive.{TEST_USER_EMAIL}"
     )
     assert resp.status == 500
     content = await resp.content.read()
@@ -273,7 +271,7 @@ async def test_agents_download_metadata_not_found(
     assert backup_id != TEST_AGENT_BACKUP.backup_id
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id=google_drive.{CONFIG_ENTRY_TITLE}"
+        f"/api/backup/download/{backup_id}?agent_id=google_drive.{TEST_USER_EMAIL}"
     )
     assert resp.status == 404
     assert await resp.content.read() == b""
@@ -304,7 +302,7 @@ async def test_agents_upload(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = TEST_AGENT_BACKUP
         resp = await client.post(
-            f"/api/backup/upload?agent_id=google_drive.{CONFIG_ENTRY_TITLE}",
+            f"/api/backup/upload?agent_id=google_drive.{TEST_USER_EMAIL}",
             data={"file": StringIO("test")},
         )
 
@@ -345,7 +343,7 @@ async def test_agents_upload_create_folder_if_missing(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = TEST_AGENT_BACKUP
         resp = await client.post(
-            f"/api/backup/upload?agent_id=google_drive.{CONFIG_ENTRY_TITLE}",
+            f"/api/backup/upload?agent_id=google_drive.{TEST_USER_EMAIL}",
             data={"file": StringIO("test")},
         )
 
@@ -382,7 +380,7 @@ async def test_agents_upload_fail(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = TEST_AGENT_BACKUP
         resp = await client.post(
-            f"/api/backup/upload?agent_id=google_drive.{CONFIG_ENTRY_TITLE}",
+            f"/api/backup/upload?agent_id=google_drive.{TEST_USER_EMAIL}",
             data={"file": StringIO("test")},
         )
         await hass.async_block_till_done()
@@ -437,9 +435,7 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {
-            f"google_drive.{CONFIG_ENTRY_TITLE}": "Failed to delete backup"
-        }
+        "agent_errors": {f"google_drive.{TEST_USER_EMAIL}": "Failed to delete backup"}
     }
 
 

@@ -104,7 +104,7 @@ class DriveClient:
         fields = "id,name"
         query = " and ".join(
             [
-                "properties has { key='ha' and value='root' }",
+                "properties has { key='home_assistant' and value='root' }",
                 f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
@@ -120,7 +120,7 @@ class DriveClient:
             "name": "Home Assistant",
             "mimeType": "application/vnd.google-apps.folder",
             "properties": {
-                "ha": "root",
+                "home_assistant": "root",
                 "instance_id": self._ha_instance_id,
             },
         }
@@ -141,7 +141,7 @@ class DriveClient:
             "description": json.dumps(backup.as_dict()),
             "parents": [folder_id],
             "properties": {
-                "ha": "backup",
+                "home_assistant": "backup",
                 "instance_id": self._ha_instance_id,
                 "backup_id": backup.backup_id,
             },
@@ -166,7 +166,7 @@ class DriveClient:
         """List backups."""
         query = " and ".join(
             [
-                "properties has { key='ha' and value='backup' }",
+                "properties has { key='home_assistant' and value='backup' }",
                 f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
@@ -184,7 +184,7 @@ class DriveClient:
         """Get file_id of backup if it exists."""
         query = " and ".join(
             [
-                "properties has { key='ha' and value='backup' }",
+                "properties has { key='home_assistant' and value='backup' }",
                 f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
                 f"properties has {{ key='backup_id' and value='{backup_id}' }}",
             ]

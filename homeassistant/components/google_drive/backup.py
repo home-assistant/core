@@ -57,7 +57,8 @@ class GoogleDriveBackupAgent(BackupAgent):
     def __init__(self, config_entry: GoogleDriveConfigEntry) -> None:
         """Initialize the cloud backup sync agent."""
         super().__init__()
-        self.name = config_entry.title
+        assert config_entry.unique_id
+        self.name = config_entry.unique_id
         self._client = config_entry.runtime_data
 
     async def async_upload_backup(
