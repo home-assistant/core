@@ -37,6 +37,7 @@ FAN_MODE_SLEEP = "sleep"
 FAN_MODE_PET = "pet"
 FAN_MODE_TURBO = "turbo"
 FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
+FAN_MODE_NORMAL = "turbo"
 
 
 PRESET_MODES = {
@@ -48,7 +49,12 @@ PRESET_MODES = {
     "EverestAir": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_TURBO],
     "Vital200S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
     "Vital100S": [FAN_MODE_AUTO, FAN_MODE_SLEEP, FAN_MODE_PET],
-    "SmartTowerFan": [FAN_MODE_ADVANCED_SLEEP, FAN_MODE_AUTO, FAN_MODE_TURBO],
+    "SmartTowerFan": [
+        FAN_MODE_ADVANCED_SLEEP,
+        FAN_MODE_AUTO,
+        FAN_MODE_TURBO,
+        FAN_MODE_NORMAL,
+    ],
 }
 SPEED_RANGE = {  # off is not included
     "LV-PUR131S": (1, 3),
@@ -111,7 +117,6 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     )
     _attr_name = None
     _attr_translation_key = "vesync"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, fan: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
