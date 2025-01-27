@@ -12,8 +12,6 @@ from homeassistant.core import HomeAssistant
 
 from .util import async_init_integration
 
-from tests.common import load_fixture
-
 child_lock_switch_entity = "switch.baseboard_heater_child_lock"
 
 
@@ -34,10 +32,6 @@ async def test_set_child_lock_on(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.tado.PyTado.interface.api.Tado.set_child_lock"
         ) as mock_set_state,
-        patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.get_device_info",
-            return_value=load_fixture("tado/device_wr4_child_lock_enabled.json"),
-        ),
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
