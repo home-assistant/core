@@ -81,3 +81,4 @@ def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
 @callback
 def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
     hass.loop.call_soon(_async_notify_backup_listeners, hass)
+
