@@ -127,20 +127,24 @@ class MatterFan(MatterEntity, FanEntity):
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self.write_attribute(
-            value=self.get_matter_attribute_value(
-                clusters.FanControl.Attributes.RockSupport
-            )
-            if oscillating
-            else 0,
+            value=(
+                self.get_matter_attribute_value(
+                    clusters.FanControl.Attributes.RockSupport
+                )
+                if oscillating
+                else 0
+            ),
             matter_attribute=clusters.FanControl.Attributes.RockSetting,
         )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.write_attribute(
-            value=clusters.FanControl.Enums.AirflowDirectionEnum.kReverse
-            if direction == DIRECTION_REVERSE
-            else clusters.FanControl.Enums.AirflowDirectionEnum.kForward,
+            value=(
+                clusters.FanControl.Enums.AirflowDirectionEnum.kReverse
+                if direction == DIRECTION_REVERSE
+                else clusters.FanControl.Enums.AirflowDirectionEnum.kForward
+            ),
             matter_attribute=clusters.FanControl.Attributes.AirflowDirection,
         )
 
