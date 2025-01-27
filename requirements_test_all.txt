@@ -350,7 +350,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.3.1
+aioshelly==12.3.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -2147,7 +2147,7 @@ sanix==1.0.6
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2025.1.3
+securetar==2025.1.4
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
@@ -2400,7 +2400,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.2.2
+voip-utils==0.3.0
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
