@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 from .hub import DeconzHub
+
+if TYPE_CHECKING:
+    from . import DeconzConfigEntry
 
 
 def serial_from_unique_id(unique_id: str | None) -> str | None:
@@ -18,8 +23,9 @@ def serial_from_unique_id(unique_id: str | None) -> str | None:
 @callback
 def get_master_hub(hass: HomeAssistant) -> DeconzHub:
     """Return the gateway which is marked as master."""
+    entry: DeconzConfigEntry
     hub: DeconzHub
-    for hub in hass.data[DOMAIN].values():
-        if hub.master:
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        if (hub := entry.runtime_data).master:
             return hub
     raise ValueError

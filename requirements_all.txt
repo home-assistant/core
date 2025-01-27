@@ -1030,7 +1030,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==7.0.0
+google-nest-sdm==7.1.0
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1980,7 +1980,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.0
+pyheos==1.0.1
 
 # homeassistant.components.hive
 pyhive-integration==1.0.1
@@ -2735,7 +2735,7 @@ smhi-pkg==1.0.19
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.6
+soco==0.30.8
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
