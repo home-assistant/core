@@ -9,7 +9,7 @@ import sqlite3
 import sys
 import threading
 from typing import Any, cast
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -98,12 +98,12 @@ from tests.common import (
     async_test_home_assistant,
     mock_platform,
 )
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -1373,7 +1373,7 @@ async def test_statistics_runs_initiated(
 @pytest.mark.parametrize("enable_missing_statistics", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_compile_missing_statistics(
-    async_test_recorder: RecorderInstanceGenerator, freezer: FrozenDateTimeFactory
+    async_test_recorder: RecorderInstanceContextManager, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test missing statistics are compiled on startup."""
     now = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
@@ -1632,7 +1632,7 @@ async def test_service_disable_states_not_recording(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_service_disable_run_information_recorded(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test that runs are still recorded when recorder is disabled."""
 
@@ -2575,23 +2575,25 @@ async def test_clean_shutdown_when_recorder_thread_raises_during_validate_db_sch
 
 @pytest.mark.parametrize(
     ("func_to_patch", "expected_setup_result"),
-    [("migrate_schema_non_live", False), ("migrate_schema_live", False)],
+    [
+        ("migrate_schema_non_live", False),
+        ("migrate_schema_live", True),
+    ],
 )
 async def test_clean_shutdown_when_schema_migration_fails(
-    hass: HomeAssistant, func_to_patch: str, expected_setup_result: bool
+    hass: HomeAssistant,
+    func_to_patch: str,
+    expected_setup_result: bool,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test we still shutdown cleanly when schema migration fails."""
     with (
-        patch.object(
-            migration,
-            "validate_db_schema",
-            return_value=MagicMock(valid=False, current_version=1),
-        ),
+        patch.object(migration, "_get_current_schema_version", side_effect=[None, 1]),
         patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True),
         patch.object(
             migration,
             func_to_patch,
-            side_effect=Exception,
+            side_effect=Exception("Boom!"),
         ),
     ):
         if recorder.DOMAIN not in hass.data:
@@ -2610,9 +2612,13 @@ async def test_clean_shutdown_when_schema_migration_fails(
         assert setup_result == expected_setup_result
         await hass.async_block_till_done()
 
-    instance = recorder.get_instance(hass)
-    await hass.async_stop()
-    assert instance.engine is None
+        instance = recorder.get_instance(hass)
+        await hass.async_stop()
+        assert instance.engine is None
+
+        assert "Error during schema migration" in caplog.text
+        # Check the injected exception was logged
+        assert "Boom!" in caplog.text
 
 
 async def test_setup_fails_after_downgrade(
@@ -2649,9 +2655,9 @@ async def test_setup_fails_after_downgrade(
     await hass.async_stop()
     assert instance.engine is None
     assert (
-        f"The database schema version {SCHEMA_VERSION+1} is newer than {SCHEMA_VERSION}"
-        " which is the maximum database schema version supported by the installed "
-        "version of Home Assistant Core"
+        f"The database schema version {SCHEMA_VERSION + 1} is newer "
+        f"than {SCHEMA_VERSION} which is the maximum database schema "
+        "version supported by the installed version of Home Assistant Core"
     ) in caplog.text
 
 
