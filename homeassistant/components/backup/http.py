@@ -165,7 +165,9 @@ class UploadBackupView(HomeAssistantView):
         contents = cast(BodyPartReader, await reader.next())
 
         try:
-            await manager.async_receive_backup(contents=contents, agent_ids=agent_ids)
+            backup_id = await manager.async_receive_backup(
+                contents=contents, agent_ids=agent_ids
+            )
         except OSError as err:
             return Response(
                 body=f"Can't write backup file: {err}",
@@ -179,4 +181,4 @@ class UploadBackupView(HomeAssistantView):
         except asyncio.CancelledError:
             return Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return Response(status=HTTPStatus.CREATED)
+        return self.json({"backup_id": backup_id}, status_code=HTTPStatus.CREATED)

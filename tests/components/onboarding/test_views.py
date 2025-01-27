@@ -990,10 +990,12 @@ async def test_onboarding_backup_upload(
 
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_receive_backup",
+        return_value="abc123",
     ) as mock_receive:
         resp = await client.post(
             "/api/onboarding/backup/upload?agent_id=backup.local",
             data={"file": StringIO("test")},
         )
     assert resp.status == 201
+    assert await resp.json() == {"backup_id": "abc123"}
     mock_receive.assert_called_once_with(agent_ids=["backup.local"], contents=ANY)
