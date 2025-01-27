@@ -109,6 +109,7 @@ class LovelaceData:
         report_usage(
             f"accessed lovelace_data['{name}'] instead of lovelace_data.{name}",
             breaks_in_ha_version="2026.2",
+            exclude_integrations={DOMAIN},
         )
         return getattr(self, name)
 
@@ -121,6 +122,7 @@ class LovelaceData:
         report_usage(
             f"accessed lovelace_data.get('{name}') instead of lovelace_data.{name}",
             breaks_in_ha_version="2026.2",
+            exclude_integrations={DOMAIN},
         )
         if hasattr(self, name):
             return getattr(self, name)
