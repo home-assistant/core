@@ -164,6 +164,7 @@ class AtaDeviceClimate(MelCloudClimate):
                     ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
                 }
             )
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         if vane_vertical := self._device.vane_vertical:
             attr.update(
@@ -274,14 +275,28 @@ class AtaDeviceClimate(MelCloudClimate):
         """Return vertical vane position or mode."""
         return self._device.vane_vertical
 
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return vertical vane position or mode."""
+        return self._device.vane_horizontal
+
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
+
+    async def async_set_swing_horizontal_mode(self, swing_mode: str) -> None:
+        """Set vertical vane position or mode."""
+        await self.async_set_vane_horizontal(swing_mode)
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return a list of available vertical vane positions and modes."""
         return self._device.vane_vertical_positions
+
+    @property
+    def swing_horizontal_modes(self) -> list[str] | None:
+        """Return a list of available vertical vane positions and modes."""
+        return self._device.vane_horizontal_positions
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
