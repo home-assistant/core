@@ -48,7 +48,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
 
         if ip_address is None:
             # Should never happen, but just in case
-            return self.async_abort(reason="unknown_error")
+            return self.async_abort(reason="unknown_error") # pragma: no cover
 
         # Tell device we want a token, user must now press the button within 30 seconds
         # The first attempt will always fail, but this opens the window to press the button
