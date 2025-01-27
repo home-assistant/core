@@ -141,7 +141,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the light on, change brightness, change color."""
-        _LOGGER.debug("Switching light on for: %s", self.name)
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -227,11 +226,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                 return
 
         if self._brightness_key and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.debug(
-                "Changing brightness for: %s, to: %s",
-                self.name,
-                kwargs[ATTR_BRIGHTNESS],
-            )
             brightness = round(
                 color_util.brightness_to_value(
                     self._brightness_scale, kwargs[ATTR_BRIGHTNESS]
@@ -255,7 +249,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the light off."""
-        _LOGGER.debug("Switching light off for: %s", self.name)
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -295,7 +288,6 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
         """Update the light's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
 
-        _LOGGER.debug("Updated, new light state: %s", self._attr_is_on)
         if self._brightness_key:
             brightness = cast(
                 float, self.appliance.settings[self._brightness_key].value
@@ -303,7 +295,9 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
             self._attr_brightness = color_util.value_to_brightness(
                 self._brightness_scale, brightness
             )
-            _LOGGER.debug("Updated, new brightness: %s", self._attr_brightness)
+            _LOGGER.debug(
+                "Updated %s, new brightness: %s", self.entity_id, self._attr_brightness
+            )
         if self._color_key and self._custom_color_key:
             color = cast(str, self.appliance.settings[self._color_key].value)
             if color != self._enable_custom_color_value_key:
@@ -322,7 +316,8 @@ class HomeConnectLight(HomeConnectEntity, LightEntity):
                     self._brightness_scale, hsv[2]
                 )
                 _LOGGER.debug(
-                    "Updated, new color (%s) and new brightness (%s) ",
+                    "Updated %s, new color (%s) and new brightness (%s) ",
+                    self.entity_id,
                     color_value,
                     self._attr_brightness,
                 )

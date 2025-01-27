@@ -153,8 +153,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
-
-        _LOGGER.debug("Turning on %s", self.entity_description.key)
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -175,8 +173,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
-
-        _LOGGER.debug("Turning off %s", self.entity_description.key)
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -184,7 +180,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 value=False,
             )
         except HomeConnectError as err:
-            _LOGGER.error("Error while trying to turn off: %s", err)
             self._attr_available = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -199,11 +194,6 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     def update_native_value(self) -> None:
         """Update the switch's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
-        _LOGGER.debug(
-            "Updated %s, new state: %s",
-            self.entity_description.key,
-            self._attr_is_on,
-        )
 
 
 class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
@@ -288,7 +278,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Start the program."""
-        _LOGGER.debug("Tried to turn on program %s", self.program.key)
         try:
             await self.coordinator.client.start_program(
                 self.appliance.info.ha_id, program_key=self.program.key
@@ -305,7 +294,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Stop the program."""
-        _LOGGER.debug("Tried to stop program %s", self.program.key)
         try:
             await self.coordinator.client.stop_program(self.appliance.info.ha_id)
         except HomeConnectError as err:
@@ -324,7 +312,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             self._attr_is_on = True
         else:
             self._attr_is_on = False
-        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
@@ -340,7 +327,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
-        _LOGGER.debug("Tried to switch on %s", self.name)
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -377,7 +363,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                     SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name
                 },
             )
-        _LOGGER.debug("tried to switch off %s", self.name)
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -416,7 +401,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self._attr_is_on = False
         else:
             self._attr_is_on = None
-        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
 
     async def async_fetch_power_off_state(self) -> None:
         """Fetch the power off state."""
@@ -430,7 +414,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                     setting_key=SettingKey.BSH_COMMON_POWER_STATE,
                 )
             except HomeConnectError as err:
-                _LOGGER.error("An error occurred: %s", err)
+                _LOGGER.error("An error occurred fetching the power settings: %s", err)
                 return
         if not data or not data.constraints or not data.constraints.allowed_values:
             return

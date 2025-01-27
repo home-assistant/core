@@ -1,7 +1,6 @@
 """Provides time enties for Home Connect."""
 
 from datetime import time
-import logging
 from typing import cast
 
 from aiohomeconnect.model import SettingKey
@@ -22,9 +21,6 @@ from .const import (
 from .coordinator import HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
-
-_LOGGER = logging.getLogger(__name__)
-
 
 TIME_ENTITIES = (
     TimeEntityDescription(
@@ -68,12 +64,6 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
 
     async def async_set_value(self, value: time) -> None:
         """Set the native value of the entity."""
-        _LOGGER.debug(
-            "Tried to set value %s to %s for %s",
-            value,
-            self.bsh_key,
-            self.entity_id,
-        )
         try:
             await self.coordinator.client.set_setting(
                 self.appliance.info.ha_id,
@@ -96,4 +86,3 @@ class HomeConnectTimeEntity(HomeConnectEntity, TimeEntity):
         """Set the value of the entity."""
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
         self._attr_native_value = seconds_to_time(data.value)
-        _LOGGER.debug("Updated, new value: %s", self._attr_native_value)

@@ -151,7 +151,6 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
         """Update status when an event for the entity is received."""
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
         self._attr_native_value = cast(float, data.value)
-        _LOGGER.debug("Updated, new value: %s", self._attr_native_value)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

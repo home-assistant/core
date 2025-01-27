@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
 from typing import cast
 
 from aiohomeconnect.model import EventKey, StatusKey
@@ -27,9 +26,6 @@ from .const import (
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
-
-_LOGGER = logging.getLogger(__name__)
-
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
 
@@ -314,7 +310,6 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 self._attr_native_value = slugify(cast(str, status).split(".")[-1])
             case _:
                 self._attr_native_value = status
-        _LOGGER.debug("Updated, new state: %s", self._attr_native_value)
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):

@@ -1,6 +1,7 @@
 """Home Connect entity base class."""
 
 from abc import abstractmethod
+import logging
 
 from aiohomeconnect.model import EventKey
 
@@ -11,6 +12,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
@@ -47,6 +50,7 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         """Handle updated data from the coordinator."""
         self.update_native_value()
         self.async_write_ha_state()
+        _LOGGER.debug("Updated %s, new state: %s", self.entity_id, self.state)
 
     @property
     def bsh_key(self) -> str:

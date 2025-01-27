@@ -1,7 +1,6 @@
 """Provides a select platform for Home Connect."""
 
 import contextlib
-import logging
 from typing import cast
 
 from aiohomeconnect.model import EventKey, ProgramKey
@@ -21,8 +20,6 @@ from .coordinator import (
 )
 from .entity import HomeConnectEntity
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
-
-_LOGGER = logging.getLogger(__name__)
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
     bsh_key_to_translation_key(program.value): cast(ProgramKey, program)
@@ -113,15 +110,10 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             if event
             else None
         )
-        _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
         program_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
-        _LOGGER.debug(
-            "Starting program: %s" if self.start_on_select else "Selecting program: %s",
-            program_key,
-        )
         try:
             if self.start_on_select:
                 await self.coordinator.client.start_program(

@@ -1,7 +1,6 @@
 """Provides a binary sensor for Home Connect."""
 
 from dataclasses import dataclass
-import logging
 from typing import cast
 
 from aiohomeconnect.model import StatusKey
@@ -37,7 +36,6 @@ from .coordinator import (
 )
 from .entity import HomeConnectEntity
 
-_LOGGER = logging.getLogger(__name__)
 REFRIGERATION_DOOR_BOOLEAN_MAP = {
     REFRIGERATION_STATUS_DOOR_CLOSED: False,
     REFRIGERATION_STATUS_DOOR_OPEN: True,
@@ -157,7 +155,6 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._attr_is_on = self.entity_description.boolean_map.get(status)
         else:
             self._attr_is_on = None
-        _LOGGER.debug("Updated, new state: %s", self._attr_is_on)
 
 
 class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):
