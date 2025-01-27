@@ -280,7 +280,10 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
                             "unique_id": "hello_name-id",
                             "state": "{{ trigger.event.data.beer }}",
                             "options": "{{ trigger.event.data.beers }}",
-                            "select_option": {"event": "test_number_event"},
+                            "select_option": {
+                                "event": "test_number_event",
+                                "event_data": {"entity_id": "{{ this.entity_id }}"},
+                            },
                             "optimistic": True,
                         },
                     ],
@@ -316,6 +319,9 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     )
     assert len(events) == 1
     assert events[0].event_type == "test_number_event"
+    entity_id = events[0].data.get("entity_id")
+    assert entity_id is not None
+    assert entity_id == "select.hello_name"
 
 
 def _verify(
