@@ -69,7 +69,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         super().__init__(coordinator)
 
         self._host = reolink_data.host
-        self._attr_unique_id = f"{self._host.unique_id}_{self.entity_description.key}"
+        self._attr_unique_id: str = (
+            f"{self._host.unique_id}_{self.entity_description.key}"
+        )
 
         http_s = "https" if self._host.api.use_https else "http"
         self._conf_url = f"{http_s}://{self._host.api.host}:{self._host.api.port}"
@@ -90,7 +92,11 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._host.api.session_active and super().available
+        return (
+            self._host.api.session_active
+            and not self._host.api.baichuan.privacy_mode()
+            and super().available
+        )
 
     @callback
     def _push_callback(self) -> None:
@@ -110,8 +116,10 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         cmd_id = self.entity_description.cmd_id
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key)
-        if cmd_id is not None and self._attr_unique_id is not None:
+        if cmd_id is not None:
             self.register_callback(self._attr_unique_id, cmd_id)
+        # Privacy mode
+        self.register_callback(f"{self._attr_unique_id}_623", 623)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
@@ -119,8 +127,10 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         cmd_id = self.entity_description.cmd_id
         if cmd_key is not None:
             self._host.async_unregister_update_cmd(cmd_key)
-        if cmd_id is not None and self._attr_unique_id is not None:
+        if cmd_id is not None:
             self._host.api.baichuan.unregister_callback(self._attr_unique_id)
+        # Privacy mode
+        self._host.api.baichuan.unregister_callback(f"{self._attr_unique_id}_623")
 
         await super().async_will_remove_from_hass()
 

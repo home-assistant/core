@@ -316,6 +316,41 @@ async def test_updates_from_user_changed(
     ]
 
 
+async def test_updates_from_groups_changed(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+) -> None:
+    """Test player updates from changes to groups."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    # Assert current state
+    assert hass.states.get("media_player.test_player").attributes[
+        ATTR_GROUP_MEMBERS
+    ] == ["media_player.test_player", "media_player.test_player_2"]
+    assert hass.states.get("media_player.test_player_2").attributes[
+        ATTR_GROUP_MEMBERS
+    ] == ["media_player.test_player", "media_player.test_player_2"]
+
+    # Clear group information
+    controller._groups = {}
+    for player in controller.players.values():
+        player.group_id = None
+    await controller.dispatcher.wait_send(
+        SignalType.CONTROLLER_EVENT, const.EVENT_GROUPS_CHANGED, None
+    )
+    await hass.async_block_till_done()
+
+    # Assert groups changed
+    assert (
+        hass.states.get("media_player.test_player").attributes[ATTR_GROUP_MEMBERS]
+        is None
+    )
+    assert (
+        hass.states.get("media_player.test_player_2").attributes[ATTR_GROUP_MEMBERS]
+        is None
+    )
+
+
 async def test_clear_playlist(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
@@ -1019,7 +1054,7 @@ async def test_play_media_playlist(
         service_data,
         blocking=True,
     )
-    player.add_to_queue.assert_called_once_with(playlist, criteria)
+    player.play_media.assert_called_once_with(playlist, criteria)
 
 
 async def test_play_media_playlist_error(
@@ -1119,8 +1154,20 @@ async def test_play_media_invalid_type(
         )
 
 
+@pytest.mark.parametrize(
+    ("members", "expected"),
+    [
+        (["media_player.test_player_2"], [1, 2]),
+        (["media_player.test_player_2", "media_player.test_player"], [1, 2]),
+        (["media_player.test_player"], [1]),
+    ],
+)
 async def test_media_player_join_group(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: Heos,
+    members: list[str],
+    expected: tuple[int, list[int]],
 ) -> None:
     """Test grouping of media players through the join service."""
     config_entry.add_to_hass(hass)
@@ -1130,16 +1177,11 @@ async def test_media_player_join_group(
         SERVICE_JOIN,
         {
             ATTR_ENTITY_ID: "media_player.test_player",
-            ATTR_GROUP_MEMBERS: ["media_player.test_player_2"],
+            ATTR_GROUP_MEMBERS: members,
         },
         blocking=True,
     )
-    controller.create_group.assert_called_once_with(
-        1,
-        [
-            2,
-        ],
-    )
+    controller.set_group.assert_called_once_with(expected)
 
 
 async def test_media_player_join_group_error(
@@ -1148,7 +1190,7 @@ async def test_media_player_join_group_error(
     """Test grouping of media players through the join service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    controller.create_group.side_effect = HeosError("error")
+    controller.set_group.side_effect = HeosError("error")
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to join players: error"),
@@ -1190,15 +1232,24 @@ async def test_media_player_group_members_error(
 ) -> None:
     """Test error in HEOS API."""
     controller.get_groups.side_effect = HeosError("error")
+    controller._groups = {}
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    assert "Unable to get HEOS group info" in caplog.text
+    assert "Unable to retrieve groups" in caplog.text
     player_entity = hass.states.get("media_player.test_player")
-    assert player_entity.attributes[ATTR_GROUP_MEMBERS] == []
+    assert player_entity.attributes[ATTR_GROUP_MEMBERS] is None
 
 
+@pytest.mark.parametrize(
+    ("entity_id", "expected_args"),
+    [("media_player.test_player", [1]), ("media_player.test_player_2", [1])],
+)
 async def test_media_player_unjoin_group(
-    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: Heos,
+    entity_id: str,
+    expected_args: list[int],
 ) -> None:
     """Test ungrouping of media players through the unjoin service."""
     config_entry.add_to_hass(hass)
@@ -1207,11 +1258,11 @@ async def test_media_player_unjoin_group(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_UNJOIN,
         {
-            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
-    controller.create_group.assert_called_once_with(1, [])
+    controller.set_group.assert_called_once_with(expected_args)
 
 
 async def test_media_player_unjoin_group_error(
@@ -1220,7 +1271,7 @@ async def test_media_player_unjoin_group_error(
     """Test ungrouping of media players through the unjoin service error raises."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    controller.create_group.side_effect = HeosError("error")
+    controller.set_group.side_effect = HeosError("error")
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to unjoin player: error"),
@@ -1249,10 +1300,7 @@ async def test_media_player_group_fails_when_entity_removed(
     entity_registry.async_remove("media_player.test_player_2")
 
     # Attempt to group
-    with pytest.raises(
-        HomeAssistantError,
-        match="The group member media_player.test_player_2 could not be resolved to a HEOS player.",
-    ):
+    with pytest.raises(ServiceValidationError, match="was not found"):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_JOIN,
@@ -1262,4 +1310,35 @@ async def test_media_player_group_fails_when_entity_removed(
             },
             blocking=True,
         )
-    controller.create_group.assert_not_called()
+    controller.set_group.assert_not_called()
+
+
+async def test_media_player_group_fails_wrong_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: Heos,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test grouping fails when trying to join from the wrong integration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Create an entity in another integration
+    entry = entity_registry.async_get_or_create(
+        "media_player", "Other", "test_player_2"
+    )
+
+    # Attempt to group
+    with pytest.raises(
+        ServiceValidationError, match="is not a HEOS media player entity"
+    ):
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_JOIN,
+            {
+                ATTR_ENTITY_ID: "media_player.test_player",
+                ATTR_GROUP_MEMBERS: [entry.entity_id],
+            },
+            blocking=True,
+        )
+    controller.set_group.assert_not_called()

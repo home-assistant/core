@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import Nullable, NullValue
+from matter_server.client.models import device_types
 from matter_server.common.custom_clusters import (
     DraftElectricalMeasurementCluster,
     EveCluster,
@@ -760,5 +761,19 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.OperationalState,
             clusters.OperationalState.Attributes.OperationalStateList,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatLocalTemperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            measurement_to_ha=lambda x: x / 100,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
+        device_type=(device_types.Thermostat,),
+        allow_multi=True,  # also used for climate entity
     ),
 ]
