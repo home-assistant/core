@@ -135,6 +135,7 @@ async def test_config_flow_privacy_success(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_PORT: TEST_PORT,
         CONF_USE_HTTPS: TEST_USE_HTTPS,
+        CONF_PRIVACY: TEST_PRIVACY,
     }
     assert result["options"] == {
         CONF_PROTOCOL: DEFAULT_PROTOCOL,
