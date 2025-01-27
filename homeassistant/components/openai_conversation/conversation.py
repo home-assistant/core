@@ -94,9 +94,10 @@ def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessagePar
 
 def _chat_message_convert(
     message: conversation.ChatMessage[ChatCompletionMessageParam],
+    agent_id: str | None,
 ) -> ChatCompletionMessageParam:
-    """Convert a chat message to the native format."""
-    if message.native is not None:
+    """Convert any native chat message for this agent to the native format."""
+    if message.native is not None and message.agent_id == agent_id:
         return message.native
     return cast(
         ChatCompletionMessageParam,
@@ -184,8 +185,8 @@ class OpenAIConversationEntity(
             ]
 
         messages = [
-            _chat_message_convert(message)
-            for message in session.async_get_agent_messages()
+            _chat_message_convert(message, user_input.agent_id)
+            for message in session.async_get_messages()
         ]
 
         client = self.entry.runtime_data

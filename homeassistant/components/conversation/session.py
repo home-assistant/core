@@ -214,15 +214,6 @@ class ChatSession[_NativeT]:
         self.messages.append(message)
 
     @callback
-    def async_get_agent_messages(self) -> list[ChatMessage[_NativeT]]:
-        """Get messages for the agent the user is addressing in this session."""
-        return [
-            message
-            for message in self.messages
-            if message.agent_id is None or message.agent_id == self.agent_id
-        ]
-
-    @callback
     def async_get_messages(
         self, agent_id: str | None = None
     ) -> list[ChatMessage[_NativeT]]:
