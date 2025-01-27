@@ -459,12 +459,15 @@ class BackupManager:
             should_encrypt = config.protected if config else password is not None
             streamer: DecryptedBackupStreamer | EncryptedBackupStreamer | None = None
             if should_encrypt == backup.protected:
+                # The backup we're uploading is already in the correct state, or we
+                # don't have a password to encrypt or decrypt it
                 LOGGER.debug(
                     "Uploading backup %s to agent %s as is", backup.backup_id, agent_id
                 )
                 open_stream_func = open_stream
                 _backup = backup
             elif should_encrypt:
+                # The backup we're uploading is not encrypted, but the agent requires it
                 LOGGER.debug(
                     "Uploading encrypted backup %s to agent %s",
                     backup.backup_id,
@@ -474,6 +477,8 @@ class BackupManager:
                     self.hass, backup, open_stream, password
                 )
             else:
+                # The backup we're uploading is encrypted, but the agent requires it
+                # decrypted
                 LOGGER.debug(
                     "Uploading decrypted backup %s to agent %s",
                     backup.backup_id,
@@ -732,6 +737,8 @@ class BackupManager:
             backup=written_backup.backup,
             agent_ids=agent_ids,
             open_stream=written_backup.open_stream,
+            # When receiving a backup, we don't decrypt or encrypt it according to the
+            # agent settings, we just upload it as is.
             password=None,
         )
         await written_backup.release_stream()

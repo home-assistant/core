@@ -87,7 +87,7 @@ class BackupConfigData:
 
         return cls(
             agents={
-                agent_id: AgentConfig(**agent_data)
+                agent_id: AgentConfig(protected=agent_data["protected"])
                 for agent_id, agent_data in data["agents"].items()
             },
             create_backup=CreateBackupConfig(
