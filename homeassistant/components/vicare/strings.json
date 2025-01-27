@@ -455,6 +455,15 @@
           "silent": "Silent",
           "forcedlevelfour": "Boost"
         }
+      },
+      "supply_pressure": {
+        "name": "Supply pressure"
+      },
+      "heating_rod_starts": {
+        "name": "Heating rod starts"
+      },
+      "heating_rod_hours": {
+        "name": "Heating rod hours"
       }
     },
     "water_heater": {

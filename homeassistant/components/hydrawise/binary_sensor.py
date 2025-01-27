@@ -68,7 +68,7 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
 )
 
 SCHEMA_START_WATERING: VolDictType = {
-    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
+    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1440)),
 }
 SCHEMA_SUSPEND: VolDictType = {
     vol.Required("until"): cv.datetime,

@@ -14,6 +14,22 @@
           "password": "The password to log into the gateway, is printed at the bottom of the Lan2RF Gateway or is `intergas` for some older devices."
         }
       },
+      "dhcp_auth": {
+        "title": "Set up Intergas InComfort Lan2RF Gateway",
+        "description": "Please enter authentication details for gateway {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username to log into the gateway. This is `admin` in most cases.",
+          "password": "The password to log into the gateway, is printed at the bottom of the Lan2RF Gateway or is `intergas` for some older devices."
+        }
+      },
+      "dhcp_confirm": {
+        "title": "Set up Intergas InComfort Lan2RF Gateway",
+        "description": "Do you want to set up the discovered Intergas InComfort Lan2RF Gateway ({host})?"
+      },
       "reauth_confirm": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
@@ -33,8 +49,22 @@
       "auth_error": "Invalid credentials.",
       "no_heaters": "No heaters found.",
       "not_found": "No Lan2RF gateway found.",
-      "timeout_error": "Time out when connection to Lan2RF gateway.",
-      "unknown": "Unknown error when connection to Lan2RF gateway."
+      "timeout_error": "Time out when connecting to Lan2RF gateway.",
+      "unknown": "Unknown error when connecting to Lan2RF gateway."
+    }
+  },
+  "exceptions": {
+    "no_heaters": {
+      "message": "[%key:component::incomfort::config::error::no_heaters%]"
+    },
+    "not_found": {
+      "message": "[%key:component::incomfort::config::error::not_found%]"
+    },
+    "timeout_error": {
+      "message": "[%key:component::incomfort::config::error::timeout_error%]"
+    },
+    "unknown": {
+      "message": "[%key:component::incomfort::config::error::unknown%]"
     }
   },
   "options": {

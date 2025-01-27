@@ -1,4 +1,4 @@
-"""Support for interface with an LG webOS Smart TV."""
+"""Support for interface with an LG webOS TV."""
 
 from __future__ import annotations
 
@@ -33,7 +33,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import VolDictType
 
-from . import WebOsTvConfigEntry, update_client_key
 from .const import (
     ATTR_BUTTON,
     ATTR_PAYLOAD,
@@ -46,6 +45,7 @@ from .const import (
     SERVICE_SELECT_SOUND_OUTPUT,
     WEBOSTV_EXCEPTIONS,
 )
+from .helpers import WebOsTvConfigEntry, update_client_key
 from .triggers.turn_on import async_get_turn_on_trigger
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ async def async_setup_entry(
     entry: WebOsTvConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the LG webOS Smart TV platform."""
+    """Set up the LG webOS TV platform."""
     platform = entity_platform.async_get_current_platform()
 
     for service_name, schema, method in SERVICES:
@@ -106,27 +106,33 @@ def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
     @wraps(func)
     async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
         """Wrap all command methods."""
+        if self.state is MediaPlayerState.OFF:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_off",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "func": func.__name__,
+                },
+            )
         try:
             await func(self, *args, **kwargs)
-        except WEBOSTV_EXCEPTIONS as exc:
-            if self.state != MediaPlayerState.OFF:
-                raise HomeAssistantError(
-                    f"Error calling {func.__name__} on entity {self.entity_id},"
-                    f" state:{self.state}"
-                ) from exc
-            _LOGGER.warning(
-                "Error calling %s on entity %s, state:%s, error: %r",
-                func.__name__,
-                self.entity_id,
-                self.state,
-                exc,
-            )
+        except WEBOSTV_EXCEPTIONS as error:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={
+                    "name": str(self._entry.title),
+                    "func": func.__name__,
+                    "error": str(error),
+                },
+            ) from error
 
     return cmd_wrapper
 
 
 class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
-    """Representation of a LG webOS Smart TV."""
+    """Representation of a LG webOS TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
     _attr_has_entity_name = True
@@ -329,7 +335,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             except WebOsTvPairError:
                 self._entry.async_start_reauth(self.hass)
             else:
-                update_client_key(self.hass, self._entry, self._client)
+                update_client_key(self.hass, self._entry)
 
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
@@ -386,10 +392,14 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if (source_dict := self._source_list.get(source)) is None:
-            _LOGGER.warning(
-                "Source %s not found for %s", source, self._friendly_name_internal()
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="source_not_found",
+                translation_placeholders={
+                    "source": source,
+                    "name": str(self._friendly_name_internal()),
+                },
             )
-            return
         if source_dict.get("title"):
             await self._client.launch_app(source_dict["id"])
         elif source_dict.get("label"):

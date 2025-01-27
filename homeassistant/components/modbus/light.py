@@ -12,7 +12,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .entity import BaseSwitch
-from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
 
@@ -24,14 +23,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus lights."""
-    if discovery_info is None:
+    if discovery_info is None or not (lights := discovery_info[CONF_LIGHTS]):
         return
-
-    lights = []
-    for entry in discovery_info[CONF_LIGHTS]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        lights.append(ModbusLight(hass, hub, entry))
-    async_add_entities(lights)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusLight(hass, hub, config) for config in lights)
 
 
 class ModbusLight(BaseSwitch, LightEntity):
