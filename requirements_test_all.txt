@@ -789,7 +789,7 @@ flexit_bacnet==2.2.1
 flipr-api==1.6.1
 
 # homeassistant.components.flux_led
-flux-led==1.1.0
+flux-led==1.1.3
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
