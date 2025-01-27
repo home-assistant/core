@@ -234,6 +234,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -269,6 +271,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -316,6 +320,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -352,6 +358,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -388,6 +396,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -425,6 +435,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -461,6 +473,54 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': '2024-11-17T04:55:00+01:00',
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+            'mon',
+            'sun',
+          ]),
+          'recurrence': 'custom_days',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_info[storage_data7]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': True,
+          }),
+          'test-agent2': dict({
+            'protected': False,
+          }),
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -499,6 +559,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -534,6 +596,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -571,6 +635,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -607,6 +673,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -642,6 +710,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -679,6 +749,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -715,6 +787,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -750,6 +824,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -787,6 +863,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -818,11 +896,137 @@
     'version': 1,
   })
 # ---
+# name: test_config_update[command12]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command12].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': True,
+          }),
+          'test-agent2': dict({
+            'protected': False,
+          }),
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[command12].2
+  dict({
+    'data': dict({
+      'backups': list([
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': True,
+          }),
+          'test-agent2': dict({
+            'protected': False,
+          }),
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 2,
+    'version': 1,
+  })
+# ---
 # name: test_config_update[command1]
   dict({
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -858,6 +1062,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -895,6 +1101,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -931,6 +1139,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -966,6 +1176,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1004,6 +1216,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1041,6 +1255,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1076,6 +1292,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1113,6 +1331,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1149,6 +1369,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1184,6 +1406,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1223,6 +1447,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1261,6 +1487,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1296,6 +1524,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1337,6 +1567,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1377,6 +1609,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1412,6 +1646,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1449,6 +1685,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1485,6 +1723,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1520,6 +1760,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1557,6 +1799,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1593,6 +1837,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1628,6 +1874,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1665,6 +1913,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1701,6 +1951,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1736,6 +1988,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1773,6 +2027,8 @@
       'backups': list([
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -1809,6 +2065,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1844,6 +2102,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1879,6 +2139,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1914,6 +2176,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1949,6 +2213,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -1984,6 +2250,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2019,6 +2287,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2054,6 +2324,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2089,6 +2361,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2124,6 +2398,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2159,6 +2435,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2194,6 +2472,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2229,6 +2509,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2264,6 +2546,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2299,6 +2583,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2334,6 +2620,8 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2369,6 +2657,8 @@
     'id': 1,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2404,6 +2694,82 @@
     'id': 3,
     'result': dict({
       'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command9]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update_errors[command9].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -2494,9 +2860,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -2509,8 +2878,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -2566,9 +2933,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'test.remote',
-          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -2581,8 +2951,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -2621,9 +2989,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'test.remote',
-          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -2636,8 +3007,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -2660,9 +3029,12 @@
         dict({
           'addons': list([
           ]),
-          'agent_ids': list([
-            'test.remote',
-          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 1,
+            }),
+          }),
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
@@ -2675,8 +3047,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test 2',
-          'protected': False,
-          'size': 1,
           'with_automatic_settings': None,
         }),
       ]),
@@ -2710,9 +3080,12 @@
         dict({
           'addons': list([
           ]),
-          'agent_ids': list([
-            'test.remote',
-          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 1,
+            }),
+          }),
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
@@ -2725,8 +3098,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test 2',
-          'protected': False,
-          'size': 1,
           'with_automatic_settings': None,
         }),
       ]),
@@ -2754,10 +3125,16 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'test.remote',
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -2770,8 +3147,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -2810,9 +3185,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'test.remote',
-          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -2825,8 +3203,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -2866,9 +3242,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'domain.test',
-          ]),
+          'agents': dict({
+            'domain.test': dict({
+              'protected': False,
+              'size': 13,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
@@ -2881,8 +3260,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 13,
           'with_automatic_settings': None,
         }),
       ]),
@@ -2922,9 +3299,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'domain.test',
-          ]),
+          'agents': dict({
+            'domain.test': dict({
+              'protected': False,
+              'size': 13,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
@@ -2938,8 +3318,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 13,
           'with_automatic_settings': None,
         }),
       ]),
@@ -2978,9 +3356,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'domain.test',
-          ]),
+          'agents': dict({
+            'domain.test': dict({
+              'protected': False,
+              'size': 13,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
@@ -2993,8 +3374,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 13,
           'with_automatic_settings': None,
         }),
       ]),
@@ -3033,9 +3412,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'domain.test',
-          ]),
+          'agents': dict({
+            'domain.test': dict({
+              'protected': False,
+              'size': 13,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
@@ -3048,8 +3430,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 13,
           'with_automatic_settings': None,
         }),
       ]),
@@ -3088,9 +3468,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'domain.test',
-          ]),
+          'agents': dict({
+            'domain.test': dict({
+              'protected': False,
+              'size': 13,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
@@ -3103,8 +3486,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 13,
           'with_automatic_settings': None,
         }),
       ]),
@@ -3143,9 +3524,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'domain.test',
-          ]),
+          'agents': dict({
+            'domain.test': dict({
+              'protected': False,
+              'size': 13,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
@@ -3159,8 +3543,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 13,
           'with_automatic_settings': None,
         }),
       ]),
@@ -3199,9 +3581,12 @@
             'version': '1.0.0',
           }),
         ]),
-        'agent_ids': list([
-          'backup.local',
-        ]),
+        'agents': dict({
+          'backup.local': dict({
+            'protected': False,
+            'size': 0,
+          }),
+        }),
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
@@ -3214,8 +3599,6 @@
         'homeassistant_included': True,
         'homeassistant_version': '2024.12.0',
         'name': 'Test',
-        'protected': False,
-        'size': 0,
         'with_automatic_settings': True,
       }),
     }),
@@ -3237,9 +3620,12 @@
             'version': '1.0.0',
           }),
         ]),
-        'agent_ids': list([
-          'test.remote',
-        ]),
+        'agents': dict({
+          'test.remote': dict({
+            'protected': False,
+            'size': 0,
+          }),
+        }),
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
@@ -3252,8 +3638,6 @@
         'homeassistant_included': True,
         'homeassistant_version': '2024.12.0',
         'name': 'Test',
-        'protected': False,
-        'size': 0,
         'with_automatic_settings': True,
       }),
     }),
@@ -3287,10 +3671,16 @@
             'version': '1.0.0',
           }),
         ]),
-        'agent_ids': list([
-          'test.remote',
-          'backup.local',
-        ]),
+        'agents': dict({
+          'backup.local': dict({
+            'protected': False,
+            'size': 0,
+          }),
+          'test.remote': dict({
+            'protected': False,
+            'size': 0,
+          }),
+        }),
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
@@ -3303,8 +3693,6 @@
         'homeassistant_included': True,
         'homeassistant_version': '2024.12.0',
         'name': 'Test',
-        'protected': False,
-        'size': 0,
         'with_automatic_settings': True,
       }),
     }),
@@ -3327,9 +3715,12 @@
             'version': '1.0.0',
           }),
         ]),
-        'agent_ids': list([
-          'backup.local',
-        ]),
+        'agents': dict({
+          'backup.local': dict({
+            'protected': False,
+            'size': 0,
+          }),
+        }),
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
@@ -3342,8 +3733,6 @@
         'homeassistant_included': True,
         'homeassistant_version': '2024.12.0',
         'name': 'Test',
-        'protected': False,
-        'size': 0,
         'with_automatic_settings': True,
       }),
     }),
@@ -3602,9 +3991,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -3617,8 +4009,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -3646,9 +4036,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -3661,8 +4054,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -3690,10 +4081,16 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'test.remote',
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+            'test.remote': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -3706,8 +4103,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -3730,9 +4125,12 @@
         dict({
           'addons': list([
           ]),
-          'agent_ids': list([
-            'test.remote',
-          ]),
+          'agents': dict({
+            'test.remote': dict({
+              'protected': False,
+              'size': 1,
+            }),
+          }),
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
@@ -3745,8 +4143,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test 2',
-          'protected': False,
-          'size': 1,
           'with_automatic_settings': None,
         }),
         dict({
@@ -3757,9 +4153,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -3772,8 +4171,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),
@@ -3802,9 +4199,12 @@
               'version': '1.0.0',
             }),
           ]),
-          'agent_ids': list([
-            'backup.local',
-          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 0,
+            }),
+          }),
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
@@ -3817,8 +4217,6 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'protected': False,
-          'size': 0,
           'with_automatic_settings': True,
         }),
       ]),

@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
 import io
@@ -46,10 +46,12 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import AgentBackup, BackupError, BackupManagerError, Folder
+from .models import AgentBackup, BackupError, BackupManagerError, BaseBackup, Folder
 from .store import BackupStore
 from .util import (
     AsyncIteratorReader,
+    DecryptedBackupStreamer,
+    EncryptedBackupStreamer,
     make_backup_dir,
     read_backup,
     validate_password,
@@ -65,10 +67,18 @@ class NewBackup:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class ManagerBackup(AgentBackup):
+class AgentBackupStatus:
+    """Agent specific backup attributes."""
+
+    protected: bool
+    size: int
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class ManagerBackup(BaseBackup):
     """Backup class."""
 
-    agent_ids: list[str]
+    agents: dict[str, AgentBackupStatus]
     failed_agent_ids: list[str]
     with_automatic_settings: bool | None
 
@@ -436,20 +446,52 @@ class BackupManager:
         backup: AgentBackup,
         agent_ids: list[str],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        password: str | None,
     ) -> dict[str, Exception]:
         """Upload a backup to selected agents."""
         agent_errors: dict[str, Exception] = {}
 
         LOGGER.debug("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
 
-        sync_backup_results = await asyncio.gather(
-            *(
-                self.backup_agents[agent_id].async_upload_backup(
-                    open_stream=open_stream,
-                    backup=backup,
+        async def upload_backup_to_agent(agent_id: str) -> None:
+            """Upload backup to a single agent, and encrypt or decrypt as needed."""
+            config = self.config.data.agents.get(agent_id)
+            should_encrypt = config.protected if config else password is not None
+            if should_encrypt == backup.protected:
+                LOGGER.debug(
+                    "Uploading backup %s to agent %s as is", backup.backup_id, agent_id
                 )
-                for agent_id in agent_ids
-            ),
+                open_stream_func = open_stream
+                _backup = backup
+            elif should_encrypt:
+                LOGGER.debug(
+                    "Uploading encrypted backup %s to agent %s",
+                    backup.backup_id,
+                    agent_id,
+                )
+                encryptor = EncryptedBackupStreamer(
+                    self.hass, backup, open_stream, password
+                )
+                open_stream_func = encryptor.open_stream
+                _backup = replace(backup, protected=True, size=encryptor.size())
+            else:
+                LOGGER.debug(
+                    "Uploading decrypted backup %s to agent %s",
+                    backup.backup_id,
+                    agent_id,
+                )
+                decryptor = DecryptedBackupStreamer(
+                    self.hass, backup, open_stream, password
+                )
+                open_stream_func = decryptor.open_stream
+                _backup = replace(backup, protected=False, size=decryptor.size())
+            await self.backup_agents[agent_id].async_upload_backup(
+                open_stream=open_stream_func,
+                backup=_backup,
+            )
+
+        sync_backup_results = await asyncio.gather(
+            *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),
             return_exceptions=True,
         )
         for idx, result in enumerate(sync_backup_results):
@@ -505,7 +547,7 @@ class BackupManager:
                         agent_backup, await instance_id.async_get(self.hass)
                     )
                     backups[backup_id] = ManagerBackup(
-                        agent_ids=[],
+                        agents={},
                         addons=agent_backup.addons,
                         backup_id=backup_id,
                         date=agent_backup.date,
@@ -516,11 +558,12 @@ class BackupManager:
                         homeassistant_included=agent_backup.homeassistant_included,
                         homeassistant_version=agent_backup.homeassistant_version,
                         name=agent_backup.name,
-                        protected=agent_backup.protected,
-                        size=agent_backup.size,
                         with_automatic_settings=with_automatic_settings,
                     )
-                backups[backup_id].agent_ids.append(agent_ids[idx])
+                backups[backup_id].agents[agent_ids[idx]] = AgentBackupStatus(
+                    protected=agent_backup.protected,
+                    size=agent_backup.size,
+                )
 
         return (backups, agent_errors)
 
@@ -556,7 +599,7 @@ class BackupManager:
                     result, await instance_id.async_get(self.hass)
                 )
                 backup = ManagerBackup(
-                    agent_ids=[],
+                    agents={},
                     addons=result.addons,
                     backup_id=result.backup_id,
                     date=result.date,
@@ -567,11 +610,12 @@ class BackupManager:
                     homeassistant_included=result.homeassistant_included,
                     homeassistant_version=result.homeassistant_version,
                     name=result.name,
-                    protected=result.protected,
-                    size=result.size,
                     with_automatic_settings=with_automatic_settings,
                 )
-            backup.agent_ids.append(agent_ids[idx])
+            backup.agents[agent_ids[idx]] = AgentBackupStatus(
+                protected=result.protected,
+                size=result.size,
+            )
 
         return (backup, agent_errors)
 
@@ -684,6 +728,7 @@ class BackupManager:
             backup=written_backup.backup,
             agent_ids=agent_ids,
             open_stream=written_backup.open_stream,
+            password=None,
         )
         await written_backup.release_stream()
         self.known_backups.add(written_backup.backup, agent_errors)
@@ -850,7 +895,7 @@ class BackupManager:
             raise BackupManagerError(str(err)) from err
 
         backup_finish_task = self._backup_finish_task = self.hass.async_create_task(
-            self._async_finish_backup(agent_ids, with_automatic_settings),
+            self._async_finish_backup(agent_ids, with_automatic_settings, password),
             name="backup_manager_finish_backup",
         )
         if not raise_task_error:
@@ -867,7 +912,7 @@ class BackupManager:
         return new_backup
 
     async def _async_finish_backup(
-        self, agent_ids: list[str], with_automatic_settings: bool
+        self, agent_ids: list[str], with_automatic_settings: bool, password: str | None
     ) -> None:
         """Finish a backup."""
         if TYPE_CHECKING:
@@ -901,6 +946,7 @@ class BackupManager:
                     backup=written_backup.backup,
                     agent_ids=agent_ids,
                     open_stream=written_backup.open_stream,
+                    password=password,
                 )
             finally:
                 await written_backup.release_stream()
@@ -1261,6 +1307,10 @@ class CoreBackupReaderWriter(BackupReaderWriter):
     ) -> WrittenBackup:
         """Generate a backup."""
         manager = self._hass.data[DATA_MANAGER]
+
+        agent_config = manager.config.data.agents.get(self._local_agent_id)
+        if agent_config and not agent_config.protected:
+            password = None
 
         local_agent_tar_file_path = None
         if self._local_agent_id in agent_ids:

@@ -487,11 +487,13 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
 
     backup_data = result["result"]["backup"]
-    backup_agent_ids = backup_data.pop("agent_ids")
 
-    assert backup_agent_ids == agent_ids
     assert backup_data == {
         "addons": [],
+        "agents": {
+            agent_id: {"protected": bool(password), "size": ANY}
+            for agent_id in agent_ids
+        },
         "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
@@ -500,8 +502,6 @@ async def test_initiate_backup(
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
         "name": name,
-        "protected": bool(password),
-        "size": ANY,
         "with_automatic_settings": False,
     }
 
@@ -543,9 +543,7 @@ async def test_initiate_backup_with_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -557,15 +555,11 @@ async def test_initiate_backup_with_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
         {
             "addons": [],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 1}},
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
@@ -577,8 +571,6 @@ async def test_initiate_backup_with_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test 2",
-            "protected": False,
-            "size": 1,
             "with_automatic_settings": None,
         },
         {
@@ -589,9 +581,7 @@ async def test_initiate_backup_with_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -603,8 +593,6 @@ async def test_initiate_backup_with_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
     ]
@@ -714,7 +702,7 @@ async def test_initiate_backup_with_agent_error(
 
     new_expected_backup_data = {
         "addons": [],
-        "agent_ids": ["backup.local"],
+        "agents": {"backup.local": {"protected": False, "size": 123}},
         "backup_id": "abc123",
         "database_included": True,
         "date": ANY,
@@ -723,8 +711,6 @@ async def test_initiate_backup_with_agent_error(
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
         "name": "Custom backup 2025.1.0",
-        "protected": False,
-        "size": 123,
         "with_automatic_settings": False,
     }
 
@@ -1633,9 +1619,7 @@ async def test_receive_backup_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -1647,15 +1631,11 @@ async def test_receive_backup_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
         {
             "addons": [],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 1}},
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
@@ -1667,8 +1647,6 @@ async def test_receive_backup_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test 2",
-            "protected": False,
-            "size": 1,
             "with_automatic_settings": None,
         },
         {
@@ -1679,9 +1657,7 @@ async def test_receive_backup_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -1693,8 +1669,6 @@ async def test_receive_backup_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
     ]

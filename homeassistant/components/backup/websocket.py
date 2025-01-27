@@ -344,6 +344,7 @@ async def handle_config_info(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/config/update",
+        vol.Optional("agents"): vol.Schema({str: {"protected": bool}}),
         vol.Optional("create_backup"): vol.Schema(
             {
                 vol.Optional("agent_ids"): vol.All([str], vol.Unique()),

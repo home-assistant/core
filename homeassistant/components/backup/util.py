@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Callable, Coroutine
 import copy
+from dataclasses import replace
 from io import BytesIO
 import json
 from pathlib import Path, PurePath
 from queue import SimpleQueue
 import tarfile
-from typing import IO, Self, cast
+import threading
+from typing import IO, Any, Self, cast
 
 import aiohttp
 from securetar import SecureTarError, SecureTarFile, SecureTarReadError
@@ -28,6 +30,12 @@ class DecryptError(HomeAssistantError):
     """Error during decryption."""
 
     _message = "Unexpected error during decryption."
+
+
+class EncryptError(HomeAssistantError):
+    """Error during encryption."""
+
+    _message = "Unexpected error during encryption."
 
 
 class UnsupportedSecureTarVersion(DecryptError):
@@ -179,6 +187,7 @@ class AsyncIteratorWriter:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the wrapper."""
         self._hass = hass
+        self._pos: int = 0
         self._queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=1)
 
     def __aiter__(self) -> Self:
@@ -191,9 +200,14 @@ class AsyncIteratorWriter:
             return data
         raise StopAsyncIteration
 
+    def tell(self) -> int:
+        """Return the current position in the iterator."""
+        return self._pos
+
     def write(self, s: bytes, /) -> int:
         """Write data to the iterator."""
         asyncio.run_coroutine_threadsafe(self._queue.put(s), self._hass.loop).result()
+        self._pos += len(s)
         return len(s)
 
 
@@ -231,6 +245,7 @@ def decrypt_backup(
     output_stream: IO[bytes],
     password: str | None,
     on_done: Callable[[], None],
+    minimum_size: int,
 ) -> None:
     """Decrypt a backup."""
     try:
@@ -245,6 +260,10 @@ def decrypt_backup(
             _decrypt_backup(input_tar, output_tar, password)
     except (DecryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error decrypting backup: %s", err)
+    else:
+        # Pad the output stream to the requested size
+        padding = max(minimum_size - output_stream.tell(), 0)
+        output_stream.write(b"\0" * padding)
     finally:
         output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
         on_done()
@@ -286,6 +305,135 @@ def _decrypt_backup(
             decrypted_obj = copy.deepcopy(obj)
             decrypted_obj.size = plaintext_size
             output_tar.addfile(decrypted_obj, decrypted)
+
+
+def encrypt_backup(
+    input_stream: IO[bytes],
+    output_stream: IO[bytes],
+    password: str | None,
+    on_done: Callable[[], None],
+    minimum_size: int,
+) -> None:
+    """Encrypt a backup."""
+    try:
+        with (
+            tarfile.open(
+                fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
+            ) as input_tar,
+            tarfile.open(
+                fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
+            ) as output_tar,
+        ):
+            _encrypt_backup(input_tar, output_tar, password)
+    except (EncryptError, SecureTarError, tarfile.TarError) as err:
+        LOGGER.warning("Error encrypting backup: %s", err)
+    else:
+        # Pad the output stream to the requested size
+        padding = max(minimum_size - output_stream.tell(), 0)
+        output_stream.write(b"\0" * padding)
+    finally:
+        output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
+        on_done()
+
+
+def _encrypt_backup(
+    input_tar: tarfile.TarFile,
+    output_tar: tarfile.TarFile,
+    password: str | None,
+) -> None:
+    """Encrypt a backup."""
+    for obj in input_tar:
+        # We compare with PurePath to avoid issues with different path separators,
+        # for example when backup.json is added as "./backup.json"
+        if PurePath(obj.name) == PurePath("backup.json"):
+            # Rewrite the backup.json file to indicate that the backup is encrypted
+            if not (reader := input_tar.extractfile(obj)):
+                raise EncryptError
+            metadata = json_loads_object(reader.read())
+            metadata["protected"] = True
+            updated_metadata_b = json.dumps(metadata).encode()
+            metadata_obj = copy.deepcopy(obj)
+            metadata_obj.size = len(updated_metadata_b)
+            output_tar.addfile(metadata_obj, BytesIO(updated_metadata_b))
+            continue
+        if not obj.name.endswith((".tar", ".tgz", ".tar.gz")):
+            output_tar.addfile(obj, input_tar.extractfile(obj))
+            continue
+        istf = SecureTarFile(
+            None,  # Not used
+            gzip=False,
+            key=password_to_key(password) if password is not None else None,
+            mode="r",
+            fileobj=input_tar.extractfile(obj),
+            nonce=b"veryrandombytes!",
+        )
+        with istf.encrypt(obj) as encrypted:
+            encrypted_obj = copy.deepcopy(obj)
+            encrypted_obj.size = encrypted._size  # noqa: SLF001
+            output_tar.addfile(encrypted_obj, encrypted)
+
+
+class _CipherBackupStreamer:
+    """Encrypt or decrypt a backup."""
+
+    _cipher_func: Callable[
+        [IO[bytes], IO[bytes], str | None, Callable[[], None], int], None
+    ]
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        backup: AgentBackup,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        password: str | None,
+    ) -> None:
+        """Initialize."""
+        self._backup = backup
+        self._hass = hass
+        self._open_stream = open_stream
+        self._password = password
+
+    def size(self) -> int:
+        """Return the maximum size of the decrypted or encrypted backup."""
+        b = self._backup
+        num_tar_files = len(b.addons) + len(b.folders) + b.homeassistant_included + 1
+        return b.size + num_tar_files * tarfile.RECORDSIZE
+
+    async def open_stream(self) -> AsyncIterator[bytes]:
+        """Open a stream."""
+
+        def on_done() -> None:
+            """Call by the worker thread when it's done."""
+
+        stream = await self._open_stream()
+        reader = AsyncIteratorReader(self._hass, stream)
+        writer = AsyncIteratorWriter(self._hass)
+        worker = threading.Thread(
+            target=self._cipher_func,
+            args=[reader, writer, self._password, on_done, self.size()],
+        )
+        worker.start()
+        return writer
+
+
+class DecryptedBackupStreamer(_CipherBackupStreamer):
+    """Decrypt a backup."""
+
+    _cipher_func = staticmethod(decrypt_backup)
+
+    def backup(self) -> AgentBackup:
+        """Return the decrypted backup."""
+        return replace(self._backup, protected=False, size=self.size())
+
+
+class EncryptedBackupStreamer(_CipherBackupStreamer):
+    """Encrypt a backup."""
+
+    _cipher_func = staticmethod(encrypt_backup)
+
+    def backup(self) -> AgentBackup:
+        """Return the encrypted backup."""
+        return replace(self._backup, protected=True, size=self.size())
 
 
 async def receive_file(

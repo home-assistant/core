@@ -56,6 +56,7 @@ BACKUP_CALL = call(
 DEFAULT_STORAGE_DATA: dict[str, Any] = {
     "backups": [],
     "config": {
+        "agents": {},
         "create_backup": {
             "agent_ids": [],
             "include_addons": None,
@@ -587,6 +588,8 @@ async def test_generate_with_default_settings_calls_create(
     last_completed_automatic_backup: str,
 ) -> None:
     """Test backup/generate_with_automatic_settings calls async_initiate_backup."""
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = create_backup_settings["password"] is not None
     client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-13T12:01:00+01:00")
@@ -913,6 +916,7 @@ async def test_agents_info(
                 "data": {
                     "backups": [],
                     "config": {
+                        "agents": {},
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": ["test-addon"],
@@ -943,6 +947,7 @@ async def test_agents_info(
                 "data": {
                     "backups": [],
                     "config": {
+                        "agents": {},
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -973,6 +978,7 @@ async def test_agents_info(
                 "data": {
                     "backups": [],
                     "config": {
+                        "agents": {},
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1003,6 +1009,7 @@ async def test_agents_info(
                 "data": {
                     "backups": [],
                     "config": {
+                        "agents": {},
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1033,6 +1040,7 @@ async def test_agents_info(
                 "data": {
                     "backups": [],
                     "config": {
+                        "agents": {},
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1063,6 +1071,41 @@ async def test_agents_info(
                 "data": {
                     "backups": [],
                     "config": {
+                        "agents": {},
+                        "create_backup": {
+                            "agent_ids": ["test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": ["mon", "sun"],
+                            "recurrence": "custom_days",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {
+                            "test-agent1": {"protected": True},
+                            "test-agent2": {"protected": False},
+                        },
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1189,6 +1232,13 @@ async def test_config_info(
             "retention": {"days": 7},
             "schedule": {"recurrence": "daily"},
         },
+        {
+            "type": "backup/config/update",
+            "agents": {
+                "test-agent1": {"protected": True},
+                "test-agent2": {"protected": False},
+            },
+        },
     ],
 )
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
@@ -1273,6 +1323,10 @@ async def test_config_update(
         {
             "type": "backup/config/update",
             "create_backup": {"include_folders": ["media", "media"]},
+        },
+        {
+            "type": "backup/config/update",
+            "agents": {"test-agent1": {"favorite": True}},
         },
     ],
 )
@@ -1600,10 +1654,14 @@ async def test_config_schedule_logic(
     create_backup_side_effect: list[Exception | None] | None,
 ) -> None:
     """Test config schedule logic."""
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
     client = await hass_ws_client(hass)
     storage_data = {
         "backups": [],
         "config": {
+            "agents": {},
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
                 "include_addons": ["test-addon"],
@@ -2057,10 +2115,14 @@ async def test_config_retention_copies_logic(
     delete_args_list: Any,
 ) -> None:
     """Test config backup retention copies logic."""
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
     client = await hass_ws_client(hass)
     storage_data = {
         "backups": [],
         "config": {
+            "agents": {},
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -2320,10 +2382,14 @@ async def test_config_retention_copies_logic_manual_backup(
     delete_args_list: Any,
 ) -> None:
     """Test config backup retention copies logic for manual backup."""
+    created_backup: MagicMock = create_backup.return_value[1].result().backup
+    created_backup.protected = True
+
     client = await hass_ws_client(hass)
     storage_data = {
         "backups": [],
         "config": {
+            "agents": {},
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -2750,6 +2816,7 @@ async def test_config_retention_days_logic(
     storage_data = {
         "backups": [],
         "config": {
+            "agents": {},
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
