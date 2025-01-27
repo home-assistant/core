@@ -163,6 +163,11 @@ class OTBRData:
         """Get extended address (EUI-64)."""
         return await self.api.get_extended_address()
 
+    @_handle_otbr_error
+    async def get_coprocessor_version(self) -> str:
+        """Get coprocessor firmware version."""
+        return await self.api.get_coprocessor_version()
+
 
 async def get_allowed_channel(hass: HomeAssistant, otbr_url: str) -> int | None:
     """Return the allowed channel, or None if there's no restriction."""
