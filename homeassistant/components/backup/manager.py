@@ -457,6 +457,7 @@ class BackupManager:
             """Upload backup to a single agent, and encrypt or decrypt as needed."""
             config = self.config.data.agents.get(agent_id)
             should_encrypt = config.protected if config else password is not None
+            streamer: DecryptedBackupStreamer | EncryptedBackupStreamer | None = None
             if should_encrypt == backup.protected:
                 LOGGER.debug(
                     "Uploading backup %s to agent %s as is", backup.backup_id, agent_id
@@ -469,26 +470,29 @@ class BackupManager:
                     backup.backup_id,
                     agent_id,
                 )
-                encryptor = EncryptedBackupStreamer(
+                streamer = EncryptedBackupStreamer(
                     self.hass, backup, open_stream, password
                 )
-                open_stream_func = encryptor.open_stream
-                _backup = replace(backup, protected=True, size=encryptor.size())
             else:
                 LOGGER.debug(
                     "Uploading decrypted backup %s to agent %s",
                     backup.backup_id,
                     agent_id,
                 )
-                decryptor = DecryptedBackupStreamer(
+                streamer = DecryptedBackupStreamer(
                     self.hass, backup, open_stream, password
                 )
-                open_stream_func = decryptor.open_stream
-                _backup = replace(backup, protected=False, size=decryptor.size())
+            if streamer:
+                open_stream_func = streamer.open_stream
+                _backup = replace(
+                    backup, protected=should_encrypt, size=streamer.size()
+                )
             await self.backup_agents[agent_id].async_upload_backup(
                 open_stream=open_stream_func,
                 backup=_backup,
             )
+            if streamer:
+                await streamer.done_event.wait()
 
         sync_backup_results = await asyncio.gather(
             *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),

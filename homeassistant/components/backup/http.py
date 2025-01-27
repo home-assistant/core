@@ -129,7 +129,7 @@ class DownloadBackupView(HomeAssistantView):
 
         stream = util.AsyncIteratorWriter(hass)
         worker = threading.Thread(
-            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0]
+            target=util.decrypt_backup, args=[reader, stream, password, on_done, 0, []]
         )
         try:
             worker.start()

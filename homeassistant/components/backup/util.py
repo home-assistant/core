@@ -8,6 +8,7 @@ import copy
 from dataclasses import replace
 from io import BytesIO
 import json
+import os
 from pathlib import Path, PurePath
 from queue import SimpleQueue
 import tarfile
@@ -246,6 +247,7 @@ def decrypt_backup(
     password: str | None,
     on_done: Callable[[], None],
     minimum_size: int,
+    nonces: list[bytes],
 ) -> None:
     """Decrypt a backup."""
     try:
@@ -313,6 +315,7 @@ def encrypt_backup(
     password: str | None,
     on_done: Callable[[], None],
     minimum_size: int,
+    nonces: list[bytes],
 ) -> None:
     """Encrypt a backup."""
     try:
@@ -324,7 +327,7 @@ def encrypt_backup(
                 fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
             ) as output_tar,
         ):
-            _encrypt_backup(input_tar, output_tar, password)
+            _encrypt_backup(input_tar, output_tar, password, nonces)
     except (EncryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error encrypting backup: %s", err)
     else:
@@ -340,8 +343,10 @@ def _encrypt_backup(
     input_tar: tarfile.TarFile,
     output_tar: tarfile.TarFile,
     password: str | None,
+    nonces: list[bytes],
 ) -> None:
     """Encrypt a backup."""
+    inner_tar_idx = 0
     for obj in input_tar:
         # We compare with PurePath to avoid issues with different path separators,
         # for example when backup.json is added as "./backup.json"
@@ -365,11 +370,12 @@ def _encrypt_backup(
             key=password_to_key(password) if password is not None else None,
             mode="r",
             fileobj=input_tar.extractfile(obj),
-            nonce=b"veryrandombytes!",
+            nonce=nonces[inner_tar_idx],
         )
+        inner_tar_idx += 1
         with istf.encrypt(obj) as encrypted:
             encrypted_obj = copy.deepcopy(obj)
-            encrypted_obj.size = encrypted._size  # noqa: SLF001
+            encrypted_obj.size = encrypted.encrypted_size
             output_tar.addfile(encrypted_obj, encrypted)
 
 
@@ -377,7 +383,7 @@ class _CipherBackupStreamer:
     """Encrypt or decrypt a backup."""
 
     _cipher_func: Callable[
-        [IO[bytes], IO[bytes], str | None, Callable[[], None], int], None
+        [IO[bytes], IO[bytes], str | None, Callable[[], None], int, list[bytes]], None
     ]
 
     def __init__(
@@ -388,29 +394,35 @@ class _CipherBackupStreamer:
         password: str | None,
     ) -> None:
         """Initialize."""
+        self.done_event = asyncio.Event()
         self._backup = backup
         self._hass = hass
         self._open_stream = open_stream
         self._password = password
+        self._nonces: list[bytes] = []
 
     def size(self) -> int:
         """Return the maximum size of the decrypted or encrypted backup."""
+        return self._backup.size + self._num_tar_files() * tarfile.RECORDSIZE
+
+    def _num_tar_files(self) -> int:
+        """Return the number of inner tar files."""
         b = self._backup
-        num_tar_files = len(b.addons) + len(b.folders) + b.homeassistant_included + 1
-        return b.size + num_tar_files * tarfile.RECORDSIZE
+        return len(b.addons) + len(b.folders) + b.homeassistant_included + 1
 
     async def open_stream(self) -> AsyncIterator[bytes]:
         """Open a stream."""
 
         def on_done() -> None:
             """Call by the worker thread when it's done."""
+            self._hass.loop.call_soon_threadsafe(self.done_event.set)
 
         stream = await self._open_stream()
         reader = AsyncIteratorReader(self._hass, stream)
         writer = AsyncIteratorWriter(self._hass)
         worker = threading.Thread(
             target=self._cipher_func,
-            args=[reader, writer, self._password, on_done, self.size()],
+            args=[reader, writer, self._password, on_done, self.size(), self._nonces],
         )
         worker.start()
         return writer
@@ -428,6 +440,17 @@ class DecryptedBackupStreamer(_CipherBackupStreamer):
 
 class EncryptedBackupStreamer(_CipherBackupStreamer):
     """Encrypt a backup."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        backup: AgentBackup,
+        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        password: str | None,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, backup, open_stream, password)
+        self._nonces = [os.urandom(16) for _ in range(self._num_tar_files())]
 
     _cipher_func = staticmethod(encrypt_backup)
 
