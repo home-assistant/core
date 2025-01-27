@@ -8,15 +8,12 @@ from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import cast
 
 from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.flasher import Flasher
-import voluptuous as vol
-from yarl import URL
 
-from homeassistant.components.hassio import AddonError, AddonState, valid_addon
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.components.hassio import AddonError, AddonState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
@@ -147,88 +144,39 @@ class FirmwareInfo:
         return all(states)
 
 
-async def get_zha_firmware_info(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> FirmwareInfo | None:
-    """Return firmware information for the ZHA instance."""
-
-    # We only support EZSP firmware for now
-    if config_entry.data.get("radio_type", None) != "ezsp":
-        return None
-
-    device = config_entry.data.get("device", {}).get("path", None)
-    if device is None:
-        return None
-
-    try:
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.zha.helpers import get_zha_gateway
-    except ImportError:
-        # A ZHA config entry exists but ZHA isn't installed, it was probably ignored
-        return None
-
-    try:
-        gateway = get_zha_gateway(hass)
-    except ValueError:
-        firmware_version = None
-    else:
-        firmware_version = gateway.state.node_info.version
-
-    return FirmwareInfo(
-        device=device,
-        firmware_type=ApplicationType.EZSP,
-        firmware_version=firmware_version,
-        source=ZHA_DOMAIN,
-        owners=[OwningIntegration(config_entry_id=config_entry.entry_id)],
-    )
-
-
-async def get_otbr_firmware_info(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> FirmwareInfo | None:
-    """Return firmware information for the OpenThread Border Router."""
-    device = config_entry.data["device"]
-    if device is None:
-        return None
-
-    owners: list[OwningIntegration | OwningAddon] = [
-        OwningIntegration(config_entry_id=config_entry.entry_id)
-    ]
-
-    if is_hassio(hass) and (host := URL(config_entry.data["url"]).host) is not None:
-        try:
-            valid_addon(host)
-        except vol.Invalid:
-            pass
-        else:
-            owners.append(OwningAddon(slug=host))
-
-    return FirmwareInfo(
-        device=device,
-        firmware_type=ApplicationType.SPINEL,
-        firmware_version=cast(str | None, config_entry.data["firmware_version"]),
-        source=OTBR_DOMAIN,
-        owners=owners,
-    )
-
-
 async def guess_hardware_owners(
     hass: HomeAssistant, device_path: str
 ) -> list[FirmwareInfo]:
     """Guess the firmware info based on installed addons and other integrations."""
     device_guesses: defaultdict[str, list[FirmwareInfo]] = defaultdict(list)
 
-    for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
-        firmware_info = await get_zha_firmware_info(hass, zha_config_entry)
+    try:
+        # pylint: disable-next=import-outside-toplevel, hass-component-root-import
+        from homeassistant.components.zha.homeassistant_hardware import (
+            get_firmware_info as get_zha_firmware_info,
+        )
+    except ImportError:
+        pass
+    else:
+        for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
+            firmware_info = await get_zha_firmware_info(hass, zha_config_entry)
 
-        if firmware_info is not None:
-            device_guesses[firmware_info.device].append(firmware_info)
+            if firmware_info is not None:
+                device_guesses[firmware_info.device].append(firmware_info)
 
-    for otbr_config_entry in hass.config_entries.async_entries(OTBR_DOMAIN):
-        firmware_info = await get_otbr_firmware_info(hass, otbr_config_entry)
+    try:
+        # pylint: disable-next=import-outside-toplevel, hass-component-root-import
+        from homeassistant.components.otbr.homeassistant_hardware import (
+            get_firmware_info as get_otbr_firmware_info,
+        )
+    except ImportError:
+        pass
+    else:
+        for otbr_config_entry in hass.config_entries.async_entries(OTBR_DOMAIN):
+            firmware_info = await get_otbr_firmware_info(hass, otbr_config_entry)
 
-        if firmware_info is not None:
-            device_guesses[firmware_info.device].append(firmware_info)
+            if firmware_info is not None:
+                device_guesses[firmware_info.device].append(firmware_info)
 
     # It may be possible for the OTBR addon to be present without the integration
     if is_hassio(hass):

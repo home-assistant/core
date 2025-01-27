@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import voluptuous as vol
 from yarl import URL
 
@@ -12,6 +14,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningAddon,
     OwningIntegration,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
@@ -21,9 +24,10 @@ from .const import DOMAIN
 
 
 async def get_firmware_info(
-    hass: HomeAssistant, config_entry: OTBRConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> FirmwareInfo | None:
     """Return firmware information for the OpenThread Border Router."""
+    config_entry = cast(OTBRConfigEntry, config_entry)
     device = config_entry.data["device"]
     if device is None:
         return None
