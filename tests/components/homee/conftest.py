@@ -96,6 +96,10 @@ def cover() -> HomeeNode:
     att3.name = ""
     att3.is_reversed = 0
 
+    att1.get_value = lambda: att1.current_value
+    att2.get_value = lambda: att2.current_value
+    att3.get_value = lambda: att3.current_value
+
     mock = AsyncMock(spec=HomeeNode)
     mock.id = 1
     mock.name = "Test Cover"

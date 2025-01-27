@@ -84,7 +84,7 @@ async def test_cover_positions(
 
     cover.attributes[0].current_value = 3
     cover.attributes[1].current_value = 75
-    cover.attributes[2].current_value = 75
+    cover.attributes[2].current_value = 56
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
@@ -95,7 +95,7 @@ async def test_cover_positions(
 
     cover.attributes[0].current_value = 4
     cover.attributes[1].current_value = 25
-    cover.attributes[2].current_value = 25
+    cover.attributes[2].current_value = -11
     cover.add_on_changed_listener.call_args_list[0][0][0](cover)
     await hass.async_block_till_done()
 
