@@ -263,7 +263,7 @@ def decrypt_backup(
     except (DecryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error decrypting backup: %s", err)
     else:
-        # Pad the output stream to the requested size
+        # Pad the output stream to the requested minimum size
         padding = max(minimum_size - output_stream.tell(), 0)
         output_stream.write(b"\0" * padding)
     finally:
@@ -331,7 +331,7 @@ def encrypt_backup(
     except (EncryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error encrypting backup: %s", err)
     else:
-        # Pad the output stream to the requested size
+        # Pad the output stream to the requested minimum size
         padding = max(minimum_size - output_stream.tell(), 0)
         output_stream.write(b"\0" * padding)
     finally:
