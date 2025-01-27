@@ -42,6 +42,8 @@ def async_register_backup_agents_listener(
     def remove_listener() -> None:
         """Remove the listener."""
         hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
+        if not hass.data[DATA_BACKUP_AGENT_LISTENERS]:
+            hass.data.pop(DATA_BACKUP_AGENT_LISTENERS)
 
     return remove_listener
 
