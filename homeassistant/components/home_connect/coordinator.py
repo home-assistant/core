@@ -49,6 +49,13 @@ class HomeConnectApplianceData:
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
 
+    def update(self, other: "HomeConnectApplianceData") -> None:
+        """Update data with data from other instance."""
+        self.events.update(other.events)
+        self.info.connected = other.info.connected
+        self.settings.update(other.settings)
+        self.status.update(other.status)
+
 
 class HomeConnectCoordinator(
     DataUpdateCoordinator[dict[str, HomeConnectApplianceData]]
@@ -157,6 +164,10 @@ class HomeConnectCoordinator(
                     self.config_entry.entry_id
                 )
                 break
+            # if there was a non-breaking error, we continue listening
+            # but we need to refresh the data to get the possible changes
+            # that happened while the event stream was interrupted
+            await self.async_refresh()
 
     @callback
     def _call_event_listener(self, event_message: EventMessage):
@@ -178,7 +189,7 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
 
-        appliance_data = {}
+        appliances_data = self.data or {}
         for appliance in appliances.homeappliances:
             try:
                 settings = {
@@ -210,7 +221,11 @@ class HomeConnectCoordinator(
                     else type(error).__name__,
                 )
                 status = {}
-            appliance_data[appliance.ha_id] = HomeConnectApplianceData(
+            appliance_data = HomeConnectApplianceData(
                 info=appliance, settings=settings, status=status
             )
-        return appliance_data
+            if appliance.ha_id in appliances_data:
+                appliances_data[appliance.ha_id].update(appliance_data)
+            else:
+                appliances_data[appliance.ha_id] = appliance_data
+        return appliances_data

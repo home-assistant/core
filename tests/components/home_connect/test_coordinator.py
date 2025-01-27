@@ -1,7 +1,7 @@
 """Test for Home Connect coordinator."""
 
 from collections.abc import Awaitable, Callable
-from typing import cast
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
@@ -12,6 +12,8 @@ from aiohomeconnect.model import (
     EventKey,
     EventMessage,
     EventType,
+    Status,
+    StatusKey,
 )
 from aiohomeconnect.model.error import (
     EventStreamInterruptedError,
@@ -22,6 +24,7 @@ from aiohomeconnect.model.error import (
 import pytest
 
 from homeassistant.components.home_connect.const import (
+    BSH_DOOR_STATE_LOCKED,
     BSH_DOOR_STATE_OPEN,
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_POWER_OFF,
@@ -268,13 +271,26 @@ async def test_event_listener_error(
     [HomeConnectRequestError(), EventStreamInterruptedError()],
 )
 @pytest.mark.parametrize(
-    ("event_type", "event_key", "event_value", "entity_id"),
+    (
+        "entity_id",
+        "initial_state",
+        "status_key",
+        "status_value",
+        "after_refresh_expected_state",
+        "event_key",
+        "event_value",
+        "after_event_expected_state",
+    ),
     [
         (
-            EventType.STATUS,
+            "sensor.washer_door",
+            "closed",
+            StatusKey.BSH_COMMON_DOOR_STATE,
+            BSH_DOOR_STATE_LOCKED,
+            "locked",
             EventKey.BSH_COMMON_STATUS_DOOR_STATE,
             BSH_DOOR_STATE_OPEN,
-            "sensor.washer_door",
+            "open",
         ),
     ],
 )
@@ -282,10 +298,14 @@ async def test_event_listener_error(
     "homeassistant.components.home_connect.coordinator.EVENT_STREAM_RECONNECT_DELAY", 0
 )
 async def test_event_listener_resilience(
-    event_type: EventType,
-    event_key: EventKey,
-    event_value: str,
     entity_id: str,
+    initial_state: str,
+    status_key: StatusKey,
+    status_value: Any,
+    after_refresh_expected_state: str,
+    event_key: EventKey,
+    event_value: Any,
+    after_event_expected_state: str,
     exception: HomeConnectError,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -295,20 +315,34 @@ async def test_event_listener_resilience(
     appliance_ha_id: str,
 ) -> None:
     """Test that the event listener is resilient to interruptions."""
+    future = hass.loop.create_future()
+
+    async def stream_exception():
+        yield await future
+
     client.stream_all_events = MagicMock(
-        side_effect=[exception, client.stream_all_events()]
+        side_effect=[stream_exception(), client.stream_all_events()]
     )
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     await hass.async_block_till_done()
 
-    assert client.stream_all_events.call_count == 2
     assert config_entry.state == ConfigEntryState.LOADED
     assert len(config_entry._background_tasks) == 1
 
-    state = hass.states.get(entity_id)
-    assert state
+    assert hass.states.is_state(entity_id, initial_state)
+
+    client.get_status.return_value = ArrayOfStatus(
+        [Status(status_key, status_value)],
+    )
+    await hass.async_block_till_done()
+    future.set_exception(exception)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert client.stream_all_events.call_count == 2
+    assert hass.states.is_state(entity_id, after_refresh_expected_state)
 
     await client.add_events(
         [
@@ -331,6 +365,4 @@ async def test_event_listener_resilience(
     )
     await hass.async_block_till_done()
 
-    new_state = hass.states.get(entity_id)
-    assert new_state
-    assert new_state.state != state.state
+    assert hass.states.is_state(entity_id, after_event_expected_state)
