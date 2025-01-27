@@ -228,6 +228,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             self.smartfan.pet_mode()
         elif preset_mode == FAN_MODE_TURBO:
             self.smartfan.turbo_mode()
+        elif preset_mode == FAN_MODE_NORMAL:
+            self.smartfan.normal_mode()
 
         self.schedule_update_ha_state()
 
