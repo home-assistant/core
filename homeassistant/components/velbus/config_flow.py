@@ -58,7 +58,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle network step."""
         if user_input is not None:
             self._title = "Velbus Network"
-            if user_input[CONF_TLS] == "yes":
+            if user_input[CONF_TLS]:
                 self._device = "tls://"
             else:
                 self._device = ""
@@ -70,7 +70,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self._create_device()
         else:
             user_input = {
-                CONF_TLS: "yes",
+                CONF_TLS: True,
                 CONF_PORT: 27015,
             }
 
@@ -79,7 +79,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_TLS): vol.In(["yes", "no"]),
+                        vol.Required(CONF_TLS): bool,
                         vol.Required(CONF_HOST): str,
                         vol.Required(CONF_PORT): int,
                         vol.Optional(CONF_PASSWORD): str,

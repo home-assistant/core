@@ -80,7 +80,7 @@ async def test_user_network_succes(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),
         {
-            CONF_TLS: "no",
+            CONF_TLS: False,
             CONF_HOST: "velbus",
             CONF_PORT: 6000,
             CONF_PASSWORD: "",
@@ -116,7 +116,7 @@ async def test_user_network_succes_tls(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result.get("flow_id"),
         {
-            CONF_TLS: "yes",
+            CONF_TLS: True,
             CONF_HOST: "velbus",
             CONF_PORT: 6000,
             CONF_PASSWORD: "password",
@@ -174,7 +174,7 @@ async def test_network_abort_if_already_setup(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_TLS: "no",
+            CONF_TLS: False,
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 3788,
             CONF_PASSWORD: "",
