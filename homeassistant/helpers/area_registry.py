@@ -20,6 +20,7 @@ from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
     NormalizedNameBaseRegistryItems,
+    normalize_name,
 )
 from .registry import BaseRegistry, RegistryIndexType
 from .singleton import singleton
