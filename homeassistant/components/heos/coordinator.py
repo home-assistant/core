@@ -70,7 +70,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
 
     @property
     def favorites(self) -> dict[int, MediaItem]:
-        """Get input sources across all devices."""
+        """Get favorite stations."""
         return self._favorites
 
     async def async_setup(self) -> None:

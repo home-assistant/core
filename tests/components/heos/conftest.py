@@ -159,7 +159,7 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
             image_url="http://",
             album_id="1",
             media_id="1",
-            queue_id="1",
+            queue_id=1,
             source_id=10,
         )
         player.add_to_queue = AsyncMock()
