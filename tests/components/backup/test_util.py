@@ -144,7 +144,7 @@ def test_validate_password_no_homeassistant() -> None:
 async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
     """Test the decrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd_decrypted.tar", DOMAIN
+        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
@@ -187,7 +187,7 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
 async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
     """Test the encrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd_decrypted.tar", DOMAIN
+        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
@@ -241,7 +241,7 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
 async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> None:
     """Test the encrypted backup streamer."""
     decrypted_backup_path = get_fixture_path(
-        "test_backups/c0cb53bd_decrypted.tar", DOMAIN
+        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
     )
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     backup = AgentBackup(
