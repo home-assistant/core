@@ -37,7 +37,7 @@ class EnvoyRelaySelectEntityDescription(SelectEntityDescription):
 class EnvoyStorageSettingsSelectEntityDescription(SelectEntityDescription):
     """Describes an Envoy storage settings select entity."""
 
-    value_fn: Callable[[EnvoyStorageSettings], str]
+    value_fn: Callable[[EnvoyStorageSettings], str | None]
     update_fn: Callable[[Envoy, str], Awaitable[dict[str, Any]]]
 
 
@@ -118,7 +118,9 @@ STORAGE_MODE_ENTITY = EnvoyStorageSettingsSelectEntityDescription(
     key="storage_mode",
     translation_key="storage_mode",
     options=STORAGE_MODE_OPTIONS,
-    value_fn=lambda storage_settings: STORAGE_MODE_MAP[storage_settings.mode],
+    value_fn=lambda storage_settings: (
+        None if not storage_settings.mode else STORAGE_MODE_MAP[storage_settings.mode]
+    ),
     update_fn=lambda envoy, value: envoy.set_storage_mode(
         REVERSE_STORAGE_MODE_MAP[value]
     ),
@@ -235,7 +237,7 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
             )
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the state of the select entity."""
         assert self.data.tariff is not None
         assert self.data.tariff.storage_settings is not None

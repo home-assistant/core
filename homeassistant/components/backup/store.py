@@ -48,10 +48,18 @@ class _BackupStore(Store[StoredBackupData]):
         data = old_data
         if old_major_version == 1:
             if old_minor_version < 2:
-                # Version 1.2 adds configurable backup time
+                # Version 1.2 adds configurable backup time and custom days
                 data["config"]["schedule"]["time"] = None
+                if (state := data["config"]["schedule"]["state"]) in ("daily", "never"):
+                    data["config"]["schedule"]["days"] = []
+                    data["config"]["schedule"]["recurrence"] = state
+                else:
+                    data["config"]["schedule"]["days"] = [state]
+                    data["config"]["schedule"]["recurrence"] = "custom_days"
 
-        if old_major_version > 1:
+        # Note: We allow reading data with major version 2.
+        # Reject if major version is higher than 2.
+        if old_major_version > 2:
             raise NotImplementedError
         return data
 

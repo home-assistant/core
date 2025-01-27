@@ -67,8 +67,8 @@ DISCOVERY_SCHEMAS = [
             command=lambda: clusters.Identify.Commands.Identify(identifyTime=15),
         ),
         entity_class=MatterCommandButton,
-        required_attributes=(clusters.Identify.Attributes.AcceptedCommandList,),
-        value_contains=clusters.Identify.Commands.Identify.command_id,
+        required_attributes=(clusters.Identify.Attributes.IdentifyType,),
+        value_is_not=clusters.Identify.Enums.IdentifyTypeEnum.kNone,
         allow_multi=True,
     ),
     MatterDiscoverySchema(
