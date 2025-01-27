@@ -19,6 +19,8 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_ON,
+    SWING_OFF,
+    SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -136,6 +138,14 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
             ClimateSchema.CONF_FAN_SPEED_STATE_ADDRESS
         ),
         fan_speed_mode=config[ClimateSchema.CONF_FAN_SPEED_MODE],
+        group_address_swing=config.get(ClimateSchema.CONF_SWING_ADDRESS),
+        group_address_swing_state=config.get(ClimateSchema.CONF_SWING_STATE_ADDRESS),
+        group_address_horizontal_swing=config.get(
+            ClimateSchema.CONF_SWING_HORIZONTAL_ADDRESS
+        ),
+        group_address_horizontal_swing_state=config.get(
+            ClimateSchema.CONF_SWING_HORIZONTAL_STATE_ADDRESS
+        ),
         group_address_humidity_state=config.get(
             ClimateSchema.CONF_HUMIDITY_STATE_ADDRESS
         ),
@@ -207,6 +217,16 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
                 self._attr_fan_modes = [self.fan_zero_mode] + [
                     f"{percentage}%" for percentage in self._fan_modes_percentages[1:]
                 ]
+        if self._device.swing is not None and self._device.swing.initialized:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+            self._attr_swing_modes = [SWING_ON, SWING_OFF]
+
+        if (
+            self._device.horizontal_swing is not None
+            and self._device.horizontal_swing.initialized
+        ):
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+            self._attr_swing_horizontal_modes = [SWING_ON, SWING_OFF]
 
         self._attr_target_temperature_step = self._device.temperature_step
         self._attr_unique_id = (
@@ -224,12 +244,12 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.temperature.value
+        return self._device.temperature.value  # type: ignore[no-any-return]
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._device.target_temperature.value
+        return self._device.target_temperature.value  # type: ignore[no-any-return]
 
     @property
     def min_temp(self) -> float:
@@ -350,7 +370,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         Requires ClimateEntityFeature.PRESET_MODE.
         """
         if self._device.mode is not None and self._device.mode.supports_operation_mode:
-            return self._device.mode.operation_mode.name.lower()
+            return self._device.mode.operation_mode.name.lower()  # type: ignore[no-any-return]
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -374,7 +394,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             return self.fan_zero_mode
 
         if self._device.fan_speed_mode == FanSpeedMode.STEP:
-            return self._attr_fan_modes[fan_speed]
+            return self._attr_fan_modes[fan_speed]  # type: ignore[no-any-return]
 
         # Find the closest fan mode percentage
         closest_percentage = min(
@@ -399,10 +419,32 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
 
         await self._device.set_fan_speed(self._fan_modes_percentages[fan_mode_index])
 
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set the swing setting."""
+        await self._device.set_swing(swing_mode == SWING_ON)
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set the horizontal swing setting."""
+        await self._device.set_horizontal_swing(swing_horizontal_mode == SWING_ON)
+
+    @property
+    def swing_mode(self) -> str | None:
+        """Return the swing setting."""
+        if self._device.swing is not None:
+            return SWING_ON if self._device.swing.value else SWING_OFF
+        return None
+
+    @property
+    def swing_horizontal_mode(self) -> str | None:
+        """Return the horizontal swing setting."""
+        if self._device.horizontal_swing is not None:
+            return SWING_ON if self._device.horizontal_swing.value else SWING_OFF
+        return None
+
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        return self._device.humidity.value
+        return self._device.humidity.value  # type: ignore[no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

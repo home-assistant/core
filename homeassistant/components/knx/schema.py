@@ -339,6 +339,10 @@ class ClimateSchema(KNXPlatformSchema):
     CONF_FAN_SPEED_MODE = "fan_speed_mode"
     CONF_FAN_ZERO_MODE = "fan_zero_mode"
     CONF_HUMIDITY_STATE_ADDRESS = "humidity_state_address"
+    CONF_SWING_ADDRESS = "swing_address"
+    CONF_SWING_STATE_ADDRESS = "swing_state_address"
+    CONF_SWING_HORIZONTAL_ADDRESS = "swing_horizontal_address"
+    CONF_SWING_HORIZONTAL_STATE_ADDRESS = "swing_horizontal_state_address"
 
     DEFAULT_NAME = "KNX Climate"
     DEFAULT_SETPOINT_SHIFT_MODE = "DPT6010"
@@ -427,6 +431,10 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_FAN_ZERO_MODE, default=FAN_OFF): vol.Coerce(
                     FanZeroMode
                 ),
+                vol.Optional(CONF_SWING_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
             }
         ),
