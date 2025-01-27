@@ -458,7 +458,7 @@ class BackupManager:
             config = self.config.data.agents.get(agent_id)
             should_encrypt = config.protected if config else password is not None
             streamer: DecryptedBackupStreamer | EncryptedBackupStreamer | None = None
-            if should_encrypt == backup.protected:
+            if should_encrypt == backup.protected or password is None:
                 # The backup we're uploading is already in the correct state, or we
                 # don't have a password to encrypt or decrypt it
                 LOGGER.debug(
