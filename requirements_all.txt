@@ -1364,6 +1364,7 @@ maxcube-api==0.4.3
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
 
+# homeassistant.components.mcp
 # homeassistant.components.mcp_server
 mcp==1.1.2
 
