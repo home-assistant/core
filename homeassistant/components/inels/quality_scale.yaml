@@ -2,17 +2,7 @@ rules:
   # Bronze
   config-flow: done
   test-before-configure: done
-  unique-config-entry:
-    status: todo # exempt ?
-    comment: >
-      The integration only allows one ConfigEntry, otherwise aborted with reason
-      "single_instance_allowed".
-
-      There is a historical reason for this, since we sell hardware with
-      embedded Linux:
-      https://www.elkoep.com/third-party-integration-gateway---inels-bridge
-
-      In all other cases, our customers use only one broker per household.
+  unique-config-entry: done
   config-flow-test-coverage: done
   runtime-data:
     status: exempt
@@ -136,4 +126,4 @@ rules:
     status: exempt
     comment: |
       The integration is not making any HTTP requests.
-  strict-typing: done
+  strict-typing: todo
