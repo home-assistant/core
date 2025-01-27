@@ -1627,7 +1627,7 @@ async def test_remove_config_subentry_from_device_removes_entities(
         config_entry_1.entry_id: {None, "mock-subentry-id-1", "mock-subentry-id-2"},
     }
 
-    # Create one entity for each config entry
+    # Create one entity entry for each config entry or subentry
     entry_1 = entity_registry.async_get_or_create(
         "light",
         "hue",

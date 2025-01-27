@@ -1056,10 +1056,10 @@ class EntityRegistry(BaseRegistry):
         )
         for entity in entities:
             if (
-                (entry_id := entity.config_entry_id) is not None
-                and entry_id in device.config_entries
+                (config_entry_id := entity.config_entry_id) is not None
+                and config_entry_id in device.config_entries
                 and entity.config_subentry_id
-                not in device.config_entries_subentries[entry_id]
+                not in device.config_entries_subentries[config_entry_id]
             ):
                 self.async_remove(entity.entity_id)
 
