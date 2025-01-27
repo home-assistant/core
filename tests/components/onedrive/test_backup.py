@@ -57,7 +57,7 @@ async def test_agents_info(
     assert response["result"] == {
         "agents": [
             {"agent_id": "backup.local"},
-            {"agent_id": f"{DOMAIN}.{mock_config_entry.title}"},
+            {"agent_id": f"{DOMAIN}.{mock_config_entry.unique_id}"},
         ],
     }
 
@@ -87,7 +87,7 @@ async def test_agents_list_backups(
             "name": "Core 2024.12.0.dev0",
             "protected": False,
             "size": 34519040,
-            "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+            "agent_ids": [f"{DOMAIN}.{mock_config_entry.unique_id}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -123,7 +123,7 @@ async def test_agents_get_backup(
         "name": "Core 2024.12.0.dev0",
         "protected": False,
         "size": 34519040,
-        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.unique_id}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
@@ -175,7 +175,7 @@ async def test_agents_upload(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.title}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
             data={"file": StringIO("test")},
         )
 
@@ -219,7 +219,7 @@ async def test_broken_upload_session(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.title}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
             data={"file": StringIO("test")},
         )
 
@@ -240,7 +240,7 @@ async def test_agents_download(
     backup_id = BACKUP_METADATA["backup_id"]
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.title}"
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.unique_id}"
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
@@ -280,7 +280,7 @@ async def test_delete_error(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{mock_config_entry.title}": error}
+        "agent_errors": {f"{DOMAIN}.{mock_config_entry.unique_id}": error}
     }
 
 
@@ -325,7 +325,7 @@ async def test_agents_backup_error(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.title}": "Backup operation failed"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Backup operation failed"
     }
 
 
@@ -345,7 +345,7 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.title}": "Backup operation failed"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Backup operation failed"
     }
 
     await hass.async_block_till_done()

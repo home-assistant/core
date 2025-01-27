@@ -116,7 +116,8 @@ class OneDriveBackupAgent(BackupAgent):
         self._entry = entry
         self._items = entry.runtime_data.items
         self._folder_id = entry.runtime_data.backup_folder_id
-        self.name = entry.title
+        assert entry.unique_id
+        self.name = entry.unique_id
 
     @handle_backup_errors
     async def async_download_backup(
