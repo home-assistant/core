@@ -280,10 +280,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
 
+        accept_pipeline_task = self.async_accept_pipeline_from_satellite(
+            audio_stream=stt_stream(),
+        )
+
         try:
-            await self.async_accept_pipeline_from_satellite(
-                audio_stream=stt_stream(),
-            )
+            await accept_pipeline_task
 
             if self._pipeline_had_error:
                 self._pipeline_had_error = False
@@ -303,7 +305,16 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self.disconnect()  # caller hung up
             self._clear_pipeline_task_queue()
         except asyncio.exceptions.CancelledError:
-            _LOGGER.exception("Pipeline task cancelled")
+            _LOGGER.debug("Pipeline task cancelled")
+            # If the pipeline got cancelled wait a little longer for it to finish,
+            # then restart it
+            try:
+                async with asyncio.timeout(3.0):
+                    await accept_pipeline_task
+            except TimeoutError:
+                _LOGGER.debug("Timed out waiting for accept pipeline task")
+            if self._pipeline_task_queue.empty():
+                await self._pipeline_task_queue.put(self._run_pipeline())
         finally:
             # Stop audio stream
             await self._audio_queue.put(None)

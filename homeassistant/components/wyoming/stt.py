@@ -120,7 +120,7 @@ class WyomingSttProvider(stt.SpeechToTextEntity):
                     try:
                         event = await client.read_event()
                     except asyncio.exceptions.CancelledError:
-                        _LOGGER.debug("Event read cancelled, try again I guess?")
+                        _LOGGER.debug("Event read cancelled, retrying")
                         continue
                     if event is None:
                         _LOGGER.debug("Connection lost")

@@ -270,6 +270,7 @@ class AssistSatelliteEntity(entity.Entity):
         if self._conversation_id_time and (
             (time.monotonic() - self._conversation_id_time) > _CONVERSATION_TIMEOUT_SEC
         ):
+            _LOGGER.debug("Exceeded conversation timeout")
             self._conversation_id = None
             self._conversation_id_time = None
 
@@ -313,7 +314,9 @@ class AssistSatelliteEntity(entity.Entity):
 
     async def _cancel_running_pipeline(self) -> None:
         """Cancel the current pipeline if it's running."""
+        _LOGGER.debug("Cancel running pipeline called")
         if self._pipeline_task is not None:
+            _LOGGER.debug("Cancel running pipeline")
             self._pipeline_task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await self._pipeline_task
