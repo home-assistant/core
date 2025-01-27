@@ -306,7 +306,7 @@ class LcnRelayCoverPositioning(LcnRelayCover):
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         if not await self.device_connection.control_motor_relays_position(
-            self.motor.value, 100 - position, mode=self.positioning_mode
+            self.motor.value, position, mode=self.positioning_mode
         ):
             return
         self._attr_is_closed = (self._attr_current_cover_position == 0) & (
@@ -326,9 +326,9 @@ class LcnRelayCoverPositioning(LcnRelayCover):
             isinstance(input_obj, self.input_mapping[self.positioning_mode])
             and input_obj.motor == self.motor.value
         ):
-            self._attr_current_cover_position = 100 - input_obj.position_percent
+            self._attr_current_cover_position = input_obj.position_percent
             if self._attr_current_cover_position in [0, 100]:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
-                self._attr_is_closed = self._attr_current_cover_position == 0
+            self._attr_is_closed = self._attr_current_cover_position == 0
             self.async_write_ha_state()
