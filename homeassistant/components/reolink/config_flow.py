@@ -51,6 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PROTOCOL = "rtsp"
 DEFAULT_OPTIONS = {CONF_PROTOCOL: DEFAULT_PROTOCOL}
+API_STARTUP_TIME = 5
 
 
 class ReolinkOptionsFlowHandler(OptionsFlow):
@@ -241,7 +242,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 if self._disable_privacy:
                     await host.api.baichuan.set_privacy_mode(enable=False)
                     # give the camera some time to startup the HTTP API server
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(API_STARTUP_TIME)
                 await host.async_init()
             except UserNotAdmin:
                 errors[CONF_USERNAME] = "not_admin"

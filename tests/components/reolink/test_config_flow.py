@@ -2,7 +2,7 @@
 
 import json
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, call
+from unittest.mock import ANY, AsyncMock, MagicMock, call, patch
 
 from aiohttp import ClientSession
 from freezegun.api import FrozenDateTimeFactory
@@ -120,7 +120,8 @@ async def test_config_flow_privacy_success(
     assert reolink_connect.baichuan.set_privacy_mode.call_count == 0
     reolink_connect.get_host_data.reset_mock(side_effect=True)
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    with patch("homeassistant.components.reolink.config_flow.API_STARTUP_TIME", new=0):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert reolink_connect.baichuan.set_privacy_mode.call_count == 1
 
