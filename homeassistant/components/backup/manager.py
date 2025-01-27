@@ -147,6 +147,7 @@ class RestoreBackupState(StrEnum):
     """Receive backup state enum."""
 
     COMPLETED = "completed"
+    CORE_RESTART = "core_restart"
     FAILED = "failed"
     IN_PROGRESS = "in_progress"
 
@@ -217,7 +218,7 @@ class BackupReaderWriter(abc.ABC):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[ManagerStateEvent], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Create a backup."""
@@ -238,6 +239,7 @@ class BackupReaderWriter(abc.ABC):
         backup_id: str,
         *,
         agent_id: str,
+        on_progress: Callable[[RestoreBackupEvent], None],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         password: str | None,
         restore_addons: list[str] | None,
@@ -696,6 +698,21 @@ class BackupManager:
         await self._backup_finish_task
         return new_backup
 
+    async def async_create_automatic_backup(self) -> NewBackup:
+        """Create a backup with automatic backup settings."""
+        config_data = self.config.data
+        return await self.async_create_backup(
+            agent_ids=config_data.create_backup.agent_ids,
+            include_addons=config_data.create_backup.include_addons,
+            include_all_addons=config_data.create_backup.include_all_addons,
+            include_database=config_data.create_backup.include_database,
+            include_folders=config_data.create_backup.include_folders,
+            include_homeassistant=True,  # always include HA
+            name=config_data.create_backup.name,
+            password=config_data.create_backup.password,
+            with_automatic_settings=True,
+        )
+
     async def async_initiate_backup(
         self,
         *,
@@ -941,6 +958,7 @@ class BackupManager:
             backup_id=backup_id,
             open_stream=open_backup,
             agent_id=agent_id,
+            on_progress=self.async_on_backup_event,
             password=password,
             restore_addons=restore_addons,
             restore_database=restore_database,
@@ -1130,7 +1148,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[ManagerStateEvent], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Initiate generating a backup."""
@@ -1170,7 +1188,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         date_str: str,
         extra_metadata: dict[str, bool | str],
         include_database: bool,
-        on_progress: Callable[[ManagerStateEvent], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> WrittenBackup:
         """Generate a backup."""
@@ -1378,6 +1396,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         *,
         agent_id: str,
+        on_progress: Callable[[RestoreBackupEvent], None],
         password: str | None,
         restore_addons: list[str] | None,
         restore_database: bool,
@@ -1440,6 +1459,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
 
         await self._hass.async_add_executor_job(_write_restore_file)
+        on_progress(
+            RestoreBackupEvent(stage=None, state=RestoreBackupState.CORE_RESTART)
+        )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
 
 

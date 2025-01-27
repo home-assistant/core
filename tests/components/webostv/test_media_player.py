@@ -1,4 +1,4 @@
-"""The tests for the LG webOS media player platform."""
+"""The tests for the LG webOS TV media player platform."""
 
 from datetime import timedelta
 from http import HTTPStatus
@@ -165,7 +165,7 @@ async def test_media_next_previous_track(
 
 
 async def test_select_source_with_empty_source_list(
-    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, client
 ) -> None:
     """Ensure we don't call client methods when we don't have sources."""
     await setup_webostv(hass)
@@ -175,11 +175,14 @@ async def test_select_source_with_empty_source_list(
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "nonexistent",
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Source nonexistent not found in the sources list for {TV_NAME}",
+    ):
+        await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 
     client.launch_app.assert_not_called()
     client.set_input.assert_not_called()
-    assert f"Source nonexistent not found for {TV_NAME}" in caplog.text
 
 
 async def test_select_app_source(hass: HomeAssistant, client) -> None:
@@ -482,35 +485,44 @@ async def test_client_key_update_on_connect(
     assert config_entry.data[CONF_CLIENT_SECRET] == client.client_key
 
 
+@pytest.mark.parametrize(
+    ("is_on", "exception", "error_message"),
+    [
+        (
+            True,
+            WebOsTvCommandError("Some error"),
+            f"Communication error while calling async_media_play for device {TV_NAME}: Some error",
+        ),
+        (
+            True,
+            WebOsTvCommandError("Some other error"),
+            f"Communication error while calling async_media_play for device {TV_NAME}: Some other error",
+        ),
+        (
+            False,
+            None,
+            f"Error calling async_media_play for device {TV_NAME}: Device is off and cannot be controlled",
+        ),
+    ],
+)
 async def test_control_error_handling(
-    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    client,
+    is_on: bool,
+    exception: Exception,
+    error_message: str,
 ) -> None:
     """Test control errors handling."""
     await setup_webostv(hass)
-    client.play.side_effect = WebOsTvCommandError
-    data = {ATTR_ENTITY_ID: ENTITY_ID}
+    client.play.side_effect = exception
+    client.is_on = is_on
+    await client.mock_state_update()
 
-    # Device on, raise HomeAssistantError
-    with pytest.raises(HomeAssistantError) as exc:
+    data = {ATTR_ENTITY_ID: ENTITY_ID}
+    with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
-    assert (
-        str(exc.value)
-        == f"Error calling async_media_play on entity {ENTITY_ID}, state:on"
-    )
-    assert client.play.call_count == 1
-
-    # Device off, log a warning
-    client.is_on = False
-    client.play.side_effect = TimeoutError
-    await client.mock_state_update()
-    await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
-
-    assert client.play.call_count == 2
-    assert (
-        f"Error calling async_media_play on entity {ENTITY_ID}, state:off, error:"
-        " TimeoutError()" in caplog.text
-    )
+    assert client.play.call_count == int(is_on)
 
 
 async def test_supported_features(hass: HomeAssistant, client) -> None:
@@ -820,15 +832,15 @@ async def test_update_media_state(hass: HomeAssistant, client) -> None:
     """Test updating media state."""
     await setup_webostv(hass)
 
-    client.media_state = {"foregroundAppInfo": [{"playState": "playing"}]}
+    client.media_state = [{"playState": "playing"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
 
-    client.media_state = {"foregroundAppInfo": [{"playState": "paused"}]}
+    client.media_state = [{"playState": "paused"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
 
-    client.media_state = {"foregroundAppInfo": [{"playState": "unloaded"}]}
+    client.media_state = [{"playState": "unloaded"}]
     await client.mock_state_update()
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
 

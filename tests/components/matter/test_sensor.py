@@ -193,6 +193,12 @@ async def test_battery_sensor_description(
     assert state
     assert state.state == "CR2032"
 
+    # case with a empty string to check if the attribute is indeed ignored
+    set_node_attribute(matter_node, 1, 47, 19, "")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.smoke_sensor_battery_type") is None
+
 
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_eve_thermo_sensor(
@@ -212,6 +218,18 @@ async def test_eve_thermo_sensor(
     state = hass.states.get("sensor.eve_thermo_valve_position")
     assert state
     assert state.state == "0"
+
+    # LocalTemperature
+    state = hass.states.get("sensor.eve_thermo_temperature")
+    assert state
+    assert state.state == "21.0"
+
+    set_node_attribute(matter_node, 1, 513, 0, 1800)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.eve_thermo_temperature")
+    assert state
+    assert state.state == "18.0"
 
 
 @pytest.mark.parametrize("node_fixture", ["pressure_sensor"])

@@ -798,36 +798,13 @@ class DefaultAgent(ConversationEntity):
         intent_response: intent.IntentResponse,
         recognize_result: RecognizeResult,
     ) -> str:
-        # Make copies of the states here so we can add translated names for responses.
-        matched = [
-            state_copy
-            for state in intent_response.matched_states
-            if (state_copy := core.State.from_dict(state.as_dict()))
-        ]
-        unmatched = [
-            state_copy
-            for state in intent_response.unmatched_states
-            if (state_copy := core.State.from_dict(state.as_dict()))
-        ]
-        all_states = matched + unmatched
-        domains = {state.domain for state in all_states}
-        translations = await translation.async_get_translations(
-            self.hass, language, "entity_component", domains
-        )
-
-        # Use translated state names
-        for state in all_states:
-            device_class = state.attributes.get("device_class", "_")
-            key = f"component.{state.domain}.entity_component.{device_class}.state.{state.state}"
-            state.state = translations.get(key, state.state)
-
         # Get first matched or unmatched state.
         # This is available in the response template as "state".
         state1: core.State | None = None
         if intent_response.matched_states:
-            state1 = matched[0]
+            state1 = intent_response.matched_states[0]
         elif intent_response.unmatched_states:
-            state1 = unmatched[0]
+            state1 = intent_response.unmatched_states[0]
 
         # Render response template
         speech_slots = {
@@ -849,11 +826,13 @@ class DefaultAgent(ConversationEntity):
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
-                        template.TemplateState(self.hass, state) for state in matched
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.matched_states
                     ],
                     # Entity states that did not match the query
                     "unmatched": [
-                        template.TemplateState(self.hass, state) for state in unmatched
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.unmatched_states
                     ],
                 },
             }
@@ -1350,14 +1329,25 @@ class DefaultAgent(ConversationEntity):
         """Try to match sentence against registered intents and return response.
 
         Only performs strict matching with exposed entities and exact wording.
-        Returns None if no match occurred.
+        Returns None if no match or a matching error occurred.
         """
         result = await self.async_recognize_intent(user_input, strict_intents_only=True)
         if not isinstance(result, RecognizeResult):
             # No error message on failed match
             return None
 
-        return await self._async_process_intent_result(result, user_input)
+        response = await self._async_process_intent_result(result, user_input)
+        if (
+            response.response_type == intent.IntentResponseType.ERROR
+            and response.error_code
+            not in (
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
+                intent.IntentResponseErrorCode.UNKNOWN,
+            )
+        ):
+            # We ignore no matching errors
+            return None
+        return response
 
 
 def _make_error_result(
@@ -1495,12 +1485,6 @@ def _get_match_error_response(
         # Entity is not in correct state
         assert constraints.states
         state = next(iter(constraints.states))
-        if constraints.domains:
-            # Translate if domain is available
-            domain = next(iter(constraints.domains))
-            state = translation.async_translate_state(
-                hass, state, domain, None, None, None
-            )
 
         return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
 

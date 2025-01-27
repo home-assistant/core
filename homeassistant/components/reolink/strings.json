@@ -18,6 +18,10 @@
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
+      },
+      "privacy": {
+        "title": "Permission to disable Reolink privacy mode",
+        "description": "Privacy mode is enabled on Reolink device {host}. By pressing SUBMIT, the privacy mode will be disabled to retrieve the necessary information from the Reolink device. You can abort the setup by pressing X and repeat the setup at a time in which privacy mode can be disabled. After this configuration, you are free to enable the privacy mode again using the privacy mode switch entity. During normal startup the privacy mode will not be disabled. Note however that all entities will be marked unavailable as long as the privacy mode is active."
       }
     },
     "error": {
@@ -808,6 +812,9 @@
       },
       "led": {
         "name": "LED"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
       }
     }
   }
