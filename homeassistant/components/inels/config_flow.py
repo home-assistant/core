@@ -26,12 +26,12 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         errors: dict[str, str] = {}
 
-        if user_input is not None:
+        if user_input:
+            # Abort if an entry with the same host already exists
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+
             test_connect = await self.hass.async_add_executor_job(
                 try_connection,
                 self.hass,
@@ -44,7 +44,7 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if test_connect is None:
                 return self.async_create_entry(
-                    title=TITLE,
+                    title=f"{TITLE} ({user_input[CONF_HOST]})",
                     data=user_input,
                 )
 
@@ -64,7 +64,6 @@ class INelsConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-            last_step=True,
         )
 
 
