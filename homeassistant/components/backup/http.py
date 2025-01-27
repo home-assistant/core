@@ -69,7 +69,7 @@ class DownloadBackupView(HomeAssistantView):
             CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
         }
 
-        if not password:
+        if not password or not backup.protected:
             return await self._send_backup_no_password(
                 request, headers, backup_id, agent_id, agent, manager
             )
