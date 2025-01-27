@@ -1203,8 +1203,8 @@ async def test_loading_platform_with_listener(
     await ws_client.send_json_auto_id({"type": "backup/agents/info"})
     resp = await ws_client.receive_json()
     assert resp["result"]["agents"] == [
-        {"agent_id": "backup.local"},
-        {"agent_id": "test.remote1"},
+        {"agent_id": "backup.local", "name": "local"},
+        {"agent_id": "test.remote1", "name": "remote1"},
     ]
     assert len(manager.local_backup_agents) == num_local_agents
 
@@ -1220,8 +1220,8 @@ async def test_loading_platform_with_listener(
     await ws_client.send_json_auto_id({"type": "backup/agents/info"})
     resp = await ws_client.receive_json()
     assert resp["result"]["agents"] == [
-        {"agent_id": "backup.local"},
-        {"agent_id": "test.remote2"},
+        {"agent_id": "backup.local", "name": "local"},
+        {"agent_id": "test.remote2", "name": "remote2"},
     ]
     assert len(manager.local_backup_agents) == num_local_agents
 
