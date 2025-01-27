@@ -26,7 +26,7 @@ TO_REDACT = [
 def _as_dict(
     data: Any, redact: bool = False
 ) -> Mapping[str, Any] | Sequence[Any] | Any:
-    """Convert dataclasses to dictionaries within various data structures."""
+    """Convert dataclasses to dicts within various data structures."""
     if dataclasses.is_dataclass(data):
         data_dict = dataclasses.asdict(data)  # type: ignore[arg-type]
         return data_dict if not redact else async_redact_data(data_dict, TO_REDACT)
@@ -62,7 +62,6 @@ async def async_get_config_entry_diagnostics(
         diagnostics["system"] = {"error": str(err)}
     else:
         diagnostics["system"] = _as_dict(system_info, redact=True)
-
     return diagnostics
 
 
@@ -75,9 +74,9 @@ async def async_get_device_diagnostics(
     player_id = next(
         int(value) for domain, value in device.identifiers if domain == DOMAIN
     )
-    coordinator = config_entry.runtime_data
+    player = config_entry.runtime_data.heos.players.get(player_id)
     return {
-        "device": async_redact_data(device.dict_repr),  # type: ignore[call-overload]
+        "device": async_redact_data(device.dict_repr, TO_REDACT),
         "entities": [
             {
                 "entity": entity.as_partial_dict,
@@ -87,5 +86,5 @@ async def async_get_device_diagnostics(
             }
             for entity in entities
         ],
-        "player": _as_dict(coordinator.heos.players.get(player_id), redact=True),
+        "player": _as_dict(player, redact=True),
     }

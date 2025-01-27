@@ -6,11 +6,13 @@ from collections.abc import AsyncIterator
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyheos import (
-    CONTROLS_ALL,
     Heos,
     HeosGroup,
+    HeosHost,
+    HeosNowPlayingMedia,
     HeosOptions,
     HeosPlayer,
+    HeosSystem,
     LineOutLevelType,
     MediaItem,
     MediaType,
@@ -98,6 +100,33 @@ async def controller_fixture(
         yield mock_heos
 
 
+@pytest.fixture(name="system")
+def system_info_fixture() -> dict[str, str]:
+    """Create a system info fixture."""
+    return HeosSystem(
+        "user@user.com",
+        "127.0.0.1",
+        hosts=[
+            HeosHost(
+                "Test Player",
+                "HEOS Drive HS2",
+                "123456",
+                "1.0.0",
+                "127.0.0.1",
+                NetworkType.WIRED,
+            ),
+            HeosHost(
+                "Test Player 2",
+                "Speaker",
+                "123456",
+                "1.0.0",
+                "127.0.0.2",
+                NetworkType.WIFI,
+            ),
+        ],
+    )
+
+
 @pytest.fixture(name="players")
 def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
     """Create two mock HeosPlayers."""
@@ -121,20 +150,18 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
             volume=25,
             heos=None,
         )
-        player.now_playing_media = Mock()
-        player.now_playing_media.supported_controls = CONTROLS_ALL
-        player.now_playing_media.album_id = 1
-        player.now_playing_media.queue_id = 1
-        player.now_playing_media.source_id = 1
-        player.now_playing_media.station = "Station Name"
-        player.now_playing_media.type = "Station"
-        player.now_playing_media.album = "Album"
-        player.now_playing_media.artist = "Artist"
-        player.now_playing_media.media_id = "1"
-        player.now_playing_media.duration = None
-        player.now_playing_media.current_position = None
-        player.now_playing_media.image_url = "http://"
-        player.now_playing_media.song = "Song"
+        player.now_playing_media = HeosNowPlayingMedia(
+            type=MediaType.STATION,
+            song="Song",
+            station="Station Name",
+            album="Album",
+            artist="Artist",
+            image_url="http://",
+            album_id="1",
+            media_id="1",
+            queue_id="1",
+            source_id=10,
+        )
         player.add_to_queue = AsyncMock()
         player.clear_queue = AsyncMock()
         player.get_quick_selects = AsyncMock(return_value=quick_selects)
