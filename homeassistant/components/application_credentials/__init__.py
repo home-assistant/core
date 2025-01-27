@@ -143,8 +143,6 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Application Credentials."""
-    hass.data[DOMAIN] = {}
-
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),
