@@ -1,7 +1,7 @@
 """Tests for the Model Context Protocol component."""
 
 import re
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import httpx
 from mcp.types import CallToolResult, ListToolsResult, TextContent, Tool
@@ -206,3 +206,19 @@ async def test_call_tool_fails(
             ),
             create_llm_context(),
         )
+
+
+async def test_convert_tool_schema_fails(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_mcp_client: Mock
+) -> None:
+    """Test a failure converting an MCP tool schema to a Home Assistant schema."""
+    mock_mcp_client.return_value.list_tools.return_value = ListToolsResult(
+        tools=[SEARCH_MEMORY_TOOL]
+    )
+
+    with patch(
+        "homeassistant.components.mcp.coordinator.convert_to_voluptuous",
+        side_effect=ValueError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
