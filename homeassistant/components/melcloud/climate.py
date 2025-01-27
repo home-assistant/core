@@ -284,9 +284,9 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set vertical vane position or mode."""
         await self.async_set_vane_vertical(swing_mode)
 
-    async def async_set_swing_horizontal_mode(self, swing_mode: str) -> None:
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set vertical vane position or mode."""
-        await self.async_set_vane_horizontal(swing_mode)
+        await self.async_set_vane_horizontal(swing_horizontal_mode)
 
     @property
     def swing_modes(self) -> list[str] | None:
