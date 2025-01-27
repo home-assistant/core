@@ -203,9 +203,27 @@ def _mocked_device(
         )
     device.features = device_features
 
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always.
+    module_features = {
+        mod_key if (mod_key := v.expected_module_key) else k: v
+        for k, v in device_features.items()
+    }
+
     for mod in device.modules.values():
-        mod.get_feature.side_effect = device_features.get
-        mod.has_feature.side_effect = lambda id: id in device_features
+        # Some tests remove the feature from device_features to test missing
+        # features, so check the key is still present there.
+        mod.get_feature.side_effect = (
+            lambda mod_id: mod_feat
+            if (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+            else None
+        )
+        mod.has_feature.side_effect = (
+            lambda mod_id: (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+        )
 
     device.parent = None
     device.children = []
@@ -244,6 +262,7 @@ def _mocked_feature(
     unit=None,
     minimum_value=None,
     maximum_value=None,
+    expected_module_key=None,
 ) -> Feature:
     """Get a mocked feature.
 
@@ -280,6 +299,16 @@ def _mocked_feature(
 
     # select
     feature.choices = choices or fixture.get("choices")
+
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always. module_key indicates the key of the feature
+    # in the module.
+    feature.expected_module_key = (
+        mod_key
+        if (mod_key := fixture.get("expected_module_key", expected_module_key))
+        else None
+    )
 
     return feature
 
