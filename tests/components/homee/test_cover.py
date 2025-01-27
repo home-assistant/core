@@ -3,7 +3,12 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_CLOSE_COVER, SERVICE_OPEN_COVER
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
+    SERVICE_STOP_COVER,
+)
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -50,6 +55,27 @@ async def test_close_cover(
     )
 
     mock_homee.set_value.assert_called_once_with(cover.id, 1, 1)
+
+
+async def test_stop_cover(
+    hass: HomeAssistant,
+    cover: AsyncMock,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test opening the cover."""
+    mock_homee.nodes = [cover]
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: "cover.test_cover"},
+        blocking=True,
+    )
+
+    mock_homee.set_value.assert_called_once_with(cover.id, 1, 2)
 
 
 async def test_cover_positions(
