@@ -1627,8 +1627,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Off',
-        'Normal',
+        'off',
+        'normal',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1663,8 +1663,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LaundryWasher Number of rinses',
       'options': list([
-        'Off',
-        'Normal',
+        'off',
+        'normal',
       ]),
     }),
     'context': <ANY>,
@@ -1672,7 +1672,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Off',
+    'state': 'off',
   })
 # ---
 # name: test_selects[silabs_laundrywasher][select.laundrywasher_spin_speed-entry]

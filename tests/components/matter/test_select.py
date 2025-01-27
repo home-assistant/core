@@ -183,9 +183,9 @@ async def test_list_select_entities(
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state
-    assert state.state == "Off"
-    assert state.attributes["options"] == ["Off", "Normal"]
+    assert state.state == "off"
+    assert state.attributes["options"] == ["off", "normal"]
     set_node_attribute(matter_node, 1, 83, 2, 1)
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.laundrywasher_number_of_rinses")
-    assert state.state == "Normal"
+    assert state.state == "normal"

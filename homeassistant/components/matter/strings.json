@@ -207,7 +207,13 @@
         "name": "Temperature display mode"
       },
       "laundry_washer_number_of_rinses": {
-        "name": "Number of rinses"
+        "name": "Number of rinses",
+        "state": {
+          "off": "Off",
+          "normal": "Normal",
+          "extra": "Extra",
+          "max": "Max"
+        }
       },
       "laundry_washer_spin_speed": {
         "name": "Spin speed"
