@@ -84,8 +84,9 @@ async def test_mcp_server_failure(
         "", request=None, response=httpx.Response(500)
     )
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    with patch("homeassistant.components.mcp.coordinator.TIMEOUT", 1):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_list_tools_failure(

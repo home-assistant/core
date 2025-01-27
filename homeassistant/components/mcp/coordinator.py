@@ -1,7 +1,8 @@
 """Types for the Model Context Protocol integration."""
 
+import asyncio
 from collections.abc import AsyncGenerator
-from contextlib import AbstractAsyncContextManager, asynccontextmanager
+from contextlib import asynccontextmanager
 import datetime
 import logging
 
@@ -24,6 +25,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=30)
+TIMEOUT = 10
 
 
 @asynccontextmanager
@@ -77,8 +79,8 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
     """Define an object to hold MCP data."""
 
     config_entry: ConfigEntry
-    session: ClientSession
-    ctx_mgr: AbstractAsyncContextManager[ClientSession]
+    _session: ClientSession | None = None
+    _setup_error: Exception | None = None
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize ModelContextProtocolCoordinator."""
@@ -89,18 +91,52 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
             config_entry=config_entry,
             update_interval=UPDATE_INTERVAL,
         )
+        self._stop = asyncio.Event()
 
     async def _async_setup(self) -> None:
         """Set up the client connection."""
-        self.ctx_mgr = mcp_client(self.config_entry.data[CONF_URL])
+        connected = asyncio.Event()
+        stop = asyncio.Event()
+        self.config_entry.async_create_background_task(
+            self.hass, self._connect(connected, stop), "mcp-client"
+        )
         try:
-            self.session = await self.ctx_mgr.__aenter__()  # pylint: disable=unnecessary-dunder-call
-        except httpx.HTTPError as err:
-            raise UpdateFailed(f"Error communicating with MCP server: {err}") from err
+            async with asyncio.timeout(TIMEOUT):
+                await connected.wait()
+                self._stop = stop
+        finally:
+            if self._setup_error is not None:
+                raise self._setup_error
+
+    async def _connect(self, connected: asyncio.Event, stop: asyncio.Event) -> None:
+        """Create a server-sent event MCP client."""
+        url = self.config_entry.data[CONF_URL]
+        try:
+            async with (
+                sse_client(url=url) as streams,
+                ClientSession(*streams) as session,
+            ):
+                await session.initialize()
+                self._session = session
+                connected.set()
+                await stop.wait()
+        except httpx.HTTPStatusError as err:
+            self._setup_error = err
+            _LOGGER.debug("Error connecting to MCP server: %s", err)
+            raise UpdateFailed(f"Error connecting to MCP server: {err}") from err
+        except ExceptionGroup as err:
+            self._setup_error = err.exceptions[0]
+            _LOGGER.debug("Error connecting to MCP server: %s", err)
+            raise UpdateFailed(
+                "Error connecting to MCP server: {err.exceptions[0]}"
+            ) from err.exceptions[0]
+        finally:
+            self._session = None
 
     async def close(self) -> None:
         """Close the client connection."""
-        await self.ctx_mgr.__aexit__(None, None, None)
+        if self._stop is not None:
+            self._stop.set()
 
     async def _async_update_data(self) -> list[llm.Tool]:
         """Fetch data from API endpoint.
@@ -108,8 +144,10 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
+        if self._session is None:
+            raise UpdateFailed("No session available")
         try:
-            result = await self.session.list_tools()
+            result = await self._session.list_tools()
         except httpx.HTTPError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
@@ -127,7 +165,7 @@ class ModelContextProtocolCoordinator(DataUpdateCoordinator[list[llm.Tool]]):
                     tool.name,
                     tool.description,
                     parameters,
-                    self.session,
+                    self._session,
                 )
             )
         return tools
