@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from aiohttp import ClientError
-from nice_go import ApiError
+from nice_go import ApiError, AuthFailedError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import Platform
@@ -76,6 +76,23 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
                 translation_key="switch_on_error",
                 translation_placeholders={"exception": str(error)},
             ) from error
+        except AuthFailedError:
+            # Try refreshing token and retry
+            await self.coordinator.update_refresh_token()
+            try:
+                await self.coordinator.api.vacation_mode_on(self._device_id)
+            except (ApiError, ClientError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="switch_on_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
+            except AuthFailedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="switch_on_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
@@ -88,3 +105,20 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
                 translation_key="switch_off_error",
                 translation_placeholders={"exception": str(error)},
             ) from error
+        except AuthFailedError:
+            # Try refreshing token and retry
+            await self.coordinator.update_refresh_token()
+            try:
+                await self.coordinator.api.vacation_mode_off(self._device_id)
+            except (ApiError, ClientError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="switch_off_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
+            except AuthFailedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="switch_off_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err

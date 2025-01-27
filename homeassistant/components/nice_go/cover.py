@@ -3,7 +3,7 @@
 from typing import Any
 
 from aiohttp import ClientError
-from nice_go import ApiError
+from nice_go import ApiError, AuthFailedError
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -84,6 +84,23 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
                 translation_key="close_cover_error",
                 translation_placeholders={"exception": str(err)},
             ) from err
+        except AuthFailedError:
+            # Try refreshing token and retry
+            await self.coordinator.update_refresh_token()
+            try:
+                await self.coordinator.api.close_barrier(self._device_id)
+            except (ApiError, ClientError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="close_cover_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
+            except AuthFailedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="close_cover_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
@@ -98,3 +115,20 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
                 translation_key="open_cover_error",
                 translation_placeholders={"exception": str(err)},
             ) from err
+        except AuthFailedError:
+            # Try refreshing token and retry
+            await self.coordinator.update_refresh_token()
+            try:
+                await self.coordinator.api.open_barrier(self._device_id)
+            except (ApiError, ClientError) as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="open_cover_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
+            except AuthFailedError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="open_cover_error",
+                    translation_placeholders={"exception": str(err)},
+                ) from err
