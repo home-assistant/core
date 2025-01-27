@@ -407,32 +407,31 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if not self.saved_user_input:
             self.saved_user_input = user_input
 
-        if CONF_BACKUP_PATH not in user_input and CONF_BACKUP_SHARE not in user_input:
-            return self.async_show_form(
-                step_id="backup_share",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_BACKUP_SHARE): SelectSelector(
-                            SelectSelectorConfig(
-                                options=[
-                                    SelectOptionDict(value=s.path, label=s.name)
-                                    for s in self.shares
-                                ],
-                                mode=SelectSelectorMode.DROPDOWN,
-                            ),
+        if CONF_BACKUP_PATH in user_input:
+            user_input = {**self.saved_user_input, **user_input}
+            self.saved_user_input = {}
+            return await self.async_step_user(user_input)
+
+        return self.async_show_form(
+            step_id="backup_share",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BACKUP_SHARE): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=s.path, label=s.name)
+                                for s in self.shares
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
                         ),
-                        vol.Required(
-                            CONF_BACKUP_PATH,
-                            default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
-                        ): str,
-                    }
-                ),
-            )
-
-        user_input = {**self.saved_user_input, **user_input}
-        self.saved_user_input = {}
-
-        return await self.async_step_user(user_input)
+                    ),
+                    vol.Required(
+                        CONF_BACKUP_PATH,
+                        default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
+                    ): str,
+                }
+            ),
+        )
 
     def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
         """See if we already have a configured NAS with this MAC address."""
