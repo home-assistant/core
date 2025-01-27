@@ -152,6 +152,7 @@ async def ws_subscribe_advertisements(
     ).async_start()
 
 
+@websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "bluetooth/subscribe_connection_allocations",
