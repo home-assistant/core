@@ -133,7 +133,7 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
 
 
 class MatterDynamicListSelectEntity(MatterEntity, SelectEntity):
-    """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
+    """Representation of a Matter select entity where the options are dynamically defined in a Matter attribute."""
 
     entity_description: MatterDynamicListSelectEntityDescription
 
