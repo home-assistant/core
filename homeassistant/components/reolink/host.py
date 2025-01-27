@@ -259,8 +259,6 @@ class ReolinkHost:
                 self._hass, FIRST_TCP_PUSH_TIMEOUT, self._async_check_tcp_push
             )
 
-        self.privacy_mode = self._api.baichuan.privacy_mode()
-
         ch_list: list[int | None] = [None]
         if self._api.is_nvr:
             ch_list.extend(self._api.channels)
