@@ -90,7 +90,7 @@ async def test_reauth_triggered(hass: HomeAssistant) -> None:
 async def test_config_entry_migrations(
     hass: HomeAssistant, mock_dsm: MagicMock
 ) -> None:
-    """Test if reauthentication flow is triggered."""
+    """Test config entry migrations."""
     with (
         patch(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
