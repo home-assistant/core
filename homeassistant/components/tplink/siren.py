@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+import math
+from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Device, Module
 
@@ -19,9 +20,11 @@ from homeassistant.components.siren import (
     SirenTurnOnServiceParameters,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry, legacy_device_id
+from .const import DOMAIN
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
@@ -112,18 +115,32 @@ class TPLinkSirenEntity(CoordinatedTPLinkModuleEntity, SirenEntity):
         super().__init__(device, coordinator, description, parent=parent)
         self._alarm_module = device.modules[Module.Alarm]
 
+        alarm_vol_feat = self._alarm_module.get_feature("alarm_volume")
+        alarm_duration_feat = self._alarm_module.get_feature("alarm_duration")
+        if TYPE_CHECKING:
+            assert alarm_vol_feat
+            assert alarm_duration_feat
+        self._alarm_volume_max = alarm_vol_feat.maximum_value
+        self._alarm_duration_max = alarm_duration_feat.maximum_value
+
     @async_refresh_after
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on."""
         turn_on_params = cast(SirenTurnOnServiceParameters, kwargs)
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
-            # The device has only three volume levels, so we do binning here
-            if volume < 0.33:
-                volume = "low"
-            elif volume < 0.66:
-                volume = "medium"
-            else:
-                volume = "high"
+            # service parameter is a % so we round up to the nearest int
+            volume = math.ceil(volume * self._alarm_volume_max)
+
+        if (duration := kwargs.get(ATTR_DURATION)) is not None:
+            if duration < 1 or duration > self._alarm_duration_max:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_alarm_duration",
+                    translation_placeholders={
+                        "duration": str(duration),
+                        "duration_max": str(self._alarm_duration_max),
+                    },
+                )
 
         await self._alarm_module.play(
             duration=turn_on_params.get(ATTR_DURATION),
