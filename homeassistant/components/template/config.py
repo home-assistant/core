@@ -122,9 +122,11 @@ async def _async_resolve_blueprints(
             raise vol.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
             platform = platforms.pop()
-            for prop in (CONF_NAME, CONF_UNIQUE_ID, CONF_VARIABLES):
+            for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
+            if CONF_TRIGGER not in config and CONF_VARIABLES in config:
+                config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
         raw_config = dict(config)
 
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
