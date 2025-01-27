@@ -233,7 +233,6 @@ class IPPSensor(SensorEntity):
         self._attributes = self.data.attributes.get(self._printer_name)
         self._attr_available = self.data.available
 
-
 class MarkerSensor(SensorEntity):
     """Implementation of the MarkerSensor.
 
@@ -246,7 +245,8 @@ class MarkerSensor(SensorEntity):
     def __init__(self, data: CupsData, printer: str, name: str, is_cups: bool) -> None:
         """Initialize the sensor."""
         self.data = data
-        self._attr_name = name
+        # Changed the name to include the printer name as a prefix
+        self._attr_name = f"{printer}_{name}"
         self._printer = printer
         self._index = data.attributes[printer]["marker-names"].index(name)
         self._is_cups = is_cups
