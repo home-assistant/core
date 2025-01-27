@@ -167,7 +167,6 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             URL(self.authorize_url)
             .with_query(
                 {
-                    "appSelect": 1,
                     "response_type": "code",
                     "client_id": self.client_id,
                     "redirect_uri": redirect_uri,

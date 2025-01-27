@@ -165,3 +165,20 @@ async def test_reauthentication_flow(
     assert result["reason"] == "reauth_successful"
 
     assert len(mock_setup.mock_calls) == 1
+
+async def test_extra_authorize_data(hass: HomeAssistant) -> None:
+    """Test extra authorize data is appended to the authorize URL."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert "appSelect" in result["url"]
+    assert result["url"].endswith(f"&state={state}")
