@@ -626,6 +626,108 @@ async def test_service_climate_update(
 
 
 @pytest.mark.parametrize(
+    ("do_config", "result", "register_words", "coil_value"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                                CONF_HVAC_MODE_DRY: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.COOL,
+            [0x00],
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 119,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                                CONF_HVAC_MODE_DRY: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.HEAT,
+            [0x01],
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.OFF,
+            [0x00],
+            [0x00],
+        ),
+    ],
+)
+async def test_hvac_onoff_coil_update(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words, coil_value
+) -> None:
+    """Test climate update based on On/Off coil values."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_coils.return_value = ReadResult(coil_value)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result
+
+
+@pytest.mark.parametrize(
     ("do_config", "result", "register_words"),
     [
         (
