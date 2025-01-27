@@ -745,7 +745,7 @@ async def test_script_tool(
     area = area_registry.async_create("Living room")
     floor = floor_registry.async_create("2")
 
-    assert llm.SCRIPT_PARAMETERS_CACHE not in hass.data
+    assert llm.ACTION_PARAMETERS_CACHE not in hass.data
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -769,7 +769,7 @@ async def test_script_tool(
     }
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
             "This is a test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
@@ -866,7 +866,7 @@ async def test_script_tool(
     ):
         await hass.services.async_call("script", "reload", blocking=True)
 
-    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {}
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -882,7 +882,7 @@ async def test_script_tool(
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
             "This is a new test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
