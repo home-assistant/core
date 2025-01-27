@@ -71,30 +71,33 @@ async def test_cover_positions(
     assert attributes.get("current_position") == 100
     assert attributes.get("current_tilt_position") == 100
 
-    mock_homee.nodes[0].attributes[0].current_value = 0
-    mock_homee.nodes[0].attributes[1].current_value = 1
-    mock_homee.nodes[0].attributes[2].current_value = 0
+    cover.current_value = 100
+    cover.current_value = 1
+    cover.current_value = 90
     mock_homee.nodes[0].add_on_changed_listener.call_args_list[0](mock_homee.nodes[0])
+    await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_cover").state == CoverState.CLOSED
     attributes = hass.states.get("cover.test_cover").attributes
     assert attributes.get("current_position") == 0
     assert attributes.get("current_tilt_position") == 0
 
-    mock_homee.nodes[0].attributes[0].current_value = 75
-    mock_homee.nodes[0].attributes[1].current_value = 3
-    mock_homee.nodes[0].attributes[2].current_value = 75
+    cover.current_value = 75
+    cover.current_value = 3
+    cover.current_value = 75
     mock_homee.nodes[0].add_on_changed_listener.call_args_list[0](mock_homee.nodes[0])
+    await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_cover").state == CoverState.OPENING
     attributes = hass.states.get("cover.test_cover").attributes
     assert attributes.get("current_position") == 25
     assert attributes.get("current_tilt_position") == 25
 
-    mock_homee.nodes[0].attributes[0].current_value = 25
-    mock_homee.nodes[0].attributes[1].current_value = 4
-    mock_homee.nodes[0].attributes[2].current_value = 25
+    cover.current_value = 25
+    cover.current_value = 4
+    cover.current_value = 25
     mock_homee.nodes[0].add_on_changed_listener.call_args_list[0](mock_homee.nodes[0])
+    await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_cover").state == CoverState.CLOSING
     attributes = hass.states.get("cover.test_cover").attributes
