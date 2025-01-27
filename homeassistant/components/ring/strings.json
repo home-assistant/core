@@ -8,8 +8,8 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "username": "Your Ring cloud username.",
-          "password": "Your Ring cloud password."
+          "username": "Your Ring account username.",
+          "password": "Your Ring account password."
         }
       },
       "2fa": {
