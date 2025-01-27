@@ -37,7 +37,7 @@ FAN_MODE_SLEEP = "sleep"
 FAN_MODE_PET = "pet"
 FAN_MODE_TURBO = "turbo"
 FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
-FAN_MODE_NORMAL = "turbo"
+FAN_MODE_NORMAL = "normal"
 
 
 PRESET_MODES = {
