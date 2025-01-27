@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(hours=1)
 
 
