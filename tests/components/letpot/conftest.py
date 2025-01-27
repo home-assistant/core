@@ -15,7 +15,7 @@ from homeassistant.components.letpot.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
-from . import AUTHENTICATION
+from . import AUTHENTICATION, STATUS
 
 from tests.common import MockConfigEntry
 
@@ -55,6 +55,19 @@ def mock_client() -> Generator[AsyncMock]:
             )
         ]
         yield client
+
+
+@pytest.fixture
+def mock_device_client() -> Generator[AsyncMock]:
+    """Mock a LetPotDeviceClient."""
+    with patch(
+        "homeassistant.components.letpot.coordinator.LetPotDeviceClient",
+        autospec=True,
+    ) as mock_device_client:
+        device_client = mock_device_client.return_value
+        device_client.get_current_status.return_value = STATUS
+        device_client.last_status.return_value = STATUS
+        yield device_client
 
 
 @pytest.fixture
