@@ -58,7 +58,7 @@ rules:
     comment: |
       This integration does not have platforms.
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices:
