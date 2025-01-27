@@ -10,8 +10,9 @@ from functools import partial
 import logging
 import os
 import sys
-from typing import TYPE_CHECKING, Any, overload
+from typing import Any, overload
 
+from aiousbwatcher import AIOUSBWatcher, InotifyNotAvailableError
 from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
@@ -26,7 +27,7 @@ from homeassistant.core import (
     HomeAssistant,
     callback as hass_callback,
 )
-from homeassistant.helpers import config_validation as cv, discovery_flow, system_info
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.deprecation import (
     DeprecatedConstant,
@@ -42,9 +43,6 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from .const import DOMAIN
 from .models import USBDevice
 from .utils import usb_device_from_port
-
-if TYPE_CHECKING:
-    from pyudev import Device, MonitorObserver
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -263,7 +261,7 @@ class USBDiscovery:
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
-        if await self._async_supports_monitoring():
+        if self._async_supports_monitoring():
             await self._async_start_monitor()
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
@@ -279,18 +277,23 @@ class USBDiscovery:
         if self._request_debouncer:
             self._request_debouncer.async_shutdown()
 
-    async def _async_supports_monitoring(self) -> bool:
-        info = await system_info.async_get_system_info(self.hass)
-        return not info.get("docker")
+    @hass_callback
+    def _async_supports_monitoring(self) -> bool:
+        return sys.platform == "linux"
 
     async def _async_start_monitor(self) -> None:
         """Start monitoring hardware."""
-        if not await self._async_start_monitor_udev():
+        try:
+            await self._async_start_aiousbwatcher()
+        except InotifyNotAvailableError as ex:
             _LOGGER.info(
-                "Falling back to periodic filesystem polling for development, libudev "
-                "is not present"
+                "Falling back to periodic filesystem polling for development, aiousbwatcher "
+                "is not available on this system: %s",
+                ex,
             )
             self._async_start_monitor_polling()
+        except Exception:
+            _LOGGER.exception("Failed to start aiousbwatcher")
 
     @hass_callback
     def _async_start_monitor_polling(self) -> None:
@@ -309,70 +312,24 @@ class USBDiscovery:
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
-    async def _async_start_monitor_udev(self) -> bool:
-        """Start monitoring hardware with pyudev. Returns True if successful."""
-        if not sys.platform.startswith("linux"):
-            return False
+    async def _async_start_aiousbwatcher(self) -> None:
+        """Start monitoring hardware with aiousbwatcher. Returns True if successful."""
 
-        if not (
-            observer := await self.hass.async_add_executor_job(
-                self._get_monitor_observer
-            )
-        ):
-            return False
+        @hass_callback
+        def _usb_change_callback() -> None:
+            self.hass.create_task(self._async_scan())
 
-        def _stop_observer(event: Event) -> None:
-            observer.stop()
+        watcher = AIOUSBWatcher()
+        watcher.async_register_callback(_usb_change_callback)
+        cancel = watcher.async_start()
 
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_observer)
+        @hass_callback
+        def _async_stop_watcher(event: Event) -> None:
+            cancel()
+
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_watcher)
+
         self.observer_active = True
-        return True
-
-    def _get_monitor_observer(self) -> MonitorObserver | None:
-        """Get the monitor observer.
-
-        This runs in the executor because the import
-        does blocking I/O.
-        """
-        from pyudev import (  # pylint: disable=import-outside-toplevel
-            Context,
-            Monitor,
-            MonitorObserver,
-        )
-
-        try:
-            context = Context()
-        except (ImportError, OSError):
-            return None
-
-        monitor = Monitor.from_netlink(context)
-        try:
-            monitor.filter_by(subsystem="tty")
-        except ValueError as ex:  # this fails on WSL
-            _LOGGER.debug(
-                "Unable to setup pyudev filtering; This is expected on WSL: %s", ex
-            )
-            return None
-
-        observer = MonitorObserver(
-            monitor, callback=self._device_event, name="usb-observer"
-        )
-
-        observer.start()
-        return observer
-
-    def _device_event(self, device: Device) -> None:
-        """Call when the observer receives a USB device event."""
-        if device.action not in ("add", "remove"):
-            return
-
-        _LOGGER.info(
-            "Received a udev device event %r for %s, triggering scan",
-            device.action,
-            device.device_node,
-        )
-
-        self.hass.create_task(self._async_scan())
 
     @hass_callback
     def async_register_scan_request_callback(
@@ -511,6 +468,7 @@ class USBDiscovery:
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
+        _LOGGER.debug("Executing comports scan")
         await self._async_process_ports(
             await self.hass.async_add_executor_job(comports)
         )
