@@ -20,20 +20,11 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import CLIENT_ID, REDIRECT_URI
 
-from tests.common import MockConfigEntry, load_json_value_fixture
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
-
-async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
-    """Test config flow base case with no credentials registered."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "missing_credentials"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
@@ -82,11 +73,6 @@ async def test_full_flow(
         },
     )
 
-    aioclient_mock.get(
-        "https://api.electrickiwi.co.nz/session/",
-        json=load_json_value_fixture("session.json", DOMAIN),
-    )
-
     await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -99,19 +85,14 @@ async def test_existing_entry(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
-    config_entry: MockConfigEntry,
+    migrated_config_entry: MockConfigEntry,
 ) -> None:
     """Check existing entry."""
-    config_entry.add_to_hass(hass)
+    migrated_config_entry.add_to_hass(hass)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER, "entry_id": DOMAIN}
-    )
-
-    aioclient_mock.get(
-        "https://api.electrickiwi.co.nz/session/",
-        json=load_json_value_fixture("session.json", DOMAIN),
     )
 
     state = config_entry_oauth2_flow._encode_jwt(
@@ -141,21 +122,18 @@ async def test_existing_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
+    migrated_config_entry: MockConfigEntry,
 ) -> None:
     """Test Electric Kiwi reauthentication."""
-    config_entry.add_to_hass(hass)
+    migrated_config_entry.add_to_hass(hass)
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {}
-
-    result = await config_entry.start_reauth_flow(hass)
+    result = await migrated_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -184,11 +162,6 @@ async def test_reauthentication(
         },
     )
 
-    aioclient_mock.get(
-        "https://api.electrickiwi.co.nz/session/",
-        json=load_json_value_fixture("session.json", DOMAIN),
-    )
-
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
@@ -200,12 +173,13 @@ async def test_reauthentication(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
-async def test_no_customers(
+async def test_no_services(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     setup_credentials: None,
     mock_setup_entry: AsyncMock,
+    ek_api: AsyncMock,
 ) -> None:
     """Check full flow."""
 
@@ -245,15 +219,8 @@ async def test_no_customers(
         },
     )
 
-    aioclient_mock.get(
-        "https://api.electrickiwi.co.nz/session/",
-        json=load_json_value_fixture("session_no_user.json", DOMAIN),
-    )
-
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 0
-    assert len(mock_setup_entry.mock_calls) == 0
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "no_customers"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1

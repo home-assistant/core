@@ -7,7 +7,7 @@ import logging
 
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
-from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
+from electrickiwi_api.model import AccountSummary, Hop, HopIntervals
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -19,7 +19,7 @@ ACCOUNT_SCAN_INTERVAL = timedelta(hours=6)
 HOP_SCAN_INTERVAL = timedelta(minutes=20)
 
 
-class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountBalance]):
+class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountSummary]):
     """ElectricKiwi Account Data object."""
 
     def __init__(self, hass: HomeAssistant, ek_api: ElectricKiwiApi) -> None:
@@ -32,11 +32,11 @@ class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountBalance]):
         )
         self._ek_api = ek_api
 
-    async def _async_update_data(self) -> AccountBalance:
+    async def _async_update_data(self) -> AccountSummary:
         """Fetch data from Account balance API endpoint."""
         try:
             async with asyncio.timeout(60):
-                return await self._ek_api.get_account_balance()
+                return await self._ek_api.get_account_summary()
         except AuthException as auth_err:
             raise ConfigEntryAuthFailed from auth_err
         except ApiException as api_err:

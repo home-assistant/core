@@ -60,10 +60,7 @@ class ElectricKiwiOauth2FlowHandler(
 
         session = await ek_api.get_active_session()
 
-        if len(session.customer_numbers) == 0:
-            return self.async_abort(reason="no_customers")
-
-        unique_id = "_".join(str(num) for num in session.customer_numbers)
+        unique_id = str(session.data.customer_number)
 
         await self.async_set_unique_id(unique_id)
         if self.source == SOURCE_REAUTH:

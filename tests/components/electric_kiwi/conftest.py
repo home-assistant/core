@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Generator
 from time import time
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
-from electrickiwi_api.model import AccountBalance, Hop, HopIntervals, Session
+from electrickiwi_api.model import AccountSummary, Hop, HopIntervals, Session
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -27,7 +27,7 @@ type YieldFixture = Generator[AsyncMock]
 type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup application credentials component."""
     await async_setup_component(hass, "application_credentials", {})
@@ -38,14 +38,55 @@ async def setup_credentials(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.fixture(name="electrickiwi_api")
+def electrickiwi_api_fixture() -> AsyncMock:
+    """Define electric kiwi API fixture."""
+    return Mock(
+        customer_number=123456,
+        connection_id=123456,
+        set_active_session=AsyncMock(None),
+        get_active_session=AsyncMock(
+            return_value=Session.from_dict(
+                load_json_value_fixture("session.json", DOMAIN)
+            )
+        ),
+        get_hop_intervals=AsyncMock(
+            return_value=HopIntervals.from_dict(
+                load_json_value_fixture("hop_intervals.json", DOMAIN)
+            )
+        ),
+        get_hop=AsyncMock(
+            return_value=Hop.from_dict(load_json_value_fixture("get_hop.json", DOMAIN))
+        ),
+        get_account_summary=AsyncMock(
+            return_value=AccountSummary.from_dict(
+                load_json_value_fixture("account_summary.json", DOMAIN)
+            )
+        ),
+    )
+
+
 @pytest.fixture(autouse=True)
-async def request_setup(current_request_with_host: None) -> None:
-    """Request setup."""
+def ek_api(electrickiwi_api: Mock) -> YieldFixture:
+    """Mock ek api and return values."""
+    with (
+        patch(
+            "electrickiwi_api.ElectricKiwiApi",
+            autospec=True,
+            return_value=electrickiwi_api,
+        ),
+        patch(
+            "homeassistant.components.electric_kiwi.ElectricKiwiApi",
+            autospec=True,
+            return_value=electrickiwi_api,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
 def component_setup(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, ek_api: AsyncMock
 ) -> ComponentSetup:
     """Fixture for setting up the integration."""
 
@@ -84,9 +125,32 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "expires_at": time() + 60,
             },
         },
-        unique_id="123456",
+        unique_id=DOMAIN,
         version=1,
         minor_version=1,
+    )
+
+
+@pytest.fixture(name="migrated_config_entry")
+def mock_migrated_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create mocked config entry."""
+    return MockConfigEntry(
+        title="Electric Kiwi",
+        domain=DOMAIN,
+        data={
+            "id": "123456",
+            "auth_implementation": DOMAIN,
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time() + 60,
+            },
+        },
+        unique_id="123456",
+        version=1,
+        minor_version=2,
     )
 
 
@@ -107,31 +171,3 @@ def electric_kiwi_auth() -> YieldFixture:
     ) as mock_auth:
         mock_auth.return_value.async_get_access_token = AsyncMock("auth_token")
         yield mock_auth
-
-
-@pytest.fixture(name="ek_api")
-def ek_api() -> YieldFixture:
-    """Mock ek api and return values."""
-    with patch(
-        "homeassistant.components.electric_kiwi.ElectricKiwiApi", autospec=True
-    ) as mock_ek_api:
-        mock_ek_api.return_value.customer_number = 123456
-        mock_ek_api.return_value.connection_id = 123456
-        mock_ek_api.return_value.set_active_session.return_value = None
-        mock_ek_api.return_value.get_active_session.return_value = Session.from_dict(
-            load_json_value_fixture("session.json", DOMAIN)
-        )
-        mock_ek_api.return_value.get_hop_intervals.return_value = (
-            HopIntervals.from_dict(
-                load_json_value_fixture("hop_intervals.json", DOMAIN)
-            )
-        )
-        mock_ek_api.return_value.get_hop.return_value = Hop.from_dict(
-            load_json_value_fixture("get_hop.json", DOMAIN)
-        )
-        mock_ek_api.return_value.get_account_balance.return_value = (
-            AccountBalance.from_dict(
-                load_json_value_fixture("account_balance.json", DOMAIN)
-            )
-        )
-        yield mock_ek_api
