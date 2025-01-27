@@ -146,6 +146,14 @@ async def test_list_select_entities(
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state.state == "unknown"
 
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_dynamic_list_select_entities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test MatterDynamicListSelectEntity entities are discovered and working from a laundrywasher fixture."""
     # SpinSpeedCurrent
     state = hass.states.get("select.laundrywasher_spin_speed")
     assert state
@@ -180,6 +188,14 @@ async def test_list_select_entities(
     state = hass.states.get("select.laundrywasher_spin_speed")
     assert state.state == "unknown"
 
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_map_select_entities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test MatterMapSelectEntity entities are discovered and working from a laundrywasher fixture."""
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state
