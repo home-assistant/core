@@ -1328,7 +1328,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self.async_update_device(device.id, remove_config_entry_id=config_entry_id)
         for deleted_device in list(self.deleted_devices.values()):
             config_entries = deleted_device.config_entries
-            config_entries_subentries = deleted_device.config_entries_subentries
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
@@ -1341,7 +1340,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
             else:
                 config_entries = config_entries - {config_entry_id}
-                config_entries_subentries = dict(config_entries_subentries)
+                config_entries_subentries = dict(
+                    deleted_device.config_entries_subentries
+                )
                 del config_entries_subentries[config_entry_id]
                 # No need to reindex here since we currently
                 # do not have a lookup by config entry
