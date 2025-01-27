@@ -62,6 +62,7 @@ def dsm_with_photos() -> MagicMock:
     dsm.photos.get_item_thumbnail_url = AsyncMock(
         return_value="http://my.thumbnail.url"
     )
+    dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
     return dsm
 
 

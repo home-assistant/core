@@ -87,7 +87,8 @@ async def controller_fixture(
     mock_heos.load_players = AsyncMock(return_value=change_data)
     mock_heos._signed_in_username = "user@user.com"
     mock_heos.get_groups = AsyncMock(return_value=group)
-    mock_heos.create_group = AsyncMock(return_value=None)
+    mock_heos._groups = group
+    mock_heos.set_group = AsyncMock(return_value=None)
     new_mock = Mock(return_value=mock_heos)
     mock_heos.new_mock = new_mock
     with (
@@ -104,6 +105,7 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
     for i in (1, 2):
         player = HeosPlayer(
             player_id=i,
+            group_id=999,
             name="Test Player" if i == 1 else f"Test Player {i}",
             model="HEOS Drive HS2" if i == 1 else "Speaker",
             serial="123456",
@@ -139,7 +141,7 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
         player.mute = AsyncMock()
         player.pause = AsyncMock()
         player.play = AsyncMock()
-        player.play_input_source = AsyncMock()
+        player.play_media = AsyncMock()
         player.play_next = AsyncMock()
         player.play_previous = AsyncMock()
         player.play_preset_station = AsyncMock()
@@ -193,17 +195,28 @@ def favorites_fixture() -> dict[int, MediaItem]:
 @pytest.fixture(name="input_sources")
 def input_sources_fixture() -> list[MediaItem]:
     """Create a set of input sources for testing."""
-    source = MediaItem(
-        source_id=1,
-        name="HEOS Drive - Line In 1",
-        media_id=const.INPUT_AUX_IN_1,
-        type=MediaType.STATION,
-        playable=True,
-        browsable=False,
-        image_url="",
-        heos=None,
-    )
-    return [source]
+    return [
+        MediaItem(
+            source_id=const.MUSIC_SOURCE_AUX_INPUT,
+            name="HEOS Drive - Line In 1",
+            media_id=const.INPUT_AUX_IN_1,
+            type=MediaType.STATION,
+            playable=True,
+            browsable=False,
+            image_url="",
+            heos=None,
+        ),
+        MediaItem(
+            source_id=const.MUSIC_SOURCE_AUX_INPUT,
+            name="Speaker - Line In 1",
+            media_id=const.INPUT_AUX_IN_1,
+            type=MediaType.STATION,
+            playable=True,
+            browsable=False,
+            image_url="",
+            heos=None,
+        ),
+    ]
 
 
 @pytest.fixture(name="discovery_data")
