@@ -101,19 +101,25 @@ class LovelaceData:
     yaml_dashboards: dict[str | None, ConfigType]
 
     def __getitem__(self, name: str) -> Any:
-        """Enable method for compatibility reason."""
+        """Enable method for compatibility reason.
+
+        Following migration from an untyped dict to a dataclass in
+        https://github.com/home-assistant/core/pull/136313
+        """
         report_usage(
             f"accessed lovelace_data['{name}'] instead of lovelace_data.{name}",
-            exclude_integrations={DOMAIN},
             breaks_in_ha_version="2026.2",
         )
         return getattr(self, name)
 
     def get(self, name: str, default: Any = None) -> Any:
-        """Enable method for compatibility reason."""
+        """Enable method for compatibility reason.
+
+        Following migration from an untyped dict to a dataclass in
+        https://github.com/home-assistant/core/pull/136313
+        """
         report_usage(
             f"accessed lovelace_data.get('{name}') instead of lovelace_data.{name}",
-            exclude_integrations={DOMAIN},
             breaks_in_ha_version="2026.2",
         )
         if hasattr(self, name):
