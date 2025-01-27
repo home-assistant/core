@@ -696,7 +696,7 @@ easyenergy==2.1.2
 eheimdigital==1.0.5
 
 # homeassistant.components.electric_kiwi
-electrickiwi-api==0.9.3
+electrickiwi-api==0.9.4
 
 # homeassistant.components.elevenlabs
 elevenlabs==1.9.0
