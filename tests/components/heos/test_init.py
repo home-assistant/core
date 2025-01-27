@@ -2,15 +2,7 @@
 
 from typing import cast
 
-from pyheos import (
-    CommandFailedError,
-    Heos,
-    HeosError,
-    HeosOptions,
-    SignalHeosEvent,
-    SignalType,
-    const,
-)
+from pyheos import Heos, HeosError, HeosOptions, SignalHeosEvent, SignalType
 import pytest
 
 from homeassistant.components.heos.const import DOMAIN
@@ -161,27 +153,6 @@ async def test_unload_entry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert controller.disconnect.call_count == 1
-
-
-async def test_update_sources_retry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    controller: Heos,
-) -> None:
-    """Test update sources retries on failures to max attempts."""
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    controller.get_favorites.reset_mock()
-    controller.get_input_sources.reset_mock()
-    source_manager = config_entry.runtime_data.source_manager
-    source_manager.retry_delay = 0
-    source_manager.max_retry_attempts = 1
-    controller.get_favorites.side_effect = CommandFailedError("Test", "test", 0)
-    await controller.dispatcher.wait_send(
-        SignalType.CONTROLLER_EVENT, const.EVENT_SOURCES_CHANGED, {}
-    )
-    await hass.async_block_till_done()
-    assert controller.get_favorites.call_count == 2
 
 
 async def test_device_info(

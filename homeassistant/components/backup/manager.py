@@ -698,6 +698,21 @@ class BackupManager:
         await self._backup_finish_task
         return new_backup
 
+    async def async_create_automatic_backup(self) -> NewBackup:
+        """Create a backup with automatic backup settings."""
+        config_data = self.config.data
+        return await self.async_create_backup(
+            agent_ids=config_data.create_backup.agent_ids,
+            include_addons=config_data.create_backup.include_addons,
+            include_all_addons=config_data.create_backup.include_all_addons,
+            include_database=config_data.create_backup.include_database,
+            include_folders=config_data.create_backup.include_folders,
+            include_homeassistant=True,  # always include HA
+            name=config_data.create_backup.name,
+            password=config_data.create_backup.password,
+            with_automatic_settings=True,
+        )
+
     async def async_initiate_backup(
         self,
         *,
