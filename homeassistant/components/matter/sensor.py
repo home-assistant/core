@@ -154,6 +154,7 @@ class MatterListSensor(MatterSensor):
     """Representation of a sensor entity from Matter list from Cluster attribute(s)."""
 
     entity_description: MatterListSensorEntityDescription
+    _attr_device_class = SensorDeviceClass.ENUM
 
     @callback
     def _update_from_device(self) -> None:
@@ -712,7 +713,6 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterListSensorEntityDescription(
             key="OperationalStateCurrentPhase",
             translation_key="current_phase",
-            device_class=SensorDeviceClass.ENUM,
             list_attribute=clusters.OperationalState.Attributes.PhaseList,
         ),
         entity_class=MatterListSensor,
