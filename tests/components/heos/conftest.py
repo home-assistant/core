@@ -87,7 +87,8 @@ async def controller_fixture(
     mock_heos.load_players = AsyncMock(return_value=change_data)
     mock_heos._signed_in_username = "user@user.com"
     mock_heos.get_groups = AsyncMock(return_value=group)
-    mock_heos.create_group = AsyncMock(return_value=None)
+    mock_heos._groups = group
+    mock_heos.set_group = AsyncMock(return_value=None)
     new_mock = Mock(return_value=mock_heos)
     mock_heos.new_mock = new_mock
     with (
@@ -104,6 +105,7 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
     for i in (1, 2):
         player = HeosPlayer(
             player_id=i,
+            group_id=999,
             name="Test Player" if i == 1 else f"Test Player {i}",
             model="HEOS Drive HS2" if i == 1 else "Speaker",
             serial="123456",
