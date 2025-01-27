@@ -21,6 +21,14 @@ from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+NUMBER_OF_RINSES_STATE_MAP = {
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "Off",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNormal: "Normal",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kExtra: "Extra",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kMax: "Max",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kUnknownEnumValue: None,
+}
+
 type SelectCluster = (
     clusters.ModeSelect
     | clusters.OvenMode
@@ -397,21 +405,13 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSelectEntityDescription(
             key="MatterLaundryWasherNumberOfRinses",
             translation_key="laundry_washer_number_of_rinses",
-            options=["off", "normal", "extra", "max"],
-            measurement_to_ha={
-                0: "off",
-                1: "normal",
-                2: "extra",
-                3: "max",
-            }.get,
-            ha_to_native_value={
-                "off": 0,
-                "normal": 1,
-                "extra": 2,
-                "max": 3,
-            }.get,
+            options=[x for x in NUMBER_OF_RINSES_STATE_MAP.values() if x is not None],
+            measurement_to_ha=lambda x: NUMBER_OF_RINSES_STATE_MAP[x],
         ),
         entity_class=MatterAttributeSelectEntity,
-        required_attributes=(clusters.LaundryWasherControls.Attributes.NumberOfRinses,),
+        required_attributes=(
+            clusters.LaundryWasherControls.Attributes.NumberOfRinses,
+            clusters.LaundryWasherControls.Attributes.SupportedRinses,
+        ),
     ),
 ]
