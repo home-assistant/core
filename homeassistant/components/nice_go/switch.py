@@ -11,8 +11,9 @@ from nice_go import ApiError, AuthFailedError
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
     DOMAIN,
@@ -87,7 +88,8 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
                     translation_key="switch_on_error",
                     translation_placeholders={"exception": str(err)},
                 ) from err
-            except AuthFailedError as err:
+            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
+                self.coordinator.config_entry.async_start_reauth(self.hass)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="switch_on_error",
@@ -116,7 +118,8 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
                     translation_key="switch_off_error",
                     translation_placeholders={"exception": str(err)},
                 ) from err
-            except AuthFailedError as err:
+            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
+                self.coordinator.config_entry.async_start_reauth(self.hass)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="switch_off_error",

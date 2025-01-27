@@ -11,8 +11,9 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import DOMAIN
 from .coordinator import NiceGOConfigEntry
@@ -86,8 +87,8 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
             ) from err
         except AuthFailedError:
             # Try refreshing token and retry
-            await self.coordinator.update_refresh_token()
             try:
+                await self.coordinator.update_refresh_token()
                 await self.coordinator.api.close_barrier(self._device_id)
             except (ApiError, ClientError) as err:
                 raise HomeAssistantError(
@@ -95,7 +96,8 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
                     translation_key="close_cover_error",
                     translation_placeholders={"exception": str(err)},
                 ) from err
-            except AuthFailedError as err:
+            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
+                self.coordinator.config_entry.async_start_reauth(self.hass)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="close_cover_error",
@@ -126,7 +128,8 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
                     translation_key="open_cover_error",
                     translation_placeholders={"exception": str(err)},
                 ) from err
-            except AuthFailedError as err:
+            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
+                self.coordinator.config_entry.async_start_reauth(self.hass)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="open_cover_error",
