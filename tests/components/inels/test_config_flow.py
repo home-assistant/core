@@ -179,15 +179,29 @@ async def test_async_unload_entry_removes_domain(hass: HomeAssistant) -> None:
         mock_unload.assert_called_once_with(hass, config_entry)
 
 
-async def test_single_instance(hass: HomeAssistant) -> None:
-    """Test only on single instance of inels integration."""
-    MockConfigEntry(domain=inels.DOMAIN).add_to_hass(hass)
+async def test_multiple_instances(hass: HomeAssistant) -> None:
+    """Test multiple instances of inels integration with unique hosts."""
+    MockConfigEntry(domain=inels.DOMAIN, data={CONF_HOST: "192.168.1.1"}).add_to_hass(
+        hass
+    )
 
     result = await hass.config_entries.flow.async_init(
         inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result[CONF_TYPE] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "192.168.1.2",
+            CONF_PORT: 1883,
+            CONF_USERNAME: "test",
+            CONF_PASSWORD: "pwd",
+            MQTT_TRANSPORT: "tcp",
+        },
+    )
+
+    assert result[CONF_TYPE] == "create_entry"
+    assert result["result"].data[CONF_HOST] == "192.168.1.2"
 
 
 async def test_try_connection(mock_mqtt_client_test_connection, default_config) -> None:
