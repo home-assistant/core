@@ -49,7 +49,6 @@ async def test_form(
         result["flow_id"],
         CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
@@ -121,7 +120,6 @@ async def test_form_auth_error(
         result["flow_id"],
         CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
@@ -159,7 +157,6 @@ async def test_form_already_configured(hass: HomeAssistant, region, brand) -> No
             "brand": brand[0],
         },
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
@@ -183,7 +180,6 @@ async def test_no_appliances_flow(
         result["flow_id"],
         CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_appliances"}
@@ -211,7 +207,6 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
         result["flow_id"],
         {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -246,7 +241,6 @@ async def test_reauth_flow_auth_error(
         result["flow_id"],
         {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
@@ -276,6 +270,6 @@ async def test_reauth_flow_connnection_error(
         result["flow_id"],
         {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
     )
-    await hass.async_block_till_done()
+
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
