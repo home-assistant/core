@@ -46,6 +46,7 @@ async def mocked_vacuum(hass: HomeAssistant) -> Device:
             category=Feature.Category.Config,
             choices=["Quiet", "Max"],
             value="Max",
+            expected_module_key="fan_speed_preset",
         ),
     ]
 
@@ -75,7 +76,7 @@ async def test_vacuum(
 
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity
-    assert entity.unique_id == f"{DEVICE_ID}_vacuum"
+    assert entity.unique_id == f"{DEVICE_ID}-vacuum"
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == VacuumActivity.DOCKED
