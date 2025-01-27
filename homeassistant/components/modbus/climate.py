@@ -543,5 +543,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     async def _async_read_coil(self, address: int) -> int | None:
         result = await self._hub.async_pb_call(self._slave, address, 1, CALL_TYPE_COIL)
         if result is not None and result.bits is not None:
+            self._attr_available = True
             return int(result.bits[0])
+        self._attr_available = False
         return None
