@@ -6,12 +6,7 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import (
-    area_registry as ar,
-    config_validation as cv,
-    entity_registry as er,
-    intent,
-)
+from homeassistant.helpers import config_validation as cv, intent
 
 from . import (
     ATTR_TEMPERATURE,
@@ -109,6 +104,7 @@ class SetTemperatureIntent(intent.IntentHandler):
             domains=[DOMAIN],
             assistant=intent_obj.assistant,
             features=ClimateEntityFeature.TARGET_TEMPERATURE,
+            single_target=True,
         )
         match_preferences = intent.MatchTargetsPreferences(
             area_id=slots.get("preferred_area_id", {}).get("value"),
@@ -123,39 +119,7 @@ class SetTemperatureIntent(intent.IntentHandler):
             )
 
         assert match_result.states
-
-        # Default to first matched state
         climate_state = match_result.states[0]
-
-        # Find best match using preferences
-        if (len(match_result.states) > 1) and (
-            match_preferences.area_id or match_preferences.floor_id
-        ):
-            entity_registry = er.async_get(hass)
-            area_registry = ar.async_get(hass)
-            for maybe_state in match_result.states:
-                entity = entity_registry.async_get(maybe_state.entity_id)
-                if entity is None:
-                    continue
-
-                if match_preferences.area_id and (
-                    entity.area_id == match_preferences.area_id
-                ):
-                    # In preferred area
-                    climate_state = maybe_state
-                    break
-
-                if (not match_preferences.floor_id) or (not entity.area_id):
-                    continue
-
-                area = area_registry.async_get_area(entity.area_id)
-                if area is None:
-                    continue
-
-                if area.floor_id == match_preferences.floor_id:
-                    # On preferred floor
-                    climate_state = maybe_state
-                    break
 
         await hass.services.async_call(
             DOMAIN,

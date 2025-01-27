@@ -520,19 +520,16 @@ async def test_set_temperature(
         bedroom_area.id, floor_id=second_floor.floor_id
     )
 
-    # First climate entity will be selected (no area/floor/name)
-    response = await intent.async_handle(
-        hass,
-        "test",
-        climate_intent.INTENT_SET_TEMPERATURE,
-        {"temperature": {"value": 20}},
-        assistant=conversation.DOMAIN,
-    )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.matched_states
-    assert response.matched_states[0].entity_id == climate_1.entity_id
-    state = hass.states.get(climate_1.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.0
+    # Cannot target multiple climate devices
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {"temperature": {"value": 20}},
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
 
     # Select by area explicitly (climate_2)
     response = await intent.async_handle(
@@ -629,22 +626,19 @@ async def test_set_temperature(
     assert constraints.domains and (set(constraints.domains) == {DOMAIN})
     assert constraints.device_classes is None
 
-    # Implicit area with no climate entities should pick the first one
-    response = await intent.async_handle(
-        hass,
-        "test",
-        climate_intent.INTENT_SET_TEMPERATURE,
-        {
-            "preferred_area_id": {"value": office_area.id},
-            "temperature": {"value": 20.7},
-        },
-        assistant=conversation.DOMAIN,
-    )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert response.matched_states
-    assert response.matched_states[0].entity_id == climate_1.entity_id
-    state = hass.states.get(climate_1.entity_id)
-    assert state.attributes[ATTR_TEMPERATURE] == 20.7
+    # Implicit area with no climate entities will fail with multiple targets
+    with pytest.raises(intent.MatchFailedError) as err:
+        await intent.async_handle(
+            hass,
+            "test",
+            climate_intent.INTENT_SET_TEMPERATURE,
+            {
+                "preferred_area_id": {"value": office_area.id},
+                "temperature": {"value": 20.7},
+            },
+            assistant=conversation.DOMAIN,
+        )
+    assert err.value.result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
 
 
 async def test_set_temperature_no_entities(
