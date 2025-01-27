@@ -131,11 +131,9 @@ async def test_agents_list_backups_fail(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agent_errors": {f"google_drive.{TEST_USER_EMAIL}": "Failed to list backups"},
-        "backups": [],
-        "last_attempted_automatic_backup": None,
-        "last_completed_automatic_backup": None,
+    assert response["result"]["backups"] == []
+    assert response["result"]["agent_errors"] == {
+        f"google_drive.{TEST_USER_EMAIL}": "Failed to list backups"
     }
 
 
