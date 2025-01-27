@@ -77,7 +77,7 @@ def cover() -> HomeeNode:
     att2.changed_by = 1
     att2.data = ""
     att2.name = ""
-    att1.is_reversed = 0
+    att2.is_reversed = 0
 
     att3 = AsyncMock(spec=HomeeAttribute)
     att3.id = 3
@@ -94,7 +94,7 @@ def cover() -> HomeeNode:
     att3.changed_by = 1
     att3.data = ""
     att3.name = ""
-    att1.is_reversed = 0
+    att3.is_reversed = 0
 
     mock = AsyncMock(spec=HomeeNode)
     mock.id = 1
