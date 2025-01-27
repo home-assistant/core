@@ -383,7 +383,7 @@ async def test_agent_info(
                 "addons": [
                     {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
                 ],
-                "agent_ids": ["hassio.local"],
+                "agents": {"hassio.local": {"protected": False, "size": 1048576}},
                 "backup_id": "abc123",
                 "database_included": True,
                 "date": "1970-01-01T00:00:00+00:00",
@@ -392,8 +392,6 @@ async def test_agent_info(
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0",
                 "name": "Test",
-                "protected": False,
-                "size": 1048576,
                 "with_automatic_settings": None,
             },
         ),
@@ -404,7 +402,7 @@ async def test_agent_info(
                 "addons": [
                     {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
                 ],
-                "agent_ids": ["hassio.local"],
+                "agents": {"hassio.local": {"protected": False, "size": 1048576}},
                 "backup_id": "abc123",
                 "database_included": False,
                 "date": "1970-01-01T00:00:00+00:00",
@@ -413,8 +411,6 @@ async def test_agent_info(
                 "homeassistant_included": False,
                 "homeassistant_version": None,
                 "name": "Test",
-                "protected": False,
-                "size": 1048576,
                 "with_automatic_settings": None,
             },
         ),
