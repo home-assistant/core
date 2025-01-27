@@ -73,9 +73,8 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
     def __init__(
         self,
         hass: HomeAssistant,
-        ring_api: Ring,
-        *,
         config_entry: RingConfigEntry,
+        ring_api: Ring,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -133,11 +132,10 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RingConfigEntry,
         ring_api: Ring,
         listen_credentials: dict[str, Any] | None,
         listen_credentials_updater: Callable[[dict[str, Any]], None],
-        *,
-        config_entry: RingConfigEntry,
     ) -> None:
         """Initialize my coordinator."""
         self.hass = hass

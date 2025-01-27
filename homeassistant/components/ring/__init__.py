@@ -61,10 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: RingConfigEntry) -> bool
     )
     ring = Ring(auth)
 
-    devices_coordinator = RingDataCoordinator(hass, ring, config_entry=entry)
+    devices_coordinator = RingDataCoordinator(hass, entry, ring)
     listen_credentials = entry.data.get(CONF_LISTEN_CREDENTIALS)
     listen_coordinator = RingListenCoordinator(
-        hass, ring, listen_credentials, listen_credentials_updater, config_entry=entry
+        hass, entry, ring, listen_credentials, listen_credentials_updater
     )
 
     await devices_coordinator.async_config_entry_first_refresh()
