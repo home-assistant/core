@@ -1543,7 +1543,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "haveibeenpwned",
     "hddtemp",
     "hdmi_cec",
-    "heos",
     "heatmiser",
     "here_travel_time",
     "hikvision",

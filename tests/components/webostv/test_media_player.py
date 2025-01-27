@@ -1,4 +1,4 @@
-"""The tests for the LG webOS media player platform."""
+"""The tests for the LG webOS TV media player platform."""
 
 from datetime import timedelta
 from http import HTTPStatus
@@ -165,7 +165,7 @@ async def test_media_next_previous_track(
 
 
 async def test_select_source_with_empty_source_list(
-    hass: HomeAssistant, client, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, client
 ) -> None:
     """Ensure we don't call client methods when we don't have sources."""
     await setup_webostv(hass)
@@ -175,11 +175,14 @@ async def test_select_source_with_empty_source_list(
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_INPUT_SOURCE: "nonexistent",
     }
-    await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Source nonexistent not found in the sources list for {TV_NAME}",
+    ):
+        await hass.services.async_call(MP_DOMAIN, SERVICE_SELECT_SOURCE, data, True)
 
     client.launch_app.assert_not_called()
     client.set_input.assert_not_called()
-    assert f"Source nonexistent not found for {TV_NAME}" in caplog.text
 
 
 async def test_select_app_source(hass: HomeAssistant, client) -> None:
