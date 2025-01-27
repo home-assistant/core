@@ -104,6 +104,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         self._username: str = "admin"
         self._password: str | None = None
         self._user_input: dict[str, Any] | None = None
+        self._disable_privacy: bool = False
 
     @staticmethod
     @callback
@@ -206,7 +207,8 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask permission to disable privacy mode."""
         if user_input is not None:
-            return await self.async_step_user(self._user_input, disable_privacy=True)
+            self._disable_privacy = True
+            return await self.async_step_user(self._user_input)
 
         assert self._user_input is not None
         placeholders = {"host": self._user_input[CONF_HOST]}
@@ -216,7 +218,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None, disable_privacy: bool = False
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
@@ -236,7 +238,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
 
             host = ReolinkHost(self.hass, user_input, DEFAULT_OPTIONS)
             try:
-                if disable_privacy:
+                if self._disable_privacy:
                     await host.api.baichuan.set_privacy_mode(enable=False)
                     # give the camera some time to startup the HTTP API server
                     await asyncio.sleep(5)
