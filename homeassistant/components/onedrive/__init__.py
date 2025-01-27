@@ -15,7 +15,7 @@ from msgraph.generated.models.drive_item import DriveItem
 from msgraph.generated.models.folder import Folder
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
@@ -102,13 +102,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Unload a OneDrive config entry."""
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    _async_notify_backup_listeners_soon(hass)
     return True
 
 
-async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
+
+
+@callback
+def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
+    hass.loop.call_soon(_async_notify_backup_listeners, hass)
 
 
 async def _async_create_folder_if_not_exists(
