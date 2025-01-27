@@ -28,8 +28,7 @@ async def get_firmware_info(
 ) -> FirmwareInfo | None:
     """Return firmware information for the OpenThread Border Router."""
     config_entry = cast(OTBRConfigEntry, config_entry)
-    device = config_entry.data["device"]
-    if device is None:
+    if (device := config_entry.data.get("device", None)) is None:
         return None
 
     owners: list[OwningIntegration | OwningAddon] = [
