@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_rpc_script_event[event.test_name_test_script_js-entry]
+# name: test_rpc_script_1_event[event.test_name_test_script_js-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -37,7 +37,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_rpc_script_event[event.test_name_test_script_js-state]
+# name: test_rpc_script_1_event[event.test_name_test_script_js-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
@@ -54,4 +54,16 @@
     'last_updated': <ANY>,
     'state': 'unknown',
   })
+# ---
+# name: test_rpc_script_2_event[event.test_name_test_script_2_js-entry]
+  None
+# ---
+# name: test_rpc_script_2_event[event.test_name_test_script_2_js-state]
+  None
+# ---
+# name: test_rpc_script_ble_event[event.test_name_aioshelly_ble_integration-entry]
+  None
+# ---
+# name: test_rpc_script_ble_event[event.test_name_aioshelly_ble_integration-state]
+  None
 # ---
