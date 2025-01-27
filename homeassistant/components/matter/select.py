@@ -138,7 +138,7 @@ class MatterDynamicListSelectEntity(MatterEntity, SelectEntity):
     entity_description: MatterDynamicListSelectEntityDescription
 
     async def async_select_option(self, option: str) -> None:
-        """Change the selected mode."""
+        """Change the selected option."""
         option_id = self._attr_options.index(option)
 
         if TYPE_CHECKING:
