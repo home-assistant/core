@@ -29,7 +29,6 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         device_info,
     ) -> None:
         """Initialize the Tado child lock switch entity."""
-        self._tado = coordinator
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
         self._device_info = device_info
@@ -49,12 +48,12 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._tado.set_child_lock(self._device_id, True)
+        await self.coordinator.set_child_lock(self._device_id, True)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._tado.set_child_lock(self._device_id, False)
+        await self.coordinator.set_child_lock(self._device_id, False)
         await self.coordinator.async_request_refresh()
 
     @callback
@@ -66,9 +65,8 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     @callback
     def _async_update_callback(self) -> None:
         """Handle update callbacks."""
-        _LOGGER.info("Update device data")
         try:
-            self._device_info = self._tado.data["device"][self._device_id]
+            self._device_info = self.coordinator.data["device"][self._device_id]
         except KeyError:
             return
         self._state = self._device_info.get("childLockEnabled", False) is True
