@@ -48,6 +48,11 @@ class HomeeEntity(Entity):
         """Return the availability of the underlying node."""
         return (self._attribute.state == AttributeState.NORMAL) and self._host_connected
 
+    async def async_set_value(self, value: float) -> None:
+        """Set an attribute value on the homee node."""
+        homee = self._entry.runtime_data
+        await homee.set_value(self._attribute.node_id, self._attribute.id, value)
+
     async def async_update(self) -> None:
         """Update entity from homee."""
         homee = self._entry.runtime_data
@@ -126,13 +131,6 @@ class HomeeNodeEntity(Entity):
             return str(attribute.get_value())
 
         return None
-
-    def has_attribute(self, attribute_type: AttributeType) -> bool:
-        """Check if an attribute of the given type exists."""
-        if self._node.attribute_map is None:
-            return False
-
-        return attribute_type in self._node.attribute_map
 
     async def async_set_value(self, attribute: HomeeAttribute, value: float) -> None:
         """Set an attribute value on the homee node."""

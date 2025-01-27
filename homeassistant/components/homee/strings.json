@@ -135,6 +135,62 @@
           "tilted": "Tilted"
         }
       }
+    },
+    "switch": {
+      "automatic_mode_impulse": {
+        "name": "Automatic Mode Impulse"
+      },
+      "briefly_open_impulse": {
+        "name": "Briefly Open Impulse"
+      },
+      "external_binary_input": {
+        "name": "Child Lock"
+      },
+      "identification_mode": {
+        "name": "Identification Mode"
+      },
+      "impulse": {
+        "name": "Impulse"
+      },
+      "impulse_instance": {
+        "name": "Impulse {instance}"
+      },
+      "light_impulse": {
+        "name": "Light Impulse"
+      },
+      "light_impulse_instance": {
+        "name": "Light Impulse {instance}"
+      },
+      "manual_operation": {
+        "name": "Manual Operation"
+      },
+      "motor_rotation": {
+        "name": "Motor rotation direction"
+      },
+      "open_partial_impulse": {
+        "name": "Open Partial Impulse"
+      },
+      "permanently_open_impulse": {
+        "name": "Permanently Open Impulse"
+      },
+      "reset_meter": {
+        "name": "Reset Meter"
+      },
+      "reset_meter_instance": {
+        "name": "Reset Meter {instance}"
+      },
+      "restore_last_known_state": {
+        "name": "Restore last known state"
+      },
+      "switch_type": {
+        "name": "Switch Type"
+      },
+      "ventilate_ipulse": {
+        "name": "Ventilate Impulse"
+      },
+      "watchdog_on_off": {
+        "name": "Watchdog"
+      }
     }
   }
 }
