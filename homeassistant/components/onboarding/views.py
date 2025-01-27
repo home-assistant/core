@@ -6,8 +6,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from functools import wraps
 from http import HTTPStatus
-import json
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -334,19 +333,20 @@ class BackupOnboardingView(HomeAssistantView):
         self._data = data
 
 
-def with_backup_manager[
-    _ViewT: BackupOnboardingView,
-](
+def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
     func: Callable[
-        [_ViewT, BackupManager, web.Request], Coroutine[Any, Any, web.Response]
+        Concatenate[_ViewT, BackupManager, web.Request, _P],
+        Coroutine[Any, Any, web.Response],
     ],
-) -> Callable[[_ViewT, web.Request], Coroutine[Any, Any, web.Response]]:
+) -> Callable[Concatenate[_ViewT, web.Request, _P], Coroutine[Any, Any, web.Response]]:
     """Home Assistant API decorator to check onboarding and inject manager."""
 
     @wraps(func)
     async def with_backup(
         self: _ViewT,
         request: web.Request,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
     ) -> web.Response:
         """Check admin and call function."""
         if self._data["done"]:
@@ -360,7 +360,7 @@ def with_backup_manager[
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
-        return await func(self, manager, request)
+        return await func(self, manager, request, *args, **kwargs)
 
     return with_backup
 
@@ -390,59 +390,36 @@ class RestoreBackupView(BackupOnboardingView):
     url = "/api/onboarding/backup/restore"
     name = "api:onboarding:backup:restore"
 
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("backup_id"): str,
+                vol.Required("agent_id"): str,
+                vol.Optional("password"): str,
+                vol.Optional("restore_addons"): [str],
+                vol.Optional("restore_database", default=True): bool,
+                vol.Optional("restore_folders"): [vol.Coerce(Folder)],
+            }
+        )
+    )
     @with_backup_manager
-    async def post(self, manager: BackupManager, request: web.Request) -> web.Response:
+    async def post(
+        self, manager: BackupManager, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
         """Restore a backup."""
         try:
-            agent_id = request.query.getone("agent_id")
-        except KeyError:
-            return self.json(
-                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
-            )
-
-        try:
-            backup_id = request.query.getone("backup_id")
-        except KeyError:
-            return self.json(
-                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
-            )
-
-        password = request.query.get("password")
-
-        try:
-            addons = request.query.getall("restore_addon")
-        except KeyError:
-            addons = []
-
-        try:
-            restore_database = json.loads(request.query.get("restore_database", "true"))
-        except json.JSONDecodeError:
-            return self.json(
-                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
-            )
-
-        try:
-            folders = [Folder(f) for f in request.query.getall("restore_folder")]
-        except KeyError:
-            folders = []
-        except ValueError:
-            return self.json(
-                {"error": "invalid_request"}, status_code=HTTPStatus.BAD_REQUEST
-            )
-
-        try:
             await manager.async_restore_backup(
-                backup_id,
-                agent_id=agent_id,
-                password=password,
-                restore_addons=addons,
-                restore_database=restore_database,
-                restore_folders=folders,
+                data["backup_id"],
+                agent_id=data["agent_id"],
+                password=data.get("password"),
+                restore_addons=data.get("restore_addons"),
+                restore_database=data["restore_database"],
+                restore_folders=data.get("restore_folders"),
                 restore_homeassistant=True,
             )
         except IncorrectPasswordError:
             return self.json(
-                {"error": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+                {"message": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
             )
         return web.Response(status=HTTPStatus.OK)
 

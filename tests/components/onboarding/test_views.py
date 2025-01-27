@@ -652,12 +652,16 @@ async def test_onboarding_installation_type(
 
 
 @pytest.mark.parametrize(
-    ("method", "view"),
+    ("method", "view", "kwargs"),
     [
-        ("get", "installation_type"),
-        ("get", "backup/info"),
-        ("post", "backup/restore"),
-        ("post", "backup/upload"),
+        ("get", "installation_type", {}),
+        ("get", "backup/info", {}),
+        (
+            "post",
+            "backup/restore",
+            {"json": {"backup_id": "abc123", "agent_id": "test"}},
+        ),
+        ("post", "backup/upload", {}),
     ],
 )
 async def test_onboarding_view_after_done(
@@ -666,6 +670,7 @@ async def test_onboarding_view_after_done(
     hass_client: ClientSessionGenerator,
     method: str,
     view: str,
+    kwargs: dict[str, Any],
 ) -> None:
     """Test raising after onboarding."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -675,7 +680,7 @@ async def test_onboarding_view_after_done(
 
     client = await hass_client()
 
-    resp = await client.request(method, f"/api/onboarding/{view}")
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
 
     assert resp.status == 401
 
@@ -742,11 +747,15 @@ async def test_complete_onboarding(
 
 
 @pytest.mark.parametrize(
-    ("method", "view"),
+    ("method", "view", "kwargs"),
     [
-        ("get", "backup/info"),
-        ("post", "backup/restore"),
-        ("post", "backup/upload"),
+        ("get", "backup/info", {}),
+        (
+            "post",
+            "backup/restore",
+            {"json": {"backup_id": "abc123", "agent_id": "test"}},
+        ),
+        ("post", "backup/upload", {}),
     ],
 )
 async def test_onboarding_backup_view_without_backup(
@@ -755,6 +764,7 @@ async def test_onboarding_backup_view_without_backup(
     hass_client: ClientSessionGenerator,
     method: str,
     view: str,
+    kwargs: dict[str, Any],
 ) -> None:
     """Test interacting with backup wievs when backup integration is missing."""
     mock_storage(hass_storage, {"done": []})
@@ -764,7 +774,7 @@ async def test_onboarding_backup_view_without_backup(
 
     client = await hass_client()
 
-    resp = await client.request(method, f"/api/onboarding/{view}")
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
 
     assert resp.status == 500
     assert await resp.json() == {"error": "backup_disabled"}
@@ -834,22 +844,28 @@ async def test_onboarding_backup_info(
 
 
 @pytest.mark.parametrize(
-    ("query", "expected_kwargs"),
+    ("params", "expected_kwargs"),
     [
         (
-            "?backup_id=abc123&agent_id=backup.local",
+            {"backup_id": "abc123", "agent_id": "backup.local"},
             {
                 "agent_id": "backup.local",
                 "password": None,
-                "restore_addons": [],
+                "restore_addons": None,
                 "restore_database": True,
-                "restore_folders": [],
+                "restore_folders": None,
                 "restore_homeassistant": True,
             },
         ),
         (
-            "?backup_id=abc123&agent_id=backup.local&password=hunter2"
-            "&restore_addon=addon_1&restore_database=true&restore_folder=media",
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "password": "hunter2",
+                "restore_addons": ["addon_1"],
+                "restore_database": True,
+                "restore_folders": ["media"],
+            },
             {
                 "agent_id": "backup.local",
                 "password": "hunter2",
@@ -860,10 +876,14 @@ async def test_onboarding_backup_info(
             },
         ),
         (
-            "?backup_id=abc123&agent_id=backup.local&password=hunter2"
-            "&restore_addon=addon_1&restore_addon=addon_2"
-            "&restore_database=false"
-            "&restore_folder=media&restore_folder=share",
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "password": "hunter2",
+                "restore_addons": ["addon_1", "addon_2"],
+                "restore_database": False,
+                "restore_folders": ["media", "share"],
+            },
             {
                 "agent_id": "backup.local",
                 "password": "hunter2",
@@ -879,7 +899,7 @@ async def test_onboarding_backup_restore(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
-    query: str,
+    params: dict[str, Any],
     expected_kwargs: dict[str, Any],
 ) -> None:
     """Test returning installation type during onboarding."""
@@ -894,49 +914,57 @@ async def test_onboarding_backup_restore(
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
     ) as mock_restore:
-        resp = await client.post(f"/api/onboarding/backup/restore{query}")
+        resp = await client.post("/api/onboarding/backup/restore", json=params)
     assert resp.status == 200
     mock_restore.assert_called_once_with("abc123", **expected_kwargs)
 
 
 @pytest.mark.parametrize(
-    ("query", "restore_error", "expected_status", "expected_error", "restore_calls"),
+    ("params", "restore_error", "expected_status", "expected_message", "restore_calls"),
     [
         # Missing agent_id
         (
-            "?backup_id=abc123",
+            {"backup_id": "abc123"},
             None,
             400,
-            "invalid_request",
+            "Message format incorrect: required key not provided @ data['agent_id']",
             0,
         ),
         # Missing backup_id
         (
-            "?agent_id=backup.local",
+            {"agent_id": "backup.local"},
             None,
             400,
-            "invalid_request",
+            "Message format incorrect: required key not provided @ data['backup_id']",
             0,
         ),
         # Invalid restore_database
         (
-            "?backup_id=abc123&agent_id=backup.local&restore_database=yes_please",
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "restore_database": "yes_please",
+            },
             None,
             400,
-            "invalid_request",
+            "Message format incorrect: expected bool for dictionary value @ data['restore_database']",
             0,
         ),
         # Invalid folder
         (
-            "?backup_id=abc123&agent_id=backup.local&restore_folder=invalid",
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "restore_folders": ["invalid"],
+            },
             None,
             400,
-            "invalid_request",
+            "Message format incorrect: expected Folder or one of 'share', 'addons/local', 'ssl', 'media' @ data['restore_folders'][0]",
             0,
         ),
         # Wrong password
         (
-            "?backup_id=abc123&agent_id=backup.local",
+            {"backup_id": "abc123", "agent_id": "backup.local"},
             backup.IncorrectPasswordError,
             400,
             "incorrect_password",
@@ -948,10 +976,10 @@ async def test_onboarding_backup_restore_error(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
-    query: str,
+    params: dict[str, Any],
     restore_error: Exception | None,
     expected_status: int,
-    expected_error: str,
+    expected_message: str,
     restore_calls: int,
 ) -> None:
     """Test returning installation type during onboarding."""
@@ -967,10 +995,10 @@ async def test_onboarding_backup_restore_error(
         "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
         side_effect=restore_error,
     ) as mock_restore:
-        resp = await client.post(f"/api/onboarding/backup/restore{query}")
+        resp = await client.post("/api/onboarding/backup/restore", json=params)
 
     assert resp.status == expected_status
-    assert await resp.json() == {"error": expected_error}
+    assert await resp.json() == {"message": expected_message}
     assert len(mock_restore.mock_calls) == restore_calls
 
 
