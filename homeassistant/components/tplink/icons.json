@@ -125,12 +125,6 @@
       "signal_level": {
         "default": "mdi:signal"
       },
-      "current_firmware_version": {
-        "default": "mdi:information"
-      },
-      "available_firmware_version": {
-        "default": "mdi:information-outline"
-      },
       "alarm_source": {
         "default": "mdi:bell"
       },
@@ -150,9 +144,6 @@
       },
       "temperature_offset": {
         "default": "mdi:contrast"
-      },
-      "target_temperature": {
-        "default": "mdi:thermometer"
       },
       "pan_step": {
         "default": "mdi:unfold-more-vertical"

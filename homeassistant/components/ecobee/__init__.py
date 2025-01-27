@@ -27,6 +27,8 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Optional(CONF_API_KEY): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
+type EcobeeConfigEntry = ConfigEntry[EcobeeData]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Ecobee uses config flow for configuration.
@@ -52,23 +54,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
     """Set up ecobee via a config entry."""
     api_key = entry.data[CONF_API_KEY]
     refresh_token = entry.data[CONF_REFRESH_TOKEN]
 
-    data = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
+    runtime_data = EcobeeData(hass, entry, api_key=api_key, refresh_token=refresh_token)
 
-    if not await data.refresh():
+    if not await runtime_data.refresh():
         return False
 
-    await data.update()
+    await runtime_data.update()
 
-    if data.ecobee.thermostats is None:
+    if runtime_data.ecobee.thermostats is None:
         _LOGGER.error("No ecobee devices found to set up")
         return False
 
-    hass.data[DOMAIN] = data
+    entry.runtime_data = runtime_data
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -117,9 +119,6 @@ class EcobeeData:
         return False
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EcobeeConfigEntry) -> bool:
     """Unload the config entry and platforms."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
