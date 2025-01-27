@@ -49,11 +49,7 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         """Handle the button press leveraging a Matter command."""
         if TYPE_CHECKING:
             assert self.entity_description.command is not None
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=self.entity_description.command(),
-        )
+        await self.send_device_command(self.entity_description.command())
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
