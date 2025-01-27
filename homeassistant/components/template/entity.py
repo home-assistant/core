@@ -20,12 +20,12 @@ class AbstractTemplateEntity(Entity):
     @property
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
-        return None
+        raise NotImplementedError
 
     @callback
     def _render_script_variables(self) -> dict:
         """Render configured variables."""
-        return {}
+        raise NotImplementedError
 
     def add_script(
         self,

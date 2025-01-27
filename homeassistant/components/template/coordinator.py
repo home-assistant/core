@@ -38,7 +38,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         self._blueprint_inputs: dict | None = None
         if config is not None:
             self._run_variables = config.get(CONF_VARIABLES)
-            self._blueprint_inputs = config.get("raw_blueprint_inputs")
+            self._blueprint_inputs = getattr(config, "raw_blueprint_inputs", None)
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -137,6 +137,9 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
     async def _handle_triggered(
         self, run_variables: TemplateVarsType, context: Context | None = None
     ) -> None:
+        if self._run_variables:
+            run_variables = self._run_variables.async_render(self.hass, run_variables)
+
         if not self._check_condition(run_variables):
             return
         self._execute_update(run_variables, context)
