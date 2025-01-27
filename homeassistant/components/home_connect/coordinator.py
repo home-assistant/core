@@ -24,13 +24,14 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     HomeConnectRequestError,
 )
+from aiohomeconnect.model.program import EnumerateAvailableProgram
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +47,7 @@ class HomeConnectApplianceData:
 
     events: dict[EventKey, Event] = field(default_factory=dict)
     info: HomeAppliance
+    programs: list[EnumerateAvailableProgram] = field(default_factory=list)
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
 
@@ -53,6 +55,8 @@ class HomeConnectApplianceData:
         """Update data with data from other instance."""
         self.events.update(other.events)
         self.info.connected = other.info.connected
+        self.programs.clear()
+        self.programs.extend(other.programs)
         self.settings.update(other.settings)
         self.status.update(other.status)
 
@@ -226,6 +230,25 @@ class HomeConnectCoordinator(
             )
             if appliance.ha_id in appliances_data:
                 appliances_data[appliance.ha_id].update(appliance_data)
+                appliance_data = appliances_data[appliance.ha_id]
             else:
                 appliances_data[appliance.ha_id] = appliance_data
+            if (
+                appliance.type in APPLIANCES_WITH_PROGRAMS
+                and not appliance_data.programs
+            ):
+                try:
+                    appliance_data.programs.extend(
+                        (
+                            await self.client.get_available_programs(appliance.ha_id)
+                        ).programs
+                    )
+                except HomeConnectError as error:
+                    _LOGGER.debug(
+                        "Error fetching programs for %s: %s",
+                        appliance.ha_id,
+                        error
+                        if isinstance(error, HomeConnectApiError)
+                        else type(error).__name__,
+                    )
         return appliances_data

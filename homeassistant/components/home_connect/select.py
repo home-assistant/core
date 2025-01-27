@@ -1,11 +1,9 @@
 """Provides a select platform for Home Connect."""
 
-import contextlib
 from typing import cast
 
 from aiohomeconnect.model import EventKey, ProgramKey
 from aiohomeconnect.model.error import HomeConnectError
-from aiohomeconnect.model.program import EnumerateAvailableProgram
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -50,30 +48,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect select entities."""
 
-    async def get_entities_for_appliance(
+    def get_entities_for_appliance(
         appliance: HomeConnectApplianceData,
     ) -> list[HomeConnectProgramSelectEntity]:
         """Get a list of entities."""
-        entities: list[HomeConnectProgramSelectEntity] = []
-        if appliance.info.type in APPLIANCES_WITH_PROGRAMS:
-            with contextlib.suppress(HomeConnectError):
-                programs = (
-                    await entry.runtime_data.client.get_available_programs(
-                        appliance.info.ha_id
-                    )
-                ).programs
-                entities.extend(
-                    HomeConnectProgramSelectEntity(
-                        entry.runtime_data, appliance, programs, desc
-                    )
-                    for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
-                )
-        return entities
+        if appliance.info.type not in APPLIANCES_WITH_PROGRAMS:
+            return []
+        return [
+            HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
+            for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
+        ]
 
     entities = [
         entity
         for appliance in entry.runtime_data.data.values()
-        for entity in await get_entities_for_appliance(appliance)
+        for entity in get_entities_for_appliance(appliance)
     ]
     async_add_entities(entities)
 
@@ -85,7 +74,6 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         self,
         coordinator: HomeConnectCoordinator,
         appliance: HomeConnectApplianceData,
-        programs: list[EnumerateAvailableProgram],
         desc: SelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
@@ -96,7 +84,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         )
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
-            for program in programs
+            for program in appliance.programs
             if program.key != ProgramKey.UNKNOWN
         ]
         self.start_on_select = desc.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM

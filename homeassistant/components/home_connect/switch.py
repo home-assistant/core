@@ -1,6 +1,5 @@
 """Provides a switch for Home Connect."""
 
-import contextlib
 import logging
 from typing import Any, cast
 
@@ -22,7 +21,6 @@ from homeassistant.helpers.issue_registry import (
 )
 
 from .const import (
-    APPLIANCES_WITH_PROGRAMS,
     BSH_POWER_OFF,
     BSH_POWER_ON,
     BSH_POWER_STANDBY,
@@ -108,24 +106,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
 
-    async def get_entities_for_appliance(
+    def get_entities_for_appliance(
         appliance: HomeConnectApplianceData,
     ) -> list[SwitchEntity]:
         """Get a list of entities."""
         entities: list[SwitchEntity] = []
-        if appliance.info.type in APPLIANCES_WITH_PROGRAMS:
-            with contextlib.suppress(HomeConnectError):
-                programs = (
-                    await entry.runtime_data.client.get_available_programs(
-                        appliance.info.ha_id
-                    )
-                ).programs
-                if programs:
-                    entities.extend(
-                        HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
-                        for program in programs
-                        if program.key != ProgramKey.UNKNOWN
-                    )
+        entities.extend(
+            HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
+            for program in appliance.programs
+            if program.key != ProgramKey.UNKNOWN
+        )
         if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
             entities.append(
                 HomeConnectPowerSwitch(
@@ -143,7 +133,7 @@ async def async_setup_entry(
     entities = [
         entity
         for appliance in entry.runtime_data.data.values()
-        for entity in await get_entities_for_appliance(appliance)
+        for entity in get_entities_for_appliance(appliance)
     ]
     async_add_entities(entities)
 
