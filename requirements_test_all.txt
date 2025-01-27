@@ -2147,7 +2147,7 @@ sanix==1.0.6
 screenlogicpy==0.10.0
 
 # homeassistant.components.backup
-securetar==2025.1.3
+securetar==2025.1.4
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
