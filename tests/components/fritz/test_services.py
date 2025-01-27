@@ -2,7 +2,8 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.fritz.const import DOMAIN, SERVICE_SET_GUEST_WIFI_PW
+from homeassistant.components.fritz.const import DOMAIN
+from homeassistant.components.fritz.services import SERVICE_SET_GUEST_WIFI_PW
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component

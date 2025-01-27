@@ -56,8 +56,6 @@ ERROR_CANNOT_CONNECT = "cannot_connect"
 ERROR_UPNP_NOT_CONFIGURED = "upnp_not_configured"
 ERROR_UNKNOWN = "unknown_error"
 
-SERVICE_SET_GUEST_WIFI_PW = "set_guest_wifi_password"
-
 SWITCH_TYPE_DEFLECTION = "CallDeflection"
 SWITCH_TYPE_PORTFORWARD = "PortForward"
 SWITCH_TYPE_PROFILE = "Profile"
