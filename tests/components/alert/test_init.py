@@ -3,6 +3,7 @@
 from copy import deepcopy
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
@@ -14,6 +15,7 @@ from homeassistant.components.alert.const import (
     CONF_TITLE,
     DOMAIN,
 )
+from homeassistant.components.alert.entity import EVENT_ALERT_NOTIFY
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -27,7 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -73,6 +75,14 @@ TEST_NOACK = [
 ENTITY_ID = f"{DOMAIN}.{NAME}"
 
 
+class _EventCallback:
+    def __init__(self):
+        self.event: Event | None = None
+
+    def listener(self, event: Event):
+        self.event = event
+
+
 @pytest.fixture
 def mock_notifier(hass: HomeAssistant) -> list[ServiceCall]:
     """Mock for notifier."""
@@ -85,19 +95,29 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert hass.states.get(ENTITY_ID).state == STATE_IDLE
 
 
-async def test_fire(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
+async def test_fire(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], snapshot: SnapshotAssertion
+) -> None:
     """Test the alert firing."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
+    event_callback = _EventCallback()
+    hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
+    assert event_callback.event.data == snapshot
 
 
-async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
+async def test_silence(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], snapshot: SnapshotAssertion
+) -> None:
     """Test silencing the alert."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
+
+    event_callback = _EventCallback()
+    hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
 
     await hass.services.async_call(
         DOMAIN,
@@ -106,6 +126,7 @@ async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) ->
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert event_callback.event.data == snapshot
 
     # alert should not be silenced on next fire
     hass.states.async_set("sensor.test", STATE_OFF)
@@ -116,11 +137,16 @@ async def test_silence(hass: HomeAssistant, mock_notifier: list[ServiceCall]) ->
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
-async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
+async def test_reset(
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], snapshot: SnapshotAssertion
+) -> None:
     """Test resetting the alert."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
+
+    event_callback = _EventCallback()
+    hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
 
     await hass.services.async_call(
         DOMAIN,
@@ -128,8 +154,9 @@ async def test_reset(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> N
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
-
+    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert event_callback.event.data == snapshot
 
     await hass.services.async_call(
         DOMAIN,
@@ -165,7 +192,7 @@ async def test_toggle(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> 
 
 
 async def test_notification_no_done_message(
-    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], snapshot: SnapshotAssertion
 ) -> None:
     """Test notifications."""
     config = deepcopy(TEST_CONFIG)
@@ -178,13 +205,17 @@ async def test_notification_no_done_message(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
 
+    event_callback = _EventCallback()
+    hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
+
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
+    assert event_callback.event.data == snapshot
 
 
 async def test_notification(
-    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], snapshot: SnapshotAssertion
 ) -> None:
     """Test notifications."""
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
@@ -194,9 +225,13 @@ async def test_notification(
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
 
+    event_callback = _EventCallback()
+    hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
+
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 2
+    assert event_callback.event.data == snapshot
 
 
 async def test_bad_notifier(
@@ -309,18 +344,22 @@ async def test_sending_titled_notification(
 
 
 async def test_sending_data_notification(
-    hass: HomeAssistant, mock_notifier: list[ServiceCall]
+    hass: HomeAssistant, mock_notifier: list[ServiceCall], snapshot: SnapshotAssertion
 ) -> None:
     """Test notifications."""
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_DATA] = TEST_DATA
     assert await async_setup_component(hass, DOMAIN, config)
 
+    event_callback = _EventCallback()
+    hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
+
     hass.states.async_set(TEST_ENTITY, STATE_ON)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
     last_event = mock_notifier[-1]
     assert last_event.data[notify.ATTR_DATA] == TEST_DATA
+    assert event_callback.event.data == snapshot
 
 
 async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) -> None:
