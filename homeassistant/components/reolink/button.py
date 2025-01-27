@@ -135,7 +135,7 @@ BUTTON_ENTITIES = (
     ),
 )
 
-HOST_BUTTON_ENTITIES = (
+AVAILABILITY_HOST_BUTTON_ENTITIES = (
     ReolinkHostButtonEntityDescription(
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
@@ -155,15 +155,15 @@ async def async_setup_entry(
     """Set up a Reolink button entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[ReolinkButtonEntity | ReolinkHostButtonEntity] = [
+    entities: list[ReolinkButtonEntity | ReolinkAvailabilityHostButtonEntity] = [
         ReolinkButtonEntity(reolink_data, channel, entity_description)
         for entity_description in BUTTON_ENTITIES
         for channel in reolink_data.host.api.channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(
-        ReolinkHostButtonEntity(reolink_data, entity_description)
-        for entity_description in HOST_BUTTON_ENTITIES
+        ReolinkAvailabilityHostButtonEntity(reolink_data, entity_description)
+        for entity_description in AVAILABILITY_HOST_BUTTON_ENTITIES
         if entity_description.supported(reolink_data.host.api)
     )
     async_add_entities(entities)
@@ -218,7 +218,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
-    """Base button entity class for Reolink IP cameras."""
+    """Base button entity class for Reolink hosts."""
 
     entity_description: ReolinkHostButtonEntityDescription
 
@@ -235,3 +235,12 @@ class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Execute the button action."""
         await self.entity_description.method(self._host.api)
+
+
+class ReolinkAvailabilityHostButtonEntity(ReolinkHostButtonEntity):
+    """Button entity class for Reolink hosts which will be available even if API is unavailable."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return True
