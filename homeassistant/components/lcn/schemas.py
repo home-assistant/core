@@ -24,6 +24,7 @@ from .const import (
     CONF_REGISTER,
     CONF_REVERSE_TIME,
     CONF_SETPOINT,
+    CONF_TARGET_VALUE_LOCKED,
     CONF_TRANSITION,
     KEYS,
     LED_PORTS,
@@ -58,6 +59,7 @@ DOMAIN_DATA_CLIMATE: VolDictType = {
     vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
     vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
     vol.Optional(CONF_LOCKABLE, default=False): vol.Coerce(bool),
+    vol.Optional(CONF_TARGET_VALUE_LOCKED, default=-1): vol.Coerce(float),
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=UnitOfTemperature.CELSIUS): vol.In(
         UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT
     ),

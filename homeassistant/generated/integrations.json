@@ -3346,7 +3346,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "LG webOS Smart TV"
+          "name": "LG webOS TV"
         }
       }
     },
@@ -3612,6 +3612,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "mcp": {
+      "name": "Model Context Protocol",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "mcp_server": {
       "name": "Model Context Protocol Server",
@@ -4986,6 +4992,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "qbus": {
+      "name": "Qbus",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "qingping": {
       "name": "Qingping",

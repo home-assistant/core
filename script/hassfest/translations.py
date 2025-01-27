@@ -454,7 +454,7 @@ ONBOARDING_SCHEMA = vol.Schema(
 )
 
 
-def validate_translation_file(  # noqa: C901
+def validate_translation_file(
     config: Config,
     integration: Integration,
     all_strings: dict[str, Any] | None,

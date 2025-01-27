@@ -86,16 +86,12 @@ def _setup_entities(
     async_add_entities,
     coordinator: VeSyncDataCoordinator,
 ):
-    """Check if device is online and add entity."""
-    entities = []
-    for dev in devices:
-        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan":
-            entities.append(VeSyncFanHA(dev, coordinator))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
+    """Check if device is fan and add entity."""
+    entities = [
+        VeSyncFanHA(dev, coordinator)
+        for dev in devices
+        if DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(dev.device_type, "")) == "fan"
+    ]
 
     async_add_entities(entities, update_before_add=True)
 
