@@ -25,7 +25,7 @@ from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceIn
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
+from .const import BLU_TRV_TIMEOUT, CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     BlockEntityDescription,
@@ -125,6 +125,17 @@ class RpcBluTrvNumber(RpcNumber):
         ble_addr: str = coordinator.device.config[key]["addr"]
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, ble_addr)}
+        )
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        if TYPE_CHECKING:
+            assert isinstance(self._id, int)
+
+        await self.call_rpc(
+            self.entity_description.method,
+            self.entity_description.method_params_fn(self._id, value),
+            timeout=BLU_TRV_TIMEOUT,
         )
 
 
