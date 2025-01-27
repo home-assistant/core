@@ -52,17 +52,13 @@ rules:
   repair-issues:
     status: exempt
     comment: This integration does not have repairs
-  docs-use-cases:
-    status: todo
-    comment: Docs PR 36518
+  docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations: done
   docs-troubleshooting: done
-  docs-examples:
-    status: todo
-    comment: Docs PR 36518
+  docs-examples: done
   ## Platinum
   async-dependency: done
   inject-websession: done
