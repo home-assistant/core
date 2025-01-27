@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Literal
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -23,7 +25,9 @@ from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonObjectType
 
+from . import trace
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
@@ -120,7 +124,7 @@ async def async_get_chat_session(
     if history:
         history = replace(history, messages=history.messages.copy())
     else:
-        history = ChatSession(hass, conversation_id)
+        history = ChatSession(hass, conversation_id, user_input.agent_id)
 
     message: ChatMessage = ChatMessage(
         role="user",
@@ -190,6 +194,7 @@ class ChatSession[_NativeT]:
 
     hass: HomeAssistant
     conversation_id: str
+    agent_id: str | None
     user_name: str | None = None
     messages: list[ChatMessage[_NativeT]] = field(
         default_factory=lambda: [ChatMessage(role="system", agent_id=None, content="")]
@@ -209,7 +214,9 @@ class ChatSession[_NativeT]:
         self.messages.append(message)
 
     @callback
-    def async_get_messages(self, agent_id: str | None) -> list[ChatMessage[_NativeT]]:
+    def async_get_messages(
+        self, agent_id: str | None = None
+    ) -> list[ChatMessage[_NativeT]]:
         """Get messages for a specific agent ID.
 
         This will filter out any native message tied to other agent IDs.
@@ -326,3 +333,29 @@ class ChatSession[_NativeT]:
             agent_id=user_input.agent_id,
             content=prompt,
         )
+
+        LOGGER.debug("Prompt: %s", self.messages)
+        LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
+
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                "messages": self.messages,
+                "tools": self.llm_api.tools if self.llm_api else None,
+            },
+        )
+
+    async def async_call_tool(self, tool_input: llm.ToolInput) -> JsonObjectType:
+        """Invoke LLM tool for the configured LLM API."""
+        if not self.llm_api:
+            raise ValueError("No LLM API configured")
+        LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
+
+        try:
+            tool_response = await self.llm_api.async_call_tool(tool_input)
+        except (HomeAssistantError, vol.Invalid) as e:
+            tool_response = {"error": type(e).__name__}
+            if str(e):
+                tool_response["error_text"] = str(e)
+        LOGGER.debug("Tool response: %s", tool_response)
+        return tool_response

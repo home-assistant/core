@@ -12,7 +12,7 @@ coverage==7.6.8
 freezegun==1.5.1
 license-expression==30.4.0
 mock-open==1.4.0
-mypy-dev==1.15.0a2
+mypy-dev==1.16.0a1
 pre-commit==4.0.0
 pydantic==2.10.6
 pylint==3.3.3

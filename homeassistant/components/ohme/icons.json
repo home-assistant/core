@@ -10,6 +10,11 @@
         "default": "mdi:battery-heart"
       }
     },
+    "select": {
+      "charge_mode": {
+        "default": "mdi:play-box"
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:car",
