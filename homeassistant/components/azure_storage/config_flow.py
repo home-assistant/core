@@ -62,7 +62,9 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_ACCOUNT_NAME): str,
-                    vol.Required(CONF_CONTAINER_NAME, default="hass-backups"): str,
+                    vol.Required(
+                        CONF_CONTAINER_NAME, default="home-assistant-backups"
+                    ): str,
                     vol.Required(CONF_STORAGE_ACCOUNT_KEY): str,
                 }
             ),
