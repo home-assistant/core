@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 HA_UUID = "0a123c"
+TEST_AGENT_ID = "google_drive.testuser-domain-com"
 TEST_USER_EMAIL = "testuser@domain.com"
 CONFIG_ENTRY_TITLE = "Google Drive entry title"
 

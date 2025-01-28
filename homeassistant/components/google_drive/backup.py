@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from google_drive_api.exceptions import GoogleDriveApiError
+from slugify import slugify
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -58,7 +59,8 @@ class GoogleDriveBackupAgent(BackupAgent):
         """Initialize the cloud backup sync agent."""
         super().__init__()
         assert config_entry.unique_id
-        self.name = config_entry.unique_id
+        self.name = config_entry.title
+        self.unique_id = slugify(config_entry.unique_id)
         self._client = config_entry.runtime_data
 
     async def async_upload_backup(
