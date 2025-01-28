@@ -107,6 +107,8 @@ pytestmark = [
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
             ],
         ),
         (
@@ -302,6 +304,8 @@ pytestmark = [
                 "sensor.device_power",
                 "sensor.device_state_of_charge",
                 "sensor.device_voltage",
+                "sensor.device_wi_fi_rssi",
+                "sensor.device_wi_fi_ssid",
             ],
         ),
     ],
@@ -450,6 +454,7 @@ async def test_sensors(
                 "sensor.device_current",
                 "sensor.device_frequency",
                 "sensor.device_voltage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
     ],
@@ -557,6 +562,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -605,6 +611,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -661,6 +668,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -711,6 +719,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -750,6 +759,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -800,6 +810,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -839,6 +850,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_rssi",
             ],
         ),
         (
@@ -887,6 +899,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
+                "sensor.device_wi_fi_strength",
             ],
         ),
     ],
