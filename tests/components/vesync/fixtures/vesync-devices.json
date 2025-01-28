@@ -6,7 +6,7 @@
         "cid": "200s-humidifier",
         "deviceType": "Classic200S",
         "deviceName": "Humidifier 200s",
-        "subDeviceNo": null,
+        "subDeviceNo": 4321,
         "deviceStatus": "on",
         "connectionStatus": "online",
         "uuid": "00000000-1111-2222-3333-444444444444",

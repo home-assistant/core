@@ -348,7 +348,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '200s-humidifier',
+          '200s-humidifier4321',
         ),
       }),
       'is_new': False,
