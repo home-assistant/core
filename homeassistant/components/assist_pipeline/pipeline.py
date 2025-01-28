@@ -1101,11 +1101,10 @@ class PipelineRun:
                         "speech", ""
                     )
                     chat_session.async_add_message(
-                        conversation.ChatMessage(
+                        conversation.Content(
                             role="assistant",
                             agent_id=agent_id,
                             content=speech,
-                            native=intent_response,
                         )
                     )
                     conversation_result = conversation.ConversationResult(

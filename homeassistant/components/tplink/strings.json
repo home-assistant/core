@@ -138,6 +138,12 @@
       },
       "tilt_down": {
         "name": "Tilt down"
+      },
+      "pair": {
+        "name": "Pair new device"
+      },
+      "unpair": {
+        "name": "Unpair device"
       }
     },
     "camera": {
@@ -367,6 +373,9 @@
     },
     "unsupported_mode": {
       "message": "Tried to set unsupported mode: {mode}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
     }
   },
   "issues": {

@@ -8,7 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .config import ScheduleState
+from .config import Day, ScheduleRecurrence
 from .const import DATA_MANAGER, LOGGER
 from .manager import (
     DecryptOnDowloadNotSupported,
@@ -61,6 +61,7 @@ async def handle_info(
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+            "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
         },
     )
 
@@ -305,7 +306,10 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [
+                {"agent_id": agent.agent_id, "name": agent.name}
+                for agent in manager.backup_agents.values()
+            ],
         },
     )
 
@@ -320,13 +324,18 @@ async def handle_config_info(
 ) -> None:
     """Send the stored backup config."""
     manager = hass.data[DATA_MANAGER]
+    config = manager.config.data.to_dict()
+    # Remove state from schedule, it's not needed in the frontend
+    # mypy doesn't like deleting from TypedDict, ignore it
+    del config["schedule"]["state"]  # type: ignore[misc]
     connection.send_result(
         msg["id"],
         {
-            "config": manager.config.data.to_dict()
+            "config": config
             | {
-                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup
-            },
+                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+                "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
+            }
         },
     )
 
@@ -358,7 +367,12 @@ async def handle_config_info(
         ),
         vol.Optional("schedule"): vol.Schema(
             {
-                vol.Optional("state"): vol.All(str, vol.Coerce(ScheduleState)),
+                vol.Optional("days"): vol.Any(
+                    vol.All([vol.Coerce(Day)], vol.Unique()),
+                ),
+                vol.Optional("recurrence"): vol.All(
+                    str, vol.Coerce(ScheduleRecurrence)
+                ),
                 vol.Optional("time"): vol.Any(cv.time, None),
             }
         ),

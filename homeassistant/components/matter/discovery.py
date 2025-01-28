@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 
-from chip.clusters.Objects import ClusterAttributeDescriptor
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, NullValue
 from matter_server.client.models.node import MatterEndpoint
 
 from homeassistant.const import Platform
@@ -121,12 +121,28 @@ def async_discover_entities(
         ):
             continue
 
+        # check if value exists but is none/null
+        if not schema.allow_none_value and any(
+            endpoint.get_attribute_value(None, val_schema) in (None, NullValue)
+            for val_schema in schema.required_attributes
+        ):
+            continue
+
         # check for required value in (primary) attribute
         primary_attribute = schema.required_attributes[0]
         primary_value = endpoint.get_attribute_value(None, primary_attribute)
         if schema.value_contains is not None and (
             isinstance(primary_value, list)
             and schema.value_contains not in primary_value
+        ):
+            continue
+
+        # check for value that may not be present
+        if schema.value_is_not is not None and (
+            schema.value_is_not == primary_value
+            or (
+                isinstance(primary_value, list) and schema.value_is_not in primary_value
+            )
         ):
             continue
 

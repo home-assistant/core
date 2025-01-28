@@ -13,7 +13,7 @@ from typing import Any, Generic, Protocol, TypeVar
 import urllib.error
 
 import aiohttp
-from propcache import cached_property
+from propcache.api import cached_property
 import requests
 
 from homeassistant import config_entries
