@@ -1056,6 +1056,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
 
+        # NOTE: Once we solve the broader issue of duplicated devices, we might
+        # want to revisit it. Instead of simply removing the duplicated deleted device,
+        # we might want to merge the information from it into the non-deleted device.
         for deleted_device in self._async_get_deleted_devices(
             added_identifiers, added_connections
         ):
