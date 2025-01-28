@@ -125,6 +125,7 @@ async def test_silence(
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
     )
+    await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     assert event_callback.event.data == snapshot
 

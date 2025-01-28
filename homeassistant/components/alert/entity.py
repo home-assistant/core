@@ -33,7 +33,7 @@ class AlertNotifyAction(enum.StrEnum):
 
     generate = "generate"
     acknowledge = "acknowledge"
-    done = "clear"
+    done = "done"
     reset = "reset"
 
 

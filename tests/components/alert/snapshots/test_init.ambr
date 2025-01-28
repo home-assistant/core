@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_fire
   dict({
-    'action': <AlertAction.generate: 'generate'>,
+    'action': <AlertNotifyAction.generate: 'generate'>,
     'data': dict({
     }),
     'entity_id': 'alert.alert_test',
@@ -12,7 +12,7 @@
 # ---
 # name: test_notification
   dict({
-    'action': <AlertAction.done: 'clear'>,
+    'action': <AlertNotifyAction.done: 'done'>,
     'data': dict({
     }),
     'entity_id': 'alert.alert_test',
@@ -23,7 +23,7 @@
 # ---
 # name: test_notification_no_done_message
   dict({
-    'action': <AlertAction.done: 'clear'>,
+    'action': <AlertNotifyAction.done: 'done'>,
     'data': dict({
     }),
     'entity_id': 'alert.alert_test',
@@ -34,7 +34,7 @@
 # ---
 # name: test_reset
   dict({
-    'action': <AlertAction.acknowledge: 'acknowledge'>,
+    'action': <AlertNotifyAction.acknowledge: 'acknowledge'>,
     'data': dict({
     }),
     'entity_id': 'alert.alert_test',
@@ -45,7 +45,7 @@
 # ---
 # name: test_sending_data_notification
   dict({
-    'action': <AlertAction.generate: 'generate'>,
+    'action': <AlertNotifyAction.generate: 'generate'>,
     'data': dict({
       'data': dict({
         'inline_keyboard': list([
@@ -61,7 +61,7 @@
 # ---
 # name: test_silence
   dict({
-    'action': <AlertAction.acknowledge: 'acknowledge'>,
+    'action': <AlertNotifyAction.acknowledge: 'acknowledge'>,
     'data': dict({
     }),
     'entity_id': 'alert.alert_test',
