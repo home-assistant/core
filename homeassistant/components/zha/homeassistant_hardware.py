@@ -8,16 +8,17 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningIntegration,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
 from .helpers import get_zha_gateway
 
 
-async def get_firmware_info(
+@callback
+def get_firmware_info(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> FirmwareInfo | None:
-    """Return firmware information for the ZHA instance."""
+    """Return firmware information for the ZHA instance, synchronously."""
 
     # We only support EZSP firmware for now
     if config_entry.data.get("radio_type", None) != "ezsp":

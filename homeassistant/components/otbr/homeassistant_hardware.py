@@ -23,7 +23,7 @@ from . import OTBRConfigEntry
 from .const import DOMAIN
 
 
-async def get_firmware_info(
+async def async_get_firmware_info(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> FirmwareInfo | None:
     """Return firmware information for the OpenThread Border Router."""

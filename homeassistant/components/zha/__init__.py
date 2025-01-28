@@ -12,6 +12,10 @@ from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
+from homeassistant.components.homeassistant_hardware.helpers import (
+    notify_firmware_info,
+    register_firmware_info_provider,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_TYPE,
@@ -26,7 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from . import repairs, websocket_api
+from . import homeassistant_hardware, repairs, websocket_api
 from .const import (
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
@@ -111,6 +115,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ha_zha_data = HAZHAData(yaml_config=config.get(DOMAIN, {}))
     hass.data[DATA_ZHA] = ha_zha_data
 
+    register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+
     return True
 
 
@@ -179,6 +185,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         raise ConfigEntryNotReady from exc
 
     repairs.async_delete_blocking_issues(hass)
+
+    await notify_firmware_info(
+        hass,
+        DOMAIN,
+        firmware_info=homeassistant_hardware.get_firmware_info(hass, config_entry),
+    )
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 

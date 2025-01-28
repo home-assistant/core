@@ -18,12 +18,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 
+from . import DATA_COMPONENT
 from .const import (
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
-    OTBR_DOMAIN,
-    ZHA_DOMAIN,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -150,33 +149,11 @@ async def guess_hardware_owners(
     """Guess the firmware info based on installed addons and other integrations."""
     device_guesses: defaultdict[str, list[FirmwareInfo]] = defaultdict(list)
 
-    try:
-        # pylint: disable-next=import-outside-toplevel, hass-component-root-import
-        from homeassistant.components.zha.homeassistant_hardware import (
-            get_firmware_info as get_zha_firmware_info,
-        )
-    except ImportError:
-        pass
-    else:
-        for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
-            firmware_info = await get_zha_firmware_info(hass, zha_config_entry)
-
-            if firmware_info is not None:
-                device_guesses[firmware_info.device].append(firmware_info)
-
-    try:
-        # pylint: disable-next=import-outside-toplevel, hass-component-root-import
-        from homeassistant.components.otbr.homeassistant_hardware import (
-            get_firmware_info as get_otbr_firmware_info,
-        )
-    except ImportError:
-        pass
-    else:
-        for otbr_config_entry in hass.config_entries.async_entries(OTBR_DOMAIN):
-            firmware_info = await get_otbr_firmware_info(hass, otbr_config_entry)
-
-            if firmware_info is not None:
-                device_guesses[firmware_info.device].append(firmware_info)
+    async for _config_entry, firmware_info in hass.data[
+        DATA_COMPONENT
+    ].iter_firmware_info():
+        if firmware_info is not None:
+            device_guesses[firmware_info.device].append(firmware_info)
 
     # It may be possible for the OTBR addon to be present without the integration
     if is_hassio(hass):
