@@ -82,7 +82,7 @@ async def test_cleanup(
         assert chat_session.conversation_id != conversation_id
         conversation_id = chat_session.conversation_id
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
@@ -127,12 +127,6 @@ async def test_cleanup(
         assert len(chat_session.messages) == 2
 
 
-def test_chat_message() -> None:
-    """Test chat message."""
-    with pytest.raises(ValueError):
-        session.ChatMessage(role="native", agent_id=None, content="", native=None)
-
-
 async def test_add_message(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
@@ -144,7 +138,7 @@ async def test_add_message(
 
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(role="system", agent_id=None, content="")
+                session.Content(role="system", agent_id=None, content="")
             )
 
         # No 2 user messages in a row
@@ -152,19 +146,19 @@ async def test_add_message(
 
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(role="user", agent_id=None, content="")
+                session.Content(role="user", agent_id=None, content="")
             )
 
         # No 2 assistant messages in a row
         chat_session.async_add_message(
-            session.ChatMessage(role="assistant", agent_id=None, content="")
+            session.Content(role="assistant", agent_id=None, content="")
         )
         assert len(chat_session.messages) == 3
         assert chat_session.messages[-1].role == "assistant"
 
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(role="assistant", agent_id=None, content="")
+                session.Content(role="assistant", agent_id=None, content="")
             )
 
 
@@ -177,12 +171,12 @@ async def test_message_filtering(
     ) as chat_session:
         messages = chat_session.async_get_messages(agent_id=None)
         assert len(messages) == 2
-        assert messages[0] == session.ChatMessage(
+        assert messages[0] == session.Content(
             role="system",
             agent_id=None,
             content="",
         )
-        assert messages[1] == session.ChatMessage(
+        assert messages[1] == session.Content(
             role="user",
             agent_id="mock-agent-id",
             content=mock_conversation_input.text,
@@ -190,7 +184,7 @@ async def test_message_filtering(
         # Cannot add a second user message in a row
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(
+                session.Content(
                     role="user",
                     agent_id="mock-agent-id",
                     content="Hey!",
@@ -198,31 +192,25 @@ async def test_message_filtering(
             )
 
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
-                native="assistant-reply-native",
             )
         )
         # Different agent, native messages will be filtered out.
         chat_session.async_add_message(
-            session.ChatMessage(
-                role="native", agent_id="another-mock-agent-id", content="", native=1
-            )
+            session.NativeContent(agent_id="another-mock-agent-id", content=1)
         )
         chat_session.async_add_message(
-            session.ChatMessage(
-                role="native", agent_id="mock-agent-id", content="", native=1
-            )
+            session.NativeContent(agent_id="mock-agent-id", content=1)
         )
         # A non-native message from another agent is not filtered out.
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="another-mock-agent-id",
                 content="Hi!",
-                native=1,
             )
         )
 
@@ -231,17 +219,14 @@ async def test_message_filtering(
     messages = chat_session.async_get_messages(agent_id="mock-agent-id")
     assert len(messages) == 5
 
-    assert messages[2] == session.ChatMessage(
+    assert messages[2] == session.Content(
         role="assistant",
         agent_id="mock-agent-id",
         content="Hey!",
-        native="assistant-reply-native",
     )
-    assert messages[3] == session.ChatMessage(
-        role="native", agent_id="mock-agent-id", content="", native=1
-    )
-    assert messages[4] == session.ChatMessage(
-        role="assistant", agent_id="another-mock-agent-id", content="Hi!", native=1
+    assert messages[3] == session.NativeContent(agent_id="mock-agent-id", content=1)
+    assert messages[4] == session.Content(
+        role="assistant", agent_id="another-mock-agent-id", content="Hi!"
     )
 
 
@@ -361,7 +346,7 @@ async def test_extra_systen_prompt(
             user_llm_prompt=None,
         )
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
@@ -401,7 +386,7 @@ async def test_extra_systen_prompt(
             user_llm_prompt=None,
         )
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
