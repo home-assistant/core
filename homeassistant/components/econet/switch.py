@@ -9,11 +9,10 @@ from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import ThermostatOperationMode
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, EQUIPMENT
+from . import EconetConfigEntry
 from .entity import EcoNetEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,11 +20,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EconetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat switch entity."""
-    equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
+    equipment = entry.runtime_data
     async_add_entities(
         EcoNetSwitchAuxHeatOnly(thermostat)
         for thermostat in equipment[EquipmentType.THERMOSTAT]
