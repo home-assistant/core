@@ -1,6 +1,7 @@
 """Support for Roborock image."""
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
 import io
 
@@ -11,6 +12,7 @@ from vacuum_map_parser_base.config.size import Sizes
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
 from homeassistant.components.image import ImageEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -45,17 +47,27 @@ async def async_setup_entry(
     parser = RoborockMapDataParser(
         ColorsPalette(), Sizes(), drawables, ImageConfig(), []
     )
+
+    def parse_image(map_bytes: bytes) -> bytes | None:
+        parsed_map = parser.parse(map_bytes)
+        if parsed_map.image is None:
+            return None
+        img_byte_arr = io.BytesIO()
+        parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
+        return img_byte_arr.getvalue()
+
     await asyncio.gather(
         *(refresh_coordinators(hass, coord) for coord in config_entry.runtime_data.v1)
     )
     async_add_entities(
         (
             RoborockMap(
+                config_entry,
                 f"{coord.duid_slug}_map_{map_info.name}",
                 coord,
                 map_info.flag,
                 map_info.name,
-                parser,
+                parse_image,
             )
             for coord in config_entry.runtime_data.v1
             for map_info in coord.maps.values()
@@ -72,15 +84,17 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         map_flag: int,
         map_name: str,
-        parser: RoborockMapDataParser,
+        parser: Callable[[bytes], bytes | None],
     ) -> None:
         """Initialize a Roborock map."""
         RoborockCoordinatedEntityV1.__init__(self, unique_id, coordinator)
         ImageEntity.__init__(self, coordinator.hass)
+        self.config_entry = config_entry
         self._attr_name = map_name
         self.parser = parser
         self.map_flag = map_flag
@@ -133,33 +147,25 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 ),
                 return_exceptions=True,
             )
-            if not isinstance(response[0], bytes):
+            if (
+                not isinstance(response[0], bytes)
+                or (content := self.parser(response[0])) is None
+            ):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="map_failure",
                 )
-            map_data = response[0]
-            content = self.create_image(map_data, self.parser)
             if self.cached_map != content:
                 self.cached_map = content
-                await self.coordinator.map_storage.async_save_map(
-                    self.map_flag,
-                    content,
+                self.config_entry.async_create_task(
+                    self.hass,
+                    self.coordinator.map_storage.async_save_map(
+                        self.map_flag,
+                        content,
+                    ),
+                    f"{self.unique_id} map",
                 )
         return self.cached_map
-
-    @staticmethod
-    def create_image(map_bytes: bytes, parser: RoborockMapDataParser) -> bytes:
-        """Create an image using the map parser."""
-        parsed_map = parser.parse(map_bytes)
-        if parsed_map.image is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="map_failure",
-            )
-        img_byte_arr = io.BytesIO()
-        parsed_map.image.data.save(img_byte_arr, format=MAP_FILE_FORMAT)
-        return img_byte_arr.getvalue()
 
 
 async def refresh_coordinators(
