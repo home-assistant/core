@@ -57,19 +57,12 @@ class HardwareInfoDispatcher:
                 f"Domain {domain} is already registered as a firmware info provider"
             )
 
+        # There is no need to handle "unregistration" because integrations cannot be
+        # wholly removed at runtime
         self._providers[domain] = platform
         _LOGGER.debug(
             "Registered firmware info provider from domain %r: %s", domain, platform
         )
-
-    def unregister_firmware_info_provider(self, domain: str) -> None:
-        """Unregister a firmware info provider."""
-        if domain not in self._providers:
-            raise ValueError(
-                f"Domain {domain} is not a registered firmware info provider"
-            )
-
-        del self._providers[domain]
 
     async def notify_firmware_info(
         self, domain: str, firmware_info: FirmwareInfo
@@ -100,12 +93,6 @@ def register_firmware_info_provider(
 ) -> None:
     """Register a firmware info provider."""
     return hass.data[DATA_COMPONENT].register_firmware_info_provider(domain, platform)
-
-
-@callback
-def unregister_firmware_info_provider(hass: HomeAssistant, domain: str) -> None:
-    """Unregister a firmware info provider."""
-    return hass.data[DATA_COMPONENT].unregister_firmware_info_provider(domain)
 
 
 @callback
