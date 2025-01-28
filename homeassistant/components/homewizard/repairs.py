@@ -34,7 +34,6 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
         if user_input is not None:
             return await self.async_step_authorize()
 
-        # return self.async_show_form(step_id="authorize", errors=errors)
         return self.async_show_form(
             step_id="confirm", description_placeholders={"title": self.entry.title}
         )
