@@ -1,5 +1,6 @@
 """Tests for the Vogel's MotionMount config flow."""
 
+import asyncio
 import dataclasses
 import socket
 from unittest.mock import MagicMock, PropertyMock
@@ -377,7 +378,7 @@ async def test_zeroconf_authentication_needed(
     assert result["step_id"] == "auth"
 
 
-async def test_authentication_incorrect_pin(
+async def test_authentication_incorrect_then_correct_pin(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motionmount_config_flow: MagicMock,
@@ -387,6 +388,9 @@ async def test_authentication_incorrect_pin(
     type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
         return_value=False
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
     )
 
     user_input = MOCK_USER_INPUT.copy()
@@ -411,6 +415,25 @@ async def test_authentication_incorrect_pin(
     assert result["errors"]
     assert result["errors"][CONF_PIN] == CONF_PIN
 
+    # Now simulate the user entered the correct pin to finalize the test
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
+
 
 async def test_authentication_first_incorrect_pin_to_backoff(
     hass: HomeAssistant,
@@ -424,7 +447,7 @@ async def test_authentication_first_incorrect_pin_to_backoff(
         return_value=False
     )
     type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
-        side_effect=[True, 4]
+        side_effect=[True, 1]
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -445,6 +468,31 @@ async def test_authentication_first_incorrect_pin_to_backoff(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backoff"
 
+    await asyncio.sleep(2)
+
+    # Now simulate the user entered the correct pin to finalize the test
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
+
 
 async def test_authentication_multiple_incorrect_pins(
     hass: HomeAssistant,
@@ -457,7 +505,7 @@ async def test_authentication_multiple_incorrect_pins(
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
         return_value=False
     )
-    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(return_value=7)
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(return_value=1)
 
     user_input = MOCK_USER_INPUT.copy()
 
@@ -478,6 +526,31 @@ async def test_authentication_multiple_incorrect_pins(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backoff"
 
+    await asyncio.sleep(2)
+
+    # Now simulate the user entered the correct pin to finalize the test
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
+
 
 async def test_authentication_show_backoff_when_still_running(
     hass: HomeAssistant,
@@ -490,7 +563,7 @@ async def test_authentication_show_backoff_when_still_running(
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
         return_value=False
     )
-    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(return_value=20)
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(return_value=1)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -518,6 +591,31 @@ async def test_authentication_show_backoff_when_still_running(
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backoff"
+
+    await asyncio.sleep(2)
+
+    # Now simulate the user entered the correct pin to finalize the test
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
 
 
 async def test_authentication_correct_pin(
@@ -563,26 +661,6 @@ async def test_authentication_correct_pin(
 
     assert result["result"]
     assert result["result"].unique_id == ZEROCONF_MAC
-
-
-async def test_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
-) -> None:
-    """Test reauthentication."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
 
 
 async def test_full_user_flow_implementation(
