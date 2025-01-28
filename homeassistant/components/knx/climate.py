@@ -217,14 +217,11 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
                 self._attr_fan_modes = [self.fan_zero_mode] + [
                     f"{percentage}%" for percentage in self._fan_modes_percentages[1:]
                 ]
-        if self._device.swing is not None and self._device.swing.initialized:
+        if self._device.swing.initialized:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
             self._attr_swing_modes = [SWING_ON, SWING_OFF]
 
-        if (
-            self._device.horizontal_swing is not None
-            and self._device.horizontal_swing.initialized
-        ):
+        if self._device.horizontal_swing.initialized:
             self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
             self._attr_swing_horizontal_modes = [SWING_ON, SWING_OFF]
 
@@ -430,14 +427,14 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        if self._device.swing is not None:
+        if self._device.swing.value is not None:
             return SWING_ON if self._device.swing.value else SWING_OFF
         return None
 
     @property
     def swing_horizontal_mode(self) -> str | None:
         """Return the horizontal swing setting."""
-        if self._device.horizontal_swing is not None:
+        if self._device.horizontal_swing.value is not None:
             return SWING_ON if self._device.horizontal_swing.value else SWING_OFF
         return None
 
