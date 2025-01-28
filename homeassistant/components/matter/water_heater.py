@@ -19,9 +19,15 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, STATE_OFF, STATE_ON, Platform, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_WHOLE,
+    STATE_OFF,
+    STATE_ON,
+    Platform,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -50,9 +56,10 @@ async def async_setup_entry(
 
 class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
+
     _attr_current_temperature: float | None = None
-    _attr_min_temp = 30.0
-    _attr_max_temp = 70.0
+    _attr_min_temp = 30.0 # Replace with dynamic attribute
+    _attr_max_temp = 70.0 # Replace with dynamic attribute
     _attr_precision = PRECISION_WHOLE
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -95,15 +102,13 @@ DISCOVERY_SCHEMAS = [
             name=None,
         ),
         entity_class=MatterWaterHeater,
-        #entity_class=DemoWaterHeater,
         required_attributes=(
             clusters.WaterHeaterManagement.Attributes.BoostState,
             clusters.WaterHeaterManagement.Attributes.HeaterTypes,
             clusters.WaterHeaterManagement.Attributes.HeatDemand,
             clusters.WaterHeaterManagement.Attributes.FeatureMap,
         ),
-        optional_attributes=(
-        ),
-        allow_multi=True, # also used for sensor entity
+        optional_attributes=(),
+        allow_multi=True,  # also used for sensor entity
     ),
 ]
