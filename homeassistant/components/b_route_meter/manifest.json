@@ -3,8 +3,7 @@
     "name": "B-Route Smart Meter",
     "documentation": "https://www.home-assistant.io/integrations/b_route_meter",
     "requirements": [
-        "pyserial==3.5",
-        "python-dateutil==2.8.2"
+        "pyserial==3.5"
     ],
     "config_flow": true,
     "codeowners": [

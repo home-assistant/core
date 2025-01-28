@@ -8,10 +8,9 @@ via the B-route interface (ECHONET Lite).
 
 """
 
-from datetime import datetime
+from datetime import UTC, datetime, timedelta, timezone
 import logging
 
-from dateutil import tz
 import serial
 
 from homeassistant.exceptions import (
@@ -22,8 +21,7 @@ from homeassistant.exceptions import (
 
 _LOGGER = logging.getLogger(__name__)
 
-JST = tz.gettz("Asia/Tokyo")  # B-route meters only in Japan
-UTC = tz.gettz("UTC")
+JST = timezone(timedelta(hours=9), "JST")  # B-route meters only in Japan
 
 
 class BRouteReader:
