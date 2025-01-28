@@ -80,12 +80,12 @@ async def test_auth_failed_on_setup(
     ("error_type", "log_msg"),
     [
         (
-            RingTimeout,
-            "Timeout communicating with Ring API - async_update_data: ",
+            RingTimeout("Some internal error info"),
+            "Timeout communicating with Ring API",
         ),
         (
-            RingError,
-            "Error communicating with Ring API - async_update_data: ",
+            RingError("Some internal error info"),
+            "Error communicating with Ring API",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -95,6 +95,7 @@ async def test_error_on_setup(
     mock_ring_client,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
     error_type,
     log_msg,
 ) -> None:
@@ -109,6 +110,7 @@ async def test_error_on_setup(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert log_msg in caplog.text
+    assert str(error_type) in caplog.text
 
 
 async def test_auth_failure_on_global_update(
@@ -165,12 +167,12 @@ async def test_auth_failure_on_device_update(
     ("error_type", "log_msg"),
     [
         (
-            RingTimeout,
-            "Error fetching devices data: Timeout communicating with Ring API - async_update_devices: ",
+            RingTimeout("Some internal error info"),
+            "Error fetching devices data: Timeout communicating with Ring API",
         ),
         (
-            RingError,
-            "Error fetching devices data: Error communicating with Ring API - async_update_devices: ",
+            RingError("Some internal error info"),
+            "Error fetching devices data: Error communicating with Ring API",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -196,20 +198,30 @@ async def test_error_on_global_update(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert log_msg in caplog.text
+    assert str(error_type) in caplog.text
 
     assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+
+    # Check log is not being spammed.
+    caplog.clear()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert log_msg not in caplog.text
+    assert str(error_type) not in caplog.text
 
 
 @pytest.mark.parametrize(
     ("error_type", "log_msg"),
     [
         (
-            RingTimeout,
-            "Error fetching devices data: Timeout communicating with Ring API for device Front - async_history: ",
+            RingTimeout("Some internal error info"),
+            "Error fetching devices data: Timeout communicating with Ring API for device Front",
         ),
         (
-            RingError,
-            "Error fetching devices data: Error communicating with Ring API for device Front - async_history: ",
+            RingError("Some internal error info"),
+            "Error fetching devices data: Error communicating with Ring API for device Front",
         ),
     ],
     ids=["timeout-error", "other-error"],
@@ -237,7 +249,17 @@ async def test_error_on_device_update(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert log_msg in caplog.text
+    assert str(error_type) in caplog.text
     assert hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+
+    # Check log is not being spammed.
+    caplog.clear()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert log_msg not in caplog.text
+    assert str(error_type) not in caplog.text
 
 
 @pytest.mark.parametrize(

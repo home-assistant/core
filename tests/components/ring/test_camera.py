@@ -436,9 +436,11 @@ async def test_camera_webrtc(
     assert response
     assert response.get("success") is False
     assert response["error"]["code"] == "home_assistant_error"
-    msg = f"The sdp_m_line_index is required for ring webrtc streaming from {front_camera_mock.name}"
-    assert msg in response["error"].get("message")
-    assert msg in caplog.text
+    log_msg = f"The sdp_m_line_index is required for ring webrtc streaming from {front_camera_mock.name}"
+    error_msg = f"Error negotiating stream for {front_camera_mock.name}"
+    assert error_msg in response["error"].get("message")
+    assert error_msg in caplog.text
+    assert log_msg in caplog.text
     front_camera_mock.on_webrtc_candidate.assert_called_once()
 
     # Answer message

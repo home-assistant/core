@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
+import logging
 from typing import Any, Concatenate, Generic, TypeVar, cast
 
 from ring_doorbell import (
@@ -36,6 +37,8 @@ _RingCoordinatorT = TypeVar(
     bound=(RingDataCoordinator | RingListenCoordinator),
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(slots=True)
 class DeprecatedInfo:
@@ -62,32 +65,39 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
             return await async_func(self, *args, **kwargs)
         except AuthenticationError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
+            _LOGGER.exception(
+                "Authentication error calling %s in platform %s: ",
+                async_func.__name__,
+                self.platform,
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_api_authentication",
                 translation_placeholders={
-                    "func": async_func.__name__,
-                    "exc": str(err),
                     "device": self._device.name,
                 },
             ) from err
         except RingTimeout as err:
+            _LOGGER.exception(
+                "Timeout error calling %s in platform %s: ",
+                async_func.__name__,
+                self.platform,
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_api_timeout",
                 translation_placeholders={
-                    "func": async_func.__name__,
-                    "exc": str(err),
                     "device": self._device.name,
                 },
             ) from err
         except RingError as err:
+            _LOGGER.exception(
+                "Error calling %s in platform %s: ", async_func.__name__, self.platform
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_api_error",
                 translation_placeholders={
-                    "func": async_func.__name__,
-                    "exc": str(err),
                     "device": self._device.name,
                 },
             ) from err

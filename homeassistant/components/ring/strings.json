@@ -136,25 +136,25 @@
   },
   "exceptions": {
     "api_authentication": {
-      "message": "Authentication error communicating with Ring API - {func}: {exc}"
+      "message": "Authentication error communicating with Ring API"
     },
     "api_timeout": {
-      "message": "Timeout communicating with Ring API - {func}: {exc}"
+      "message": "Timeout communicating with Ring API"
     },
     "api_error": {
-      "message": "Error communicating with Ring API - {func}: {exc}"
+      "message": "Error communicating with Ring API"
     },
     "device_api_authentication": {
-      "message": "Authentication error communicating with Ring API for device {device} - {func}: {exc}"
+      "message": "Authentication error communicating with Ring API for device {device}"
     },
     "device_api_timeout": {
-      "message": "Timeout communicating with Ring API for device {device} - {func}: {exc}"
+      "message": "Timeout communicating with Ring API for device {device}"
     },
     "device_api_error": {
-      "message": "Error communicating with Ring API for device {device} - {func}: {exc}"
+      "message": "Error communicating with Ring API for device {device}"
     },
     "sdp_m_line_index_required": {
-      "message": "The sdp_m_line_index is required for ring webrtc streaming from {device}"
+      "message": "Error negotiating stream for {device}"
     }
   },
   "issues": {
