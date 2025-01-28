@@ -27,6 +27,7 @@ from .switch import DISCOVERY_SCHEMAS as SWITCH_SCHEMAS
 from .update import DISCOVERY_SCHEMAS as UPDATE_SCHEMAS
 from .vacuum import DISCOVERY_SCHEMAS as VACUUM_SCHEMAS
 from .valve import DISCOVERY_SCHEMAS as VALVE_SCHEMAS
+from .water_heater import DISCOVERY_SCHEMAS as WATER_HEATER_SCHEMAS
 
 DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_SCHEMAS,
@@ -44,6 +45,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.UPDATE: UPDATE_SCHEMAS,
     Platform.VACUUM: VACUUM_SCHEMAS,
     Platform.VALVE: VALVE_SCHEMAS,
+    Platform.WATER_HEATER: WATER_HEATER_SCHEMAS,
 }
 SUPPORTED_PLATFORMS = tuple(DISCOVERY_SCHEMAS)
 
