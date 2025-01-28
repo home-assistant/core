@@ -21,7 +21,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -39,7 +38,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-from . import EcobeeData
+from . import EcobeeConfigEntry, EcobeeData
 from .const import (
     _LOGGER,
     ATTR_ACTIVE_SENSORS,
@@ -201,12 +200,12 @@ SUPPORT_FLAGS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcobeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat."""
 
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     entities = []
 
     for index in range(len(data.ecobee.thermostats)):

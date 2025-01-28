@@ -208,8 +208,8 @@ async def test_agents_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [
-            {"agent_id": "synology_dsm.Mock Title"},
-            {"agent_id": "backup.local"},
+            {"agent_id": "synology_dsm.mocked_syno_dsm_entry", "name": "Mock Title"},
+            {"agent_id": "backup.local", "name": "local"},
         ],
     }
 
@@ -231,7 +231,7 @@ async def test_agents_not_loaded(
     assert response["success"]
     assert response["result"] == {
         "agents": [
-            {"agent_id": "backup.local"},
+            {"agent_id": "backup.local", "name": "local"},
         ],
     }
 
@@ -251,8 +251,8 @@ async def test_agents_on_unload(
     assert response["success"]
     assert response["result"] == {
         "agents": [
-            {"agent_id": "synology_dsm.Mock Title"},
-            {"agent_id": "backup.local"},
+            {"agent_id": "synology_dsm.mocked_syno_dsm_entry", "name": "Mock Title"},
+            {"agent_id": "backup.local", "name": "local"},
         ],
     }
 
@@ -269,7 +269,7 @@ async def test_agents_on_unload(
     assert response["success"]
     assert response["result"] == {
         "agents": [
-            {"agent_id": "backup.local"},
+            {"agent_id": "backup.local", "name": "local"},
         ],
     }
 
@@ -299,7 +299,7 @@ async def test_agents_list_backups(
             "name": "Automatic backup 2025.2.0.dev0",
             "protected": True,
             "size": 13916160,
-            "agent_ids": ["synology_dsm.Mock Title"],
+            "agent_ids": ["synology_dsm.mocked_syno_dsm_entry"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -323,7 +323,9 @@ async def test_agents_list_backups_error(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"synology_dsm.Mock Title": "Failed to list backups"},
+        "agent_errors": {
+            "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
+        },
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
@@ -362,7 +364,7 @@ async def test_agents_list_backups_disabled_filestation(
                 "name": "Automatic backup 2025.2.0.dev0",
                 "protected": True,
                 "size": 13916160,
-                "agent_ids": ["synology_dsm.Mock Title"],
+                "agent_ids": ["synology_dsm.mocked_syno_dsm_entry"],
                 "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
@@ -429,7 +431,9 @@ async def test_agents_get_backup_error(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"synology_dsm.Mock Title": "Failed to list backups"},
+        "agent_errors": {
+            "synology_dsm.mocked_syno_dsm_entry": "Failed to list backups"
+        },
         "backup": None,
     }
 
@@ -462,7 +466,7 @@ async def test_agents_download(
     backup_id = "abcd12ef"
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id=synology_dsm.Mock Title"
+        f"/api/backup/download/{backup_id}?agent_id=synology_dsm.mocked_syno_dsm_entry"
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
@@ -482,7 +486,7 @@ async def test_agents_download_not_existing(
     )
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id=synology_dsm.Mock Title"
+        f"/api/backup/download/{backup_id}?agent_id=synology_dsm.mocked_syno_dsm_entry"
     )
     assert resp.reason == "Internal Server Error"
     assert resp.status == 500
@@ -524,7 +528,7 @@ async def test_agents_upload(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            "/api/backup/upload?agent_id=synology_dsm.Mock Title",
+            "/api/backup/upload?agent_id=synology_dsm.mocked_syno_dsm_entry",
             data={"file": StringIO("test")},
         )
 
@@ -578,7 +582,7 @@ async def test_agents_upload_error(
             SynologyDSMAPIErrorException("api", "500", "error")
         )
         resp = await client.post(
-            "/api/backup/upload?agent_id=synology_dsm.Mock Title",
+            "/api/backup/upload?agent_id=synology_dsm.mocked_syno_dsm_entry",
             data={"file": StringIO("test")},
         )
 
@@ -609,7 +613,7 @@ async def test_agents_upload_error(
         ]
 
         resp = await client.post(
-            "/api/backup/upload?agent_id=synology_dsm.Mock Title",
+            "/api/backup/upload?agent_id=synology_dsm.mocked_syno_dsm_entry",
             data={"file": StringIO("test")},
         )
 
@@ -674,7 +678,9 @@ async def test_agents_delete_not_existing(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"synology_dsm.Mock Title": "Failed to delete the backup"}
+        "agent_errors": {
+            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete the backup"
+        }
     }
 
 
@@ -701,7 +707,9 @@ async def test_agents_delete_error(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {"synology_dsm.Mock Title": "Failed to delete the backup"}
+        "agent_errors": {
+            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete the backup"
+        }
     }
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 1
