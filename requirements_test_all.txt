@@ -941,7 +941,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.12.0
+habluetooth==3.13.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1933,7 +1933,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.1.1
+python-homewizard-energy==v8.2.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1979,7 +1979,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.8.4
+python-roborock==2.9.7
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2493,7 +2493,7 @@ yalexs-ble==2.5.6
 yalexs==8.10.0
 
 # homeassistant.components.yeelight
-yeelight==0.7.14
+yeelight==0.7.16
 
 # homeassistant.components.yolink
 yolink-api==0.4.7

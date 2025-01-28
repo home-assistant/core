@@ -138,6 +138,12 @@
       },
       "tilt_down": {
         "name": "Tilt down"
+      },
+      "pair": {
+        "name": "Pair new device"
+      },
+      "unpair": {
+        "name": "Unpair device"
       }
     },
     "camera": {

@@ -386,5 +386,15 @@
     "type": "Sensor",
     "category": "Info",
     "enum_type": "CleanErrorCode"
+  },
+  "pair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "unpair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
   }
 }
