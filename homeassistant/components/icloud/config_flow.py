@@ -296,14 +296,14 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             if self.api.requires_2fa:
                 try:
                     self.api = await self.hass.async_add_executor_job(
-                    PyiCloudService,
-                    self._username,
-                    self._password,
-                    'com',
-                    Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
-                    True,
-                    None,
-                    self._with_family,
+                        PyiCloudService,
+                        self._username,
+                        self._password,
+                        'com',
+                        Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
+                        True,
+                        None,
+                        self._with_family,
                     )
                     return await self.async_step_verification_code(None, errors)
                 except PyiCloudFailedLoginException as error_login:
