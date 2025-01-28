@@ -90,13 +90,13 @@ def generate_backup_id_fixture() -> Generator[MagicMock]:
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
-async def test_async_create_backup(
+async def test_create_backup_service(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
 ) -> None:
-    """Test create backup."""
+    """Test create backup service."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -135,6 +135,128 @@ async def test_async_create_backup(
         on_progress=ANY,
         password=None,
     )
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    ("manager_kwargs", "expected_writer_kwargs"),
+    [
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Custom backup 2025.1.0",
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+                "with_automatic_settings": True,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Automatic backup 2025.1.0",
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "extra_metadata": {"custom": "data"},
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Custom backup 2025.1.0",
+                "extra_metadata": {
+                    "custom": "data",
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+    ],
+)
+async def test_async_create_backup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mocked_json_bytes: Mock,
+    mocked_tarfile: Mock,
+    manager_kwargs: dict[str, Any],
+    expected_writer_kwargs: dict[str, Any],
+) -> None:
+    """Test create backup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    manager = hass.data[DATA_MANAGER]
+
+    new_backup = NewBackup(backup_job_id="time-123")
+    backup_task = AsyncMock(
+        return_value=WrittenBackup(
+            backup=TEST_BACKUP_ABC123,
+            open_stream=AsyncMock(),
+            release_stream=AsyncMock(),
+        ),
+    )()  # call it so that it can be awaited
+
+    with patch(
+        "homeassistant.components.backup.manager.CoreBackupReaderWriter.async_create_backup",
+        return_value=(new_backup, backup_task),
+    ) as create_backup:
+        await manager.async_create_backup(**manager_kwargs)
+
+    assert create_backup.called
+    assert create_backup.call_args == call(**expected_writer_kwargs)
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
