@@ -1,0 +1,19 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      '__type': "<class 'homeassistant.components.cookidoo.coordinator.CookidooData'>",
+      'repr': "CookidooData(ingredient_items=[CookidooIngredientItem(id='unique_id_mehl', name='Mehl', is_owned=False, description='200 g')], additional_items=[CookidooAdditionalItem(id='unique_id_tomaten', name='Tomaten', is_owned=False)], subscription=CookidooSubscription(active=True, expires='2025-12-16T23:59:00Z', start_date='2024-12-16T00:00:00Z', status='ACTIVE', subscription_level='FULL', subscription_source='COMMERCE', type='REGULAR', extended_type='REGULAR'))",
+    }),
+    'entry_data': dict({
+      'country': 'CH',
+      'email': 'test-email',
+      'language': 'de-CH',
+      'password': '**REDACTED**',
+    }),
+    'user': dict({
+      '__type': "<class 'cookidoo_api.types.CookidooUserInfo'>",
+      'repr': "CookidooUserInfo(username='username_1234', description=None, picture=None)",
+    }),
+  })
+# ---
