@@ -129,6 +129,6 @@ async def test_service_set_guest_wifi_password_unloaded(
         )
         assert not mock_async_trigger_set_guest_password.called
         assert (
-            'HomeAssistantError: Failed to perform action "set_guest_wifi_password"'
+            'ServiceValidationError: Failed to perform action "set_guest_wifi_password". Config entry for target not found'
             in caplog.text
         )
