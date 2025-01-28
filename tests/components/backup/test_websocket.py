@@ -2816,7 +2816,7 @@ async def test_subscribe_event(
     assert await client.receive_json() == snapshot
 
     manager.async_on_backup_event(
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
     )
     assert await client.receive_json() == snapshot
 

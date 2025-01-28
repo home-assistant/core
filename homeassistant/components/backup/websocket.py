@@ -306,7 +306,10 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [
+                {"agent_id": agent.agent_id, "name": agent.name}
+                for agent in manager.backup_agents.values()
+            ],
         },
     )
 

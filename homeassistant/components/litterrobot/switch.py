@@ -13,7 +13,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LitterRobotConfigEntry
+from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
 
 
@@ -48,14 +48,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
-    hub = entry.runtime_data
-    entities = [
-        RobotSwitchEntity(robot=robot, hub=hub, description=description)
+    coordinator = entry.runtime_data
+    async_add_entities(
+        RobotSwitchEntity(robot=robot, coordinator=coordinator, description=description)
         for description in ROBOT_SWITCHES
-        for robot in hub.account.robots
+        for robot in coordinator.account.robots
         if isinstance(robot, (LitterRobot, FeederRobot))
-    ]
-    async_add_entities(entities)
+    )
 
 
 class RobotSwitchEntity(LitterRobotEntity[_RobotT], SwitchEntity):

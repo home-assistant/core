@@ -200,6 +200,9 @@
           "previous": "Previous"
         }
       },
+      "temperature_level": {
+        "name": "Temperature level"
+      },
       "temperature_display_mode": {
         "name": "Temperature display mode"
       }
@@ -254,6 +257,9 @@
       },
       "battery_replacement_description": {
         "name": "Battery type"
+      },
+      "current_phase": {
+        "name": "Current phase"
       }
     },
     "switch": {
