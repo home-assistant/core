@@ -9,7 +9,6 @@ from typing import Any
 
 from aiohttp import ClientSession, ClientTimeout, StreamReader
 from aiohttp.client_exceptions import ClientError, ClientResponseError
-from google.auth.exceptions import RefreshError
 from google_drive_api.api import AbstractAuth, GoogleDriveApi
 
 from homeassistant.components.backup import AgentBackup
@@ -43,7 +42,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
         """Return a valid access token."""
         try:
             await self._oauth_session.async_ensure_token_valid()
-        except (RefreshError, ClientResponseError, ClientError) as ex:
+        except ClientError as ex:
             if (
                 self._oauth_session.config_entry.state
                 is ConfigEntryState.SETUP_IN_PROGRESS
@@ -53,9 +52,7 @@ class AsyncConfigEntryAuth(AbstractAuth):
                         "OAuth session is not valid, reauth required"
                     ) from ex
                 raise ConfigEntryNotReady from ex
-            if isinstance(ex, RefreshError) or (
-                hasattr(ex, "status") and ex.status == 400
-            ):
+            if hasattr(ex, "status") and ex.status == 400:
                 self._oauth_session.config_entry.async_start_reauth(
                     self._oauth_session.hass
                 )
