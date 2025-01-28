@@ -66,6 +66,15 @@ def to_percentage(value: float | None) -> float | None:
     return value * 100 if value is not None else None
 
 
+def time_to_datetime(value: int | None) -> datetime | None:
+    """Convert seconds to datetime when value is not None."""
+    return (
+        utcnow().replace(microsecond=0) - timedelta(seconds=value)
+        if value is not None
+        else None
+    )
+
+
 SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
     HomeWizardSensorEntityDescription(
         key="smr_version",
@@ -616,10 +625,7 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             lambda data: data.system is not None and data.system.uptime_s is not None
         ),
         value_fn=(
-            lambda x: utcnow().replace(microsecond=0)
-            - timedelta(seconds=x.system.uptime_s)
-            if x.system is not None and x.system.uptime_s is not None
-            else None
+            lambda data: time_to_datetime(data.system.uptime_s) if data.system else None
         ),
     ),
 )
