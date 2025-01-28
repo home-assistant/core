@@ -49,7 +49,12 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
+
+        # The iot HS300 allows a limited number of concurrent requests and
+        # fetching the emeter information requires separate ones, so child
+        # coordinators are created below in get_child_coordinator.
         self._update_children = not isinstance(device, IotStrip)
+
         super().__init__(
             hass,
             _LOGGER,
