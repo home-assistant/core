@@ -35,7 +35,7 @@ go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
 habluetooth==3.13.0
 hass-nabucasa==0.88.1
-hassil==2.1.0
+hassil==2.2.0
 home-assistant-bluetooth==1.13.0
 home-assistant-frontend==20250109.2
 home-assistant-intents==2025.1.1
