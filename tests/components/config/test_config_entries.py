@@ -1192,7 +1192,11 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
         source="bla",
         subentries_data=[
             core_ce.ConfigSubentryData(
-                data={}, subentry_id="mock_id", title="Title", unique_id=None
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id=None,
             )
         ],
     ).add_to_hass(hass)
