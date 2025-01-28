@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Final
 
 from homewizard_energy.models import CombinedModels, ExternalDevice
@@ -33,6 +34,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util.dt import utcnow
 
 from . import HomeWizardConfigEntry
 from .const import DOMAIN
@@ -48,7 +50,7 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
 
     enabled_fn: Callable[[CombinedModels], bool] = lambda x: True
     has_fn: Callable[[CombinedModels], bool]
-    value_fn: Callable[[CombinedModels], StateType]
+    value_fn: Callable[[CombinedModels], StateType | datetime]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -604,6 +606,22 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         has_fn=lambda data: data.measurement.cycles is not None,
         value_fn=lambda data: data.measurement.cycles,
     ),
+    HomeWizardSensorEntityDescription(
+        key="uptime",
+        translation_key="uptime",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=(
+            lambda data: data.system is not None and data.system.uptime_s is not None
+        ),
+        value_fn=(
+            lambda x: utcnow().replace(microsecond=0)
+            - timedelta(seconds=x.system.uptime_s)
+            if x.system is not None and x.system.uptime_s is not None
+            else None
+        ),
+    ),
 )
 
 
@@ -690,7 +708,7 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
             self._attr_entity_registry_enabled_default = False
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)
 
