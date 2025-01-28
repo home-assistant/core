@@ -52,8 +52,6 @@ async def test_vacuum(
     )
     assert device_entries
 
-    entity_registry = er.async_get(hass)
-
     entity = entity_registry.async_get(ENTITY_ID)
     assert entity
     assert entity.unique_id == f"{DEVICE_ID}-vacuum"
