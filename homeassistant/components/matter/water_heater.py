@@ -105,7 +105,7 @@ DISCOVERY_SCHEMAS = [
             clusters.WaterHeaterManagement.Attributes.FeatureMap,
         ),
         optional_attributes=(),
-        device_type=(device_types.WaterHeater),
+        device_type=(device_types.WaterHeater,),
         allow_multi=True,  # also used for sensor entity
     ),
 ]
