@@ -7,12 +7,12 @@ import logging
 from typing import Any
 
 from google_drive_api.exceptions import GoogleDriveApiError
-from slugify import slugify
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
+from homeassistant.util import slugify
 
 from . import DATA_BACKUP_AGENT_LISTENERS, GoogleDriveConfigEntry
 from .const import DOMAIN
