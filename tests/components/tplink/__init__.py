@@ -18,7 +18,7 @@ from kasa import (
 from kasa.interfaces import Fan, Light, LightEffect, LightState, Thermostat
 from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
-from kasa.smart.modules.clean import Clean, ErrorCode, Status
+from kasa.smart.modules.clean import AreaUnit, Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
 
@@ -60,6 +60,7 @@ def _load_feature_fixtures():
 
 
 FEATURES_FIXTURE = _load_feature_fixtures()
+FIXTURE_ENUM_TYPES = {"CleanAreaUnit": AreaUnit}
 
 
 async def setup_platform_for_device(
@@ -275,6 +276,9 @@ def _mocked_feature(
     if fixture := FEATURES_FIXTURE.get(id):
         # copy the fixture so tests do not interfere with each other
         fixture = dict(fixture)
+        if unit_enum_type := fixture.get("unit_enum_type"):
+            val = FIXTURE_ENUM_TYPES[unit_enum_type](fixture["unit"])
+            fixture["unit"] = val
     else:
         assert require_fixture is False, (
             f"No fixture defined for feature {id} and require_fixture is True"
