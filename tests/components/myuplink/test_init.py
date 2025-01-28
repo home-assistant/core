@@ -220,6 +220,9 @@ async def test_device_remove_devices(
 @pytest.mark.parametrize(
     "load_systems_file",
     [load_fixture("systems-multi.json", DOMAIN)],
+    ids=[
+        "multi",
+    ],
 )
 @pytest.mark.parametrize(
     ("load_device_file", "device_id"),
@@ -236,6 +239,11 @@ async def test_device_remove_devices(
             load_fixture("device-robin.json", DOMAIN),
             "robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff",
         ),
+    ],
+    ids=[
+        "alfred",
+        "batman",
+        "robin",
     ],
 )
 async def test_device_info(
