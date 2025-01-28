@@ -30,11 +30,12 @@ class BackupAgent(abc.ABC):
 
     domain: str
     name: str
+    unique_id: str
 
     @cached_property
     def agent_id(self) -> str:
         """Return the agent_id."""
-        return f"{self.domain}.{self.name}"
+        return f"{self.domain}.{self.unique_id}"
 
     @abc.abstractmethod
     async def async_download_backup(
