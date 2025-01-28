@@ -106,6 +106,6 @@
 # ---
 # name: test_no_button_and_remote_key_event_creation
   list([
-    'media_player.beosound_balance_22222222',
+    'media_player.beoconnect_core_22222222',
   ])
 # ---
