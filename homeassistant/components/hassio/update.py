@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohasupervisor import SupervisorClient, SupervisorError
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import OSUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -297,10 +297,3 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_core(self.hass, version, backup)
-
-
-async def _default_agent(client: SupervisorClient) -> str:
-    """Return the default agent for creating a backup."""
-    mounts = await client.mounts.info()
-    default_mount = mounts.default_backup_mount
-    return f"hassio.{default_mount if default_mount is not None else 'local'}"
