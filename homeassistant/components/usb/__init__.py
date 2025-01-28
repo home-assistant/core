@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 import dataclasses
 from datetime import datetime, timedelta
@@ -50,7 +51,7 @@ PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
 
 POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
 REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
-ADD_REMOVE_SCAN_COOLDOWN = 4  # 4 second cooldown to give devices a chance to register
+ADD_REMOVE_SCAN_COOLDOWN = 5  # 5 second cooldown to give devices a chance to register
 
 __all__ = [
     "USBCallbackMatcher",
@@ -260,6 +261,7 @@ class USBDiscovery:
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
         self._port_event_callbacks: set[PORT_EVENT_CALLBACK_TYPE] = set()
         self._last_processed_devices: set[USBDevice] = set()
+        self._scan_lock = asyncio.Lock()
 
     async def async_setup(self) -> None:
         """Set up USB Discovery."""
@@ -485,9 +487,10 @@ class USBDiscovery:
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
         _LOGGER.debug("Executing comports scan")
-        await self._async_process_ports(
-            await self.hass.async_add_executor_job(comports)
-        )
+        async with self._scan_lock:
+            await self._async_process_ports(
+                await self.hass.async_add_executor_job(comports)
+            )
         if self.initial_scan_done:
             return
 
