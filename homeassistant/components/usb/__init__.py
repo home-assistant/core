@@ -315,7 +315,10 @@ class USBDiscovery:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_polling)
 
     async def _async_start_aiousbwatcher(self) -> None:
-        """Start monitoring hardware with aiousbwatcher. Returns True if successful."""
+        """Start monitoring hardware with aiousbwatcher.
+
+        Returns True if successful.
+        """
 
         @hass_callback
         def _usb_change_callback() -> None:
