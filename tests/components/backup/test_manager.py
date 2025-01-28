@@ -297,6 +297,7 @@ async def test_initiate_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
@@ -311,6 +312,7 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -318,6 +320,7 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -325,6 +328,7 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": CreateBackupState.COMPLETED,
     }
@@ -548,6 +552,7 @@ async def test_initiate_backup_with_agent_error(
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
             "stage": None,
+            "reason": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
         result = await ws_client.receive_json()
@@ -561,6 +566,7 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -568,6 +574,7 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -575,6 +582,7 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -903,6 +911,7 @@ async def test_initiate_backup_non_agent_upload_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
@@ -917,6 +926,7 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -924,6 +934,7 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -931,6 +942,7 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -1009,6 +1021,7 @@ async def test_initiate_backup_with_task_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -1016,6 +1029,7 @@ async def test_initiate_backup_with_task_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -1123,6 +1137,7 @@ async def test_initiate_backup_file_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
@@ -1137,6 +1152,7 @@ async def test_initiate_backup_file_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -1144,6 +1160,7 @@ async def test_initiate_backup_file_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -1151,6 +1168,7 @@ async def test_initiate_backup_file_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -1437,6 +1455,7 @@ async def test_receive_backup_busy_manager(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1630,6 +1649,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1637,6 +1657,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1644,6 +1665,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1651,6 +1673,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.COMPLETED,
     }
@@ -1763,6 +1786,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1770,6 +1794,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1777,6 +1802,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1885,6 +1911,7 @@ async def test_receive_backup_file_write_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1892,6 +1919,7 @@ async def test_receive_backup_file_write_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1899,6 +1927,7 @@ async def test_receive_backup_file_write_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": "unknown_error",
         "stage": None,
         "state": ReceiveBackupState.FAILED,
     }
@@ -1992,6 +2021,7 @@ async def test_receive_backup_read_tar_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1999,6 +2029,7 @@ async def test_receive_backup_read_tar_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2006,6 +2037,7 @@ async def test_receive_backup_read_tar_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": "unknown_error",
         "stage": None,
         "state": ReceiveBackupState.FAILED,
     }
@@ -2029,6 +2061,7 @@ async def test_receive_backup_read_tar_error(
         "unlink_call_count",
         "unlink_exception",
         "final_state",
+        "final_state_reason",
         "response_status",
     ),
     [
@@ -2042,6 +2075,7 @@ async def test_receive_backup_read_tar_error(
             1,
             None,
             ReceiveBackupState.COMPLETED,
+            None,
             201,
         ),
         (
@@ -2054,6 +2088,7 @@ async def test_receive_backup_read_tar_error(
             1,
             None,
             ReceiveBackupState.COMPLETED,
+            None,
             201,
         ),
         (
@@ -2066,6 +2101,7 @@ async def test_receive_backup_read_tar_error(
             1,
             None,
             ReceiveBackupState.COMPLETED,
+            None,
             201,
         ),
         (
@@ -2078,6 +2114,7 @@ async def test_receive_backup_read_tar_error(
             1,
             OSError("Boom!"),
             ReceiveBackupState.FAILED,
+            "unknown_error",
             500,
         ),
     ],
@@ -2096,6 +2133,7 @@ async def test_receive_backup_file_read_error(
     unlink_call_count: int,
     unlink_exception: Exception | None,
     final_state: ReceiveBackupState,
+    final_state_reason: str | None,
     response_status: int,
 ) -> None:
     """Test file read error during backup receive."""
@@ -2166,6 +2204,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2173,6 +2212,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2180,6 +2220,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2187,6 +2228,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": final_state_reason,
         "stage": None,
         "state": final_state,
     }
@@ -2272,6 +2314,7 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2279,6 +2322,7 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.CORE_RESTART,
         }
@@ -2288,6 +2332,7 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.COMPLETED,
         }
@@ -2375,6 +2420,7 @@ async def test_restore_backup_wrong_password(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2382,6 +2428,7 @@ async def test_restore_backup_wrong_password(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": "password_incorrect",
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2401,23 +2448,27 @@ async def test_restore_backup_wrong_password(
 
 @pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("parameters", "expected_error"),
+    ("parameters", "expected_error", "expected_reason"),
     [
         (
             {"backup_id": TEST_BACKUP_DEF456.backup_id},
             f"Backup def456 not found in agent {LOCAL_AGENT_ID}",
+            "backup_manager_error",
         ),
         (
             {"restore_addons": ["blah"]},
             "Addons and folders are not supported in core restore",
+            "backup_reader_writer_error",
         ),
         (
             {"restore_folders": [Folder.ADDONS]},
             "Addons and folders are not supported in core restore",
+            "backup_reader_writer_error",
         ),
         (
             {"restore_database": False, "restore_homeassistant": False},
             "Home Assistant or database must be included in restore",
+            "backup_reader_writer_error",
         ),
     ],
 )
@@ -2426,6 +2477,7 @@ async def test_restore_backup_wrong_parameters(
     hass_ws_client: WebSocketGenerator,
     parameters: dict[str, Any],
     expected_error: str,
+    expected_reason: str,
 ) -> None:
     """Test restore backup wrong parameters."""
     await async_setup_component(hass, DOMAIN, {})
@@ -2462,6 +2514,7 @@ async def test_restore_backup_wrong_parameters(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2469,6 +2522,7 @@ async def test_restore_backup_wrong_parameters(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": expected_reason,
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2518,10 +2572,20 @@ async def test_restore_backup_when_busy(
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("exception", "error_code", "error_message"),
+    ("exception", "error_code", "error_message", "expected_reason"),
     [
-        (BackupAgentError("Boom!"), "home_assistant_error", "Boom!"),
-        (Exception("Boom!"), "unknown_error", "Unknown error"),
+        (
+            BackupAgentError("Boom!"),
+            "home_assistant_error",
+            "Boom!",
+            "backup_agent_error",
+        ),
+        (
+            Exception("Boom!"),
+            "unknown_error",
+            "Unknown error",
+            "unknown_error",
+        ),
     ],
 )
 async def test_restore_backup_agent_error(
@@ -2530,6 +2594,7 @@ async def test_restore_backup_agent_error(
     exception: Exception,
     error_code: str,
     error_message: str,
+    expected_reason: str,
 ) -> None:
     """Test restore backup with agent error."""
     remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
@@ -2572,6 +2637,7 @@ async def test_restore_backup_agent_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2579,6 +2645,7 @@ async def test_restore_backup_agent_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": expected_reason,
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2719,6 +2786,7 @@ async def test_restore_backup_file_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2726,6 +2794,7 @@ async def test_restore_backup_file_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": "unknown_error",
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }

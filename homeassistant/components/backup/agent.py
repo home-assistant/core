@@ -10,18 +10,20 @@ from typing import Any, Protocol
 from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 
-from .models import AgentBackup
+from .models import AgentBackup, BackupError
 
 
-class BackupAgentError(HomeAssistantError):
+class BackupAgentError(BackupError):
     """Base class for backup agent errors."""
+
+    error_code = "backup_agent_error"
 
 
 class BackupAgentUnreachableError(BackupAgentError):
     """Raised when the agent can't reach its API."""
 
+    error_code = "backup_agent_unreachable"
     _message = "The backup agent is unreachable."
 
 
