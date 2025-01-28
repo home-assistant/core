@@ -2446,7 +2446,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.8.4
+python-roborock==2.9.7
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
