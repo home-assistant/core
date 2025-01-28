@@ -369,6 +369,8 @@ async def test_draft_electrical_measurement_sensor(
     await trigger_subscription_callback(hass, matter_client)
 
     state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "unknown"
 
     # ActivePower
     set_node_attribute(matter_node, 1, 2820, 1291, None)
