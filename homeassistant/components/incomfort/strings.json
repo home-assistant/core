@@ -49,8 +49,22 @@
       "auth_error": "Invalid credentials.",
       "no_heaters": "No heaters found.",
       "not_found": "No Lan2RF gateway found.",
-      "timeout_error": "Time out when connection to Lan2RF gateway.",
-      "unknown": "Unknown error when connection to Lan2RF gateway."
+      "timeout_error": "Time out when connecting to Lan2RF gateway.",
+      "unknown": "Unknown error when connecting to Lan2RF gateway."
+    }
+  },
+  "exceptions": {
+    "no_heaters": {
+      "message": "[%key:component::incomfort::config::error::no_heaters%]"
+    },
+    "not_found": {
+      "message": "[%key:component::incomfort::config::error::not_found%]"
+    },
+    "timeout_error": {
+      "message": "[%key:component::incomfort::config::error::timeout_error%]"
+    },
+    "unknown": {
+      "message": "[%key:component::incomfort::config::error::unknown%]"
     }
   },
   "options": {

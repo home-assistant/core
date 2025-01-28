@@ -13,9 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator

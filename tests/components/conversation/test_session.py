@@ -2,13 +2,15 @@
 
 from collections.abc import Generator
 from datetime import timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.conversation import ConversationInput, session
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.util import dt as dt_util
 
@@ -80,7 +82,7 @@ async def test_cleanup(
         assert chat_session.conversation_id != conversation_id
         conversation_id = chat_session.conversation_id
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
@@ -125,12 +127,6 @@ async def test_cleanup(
         assert len(chat_session.messages) == 2
 
 
-def test_chat_message() -> None:
-    """Test chat message."""
-    with pytest.raises(ValueError):
-        session.ChatMessage(role="native", agent_id=None, content="", native=None)
-
-
 async def test_add_message(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
@@ -142,7 +138,7 @@ async def test_add_message(
 
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(role="system", agent_id=None, content="")
+                session.Content(role="system", agent_id=None, content="")
             )
 
         # No 2 user messages in a row
@@ -150,19 +146,19 @@ async def test_add_message(
 
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(role="user", agent_id=None, content="")
+                session.Content(role="user", agent_id=None, content="")
             )
 
         # No 2 assistant messages in a row
         chat_session.async_add_message(
-            session.ChatMessage(role="assistant", agent_id=None, content="")
+            session.Content(role="assistant", agent_id=None, content="")
         )
         assert len(chat_session.messages) == 3
         assert chat_session.messages[-1].role == "assistant"
 
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(role="assistant", agent_id=None, content="")
+                session.Content(role="assistant", agent_id=None, content="")
             )
 
 
@@ -175,20 +171,20 @@ async def test_message_filtering(
     ) as chat_session:
         messages = chat_session.async_get_messages(agent_id=None)
         assert len(messages) == 2
-        assert messages[0] == session.ChatMessage(
+        assert messages[0] == session.Content(
             role="system",
             agent_id=None,
             content="",
         )
-        assert messages[1] == session.ChatMessage(
+        assert messages[1] == session.Content(
             role="user",
-            agent_id=mock_conversation_input.agent_id,
+            agent_id="mock-agent-id",
             content=mock_conversation_input.text,
         )
         # Cannot add a second user message in a row
         with pytest.raises(ValueError):
             chat_session.async_add_message(
-                session.ChatMessage(
+                session.Content(
                     role="user",
                     agent_id="mock-agent-id",
                     content="Hey!",
@@ -196,38 +192,41 @@ async def test_message_filtering(
             )
 
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
-                native="assistant-reply-native",
             )
         )
-        # Different agent, will be filtered out.
+        # Different agent, native messages will be filtered out.
         chat_session.async_add_message(
-            session.ChatMessage(
-                role="native", agent_id="another-mock-agent-id", content="", native=1
-            )
+            session.NativeContent(agent_id="another-mock-agent-id", content=1)
         )
         chat_session.async_add_message(
-            session.ChatMessage(
-                role="native", agent_id="mock-agent-id", content="", native=1
+            session.NativeContent(agent_id="mock-agent-id", content=1)
+        )
+        # A non-native message from another agent is not filtered out.
+        chat_session.async_add_message(
+            session.Content(
+                role="assistant",
+                agent_id="another-mock-agent-id",
+                content="Hi!",
             )
         )
 
-    assert len(chat_session.messages) == 5
+    assert len(chat_session.messages) == 6
 
     messages = chat_session.async_get_messages(agent_id="mock-agent-id")
-    assert len(messages) == 4
+    assert len(messages) == 5
 
-    assert messages[2] == session.ChatMessage(
+    assert messages[2] == session.Content(
         role="assistant",
         agent_id="mock-agent-id",
         content="Hey!",
-        native="assistant-reply-native",
     )
-    assert messages[3] == session.ChatMessage(
-        role="native", agent_id="mock-agent-id", content="", native=1
+    assert messages[3] == session.NativeContent(agent_id="mock-agent-id", content=1)
+    assert messages[4] == session.Content(
+        role="assistant", agent_id="another-mock-agent-id", content="Hi!"
     )
 
 
@@ -347,7 +346,7 @@ async def test_extra_systen_prompt(
             user_llm_prompt=None,
         )
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
@@ -387,7 +386,7 @@ async def test_extra_systen_prompt(
             user_llm_prompt=None,
         )
         chat_session.async_add_message(
-            session.ChatMessage(
+            session.Content(
                 role="assistant",
                 agent_id="mock-agent-id",
                 content="Hey!",
@@ -413,3 +412,81 @@ async def test_extra_systen_prompt(
 
     assert chat_session.extra_system_prompt == extra_system_prompt2
     assert chat_session.messages[0].content.endswith(extra_system_prompt2)
+
+
+async def test_tool_call(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test using the session tool calling API."""
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.return_value = "Test response"
+
+    with patch(
+        "homeassistant.components.conversation.session.llm.AssistAPI._async_get_tools",
+        return_value=[],
+    ) as mock_get_tools:
+        mock_get_tools.return_value = [mock_tool]
+
+        async with session.async_get_chat_session(
+            hass, mock_conversation_input
+        ) as chat_session:
+            await chat_session.async_update_llm_data(
+                conversing_domain="test",
+                user_input=mock_conversation_input,
+                user_llm_hass_api="assist",
+                user_llm_prompt=None,
+            )
+            result = await chat_session.async_call_tool(
+                llm.ToolInput(
+                    tool_name="test_tool",
+                    tool_args={"param1": "Test Param"},
+                )
+            )
+
+    assert result == "Test response"
+
+
+async def test_tool_call_exception(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test using the session tool calling API."""
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.side_effect = HomeAssistantError("Test error")
+
+    with patch(
+        "homeassistant.components.conversation.session.llm.AssistAPI._async_get_tools",
+        return_value=[],
+    ) as mock_get_tools:
+        mock_get_tools.return_value = [mock_tool]
+
+        async with session.async_get_chat_session(
+            hass, mock_conversation_input
+        ) as chat_session:
+            await chat_session.async_update_llm_data(
+                conversing_domain="test",
+                user_input=mock_conversation_input,
+                user_llm_hass_api="assist",
+                user_llm_prompt=None,
+            )
+            result = await chat_session.async_call_tool(
+                llm.ToolInput(
+                    tool_name="test_tool",
+                    tool_args={"param1": "Test Param"},
+                )
+            )
+
+    assert result == {"error": "HomeAssistantError", "error_text": "Test error"}
