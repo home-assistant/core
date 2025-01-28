@@ -6,8 +6,8 @@ from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant import config_entries
 from homeassistant.components.google_drive.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -35,7 +35,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -110,7 +110,7 @@ async def test_create_folder_error(
 ) -> None:
     """Test case where creating the folder fails."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -164,7 +164,7 @@ async def test_get_email_error(
 ) -> None:
     """Test case where getting the email address fails."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -239,12 +239,8 @@ async def test_reauth(
 ) -> None:
     """Test the reauthentication flow."""
     config_entry.add_to_hass(hass)
-    config_entry.async_start_reauth(hass)
-    await hass.async_block_till_done()
+    result = await config_entry.start_reauth_flow(hass)
 
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    result = flows[0]
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -311,7 +307,7 @@ async def test_already_configured(
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

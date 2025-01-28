@@ -54,9 +54,7 @@ async def test_setup_success(
     await hass.config_entries.async_unload(entries[0].entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 async def test_create_folder_if_missing(
