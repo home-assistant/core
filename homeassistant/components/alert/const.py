@@ -17,3 +17,5 @@ CONF_DATA = "data"
 
 DEFAULT_CAN_ACK = True
 DEFAULT_SKIP_FIRST = False
+
+ALERT_NOTIFY_EVENT = "alert_notify"

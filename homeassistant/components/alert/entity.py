@@ -25,11 +25,11 @@ from homeassistant.helpers.template import Template
 from homeassistant.util.dt import now
 from homeassistant.util.event_type import EventType
 
-from .const import DOMAIN, LOGGER
+from .const import ALERT_NOTIFY_EVENT, DOMAIN, LOGGER
 
 
 class AlertAction(enum.StrEnum):
-    """Represent the origin of an event."""
+    """Represents the different actions in the alert lifecycle."""
 
     generate = "generate"
     acknowledge = "acknowledge"
@@ -37,16 +37,18 @@ class AlertAction(enum.StrEnum):
     reset = "reset"
 
 
-class EventAlertEventData(TypedDict):
-    """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
+class AlertEventData(TypedDict):
+    """Represents the data in an Alert Event."""
 
     entity_id: str
     action: AlertAction
-    message: str
-    repeat: int
+    title: str | None
+    message: str | None
+    repeat: int | None
+    data: dict[Any, Any]
 
 
-EVENT_ALERT_NOTIFY: EventType[EventAlertEventData] = EventType("alert_notify")
+EVENT_ALERT_NOTIFY: EventType[AlertEventData] = EventType(ALERT_NOTIFY_EVENT)
 
 
 class AlertEntity(Entity):
@@ -145,15 +147,19 @@ class AlertEntity(Entity):
 
     def _async_fire_event(
         self, action: AlertAction, message: str | None = None, repeat: int | None = None
-    ):
-        alert_data = EventAlertEventData(
-            entity_id=self.entity_id, action=action, message=message, repeat=repeat
-        )
+    ) -> None:
         if self._title_template is not None:
             title = self._title_template.async_render(parse_result=False)
-            alert_data[ATTR_TITLE] = title
-        if self._data:
-            alert_data[ATTR_DATA] = self._data
+        else:
+            title = None
+        alert_data = AlertEventData(
+            entity_id=self.entity_id,
+            action=action,
+            title=title,
+            message=message,
+            repeat=repeat,
+            data=self._data,
+        )
         self.hass.bus.async_fire(EVENT_ALERT_NOTIFY, alert_data)
 
     async def _schedule_notify(self) -> None:
