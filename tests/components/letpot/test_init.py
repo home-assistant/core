@@ -5,7 +5,6 @@ from unittest.mock import MagicMock
 from letpot.exceptions import LetPotAuthenticationException, LetPotConnectionException
 import pytest
 
-from homeassistant.components.letpot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -25,17 +24,16 @@ async def test_load_unload_config_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(mock_client.refresh_token.mock_calls) == 0  # Didn't refresh valid token
-    assert len(mock_client.get_devices.mock_calls) == 1
-    assert len(mock_device_client.subscribe.mock_calls) == 1
-    assert len(mock_device_client.get_current_status.mock_calls) == 1
+    mock_client.refresh_token.assert_not_called()  # Didn't refresh valid token
+    mock_client.get_devices.assert_called_once()
+    mock_device_client.subscribe.assert_called_once()
+    mock_device_client.get_current_status.assert_called_once()
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not hass.data.get(DOMAIN)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert len(mock_device_client.disconnect.mock_calls) == 1
+    mock_device_client.disconnect.assert_called_once()
 
 
 @pytest.mark.freeze_time("2025-02-15 00:00:00")
@@ -49,12 +47,12 @@ async def test_refresh_authentication_on_load(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert len(mock_client.refresh_token.mock_calls) == 1
+    mock_client.refresh_token.assert_called_once()
 
     # Check loading continued as expected after refreshing token
-    assert len(mock_client.get_devices.mock_calls) == 1
-    assert len(mock_device_client.subscribe.mock_calls) == 1
-    assert len(mock_device_client.get_current_status.mock_calls) == 1
+    mock_client.get_devices.assert_called_once()
+    mock_device_client.subscribe.assert_called_once()
+    mock_device_client.get_current_status.assert_called_once()
 
 
 @pytest.mark.freeze_time("2025-03-01 00:00:00")
@@ -69,8 +67,8 @@ async def test_refresh_token_error_aborts(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert len(mock_client.refresh_token.mock_calls) == 1
-    assert len(mock_client.get_devices.mock_calls) == 0
+    mock_client.refresh_token.assert_called_once()
+    mock_client.get_devices.assert_not_called()
 
 
 @pytest.mark.parametrize(
@@ -94,5 +92,5 @@ async def test_get_devices_exceptions(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is config_entry_state
-    assert len(mock_client.get_devices.mock_calls) == 1
-    assert len(mock_device_client.subscribe.mock_calls) == 0
+    mock_client.get_devices.assert_called_once()
+    mock_device_client.subscribe.assert_not_called()

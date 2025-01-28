@@ -56,7 +56,6 @@ async def test_full_flow(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     _assert_result_success(result)
     assert len(mock_setup_entry.mock_calls) == 1
@@ -103,7 +102,6 @@ async def test_flow_exceptions(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     _assert_result_success(result)
     assert len(mock_setup_entry.mock_calls) == 1
@@ -133,7 +131,6 @@ async def test_flow_duplicate(
             CONF_PASSWORD: "test-password",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -163,7 +160,6 @@ async def test_reauth_flow(
         result["flow_id"],
         {CONF_PASSWORD: "new-password"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -222,7 +218,6 @@ async def test_reauth_exceptions(
         result["flow_id"],
         {CONF_PASSWORD: "new-password"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -259,7 +254,6 @@ async def test_reauth_different_user_id_new(
         result["flow_id"],
         {CONF_PASSWORD: "new-password"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -299,7 +293,6 @@ async def test_reauth_different_user_id_existing(
         result["flow_id"],
         {CONF_PASSWORD: "new-password"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
