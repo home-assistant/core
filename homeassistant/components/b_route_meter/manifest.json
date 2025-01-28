@@ -1,0 +1,17 @@
+{
+    "domain": "b_route_meter",
+    "name": "B-Route Smart Meter",
+    "documentation": "https://www.home-assistant.io/integrations/b_route_meter",
+    "requirements": [
+        "pyserial==3.5",
+        "python-dateutil==2.8.2"
+    ],
+    "config_flow": true,
+    "codeowners": [
+        "@yufeikang"
+    ],
+    "loggers": [
+        "b_route_meter"
+    ],
+    "iot_class": "local_polling"
+}
