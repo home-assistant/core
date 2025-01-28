@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from kasa import Device, Feature, Module
+from kasa import Device, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -10,6 +10,7 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
+    SERVICE_LOCATE,
     SERVICE_PAUSE,
     SERVICE_RETURN_TO_BASE,
     SERVICE_SET_FAN_SPEED,
@@ -20,13 +21,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    DEVICE_ID,
-    _mocked_device,
-    _mocked_feature,
-    setup_platform_for_device,
-    snapshot_platform,
-)
+from . import DEVICE_ID, _mocked_device, setup_platform_for_device, snapshot_platform
 
 from tests.common import MockConfigEntry
 
@@ -37,22 +32,7 @@ ENTITY_ID = "vacuum.my_vacuum"
 async def mocked_vacuum(hass: HomeAssistant) -> Device:
     """Return mocked tplink vacuum."""
 
-    # Need to manually create the fan speed preset feature,
-    # as we are going to read its choices through it
-    feats = [
-        _mocked_feature(
-            "vacuum_fan_speed",
-            type_=Feature.Type.Choice,
-            category=Feature.Category.Config,
-            choices=["Quiet", "Max"],
-            value="Max",
-            expected_module_key="fan_speed_preset",
-        ),
-    ]
-
-    return _mocked_device(
-        modules=[Module.Clean, Module.Speaker], features=feats, alias="my_vacuum"
-    )
+    return _mocked_device(modules=[Module.Clean, Module.Speaker], alias="my_vacuum")
 
 
 async def test_vacuum(
@@ -103,12 +83,18 @@ async def test_states(
 
 
 @pytest.mark.parametrize(
-    ("service_call", "method", "params"),
+    ("service_call", "module_name", "method", "params"),
     [
-        (SERVICE_START, "start", {}),
-        (SERVICE_PAUSE, "pause", {}),
-        (SERVICE_RETURN_TO_BASE, "return_home", {}),
-        (SERVICE_SET_FAN_SPEED, "set_fan_speed_preset", {ATTR_FAN_SPEED: "Quiet"}),
+        (SERVICE_START, Module.Clean, "start", {}),
+        (SERVICE_PAUSE, Module.Clean, "pause", {}),
+        (SERVICE_RETURN_TO_BASE, Module.Clean, "return_home", {}),
+        (
+            SERVICE_SET_FAN_SPEED,
+            Module.Clean,
+            "set_fan_speed_preset",
+            {ATTR_FAN_SPEED: "Quiet"},
+        ),
+        (SERVICE_LOCATE, Module.Speaker, "locate", {}),
     ],
 )
 async def test_vacuum_module(
@@ -116,16 +102,17 @@ async def test_vacuum_module(
     mock_config_entry: MockConfigEntry,
     mocked_vacuum: Device,
     service_call: str,
+    module_name: str,
     method: str,
     params: dict,
 ) -> None:
     """Test that all vacuum commands work correctly."""
     vacuum = mocked_vacuum
-    clean = vacuum.modules[Module.Clean]
+    module = vacuum.modules[module_name]
 
     await setup_platform_for_device(hass, mock_config_entry, Platform.VACUUM, vacuum)
 
-    mock_method = getattr(clean, method)
+    mock_method = getattr(module, method)
 
     service_data = {ATTR_ENTITY_ID: ENTITY_ID}
     service_data |= params

@@ -211,7 +211,6 @@ def _mocked_device(
         mod_key if (mod_key := v.expected_module_key) else k: v
         for k, v in device_features.items()
     }
-
     for mod in device.modules.values():
         # Some tests remove the feature from device_features to test missing
         # features, so check the key is still present there.
@@ -446,6 +445,17 @@ def _mocked_clean_module(device):
     clean.error = ErrorCode.Ok
     clean.battery = 100
     clean.status = Status.Charged
+
+    # Need to manually create the fan speed preset feature,
+    # as we are going to read its choices through it
+    device.features["vacuum_fan_speed"] = _mocked_feature(
+        "vacuum_fan_speed",
+        type_=Feature.Type.Choice,
+        category=Feature.Category.Config,
+        choices=["Quiet", "Max"],
+        value="Max",
+        expected_module_key="fan_speed_preset",
+    )
 
     return clean
 
