@@ -199,9 +199,6 @@
       },
       "pir_enabled": {
         "name": "Motion sensor"
-      },
-      "power_protection_enabled": {
-        "name": "Power protection"
       }
     },
     "number": {
@@ -218,7 +215,7 @@
         "name": "Temperature offset"
       },
       "power_protection_threshold": {
-        "name": "Power protection threshold"
+        "name": "Power protection"
       }
     }
   },

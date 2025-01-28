@@ -29,11 +29,6 @@
     "type": "Switch",
     "category": "Config"
   },
-  "power_protection_enabled": {
-    "value": true,
-    "type": "Switch",
-    "category": "Config"
-  },
   "fan_sleep_mode": {
     "value": false,
     "type": "Switch",

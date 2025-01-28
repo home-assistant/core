@@ -54,9 +54,6 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="pir_enabled",
     ),
-    TPLinkSwitchEntityDescription(
-        key="power_protection_enabled",
-    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}

@@ -77,12 +77,6 @@
         "state": {
           "on": "mdi:motion-sensor"
         }
-      },
-      "power_protection_enabled": {
-        "default": "mdi:shield",
-        "state": {
-          "on": "mdi:shield-check"
-        }
       }
     },
     "sensor": {

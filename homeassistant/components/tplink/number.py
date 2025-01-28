@@ -53,7 +53,7 @@ NUMBER_DESCRIPTIONS: Final = (
     ),
     TPLinkNumberEntityDescription(
         key="power_protection_threshold",
-        mode=NumberMode.BOX,
+        mode=NumberMode.SLIDER,
     ),
 )
 
