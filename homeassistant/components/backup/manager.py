@@ -633,15 +633,6 @@ class BackupManager:
         )
         try:
             await self._async_receive_backup(agent_ids=agent_ids, contents=contents)
-        except BackupError as err:
-            self.async_on_backup_event(
-                ReceiveBackupEvent(
-                    reason=err.error_code,
-                    stage=None,
-                    state=ReceiveBackupState.FAILED,
-                )
-            )
-            raise
         except Exception:
             self.async_on_backup_event(
                 ReceiveBackupEvent(
