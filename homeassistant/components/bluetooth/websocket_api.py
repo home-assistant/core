@@ -21,6 +21,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.json import json_bytes
 
 from .api import _get_manager, async_register_callback
+from .const import DOMAIN
 from .match import BluetoothCallbackMatcher
 from .models import BluetoothChange
 from .util import InvalidConfigEntryID, InvalidSource, config_entry_id_to_source
@@ -31,6 +32,7 @@ def async_setup(hass: HomeAssistant) -> None:
     """Set up the bluetooth websocket API."""
     websocket_api.async_register_command(hass, ws_subscribe_advertisements)
     websocket_api.async_register_command(hass, ws_subscribe_connection_allocations)
+    websocket_api.async_register_command(hass, ws_subscribe_scanner_details)
 
 
 @lru_cache(maxsize=1024)
@@ -213,14 +215,18 @@ async def ws_subscribe_scanner_details(
     ws_msg_id = msg["id"]
     source: str | None = None
     if config_entry_id := msg.get("config_entry_id"):
-        try:
-            source = config_entry_id_to_source(hass, config_entry_id)
-        except InvalidConfigEntryID as err:
-            connection.send_error(ws_msg_id, "invalid_config_entry_id", str(err))
+        if (
+            not (entry := hass.config_entries.async_get_entry(config_entry_id))
+            or entry.domain != DOMAIN
+        ):
+            connection.send_error(
+                ws_msg_id,
+                "invalid_config_entry_id",
+                f"Invalid config entry id: {config_entry_id}",
+            )
             return
-        except InvalidSource as err:
-            connection.send_error(ws_msg_id, "invalid_source", str(err))
-            return
+        source = entry.unique_id
+        assert source is not None
 
     def _async_event_message(message: dict[str, Any]) -> None:
         connection.send_message(
@@ -228,10 +234,8 @@ async def ws_subscribe_scanner_details(
         )
 
     def _async_registration_changed(registration: HaScannerRegistration) -> None:
-        if registration.event is HaScannerRegistrationEvent.ADDED:
-            event_type = "added"
-        else:
-            event_type = "removed"
+        added_event = HaScannerRegistrationEvent.ADDED
+        event_type = "added" if registration.event == added_event else "removed"
         _async_event_message({event_type: [registration.scanner.details]})
 
     manager = _get_manager(hass)
@@ -241,13 +245,11 @@ async def ws_subscribe_scanner_details(
         )
     )
     connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
-    if scanners := manager.async_current_scanners():
-        _async_event_message(
-            {
-                "added": [
-                    scanner.details
-                    for scanner in scanners
-                    if source is None or scanner.source == source
-                ]
-            }
-        )
+    if (scanners := manager.async_current_scanners()) and (
+        matching_scanners := [
+            scanner.details
+            for scanner in scanners
+            if source is None or scanner.source == source
+        ]
+    ):
+        _async_event_message({"added": matching_scanners})

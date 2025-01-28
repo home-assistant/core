@@ -17,6 +17,7 @@ from . import (
     HCI0_SOURCE_ADDRESS,
     HCI1_SOURCE_ADDRESS,
     NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
+    FakeScanner,
     _get_manager,
     generate_advertisement_data,
     generate_ble_device,
@@ -123,7 +124,7 @@ async def test_subscribe_advertisements(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subscribe_subscribe_connection_allocations(
+async def test_subscribe_connection_allocations(
     hass: HomeAssistant,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
@@ -201,7 +202,7 @@ async def test_subscribe_subscribe_connection_allocations(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subscribe_subscribe_connection_allocations_specific_scanner(
+async def test_subscribe_connection_allocations_specific_scanner(
     hass: HomeAssistant,
     register_non_connectable_scanner: None,
     hass_ws_client: WebSocketGenerator,
@@ -237,7 +238,7 @@ async def test_subscribe_subscribe_connection_allocations_specific_scanner(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subscribe_subscribe_connection_allocations_invalid_config_entry_id(
+async def test_subscribe_connection_allocations_invalid_config_entry_id(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -258,7 +259,7 @@ async def test_subscribe_subscribe_connection_allocations_invalid_config_entry_i
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_subscribe_subscribe_connection_allocations_invalid_scanner(
+async def test_subscribe_connection_allocations_invalid_scanner(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -278,3 +279,136 @@ async def test_subscribe_subscribe_connection_allocations_invalid_scanner(
     assert not response["success"]
     assert response["error"]["code"] == "invalid_source"
     assert response["error"]["message"] == "Source invalid not found"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_scanner_details(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_connection_allocations."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_scanner_details",
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["success"]
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+
+    assert response["event"] == {
+        "added": [
+            {
+                "adapter": "hci0",
+                "connectable": False,
+                "name": "hci0 (00:00:00:00:00:01)",
+                "source": "00:00:00:00:00:01",
+            }
+        ]
+    }
+
+    manager = _get_manager()
+    hci3_scanner = FakeScanner("AA:BB:CC:DD:EE:33", "hci3")
+    cancel_hci3 = manager.async_register_hass_scanner(hci3_scanner)
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "added": [
+            {
+                "adapter": "hci3",
+                "connectable": False,
+                "name": "hci3 (AA:BB:CC:DD:EE:33)",
+                "source": "AA:BB:CC:DD:EE:33",
+            }
+        ]
+    }
+    cancel_hci3()
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "removed": [
+            {
+                "adapter": "hci3",
+                "connectable": False,
+                "name": "hci3 (AA:BB:CC:DD:EE:33)",
+                "source": "AA:BB:CC:DD:EE:33",
+            }
+        ]
+    }
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_scanner_details_specific_scanner(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_scanner_details for a specific source address."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="AA:BB:CC:DD:EE:33")
+    entry.add_to_hass(hass)
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_scanner_details",
+            "config_entry_id": entry.entry_id,
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["success"]
+    manager = _get_manager()
+    hci3_scanner = FakeScanner("AA:BB:CC:DD:EE:33", "hci3")
+    cancel_hci3 = manager.async_register_hass_scanner(hci3_scanner)
+
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "added": [
+            {
+                "adapter": "hci3",
+                "connectable": False,
+                "name": "hci3 (AA:BB:CC:DD:EE:33)",
+                "source": "AA:BB:CC:DD:EE:33",
+            }
+        ]
+    }
+    cancel_hci3()
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert response["event"] == {
+        "removed": [
+            {
+                "adapter": "hci3",
+                "connectable": False,
+                "name": "hci3 (AA:BB:CC:DD:EE:33)",
+                "source": "AA:BB:CC:DD:EE:33",
+            }
+        ]
+    }
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_subscribe_scanner_details_invalid_config_entry_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test bluetooth subscribe_scanner_details for an invalid config entry id."""
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "bluetooth/subscribe_scanner_details",
+            "config_entry_id": "non_existent",
+        }
+    )
+    async with asyncio.timeout(1):
+        response = await client.receive_json()
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_config_entry_id"
+    assert response["error"]["message"] == "Invalid config entry id: non_existent"
