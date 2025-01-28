@@ -16,10 +16,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import conbee_device, slae_sh_device
 
-from tests.common import import_and_test_deprecated_constant
+from tests.common import async_fire_time_changed, import_and_test_deprecated_constant
 from tests.typing import WebSocketGenerator
 
 
@@ -93,11 +94,17 @@ async def test_aiousbwatcher_discovery(
 
         aiousbwatcher_callback()
         await hass.async_block_till_done()
+
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=usb.ADD_REMOVE_SCAN_COOLDOWN)
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
         assert len(mock_config_flow.mock_calls) == 2
         assert mock_config_flow.mock_calls[1][1][0] == "test2"
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-    await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("aiousbwatcher_no_inotify")
@@ -777,8 +784,13 @@ async def test_discovered_by_aiousbwatcher_before_started(hass: HomeAssistant) -
 
         initial_mock_comports.extend(mock_comports)
         aiousbwatcher_callback()
-
         await hass.async_block_till_done()
+
+        async_fire_time_changed(
+            hass, dt_util.utcnow() + timedelta(seconds=usb.ADD_REMOVE_SCAN_COOLDOWN)
+        )
+        await hass.async_block_till_done(wait_background_tasks=True)
+
         assert len(mock_config_flow.mock_calls) == 1
 
 
