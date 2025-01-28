@@ -46,6 +46,8 @@ def async_register_backup_agents_listener(
     def remove_listener() -> None:
         """Remove the listener."""
         hass.data[DATA_BACKUP_AGENT_LISTENERS].remove(listener)
+        if not hass.data[DATA_BACKUP_AGENT_LISTENERS]:
+            del hass.data[DATA_BACKUP_AGENT_LISTENERS]
 
     return remove_listener
 
@@ -112,15 +114,15 @@ class GoogleDriveBackupAgent(BackupAgent):
         :return: An async iterator that yields bytes.
         """
         _LOGGER.debug("Downloading backup_id: %s", backup_id)
-        file_id = await self._client.async_get_backup_file_id(backup_id)
-        if file_id:
-            _LOGGER.debug("Downloading file_id: %s", file_id)
-            try:
+        try:
+            file_id = await self._client.async_get_backup_file_id(backup_id)
+            if file_id:
+                _LOGGER.debug("Downloading file_id: %s", file_id)
                 stream = await self._client.async_download(file_id)
-            except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
-                _LOGGER.error("Download backup error: %s", err)
-                raise BackupAgentError("Failed to download backup") from err
-            return ChunkAsyncStreamIterator(stream)
+                return ChunkAsyncStreamIterator(stream)
+        except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("Download backup error: %s", err)
+            raise BackupAgentError("Failed to download backup") from err
         _LOGGER.error("Download backup_id: %s not found", backup_id)
         raise BackupAgentError("Backup not found")
 
@@ -134,12 +136,12 @@ class GoogleDriveBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
         _LOGGER.debug("Deleting backup_id: %s", backup_id)
-        file_id = await self._client.async_get_backup_file_id(backup_id)
-        if file_id:
-            _LOGGER.debug("Deleting file_id: %s", file_id)
-            try:
+        try:
+            file_id = await self._client.async_get_backup_file_id(backup_id)
+            if file_id:
+                _LOGGER.debug("Deleting file_id: %s", file_id)
                 await self._client.async_delete(file_id)
                 _LOGGER.debug("Deleted backup_id: %s", backup_id)
-            except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
-                _LOGGER.error("Delete backup error: %s", err)
-                raise BackupAgentError("Failed to delete backup") from err
+        except (GoogleDriveApiError, HomeAssistantError, TimeoutError) as err:
+            _LOGGER.error("Delete backup error: %s", err)
+            raise BackupAgentError("Failed to delete backup") from err

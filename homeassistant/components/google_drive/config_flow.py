@@ -76,6 +76,9 @@ class OAuth2FlowHandler(
                 reason="access_not_configured",
                 description_placeholders={"message": str(err)},
             )
+        except Exception:
+            self.logger.exception("Unknown error occurred")
+            return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(email_address)
 

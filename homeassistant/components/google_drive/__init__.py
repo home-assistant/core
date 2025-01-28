@@ -56,10 +56,10 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleDriveConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    hass.loop.call_soon(_notify_backup_listeners, hass)
     return True
 
 
-async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+def _notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()

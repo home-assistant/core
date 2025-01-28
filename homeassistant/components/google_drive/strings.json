@@ -27,6 +27,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "access_not_configured": "Unable to access the Google Drive API:\n\n{message}",
       "create_folder_failure": "Error while creating Google Drive folder:\n\n{message}",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "wrong_account": "Wrong account: Please authenticate with {email}."
     },
     "create_entry": {

@@ -156,11 +156,26 @@ async def test_create_folder_error(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    ("exception", "expected_abort_reason", "expected_placeholders"),
+    [
+        (
+            GoogleDriveApiError("some error"),
+            "access_not_configured",
+            {"message": "some error"},
+        ),
+        (Exception, "unknown", None),
+    ],
+    ids=["api_not_enabled", "general_exception"],
+)
 async def test_get_email_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_api: MagicMock,
+    exception: Exception,
+    expected_abort_reason,
+    expected_placeholders,
 ) -> None:
     """Test case where getting the email address fails."""
     result = await hass.config_entries.flow.async_init(
@@ -187,7 +202,7 @@ async def test_get_email_error(
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     # Prepare API responses
-    mock_api.get_user = AsyncMock(side_effect=GoogleDriveApiError("some error"))
+    mock_api.get_user = AsyncMock(side_effect=exception)
     aioclient_mock.post(
         GOOGLE_TOKEN_URI,
         json={
@@ -200,8 +215,8 @@ async def test_get_email_error(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "access_not_configured"
-    assert result.get("description_placeholders") == {"message": "some error"}
+    assert result.get("reason") == expected_abort_reason
+    assert result.get("description_placeholders") == expected_placeholders
 
 
 @pytest.mark.usefixtures("current_request_with_host")

@@ -41,6 +41,18 @@ TEST_AGENT_BACKUP = AgentBackup(
     protected=False,
     size=987,
 )
+TEST_AGENT_BACKUP_FRONTEND_JSON = {
+    "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
+    "backup_id": "test-backup",
+    "database_included": True,
+    "date": "2025-01-01T01:23:45.678Z",
+    "folders": [],
+    "homeassistant_included": True,
+    "homeassistant_version": "2024.12.0",
+    "name": "Test",
+    "protected": False,
+    "size": 987,
+}
 
 
 @pytest.fixture(autouse=True)
@@ -110,7 +122,7 @@ async def test_agents_list_backups(
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backups"] == [
-        TEST_AGENT_BACKUP.as_frontend_json()
+        TEST_AGENT_BACKUP_FRONTEND_JSON
         | {
             "agent_ids": [TEST_AGENT_ID],
             "failed_agent_ids": [],
@@ -144,7 +156,7 @@ async def test_agents_list_backups_fail(
     [
         (
             TEST_AGENT_BACKUP.backup_id,
-            TEST_AGENT_BACKUP.as_frontend_json()
+            TEST_AGENT_BACKUP_FRONTEND_JSON
             | {
                 "agent_ids": [TEST_AGENT_ID],
                 "failed_agent_ids": [],
