@@ -6,13 +6,16 @@ from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+from httpx import HTTPError
 from pyenphase import Envoy, EnvoyDryContactSettings
 from pyenphase.const import SupportedFeatures
+from pyenphase.exceptions import EnvoyError
 from pyenphase.models.dry_contacts import DryContactAction, DryContactMode
 from pyenphase.models.tariff import EnvoyStorageMode, EnvoyStorageSettings
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,6 +24,7 @@ from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 PARALLEL_UPDATES = 1
+ACTIONERRORS = (EnvoyError, HTTPError)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -194,7 +198,19 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
-        await self.entity_description.update_fn(self.envoy, self.relay, option)
+        try:
+            await self.entity_description.update_fn(self.envoy, self.relay, option)
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="select_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "select": self.entity_id,
+                    "value": option,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -245,5 +261,17 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
-        await self.entity_description.update_fn(self.envoy, option)
+        try:
+            await self.entity_description.update_fn(self.envoy, option)
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="select_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "select": self.entity_id,
+                    "value": option,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
