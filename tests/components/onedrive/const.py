@@ -17,3 +17,5 @@ BACKUP_METADATA = {
     "protected": False,
     "size": 34519040,
 }
+
+SLUG_NAME = "john-doe-s-onedrive"
