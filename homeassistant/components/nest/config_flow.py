@@ -206,7 +206,9 @@ class NestFlowHandler(
     ) -> ConfigFlowResult:
         """Handle cloud project in user input."""
         if user_input is not None:
-            self._data.update(user_input)
+            self._data[CONF_CLOUD_PROJECT_ID] = user_input[
+                CONF_CLOUD_PROJECT_ID
+            ].strip()
             return await self.async_step_device_project()
         return self.async_show_form(
             step_id="cloud_project",
@@ -227,7 +229,7 @@ class NestFlowHandler(
         """Collect device access project from user input."""
         errors = {}
         if user_input is not None:
-            project_id = user_input[CONF_PROJECT_ID]
+            project_id = user_input[CONF_PROJECT_ID].strip()
             if project_id == self._data[CONF_CLOUD_PROJECT_ID]:
                 _LOGGER.error(
                     "Device Access Project ID and Cloud Project ID must not be the"
