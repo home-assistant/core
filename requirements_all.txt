@@ -590,8 +590,6 @@ bimmer-connected[china]==0.17.2
 bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
-bleak-esphome==2.1.1
-
 # homeassistant.components.esphome
 bleak-esphome==2.2.0
 

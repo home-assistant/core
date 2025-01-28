@@ -521,8 +521,6 @@ beautifulsoup4==4.12.3
 bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
-bleak-esphome==2.1.1
-
 # homeassistant.components.esphome
 bleak-esphome==2.2.0
 
