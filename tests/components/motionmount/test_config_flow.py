@@ -1,10 +1,11 @@
 """Tests for the Vogel's MotionMount config flow."""
 
-import asyncio
 import dataclasses
+from datetime import timedelta
 import socket
 from unittest.mock import MagicMock, PropertyMock
 
+from freezegun.api import FrozenDateTimeFactory
 import motionmount
 import pytest
 
@@ -26,7 +27,7 @@ from . import (
     ZEROCONF_NAME,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 MAC = bytes.fromhex("c4dd57f8a55f")
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -505,6 +506,7 @@ async def test_authentication_first_incorrect_pin_to_backoff(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motionmount_config_flow: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that authentication is requested when needed."""
     type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
@@ -534,7 +536,9 @@ async def test_authentication_first_incorrect_pin_to_backoff(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backoff"
 
-    await asyncio.sleep(2)
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Now simulate the user entered the correct pin to finalize the test
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
@@ -564,6 +568,7 @@ async def test_authentication_multiple_incorrect_pins(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motionmount_config_flow: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that authentication is requested when needed."""
     type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
@@ -592,7 +597,9 @@ async def test_authentication_multiple_incorrect_pins(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backoff"
 
-    await asyncio.sleep(2)
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Now simulate the user entered the correct pin to finalize the test
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
@@ -622,6 +629,7 @@ async def test_authentication_show_backoff_when_still_running(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_motionmount_config_flow: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that authentication is requested when needed."""
     type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
@@ -658,7 +666,9 @@ async def test_authentication_show_backoff_when_still_running(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backoff"
 
-    await asyncio.sleep(2)
+    freezer.tick(timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Now simulate the user entered the correct pin to finalize the test
     type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
