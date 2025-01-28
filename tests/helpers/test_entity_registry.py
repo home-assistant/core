@@ -757,7 +757,7 @@ async def test_removing_config_subentry_id(
         config_subentry_id="mock-subentry-id-1",
     )
     assert entry.config_subentry_id == "mock-subentry-id-1"
-    entity_registry.async_clear_config_subentry("mock-id-1", "mock-subentry-id-1")
+    hass.config_entries.async_remove_subentry(mock_config, "mock-subentry-id-1")
 
     assert not entity_registry.entities
 
@@ -829,7 +829,7 @@ async def test_deleted_entity_removing_config_subentry_id(
     assert deleted_entry2.config_subentry_id == "mock-subentry-id-2"
     assert deleted_entry2.orphaned_timestamp is None
 
-    entity_registry.async_clear_config_subentry("mock-id-1", "mock-subentry-id-1")
+    hass.config_entries.async_remove_subentry(mock_config, "mock-subentry-id-1")
     assert len(entity_registry.entities) == 0
     assert len(entity_registry.deleted_entities) == 2
     deleted_entry1 = entity_registry.deleted_entities[("light", "hue", "5678")]

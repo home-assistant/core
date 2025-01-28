@@ -1656,7 +1656,11 @@ async def test_removing_config_subentries(
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
 
-    device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
+    device_registry.async_update_device(
+        entry.id,
+        remove_config_entry_id=config_entry_1.entry_id,
+        remove_config_subentry_id=None,
+    )
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry.config_entries_subentries == {
@@ -1664,9 +1668,7 @@ async def test_removing_config_subentries(
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
 
-    device_registry.async_clear_config_subentry(
-        config_entry_1.entry_id, "mock-subentry-id-1-1"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-1")
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry.config_entries_subentries == {
@@ -1674,18 +1676,14 @@ async def test_removing_config_subentries(
         config_entry_2.entry_id: {"mock-subentry-id-2-1"},
     }
 
-    device_registry.async_clear_config_subentry(
-        config_entry_1.entry_id, "mock-subentry-id-1-2"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-2")
     entry = device_registry.async_get_device(identifiers={("bridgeid", "0123")})
     assert entry.config_entries == {config_entry_2.entry_id}
     assert entry.config_entries_subentries == {
         config_entry_2.entry_id: {"mock-subentry-id-2-1"}
     }
 
-    device_registry.async_clear_config_subentry(
-        config_entry_2.entry_id, "mock-subentry-id-2-1"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_2, "mock-subentry-id-2-1")
     assert device_registry.async_get_device(identifiers={("bridgeid", "0123")}) is None
     assert device_registry.async_get_device(identifiers={("bridgeid", "4567")}) is None
 
@@ -1914,9 +1912,7 @@ async def test_deleted_device_removing_config_subentries(
     }
     assert entry.orphaned_timestamp is None
 
-    device_registry.async_clear_config_subentry(
-        config_entry_1.entry_id, "mock-subentry-id-1-1"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-1")
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == {config_entry_1.entry_id, config_entry_2.entry_id}
     assert entry.config_entries_subentries == {
@@ -1933,9 +1929,7 @@ async def test_deleted_device_removing_config_subentries(
         device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None) is entry
     )
 
-    device_registry.async_clear_config_subentry(
-        config_entry_1.entry_id, "mock-subentry-id-1-2"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_1, "mock-subentry-id-1-2")
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == {config_entry_2.entry_id}
     assert entry.config_entries_subentries == {
@@ -1943,9 +1937,7 @@ async def test_deleted_device_removing_config_subentries(
     }
     assert entry.orphaned_timestamp is None
 
-    device_registry.async_clear_config_subentry(
-        config_entry_2.entry_id, "mock-subentry-id-2-1"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_2, "mock-subentry-id-2-1")
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == set()
     assert entry.config_entries_subentries == {}
@@ -1956,6 +1948,15 @@ async def test_deleted_device_removing_config_subentries(
     assert len(update_events) == 5
 
     # Re-add, expect to keep the device id
+    hass.config_entries.async_add_subentry(
+        config_entry_2,
+        config_entries.ConfigSubentry(
+            data={},
+            subentry_id="mock-subentry-id-2-1",
+            title="Mock title",
+            unique_id="test",
+        ),
+    )
     restored_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry_2.entry_id,
         config_subentry_id="mock-subentry-id-2-1",
@@ -1968,9 +1969,7 @@ async def test_deleted_device_removing_config_subentries(
 
     # Remove again, and trigger purge
     device_registry.async_remove_device(entry.id)
-    device_registry.async_clear_config_subentry(
-        config_entry_2.entry_id, "mock-subentry-id-2-1"
-    )
+    hass.config_entries.async_remove_subentry(config_entry_2, "mock-subentry-id-2-1")
     entry = device_registry.deleted_devices.get_entry({("bridgeid", "0123")}, None)
     assert entry.config_entries == set()
     assert entry.config_entries_subentries == {}
