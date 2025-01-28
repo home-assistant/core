@@ -267,6 +267,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
+        # allow None value for previous state
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
