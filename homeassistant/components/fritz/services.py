@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
-from . import FritzConfigEntry
 from .const import DOMAIN
+from .coordinator import FritzConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
