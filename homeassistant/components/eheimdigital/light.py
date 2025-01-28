@@ -1,8 +1,9 @@
 """EHEIM Digital lights."""
 
-from typing import Any
+from typing import Any, Literal, overload
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
+from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.types import EheimDigitalClientError, LightMode
 
 from homeassistant.components.light import (
@@ -37,10 +38,22 @@ async def async_setup_entry(
     """Set up the callbacks for the coordinator so lights can be added as devices are found."""
     coordinator = entry.runtime_data
 
-    async def async_setup_device_entities(device_address: str) -> None:
+    @overload
+    def async_setup_device_entities(
+        device_address: str, *, return_entities: Literal[False]
+    ) -> None: ...
+
+    @overload
+    def async_setup_device_entities(
+        device_address: str, *, return_entities: Literal[True]
+    ) -> list[EheimDigitalEntity[EheimDigitalDevice]]: ...
+
+    def async_setup_device_entities(
+        device_address: str, *, return_entities: bool
+    ) -> None | list[EheimDigitalEntity[EheimDigitalDevice]]:
         """Set up the light entities for a device."""
         device = coordinator.hub.devices[device_address]
-        entities: list[EheimDigitalClassicLEDControlLight] = []
+        entities: list[EheimDigitalEntity[EheimDigitalDevice]] = []
 
         if isinstance(device, EheimDigitalClassicLEDControl):
             for channel in range(2):
@@ -49,12 +62,19 @@ async def async_setup_entry(
                         EheimDigitalClassicLEDControlLight(coordinator, device, channel)
                     )
                     coordinator.known_devices.add(device.mac_address)
+
+        if return_entities:
+            return entities
         async_add_entities(entities)
+        return None
 
     coordinator.add_platform_callback(async_setup_device_entities)
 
+    entities: list[EheimDigitalEntity[EheimDigitalDevice]] = []
+
     for device_address in entry.runtime_data.hub.devices:
-        await async_setup_device_entities(device_address)
+        entities += async_setup_device_entities(device_address, return_entities=True)
+    async_add_entities(entities)
 
 
 class EheimDigitalClassicLEDControlLight(

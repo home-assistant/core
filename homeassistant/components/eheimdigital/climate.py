@@ -1,7 +1,8 @@
 """EHEIM Digital climate."""
 
-from typing import Any
+from typing import Any, Literal, overload
 
+from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.types import EheimDigitalClientError, HeaterMode, HeaterUnit
 
@@ -39,17 +40,39 @@ async def async_setup_entry(
     """Set up the callbacks for the coordinator so climate entities can be added as devices are found."""
     coordinator = entry.runtime_data
 
-    async def async_setup_device_entities(device_address: str) -> None:
+    @overload
+    def async_setup_device_entities(
+        device_address: str, *, return_entities: Literal[False]
+    ) -> None: ...
+
+    @overload
+    def async_setup_device_entities(
+        device_address: str, *, return_entities: Literal[True]
+    ) -> list[EheimDigitalEntity[EheimDigitalDevice]]: ...
+
+    def async_setup_device_entities(
+        device_address: str, *, return_entities: bool
+    ) -> None | list[EheimDigitalEntity[EheimDigitalDevice]]:
         """Set up the light entities for a device."""
         device = coordinator.hub.devices[device_address]
+        entities: list[EheimDigitalEntity[EheimDigitalDevice]] = []
 
         if isinstance(device, EheimDigitalHeater):
-            async_add_entities([EheimDigitalHeaterClimate(coordinator, device)])
+            entities.append(EheimDigitalHeaterClimate(coordinator, device))
+            coordinator.known_devices.add(device.mac_address)
+
+        if return_entities:
+            return entities
+        async_add_entities(entities)
+        return None
 
     coordinator.add_platform_callback(async_setup_device_entities)
 
+    entities: list[EheimDigitalEntity[EheimDigitalDevice]] = []
+
     for device_address in entry.runtime_data.hub.devices:
-        await async_setup_device_entities(device_address)
+        entities += async_setup_device_entities(device_address, return_entities=True)
+    async_add_entities(entities)
 
 
 class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateEntity):
