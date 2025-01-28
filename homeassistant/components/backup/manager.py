@@ -626,9 +626,9 @@ class BackupManager:
             raise BackupManagerError(f"Backup manager busy: {self.state}")
         self.async_on_backup_event(
             ReceiveBackupEvent(
+                reason=None,
                 stage=None,
                 state=ReceiveBackupState.IN_PROGRESS,
-                reason=None,
             )
         )
         try:
@@ -636,27 +636,27 @@ class BackupManager:
         except BackupError as err:
             self.async_on_backup_event(
                 ReceiveBackupEvent(
+                    reason=err.error_code,
                     stage=None,
                     state=ReceiveBackupState.FAILED,
-                    reason=err.error_code,
                 )
             )
             raise
         except Exception:
             self.async_on_backup_event(
                 ReceiveBackupEvent(
+                    reason="unknown_error",
                     stage=None,
                     state=ReceiveBackupState.FAILED,
-                    reason="unknown_error",
                 )
             )
             raise
         else:
             self.async_on_backup_event(
                 ReceiveBackupEvent(
+                    reason=None,
                     stage=None,
                     state=ReceiveBackupState.COMPLETED,
-                    reason=None,
                 )
             )
         finally:
@@ -672,9 +672,9 @@ class BackupManager:
         contents.chunk_size = BUF_SIZE
         self.async_on_backup_event(
             ReceiveBackupEvent(
+                reason=None,
                 stage=ReceiveBackupStage.RECEIVE_FILE,
                 state=ReceiveBackupState.IN_PROGRESS,
-                reason=None,
             )
         )
         written_backup = await self._reader_writer.async_receive_backup(
@@ -684,9 +684,9 @@ class BackupManager:
         )
         self.async_on_backup_event(
             ReceiveBackupEvent(
+                reason=None,
                 stage=ReceiveBackupStage.UPLOAD_TO_AGENTS,
                 state=ReceiveBackupState.IN_PROGRESS,
-                reason=None,
             )
         )
         agent_errors = await self._async_upload_backup(
@@ -766,9 +766,9 @@ class BackupManager:
 
         self.async_on_backup_event(
             CreateBackupEvent(
+                reason=None,
                 stage=None,
                 state=CreateBackupState.IN_PROGRESS,
-                reason=None,
             )
         )
         try:
@@ -788,9 +788,9 @@ class BackupManager:
             reason = err.error_code if isinstance(err, BackupError) else "unknown_error"
             self.async_on_backup_event(
                 CreateBackupEvent(
+                    reason=reason,
                     stage=None,
                     state=CreateBackupState.FAILED,
-                    reason=reason,
                 )
             )
             self.async_on_backup_event(IdleEvent())
@@ -892,9 +892,9 @@ class BackupManager:
             )
             self.async_on_backup_event(
                 CreateBackupEvent(
+                    reason=None,
                     stage=CreateBackupStage.UPLOAD_TO_AGENTS,
                     state=CreateBackupState.IN_PROGRESS,
-                    reason=None,
                 )
             )
 
@@ -926,17 +926,17 @@ class BackupManager:
             if backup_success:
                 self.async_on_backup_event(
                     CreateBackupEvent(
+                        reason=None,
                         stage=None,
                         state=CreateBackupState.COMPLETED,
-                        reason=None,
                     )
                 )
             else:
                 self.async_on_backup_event(
                     CreateBackupEvent(
+                        reason="upload_failed",
                         stage=None,
                         state=CreateBackupState.FAILED,
-                        reason="upload_failed",
                     )
                 )
             self.async_on_backup_event(IdleEvent())
@@ -958,9 +958,9 @@ class BackupManager:
 
         self.async_on_backup_event(
             RestoreBackupEvent(
+                reason=None,
                 stage=None,
                 state=RestoreBackupState.IN_PROGRESS,
-                reason=None,
             )
         )
         try:
@@ -975,26 +975,26 @@ class BackupManager:
             )
             self.async_on_backup_event(
                 RestoreBackupEvent(
+                    reason=None,
                     stage=None,
                     state=RestoreBackupState.COMPLETED,
-                    reason=None,
                 )
             )
         except BackupError as err:
             self.async_on_backup_event(
                 RestoreBackupEvent(
+                    reason=err.error_code,
                     stage=None,
                     state=RestoreBackupState.FAILED,
-                    reason=err.error_code,
                 )
             )
             raise
         except Exception:
             self.async_on_backup_event(
                 RestoreBackupEvent(
+                    reason="unknown_error",
                     stage=None,
                     state=RestoreBackupState.FAILED,
-                    reason="unknown_error",
                 )
             )
             raise
@@ -1269,9 +1269,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
 
         on_progress(
             CreateBackupEvent(
+                reason=None,
                 stage=CreateBackupStage.HOME_ASSISTANT,
                 state=CreateBackupState.IN_PROGRESS,
-                reason=None,
             )
         )
         try:
@@ -1530,9 +1530,9 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         await self._hass.async_add_executor_job(_write_restore_file)
         on_progress(
             RestoreBackupEvent(
+                reason=None,
                 stage=None,
                 state=RestoreBackupState.CORE_RESTART,
-                reason=None,
             )
         )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
