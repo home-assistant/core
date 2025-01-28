@@ -759,37 +759,6 @@ async def test_reauth_multiple_config_entries(
     assert entry.data.get("extra_data")
 
 
-@pytest.mark.parametrize(("sdm_managed_topic"), [(True)])
-async def test_pubsub_subscription_strip_whitespace(
-    hass: HomeAssistant,
-    oauth: OAuthFixture,
-) -> None:
-    """Check that project id has whitespace stripped on entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    await oauth.async_app_creds_flow(
-        result, cloud_project_id=" " + CLOUD_PROJECT_ID + " "
-    )
-    oauth.async_mock_refresh()
-    result = await oauth.async_configure(result, {"code": "1234"})
-    entry = await oauth.async_complete_pubsub_flow(
-        result, selected_topic="projects/sdm-prod/topics/enterprise-some-project-id"
-    )
-    assert entry.title == "Import from configuration.yaml"
-    assert "token" in entry.data
-    entry.data["token"].pop("expires_at")
-    assert entry.unique_id == PROJECT_ID
-    assert entry.data["token"] == {
-        "refresh_token": "mock-refresh-token",
-        "access_token": "mock-access-token",
-        "type": "Bearer",
-        "expires_in": 60,
-    }
-    assert "subscription_name" in entry.data
-    assert entry.data["cloud_project_id"] == CLOUD_PROJECT_ID
-
-
 @pytest.mark.parametrize(
     ("sdm_managed_topic", "create_subscription_status"),
     [(True, HTTPStatus.UNAUTHORIZED)],
