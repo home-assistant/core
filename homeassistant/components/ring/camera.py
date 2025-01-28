@@ -35,6 +35,10 @@ from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, exception_wrap
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
+
 FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 MOTION_DETECTION_CAPABILITY = "motion_detection"
 

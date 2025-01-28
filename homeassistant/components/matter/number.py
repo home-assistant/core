@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from matter_server.common import custom_clusters
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -52,16 +51,10 @@ class MatterNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        matter_attribute = self._entity_info.primary_attribute
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
             sendvalue = value_convert(value)
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                matter_attribute,
-            ),
+        await self.write_attribute(
             value=sendvalue,
         )
 

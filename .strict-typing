@@ -237,6 +237,7 @@ homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*
 homeassistant.components.homeassistant_yellow.*
+homeassistant.components.homee.*
 homeassistant.components.homekit.*
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
@@ -315,6 +316,7 @@ homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mcp.*
 homeassistant.components.mcp_server.*
 homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*

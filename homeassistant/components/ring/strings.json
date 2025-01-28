@@ -6,12 +6,19 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "Your Ring account username.",
+          "password": "Your Ring account password."
         }
       },
       "2fa": {
         "title": "Two-factor authentication",
         "data": {
           "2fa": "Two-factor code"
+        },
+        "data_description": {
+          "2fa": "Account verification code via the method selected in your ring account settings."
         }
       },
       "reauth_confirm": {
@@ -19,6 +26,9 @@
         "description": "The Ring integration needs to re-authenticate your account {username}",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ring::config::step::user::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -26,6 +36,9 @@
         "description": "Will create a new Authorized Device for {username} at ring.com",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::ring::config::step::user::data_description::password%]"
         }
       }
     },
