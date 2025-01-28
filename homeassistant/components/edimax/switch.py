@@ -4,87 +4,80 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyedimax.smartplug import SmartPlug
-import voluptuous as vol
-
-from homeassistant.components.switch import (
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
-    SwitchEntity,
-)
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import HomeAssistant, SwitchEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-DOMAIN = "edimax"
-
-DEFAULT_NAME = "Edimax Smart Plug"
-DEFAULT_PASSWORD = "1234"
-DEFAULT_USERNAME = "admin"
-
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-    }
-)
+from . import EdimaxConfigEntry
+from .const import DEFAULT_NAME
+from .smartplug_adapter import Info, SmartPlugAdapter
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: EdimaxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Find and return Edimax Smart Plugs."""
-    host = config.get(CONF_HOST)
-    auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-    name = config.get(CONF_NAME)
-
-    add_entities([SmartPlugSwitch(SmartPlug(host, auth), name)], True)
+    """Add sensors for passed config_entry in HA."""
+    adapter = config_entry.runtime_data
+    async_add_entities(
+        [SmartPlugSwitch(adapter, config_entry.data["name"])],
+        True,
+    )
 
 
 class SmartPlugSwitch(SwitchEntity):
     """Representation an Edimax Smart Plug switch."""
 
-    def __init__(self, smartplug, name):
+    adapter: SmartPlugAdapter
+
+    _name: str = DEFAULT_NAME
+    _state: str = "OFF"
+    _info: Info
+    _mac: str
+
+    def __init__(self, adapter, name) -> None:
         """Initialize the switch."""
-        self.smartplug = smartplug
+
+        self.adapter = adapter
         self._name = name
-        self._state = False
-        self._info = None
-        self._mac = None
+        self._state = "ON"
+        self._mac = "unknown"
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the device's MAC address."""
+
         return self._mac
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the Smart Plug, if any."""
+
         return self._name
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self._state
+
+        return self.adapter.state == "ON"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.smartplug.state = "ON"
+
+        self.adapter.state = "ON"
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self.smartplug.state = "OFF"
+
+        self.adapter.state = "OFF"
 
     def update(self) -> None:
         """Update edimax switch."""
-        if not self._info:
-            self._info = self.smartplug.info
-            self._mac = self._info["mac"]
 
-        self._state = self.smartplug.state == "ON"
+        self.adapter.update()
+
+        if not self._info:
+            self._info = self.adapter.info
+            self._mac = self._info.serial_number
+
+        self._state = self.adapter.state

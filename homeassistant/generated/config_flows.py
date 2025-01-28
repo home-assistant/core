@@ -153,6 +153,7 @@ FLOWS = {
         "econet",
         "ecovacs",
         "ecowitt",
+        "edimax",
         "edl21",
         "efergy",
         "eheimdigital",
