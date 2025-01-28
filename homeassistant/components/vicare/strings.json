@@ -465,13 +465,13 @@
       "heating_rod_hours": {
         "name": "Heating rod hours"
       },
-      "spf-total": {
+      "spf_total": {
         "name": "Seasonal performance factor"
       },
-      "spf-dhw": {
+      "spf_dhw": {
         "name": "Seasonal performance factor - domestic hot water"
       },
-      "spf-heating": {
+      "spf_heating": {
         "name": "Seasonal performance factor - heating"
       }
     },
