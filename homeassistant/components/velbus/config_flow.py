@@ -122,9 +122,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
-        await self.async_set_unique_id(
-            f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"
-        )
+        await self.async_set_unique_id(discovery_info.serial_number)
         self._device = discovery_info.device
         self._title = "Velbus USB"
         self._async_abort_entries_match({CONF_PORT: self._device})

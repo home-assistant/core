@@ -203,7 +203,7 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
         user_input={},
     )
     assert result
-    assert result["result"].unique_id == "0B1B:10CF_1234_Velleman_Velbus VMB1USB"
+    assert result["result"].unique_id == "1234"
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
 
