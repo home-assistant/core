@@ -180,12 +180,6 @@ def _mocked_device(
         device_config.host = ip_address
     device.host = ip_address
 
-    if modules:
-        device.modules = {
-            module_name: MODULE_TO_MOCK_GEN[module_name](device)
-            for module_name in modules
-        }
-
     device_features = {}
     if features:
         device_features = {
@@ -203,9 +197,16 @@ def _mocked_device(
         )
     device.features = device_features
 
+    # Add modules after features so modules can add any required features
+    if modules:
+        device.modules = {
+            module_name: MODULE_TO_MOCK_GEN[module_name](device)
+            for module_name in modules
+        }
+
     # module features are accessed from a module via get_feature which is
     # keyed on the module attribute name. Usually this is the same as the
-    # feature.id but not always.
+    # feature.id but not always so accept overrides.
     module_features = {
         mod_key if (mod_key := v.expected_module_key) else k: v
         for k, v in device_features.items()
@@ -272,7 +273,10 @@ def _mocked_feature(
     feature.id = id
     feature.name = name or id.upper()
     feature.set_value = AsyncMock()
-    if not (fixture := FEATURES_FIXTURE.get(id)):
+    if fixture := FEATURES_FIXTURE.get(id):
+        # copy the fixture so tests do not interfere with each other
+        fixture = dict(fixture)
+    else:
         assert require_fixture is False, (
             f"No fixture defined for feature {id} and require_fixture is True"
         )
@@ -280,7 +284,8 @@ def _mocked_feature(
             f"Value must be provided if feature {id} not defined in features.json"
         )
         fixture = {"value": value, "category": "Primary", "type": "Sensor"}
-    elif value is not UNDEFINED:
+
+    if value is not UNDEFINED:
         fixture["value"] = value
     feature.value = fixture["value"]
 
@@ -383,8 +388,22 @@ def _mocked_fan_module(effect) -> Fan:
 def _mocked_alarm_module(device):
     alarm = MagicMock(auto_spec=Alarm, name="Mocked alarm")
     alarm.active = False
+    alarm.alarm_sounds = "Foo", "Bar"
     alarm.play = AsyncMock()
     alarm.stop = AsyncMock()
+
+    device.features["alarm_volume"] = _mocked_feature(
+        "alarm_volume",
+        minimum_value=0,
+        maximum_value=3,
+        value=None,
+    )
+    device.features["alarm_duration"] = _mocked_feature(
+        "alarm_duration",
+        minimum_value=0,
+        maximum_value=300,
+        value=None,
+    )
 
     return alarm
 
