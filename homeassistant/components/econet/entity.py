@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, PUSH_UPDATE
 
 
-class EcoNetEntity[_EquipmentT: Equipment](Entity):
+class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
     """Define a base EcoNet entity."""
 
     _attr_should_poll = False
