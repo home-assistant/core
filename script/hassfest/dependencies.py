@@ -169,7 +169,6 @@ IGNORE_VIOLATIONS = {
     ("zha", "homeassistant_yellow"),
     ("homeassistant_sky_connect", "zha"),
     ("homeassistant_hardware", "zha"),
-    ("homeassistant_hardware", "otbr"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
