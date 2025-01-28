@@ -50,6 +50,7 @@ PORT_EVENT_CALLBACK_TYPE = Callable[[set[USBDevice], set[USBDevice]], None]
 
 POLLING_MONITOR_SCAN_PERIOD = timedelta(seconds=5)
 REQUEST_SCAN_COOLDOWN = 10  # 10 second cooldown
+ADD_REMOVE_SCAN_COOLDOWN = 4  # 4 second cooldown to give devices a chance to register
 
 __all__ = [
     "USBCallbackMatcher",
@@ -253,6 +254,7 @@ class USBDiscovery:
         self.seen: set[tuple[str, ...]] = set()
         self.observer_active = False
         self._request_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
+        self._add_remove_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None
         self._request_callbacks: list[CALLBACK_TYPE] = []
         self.initial_scan_done = False
         self._initial_scan_callbacks: list[CALLBACK_TYPE] = []
@@ -317,7 +319,7 @@ class USBDiscovery:
 
         @hass_callback
         def _usb_change_callback() -> None:
-            self.hass.create_task(self._async_scan())
+            self._async_delayed_add_remove_scan()
 
         watcher = AIOUSBWatcher()
         watcher.async_register_callback(_usb_change_callback)
@@ -465,6 +467,20 @@ class USBDiscovery:
 
         for usb_device in usb_devices:
             await self._async_process_discovered_usb_device(usb_device)
+
+    @hass_callback
+    def _async_delayed_add_remove_scan(self) -> None:
+        """Request a serial scan after a debouncer delay."""
+        if not self._add_remove_debouncer:
+            self._add_remove_debouncer = Debouncer(
+                self.hass,
+                _LOGGER,
+                cooldown=ADD_REMOVE_SCAN_COOLDOWN,
+                immediate=False,
+                function=self._async_scan,
+                background=True,
+            )
+        self._add_remove_debouncer.async_schedule_call()
 
     async def _async_scan_serial(self) -> None:
         """Scan serial ports."""
