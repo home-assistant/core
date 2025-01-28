@@ -145,7 +145,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": True,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -165,7 +165,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": "Unsupported API",
             "source": "bla2",
             "state": core_ce.ConfigEntryState.SETUP_ERROR.value,
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -185,7 +185,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla3",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -205,7 +205,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla4",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -225,7 +225,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": "bla5",
             "state": core_ce.ConfigEntryState.NOT_LOADED.value,
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -589,7 +589,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
             "reason": None,
             "source": core_ce.SOURCE_USER,
             "state": core_ce.ConfigEntryState.LOADED.value,
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -675,7 +675,7 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
                 "reason": None,
                 "source": core_ce.SOURCE_USER,
                 "state": core_ce.ConfigEntryState.LOADED.value,
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -1145,28 +1145,25 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
     """Test we can start a subentry flow."""
 
     class TestFlow(core_ce.ConfigFlow):
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
-                async def async_step_init(self, user_input=None):
-                    raise NotImplementedError
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                raise NotImplementedError
 
-                async def async_step_user(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=schema,
-                        description_placeholders={"enabled": "Set to true to be true"},
-                    )
-
-            return SubentryFlowHandler()
+            async def async_step_user(self, user_input=None):
+                schema = {}
+                schema[vol.Required("enabled")] = bool
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=schema,
+                    description_placeholders={"enabled": "Set to true to be true"},
+                )
 
         @classmethod
         @callback
-        def async_supported_subentries(cls, config_entry):
-            return ("test",)
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
@@ -1177,7 +1174,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
@@ -1189,6 +1186,73 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
         "type": "form",
         "handler": ["test1", "test"],
         "step_id": "user",
+        "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
+        "description_placeholders": {"enabled": "Set to true to be true"},
+        "errors": None,
+        "last_step": None,
+        "preview": None,
+    }
+
+
+async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
+    """Test we can start a subentry reconfigure flow."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_user(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_reconfigure(self, user_input=None):
+                schema = {}
+                schema[vol.Required("enabled")] = bool
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=schema,
+                    description_placeholders={"enabled": "Set to true to be true"},
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id=None,
+            )
+        ],
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(
+            url, json={"handler": [entry.entry_id, "test"], "subentry_id": "mock_id"}
+        )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    data.pop("flow_id")
+    assert data == {
+        "type": "form",
+        "handler": ["test1", "test"],
+        "step_id": "reconfigure",
         "data_schema": [{"name": "enabled", "required": True, "type": "boolean"}],
         "description_placeholders": {"enabled": "Set to true to be true"},
         "errors": None,
@@ -1211,25 +1275,22 @@ async def test_subentry_flow_unauth(
     """Test unauthorized on subentry flow."""
 
     class TestFlow(core_ce.ConfigFlow):
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
-                async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
-                    return self.async_show_form(
-                        step_id="user",
-                        data_schema=schema,
-                        description_placeholders={"enabled": "Set to true to be true"},
-                    )
-
-            return SubentryFlowHandler()
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                schema = {}
+                schema[vol.Required("enabled")] = bool
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=schema,
+                    description_placeholders={"enabled": "Set to true to be true"},
+                )
 
         @classmethod
         @callback
-        def async_supported_subentries(cls, config_entry):
-            return ("test",)
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.config_flow", None)
@@ -1242,7 +1303,7 @@ async def test_subentry_flow_unauth(
 
     hass_admin_user.groups = []
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -1256,29 +1317,26 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
-                async def async_step_user(self, user_input=None):
-                    return await self.async_step_finish()
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                return await self.async_step_finish()
 
-                async def async_step_finish(self, user_input=None):
-                    if user_input:
-                        return self.async_create_entry(
-                            title="Mock title", data=user_input, unique_id="test"
-                        )
-
-                    return self.async_show_form(
-                        step_id="finish", data_schema=vol.Schema({"enabled": bool})
+            async def async_step_finish(self, user_input=None):
+                if user_input:
+                    return self.async_create_entry(
+                        title="Mock title", data=user_input, unique_id="test"
                     )
 
-            return SubentryFlowHandler()
+                return self.async_show_form(
+                    step_id="finish", data_schema=vol.Schema({"enabled": bool})
+                )
 
         @classmethod
         @callback
-        def async_supported_subentries(cls, config_entry):
-            return ("test",)
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     MockConfigEntry(
         domain="test",
@@ -1287,7 +1345,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
@@ -1337,33 +1395,28 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
-        @staticmethod
-        @callback
-        def async_get_subentry_flow(config_entry, subentry_type: str):
-            class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
-                async def async_step_user(self, user_input=None):
-                    return self.async_show_form(
-                        step_id="finish",
-                        data_schema=vol.Schema(
-                            {
-                                vol.Required(
-                                    "choices", default=["invalid", "valid"]
-                                ): cv.multi_select({"valid": "Valid"})
-                            }
-                        ),
-                    )
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                return self.async_show_form(
+                    step_id="finish",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Required(
+                                "choices", default=["invalid", "valid"]
+                            ): cv.multi_select({"valid": "Valid"})
+                        }
+                    ),
+                )
 
-                async def async_step_finish(self, user_input=None):
-                    return self.async_create_entry(
-                        title="Enable disable", data=user_input
-                    )
-
-            return SubentryFlowHandler()
+            async def async_step_finish(self, user_input=None):
+                return self.async_create_entry(title="Enable disable", data=user_input)
 
         @classmethod
         @callback
-        def async_supported_subentries(cls, config_entry):
-            return ("test",)
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
 
     MockConfigEntry(
         domain="test",
@@ -1372,7 +1425,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
@@ -1398,7 +1451,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/subentries/flow/{flow_id}",
             json={"choices": ["valid", "invalid"]},
@@ -1446,7 +1499,7 @@ async def test_get_single(
         "reason": None,
         "source": "user",
         "state": "loaded",
-        "supported_subentries": [],
+        "supported_subentry_types": {},
         "supports_options": False,
         "supports_reconfigure": False,
         "supports_remove_device": False,
@@ -1808,7 +1861,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1829,7 +1882,7 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1850,7 +1903,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1871,7 +1924,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1892,7 +1945,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1924,7 +1977,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1955,7 +2008,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -1976,7 +2029,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2007,7 +2060,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2028,7 +2081,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2065,7 +2118,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2086,7 +2139,7 @@ async def test_get_matching_entries_ws(
             "reason": "Unsupported API",
             "source": "bla2",
             "state": "setup_error",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2107,7 +2160,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla3",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2128,7 +2181,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla4",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2149,7 +2202,7 @@ async def test_get_matching_entries_ws(
             "reason": None,
             "source": "bla5",
             "state": "not_loaded",
-            "supported_subentries": [],
+            "supported_subentry_types": {},
             "supports_options": False,
             "supports_reconfigure": False,
             "supports_remove_device": False,
@@ -2258,7 +2311,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2282,7 +2335,7 @@ async def test_subscribe_entries_ws(
                 "reason": "Unsupported API",
                 "source": "bla2",
                 "state": "setup_error",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2306,7 +2359,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2336,7 +2389,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2367,7 +2420,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2397,7 +2450,7 @@ async def test_subscribe_entries_ws(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2489,7 +2542,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2513,7 +2566,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2545,7 +2598,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2573,7 +2626,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla3",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2605,7 +2658,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,
@@ -2635,7 +2688,7 @@ async def test_subscribe_entries_ws_filtered(
                 "reason": None,
                 "source": "bla",
                 "state": "not_loaded",
-                "supported_subentries": [],
+                "supported_subentry_types": {},
                 "supports_options": False,
                 "supports_reconfigure": False,
                 "supports_remove_device": False,

@@ -326,6 +326,9 @@ class SubentryManagerFlowIndexView(
         """Return context."""
         context = super().get_context(data)
         context["source"] = config_entries.SOURCE_USER
+        if subentry_id := data.get("subentry_id"):
+            context["source"] = config_entries.SOURCE_RECONFIGURE
+            context["subentry_id"] = subentry_id
         return context
 
 
@@ -683,7 +686,7 @@ async def config_subentry_list(
             "title": subentry.title,
             "unique_id": subentry.unique_id,
         }
-        for subentry_id, subentry in entry.subentries.items()
+        for subentry in entry.subentries.values()
     ]
     connection.send_result(msg["id"], result)
 
