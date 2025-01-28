@@ -302,7 +302,7 @@ async def test_subscribe_scanner_details(
         response = await client.receive_json()
 
     assert response["event"] == {
-        "added": [
+        "add": [
             {
                 "adapter": "hci0",
                 "connectable": False,
@@ -319,7 +319,7 @@ async def test_subscribe_scanner_details(
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {
-        "added": [
+        "add": [
             {
                 "adapter": "hci3",
                 "connectable": False,
@@ -332,7 +332,7 @@ async def test_subscribe_scanner_details(
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {
-        "removed": [
+        "remove": [
             {
                 "adapter": "hci3",
                 "connectable": False,
@@ -369,7 +369,7 @@ async def test_subscribe_scanner_details_specific_scanner(
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {
-        "added": [
+        "add": [
             {
                 "adapter": "hci3",
                 "connectable": False,
@@ -382,7 +382,7 @@ async def test_subscribe_scanner_details_specific_scanner(
     async with asyncio.timeout(1):
         response = await client.receive_json()
     assert response["event"] == {
-        "removed": [
+        "remove": [
             {
                 "adapter": "hci3",
                 "connectable": False,
