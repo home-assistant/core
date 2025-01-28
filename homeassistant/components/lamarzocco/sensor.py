@@ -88,7 +88,6 @@ STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="drink_stats_coffee",
         translation_key="drink_stats_coffee",
-        native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.statistics.total_coffee,
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,
@@ -97,7 +96,6 @@ STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     LaMarzoccoSensorEntityDescription(
         key="drink_stats_flushing",
         translation_key="drink_stats_flushing",
-        native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.statistics.total_flushes,
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,
@@ -109,7 +107,6 @@ KEY_STATISTIC_ENTITIES: tuple[LaMarzoccoKeySensorEntityDescription, ...] = (
     LaMarzoccoKeySensorEntityDescription(
         key="drink_stats_coffee_key",
         translation_key="drink_stats_coffee_key",
-        native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device, key: device.statistics.drink_stats.get(key),
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,

@@ -82,7 +82,7 @@
     'supported_features': 0,
     'translation_key': 'drink_stats_coffee_key',
     'unique_id': 'GS012345_drink_stats_coffee_key_key1',
-    'unit_of_measurement': 'drinks',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.gs012345_coffees_made_key_1-state]
@@ -90,7 +90,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Coffees made Key 1',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_coffees_made_key_1',
@@ -132,7 +131,7 @@
     'supported_features': 0,
     'translation_key': 'drink_stats_coffee_key',
     'unique_id': 'GS012345_drink_stats_coffee_key_key2',
-    'unit_of_measurement': 'drinks',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.gs012345_coffees_made_key_2-state]
@@ -140,7 +139,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Coffees made Key 2',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_coffees_made_key_2',
@@ -182,7 +180,7 @@
     'supported_features': 0,
     'translation_key': 'drink_stats_coffee_key',
     'unique_id': 'GS012345_drink_stats_coffee_key_key3',
-    'unit_of_measurement': 'drinks',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.gs012345_coffees_made_key_3-state]
@@ -190,7 +188,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Coffees made Key 3',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_coffees_made_key_3',
@@ -232,7 +229,7 @@
     'supported_features': 0,
     'translation_key': 'drink_stats_coffee_key',
     'unique_id': 'GS012345_drink_stats_coffee_key_key4',
-    'unit_of_measurement': 'drinks',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.gs012345_coffees_made_key_4-state]
@@ -240,7 +237,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Coffees made Key 4',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_coffees_made_key_4',
@@ -441,7 +437,7 @@
     'supported_features': 0,
     'translation_key': 'drink_stats_coffee',
     'unique_id': 'GS012345_drink_stats_coffee',
-    'unit_of_measurement': 'drinks',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.gs012345_total_coffees_made-state]
@@ -449,7 +445,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Total coffees made',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_total_coffees_made',
@@ -491,7 +486,7 @@
     'supported_features': 0,
     'translation_key': 'drink_stats_flushing',
     'unique_id': 'GS012345_drink_stats_flushing',
-    'unit_of_measurement': 'drinks',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_sensors[sensor.gs012345_total_flushes_made-state]
@@ -499,7 +494,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'GS012345 Total flushes made',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': 'drinks',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gs012345_total_flushes_made',
