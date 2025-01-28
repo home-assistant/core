@@ -17,9 +17,11 @@
       'agents': list([
         dict({
           'agent_id': 'backup.local',
+          'name': 'local',
         }),
         dict({
-          'agent_id': 'domain.test',
+          'agent_id': 'test.test',
+          'name': 'test',
         }),
       ]),
     }),
