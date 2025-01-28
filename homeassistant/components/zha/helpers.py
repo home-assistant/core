@@ -1342,3 +1342,19 @@ def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
 def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
     """Return a new dictionary excluding keys with None values."""
     return {k: v for k, v in obj.items() if v is not None}
+
+
+async def migrate_entities_unique_ids(hass: HomeAssistant, domain: str, entities: list):
+    """Migrate to new entity unique ids."""
+
+    entity_registry = er.async_get(hass)
+    for entity_data in entities:
+        meta = entity_data.entity.info_object
+        if hasattr(meta, "previous_unique_id") and meta.previous_unique_id is not None:
+            entity_id = entity_registry.async_get_entity_id(
+                domain=domain, platform=DOMAIN, unique_id=meta.previous_unique_id
+            )
+            if entity_id is not None:
+                entity_registry.async_update_entity(
+                    entity_id, new_unique_id=meta.unique_id
+                )

@@ -40,6 +40,7 @@ from .helpers import (
     convert_zha_error_to_ha_error,
     exclude_none_values,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 
 ZHA_TO_HA_HVAC_MODE = {
@@ -71,6 +72,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation sensor from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.CLIMATE]
+
+    await migrate_entities_unique_ids(hass, Platform.CLIMATE, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
