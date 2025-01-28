@@ -33,48 +33,8 @@ def aiousbwatcher_no_inotify():
         yield
 
 
-@pytest.fixture(name="operating_system")
-def mock_operating_system():
-    """Mock running Home Assistant Operating system."""
-    with patch(
-        "homeassistant.components.usb.system_info.async_get_system_info",
-        return_value={
-            "hassio": True,
-            "docker": True,
-        },
-    ):
-        yield
-
-
-@pytest.fixture(name="docker")
-def mock_docker():
-    """Mock running Home Assistant in docker container."""
-    with patch(
-        "homeassistant.components.usb.system_info.async_get_system_info",
-        return_value={
-            "hassio": False,
-            "docker": True,
-        },
-    ):
-        yield
-
-
-@pytest.fixture(name="venv")
-def mock_venv():
-    """Mock running Home Assistant in a venv container."""
-    with patch(
-        "homeassistant.components.usb.system_info.async_get_system_info",
-        return_value={
-            "hassio": False,
-            "docker": False,
-            "virtualenv": True,
-        },
-    ):
-        yield
-
-
 async def test_aiousbwatcher_discovery(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that aiousbwatcher can discover a device without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}, {"domain": "test2", "vid": "0FA0"}]
@@ -142,7 +102,7 @@ async def test_aiousbwatcher_discovery(
 
 @pytest.mark.usefixtures("aiousbwatcher_no_inotify")
 async def test_polling_discovery(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that polling can discover a device without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
@@ -197,9 +157,7 @@ async def test_polling_discovery(
 
 
 @pytest.mark.usefixtures("aiousbwatcher_no_inotify")
-async def test_removal_by_aiousbwatcher_before_started(
-    hass: HomeAssistant, operating_system
-) -> None:
+async def test_removal_by_aiousbwatcher_before_started(hass: HomeAssistant) -> None:
     """Test a device is removed by the aiousbwatcher before started."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
@@ -739,7 +697,7 @@ async def test_non_matching_discovered_by_scanner_after_started(
 
 
 async def test_aiousbwatcher_on_wsl_fallback_without_throwing_exception(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, venv
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that aiousbwatcher on WSL failure results in fallback to scanning without raising an exception."""
     new_usb = [{"domain": "test1", "vid": "3039"}]
@@ -774,10 +732,8 @@ async def test_aiousbwatcher_on_wsl_fallback_without_throwing_exception(
     assert mock_config_flow.mock_calls[0][1][0] == "test1"
 
 
-async def test_discovered_by_aiousbwatcher_before_started_on_docker(
-    hass: HomeAssistant, docker
-) -> None:
-    """Test a device is discovered since aiousbwatcher is now running on bare docker."""
+async def test_discovered_by_aiousbwatcher_before_started(hass: HomeAssistant) -> None:
+    """Test a device is discovered since aiousbwatcher is now running."""
     new_usb = [{"domain": "test1", "vid": "3039", "pid": "3039"}]
 
     mock_comports = [
