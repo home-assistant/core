@@ -240,6 +240,7 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
             None,
             {
                 "agent_ids": ["hassio.local"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
                 "include_addons": ["test"],
                 "include_all_addons": False,
                 "include_database": False,
@@ -254,6 +255,7 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
             "my_nas",
             {
                 "agent_ids": ["hassio.my_nas"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
                 "include_addons": ["test"],
                 "include_all_addons": False,
                 "include_database": False,
@@ -281,6 +283,7 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
             None,
             {
                 "agent_ids": ["hassio.local"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
                 "include_addons": ["test"],
                 "include_all_addons": False,
                 "include_database": False,

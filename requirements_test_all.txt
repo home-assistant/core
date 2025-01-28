@@ -564,7 +564,7 @@ boschshcpy==0.2.91
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==0.9.1
+bring-api==1.0.0
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -1252,7 +1252,7 @@ nhc==0.3.9
 nibe==2.14.0
 
 # homeassistant.components.nice_go
-nice-go==1.0.0
+nice-go==1.0.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
