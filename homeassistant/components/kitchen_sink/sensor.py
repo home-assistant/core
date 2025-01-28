@@ -105,7 +105,7 @@ async def async_setup_entry(
                     unit_of_measurement=None,
                 )
             ],
-            subentry_id=subentry_id,
+            config_subentry_id=subentry_id,
         )
 
 

@@ -49,6 +49,7 @@ async def test_states_with_subentry(
             config_entries.ConfigSubentryData(
                 data={"state": 15},
                 subentry_id="blabla",
+                subentry_type="entity",
                 title="Sensor test",
                 unique_id=None,
             )
