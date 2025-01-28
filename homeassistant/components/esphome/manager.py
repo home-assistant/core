@@ -41,9 +41,8 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import template
+from homeassistant.helpers import device_registry as dr, template
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.issue_registry import (
