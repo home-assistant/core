@@ -37,7 +37,7 @@ rules:
     comment: 99% test coverage
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: todo
     comment: Explore if this is possible.

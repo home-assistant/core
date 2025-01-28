@@ -466,6 +466,15 @@
       },
       "heating_rod_hours": {
         "name": "Heating rod hours"
+      },
+      "spf_total": {
+        "name": "Seasonal performance factor"
+      },
+      "spf_dhw": {
+        "name": "Seasonal performance factor - domestic hot water"
+      },
+      "spf_heating": {
+        "name": "Seasonal performance factor - heating"
       }
     },
     "water_heater": {

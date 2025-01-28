@@ -25,6 +25,7 @@ APPLICATION_CREDENTIALS = [
     "neato",
     "nest",
     "netatmo",
+    "onedrive",
     "point",
     "senz",
     "spotify",

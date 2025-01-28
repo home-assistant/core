@@ -403,6 +403,9 @@ aiotractive==0.6.0
 # homeassistant.components.unifi
 aiounifi==81
 
+# homeassistant.components.usb
+aiousbwatcher==1.1.1
+
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
 
@@ -511,7 +514,7 @@ async-upnp-client==0.43.0
 asyncarve==0.1.1
 
 # homeassistant.components.keyboard_remote
-asyncinotify==4.0.2
+asyncinotify==4.2.0
 
 # homeassistant.components.supla
 asyncpysupla==0.0.5
@@ -644,7 +647,7 @@ boto3==1.34.131
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==0.9.1
+bring-api==1.0.0
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -1097,7 +1100,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.12.0
+habluetooth==3.13.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1431,6 +1434,9 @@ motioneye-client==0.3.14
 # homeassistant.components.bang_olufsen
 mozart-api==4.1.1.116.4
 
+# homeassistant.components.onedrive
+msgraph-sdk==1.16.0
+
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
@@ -1489,7 +1495,7 @@ nhc==0.3.9
 nibe==2.14.0
 
 # homeassistant.components.nice_go
-nice-go==1.0.0
+nice-go==1.0.1
 
 # homeassistant.components.nilu
 niluclient==0.1.2
@@ -1541,7 +1547,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.2.6
+ohme==1.2.8
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -2385,7 +2391,7 @@ python-google-drive-api==0.0.2
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.1.1
+python-homewizard-energy==v8.2.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2443,7 +2449,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.8.4
+python-roborock==2.9.7
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2493,9 +2499,6 @@ pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
 pytrydan==0.8.0
-
-# homeassistant.components.usb
-pyudev==0.24.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -3095,7 +3098,7 @@ yalexs-ble==2.5.6
 yalexs==8.10.0
 
 # homeassistant.components.yeelight
-yeelight==0.7.14
+yeelight==0.7.16
 
 # homeassistant.components.yeelightsunflower
 yeelightsunflower==0.0.10
