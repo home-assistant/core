@@ -1113,7 +1113,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
                 raise NotImplementedError
 
             async def async_step_user(self, user_input=None):
-                schema = OrderedDict()
+                schema = {}
                 schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="user",
@@ -1137,7 +1137,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
@@ -1169,7 +1169,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
                 raise NotImplementedError
 
             async def async_step_reconfigure(self, user_input=None):
-                schema = OrderedDict()
+                schema = {}
                 schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="reconfigure",
@@ -1202,7 +1202,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(
             url, json={"handler": [entry.entry_id, "test"], "subentry_id": "mock_id"}
@@ -1240,7 +1240,7 @@ async def test_subentry_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
             async def async_step_init(self, user_input=None):
-                schema = OrderedDict()
+                schema = {}
                 schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="user",
@@ -1266,7 +1266,7 @@ async def test_subentry_flow_unauth(
 
     hass_admin_user.groups = []
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await getattr(client, method)(endpoint, json={"handler": entry.entry_id})
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
@@ -1308,7 +1308,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
@@ -1388,7 +1388,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
     ).add_to_hass(hass)
     entry = hass.config_entries.async_entries()[0]
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         url = "/api/config/config_entries/subentries/flow"
         resp = await client.post(url, json={"handler": [entry.entry_id, "test"]})
 
@@ -1414,7 +1414,7 @@ async def test_subentry_flow_with_invalid_data(hass: HomeAssistant, client) -> N
             "preview": None,
         }
 
-    with patch.dict(HANDLERS, {"test": TestFlow}):
+    with mock_config_flow("test", TestFlow):
         resp = await client.post(
             f"/api/config/config_entries/subentries/flow/{flow_id}",
             json={"choices": ["valid", "invalid"]},
