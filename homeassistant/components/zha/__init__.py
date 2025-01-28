@@ -186,11 +186,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     repairs.async_delete_blocking_issues(hass)
 
-    await notify_firmware_info(
-        hass,
-        DOMAIN,
-        firmware_info=homeassistant_hardware.get_firmware_info(hass, config_entry),
-    )
+    if fw_info := homeassistant_hardware.get_firmware_info(hass, config_entry):
+        await notify_firmware_info(
+            hass,
+            DOMAIN,
+            firmware_info=fw_info,
+        )
 
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 

@@ -84,8 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     entry.runtime_data = otbrdata
 
-    fw_info = await homeassistant_hardware.async_get_firmware_info(hass, entry)
-    await notify_firmware_info(hass, DOMAIN, fw_info)
+    if fw_info := await homeassistant_hardware.async_get_firmware_info(hass, entry):
+        await notify_firmware_info(hass, DOMAIN, fw_info)
 
     return True
 
