@@ -16,7 +16,7 @@ from homeassistant.components.assist_satellite import AssistSatelliteEntity
 
 # pylint: disable-next=hass-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
-from homeassistant.components.voip import HassVoipDatagramProtocol
+from homeassistant.components.voip import DOMAIN, HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
@@ -844,3 +844,100 @@ async def test_pipeline_error(
 
         assert sum(played_audio_bytes) > 0
         assert played_audio_bytes == snapshot()
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_announce(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+) -> None:
+    """Test announcement."""
+    assert await async_setup_component(hass, "voip", {})
+
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    assert isinstance(satellite, VoipAssistSatellite)
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but "outgoing_call" is not async
+    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol.outgoing_call = Mock()
+
+    with (
+        patch(
+            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
+        ) as mock_send_tts,
+    ):
+        satellite.transport = Mock()
+        announce_task = hass.async_create_background_task(
+            satellite.async_announce(announcement), "voip_announce"
+        )
+        await asyncio.sleep(0)
+        mock_protocol.outgoing_call.assert_called_once()
+
+        # Trigger announcement
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await announce_task
+
+        mock_send_tts.assert_called_once_with(_MEDIA_ID, wait_for_tone=False)
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_voip_id_is_ip_address(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+) -> None:
+    """Test announcement when VoIP is an IP address instead of a SIP header."""
+    assert await async_setup_component(hass, "voip", {})
+
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    assert isinstance(satellite, VoipAssistSatellite)
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but "outgoing_call" is not async
+    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol.outgoing_call = Mock()
+
+    with (
+        patch.object(voip_device, "voip_id", "192.168.68.10"),
+        patch(
+            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
+        ) as mock_send_tts,
+    ):
+        satellite.transport = Mock()
+        announce_task = hass.async_create_background_task(
+            satellite.async_announce(announcement), "voip_announce"
+        )
+        await asyncio.sleep(0)
+        mock_protocol.outgoing_call.assert_called_once()
+        assert (
+            mock_protocol.outgoing_call.call_args.kwargs["destination"].host
+            == "192.168.68.10"
+        )
+
+        # Trigger announcement
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await announce_task
+
+        mock_send_tts.assert_called_once_with(_MEDIA_ID, wait_for_tone=False)

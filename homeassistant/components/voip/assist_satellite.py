@@ -206,6 +206,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         await self._announcement_done.wait()
 
     async def _check_announcement_ended(self) -> None:
+        """Continuously checks if an audio chunk was received within a time limit.
+
+        If not, the caller is presumed to have hung up and the announcement is ended.
+        """
         while self._announcement is not None:
             if (self._last_chunk_time is not None) and (
                 (time.monotonic() - self._last_chunk_time) > _ANNOUNCEMENT_HANGUP_SEC
@@ -262,6 +266,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             )
 
     async def _run_pipeline(self) -> None:
+        """Run a pipeline with STT input and TTS output."""
         _LOGGER.debug("Starting pipeline")
 
         self.async_set_context(Context(user_id=self.config_entry.data["user"]))
@@ -306,6 +311,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     async def _play_announcement(
         self, announcement: AssistSatelliteAnnouncement
     ) -> None:
+        """Play an announcement once."""
         _LOGGER.debug("Playing announcement")
 
         try:
