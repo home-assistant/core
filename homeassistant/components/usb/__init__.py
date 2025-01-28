@@ -427,11 +427,13 @@ class USBDiscovery:
 
     async def _async_process_ports(self, ports: Sequence[ListPortInfo]) -> None:
         """Process each discovered port."""
+        _LOGGER.debug("Processing ports: %r", ports)
         usb_devices = {
             usb_device_from_port(port)
             for port in ports
             if port.vid is not None or port.pid is not None
         }
+        _LOGGER.debug("USB devices: %r", usb_devices)
 
         # CP2102N chips create *two* serial ports on macOS: `/dev/cu.usbserial-` and
         # `/dev/cu.SLAB_USBtoUART*`. The former does not work and we should ignore them.
