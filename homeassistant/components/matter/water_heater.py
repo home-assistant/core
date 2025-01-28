@@ -10,7 +10,6 @@ from matter_server.client.models import device_types
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
-    STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
@@ -21,7 +20,6 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_WHOLE,
     STATE_OFF,
-    STATE_ON,
     Platform,
     UnitOfTemperature,
 )
