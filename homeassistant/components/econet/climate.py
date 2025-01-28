@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 from pyeconet.equipment.thermostat import ThermostatFanMode, ThermostatOperationMode
 
 from homeassistant.components.climate import (
@@ -71,7 +71,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     _attr_should_poll = True
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, thermostat):
+    def __init__(self, thermostat: Equipment) -> None:
         """Initialize."""
         super().__init__(thermostat)
         self._attr_hvac_modes = []

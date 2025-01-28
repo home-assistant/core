@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 from pyeconet.equipment.thermostat import ThermostatOperationMode
 
 from homeassistant.components.switch import SwitchEntity
@@ -34,7 +34,7 @@ async def async_setup_entry(
 class EcoNetSwitchAuxHeatOnly(EcoNetEntity, SwitchEntity):
     """Representation of a aux_heat_only EcoNet switch."""
 
-    def __init__(self, thermostat) -> None:
+    def __init__(self, thermostat: Equipment) -> None:
         """Initialize EcoNet ventilator platform."""
         super().__init__(thermostat)
         self._attr_name = f"{thermostat.device_name} emergency heat"

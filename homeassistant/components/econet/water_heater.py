@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 from pyeconet.equipment.water_heater import WaterHeaterOperationMode
 
 from homeassistant.components.water_heater import (
@@ -67,7 +67,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
     _attr_should_poll = True  # Override False default from EcoNetEntity
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, water_heater):
+    def __init__(self, water_heater: Equipment) -> None:
         """Initialize."""
         super().__init__(water_heater)
         self.water_heater = water_heater
