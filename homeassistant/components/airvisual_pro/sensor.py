@@ -50,7 +50,7 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda settings, status, measurements, history: int(
             history.get(
-                f'Outdoor {"AQI(US)" if settings["is_aqi_usa"] else "AQI(CN)"}', -1
+                f"Outdoor {'AQI(US)' if settings['is_aqi_usa'] else 'AQI(CN)'}", -1
             )
         ),
         translation_key="outdoor_air_quality_index",

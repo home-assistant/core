@@ -8,15 +8,11 @@ from typing import Any
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_RETURNING,
     StateVacuumEntity,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_IDLE, STATE_PAUSED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -39,16 +35,16 @@ SUPPORT_IROBOT = (
 )
 
 STATE_MAP = {
-    "": STATE_IDLE,
-    "charge": STATE_DOCKED,
-    "evac": STATE_RETURNING,  # Emptying at cleanbase
-    "hmMidMsn": STATE_CLEANING,  # Recharging at the middle of a cycle
-    "hmPostMsn": STATE_RETURNING,  # Cycle finished
-    "hmUsrDock": STATE_RETURNING,
-    "pause": STATE_PAUSED,
-    "run": STATE_CLEANING,
-    "stop": STATE_IDLE,
-    "stuck": STATE_ERROR,
+    "": VacuumActivity.IDLE,
+    "charge": VacuumActivity.DOCKED,
+    "evac": VacuumActivity.RETURNING,  # Emptying at cleanbase
+    "hmMidMsn": VacuumActivity.CLEANING,  # Recharging at the middle of a cycle
+    "hmPostMsn": VacuumActivity.RETURNING,  # Cycle finished
+    "hmUsrDock": VacuumActivity.RETURNING,
+    "pause": VacuumActivity.PAUSED,
+    "run": VacuumActivity.CLEANING,
+    "stop": VacuumActivity.IDLE,
+    "stuck": VacuumActivity.ERROR,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -130,7 +126,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         self._cap_position = self.vacuum_state.get("cap", {}).get("pose") == 1
 
     @property
-    def _robot_state(self):
+    def activity(self):
         """Return the state of the vacuum cleaner."""
         clean_mission_status = self.vacuum_state.get("cleanMissionStatus", {})
         cycle = clean_mission_status.get("cycle")
@@ -138,15 +134,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
         try:
             state = STATE_MAP[phase]
         except KeyError:
-            return STATE_ERROR
-        if cycle != "none" and state in (STATE_IDLE, STATE_DOCKED):
-            state = STATE_PAUSED
+            return VacuumActivity.ERROR
+        if cycle != "none" and state in (VacuumActivity.IDLE, VacuumActivity.DOCKED):
+            state = VacuumActivity.PAUSED
         return state
-
-    @property
-    def state(self) -> str:
-        """Return the state of the vacuum cleaner."""
-        return self._robot_state
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -164,7 +155,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumActivity.CLEANING:
             # Get clean mission status
             (
                 state_attrs[ATTR_CLEANING_TIME],
@@ -218,7 +209,7 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
-        if self.state == STATE_PAUSED:
+        if self.state == VacuumActivity.PAUSED:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "resume")
         else:
             await self.hass.async_add_executor_job(self.vacuum.send_command, "start")
@@ -233,10 +224,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
 
     async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumActivity.CLEANING:
             await self.async_pause()
             for _ in range(10):
-                if self.state == STATE_PAUSED:
+                if self.state == VacuumActivity.PAUSED:
                     break
                 await asyncio.sleep(1)
         await self.hass.async_add_executor_job(self.vacuum.send_command, "dock")

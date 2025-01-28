@@ -205,7 +205,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
     _attr_should_poll = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -269,6 +268,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         else:
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets
+        self._presets_inv = {v: k for k, v in presets.items()}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -422,6 +422,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        self._attr_preset_mode = self._presets_inv.get(temperature, PRESET_NONE)
         self._target_temp = temperature
         await self._async_control_heating(force=True)
         self.async_write_ha_state()

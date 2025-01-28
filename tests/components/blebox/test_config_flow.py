@@ -7,12 +7,12 @@ import blebox_uniapi
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.blebox import config_flow
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_config, mock_feature, mock_only_feature, setup_product_mock
@@ -227,7 +227,7 @@ async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("172.100.123.4"),
             ip_addresses=[ip_address("172.100.123.4")],
             port=80,
@@ -267,7 +267,7 @@ async def test_flow_with_zeroconf_when_already_configured(hass: HomeAssistant) -
         result2 = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("172.100.123.4"),
                 ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
@@ -291,7 +291,7 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("172.100.123.4"),
                 ip_addresses=[ip_address("172.100.123.4")],
                 port=80,
@@ -317,7 +317,7 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("172.100.123.4"),
                 ip_addresses=[ip_address("172.100.123.4")],
                 port=80,

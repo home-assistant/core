@@ -10,7 +10,7 @@ import pytest
 from homeassistant.components import sun
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 

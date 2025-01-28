@@ -22,6 +22,7 @@ from .const import (
     BSH_ACTIVE_PROGRAM,
     BSH_SELECTED_PROGRAM,
     DOMAIN,
+    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
 )
 from .entity import HomeConnectEntity
 
@@ -219,7 +220,7 @@ async def async_setup_entry(
                 with contextlib.suppress(HomeConnectError):
                     programs = device.appliance.get_programs_available()
                     if programs:
-                        for program in programs:
+                        for program in programs.copy():
                             if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
                                 programs.remove(program)
                                 if program not in programs_not_found:
@@ -294,7 +295,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 translation_key=translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    "program": bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: bsh_key,
                 },
             ) from err
         self.async_entity_update()

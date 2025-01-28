@@ -24,14 +24,14 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 1
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 12, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
 REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 0)
 # Truthy date string triggers showing related deprecation warning messages.
-REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = "2025.2"
+REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
@@ -589,6 +589,7 @@ class UnitOfApparentPower(StrEnum):
 class UnitOfPower(StrEnum):
     """Power units."""
 
+    MILLIWATT = "mW"
     WATT = "W"
     KILO_WATT = "kW"
     MEGA_WATT = "MW"
@@ -619,6 +620,7 @@ class UnitOfEnergy(StrEnum):
     KILO_JOULE = "kJ"
     MEGA_JOULE = "MJ"
     GIGA_JOULE = "GJ"
+    MILLIWATT_HOUR = "mWh"
     WATT_HOUR = "Wh"
     KILO_WATT_HOUR = "kWh"
     MEGA_WATT_HOUR = "MWh"
@@ -645,6 +647,8 @@ class UnitOfElectricPotential(StrEnum):
     MICROVOLT = "µV"
     MILLIVOLT = "mV"
     VOLT = "V"
+    KILOVOLT = "kV"
+    MEGAVOLT = "MV"
 
 
 # Degree units
