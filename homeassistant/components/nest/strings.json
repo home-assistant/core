@@ -108,5 +108,17 @@
         }
       }
     }
+  },
+  "selector": {
+    "topic_name": {
+      "options": {
+        "create_new_topic": "Create new topic"
+      }
+    },
+    "subscription_name": {
+      "options": {
+        "create_new_subscription": "Create new subscription"
+      }
+    }
   }
 }

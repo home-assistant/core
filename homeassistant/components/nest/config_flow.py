@@ -26,6 +26,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.util import get_random_string
 
 from . import api
@@ -287,17 +292,23 @@ class NestFlowHandler(
         except ApiException as err:
             _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
             return self.async_abort(reason="pubsub_api_error")
-
-        topics = {topic_name: topic_name for topic_name in eligible_topics.topic_names}
-        topics[CREATE_NEW_TOPIC_KEY] = "Create New"
-
+        topics = [
+            *eligible_topics.topic_names,  # Untranslated topic paths
+            CREATE_NEW_TOPIC_KEY,
+        ]
         return self.async_show_form(
             step_id="pubsub_topic",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_TOPIC_NAME, default=next(iter(topics))): vol.In(
-                        topics
-                    ),
+                    vol.Required(
+                        CONF_TOPIC_NAME, default=next(iter(topics))
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            translation_key="topic_name",
+                            mode=SelectSelectorMode.LIST,
+                            options=topics,
+                        )
+                    )
                 }
             ),
             description_placeholders={
@@ -376,7 +387,7 @@ class NestFlowHandler(
                     )
                 return await self._async_finish()
 
-        subscriptions = {}
+        subscriptions = []
         try:
             eligible_subscriptions = (
                 await self._admin_client.list_eligible_subscriptions(
@@ -389,10 +400,8 @@ class NestFlowHandler(
             )
             errors["base"] = "pubsub_api_error"
         else:
-            subscriptions.update(
-                {name: name for name in eligible_subscriptions.subscription_names}
-            )
-        subscriptions[CREATE_NEW_SUBSCRIPTION_KEY] = "Create New"
+            subscriptions.extend(eligible_subscriptions.subscription_names)
+        subscriptions.append(CREATE_NEW_SUBSCRIPTION_KEY)
         return self.async_show_form(
             step_id="pubsub_subscription",
             data_schema=vol.Schema(
@@ -400,7 +409,13 @@ class NestFlowHandler(
                     vol.Optional(
                         CONF_SUBSCRIPTION_NAME,
                         default=next(iter(subscriptions)),
-                    ): vol.In(subscriptions),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            translation_key="subscription_name",
+                            mode=SelectSelectorMode.LIST,
+                            options=subscriptions,
+                        )
+                    )
                 }
             ),
             description_placeholders={
