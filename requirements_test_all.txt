@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==28.0.1
+aioesphomeapi==29.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -521,8 +521,10 @@ beautifulsoup4==4.12.3
 bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
-# homeassistant.components.esphome
 bleak-esphome==2.1.1
+
+# homeassistant.components.esphome
+bleak-esphome==2.2.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.8.0
