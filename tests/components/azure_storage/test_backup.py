@@ -52,8 +52,11 @@ async def test_agents_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [
-            {"agent_id": "backup.local"},
-            {"agent_id": f"{DOMAIN}.{mock_config_entry.title}"},
+            {"agent_id": "backup.local", "name": "local"},
+            {
+                "agent_id": f"{DOMAIN}.{mock_config_entry.entry_id}",
+                "name": "account-container1",
+            },
         ],
     }
 
@@ -83,7 +86,7 @@ async def test_agents_list_backups(
             "name": "Core 2024.12.0.dev0",
             "protected": False,
             "size": 34519040,
-            "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+            "agent_ids": [f"{DOMAIN}.{mock_config_entry.entry_id}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -115,7 +118,7 @@ async def test_agents_get_backup(
         "name": "Core 2024.12.0.dev0",
         "protected": False,
         "size": 34519040,
-        "agent_ids": [f"{DOMAIN}.{mock_config_entry.title}"],
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.entry_id}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
@@ -181,7 +184,7 @@ async def test_agents_upload(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = TEST_BACKUP
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.title}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
             data={"file": StringIO("test")},
         )
 
@@ -205,7 +208,7 @@ async def test_agents_download(
     backup_id = BACKUP_METADATA["backup_id"]
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.title}"
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
@@ -234,6 +237,6 @@ async def test_error_during_delete(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.title}": "Error during backup operation"
+            f"{DOMAIN}.{mock_config_entry.entry_id}": "Error during backup operation"
         }
     }

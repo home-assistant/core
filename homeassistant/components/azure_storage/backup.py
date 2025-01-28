@@ -10,6 +10,7 @@ import logging
 from typing import Any, Concatenate
 
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
+from slugify import slugify
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -81,7 +82,8 @@ class AzureStorageBackupAgent(BackupAgent):
         """Initialize the Azure storage backup agent."""
         super().__init__()
         self._client = entry.runtime_data
-        self.name = entry.title
+        self.name = slugify(entry.title)
+        self.unique_id = entry.entry_id
 
     @handle_backup_errors
     async def async_download_backup(
