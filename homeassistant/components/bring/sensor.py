@@ -65,7 +65,7 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
         translation_key=BringSensor.LIST_LANGUAGE,
         value_fn=(
             lambda lst, settings: x.lower()
-            if (x := list_language(lst["listUuid"], settings))
+            if (x := list_language(lst.lst.listUuid, settings))
             else None
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -75,7 +75,7 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
     BringSensorEntityDescription(
         key=BringSensor.LIST_ACCESS,
         translation_key=BringSensor.LIST_ACCESS,
-        value_fn=lambda lst, _: lst["status"].lower(),
+        value_fn=lambda lst, _: lst.content.status.value.lower(),
         entity_category=EntityCategory.DIAGNOSTIC,
         options=["registered", "shared", "invitation"],
         device_class=SensorDeviceClass.ENUM,

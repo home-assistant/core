@@ -16,7 +16,9 @@ from kasa import (
     ThermostatState,
 )
 from kasa.interfaces import Fan, Light, LightEffect, LightState, Thermostat
+from kasa.smart.modules import Speaker
 from kasa.smart.modules.alarm import Alarm
+from kasa.smart.modules.clean import Clean, ErrorCode, Status
 from kasa.smartcam.modules.camera import LOCAL_STREAMING_PORT, Camera
 from syrupy import SnapshotAssertion
 
@@ -195,16 +197,33 @@ def _mocked_device(
         )
     device.features = device_features
 
-    # Add modules after features so modules can add required features
+    # Add modules after features so modules can add any required features
     if modules:
         device.modules = {
             module_name: MODULE_TO_MOCK_GEN[module_name](device)
             for module_name in modules
         }
 
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always so accept overrides.
+    module_features = {
+        mod_key if (mod_key := v.expected_module_key) else k: v
+        for k, v in device_features.items()
+    }
     for mod in device.modules.values():
-        mod.get_feature.side_effect = device_features.get
-        mod.has_feature.side_effect = lambda id: id in device_features
+        # Some tests remove the feature from device_features to test missing
+        # features, so check the key is still present there.
+        mod.get_feature.side_effect = (
+            lambda mod_id: mod_feat
+            if (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+            else None
+        )
+        mod.has_feature.side_effect = (
+            lambda mod_id: (mod_feat := module_features.get(mod_id))
+            and mod_feat.id in device_features
+        )
 
     device.parent = None
     device.children = []
@@ -243,6 +262,7 @@ def _mocked_feature(
     unit=None,
     minimum_value=None,
     maximum_value=None,
+    expected_module_key=None,
 ) -> Feature:
     """Get a mocked feature.
 
@@ -283,6 +303,16 @@ def _mocked_feature(
 
     # select
     feature.choices = choices or fixture.get("choices")
+
+    # module features are accessed from a module via get_feature which is
+    # keyed on the module attribute name. Usually this is the same as the
+    # feature.id but not always. module_key indicates the key of the feature
+    # in the module.
+    feature.expected_module_key = (
+        mod_key
+        if (mod_key := fixture.get("expected_module_key", expected_module_key))
+        else None
+    )
 
     return feature
 
@@ -400,6 +430,43 @@ def _mocked_thermostat_module(device):
     return therm
 
 
+def _mocked_clean_module(device):
+    clean = MagicMock(auto_spec=Clean, name="Mocked clean")
+
+    # methods
+    clean.start = AsyncMock()
+    clean.pause = AsyncMock()
+    clean.resume = AsyncMock()
+    clean.return_home = AsyncMock()
+    clean.set_fan_speed_preset = AsyncMock()
+
+    # properties
+    clean.fan_speed_preset = "Max"
+    clean.error = ErrorCode.Ok
+    clean.battery = 100
+    clean.status = Status.Charged
+
+    # Need to manually create the fan speed preset feature,
+    # as we are going to read its choices through it
+    device.features["vacuum_fan_speed"] = _mocked_feature(
+        "vacuum_fan_speed",
+        type_=Feature.Type.Choice,
+        category=Feature.Category.Config,
+        choices=["Quiet", "Max"],
+        value="Max",
+        expected_module_key="fan_speed_preset",
+    )
+
+    return clean
+
+
+def _mocked_speaker_module(device):
+    speaker = MagicMock(auto_spec=Speaker, name="Mocked speaker")
+    speaker.locate = AsyncMock()
+
+    return speaker
+
+
 def _mocked_strip_children(features=None, alias=None) -> list[Device]:
     plug0 = _mocked_device(
         alias="Plug0" if alias is None else alias,
@@ -469,6 +536,8 @@ MODULE_TO_MOCK_GEN = {
     Module.Alarm: _mocked_alarm_module,
     Module.Camera: _mocked_camera_module,
     Module.Thermostat: _mocked_thermostat_module,
+    Module.Clean: _mocked_clean_module,
+    Module.Speaker: _mocked_speaker_module,
 }
 
 

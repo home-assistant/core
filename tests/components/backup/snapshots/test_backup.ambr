@@ -39,6 +39,7 @@
       'agents': list([
         dict({
           'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
@@ -97,6 +98,7 @@
       'agents': list([
         dict({
           'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
@@ -128,6 +130,7 @@
       'agents': list([
         dict({
           'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
@@ -159,6 +162,7 @@
       'agents': list([
         dict({
           'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
@@ -190,6 +194,7 @@
       'agents': list([
         dict({
           'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
