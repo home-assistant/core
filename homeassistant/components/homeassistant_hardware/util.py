@@ -149,11 +149,8 @@ async def guess_hardware_owners(
     """Guess the firmware info based on installed addons and other integrations."""
     device_guesses: defaultdict[str, list[FirmwareInfo]] = defaultdict(list)
 
-    async for _config_entry, firmware_info in hass.data[
-        DATA_COMPONENT
-    ].iter_firmware_info():
-        if firmware_info is not None:
-            device_guesses[firmware_info.device].append(firmware_info)
+    async for firmware_info in hass.data[DATA_COMPONENT].iter_firmware_info():
+        device_guesses[firmware_info.device].append(firmware_info)
 
     # It may be possible for the OTBR addon to be present without the integration
     if is_hassio(hass):

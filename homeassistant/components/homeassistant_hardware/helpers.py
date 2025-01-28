@@ -79,9 +79,7 @@ class HardwareInfoDispatcher:
             "Received firmware info notification from %r: %s", domain, firmware_info
         )
 
-    async def iter_firmware_info(
-        self,
-    ) -> AsyncIterator[tuple[ConfigEntry, FirmwareInfo | None]]:
+    async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""
         for domain, fw_info_module in self._providers.items():
             for config_entry in self.hass.config_entries.async_entries(domain):
@@ -92,7 +90,8 @@ class HardwareInfoDispatcher:
                         self.hass, config_entry
                     )
 
-                yield config_entry, fw_info
+                if fw_info is not None:
+                    yield fw_info
 
 
 @callback
