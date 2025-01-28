@@ -1,6 +1,6 @@
 """Test homee covers."""
 
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
 from homeassistant.const import (
@@ -11,19 +11,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from . import build_mock_node, setup_integration
 
 from tests.common import MockConfigEntry
 
 
 async def test_open_cover(
     hass: HomeAssistant,
-    cover: AsyncMock,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test opening the cover."""
-    mock_homee.nodes = [cover]
+    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
 
     await setup_integration(hass, mock_config_entry)
 
@@ -33,17 +32,16 @@ async def test_open_cover(
         {ATTR_ENTITY_ID: "cover.test_cover"},
         blocking=True,
     )
-    mock_homee.set_value.assert_called_once_with(cover.id, 1, 0)
+    mock_homee.set_value.assert_called_once_with(mock_homee.nodes[0].id, 1, 0)
 
 
 async def test_close_cover(
     hass: HomeAssistant,
-    cover: AsyncMock,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test opening the cover."""
-    mock_homee.nodes = [cover]
+    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
 
     await setup_integration(hass, mock_config_entry)
 
@@ -54,17 +52,16 @@ async def test_close_cover(
         blocking=True,
     )
 
-    mock_homee.set_value.assert_called_once_with(cover.id, 1, 1)
+    mock_homee.set_value.assert_called_once_with(mock_homee.nodes[0].id, 1, 1)
 
 
 async def test_stop_cover(
     hass: HomeAssistant,
-    cover: AsyncMock,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test opening the cover."""
-    mock_homee.nodes = [cover]
+    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
 
     await setup_integration(hass, mock_config_entry)
 
@@ -75,18 +72,19 @@ async def test_stop_cover(
         blocking=True,
     )
 
-    mock_homee.set_value.assert_called_once_with(cover.id, 1, 2)
+    mock_homee.set_value.assert_called_once_with(mock_homee.nodes[0].id, 1, 2)
 
 
 async def test_cover_positions(
     hass: HomeAssistant,
-    cover: AsyncMock,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test an open cover."""
     # Cover open, tilt open.
-    mock_homee.nodes = [cover]
+    # mock_homee.nodes = [cover]
+    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    cover = mock_homee.nodes[0]
 
     await setup_integration(hass, mock_config_entry)
 
