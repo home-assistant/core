@@ -72,6 +72,9 @@ OPERATIONAL_STATE_MAP = {
     clusters.OperationalState.Enums.OperationalStateEnum.kRunning: "running",
     clusters.OperationalState.Enums.OperationalStateEnum.kPaused: "paused",
     clusters.OperationalState.Enums.OperationalStateEnum.kError: "error",
+    clusters.RvcOperationalState.Enums.OperationalStateEnum.kSeekingCharger: "seeking_charger",
+    clusters.RvcOperationalState.Enums.OperationalStateEnum.kCharging: "charging",
+    clusters.RvcOperationalState.Enums.OperationalStateEnum.kDocked: "docked",
 }
 
 
@@ -96,6 +99,18 @@ class MatterListSensorEntityDescription(MatterSensorEntityDescription):
 
     # list attribute: the attribute descriptor to get the list of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterOperationalStateSensorEntityDescription(MatterSensorEntityDescription):
+    """Describe Matter sensor entities from Matter OperationalState objects."""
+
+    # list attribute: the attribute descriptor to get the list of values (= list of structs)
+    # needs to be set for handling OperationalState not on the OperationalState cluster, but
+    # on one of its derived clusters (e.g. RvcOperationalState)
+    state_list_attribute: type[ClusterAttributeDescriptor] = (
+        clusters.OperationalState.Attributes.OperationalStateList
+    )
 
 
 class MatterSensor(MatterEntity, SensorEntity):
@@ -147,6 +162,7 @@ class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
 class MatterOperationalStateSensor(MatterSensor):
     """Representation of a sensor for Matter Operational State."""
 
+    entity_description: MatterOperationalStateSensorEntityDescription
     states_map: dict[int, str]
 
     @callback
@@ -157,10 +173,11 @@ class MatterOperationalStateSensor(MatterSensor):
         # therefore it is not possible to provide a fixed list of options
         # or to provide a mapping to a translateable string for all options
         operational_state_list = self.get_matter_attribute_value(
-            clusters.OperationalState.Attributes.OperationalStateList
+            self.entity_description.state_list_attribute
         )
         if TYPE_CHECKING:
             operational_state_list = cast(
+                # cast to the generic OperationalStateStruct type just to help typing
                 list[clusters.OperationalState.Structs.OperationalStateStruct],
                 operational_state_list,
             )
@@ -782,7 +799,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
-        entity_description=MatterSensorEntityDescription(
+        entity_description=MatterOperationalStateSensorEntityDescription(
             key="OperationalState",
             device_class=SensorDeviceClass.ENUM,
             translation_key="operational_state",
@@ -819,5 +836,34 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
         device_type=(device_types.Thermostat,),
         allow_multi=True,  # also used for climate entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterOperationalStateSensorEntityDescription(
+            key="RvcOperationalState",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="operational_state",
+            state_list_attribute=clusters.RvcOperationalState.Attributes.OperationalStateList,
+        ),
+        entity_class=MatterOperationalStateSensor,
+        required_attributes=(
+            clusters.RvcOperationalState.Attributes.OperationalState,
+            clusters.RvcOperationalState.Attributes.OperationalStateList,
+        ),
+        allow_multi=True,  # also used for vacuum entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterOperationalStateSensorEntityDescription(
+            key="OvenCavityOperationalState",
+            device_class=SensorDeviceClass.ENUM,
+            translation_key="operational_state",
+            state_list_attribute=clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
+        ),
+        entity_class=MatterOperationalStateSensor,
+        required_attributes=(
+            clusters.OvenCavityOperationalState.Attributes.OperationalState,
+            clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
+        ),
     ),
 ]
