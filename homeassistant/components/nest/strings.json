@@ -17,7 +17,7 @@
       },
       "device_project": {
         "title": "Nest: Create a Device Access Project",
-        "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Select on **Create project**\n1. Give your Device Access project a name and select **Next**.\n1. Enter your OAuth Client ID\n1. Skip enabling events for now and click **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).",
+        "description": "Create a Nest Device Access project which **requires paying Google a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Select on **Create project**\n1. Give your Device Access project a name and select **Next**.\n1. Enter your OAuth Client ID\n1. Skip enabling events for now and select **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).",
         "data": {
           "project_id": "Device Access Project ID"
         }
@@ -33,7 +33,7 @@
         }
       },
       "pubsub_topic_confirm": {
-        "title": "Enable Events",
+        "title": "Enable events",
         "description": "The Nest Device Access Console needs to be configured to publish device events to your Pub/Sub topic.\n\n1. Visit the [Device Access Console]({device_access_console_url}).\n2. Open the project.\n3. Enable *Events* and set the Pub/Sub topic name to `{topic_name}`\n4. Click *Add & Validate* to verify the topic is configured correctly.\n\nSee the integration documentation for [more info]({more_info_url}).",
         "submit": "Confirm"
       },
