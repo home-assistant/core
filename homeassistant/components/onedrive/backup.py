@@ -32,7 +32,6 @@ from msgraph.generated.models.drive_item_uploadable_properties import (
     DriveItemUploadableProperties,
 )
 from msgraph_core.models import LargeFileUploadSession
-from slugify import slugify
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -119,7 +118,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._entry = entry
         self._items = entry.runtime_data.items
         self._folder_id = entry.runtime_data.backup_folder_id
-        self.name = slugify(entry.title)
+        self.name = entry.title
         assert entry.unique_id
         self.unique_id = entry.unique_id
 

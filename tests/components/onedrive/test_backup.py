@@ -59,7 +59,7 @@ async def test_agents_info(
             {"agent_id": "backup.local", "name": "local"},
             {
                 "agent_id": f"{DOMAIN}.{mock_config_entry.unique_id}",
-                "name": "john-doe-s-onedrive",
+                "name": mock_config_entry.title,
             },
         ],
     }
