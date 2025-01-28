@@ -5,7 +5,7 @@ rules:
     status: done
     comment: Integration is a local push integration
   brands: done
-  common-modules: todo
+  common-modules: done
   config-flow-test-coverage: done
   config-flow:
     status: done
@@ -37,7 +37,7 @@ rules:
     comment: 99% test coverage
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: todo
     comment: Explore if this is possible.

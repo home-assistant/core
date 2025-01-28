@@ -146,7 +146,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "cloud.cloud"}],
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": "cloud.cloud", "name": "cloud"},
+        ],
     }
 
 

@@ -7,7 +7,6 @@ from typing import Any, cast
 
 from kasa import Device, Feature, Module
 from kasa.smart.modules.clean import Clean, Status
-from kasa.smart.modules.speaker import Speaker
 
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -53,8 +52,7 @@ class TPLinkVacuumEntityDescription(
 
 VACUUM_DESCRIPTIONS: tuple[TPLinkVacuumEntityDescription, ...] = (
     TPLinkVacuumEntityDescription(
-        key="vacuum",
-        exists_fn=lambda dev, _: Module.Clean in dev.modules,
+        key="vacuum", exists_fn=lambda dev, _: Module.Clean in dev.modules
     ),
 )
 
@@ -100,7 +98,6 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.LOCATE
     )
 
     entity_description: TPLinkVacuumEntityDescription
@@ -116,7 +113,10 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
         """Initialize the vacuum entity."""
         super().__init__(device, coordinator, description, parent=parent)
         self._vacuum_module: Clean = device.modules[Module.Clean]
-        self._speaker_module: Speaker = device.modules[Module.Speaker]
+        if speaker := device.modules.get(Module.Speaker):
+            self._speaker_module = speaker
+            self._attr_supported_features |= VacuumEntityFeature.LOCATE
+
         # Needs to be initialized empty, as vacuumentity's capability_attributes accesses it
         self._attr_fan_speed_list: list[str] = []
 
