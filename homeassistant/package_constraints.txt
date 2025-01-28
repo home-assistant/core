@@ -8,6 +8,7 @@ aiohttp-asyncmdnsresolver==0.0.1
 aiohttp-fast-zlib==0.2.0
 aiohttp==3.11.11
 aiohttp_cors==0.7.0
+aiousbwatcher==1.1.1
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
@@ -57,10 +58,9 @@ pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.7.5
-pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
-securetar==2025.1.3
+securetar==2025.1.4
 SQLAlchemy==2.0.36
 standard-aifc==3.13.0;python_version>='3.13'
 standard-telnetlib==3.13.0;python_version>='3.13'
