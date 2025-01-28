@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
-from kasa import Device, Feature, Module
+from kasa import Device, Module
 from kasa.smart.modules.clean import Clean, Status
 
 from homeassistant.components.vacuum import (
@@ -52,7 +52,10 @@ class TPLinkVacuumEntityDescription(
 
 VACUUM_DESCRIPTIONS: tuple[TPLinkVacuumEntityDescription, ...] = (
     TPLinkVacuumEntityDescription(
-        key="vacuum", exists_fn=lambda dev, _: Module.Clean in dev.modules
+        key="vacuum",
+        translation_key="vacuum",
+        exists_fn=lambda dev, _: Module.Clean in dev.modules,
+        entity_name_fn=lambda _, __: None,
     ),
 )
 
@@ -97,7 +100,6 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
         | VacuumEntityFeature.START
         | VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.FAN_SPEED
     )
 
     entity_description: TPLinkVacuumEntityDescription
@@ -117,8 +119,11 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
             self._speaker_module = speaker
             self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
-        # Needs to be initialized empty, as vacuumentity's capability_attributes accesses it
-        self._attr_fan_speed_list: list[str] = []
+        if (
+            fanspeed_feat := self._vacuum_module.get_feature("fan_speed_preset")
+        ) and fanspeed_feat.choices:
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
+            self._attr_fan_speed_list = [c.lower() for c in fanspeed_feat.choices]
 
     @async_refresh_after
     async def async_start(self) -> None:
@@ -138,7 +143,7 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
     @async_refresh_after
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        await self._vacuum_module.set_fan_speed_preset(fan_speed)
+        await self._vacuum_module.set_fan_speed_preset(fan_speed.capitalize())
 
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the device."""
@@ -152,7 +157,6 @@ class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         self._attr_activity = STATUS_TO_ACTIVITY.get(self._vacuum_module.status)
-        fanspeeds = cast(Feature, self._vacuum_module.get_feature("fan_speed_preset"))
-        self._attr_fan_speed_list = cast(list[str], fanspeeds.choices)
-        self._attr_fan_speed = self._vacuum_module.fan_speed_preset
+        if self._vacuum_module.has_feature("fan_speed_preset"):
+            self._attr_fan_speed = self._vacuum_module.fan_speed_preset.lower()
         return True

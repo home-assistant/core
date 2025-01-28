@@ -248,6 +248,21 @@
       "tilt_step": {
         "name": "Tilt degrees"
       }
+    },
+    "vacuum": {
+      "vacuum": {
+        "state_attributes": {
+          "fan_speed": {
+            "state": {
+              "quiet": "Quiet",
+              "standard": "Standard",
+              "turbo": "Turbo",
+              "max": "Max",
+              "ultra": "Ultra"
+            }
+          }
+        }
+      }
     }
   },
   "device": {
