@@ -664,7 +664,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '200s-humidifier',
+          '200s-humidifier4321',
         ),
       }),
       'is_new': False,
@@ -715,7 +715,7 @@
       'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': '200s-humidifier-humidity',
+      'unique_id': '200s-humidifier4321-humidity',
       'unit_of_measurement': '%',
     }),
   ])
