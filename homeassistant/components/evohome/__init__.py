@@ -111,8 +111,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         config[DOMAIN][CONF_PASSWORD],
         async_get_clientsession(hass),
     )
-    config[DOMAIN][CONF_PASSWORD] = "REDACTED"
-
     coordinator = EvoDataUpdateCoordinator(
         hass,
         _LOGGER,
