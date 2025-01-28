@@ -54,7 +54,8 @@ class TPLinkVacuumEntityDescription(
 VACUUM_DESCRIPTIONS: tuple[TPLinkVacuumEntityDescription, ...] = (
     TPLinkVacuumEntityDescription(
         key="vacuum",
-        exists_fn=lambda dev, _: Module.Clean in dev.modules,
+        exists_fn=lambda dev, _: Module.Clean in dev.modules
+        and Module.Speaker in dev.modules,
     ),
 )
 
