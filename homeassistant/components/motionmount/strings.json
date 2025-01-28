@@ -1,6 +1,6 @@
 {
   "common": {
-    "incorrect_pin": "Pin is not correct"
+    "incorrect_pin": "PIN is not correct"
   },
   "config": {
     "flow_title": "{name}",
@@ -19,21 +19,21 @@
       },
       "auth": {
         "title": "Authenticate to your MotionMount",
-        "description": "Your MotionMount requires a pin to operate.",
+        "description": "Your MotionMount requires a PIN to operate.",
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         }
       },
       "backoff": {
         "title": "Authenticate to your MotionMount",
-        "description": "Too many incorrect pin attempts."
+        "description": "Too many incorrect PIN attempts."
       }
     },
     "error": {
       "pin": "[%key:component::motionmount::common::incorrect_pin%]"
     },
     "progress": {
-      "progress_action": "Too many incorrect pin attempts. Please wait {timeout} s..."
+      "progress_action": "Too many incorrect PIN attempts. Please wait {timeout} s..."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -83,7 +83,7 @@
       "message": "Failed to communicate with MotionMount"
     },
     "no_pin_provided": {
-      "message": "No pin provided"
+      "message": "No PIN provided"
     },
     "incorrect_pin": {
       "message": "[%key:component::motionmount::common::incorrect_pin%]"
