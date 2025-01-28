@@ -189,16 +189,17 @@ class MatterListSensor(MatterSensor):
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
-        list_values = cast(
+        self._attr_options = list_values = cast(
             list[str],
             self.get_matter_attribute_value(self.entity_description.list_attribute),
         )
         current_value: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
         )
-        current_value_str = list_values[current_value]
-        self._attr_options = list_values
-        self._attr_native_value = current_value_str
+        try:
+            self._attr_native_value = list_values[current_value]
+        except IndexError:
+            self._attr_native_value = None
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
