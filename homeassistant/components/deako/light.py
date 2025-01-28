@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydeako.deako import Deako
+from pydeako import Deako
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant

@@ -5,7 +5,6 @@
         "title": "Define your Solar-Log connection",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "The prefix to be used for your Solar-Log sensors",
           "has_password": "I have the password for the Solar-Log user account."
         },
         "data_description": {
@@ -27,6 +26,10 @@
         "data": {
           "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "has_password": "[%key:component::solarlog::config::step::user::data_description::has_password%]",
+          "password": "[%key:component::solarlog::config::step::password::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -34,6 +37,10 @@
         "data": {
           "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "has_password": "[%key:component::solarlog::config::step::user::data_description::has_password%]",
+          "password": "[%key:component::solarlog::config::step::password::data_description::password%]"
         }
       }
     },
@@ -120,6 +127,17 @@
       "usage": {
         "name": "Usage"
       }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error while updating data from the API."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the config entry."
+    },
+    "auth_failed": {
+      "message": "Error while logging in to the API."
     }
   }
 }

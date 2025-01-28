@@ -32,14 +32,10 @@ def disable_security_filter() -> Generator[None]:
 
 
 @pytest.fixture
-def hassio_env() -> Generator[None]:
+def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
     """Fixture to inject hassio env."""
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch(
-            "homeassistant.components.hassio.HassIO.is_connected",
-            return_value={"result": "ok", "data": {}},
-        ),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
         patch(
             "homeassistant.components.hassio.HassIO.get_info",
@@ -77,9 +73,6 @@ def hassio_stubs(
         ),
         patch(
             "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.refresh_updates",
         ),
     ):
         hass.set_state(CoreState.starting)
@@ -144,7 +137,6 @@ def all_setup_requests(
     )
 
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -225,7 +217,6 @@ def all_setup_requests(
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
     )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
 
     addon_installed.return_value.update_available = False
     addon_installed.return_value.version = "1.0.0"

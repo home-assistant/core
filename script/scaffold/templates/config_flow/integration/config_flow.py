@@ -1,4 +1,4 @@
-"""Config flow for NEW_NAME integration."""
+"""Config flow for the NEW_NAME integration."""
 
 from __future__ import annotations
 

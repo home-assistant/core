@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 from unittest.mock import AsyncMock, call
+from uuid import uuid4
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import AddonsOptions
+from aiohasupervisor.models import AddonsOptions, Discovery
 import pytest
 
 from homeassistant.components.hassio.addon_manager import (
@@ -62,7 +63,11 @@ async def test_get_addon_discovery_info(
     addon_manager: AddonManager, get_addon_discovery_info: AsyncMock
 ) -> None:
     """Test get addon discovery info."""
-    get_addon_discovery_info.return_value = {"config": {"test_key": "test"}}
+    get_addon_discovery_info.return_value = [
+        Discovery(
+            addon="test_addon", service="", uuid=uuid4(), config={"test_key": "test"}
+        )
+    ]
 
     assert await addon_manager.async_get_addon_discovery_info() == {"test_key": "test"}
 
@@ -73,8 +78,6 @@ async def test_missing_addon_discovery_info(
     addon_manager: AddonManager, get_addon_discovery_info: AsyncMock
 ) -> None:
     """Test missing addon discovery info."""
-    get_addon_discovery_info.return_value = None
-
     with pytest.raises(AddonError):
         await addon_manager.async_get_addon_discovery_info()
 
@@ -85,7 +88,7 @@ async def test_get_addon_discovery_info_error(
     addon_manager: AddonManager, get_addon_discovery_info: AsyncMock
 ) -> None:
     """Test get addon discovery info raises error."""
-    get_addon_discovery_info.side_effect = HassioAPIError("Boom")
+    get_addon_discovery_info.side_effect = SupervisorError("Boom")
 
     with pytest.raises(AddonError) as err:
         assert await addon_manager.async_get_addon_discovery_info()

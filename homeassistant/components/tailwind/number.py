@@ -15,8 +15,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindEntity
-from .typing import TailwindConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -16,18 +16,9 @@ from homeassistant.const import CONF_CODE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .const import MOCK_CONFIG
 
-MOCK_CONFIG = {
-    "timeout": 6,
-    "email": "test-email",
-    "password": "test-password",
-    "access_token": "ABC",
-    "user_id": "123",
-    "monitor_id": "456",
-    "device_id": "789",
-    "refresh_token": "XYZ",
-}
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="mock_sense")

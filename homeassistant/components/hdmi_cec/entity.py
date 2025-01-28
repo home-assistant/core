@@ -36,7 +36,7 @@ class CecEntity(Entity):
         """Initialize the device."""
         self._device = device
         self._logical_address = logical
-        self.entity_id = "%s.%d" % (DOMAIN, self._logical_address)
+        self.entity_id = f"{DOMAIN}.{self._logical_address}"
         self._set_attr_name()
         self._attr_icon = ICONS_BY_TYPE.get(self._device.type, ICON_UNKNOWN)
 

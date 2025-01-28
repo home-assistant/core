@@ -4,5 +4,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/namecheapdns",
   "iot_class": "cloud_push",
+  "quality_scale": "legacy",
   "requirements": ["defusedxml==0.7.1"]
 }

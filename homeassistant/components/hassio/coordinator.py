@@ -35,6 +35,7 @@ from .const import (
     DATA_ADDONS_CHANGELOGS,
     DATA_ADDONS_INFO,
     DATA_ADDONS_STATS,
+    DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_CORE_STATS,
     DATA_HOST_INFO,
@@ -56,7 +57,7 @@ from .const import (
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
-from .handler import HassIO, HassioAPIError, get_supervisor_client
+from .handler import HassioAPIError, get_supervisor_client
 
 if TYPE_CHECKING:
     from .issues import SupervisorIssues
@@ -310,7 +311,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self.hassio: HassIO = hass.data[DOMAIN]
+        self.hassio = hass.data[DATA_COMPONENT]
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg
@@ -318,7 +319,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         self._container_updates: defaultdict[str, dict[str, set[str]]] = defaultdict(
             lambda: defaultdict(set)
         )
-        self._supervisor_client = get_supervisor_client(hass)
+        self.supervisor_client = get_supervisor_client(hass)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
@@ -503,7 +504,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_stats(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Update single addon stats."""
         try:
-            stats = await self._supervisor_client.addons.addon_stats(slug)
+            stats = await self.supervisor_client.addons.addon_stats(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch stats for %s: %s", slug, err)
             return (slug, None)
@@ -512,7 +513,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_changelog(self, slug: str) -> tuple[str, str | None]:
         """Return the changelog for an add-on."""
         try:
-            changelog = await self._supervisor_client.store.addon_changelog(slug)
+            changelog = await self.supervisor_client.store.addon_changelog(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch changelog for %s: %s", slug, err)
             return (slug, None)
@@ -521,7 +522,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     async def _update_addon_info(self, slug: str) -> tuple[str, dict[str, Any] | None]:
         """Return the info for an add-on."""
         try:
-            info = await self._supervisor_client.addons.addon_info(slug)
+            info = await self.supervisor_client.addons.addon_info(slug)
         except SupervisorError as err:
             _LOGGER.warning("Could not fetch info for %s: %s", slug, err)
             return (slug, None)
@@ -563,8 +564,8 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
             # updates if this is not a scheduled refresh and
             # we are not doing the first refresh.
             try:
-                await self.hassio.refresh_updates()
-            except HassioAPIError as err:
+                await self.supervisor_client.refresh_updates()
+            except SupervisorError as err:
                 _LOGGER.warning("Error on Supervisor API: %s", err)
 
         await super()._async_refresh(

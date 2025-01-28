@@ -27,9 +27,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AemetConfigEntry
 from .const import CONDITIONS_MAP
-from .coordinator import WeatherUpdateCoordinator
+from .coordinator import AemetConfigEntry, WeatherUpdateCoordinator
 from .entity import AemetEntity
 
 

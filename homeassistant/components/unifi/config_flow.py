@@ -18,10 +18,8 @@ from urllib.parse import urlparse
 from aiounifi.interfaces.sites import Sites
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -37,6 +35,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_DESCRIPTION,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from . import UnifiConfigEntry
 from .const import (
@@ -79,7 +82,7 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: UnifiConfigEntry,
     ) -> UnifiOptionsFlowHandler:
         """Get the options flow for this handler."""
         return UnifiOptionsFlowHandler(config_entry)
@@ -213,12 +216,12 @@ class UnifiFlowHandler(ConfigFlow, domain=UNIFI_DOMAIN):
         return await self.async_step_user()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         parsed_url = urlparse(discovery_info.ssdp_location)
-        model_description = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_DESCRIPTION]
-        mac_address = format_mac(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        model_description = discovery_info.upnp[ATTR_UPNP_MODEL_DESCRIPTION]
+        mac_address = format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL])
 
         self.config = {
             CONF_HOST: parsed_url.hostname,
@@ -250,7 +253,6 @@ class UnifiOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: UnifiConfigEntry) -> None:
         """Initialize UniFi Network options flow."""
-        self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
     async def async_step_init(

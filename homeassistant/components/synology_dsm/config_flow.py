@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import suppress
 from ipaddress import ip_address as ip
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from synology_dsm import SynologyDSM
+from synology_dsm.api.file_station.models import SynoFileSharedFolder
 from synology_dsm.exceptions import (
     SynologyDSMException,
     SynologyDSMLogin2SAFailedException,
@@ -18,7 +20,6 @@ from synology_dsm.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.components import ssdp, zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -41,13 +42,29 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import DiscoveryInfoType, VolDictType
+from homeassistant.util import slugify
 from homeassistant.util.network import is_ip_address as is_ip
 
 from .const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
     CONF_DEVICE_TOKEN,
     CONF_SNAPSHOT_QUALITY,
     CONF_VOLUMES,
+    DEFAULT_BACKUP_PATH,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SCAN_INTERVAL,
@@ -56,7 +73,9 @@ from .const import (
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
+    SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,7 +137,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SynologyDSMOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SynologyDSMOptionsFlowHandler(config_entry)
+        return SynologyDSMOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the synology_dsm config flow."""
@@ -126,6 +145,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovered_conf: dict[str, Any] = {}
         self.reauth_conf: Mapping[str, Any] = {}
         self.reauth_reason: str | None = None
+        self.shares: list[SynoFileSharedFolder] | None = None
 
     def _show_form(
         self,
@@ -168,6 +188,8 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         otp_code = user_input.get(CONF_OTP_CODE)
         friendly_name = user_input.get(CONF_NAME)
+        backup_path = user_input.get(CONF_BACKUP_PATH)
+        backup_share = user_input.get(CONF_BACKUP_SHARE)
 
         if not port:
             if use_ssl is True:
@@ -204,6 +226,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors:
             return self._show_form(step_id, user_input, errors)
 
+        with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
+            self.shares = await api.file.get_shared_folders(only_writable=True)
+
+        if self.shares and not backup_path:
+            return await self.async_step_backup_share(user_input)
+
         # unique_id should be serial for services purpose
         existing_entry = await self.async_set_unique_id(serial, raise_on_progress=False)
 
@@ -215,6 +243,10 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_USERNAME: username,
             CONF_PASSWORD: password,
             CONF_MAC: api.network.macs,
+        }
+        config_options = {
+            CONF_BACKUP_PATH: backup_path,
+            CONF_BACKUP_SHARE: backup_share,
         }
         if otp_code:
             config_data[CONF_DEVICE_TOKEN] = api.device_token
@@ -228,10 +260,12 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
                 "reauth_successful" if self.reauth_conf else "reconfigure_successful"
             )
             return self.async_update_reload_and_abort(
-                existing_entry, data=config_data, reason=reason
+                existing_entry, data=config_data, options=config_options, reason=reason
             )
 
-        return self.async_create_entry(title=friendly_name or host, data=config_data)
+        return self.async_create_entry(
+            title=friendly_name or host, data=config_data, options=config_options
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -243,7 +277,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered synology_dsm via zeroconf."""
         discovered_macs = [
@@ -258,13 +292,13 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._async_from_discovery(host, friendly_name, discovered_macs)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered synology_dsm via ssdp."""
         parsed_url = urlparse(discovery_info.ssdp_location)
-        upnp_friendly_name: str = discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]
+        upnp_friendly_name: str = discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]
         friendly_name = upnp_friendly_name.split("(", 1)[0].strip()
-        mac_address = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        mac_address = discovery_info.upnp[ATTR_UPNP_SERIAL]
         discovered_macs = [format_synology_mac(mac_address)]
         # Synology NAS can broadcast on multiple IP addresses, since they can be connected to multiple ethernets.
         # The serial of the NAS is actually its MAC address.
@@ -363,6 +397,43 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
+    async def async_step_backup_share(
+        self, user_input: dict[str, Any], errors: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Select backup location."""
+        if TYPE_CHECKING:
+            assert self.shares is not None
+
+        if not self.saved_user_input:
+            self.saved_user_input = user_input
+
+        if CONF_BACKUP_PATH not in user_input and CONF_BACKUP_SHARE not in user_input:
+            return self.async_show_form(
+                step_id="backup_share",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(CONF_BACKUP_SHARE): SelectSelector(
+                            SelectSelectorConfig(
+                                options=[
+                                    SelectOptionDict(value=s.path, label=s.name)
+                                    for s in self.shares
+                                ],
+                                mode=SelectSelectorMode.DROPDOWN,
+                            ),
+                        ),
+                        vol.Required(
+                            CONF_BACKUP_PATH,
+                            default=f"{DEFAULT_BACKUP_PATH}_{slugify(self.hass.config.location_name)}",
+                        ): str,
+                    }
+                ),
+            )
+
+        user_input = {**self.saved_user_input, **user_input}
+        self.saved_user_input = {}
+
+        return await self.async_step_user(user_input)
+
     def _async_get_existing_entry(self, discovered_mac: str) -> ConfigEntry | None:
         """See if we already have a configured NAS with this MAC address."""
         for entry in self._async_current_entries():
@@ -376,16 +447,14 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
 class SynologyDSMOptionsFlowHandler(OptionsFlow):
     """Handle a option flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
+
+        syno_data: SynologyDSMData = self.hass.data[DOMAIN][self.config_entry.unique_id]
 
         data_schema = vol.Schema(
             {
@@ -403,6 +472,36 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
                 ): vol.All(vol.Coerce(int), vol.Range(min=0, max=2)),
             }
         )
+
+        shares: list[SynoFileSharedFolder] | None = None
+        if syno_data.api.file_station:
+            with suppress(*SYNOLOGY_CONNECTION_EXCEPTIONS):
+                shares = await syno_data.api.file_station.get_shared_folders(
+                    only_writable=True
+                )
+
+        if shares:
+            data_schema = data_schema.extend(
+                {
+                    vol.Required(
+                        CONF_BACKUP_SHARE,
+                        default=self.config_entry.options[CONF_BACKUP_SHARE],
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                SelectOptionDict(value=s.path, label=s.name)
+                                for s in shares
+                            ],
+                            mode=SelectSelectorMode.DROPDOWN,
+                        ),
+                    ),
+                    vol.Required(
+                        CONF_BACKUP_PATH,
+                        default=self.config_entry.options[CONF_BACKUP_PATH],
+                    ): str,
+                }
+            )
+
         return self.async_show_form(step_id="init", data_schema=data_schema)
 
 

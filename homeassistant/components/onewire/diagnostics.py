@@ -9,7 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import OneWireConfigEntry
+from .onewirehub import OneWireConfigEntry
 
 TO_REDACT = {CONF_HOST}
 

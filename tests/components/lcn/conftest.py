@@ -16,7 +16,6 @@ from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -132,15 +131,6 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return lcn_connection
-
-
-async def setup_component(hass: HomeAssistant) -> None:
-    """Set up the LCN component."""
-    fixture_filename = "lcn/config.json"
-    config_data = json.loads(load_fixture(fixture_filename))
-
-    await async_setup_component(hass, DOMAIN, config_data)
-    await hass.async_block_till_done()
 
 
 def get_device(

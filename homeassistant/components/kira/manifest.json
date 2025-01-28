@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/kira",
   "iot_class": "local_push",
   "loggers": ["pykira"],
+  "quality_scale": "legacy",
   "requirements": ["pykira==0.1.1"]
 }

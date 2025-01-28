@@ -78,7 +78,10 @@ class OAuth2FlowHandler(
         reauth_entry = self._get_reauth_entry()
         self._abort_if_unique_id_mismatch(
             reason="wrong_account",
-            description_placeholders={"title": reauth_entry.title},
+            description_placeholders={
+                "title": reauth_entry.title,
+                "username": str(reauth_entry.unique_id),
+            },
         )
 
         new_channels = reauth_entry.options[CONF_CHANNELS]

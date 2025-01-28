@@ -9,6 +9,7 @@ import os
 import sys
 import threading
 
+from .backup_restore import restore_backup
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
@@ -182,6 +183,9 @@ def main() -> int:
         return scripts.run(args.script)
 
     config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
+    if restore_backup(config_dir):
+        return RESTART_EXIT_CODE
+
     ensure_config_path(config_dir)
 
     # pylint: disable-next=import-outside-toplevel

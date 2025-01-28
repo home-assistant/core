@@ -20,12 +20,12 @@
         "title": "Random sensor"
       },
       "user": {
-        "description": "This helper allows you to create a helper that emits a random value.",
+        "description": "This helper allows you to create an entity that emits a random value.",
         "menu_options": {
           "binary_sensor": "Random binary sensor",
           "sensor": "Random sensor"
         },
-        "title": "Random helper"
+        "title": "Create Random helper"
       }
     }
   },

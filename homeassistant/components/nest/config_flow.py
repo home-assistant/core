@@ -12,14 +12,14 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from google_nest_sdm.exceptions import (
-    ApiException,
-    AuthException,
-    ConfigurationException,
-    SubscriberException,
+from google_nest_sdm.admin_client import (
+    AdminClient,
+    EligibleSubscriptions,
+    EligibleTopics,
 )
+from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.structure import Structure
 import voluptuous as vol
 
@@ -31,8 +31,9 @@ from . import api
 from .const import (
     CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
-    CONF_SUBSCRIBER_ID,
-    DATA_NEST_CONFIG,
+    CONF_SUBSCRIBER_ID_IMPORTED,
+    CONF_SUBSCRIPTION_NAME,
+    CONF_TOPIC_NAME,
     DATA_SDM,
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -58,7 +59,7 @@ DEVICE_ACCESS_CONSOLE_URL = "https://console.nest.google.com/device-access/"
 DEVICE_ACCESS_CONSOLE_EDIT_URL = (
     "https://console.nest.google.com/device-access/project/{project_id}/information"
 )
-
+CREATE_NEW_SUBSCRIPTION_KEY = "create_new_subscription"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,6 +96,9 @@ class NestFlowHandler(
         self._data: dict[str, Any] = {DATA_SDM: {}}
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
+        self._admin_client: AdminClient | None = None
+        self._eligible_topics: EligibleTopics | None = None
+        self._eligible_subscriptions: EligibleSubscriptions | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -113,8 +117,7 @@ class NestFlowHandler(
 
     async def async_generate_authorize_url(self) -> str:
         """Generate a url for the user to authorize based on user input."""
-        config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
-        project_id = self._data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID, ""))
+        project_id = self._data.get(CONF_PROJECT_ID)
         query = await super().async_generate_authorize_url()
         authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return f"{authorize_url}{query}"
@@ -123,6 +126,7 @@ class NestFlowHandler(
         """Complete OAuth setup and finish pubsub or finish."""
         _LOGGER.debug("Finishing post-oauth configuration")
         self._data.update(data)
+        _LOGGER.debug("self.source=%s", self.source)
         if self.source == SOURCE_REAUTH:
             _LOGGER.debug("Skipping Pub/Sub configuration")
             return await self._async_finish()
@@ -132,6 +136,7 @@ class NestFlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
+        _LOGGER.debug("async_step_reauth %s", self.source)
         self._data.update(entry_data)
 
         return await self.async_step_reauth_confirm()
@@ -238,40 +243,114 @@ class NestFlowHandler(
     async def async_step_pubsub(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Configure and create Pub/Sub subscriber."""
+        """Configure and the pre-requisites to configure Pub/Sub topics and subscriptions."""
         data = {
             **self._data,
             **(user_input if user_input is not None else {}),
         }
         cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
-        config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
-        project_id = data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
+        device_access_project_id = data[CONF_PROJECT_ID]
 
         errors: dict[str, str] = {}
         if cloud_project_id:
-            # Create the subscriber id and/or verify it already exists. Note that
-            # the existing id is used, and create call below is idempotent
-            if not (subscriber_id := data.get(CONF_SUBSCRIBER_ID, "")):
-                subscriber_id = _generate_subscription_id(cloud_project_id)
-            _LOGGER.debug("Creating subscriber id '%s'", subscriber_id)
-            subscriber = api.new_subscriber_with_token(
-                self.hass,
-                self._data["token"]["access_token"],
-                project_id,
-                subscriber_id,
+            access_token = self._data["token"]["access_token"]
+            self._admin_client = api.new_pubsub_admin_client(
+                self.hass, access_token=access_token, cloud_project_id=cloud_project_id
             )
             try:
-                await subscriber.create_subscription()
-            except AuthException as err:
-                _LOGGER.error("Subscriber authentication error: %s", err)
-                return self.async_abort(reason="invalid_access_token")
-            except ConfigurationException as err:
-                _LOGGER.error("Configuration error creating subscription: %s", err)
-                errors[CONF_CLOUD_PROJECT_ID] = "bad_project_id"
-            except SubscriberException as err:
-                _LOGGER.error("Error creating subscription: %s", err)
-                errors[CONF_CLOUD_PROJECT_ID] = "subscriber_error"
+                eligible_topics = await self._admin_client.list_eligible_topics(
+                    device_access_project_id=device_access_project_id
+                )
+            except ApiException as err:
+                _LOGGER.error("Error listing eligible Pub/Sub topics: %s", err)
+                errors["base"] = "pubsub_api_error"
+            else:
+                if not eligible_topics.topic_names:
+                    errors["base"] = "no_pubsub_topics"
             if not errors:
+                self._data[CONF_CLOUD_PROJECT_ID] = cloud_project_id
+                self._eligible_topics = eligible_topics
+                return await self.async_step_pubsub_topic()
+
+        return self.async_show_form(
+            step_id="pubsub",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CLOUD_PROJECT_ID, default=cloud_project_id): str,
+                }
+            ),
+            description_placeholders={
+                "url": CLOUD_CONSOLE_URL,
+                "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
+                "more_info_url": MORE_INFO_URL,
+            },
+            errors=errors,
+        )
+
+    async def async_step_pubsub_topic(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure and create Pub/Sub topic."""
+        if TYPE_CHECKING:
+            assert self._eligible_topics
+        if user_input is not None:
+            self._data.update(user_input)
+            return await self.async_step_pubsub_subscription()
+        topics = list(self._eligible_topics.topic_names)
+        return self.async_show_form(
+            step_id="pubsub_topic",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_TOPIC_NAME, default=topics[0]): vol.In(topics),
+                }
+            ),
+            description_placeholders={
+                "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
+                "more_info_url": MORE_INFO_URL,
+            },
+        )
+
+    async def async_step_pubsub_subscription(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure and create Pub/Sub subscription."""
+        if TYPE_CHECKING:
+            assert self._admin_client
+        errors = {}
+        if user_input is not None:
+            subscription_name = user_input[CONF_SUBSCRIPTION_NAME]
+            if subscription_name == CREATE_NEW_SUBSCRIPTION_KEY:
+                topic_name = self._data[CONF_TOPIC_NAME]
+                subscription_name = _generate_subscription_id(
+                    self._data[CONF_CLOUD_PROJECT_ID]
+                )
+                _LOGGER.debug(
+                    "Creating subscription %s on topic %s",
+                    subscription_name,
+                    topic_name,
+                )
+                try:
+                    await self._admin_client.create_subscription(
+                        topic_name,
+                        subscription_name,
+                    )
+                except ApiException as err:
+                    _LOGGER.error("Error creatingPub/Sub subscription: %s", err)
+                    errors["base"] = "pubsub_api_error"
+                else:
+                    user_input[CONF_SUBSCRIPTION_NAME] = subscription_name
+            else:
+                # The user created this subscription themselves so do not delete when removing the integration.
+                user_input[CONF_SUBSCRIBER_ID_IMPORTED] = True
+
+            if not errors:
+                self._data.update(user_input)
+                subscriber = api.new_subscriber_with_token(
+                    self.hass,
+                    self._data["token"]["access_token"],
+                    self._data[CONF_PROJECT_ID],
+                    subscription_name,
+                )
                 try:
                     device_manager = await subscriber.async_get_device_manager()
                 except ApiException as err:
@@ -281,23 +360,39 @@ class NestFlowHandler(
                     self._structure_config_title = generate_config_title(
                         device_manager.structures.values()
                     )
-
-                self._data.update(
-                    {
-                        CONF_SUBSCRIBER_ID: subscriber_id,
-                        CONF_CLOUD_PROJECT_ID: cloud_project_id,
-                    }
-                )
                 return await self._async_finish()
 
+        subscriptions = {}
+        try:
+            eligible_subscriptions = (
+                await self._admin_client.list_eligible_subscriptions(
+                    expected_topic_name=self._data[CONF_TOPIC_NAME],
+                )
+            )
+        except ApiException as err:
+            _LOGGER.error(
+                "Error talking to API to list eligible Pub/Sub subscriptions: %s", err
+            )
+            errors["base"] = "pubsub_api_error"
+        else:
+            subscriptions.update(
+                {name: name for name in eligible_subscriptions.subscription_names}
+            )
+        subscriptions[CREATE_NEW_SUBSCRIPTION_KEY] = "Create New"
         return self.async_show_form(
-            step_id="pubsub",
+            step_id="pubsub_subscription",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_CLOUD_PROJECT_ID, default=cloud_project_id): str,
+                    vol.Optional(
+                        CONF_SUBSCRIPTION_NAME,
+                        default=next(iter(subscriptions)),
+                    ): vol.In(subscriptions),
                 }
             ),
-            description_placeholders={"url": CLOUD_CONSOLE_URL},
+            description_placeholders={
+                "topic": self._data[CONF_TOPIC_NAME],
+                "more_info_url": MORE_INFO_URL,
+            },
             errors=errors,
         )
 

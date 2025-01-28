@@ -39,7 +39,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
@@ -54,8 +53,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-# Reuse data and API logic from the sensor implementation
-from .const import DEFAULT_TIMEFRAME, DOMAIN
+from . import BuienRadarConfigEntry
+from .const import DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -93,7 +92,9 @@ CONDITION_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: BuienRadarConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the buienradar platform."""
     config = entry.data
@@ -113,7 +114,7 @@ async def async_setup_entry(
 
     # create weather data:
     data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
-    hass.data[DOMAIN][entry.entry_id][Platform.WEATHER] = data
+    entry.runtime_data[Platform.WEATHER] = data
     await data.async_update()
 
     async_add_entities(entities)

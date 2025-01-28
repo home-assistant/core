@@ -3,8 +3,8 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from lmcloud.const import BoilerType, MachineModel, PhysicalKey
-from lmcloud.lm_machine import LaMarzoccoMachine
+from pylamarzocco.const import BoilerType, MachineModel, PhysicalKey
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,12 +12,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
-from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+from .coordinator import LaMarzoccoConfigEntry
+from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription, LaMarzoccScaleEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,24 +38,6 @@ class LaMarzoccoSensorEntityDescription(
 
 
 ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
-    LaMarzoccoSensorEntityDescription(
-        key="drink_stats_coffee",
-        translation_key="drink_stats_coffee",
-        native_unit_of_measurement="drinks",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
-        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    LaMarzoccoSensorEntityDescription(
-        key="drink_stats_flushing",
-        translation_key="drink_stats_flushing",
-        native_unit_of_measurement="drinks",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.total_flushes,
-        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     LaMarzoccoSensorEntityDescription(
         key="shot_timer",
         translation_key="shot_timer",
@@ -85,6 +75,42 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
     ),
 )
 
+STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
+    LaMarzoccoSensorEntityDescription(
+        key="drink_stats_coffee",
+        translation_key="drink_stats_coffee",
+        native_unit_of_measurement="drinks",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
+        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    LaMarzoccoSensorEntityDescription(
+        key="drink_stats_flushing",
+        translation_key="drink_stats_flushing",
+        native_unit_of_measurement="drinks",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda device: device.statistics.total_flushes,
+        available_fn=lambda device: len(device.statistics.drink_stats) > 0,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+SCALE_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
+    LaMarzoccoSensorEntityDescription(
+        key="scale_battery",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        value_fn=lambda device: (
+            device.config.scale.battery if device.config.scale else 0
+        ),
+        supported_fn=(
+            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -92,13 +118,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities."""
-    coordinator = entry.runtime_data
+    config_coordinator = entry.runtime_data.config_coordinator
 
-    async_add_entities(
-        LaMarzoccoSensorEntity(coordinator, description)
+    entities = [
+        LaMarzoccoSensorEntity(config_coordinator, description)
         for description in ENTITIES
-        if description.supported_fn(coordinator)
+        if description.supported_fn(config_coordinator)
+    ]
+
+    if (
+        config_coordinator.device.model == MachineModel.LINEA_MINI
+        and config_coordinator.device.config.scale
+    ):
+        entities.extend(
+            LaMarzoccoScaleSensorEntity(config_coordinator, description)
+            for description in SCALE_ENTITIES
+        )
+
+    statistics_coordinator = entry.runtime_data.statistics_coordinator
+    entities.extend(
+        LaMarzoccoSensorEntity(statistics_coordinator, description)
+        for description in STATISTIC_ENTITIES
+        if description.supported_fn(statistics_coordinator)
     )
+
+    def _async_add_new_scale() -> None:
+        async_add_entities(
+            LaMarzoccoScaleSensorEntity(config_coordinator, description)
+            for description in SCALE_ENTITIES
+        )
+
+    config_coordinator.new_device_callback.append(_async_add_new_scale)
+
+    async_add_entities(entities)
 
 
 class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
@@ -110,3 +162,9 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
     def native_value(self) -> int | float:
         """State of the sensor."""
         return self.entity_description.value_fn(self.coordinator.device)
+
+
+class LaMarzoccoScaleSensorEntity(LaMarzoccoSensorEntity, LaMarzoccScaleEntity):
+    """Sensor for a La Marzocco scale."""
+
+    entity_description: LaMarzoccoSensorEntityDescription

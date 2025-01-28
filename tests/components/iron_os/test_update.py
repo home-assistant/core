@@ -3,12 +3,12 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
-from aiogithubapi import GitHubException
+from pynecil import UpdateException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,7 +26,7 @@ async def update_only() -> AsyncGenerator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_pynecil", "ble_device", "mock_githubapi")
+@pytest.mark.usefixtures("mock_pynecil", "ble_device", "mock_ironosupdate")
 async def test_update(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -57,17 +57,21 @@ async def test_update(
 
 
 @pytest.mark.usefixtures("ble_device", "mock_pynecil")
-async def test_config_entry_not_ready(
+async def test_update_unavailable(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_githubapi: AsyncMock,
+    mock_ironosupdate: AsyncMock,
 ) -> None:
-    """Test config entry not ready."""
+    """Test update entity unavailable on error."""
 
-    mock_githubapi.repos.releases.latest.side_effect = GitHubException
+    mock_ironosupdate.latest_release.side_effect = UpdateException
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("update.pinecil_firmware")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE

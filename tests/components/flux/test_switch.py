@@ -1164,7 +1164,7 @@ async def test_flux_with_multiple_lights(
     assert call.data[light.ATTR_XY_COLOR] == [0.46, 0.376]
 
 
-async def test_flux_with_mired(
+async def test_flux_with_temp(
     hass: HomeAssistant,
     mock_light_entities: list[MockLight],
 ) -> None:
@@ -1224,7 +1224,7 @@ async def test_flux_with_mired(
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
     call = turn_on_calls[-1]
-    assert call.data[light.ATTR_COLOR_TEMP] == 269
+    assert call.data[light.ATTR_COLOR_TEMP_KELVIN] == 3708
 
 
 async def test_flux_with_rgb(
