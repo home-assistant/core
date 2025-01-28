@@ -52,8 +52,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
 
     _attr_current_temperature: float | None = None
-    _attr_min_temp = 30.0 # Replace with dynamic attribute
-    _attr_max_temp = 70.0 # Replace with dynamic attribute
+    _attr_min_temp = 30.0  # Replace with dynamic attribute
+    _attr_max_temp = 70.0  # Replace with dynamic attribute
     _attr_precision = PRECISION_WHOLE
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
