@@ -2862,6 +2862,7 @@ async def test_list_subentries(
             core_ce.ConfigSubentryData(
                 data={"test": "test"},
                 subentry_id="mock_id",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             )
@@ -2882,7 +2883,12 @@ async def test_list_subentries(
 
     assert response["success"]
     assert response["result"] == [
-        {"subentry_id": "mock_id", "title": "Mock title", "unique_id": "test"},
+        {
+            "subentry_id": "mock_id",
+            "subentry_type": "test",
+            "title": "Mock title",
+            "unique_id": "test",
+        },
     ]
 
     # Try listing subentries for an unknown entry
@@ -2913,7 +2919,10 @@ async def test_delete_subentry(
         state=core_ce.ConfigEntryState.LOADED,
         subentries_data=[
             core_ce.ConfigSubentryData(
-                data={"test": "test"}, subentry_id="mock_id", title="Mock title"
+                data={"test": "test"},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Mock title",
             )
         ],
     )

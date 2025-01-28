@@ -881,6 +881,7 @@ async def test_setup_entry(
             ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1166,6 +1167,7 @@ async def test_device_info_called(
             ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),

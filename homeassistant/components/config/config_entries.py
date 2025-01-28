@@ -679,6 +679,7 @@ async def config_subentry_list(
     result = [
         {
             "subentry_id": subentry.subentry_id,
+            "subentry_type": subentry.subentry_type,
             "title": subentry.title,
             "unique_id": subentry.unique_id,
         }
