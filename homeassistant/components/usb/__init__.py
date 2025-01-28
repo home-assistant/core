@@ -296,8 +296,6 @@ class USBDiscovery:
                 ex,
             )
             self._async_start_monitor_polling()
-        except Exception:
-            _LOGGER.exception("Failed to start aiousbwatcher")
 
     @hass_callback
     def _async_start_monitor_polling(self) -> None:
