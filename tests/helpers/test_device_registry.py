@@ -182,12 +182,14 @@ async def test_multiple_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -199,6 +201,7 @@ async def test_multiple_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1605,12 +1608,14 @@ async def test_removing_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1622,6 +1627,7 @@ async def test_removing_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1803,12 +1809,14 @@ async def test_deleted_device_removing_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1820,6 +1828,7 @@ async def test_deleted_device_removing_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -1968,6 +1977,7 @@ async def test_deleted_device_removing_config_subentries(
         config_entries.ConfigSubentry(
             data={},
             subentry_id="mock-subentry-id-2-1",
+            subentry_type="test",
             title="Mock title",
             unique_id="test",
         ),
@@ -2708,12 +2718,14 @@ async def test_update_remove_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-1-2",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),
@@ -2725,6 +2737,7 @@ async def test_update_remove_config_subentries(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="mock-subentry-id-2-1",
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             ),

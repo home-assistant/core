@@ -925,10 +925,13 @@ async def test_saving_and_loading(
             await self.async_set_unique_id("unique")
             subentries = [
                 config_entries.ConfigSubentryData(
-                    data={"foo": "bar"}, title="subentry 1"
+                    data={"foo": "bar"}, subentry_type="test", title="subentry 1"
                 ),
                 config_entries.ConfigSubentryData(
-                    data={"sun": "moon"}, title="subentry 2", unique_id="very_unique"
+                    data={"sun": "moon"},
+                    subentry_type="test",
+                    title="subentry 2",
+                    unique_id="very_unique",
                 ),
             ]
             return self.async_create_entry(
@@ -1005,12 +1008,14 @@ async def test_saving_and_loading(
                         {
                             "data": {"foo": "bar"},
                             "subentry_id": ANY,
+                            "subentry_type": "test",
                             "title": "subentry 1",
                             "unique_id": None,
                         },
                         {
                             "data": {"sun": "moon"},
                             "subentry_id": ANY,
+                            "subentry_type": "test",
                             "title": "subentry 2",
                             "unique_id": "very_unique",
                         },
@@ -1547,7 +1552,10 @@ async def test_update_subentry_and_trigger_listener(
     update_listener_calls = []
 
     subentry = config_entries.ConfigSubentry(
-        data={"test": "test"}, unique_id="test", title="Mock title"
+        data={"test": "test"},
+        subentry_type="test",
+        unique_id="test",
+        title="Mock title",
     )
 
     async def update_listener(
@@ -1914,6 +1922,7 @@ async def test_create_entry_subentries(
     subentrydata = config_entries.ConfigSubentryData(
         data={"test": "test"},
         title="Mock title",
+        subentry_type="test",
         unique_id="test",
     )
 
@@ -1966,6 +1975,7 @@ async def test_create_entry_subentries(
         subentry = config_entries.ConfigSubentry(
             data=subentrydata["data"],
             subentry_id=subentry_id,
+            subentry_type="test",
             title=subentrydata["title"],
             unique_id="test",
         )
@@ -2025,6 +2035,7 @@ async def test_entry_subentry(
             subentry_id: config_entries.ConfigSubentry(
                 data={"second": True},
                 subentry_id=subentry_id,
+                subentry_type="test",
                 title="Mock title",
                 unique_id="test",
             )
@@ -2136,6 +2147,7 @@ async def test_entry_subentry_duplicate(
             config_entries.ConfigSubentryData(
                 data={},
                 subentry_id="blabla",
+                subentry_type="test",
                 title="Mock title",
                 unique_id=unique_id,
             )
