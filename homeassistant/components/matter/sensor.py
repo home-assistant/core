@@ -825,6 +825,32 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
+        entity_description=MatterListSensorEntityDescription(
+            key="RvcOperationalStateCurrentPhase",
+            translation_key="current_phase",
+            list_attribute=clusters.RvcOperationalState.Attributes.PhaseList,
+        ),
+        entity_class=MatterListSensor,
+        required_attributes=(
+            clusters.RvcOperationalState.Attributes.CurrentPhase,
+            clusters.RvcOperationalState.Attributes.PhaseList,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterListSensorEntityDescription(
+            key="OvenCavityOperationalStateCurrentPhase",
+            translation_key="current_phase",
+            list_attribute=clusters.OvenCavityOperationalState.Attributes.PhaseList,
+        ),
+        entity_class=MatterListSensor,
+        required_attributes=(
+            clusters.OvenCavityOperationalState.Attributes.CurrentPhase,
+            clusters.OvenCavityOperationalState.Attributes.PhaseList,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
             key="ThermostatLocalTemperature",
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
