@@ -1333,14 +1333,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if config_entries == {config_entry_id}:
                 # Add a time stamp when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device, orphaned_timestamp=now_time, config_entries=set()
+                    deleted_device,
+                    orphaned_timestamp=now_time,
+                    config_entries=set(),
+                    config_entries_subentries={},
                 )
             else:
                 config_entries = config_entries - {config_entry_id}
+                config_entries_subentries = dict(
+                    deleted_device.config_entries_subentries
+                )
+                del config_entries_subentries[config_entry_id]
                 # No need to reindex here since we currently
                 # do not have a lookup by config entry
                 self.deleted_devices[deleted_device.id] = attr.evolve(
-                    deleted_device, config_entries=config_entries
+                    deleted_device,
+                    config_entries=config_entries,
+                    config_entries_subentries=config_entries_subentries,
                 )
             self.async_schedule_save()
 
