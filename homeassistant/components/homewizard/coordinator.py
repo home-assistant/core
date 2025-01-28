@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from homewizard_energy import HomeWizardEnergy, HomeWizardEnergyV1
+from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError
 from homewizard_energy.models import CombinedModels as DeviceResponseEntry
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -23,16 +21,10 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
 
     config_entry: ConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, api: HomeWizardEnergy) -> None:
         """Initialize update coordinator."""
         super().__init__(hass, LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-        self.api = HomeWizardEnergyV1(
-            self.config_entry.data[CONF_IP_ADDRESS],
-            clientsession=async_get_clientsession(hass),
-        )
+        self.api = api
 
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""

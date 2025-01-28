@@ -259,6 +259,15 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "002674*",
     },
     {
+        "domain": "incomfort",
+        "hostname": "rfgateway",
+        "macaddress": "0004A3*",
+    },
+    {
+        "domain": "incomfort",
+        "registered_devices": True,
+    },
+    {
         "domain": "insteon",
         "macaddress": "000EF3*",
     },
@@ -1115,6 +1124,11 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "unifiprotect",
         "macaddress": "74ACB9*",
+    },
+    {
+        "domain": "velux",
+        "hostname": "velux_klf*",
+        "macaddress": "646184*",
     },
     {
         "domain": "verisure",

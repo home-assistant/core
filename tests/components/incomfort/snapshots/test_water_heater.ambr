@@ -13,7 +13,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'water_heater',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'water_heater.boiler',
     'has_entity_name': True,
     'hidden_by': None,

@@ -11,6 +11,7 @@ from tesla_fleet_api.const import Scope
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .coordinator import (
+    TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
@@ -44,6 +45,7 @@ class TeslaFleetEnergyData:
 
     api: EnergySpecific
     live_coordinator: TeslaFleetEnergySiteLiveCoordinator
+    history_coordinator: TeslaFleetEnergySiteHistoryCoordinator
     info_coordinator: TeslaFleetEnergySiteInfoCoordinator
     id: int
     device: DeviceInfo

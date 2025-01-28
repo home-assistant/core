@@ -34,6 +34,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -500,7 +501,7 @@ class SonosDiscoveryManager:
 
     @callback
     def _async_ssdp_discovered_player(
-        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+        self, info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         uid = info.upnp[ssdp.ATTR_UPNP_UDN]
         if not uid.startswith("uuid:RINCON_"):
@@ -529,7 +530,7 @@ class SonosDiscoveryManager:
     def async_discovered_player(
         self,
         source: str,
-        info: ssdp.SsdpServiceInfo,
+        info: SsdpServiceInfo,
         discovered_ip: str,
         uid: str,
         boot_seqnum: str | int | None,
