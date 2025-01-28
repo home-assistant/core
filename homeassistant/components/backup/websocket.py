@@ -61,6 +61,7 @@ async def handle_info(
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+            "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
         },
     )
 
@@ -305,7 +306,10 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [
+                {"agent_id": agent.agent_id, "name": agent.name}
+                for agent in manager.backup_agents.values()
+            ],
         },
     )
 
@@ -329,7 +333,8 @@ async def handle_config_info(
         {
             "config": config
             | {
-                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup
+                "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
+                "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
             }
         },
     )

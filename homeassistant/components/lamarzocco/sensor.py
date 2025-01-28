@@ -90,7 +90,7 @@ STATISTIC_ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
         translation_key="drink_stats_coffee",
         native_unit_of_measurement="drinks",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.statistics.drink_stats.get(PhysicalKey.A, 0),
+        value_fn=lambda device: device.statistics.total_coffee,
         available_fn=lambda device: len(device.statistics.drink_stats) > 0,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

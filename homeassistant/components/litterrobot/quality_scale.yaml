@@ -23,13 +23,7 @@ rules:
     comment: |
       hub.py should be renamed to coordinator.py and updated accordingly
       Also should not need to return bool (never used)
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Fix stale title and docstring
-      Replace litterrobot.DOMAIN references to DOMAIN (after correctly importing)
-      Make sure every test ends in either ABORT or CREATE_ENTRY
-      so we also test that the flow is able to recover
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:

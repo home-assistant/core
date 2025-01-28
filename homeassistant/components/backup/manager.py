@@ -672,6 +672,7 @@ class BackupManager:
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None = None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -684,6 +685,7 @@ class BackupManager:
         """Create a backup."""
         new_backup = await self.async_initiate_backup(
             agent_ids=agent_ids,
+            extra_metadata=extra_metadata,
             include_addons=include_addons,
             include_all_addons=include_all_addons,
             include_database=include_database,
@@ -698,10 +700,26 @@ class BackupManager:
         await self._backup_finish_task
         return new_backup
 
+    async def async_create_automatic_backup(self) -> NewBackup:
+        """Create a backup with automatic backup settings."""
+        config_data = self.config.data
+        return await self.async_create_backup(
+            agent_ids=config_data.create_backup.agent_ids,
+            include_addons=config_data.create_backup.include_addons,
+            include_all_addons=config_data.create_backup.include_all_addons,
+            include_database=config_data.create_backup.include_database,
+            include_folders=config_data.create_backup.include_folders,
+            include_homeassistant=True,  # always include HA
+            name=config_data.create_backup.name,
+            password=config_data.create_backup.password,
+            with_automatic_settings=True,
+        )
+
     async def async_initiate_backup(
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None = None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -726,6 +744,7 @@ class BackupManager:
         try:
             return await self._async_create_backup(
                 agent_ids=agent_ids,
+                extra_metadata=extra_metadata,
                 include_addons=include_addons,
                 include_all_addons=include_all_addons,
                 include_database=include_database,
@@ -749,6 +768,7 @@ class BackupManager:
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -775,6 +795,7 @@ class BackupManager:
             name
             or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
+        extra_metadata = extra_metadata or {}
 
         try:
             (
@@ -783,7 +804,8 @@ class BackupManager:
             ) = await self._reader_writer.async_create_backup(
                 agent_ids=agent_ids,
                 backup_name=backup_name,
-                extra_metadata={
+                extra_metadata=extra_metadata
+                | {
                     "instance_id": await instance_id.async_get(self.hass),
                     "with_automatic_settings": with_automatic_settings,
                 },
@@ -1033,7 +1055,9 @@ class BackupManager:
             backup_stream = await agent.async_download_backup(backup_id)
             reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
         try:
-            validate_password_stream(reader, password)
+            await self.hass.async_add_executor_job(
+                validate_password_stream, reader, password
+            )
         except backup_util.IncorrectPassword as err:
             raise IncorrectPasswordError from err
         except backup_util.UnsupportedSecureTarVersion as err:

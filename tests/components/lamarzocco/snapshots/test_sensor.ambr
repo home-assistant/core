@@ -456,7 +456,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1047',
+    'state': '2387',
   })
 # ---
 # name: test_sensors[sensor.gs012345_total_flushes_made-entry]
