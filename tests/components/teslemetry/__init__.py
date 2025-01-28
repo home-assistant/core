@@ -14,7 +14,9 @@ from .const import CONFIG
 from tests.common import MockConfigEntry
 
 
-async def setup_platform(hass: HomeAssistant, platforms: list[Platform] | None = None):
+async def setup_platform(
+    hass: HomeAssistant, platforms: list[Platform] | None = None
+) -> MockConfigEntry:
     """Set up the Teslemetry platform."""
 
     mock_entry = MockConfigEntry(
