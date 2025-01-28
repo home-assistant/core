@@ -4,11 +4,23 @@ import datetime
 
 from letpot.models import AuthenticationInfo, LetPotDeviceStatus
 
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 AUTHENTICATION = AuthenticationInfo(
     access_token="access_token",
-    access_token_expires=0,
+    access_token_expires=1738368000,  # 2025-02-01 00:00:00 GMT
     refresh_token="refresh_token",
-    refresh_token_expires=0,
+    refresh_token_expires=1740441600,  # 2025-02-25 00:00:00 GMT
     user_id="a1b2c3d4e5f6a1b2c3d4e5f6",
     email="email@example.com",
 )
