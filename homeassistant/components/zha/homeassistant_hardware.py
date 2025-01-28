@@ -24,8 +24,7 @@ def get_firmware_info(
     if config_entry.data.get("radio_type", None) != "ezsp":
         return None
 
-    device = config_entry.data.get("device", {}).get("path", None)
-    if device is None:
+    if (device := config_entry.data.get("device", {}).get("path")) is None:
         return None
 
     try:

@@ -32,7 +32,7 @@ async def async_get_firmware_info(
     if TYPE_CHECKING:
         config_entry = cast(OTBRConfigEntry, config_entry)
 
-    if (device := config_entry.data.get("device", None)) is None:
+    if (device := config_entry.data.get("device")) is None:
         return None
 
     owners: list[OwningIntegration | OwningAddon] = [
