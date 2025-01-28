@@ -332,7 +332,7 @@ async def test_operational_state_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test dishwasher sensor."""
+    """Test Operational State sensor, using a dishwasher fixture."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
@@ -382,12 +382,12 @@ async def test_draft_electrical_measurement_sensor(
 
 
 @pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
-async def test_operational_state_phase_sensor(
+async def test_list_sensor(
     hass: HomeAssistant,
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test Operational state (list) sensor, using a laundry washer fixture."""
+    """Test Matter List sensor."""
     # OperationalState Cluster / CurrentPhase attribute (1/96/1)
     state = hass.states.get("sensor.laundrywasher_current_phase")
     assert state
