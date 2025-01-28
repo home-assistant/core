@@ -31,7 +31,6 @@ async def test_repair_acquires_token(
 ) -> None:
     """Test repair flow is able to obtain and use token."""
 
-    # ws_client = await hass_ws_client(hass)
     assert await async_setup_component(hass, "repairs", {})
     await async_process_repairs_platforms(hass)
     client = await hass_client()
