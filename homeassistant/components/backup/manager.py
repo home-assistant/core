@@ -1048,7 +1048,9 @@ class BackupManager:
             backup_stream = await agent.async_download_backup(backup_id)
             reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
         try:
-            validate_password_stream(reader, password)
+            await self.hass.async_add_executor_job(
+                validate_password_stream, reader, password
+            )
         except backup_util.IncorrectPassword as err:
             raise IncorrectPasswordError from err
         except backup_util.UnsupportedSecureTarVersion as err:
