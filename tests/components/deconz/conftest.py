@@ -19,9 +19,14 @@ from tests.common import MockConfigEntry
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-type ConfigEntryFactoryType = Callable[
-    [MockConfigEntry], Coroutine[Any, Any, MockConfigEntry]
-]
+
+class ConfigEntryFactoryType(Protocol):
+    """Fixture factory that can set up deCONZ config entry."""
+
+    async def __call__(self, entry: MockConfigEntry = ..., /) -> MockConfigEntry:
+        """Set up a deCONZ config entry."""
+
+
 type WebsocketDataType = Callable[[dict[str, Any]], Coroutine[Any, Any, None]]
 type WebsocketStateType = Callable[[str], Coroutine[Any, Any, None]]
 
@@ -203,10 +208,10 @@ async def fixture_config_entry_factory(
     config_entry: MockConfigEntry,
     mock_requests: Callable[[str], None],
 ) -> ConfigEntryFactoryType:
-    """Fixture factory that can set up UniFi network integration."""
+    """Fixture factory that can set up deCONZ integration."""
 
     async def __mock_setup_config_entry(
-        entry: MockConfigEntry = config_entry,
+        entry: MockConfigEntry = config_entry, /
     ) -> MockConfigEntry:
         entry.add_to_hass(hass)
         mock_requests(entry.data[CONF_HOST])

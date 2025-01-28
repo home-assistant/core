@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
-
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 4304
 
@@ -54,9 +52,3 @@ MANUFACTURER_EDS = "Embedded Data Systems"
 READ_MODE_BOOL = "bool"
 READ_MODE_FLOAT = "float"
 READ_MODE_INT = "int"
-
-PLATFORMS = [
-    Platform.BINARY_SENSOR,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]

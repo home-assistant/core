@@ -6,7 +6,6 @@ from dataclasses import dataclass
 
 from chip.clusters import Objects as clusters
 from matter_server.common import custom_clusters
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -15,7 +14,13 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, Platform, UnitOfLength, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    Platform,
+    UnitOfLength,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -46,16 +51,10 @@ class MatterNumber(MatterEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        matter_attribute = self._entity_info.primary_attribute
         sendvalue = int(value)
         if value_convert := self.entity_description.ha_to_native_value:
             sendvalue = value_convert(value)
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                matter_attribute,
-            ),
+        await self.write_attribute(
             value=sendvalue,
         )
 
@@ -154,5 +153,26 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(custom_clusters.EveCluster.Attributes.Altitude,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="EveTemperatureOffset",
+            device_class=NumberDeviceClass.TEMPERATURE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="temperature_offset",
+            native_max_value=25,
+            native_min_value=-25,
+            native_step=0.5,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            measurement_to_ha=lambda x: None if x is None else x / 10,
+            ha_to_native_value=lambda x: round(x * 10),
+            mode=NumberMode.BOX,
+        ),
+        entity_class=MatterNumber,
+        required_attributes=(
+            clusters.Thermostat.Attributes.LocalTemperatureCalibration,
+        ),
+        vendor_id=(4874,),
     ),
 ]

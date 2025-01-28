@@ -11,13 +11,14 @@ import axis as axislib
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components import axis, zeroconf
+from homeassistant.components import axis
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import RtspEventMock, RtspStateType
 from .const import (
@@ -93,7 +94,7 @@ async def test_update_address(
     mock_requests("2.3.4.5")
     await hass.config_entries.flow.async_init(
         AXIS_DOMAIN,
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("2.3.4.5"),
             ip_addresses=[ip_address("2.3.4.5")],
             hostname="mock_hostname",

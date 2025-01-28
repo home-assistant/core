@@ -24,9 +24,9 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 from homeassistant.util import color as color_util
 
 from ..bridge import HueBridge

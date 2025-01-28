@@ -184,12 +184,12 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
         self.consumption_unit = consumption_unit
         self.entity_description = entity_description
         self._attr_unique_id = f"{consumption_unit}_{entity_description.key}"
+        address = coordinator.details[consumption_unit]["address"]
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="ista SE",
             model="ista EcoTrend",
-            name=f"{coordinator.details[consumption_unit]["address"]["street"]} "
-            f"{coordinator.details[consumption_unit]["address"]["houseNumber"]}".strip(),
+            name=f"{address['street']} {address['houseNumber']}".strip(),
             configuration_url="https://ecotrend.ista.de/",
             identifiers={(DOMAIN, consumption_unit)},
         )
