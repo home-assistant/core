@@ -32,17 +32,6 @@ MAC = bytes.fromhex("c4dd57f8a55f")
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_show_user_form(hass: HomeAssistant) -> None:
-    """Test that the user set up form is served."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result["step_id"] == "user"
-    assert result["type"] is FlowResultType.FORM
-
-
 async def test_user_connection_error(
     hass: HomeAssistant,
     mock_motionmount_config_flow: MagicMock,
@@ -220,6 +209,29 @@ async def test_user_response_authentication_needed(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
 
+    # Now simulate the user entered the correct pin to finalize the test
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == PORT
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
+
 
 async def test_zeroconf_connection_error(
     hass: HomeAssistant,
@@ -317,6 +329,21 @@ async def test_show_zeroconf_form_new_ce_old_pro(
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == ZEROCONF_HOSTNAME
+    assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_NAME] == ZEROCONF_NAME
+
+    assert result["result"]
+    assert result["result"].unique_id is None
+
 
 async def test_show_zeroconf_form_new_ce_new_pro(
     hass: HomeAssistant,
@@ -335,6 +362,21 @@ async def test_show_zeroconf_form_new_ce_new_pro(
     assert result["step_id"] == "zeroconf_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {CONF_NAME: "My MotionMount"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == ZEROCONF_HOSTNAME
+    assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_NAME] == ZEROCONF_NAME
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
 
 
 async def test_zeroconf_device_exists_abort(
@@ -376,6 +418,30 @@ async def test_zeroconf_authentication_needed(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
+
+    # Now simulate the user entered the correct pin to finalize the test
+    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
+        return_value=True
+    )
+    type(mock_motionmount_config_flow).can_authenticate = PropertyMock(
+        return_value=True
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=MOCK_PIN_INPUT.copy(),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == ZEROCONF_NAME
+
+    assert result["data"]
+    assert result["data"][CONF_HOST] == ZEROCONF_HOSTNAME
+    assert result["data"][CONF_PORT] == PORT
+    assert result["data"][CONF_NAME] == ZEROCONF_NAME
+
+    assert result["result"]
+    assert result["result"].unique_id == ZEROCONF_MAC
 
 
 async def test_authentication_incorrect_then_correct_pin(
