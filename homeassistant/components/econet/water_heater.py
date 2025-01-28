@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from pyeconet.equipment import EquipmentType
-from pyeconet.equipment.water_heater import WaterHeaterOperationMode
+from pyeconet.equipment.water_heater import WaterHeater, WaterHeaterOperationMode
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -61,24 +61,24 @@ async def async_setup_entry(
     )
 
 
-class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
+class EcoNetWaterHeater(EcoNetEntity[WaterHeater], WaterHeaterEntity):
     """Define an Econet water heater."""
 
     _attr_should_poll = True  # Override False default from EcoNetEntity
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
 
-    def __init__(self, water_heater):
+    def __init__(self, water_heater: WaterHeater) -> None:
         """Initialize."""
         super().__init__(water_heater)
         self.water_heater = water_heater
 
     @property
-    def is_away_mode_on(self):
+    def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
         return self._econet.away
 
     @property
-    def current_operation(self):
+    def current_operation(self) -> str:
         """Return current operation."""
         econet_mode = self.water_heater.mode
         _current_op = STATE_OFF
@@ -88,7 +88,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
         return _current_op
 
     @property
-    def operation_list(self):
+    def operation_list(self) -> list[str]:
         """List of available operation modes."""
         econet_modes = self.water_heater.modes
         op_list = []
@@ -131,7 +131,7 @@ class EcoNetWaterHeater(EcoNetEntity, WaterHeaterEntity):
             _LOGGER.error("Invalid operation mode: %s", operation_mode)
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
         return self.water_heater.set_point
 

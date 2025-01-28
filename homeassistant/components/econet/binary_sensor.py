@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -63,7 +63,7 @@ class EcoNetBinarySensor(EcoNetEntity, BinarySensorEntity):
     """Define a Econet binary sensor."""
 
     def __init__(
-        self, econet_device, description: BinarySensorEntityDescription
+        self, econet_device: Equipment, description: BinarySensorEntityDescription
     ) -> None:
         """Initialize."""
         super().__init__(econet_device)
