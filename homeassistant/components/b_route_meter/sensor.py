@@ -25,19 +25,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    CONF_RETRY_COUNT,
-    CONF_ROUTE_B_ID,
-    CONF_ROUTE_B_PWD,
-    CONF_SERIAL_PORT,
-    DEFAULT_RETRY_COUNT,
-    DEFAULT_SERIAL_PORT,
     DEVICE_MANUFACTURER,
     DEVICE_MODEL,
     DEVICE_NAME,
     DEVICE_UNIQUE_ID,
     DOMAIN,
 )
-from .coordinator import BRouteDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,26 +84,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor entities from a config entry."""
-    data = entry.data
-    route_b_id = data[CONF_ROUTE_B_ID]
-    route_b_pwd = data[CONF_ROUTE_B_PWD]
-    serial_port = data.get(CONF_SERIAL_PORT, DEFAULT_SERIAL_PORT)
-    retry_count = data.get(CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT)
-
-    coordinator = BRouteDataCoordinator(
-        hass,
-        route_b_id,
-        route_b_pwd,
-        serial_port,
-        retry_count=retry_count,
-    )
+    coordinator = entry.runtime_data
     _LOGGER.debug("Setting up B-Route meter sensor platform")
-
     await coordinator.async_config_entry_first_refresh()
 
-    sensors = [
-        BRouteSensorEntity(coordinator, description) for description in SENSOR_TYPES
-    ]
+    sensors = [BRouteSensorEntity(entry, description) for description in SENSOR_TYPES]
 
     async_add_entities(sensors)
 
@@ -124,12 +102,12 @@ class BRouteSensorEntity(SensorEntity):
 
     def __init__(
         self,
-        coordinator: BRouteDataCoordinator,
+        config_entry: ConfigEntry,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
 
-        self._coordinator = coordinator
+        self._coordinator = config_entry.runtime_data
         self.entity_description = description
         self._attr_unique_id = f"b_route_{description.key}"
         self._last_state = None

@@ -1,0 +1,42 @@
+# Current target quality scale: 🥉 Bronze
+
+rules:
+  # Bronze tier requirements
+  config-flow:
+    status: done
+    comment: Integration can be configured through UI
+  brands: done
+  docs-actions: done
+  action-setup: done
+  test-before-setup: done
+  runtime-data: done
+  entity-event-setup: done
+  docs-removal-instructions: done
+  dependency-transparency: done
+  config-flow-test-coverage: done
+  common-modules: done
+  appropriate-polling: done
+  docs-high-level-description:
+    status: done
+    comment: Documentation includes description of B-route and its purpose
+  docs-installation-instructions:
+    status: done
+    comment: Documentation provides step-by-step setup instructions
+  entity-unique-id:
+    status: done
+    comment: All entities have unique IDs based on meter ID
+  has-entity-name:
+    status: done
+    comment: Entities use has_entity_name = True
+  test-before-configure:
+    status: done
+    comment: Tests B-route connection during config flow
+  unique-config-entry:
+    status: done
+    comment: Prevents duplicate setup of same meter
+
+  # Future Silver tier goals
+  integration-owner: done
+  reauthentication-flow:
+    status: todo
+    comment: Need to implement reauthentication for failed credentials

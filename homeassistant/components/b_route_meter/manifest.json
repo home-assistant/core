@@ -1,16 +1,12 @@
 {
-    "domain": "b_route_meter",
-    "name": "B-Route Smart Meter",
-    "documentation": "https://www.home-assistant.io/integrations/b_route_meter",
-    "requirements": [
-        "pyserial==3.5"
-    ],
-    "config_flow": true,
-    "codeowners": [
-        "@yufeikang"
-    ],
-    "loggers": [
-        "b_route_meter"
-    ],
-    "iot_class": "local_polling"
+  "domain": "b_route_meter",
+  "name": "B-Route Smart Meter",
+  "codeowners": ["@yufeikang"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/b_route_meter",
+  "iot_class": "local_polling",
+  "loggers": ["b_route_meter"],
+  "quality_scale": "bronze",
+  "requirements": ["pyserial==3.5"],
+  "single_config_entry": true
 }

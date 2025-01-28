@@ -78,6 +78,7 @@ FLOWS = {
         "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",
+        "b_route_meter",
         "baf",
         "balboa",
         "bang_olufsen",
