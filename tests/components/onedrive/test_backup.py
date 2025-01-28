@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .const import BACKUP_METADATA, SLUG_NAME
+from .const import BACKUP_METADATA
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
@@ -45,6 +45,7 @@ async def setup_backup_integration(
 async def test_agents_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test backup agent info."""
     client = await hass_ws_client(hass)
@@ -55,8 +56,11 @@ async def test_agents_info(
     assert response["success"]
     assert response["result"] == {
         "agents": [
-            {"agent_id": "backup.local"},
-            {"agent_id": f"{DOMAIN}.{SLUG_NAME}"},
+            {"agent_id": "backup.local", "name": "local"},
+            {
+                "agent_id": f"{DOMAIN}.{mock_config_entry.unique_id}",
+                "name": "john-doe-s-onedrive",
+            },
         ],
     }
 
@@ -64,6 +68,7 @@ async def test_agents_info(
 async def test_agents_list_backups(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent list backups."""
 
@@ -85,7 +90,7 @@ async def test_agents_list_backups(
             "name": "Core 2024.12.0.dev0",
             "protected": False,
             "size": 34519040,
-            "agent_ids": [f"{DOMAIN}.{SLUG_NAME}"],
+            "agent_ids": [f"{DOMAIN}.{mock_config_entry.unique_id}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -96,6 +101,7 @@ async def test_agents_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent get backup."""
 
@@ -120,7 +126,7 @@ async def test_agents_get_backup(
         "name": "Core 2024.12.0.dev0",
         "protected": False,
         "size": 34519040,
-        "agent_ids": [f"{DOMAIN}.{SLUG_NAME}"],
+        "agent_ids": [f"{DOMAIN}.{mock_config_entry.unique_id}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
@@ -151,6 +157,7 @@ async def test_agents_upload(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_adapter: MagicMock,
 ) -> None:
     """Test agent upload backup."""
@@ -171,7 +178,7 @@ async def test_agents_upload(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{SLUG_NAME}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
             data={"file": StringIO("test")},
         )
 
@@ -194,6 +201,7 @@ async def test_broken_upload_session(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test broken upload session."""
     client = await hass_client()
@@ -214,7 +222,7 @@ async def test_broken_upload_session(
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{SLUG_NAME}",
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
             data={"file": StringIO("test")},
         )
 
@@ -225,6 +233,7 @@ async def test_broken_upload_session(
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test agent download backup."""
     mock_drive_items.get = AsyncMock(
@@ -234,7 +243,7 @@ async def test_agents_download(
     backup_id = BACKUP_METADATA["backup_id"]
 
     resp = await client.get(
-        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{SLUG_NAME}"
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.unique_id}"
     )
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
@@ -255,6 +264,7 @@ async def test_delete_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -272,7 +282,9 @@ async def test_delete_error(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agent_errors": {f"{DOMAIN}.{SLUG_NAME}": error}}
+    assert response["result"] == {
+        "agent_errors": {f"{DOMAIN}.{mock_config_entry.unique_id}": error}
+    }
 
 
 @pytest.mark.parametrize(
@@ -304,6 +316,7 @@ async def test_agents_backup_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test backup not found."""
 
@@ -315,7 +328,7 @@ async def test_agents_backup_error(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{SLUG_NAME}": "Backup operation failed"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Backup operation failed"
     }
 
 
@@ -335,7 +348,7 @@ async def test_reauth_on_403(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{SLUG_NAME}": "Backup operation failed"
+        f"{DOMAIN}.{mock_config_entry.unique_id}": "Backup operation failed"
     }
 
     await hass.async_block_till_done()
