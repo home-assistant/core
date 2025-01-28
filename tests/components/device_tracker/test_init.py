@@ -159,9 +159,9 @@ async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     ]
     legacy.DeviceTracker(hass, False, True, {}, devices)
     _LOGGER.debug(mock_warning.call_args_list)
-    assert (
-        mock_warning.call_count == 1
-    ), "The only warning call should be duplicates (check DEBUG)"
+    assert mock_warning.call_count == 1, (
+        "The only warning call should be duplicates (check DEBUG)"
+    )
     args, _ = mock_warning.call_args
     assert "Duplicate device MAC" in args[0], "Duplicate MAC warning expected"
 
@@ -177,9 +177,9 @@ async def test_duplicate_mac_dev_id(mock_warning, hass: HomeAssistant) -> None:
     legacy.DeviceTracker(hass, False, True, {}, devices)
 
     _LOGGER.debug(mock_warning.call_args_list)
-    assert (
-        mock_warning.call_count == 1
-    ), "The only warning call should be duplicates (check DEBUG)"
+    assert mock_warning.call_count == 1, (
+        "The only warning call should be duplicates (check DEBUG)"
+    )
     args, _ = mock_warning.call_args
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 

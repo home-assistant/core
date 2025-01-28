@@ -41,6 +41,9 @@ from .entity import (
     async_check_create_deprecated,
 )
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

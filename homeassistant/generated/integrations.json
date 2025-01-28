@@ -1144,6 +1144,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "decorquip": {
+      "name": "Decorquip Dream",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "delijn": {
       "name": "De Lijn",
       "integration_type": "hub",
@@ -2600,6 +2605,12 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "homee": {
+      "name": "Homee",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "homematic": {
       "name": "Homematic",
       "integrations": {
@@ -2788,6 +2799,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "igloohome": {
+      "name": "igloohome",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "ign_sismologia": {
       "name": "IGN Sismolog\u00eda",
@@ -3286,6 +3303,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "letpot": {
+      "name": "LetPot",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "leviton": {
       "name": "Leviton",
       "iot_standards": [
@@ -3317,7 +3340,7 @@
           "integration_type": "hub",
           "config_flow": true,
           "iot_class": "local_push",
-          "name": "LG webOS Smart TV"
+          "name": "LG webOS TV"
         }
       }
     },
@@ -3583,6 +3606,19 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "mcp": {
+      "name": "Model Context Protocol",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "mcp_server": {
+      "name": "Model Context Protocol Server",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "mealie": {
       "name": "Mealie",
@@ -4194,7 +4230,7 @@
     "nmbs": {
       "name": "NMBS",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "no_ip": {
@@ -4574,7 +4610,7 @@
       "name": "Overseerr",
       "integration_type": "service",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_push"
     },
     "ovo_energy": {
       "name": "OVO Energy",
@@ -4951,6 +4987,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "qbus": {
+      "name": "Qbus",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "qingping": {
       "name": "Qingping",
       "integration_type": "hub",
@@ -5136,7 +5178,8 @@
       "name": "Refoss",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_polling"
+      "iot_class": "local_polling",
+      "single_config_entry": true
     },
     "rejseplanen": {
       "name": "Rejseplanen",
@@ -6163,7 +6206,8 @@
       "name": "System Monitor",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "local_push"
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "tado": {
       "name": "Tado",

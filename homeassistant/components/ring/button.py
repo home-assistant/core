@@ -12,6 +12,10 @@ from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingEntity, exception_wrap
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
+
 BUTTON_DESCRIPTION = ButtonEntityDescription(
     key="open_door", translation_key="open_door"
 )

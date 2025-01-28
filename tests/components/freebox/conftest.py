@@ -1,7 +1,7 @@
 """Test helpers for Freebox."""
 
 import json
-from unittest.mock import AsyncMock, PropertyMock, patch
+from unittest.mock import AsyncMock, patch
 
 from freebox_api.exceptions import HttpRequestError
 import pytest
@@ -32,16 +32,6 @@ def mock_path():
     with (
         patch("homeassistant.components.freebox.router.Path"),
         patch("homeassistant.components.freebox.router.os.makedirs"),
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def enable_all_entities():
-    """Make sure all entities are enabled."""
-    with patch(
-        "homeassistant.helpers.entity.Entity.entity_registry_enabled_default",
-        PropertyMock(return_value=True),
     ):
         yield
 

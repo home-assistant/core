@@ -179,14 +179,14 @@ class MqttNumber(MqttEntity, RestoreNumber):
             return
 
         if num_value is not None and (
-            num_value < self.min_value or num_value > self.max_value
+            num_value < self.native_min_value or num_value > self.native_max_value
         ):
             _LOGGER.error(
                 "Invalid value for %s: %s (range %s - %s)",
                 self.entity_id,
                 num_value,
-                self.min_value,
-                self.max_value,
+                self.native_min_value,
+                self.native_max_value,
             )
             return
 

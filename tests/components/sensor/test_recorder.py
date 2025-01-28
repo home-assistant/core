@@ -57,7 +57,7 @@ from tests.components.recorder.common import (
 )
 from tests.typing import (
     MockHAClientWebSocket,
-    RecorderInstanceGenerator,
+    RecorderInstanceContextManager,
     WebSocketGenerator,
 )
 
@@ -102,7 +102,7 @@ KW_SENSOR_ATTRIBUTES = {
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder patches."""
 
@@ -117,15 +117,6 @@ def disable_mariadb_issue() -> None:
     """Disable creating issue about outdated MariaDB version."""
     with patch(
         "homeassistant.components.recorder.util._async_create_mariadb_range_index_regression_issue"
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def disable_sqlite_issue() -> None:
-    """Disable creating issue about outdated SQLite version."""
-    with patch(
-        "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
     ):
         yield
 

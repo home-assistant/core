@@ -21,7 +21,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.aiohttp_client as client
+from homeassistant.helpers import aiohttp_client as client
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
 
@@ -390,3 +390,16 @@ async def test_client_session_immutable_headers(hass: HomeAssistant) -> None:
 
     with pytest.raises(AttributeError):
         session.headers.update({"user-agent": "bla"})
+
+
+@pytest.mark.usefixtures("disable_mock_zeroconf_resolver")
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_async_mdnsresolver(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test async_mdnsresolver."""
+    resp = aioclient_mock.post("http://localhost/xyz", json={"x": 1})
+    session = client.async_create_clientsession(hass)
+    resp = await session.post("http://localhost/xyz", json={"x": 1})
+    assert resp.status == 200
+    assert await resp.json() == {"x": 1}

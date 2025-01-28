@@ -5,21 +5,28 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
+from aiohttp import ClientError
 from habiticalib import Direction, Skill
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import (
     ATTR_CONFIG_ENTRY,
     ATTR_DIRECTION,
     ATTR_ITEM,
+    ATTR_KEYWORD,
+    ATTR_PRIORITY,
     ATTR_SKILL,
+    ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
+    ATTR_TYPE,
     DOMAIN,
     SERVICE_ABORT_QUEST,
     SERVICE_ACCEPT_QUEST,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
     SERVICE_SCORE_HABIT,
@@ -40,8 +47,8 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 
-REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica, try again later"
-RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again later"
+REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica: reason"
+RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again in 5 seconds"
 
 
 @pytest.fixture(autouse=True)
@@ -229,6 +236,15 @@ async def test_cast_skill(
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
         ),
+        (
+            {
+                ATTR_TASK: "Rechnungen bezahlen",
+                ATTR_SKILL: "smash",
+            },
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
     ],
 )
 async def test_cast_skill_exceptions(
@@ -353,6 +369,11 @@ async def test_handle_quests(
             ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
     ],
 )
@@ -513,6 +534,15 @@ async def test_score_task(
             ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
+                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                ATTR_DIRECTION: "up",
+            },
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
         (
             {
@@ -716,7 +746,7 @@ async def test_transformation(
             ERROR_BAD_REQUEST,
             None,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
         ),
         (
             {
@@ -746,7 +776,27 @@ async def test_transformation(
             None,
             ERROR_BAD_REQUEST,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
+                ATTR_TARGET: "test-partymember-username",
+                ATTR_ITEM: "spooky_sparkles",
+            },
+            None,
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+        (
+            {
+                ATTR_TARGET: "test-partymember-username",
+                ATTR_ITEM: "spooky_sparkles",
+            },
+            ClientError,
+            None,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
     ],
 )
@@ -775,3 +825,67 @@ async def test_transformation_exceptions(
             return_response=True,
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service_data"),
+    [
+        {},
+        {ATTR_TYPE: ["daily"]},
+        {ATTR_TYPE: ["habit"]},
+        {ATTR_TYPE: ["todo"]},
+        {ATTR_TYPE: ["reward"]},
+        {ATTR_TYPE: ["daily", "habit"]},
+        {ATTR_TYPE: ["todo", "reward"]},
+        {ATTR_PRIORITY: "trivial"},
+        {ATTR_PRIORITY: "easy"},
+        {ATTR_PRIORITY: "medium"},
+        {ATTR_PRIORITY: "hard"},
+        {ATTR_TASK: ["Zahnseide benutzen", "Eine kurze Pause machen"]},
+        {ATTR_TASK: ["f2c85972-1a19-4426-bc6d-ce3337b9d99f"]},
+        {ATTR_TASK: ["alias_zahnseide_benutzen"]},
+        {ATTR_TAG: ["Training", "Gesundheit + Wohlbefinden"]},
+        {ATTR_KEYWORD: "gewohnheit"},
+        {ATTR_TAG: ["Home Assistant"]},
+    ],
+    ids=[
+        "all_tasks",
+        "only dailies",
+        "only habits",
+        "only todos",
+        "only rewards",
+        "only dailies and habits",
+        "only todos and rewards",
+        "trivial tasks",
+        "easy tasks",
+        "medium tasks",
+        "hard tasks",
+        "by task name",
+        "by task ID",
+        "by alias",
+        "by tag",
+        "by keyword",
+        "empty result",
+    ],
+)
+@pytest.mark.usefixtures("habitica")
+async def test_get_tasks(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    service_data: dict[str, Any],
+) -> None:
+    """Test Habitica get_tasks action."""
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_TASKS,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    assert response == snapshot

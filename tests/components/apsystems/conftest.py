@@ -38,7 +38,7 @@ def mock_apsystems() -> Generator[MagicMock]:
         mock_api = mock_client.return_value
         mock_api.get_device_info.return_value = ReturnDeviceInfo(
             deviceId="MY_SERIAL_NUMBER",
-            devVer="1.0.0",
+            devVer="EZ1 1.0.0",
             ssid="MY_SSID",
             ipAddr="127.0.01",
             minPower=0,
