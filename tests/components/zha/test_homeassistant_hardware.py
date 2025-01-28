@@ -40,7 +40,7 @@ async def test_get_firmware_info_normal(hass: HomeAssistant) -> None:
         "homeassistant.components.zha.homeassistant_hardware.get_zha_gateway"
     ) as mock_get_zha_gateway:
         mock_get_zha_gateway.return_value.state.node_info.version = "1.2.3.4"
-        fw_info_running = await get_firmware_info(hass, zha)
+        fw_info_running = get_firmware_info(hass, zha)
 
     assert fw_info_running == FirmwareInfo(
         device="/dev/ttyUSB1",
@@ -53,7 +53,7 @@ async def test_get_firmware_info_normal(hass: HomeAssistant) -> None:
 
     # With ZHA not running
     zha.mock_state(hass, ConfigEntryState.NOT_LOADED)
-    fw_info_not_running = await get_firmware_info(hass, zha)
+    fw_info_not_running = get_firmware_info(hass, zha)
 
     assert fw_info_not_running == FirmwareInfo(
         device="/dev/ttyUSB1",
@@ -86,4 +86,4 @@ async def test_get_firmware_info_errors(
     )
     zha.add_to_hass(hass)
 
-    assert (await get_firmware_info(hass, zha)) is None
+    assert (get_firmware_info(hass, zha)) is None

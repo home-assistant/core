@@ -10,7 +10,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningAddon,
     OwningIntegration,
 )
-from homeassistant.components.otbr.homeassistant_hardware import get_firmware_info
+from homeassistant.components.otbr.homeassistant_hardware import async_get_firmware_info
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -21,7 +21,7 @@ COPROCESSOR_VERSION = "OPENTHREAD/thread-reference-20200818-1740-g33cc75ed3; NRF
 
 
 async def test_get_firmware_info(hass: HomeAssistant) -> None:
-    """Test `get_firmware_info`."""
+    """Test `async_get_firmware_info`."""
 
     otbr = MockConfigEntry(
         domain="otbr",
@@ -49,7 +49,7 @@ async def test_get_firmware_info(hass: HomeAssistant) -> None:
             return_value=True,
         ),
     ):
-        fw_info = await get_firmware_info(hass, otbr)
+        fw_info = await async_get_firmware_info(hass, otbr)
 
     assert fw_info == FirmwareInfo(
         device="/dev/ttyUSB1",
@@ -64,7 +64,7 @@ async def test_get_firmware_info(hass: HomeAssistant) -> None:
 
 
 async def test_get_firmware_info_ignored(hass: HomeAssistant) -> None:
-    """Test `get_firmware_info` with ignored entry."""
+    """Test `async_get_firmware_info` with ignored entry."""
 
     otbr = MockConfigEntry(
         domain="otbr",
@@ -75,12 +75,12 @@ async def test_get_firmware_info_ignored(hass: HomeAssistant) -> None:
     )
     otbr.add_to_hass(hass)
 
-    fw_info = await get_firmware_info(hass, otbr)
+    fw_info = await async_get_firmware_info(hass, otbr)
     assert fw_info is None
 
 
 async def test_get_firmware_info_bad_addon(hass: HomeAssistant) -> None:
-    """Test `get_firmware_info`."""
+    """Test `async_get_firmware_info`."""
 
     otbr = MockConfigEntry(
         domain="otbr",
@@ -108,7 +108,7 @@ async def test_get_firmware_info_bad_addon(hass: HomeAssistant) -> None:
             side_effect=vol.Invalid("Bad addon name"),
         ),
     ):
-        fw_info = await get_firmware_info(hass, otbr)
+        fw_info = await async_get_firmware_info(hass, otbr)
 
     assert fw_info == FirmwareInfo(
         device="/dev/ttyUSB1",
@@ -122,7 +122,7 @@ async def test_get_firmware_info_bad_addon(hass: HomeAssistant) -> None:
 
 
 async def test_get_firmware_info_no_coprocessor_version(hass: HomeAssistant) -> None:
-    """Test `get_firmware_info`."""
+    """Test `async_get_firmware_info`."""
 
     otbr = MockConfigEntry(
         domain="otbr",
@@ -146,7 +146,7 @@ async def test_get_firmware_info_no_coprocessor_version(hass: HomeAssistant) -> 
             return_value=False,
         ),
     ):
-        fw_info = await get_firmware_info(hass, otbr)
+        fw_info = await async_get_firmware_info(hass, otbr)
 
     assert fw_info == FirmwareInfo(
         device="/dev/ttyUSB1",
