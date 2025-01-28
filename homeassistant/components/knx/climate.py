@@ -244,12 +244,12 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self._device.temperature.value  # type: ignore[no-any-return]
+        return self._device.temperature.value
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self._device.target_temperature.value  # type: ignore[no-any-return]
+        return self._device.target_temperature.value
 
     @property
     def min_temp(self) -> float:
@@ -370,7 +370,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
         Requires ClimateEntityFeature.PRESET_MODE.
         """
         if self._device.mode is not None and self._device.mode.supports_operation_mode:
-            return self._device.mode.operation_mode.name.lower()  # type: ignore[no-any-return]
+            return self._device.mode.operation_mode.name.lower()
         return None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -394,7 +394,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
             return self.fan_zero_mode
 
         if self._device.fan_speed_mode == FanSpeedMode.STEP:
-            return self._attr_fan_modes[fan_speed]  # type: ignore[no-any-return]
+            return self._attr_fan_modes[fan_speed]
 
         # Find the closest fan mode percentage
         closest_percentage = min(
@@ -444,7 +444,7 @@ class KNXClimate(KnxYamlEntity, ClimateEntity):
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        return self._device.humidity.value  # type: ignore[no-any-return]
+        return self._device.humidity.value
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
