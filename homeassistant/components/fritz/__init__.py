@@ -40,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzConfigEntry) -> boo
     _LOGGER.debug("Setting up FRITZ!Box Tools component")
     avm_wrapper = AvmWrapper(
         hass=hass,
+        config_entry=entry,
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],

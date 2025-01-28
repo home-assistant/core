@@ -165,11 +165,12 @@ class UpdateCoordinatorDataType(TypedDict):
 class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """FritzBoxTools class."""
 
-    config_entry: ConfigEntry
+    config_entry: FritzConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: FritzConfigEntry,
         password: str,
         port: int,
         username: str = DEFAULT_USERNAME,
@@ -179,6 +180,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Initialize FritzboxTools class."""
         super().__init__(
             hass=hass,
+            config_entry=config_entry,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=30),
