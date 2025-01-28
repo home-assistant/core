@@ -18,6 +18,11 @@
   timezone | US/Pacific
   config_dir | config
   
+  <details><summary>mock_no_info_integration</summary>
+  
+  No information available
+  </details>
+  
   <details><summary>cloud</summary>
   
   logged_in | True
@@ -33,7 +38,7 @@
   remote_server | us-west-1
   certificate_status | CertificateStatus.READY
   instance_id | 12345678901234567890
-  can_reach_cert_server | ok
+  can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
   

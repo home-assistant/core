@@ -21,6 +21,7 @@ from hass_nabucasa.voice import TTS_VOICES
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=hass-component-root-import
@@ -36,6 +37,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
 
+from tests.common import mock_platform
 from tests.components.google_assistant import MockConfig
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -1877,11 +1879,29 @@ async def test_download_support_package(
 ) -> None:
     """Test downloading a support package file."""
     aioclient_mock.get("https://cloud.bla.com/status", text="")
-    aioclient_mock.get("https://cert-server/directory", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
     aioclient_mock.get(
         "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
         exc=aiohttp.ClientError,
     )
+
+    def async_register_mock_platform(
+        hass: HomeAssistant, register: system_health.SystemHealthRegistration
+    ) -> None:
+        async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {}
+
+        register.async_register_info(mock_empty_info, "/config/mock_integration")
+
+    mock_platform(
+        hass,
+        "mock_no_info_integration.system_health",
+        MagicMock(async_register=async_register_mock_platform),
+    )
+    hass.config.components.add("mock_no_info_integration")
+
     assert await async_setup_component(hass, "system_health", {})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
@@ -1938,6 +1958,5 @@ async def test_download_support_package(
         ),
     ):
         req = await cloud_client.get("/api/cloud/support_package")
-
     assert req.status == HTTPStatus.OK
     assert await req.text() == snapshot

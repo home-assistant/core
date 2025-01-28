@@ -127,14 +127,9 @@ async def get_info(hass: HomeAssistant) -> dict[str, dict[str, str]]:
             return value
         try:
             return await value
-        except Exception as exception:  # noqa: BLE001
-            _LOGGER.error(
-                "Error fetching system info for %s - %s",
-                domain,
-                key,
-                exc_info=(type(exception), exception, exception.__traceback__),
-            )
-            return f"Failed: {exception.__class__.__name__}"
+        except Exception as exception:
+            _LOGGER.exception("Error fetching system info for %s - %s", domain, key)
+            return f"Exception: {exception}"
 
     async for domain, domain_data in _registered_domain_data(hass):
         domain_info: dict[str, Any] = {}

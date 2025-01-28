@@ -397,9 +397,9 @@ class DownloadSupportPackageView(HomeAssistantView):
     url = "/api/cloud/support_package"
     name = "api:cloud:support_package"
 
-    async def get(self, request: web.Request) -> web.Response:
-        """Download support package file."""
-
+    def _generate_markdown(
+        self, hass_info: dict[str, Any], domains_info: dict[str, dict[str, str]]
+    ) -> str:
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
                 return "No information available\n"
@@ -413,24 +413,27 @@ class DownloadSupportPackageView(HomeAssistantView):
                     first = False
             return markdown + "\n"
 
-        hass = request.app[KEY_HASS]
-        domain_health = await get_system_health_info(hass)
         markdown = "## System Information\n\n"
+        markdown += get_domain_table_markdown(hass_info)
 
-        try:
-            hass_info = domain_health.pop("homeassistant")
-            markdown += get_domain_table_markdown(hass_info)
-
-        except KeyError:
-            _LOGGER.error("No 'homeassistant' domain in system health info")
-
-        for domain, domain_info in domain_health.items():
+        for domain, domain_info in domains_info.items():
             domain_info_md = get_domain_table_markdown(domain_info)
             markdown += (
                 f"<details><summary>{domain}</summary>\n\n"
                 f"{domain_info_md}"
                 "</details>\n\n"
             )
+
+        return markdown
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Download support package file."""
+
+        hass = request.app[KEY_HASS]
+        domain_health = await get_system_health_info(hass)
+
+        hass_info = domain_health.pop("homeassistant", {})
+        markdown = self._generate_markdown(hass_info, domain_health)
 
         return web.Response(
             body=markdown,
