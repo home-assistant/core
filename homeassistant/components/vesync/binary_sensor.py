@@ -93,4 +93,3 @@ class VeSyncBinarySensor(BinarySensorEntity, VeSyncBaseEntity):
         """Return true if the binary sensor is on."""
         _LOGGER.debug(rgetattr(self.device, self.entity_description.key))
         return rgetattr(self.device, self.entity_description.key)
-        # return self.entity_description.is_on(self.device)
