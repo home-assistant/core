@@ -11,7 +11,7 @@ from homeassistant.components.heos.const import (
     SERVICE_SIGN_OUT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -34,10 +34,7 @@ async def test_sign_in(
 
 
 async def test_sign_in_failed(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    controller: Heos,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Test sign-in service logs error when not connected."""
     config_entry.add_to_hass(hass)
@@ -47,22 +44,19 @@ async def test_sign_in_failed(
         "", "Invalid credentials", 6
     )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SIGN_IN,
-        {ATTR_USERNAME: "test@test.com", ATTR_PASSWORD: "password"},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SIGN_IN,
+            {ATTR_USERNAME: "test@test.com", ATTR_PASSWORD: "password"},
+            blocking=True,
+        )
 
     controller.sign_in.assert_called_once_with("test@test.com", "password")
-    assert "Sign in failed: Invalid credentials (6)" in caplog.text
 
 
 async def test_sign_in_unknown_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    controller: Heos,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Test sign-in service logs error for failure."""
     config_entry.add_to_hass(hass)
@@ -70,15 +64,15 @@ async def test_sign_in_unknown_error(
 
     controller.sign_in.side_effect = HeosError()
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SIGN_IN,
-        {ATTR_USERNAME: "test@test.com", ATTR_PASSWORD: "password"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SIGN_IN,
+            {ATTR_USERNAME: "test@test.com", ATTR_PASSWORD: "password"},
+            blocking=True,
+        )
 
     controller.sign_in.assert_called_once_with("test@test.com", "password")
-    assert "Unable to sign in" in caplog.text
 
 
 async def test_sign_in_not_loaded_raises(
@@ -123,17 +117,14 @@ async def test_sign_out_not_loaded_raises(
 
 
 async def test_sign_out_unknown_error(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    controller: Heos,
-    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: Heos
 ) -> None:
     """Test the sign-out service."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     controller.sign_out.side_effect = HeosError()
 
-    await hass.services.async_call(DOMAIN, SERVICE_SIGN_OUT, {}, blocking=True)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(DOMAIN, SERVICE_SIGN_OUT, {}, blocking=True)
 
     assert controller.sign_out.call_count == 1
-    assert "Unable to sign out" in caplog.text

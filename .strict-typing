@@ -316,6 +316,7 @@ homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mcp.*
 homeassistant.components.mcp_server.*
 homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
@@ -358,6 +359,7 @@ homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
+homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
