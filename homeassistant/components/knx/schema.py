@@ -45,6 +45,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from .const import (
+    CONF_CONTEXT_TIMEOUT,
+    CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
     CONF_KNX_EXPOSE,
     CONF_PAYLOAD_LENGTH,
@@ -211,14 +213,6 @@ class BinarySensorSchema(KNXPlatformSchema):
     """Voluptuous schema for KNX binary sensors."""
 
     PLATFORM = Platform.BINARY_SENSOR
-
-    CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
-    CONF_SYNC_STATE = CONF_SYNC_STATE
-    CONF_INVERT = CONF_INVERT
-    CONF_IGNORE_INTERNAL_STATE = "ignore_internal_state"
-    CONF_CONTEXT_TIMEOUT = "context_timeout"
-    CONF_RESET_AFTER = CONF_RESET_AFTER
-
     DEFAULT_NAME = "KNX Binary Sensor"
 
     ENTITY_SCHEMA = vol.All(

@@ -68,6 +68,11 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         """Get input sources across all devices."""
         return self._inputs
 
+    @property
+    def favorites(self) -> dict[int, MediaItem]:
+        """Get favorite stations."""
+        return self._favorites
+
     async def async_setup(self) -> None:
         """Set up the coordinator; connect to the host; and retrieve initial data."""
         # Add before connect as it may occur during initial connection
