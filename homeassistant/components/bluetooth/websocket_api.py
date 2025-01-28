@@ -7,7 +7,12 @@ from functools import lru_cache, partial
 import time
 from typing import Any
 
-from habluetooth import BluetoothScanningMode, HaBluetoothSlotAllocations
+from habluetooth import (
+    BluetoothScanningMode,
+    HaBluetoothSlotAllocations,
+    HaScannerRegistration,
+    HaScannerRegistrationEvent,
+)
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 import voluptuous as vol
 
@@ -190,4 +195,59 @@ async def ws_subscribe_connection_allocations(
     if current_allocations := manager.async_current_allocations(source):
         connection.send_message(
             json_bytes(websocket_api.event_message(ws_msg_id, current_allocations))
+        )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "bluetooth/subscribe_scanner_details",
+        vol.Optional("config_entry_id"): str,
+    }
+)
+@websocket_api.async_response
+async def ws_subscribe_scanner_details(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe scanner details websocket command."""
+    ws_msg_id = msg["id"]
+    source: str | None = None
+    if config_entry_id := msg.get("config_entry_id"):
+        try:
+            source = config_entry_id_to_source(hass, config_entry_id)
+        except InvalidConfigEntryID as err:
+            connection.send_error(ws_msg_id, "invalid_config_entry_id", str(err))
+            return
+        except InvalidSource as err:
+            connection.send_error(ws_msg_id, "invalid_source", str(err))
+            return
+
+    def _async_event_message(message: dict[str, Any]) -> None:
+        connection.send_message(
+            json_bytes(websocket_api.event_message(ws_msg_id, message))
+        )
+
+    def _async_registration_changed(registration: HaScannerRegistration) -> None:
+        if registration.event is HaScannerRegistrationEvent.ADDED:
+            event_type = "added"
+        else:
+            event_type = "removed"
+        _async_event_message({event_type: [registration.scanner.details]})
+
+    manager = _get_manager(hass)
+    connection.subscriptions[ws_msg_id] = (
+        manager.async_register_scanner_registration_callback(
+            _async_registration_changed, source
+        )
+    )
+    connection.send_message(json_bytes(websocket_api.result_message(ws_msg_id)))
+    if scanners := manager.async_current_scanners():
+        _async_event_message(
+            {
+                "added": [
+                    scanner.details
+                    for scanner in scanners
+                    if source is None or scanner.source == source
+                ]
+            }
         )
