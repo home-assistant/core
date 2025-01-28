@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+import dataclasses
 import tarfile
 from unittest.mock import Mock, patch
 
 import pytest
+import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
 from homeassistant.components.backup.util import (
@@ -160,6 +162,7 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
         protected=True,
         size=encrypted_backup_path.stat().st_size,
     )
+    expected_padding = b"\0" * 40960  # 4 x 10240 byte of padding
 
     async def send_backup() -> AsyncIterator[bytes]:
         f = encrypted_backup_path.open("rb")
@@ -170,6 +173,9 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
         return send_backup()
 
     decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    assert decryptor.backup() == dataclasses.replace(
+        backup, protected=False, size=backup.size + len(expected_padding)
+    )
     decrypted_stream = await decryptor.open_stream()
     decrypted_output = b""
     async for chunk in decrypted_stream:
@@ -178,10 +184,41 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
     # Expect the output to match the stored decrypted backup file, with additional
     # padding.
     decrypted_backup_data = decrypted_backup_path.read_bytes()
-    encrypted_backup_len = len(decrypted_backup_data)
-    padding = b"\0" * (len(decrypted_output) - encrypted_backup_len)
-    assert len(padding) == 40960  # 4 x 10240 byte of padding
-    assert decrypted_output == decrypted_backup_data + padding
+    assert decrypted_output == decrypted_backup_data + expected_padding
+
+
+async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
+    """Test the decrypted backup streamer with wrong password."""
+    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    backup = AgentBackup(
+        addons=["addon_1", "addon_2"],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=True,
+        size=encrypted_backup_path.stat().st_size,
+    )
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        f = encrypted_backup_path.open("rb")
+        while chunk := f.read(1024):
+            yield chunk
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "wrong_password")
+    decrypted_stream = await decryptor.open_stream()
+    async for _ in decrypted_stream:
+        pass
+
+    await decryptor.done_event.wait()
+    assert isinstance(decryptor.error, securetar.SecureTarReadError)
 
 
 async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
@@ -203,6 +240,7 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
         protected=False,
         size=decrypted_backup_path.stat().st_size,
     )
+    expected_padding = b"\0" * 40960  # 4 x 10240 byte of padding
 
     async def send_backup() -> AsyncIterator[bytes]:
         f = decrypted_backup_path.open("rb")
@@ -223,6 +261,9 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
             bytes.fromhex("00000000000000000000000000000000"),
         )
         encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    assert encryptor.backup() == dataclasses.replace(
+        backup, protected=True, size=backup.size + len(expected_padding)
+    )
 
     encrypted_stream = await encryptor.open_stream()
     encrypted_output = b""
@@ -232,10 +273,7 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
     # Expect the output to match the stored encrypted backup file, with additional
     # padding.
     encrypted_backup_data = encrypted_backup_path.read_bytes()
-    encrypted_backup_len = len(encrypted_backup_data)
-    padding = b"\0" * (len(encrypted_output) - encrypted_backup_len)
-    assert len(padding) == 40960  # 4 x 10240 byte of padding
-    assert encrypted_output == encrypted_backup_data + padding
+    assert encrypted_output == encrypted_backup_data + expected_padding
 
 
 async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> None:
@@ -294,3 +332,49 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     # 4 x 10240 byte of padding
     assert len(encrypted_output1) == len(encrypted_backup_data) + 40960
     assert encrypted_output1[: len(encrypted_backup_data)] != encrypted_backup_data
+
+
+async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
+    """Test the encrypted backup streamer."""
+    decrypted_backup_path = get_fixture_path(
+        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
+    )
+    backup = AgentBackup(
+        addons=["addon_1", "addon_2"],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=False,
+        size=decrypted_backup_path.stat().st_size,
+    )
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        f = decrypted_backup_path.open("rb")
+        while chunk := f.read(1024):
+            yield chunk
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    # Patch os.urandom to return values matching the nonce used in the encrypted
+    # test backup. The backup has three inner tar files, but we need an extra nonce
+    # for a future planned supervisor.tar.
+    encryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+
+    with patch(
+        "homeassistant.components.backup.util.tarfile.open",
+        side_effect=tarfile.TarError,
+    ):
+        encrypted_stream = await encryptor.open_stream()
+        async for _ in encrypted_stream:
+            pass
+
+    # Expect the output to match the stored encrypted backup file, with additional
+    # padding.
+    await encryptor.done_event.wait()
+    assert isinstance(encryptor.error, tarfile.TarError)

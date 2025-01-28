@@ -123,7 +123,7 @@ class DownloadBackupView(HomeAssistantView):
 
         worker_done_event = asyncio.Event()
 
-        def on_done() -> None:
+        def on_done(error: Exception | None) -> None:
             """Call by the worker thread when it's done."""
             hass.loop.call_soon_threadsafe(worker_done_event.set)
 

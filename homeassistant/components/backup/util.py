@@ -245,11 +245,12 @@ def decrypt_backup(
     input_stream: IO[bytes],
     output_stream: IO[bytes],
     password: str | None,
-    on_done: Callable[[], None],
+    on_done: Callable[[Exception | None], None],
     minimum_size: int,
     nonces: list[bytes],
 ) -> None:
     """Decrypt a backup."""
+    error: Exception | None = None
     try:
         with (
             tarfile.open(
@@ -262,13 +263,14 @@ def decrypt_backup(
             _decrypt_backup(input_tar, output_tar, password)
     except (DecryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error decrypting backup: %s", err)
+        error = err
     else:
         # Pad the output stream to the requested minimum size
         padding = max(minimum_size - output_stream.tell(), 0)
         output_stream.write(b"\0" * padding)
     finally:
         output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
-        on_done()
+        on_done(error)
 
 
 def _decrypt_backup(
@@ -313,11 +315,12 @@ def encrypt_backup(
     input_stream: IO[bytes],
     output_stream: IO[bytes],
     password: str | None,
-    on_done: Callable[[], None],
+    on_done: Callable[[Exception | None], None],
     minimum_size: int,
     nonces: list[bytes],
 ) -> None:
     """Encrypt a backup."""
+    error: Exception | None = None
     try:
         with (
             tarfile.open(
@@ -330,13 +333,14 @@ def encrypt_backup(
             _encrypt_backup(input_tar, output_tar, password, nonces)
     except (EncryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error encrypting backup: %s", err)
+        error = err
     else:
         # Pad the output stream to the requested minimum size
         padding = max(minimum_size - output_stream.tell(), 0)
         output_stream.write(b"\0" * padding)
     finally:
         output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
-        on_done()
+        on_done(error)
 
 
 def _encrypt_backup(
@@ -383,7 +387,15 @@ class _CipherBackupStreamer:
     """Encrypt or decrypt a backup."""
 
     _cipher_func: Callable[
-        [IO[bytes], IO[bytes], str | None, Callable[[], None], int, list[bytes]], None
+        [
+            IO[bytes],
+            IO[bytes],
+            str | None,
+            Callable[[Exception | None], None],
+            int,
+            list[bytes],
+        ],
+        None,
     ]
 
     def __init__(
@@ -395,6 +407,7 @@ class _CipherBackupStreamer:
     ) -> None:
         """Initialize."""
         self.done_event = asyncio.Event()
+        self.error: Exception | None = None
         self._backup = backup
         self._hass = hass
         self._open_stream = open_stream
@@ -413,8 +426,9 @@ class _CipherBackupStreamer:
     async def open_stream(self) -> AsyncIterator[bytes]:
         """Open a stream."""
 
-        def on_done() -> None:
+        def on_done(error: Exception | None) -> None:
             """Call by the worker thread when it's done."""
+            self.error = error
             self._hass.loop.call_soon_threadsafe(self.done_event.set)
 
         stream = await self._open_stream()
