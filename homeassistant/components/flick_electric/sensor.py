@@ -51,19 +51,19 @@ class FlickPricingSensor(CoordinatorEntity[FlickElectricDataCoordinator], Sensor
             _LOGGER.warning(
                 "Unexpected quantity for unit price: %s", self.coordinator.data
             )
-        return self.coordinator.data.cost
+        return self.coordinator.data.cost * 100
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
-        components: dict[str, Decimal] = {}
+        components: dict[str, float] = {}
 
         for component in self.coordinator.data.components:
             if component.charge_setter not in ATTR_COMPONENTS:
                 _LOGGER.warning("Found unknown component: %s", component.charge_setter)
                 continue
 
-            components[component.charge_setter] = component.value
+            components[component.charge_setter] = float(component.value * 100)
 
         return {
             ATTR_START_AT: self.coordinator.data.start_at,

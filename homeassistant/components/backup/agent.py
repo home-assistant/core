@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from pathlib import Path
 from typing import Any, Protocol
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -30,11 +30,12 @@ class BackupAgent(abc.ABC):
 
     domain: str
     name: str
+    unique_id: str
 
     @cached_property
     def agent_id(self) -> str:
         """Return the agent_id."""
-        return f"{self.domain}.{self.name}"
+        return f"{self.domain}.{self.unique_id}"
 
     @abc.abstractmethod
     async def async_download_backup(

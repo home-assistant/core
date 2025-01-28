@@ -38,7 +38,7 @@ from homeassistant.loader import (
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["ClientCredential", "AuthorizationServer", "async_import_client_credential"]
+__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,8 +143,6 @@ class ApplicationCredentialsStorageCollection(collection.DictStorageCollection):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Application Credentials."""
-    hass.data[DOMAIN] = {}
-
     id_manager = collection.IDManager()
     storage_collection = ApplicationCredentialsStorageCollection(
         Store(hass, STORAGE_VERSION, STORAGE_KEY),

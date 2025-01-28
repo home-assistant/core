@@ -4,18 +4,23 @@ from __future__ import annotations
 
 import asyncio
 from http import HTTPStatus
-from typing import cast
+import threading
+from typing import IO, cast
 
 from aiohttp import BodyPartReader
 from aiohttp.hdrs import CONTENT_DISPOSITION
 from aiohttp.web import FileResponse, Request, Response, StreamResponse
+from multidict import istr
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
+from . import util
+from .agent import BackupAgent
 from .const import DATA_MANAGER
+from .manager import BackupManager
 
 
 @callback
@@ -43,8 +48,13 @@ class DownloadBackupView(HomeAssistantView):
             agent_id = request.query.getone("agent_id")
         except KeyError:
             return Response(status=HTTPStatus.BAD_REQUEST)
+        try:
+            password = request.query.getone("password")
+        except KeyError:
+            password = None
 
-        manager = request.app[KEY_HASS].data[DATA_MANAGER]
+        hass = request.app[KEY_HASS]
+        manager = hass.data[DATA_MANAGER]
         if agent_id not in manager.backup_agents:
             return Response(status=HTTPStatus.BAD_REQUEST)
         agent = manager.backup_agents[agent_id]
@@ -58,6 +68,24 @@ class DownloadBackupView(HomeAssistantView):
         headers = {
             CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
         }
+
+        if not password:
+            return await self._send_backup_no_password(
+                request, headers, backup_id, agent_id, agent, manager
+            )
+        return await self._send_backup_with_password(
+            hass, request, headers, backup_id, agent_id, password, agent, manager
+        )
+
+    async def _send_backup_no_password(
+        self,
+        request: Request,
+        headers: dict[istr, str],
+        backup_id: str,
+        agent_id: str,
+        agent: BackupAgent,
+        manager: BackupManager,
+    ) -> StreamResponse | FileResponse | Response:
         if agent_id in manager.local_backup_agents:
             local_agent = manager.local_backup_agents[agent_id]
             path = local_agent.get_backup_path(backup_id)
@@ -69,6 +97,50 @@ class DownloadBackupView(HomeAssistantView):
         async for chunk in stream:
             await response.write(chunk)
         return response
+
+    async def _send_backup_with_password(
+        self,
+        hass: HomeAssistant,
+        request: Request,
+        headers: dict[istr, str],
+        backup_id: str,
+        agent_id: str,
+        password: str,
+        agent: BackupAgent,
+        manager: BackupManager,
+    ) -> StreamResponse | FileResponse | Response:
+        reader: IO[bytes]
+        if agent_id in manager.local_backup_agents:
+            local_agent = manager.local_backup_agents[agent_id]
+            path = local_agent.get_backup_path(backup_id)
+            try:
+                reader = await hass.async_add_executor_job(open, path.as_posix(), "rb")
+            except FileNotFoundError:
+                return Response(status=HTTPStatus.NOT_FOUND)
+        else:
+            stream = await agent.async_download_backup(backup_id)
+            reader = cast(IO[bytes], util.AsyncIteratorReader(hass, stream))
+
+        worker_done_event = asyncio.Event()
+
+        def on_done() -> None:
+            """Call by the worker thread when it's done."""
+            hass.loop.call_soon_threadsafe(worker_done_event.set)
+
+        stream = util.AsyncIteratorWriter(hass)
+        worker = threading.Thread(
+            target=util.decrypt_backup, args=[reader, stream, password, on_done]
+        )
+        try:
+            worker.start()
+            response = StreamResponse(status=HTTPStatus.OK, headers=headers)
+            await response.prepare(request)
+            async for chunk in stream:
+                await response.write(chunk)
+            return response
+        finally:
+            reader.close()
+            await worker_done_event.wait()
 
 
 class UploadBackupView(HomeAssistantView):
