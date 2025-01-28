@@ -62,10 +62,10 @@
         "name": "Energy export tariff {tariff}"
       },
       "total_s0_kwh": {
-        "name": "Total energy S0"
+        "name": "Total energy"
       },
       "active_s0_w": {
-        "name": "Current usage S0"
+        "name": "Current usage"
       }
     }
   }
