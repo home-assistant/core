@@ -16,13 +16,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN, EQUIPMENT
+from . import EconetConfigEntry
+from .const import DOMAIN
 from .entity import EcoNetEntity
 
 ECONET_STATE_TO_HA = {
@@ -51,10 +51,12 @@ SUPPORT_FLAGS_THERMOSTAT = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EconetConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up EcoNet thermostat based on a config entry."""
-    equipment = hass.data[DOMAIN][EQUIPMENT][entry.entry_id]
+    equipment = entry.runtime_data
     async_add_entities(
         [
             EcoNetThermostat(thermostat)
