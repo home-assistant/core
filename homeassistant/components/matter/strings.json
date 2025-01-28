@@ -269,6 +269,9 @@
       },
       "battery_replacement_description": {
         "name": "Battery type"
+      },
+      "current_phase": {
+        "name": "Current phase"
       }
     },
     "switch": {

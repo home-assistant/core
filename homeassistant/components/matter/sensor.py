@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
 from chip.clusters.Types import Nullable, NullValue
 from matter_server.client.models import device_types
 from matter_server.common.custom_clusters import (
@@ -95,6 +96,14 @@ class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescrip
     """Describe Matter sensor entities."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterListSensorEntityDescription(MatterSensorEntityDescription):
+    """Describe Matter sensor entities from MatterListSensor."""
+
+    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    list_attribute: type[ClusterAttributeDescriptor]
+
+
 class MatterSensor(MatterEntity, SensorEntity):
     """Representation of a Matter sensor."""
 
@@ -175,6 +184,28 @@ class MatterOperationalStateSensor(MatterSensor):
                 clusters.OperationalState.Attributes.OperationalState
             )
         )
+
+
+class MatterListSensor(MatterSensor):
+    """Representation of a sensor entity from Matter list from Cluster attribute(s)."""
+
+    entity_description: MatterListSensorEntityDescription
+    _attr_device_class = SensorDeviceClass.ENUM
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        self._attr_options = list_values = cast(
+            list[str],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        current_value: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        try:
+            self._attr_native_value = list_values[current_value]
+        except IndexError:
+            self._attr_native_value = None
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -806,6 +837,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(
             clusters.WaterHeaterManagement.Attributes.EstimatedHeatRequired,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterListSensorEntityDescription(
+            key="OperationalStateCurrentPhase",
+            translation_key="current_phase",
+            list_attribute=clusters.OperationalState.Attributes.PhaseList,
+        ),
+        entity_class=MatterListSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.CurrentPhase,
+            clusters.OperationalState.Attributes.PhaseList,
         ),
     ),
     MatterDiscoverySchema(

@@ -128,3 +128,6 @@ class MatterDiscoverySchema:
     # [optional] bool to specify if this primary value may be discovered
     # by multiple platforms
     allow_multi: bool = False
+
+    # [optional] the primary attribute value may not be null/None
+    allow_none_value: bool = False

@@ -359,6 +359,7 @@ homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
+homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*

@@ -39,7 +39,7 @@ async def async_get_backup_agents(
         return []
     syno_datas: dict[str, SynologyDSMData] = hass.data[DOMAIN]
     return [
-        SynologyDSMBackupAgent(hass, entry)
+        SynologyDSMBackupAgent(hass, entry, entry.unique_id)
         for entry in entries
         if entry.unique_id is not None
         and (syno_data := syno_datas.get(entry.unique_id))
@@ -76,11 +76,12 @@ class SynologyDSMBackupAgent(BackupAgent):
 
     domain = DOMAIN
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, unique_id: str) -> None:
         """Initialize the Synology DSM backup agent."""
         super().__init__()
         LOGGER.debug("Initializing Synology DSM backup agent for %s", entry.unique_id)
         self.name = entry.title
+        self.unique_id = unique_id
         self.path = (
             f"{entry.options[CONF_BACKUP_SHARE]}/{entry.options[CONF_BACKUP_PATH]}"
         )
