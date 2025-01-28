@@ -1028,6 +1028,12 @@
       },
       "operation_mode": {
         "name": "Operation mode"
+      },
+      "device_mode": {
+        "name": "Device mode"
+      },
+      "pilot_wire_mode": {
+        "name": "Pilot wire mode"
       }
     },
     "sensor": {
