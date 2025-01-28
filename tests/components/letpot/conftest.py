@@ -65,6 +65,8 @@ def mock_device_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_device_client:
         device_client = mock_device_client.return_value
+        device_client.device_model_code = "LPH21"
+        device_client.device_model_name = "LetPot Air"
         device_client.get_current_status.return_value = STATUS
         device_client.last_status.return_value = STATUS
         yield device_client
