@@ -385,6 +385,9 @@ aiotractive==0.6.0
 # homeassistant.components.unifi
 aiounifi==81
 
+# homeassistant.components.usb
+aiousbwatcher==1.1.1
+
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1
 
@@ -2014,9 +2017,6 @@ pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
 pytrydan==0.8.0
-
-# homeassistant.components.usb
-pyudev==0.24.1
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
