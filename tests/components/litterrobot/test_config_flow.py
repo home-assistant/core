@@ -37,7 +37,6 @@ async def test_full_flow(hass: HomeAssistant, mock_account) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], CONFIG[DOMAIN]
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG[DOMAIN][CONF_USERNAME]
@@ -102,7 +101,6 @@ async def test_create_entry(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], CONFIG[DOMAIN]
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONFIG[DOMAIN][CONF_USERNAME]
