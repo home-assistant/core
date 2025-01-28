@@ -36,7 +36,6 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
     """Describes a YouLess sensor entity."""
 
     device_group: str
-    device_group_name: str
     value_func: Callable[[YoulessAPI], float | None]
 
 
@@ -44,9 +43,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="water",
         device_group="water",
-        device_group_name="Water meter",
         translation_key="total_water",
-        has_entity_name=True,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -57,9 +54,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="gas",
         device_group="gas",
-        device_group_name="Gas meter",
         translation_key="total_gas_m3",
-        has_entity_name=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
@@ -68,9 +63,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="usage",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_power_w",
-        has_entity_name=True,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -83,10 +76,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="power_low",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="total_energy_import_tariff_kwh",
         translation_placeholders={"tariff": "1"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -97,10 +88,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="power_high",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="total_energy_import_tariff_kwh",
         translation_placeholders={"tariff": "2"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -111,9 +100,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="power_total",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="total_energy_import_kwh",
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -126,10 +113,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_1_power",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_power_phase_w",
         translation_placeholders={"phase": "1"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -138,10 +123,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_1_voltage",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_voltage_phase_v",
         translation_placeholders={"phase": "1"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -152,10 +135,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_1_current",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_current_phase_a",
         translation_placeholders={"phase": "1"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -166,10 +147,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_2_power",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_power_phase_w",
         translation_placeholders={"phase": "2"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -178,10 +157,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_2_voltage",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_voltage_phase_v",
         translation_placeholders={"phase": "2"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -192,10 +169,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_2_current",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_current_phase_a",
         translation_placeholders={"phase": "2"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -206,10 +181,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_3_power",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_power_phase_w",
         translation_placeholders={"phase": "3"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -218,10 +191,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_3_voltage",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_voltage_phase_v",
         translation_placeholders={"phase": "3"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -232,10 +203,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="phase_3_current",
         device_group="power",
-        device_group_name="Power usage",
         translation_key="active_current_phase_a",
         translation_placeholders={"phase": "3"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
@@ -246,10 +215,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="delivery_low",
         device_group="delivery",
-        device_group_name="Energy delivery",
         translation_key="total_energy_export_tariff_kwh",
         translation_placeholders={"tariff": "1"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -262,10 +229,8 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="delivery_high",
         device_group="delivery",
-        device_group_name="Energy delivery",
         translation_key="total_energy_export_tariff_kwh",
         translation_placeholders={"tariff": "2"},
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -278,9 +243,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="extra_total",
         device_group="extra",
-        device_group_name="Extra meter",
         translation_key="total_s0_kwh",
-        has_entity_name=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -293,9 +256,7 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
     YouLessSensorEntityDescription(
         key="extra_usage",
         device_group="extra",
-        device_group_name="Extra meter",
         translation_key="active_s0_w",
-        has_entity_name=True,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
@@ -329,6 +290,7 @@ class YouLessSensor(YouLessEntity, SensorEntity):
     """Representation of a Sensor."""
 
     entity_description: YouLessSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -340,7 +302,7 @@ class YouLessSensor(YouLessEntity, SensorEntity):
         super().__init__(
             coordinator,
             f"{device}_{description.device_group}",
-            description.device_group_name,
+            description.device_group,
         )
         self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"
         self.entity_description = description

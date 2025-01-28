@@ -15,6 +15,23 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
+  "device": {
+    "water": {
+      "name": "Water meter"
+    },
+    "gas": {
+      "name": "Gas meter"
+    },
+    "power": {
+      "name": "Power meter"
+    },
+    "delivery": {
+      "name": "Energy delivery meter"
+    },
+    "extra": {
+      "name": "S0 meter"
+    }
+  },
   "entity": {
     "sensor": {
       "total_water": {
