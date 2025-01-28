@@ -133,7 +133,7 @@ class SupervisorBackupAgent(BackupAgent):
         self._hass = hass
         self._backup_dir = Path("/backups")
         self._client = get_supervisor_client(hass)
-        self.name = name
+        self.name = self.unique_id = name
         self.location = location
 
     async def async_download_backup(

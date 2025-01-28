@@ -64,6 +64,7 @@ class BackupAgentTest(BackupAgent):
     def __init__(self, name: str, backups: list[AgentBackup] | None = None) -> None:
         """Initialize the backup agent."""
         self.name = name
+        self.unique_id = name
         if backups is None:
             backups = [
                 AgentBackup(
