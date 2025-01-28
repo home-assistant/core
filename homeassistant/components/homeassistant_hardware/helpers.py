@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 from . import DATA_COMPONENT
-from .utils import FirmwareInfo
+from .util import FirmwareInfo
 
 _LOGGER = logging.getLogger(__name__)
 
