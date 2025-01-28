@@ -44,11 +44,7 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
     ) -> FlowResult:
         """Handle the authorize step of a fix flow."""
 
-        ip_address = self.entry.data.get(CONF_IP_ADDRESS)
-
-        if ip_address is None:
-            # Should never happen, but just in case
-            return self.async_abort(reason="unknown_error") # pragma: no cover
+        ip_address = self.entry.data[CONF_IP_ADDRESS]
 
         # Tell device we want a token, user must now press the button within 30 seconds
         # The first attempt will always fail, but this opens the window to press the button
@@ -59,7 +55,6 @@ class MigrateToV2ApiRepairFlow(RepairsFlow):
             if user_input is not None:
                 errors = {"base": "authorization_failed"}
 
-            # return self.async_show_form(step_id="authorize", errors=errors)
             return self.async_show_form(step_id="authorize", errors=errors)
 
         data = {**self.entry.data, CONF_TOKEN: token}
