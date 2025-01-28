@@ -121,6 +121,13 @@ def async_discover_entities(
         ):
             continue
 
+        # check if value exists but is none
+        if not schema.allow_none_value and any(
+            endpoint.get_attribute_value(None, val_schema) is None
+            for val_schema in schema.required_attributes
+        ):
+            continue
+
         # check for required value in (primary) attribute
         primary_attribute = schema.required_attributes[0]
         primary_value = endpoint.get_attribute_value(None, primary_attribute)
