@@ -1,6 +1,7 @@
 """The Backup integration."""
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
@@ -19,6 +20,7 @@ from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
     BackupManager,
+    BackupManagerError,
     BackupPlatformProtocol,
     BackupReaderWriter,
     BackupReaderWriterError,
@@ -27,6 +29,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
+    RestoreBackupEvent,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -38,6 +41,7 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
+    "BackupManagerError",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",
@@ -47,6 +51,7 @@ __all__ = [
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
+    "RestoreBackupEvent",
     "WrittenBackup",
 ]
 
@@ -86,9 +91,28 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             password=None,
         )
 
+    async def async_handle_create_automatic_service(call: ServiceCall) -> None:
+        """Service handler for creating automatic backups."""
+        await backup_manager.async_create_automatic_backup()
+
     if not with_hassio:
         hass.services.async_register(DOMAIN, "create", async_handle_create_service)
+    hass.services.async_register(
+        DOMAIN, "create_automatic", async_handle_create_automatic_service
+    )
 
     async_register_http_views(hass)
 
     return True
+
+
+@callback
+def async_get_manager(hass: HomeAssistant) -> BackupManager:
+    """Get the backup manager instance.
+
+    Raises HomeAssistantError if the backup integration is not available.
+    """
+    if DATA_MANAGER not in hass.data:
+        raise HomeAssistantError("Backup integration is not available")
+
+    return hass.data[DATA_MANAGER]

@@ -19,9 +19,8 @@ import voluptuous as vol
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import device_registry as dr, entity_platform
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

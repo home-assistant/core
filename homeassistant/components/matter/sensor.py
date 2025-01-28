@@ -7,8 +7,11 @@ from datetime import datetime
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
+from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
 from chip.clusters.Types import Nullable, NullValue
+from matter_server.client.models import device_types
 from matter_server.common.custom_clusters import (
+    DraftElectricalMeasurementCluster,
     EveCluster,
     NeoCluster,
     ThirdRealityMeteringCluster,
@@ -87,6 +90,14 @@ class MatterSensorEntityDescription(SensorEntityDescription, MatterEntityDescrip
     """Describe Matter sensor entities."""
 
 
+@dataclass(frozen=True, kw_only=True)
+class MatterListSensorEntityDescription(MatterSensorEntityDescription):
+    """Describe Matter sensor entities from MatterListSensor."""
+
+    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    list_attribute: type[ClusterAttributeDescriptor]
+
+
 class MatterSensor(MatterEntity, SensorEntity):
     """Representation of a Matter sensor."""
 
@@ -102,6 +113,35 @@ class MatterSensor(MatterEntity, SensorEntity):
         elif value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_native_value = value
+
+
+class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
+    """Representation of a Matter sensor for Matter 1.0 draft ElectricalMeasurement cluster."""
+
+    entity_description: MatterSensorEntityDescription
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        raw_value: Nullable | float | None
+        divisor: Nullable | float | None
+        multiplier: Nullable | float | None
+
+        raw_value, divisor, multiplier = (
+            self.get_matter_attribute_value(self._entity_info.attributes_to_watch[0]),
+            self.get_matter_attribute_value(self._entity_info.attributes_to_watch[1]),
+            self.get_matter_attribute_value(self._entity_info.attributes_to_watch[2]),
+        )
+
+        for value in (divisor, multiplier):
+            if value in (None, NullValue, 0):
+                self._attr_native_value = None
+                return
+
+        if raw_value in (None, NullValue):
+            self._attr_native_value = None
+        else:
+            self._attr_native_value = round(raw_value / divisor * multiplier, 2)
 
 
 class MatterOperationalStateSensor(MatterSensor):
@@ -138,6 +178,28 @@ class MatterOperationalStateSensor(MatterSensor):
                 clusters.OperationalState.Attributes.OperationalState
             )
         )
+
+
+class MatterListSensor(MatterSensor):
+    """Representation of a sensor entity from Matter list from Cluster attribute(s)."""
+
+    entity_description: MatterListSensorEntityDescription
+    _attr_device_class = SensorDeviceClass.ENUM
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        self._attr_options = list_values = cast(
+            list[str],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        current_value: int = self.get_matter_attribute_value(
+            self._entity_info.primary_attribute
+        )
+        try:
+            self._attr_native_value = list_values[current_value]
+        except IndexError:
+            self._attr_native_value = None
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
@@ -244,6 +306,8 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.PowerSource.Attributes.BatReplacementDescription,
         ),
+        # Some manufacturers returns an empty string
+        value_is_not="",
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -641,6 +705,60 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
         entity_description=MatterSensorEntityDescription(
+            key="ElectricalMeasurementActivePower",
+            device_class=SensorDeviceClass.POWER,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfPower.WATT,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterDraftElectricalMeasurementSensor,
+        required_attributes=(
+            DraftElectricalMeasurementCluster.Attributes.ActivePower,
+            DraftElectricalMeasurementCluster.Attributes.AcPowerDivisor,
+            DraftElectricalMeasurementCluster.Attributes.AcPowerMultiplier,
+        ),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalMeasurementRmsVoltage",
+            device_class=SensorDeviceClass.VOLTAGE,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            suggested_display_precision=0,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterDraftElectricalMeasurementSensor,
+        required_attributes=(
+            DraftElectricalMeasurementCluster.Attributes.RmsVoltage,
+            DraftElectricalMeasurementCluster.Attributes.AcVoltageDivisor,
+            DraftElectricalMeasurementCluster.Attributes.AcVoltageMultiplier,
+        ),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ElectricalMeasurementRmsCurrent",
+            device_class=SensorDeviceClass.CURRENT,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+            suggested_display_precision=2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterDraftElectricalMeasurementSensor,
+        required_attributes=(
+            DraftElectricalMeasurementCluster.Attributes.RmsCurrent,
+            DraftElectricalMeasurementCluster.Attributes.AcCurrentDivisor,
+            DraftElectricalMeasurementCluster.Attributes.AcCurrentMultiplier,
+        ),
+        absent_clusters=(clusters.ElectricalPowerMeasurement,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
             key="SmokeCOAlarmContaminationState",
             translation_key="contamination_state",
             device_class=SensorDeviceClass.ENUM,
@@ -674,5 +792,32 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.OperationalState,
             clusters.OperationalState.Attributes.OperationalStateList,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterListSensorEntityDescription(
+            key="OperationalStateCurrentPhase",
+            translation_key="current_phase",
+            list_attribute=clusters.OperationalState.Attributes.PhaseList,
+        ),
+        entity_class=MatterListSensor,
+        required_attributes=(
+            clusters.OperationalState.Attributes.CurrentPhase,
+            clusters.OperationalState.Attributes.PhaseList,
+        ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ThermostatLocalTemperature",
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            measurement_to_ha=lambda x: x / 100,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        entity_class=MatterSensor,
+        required_attributes=(clusters.Thermostat.Attributes.LocalTemperature,),
+        device_type=(device_types.Thermostat,),
+        allow_multi=True,  # also used for climate entity
     ),
 ]

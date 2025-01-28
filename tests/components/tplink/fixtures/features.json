@@ -370,5 +370,15 @@
     "value": 10,
     "type": "Number",
     "category": "Config"
+  },
+  "pair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "unpair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
   }
 }

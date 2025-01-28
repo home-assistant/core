@@ -13,6 +13,7 @@ from cookidoo_api import (
     CookidooException,
     CookidooIngredientItem,
     CookidooRequestException,
+    CookidooSubscription,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,6 +35,7 @@ class CookidooData:
 
     ingredient_items: list[CookidooIngredientItem]
     additional_items: list[CookidooAdditionalItem]
+    subscription: CookidooSubscription | None
 
 
 class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
@@ -75,6 +77,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         try:
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
+            subscription = await self.cookidoo.get_active_subscription()
         except CookidooAuthException:
             try:
                 await self.cookidoo.refresh_token()
@@ -97,5 +100,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ) from e
 
         return CookidooData(
-            ingredient_items=ingredient_items, additional_items=additional_items
+            ingredient_items=ingredient_items,
+            additional_items=additional_items,
+            subscription=subscription,
         )
