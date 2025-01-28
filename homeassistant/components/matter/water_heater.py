@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from enum import IntEnum
 from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_HIGH_DEMAND,
-    STATE_OFF,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
@@ -28,9 +25,8 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.temperature import display_temp as show_temp
 
 from .entity import MatterEntity
 from .helpers import get_matter
@@ -109,6 +105,7 @@ DISCOVERY_SCHEMAS = [
             clusters.WaterHeaterManagement.Attributes.FeatureMap,
         ),
         optional_attributes=(),
+        device_type=(device_types.WaterHeater),
         allow_multi=True,  # also used for sensor entity
     ),
 ]
