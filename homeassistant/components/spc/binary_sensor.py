@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from pyspcwebgw import SpcWebGateway
+from typing import cast
+
 from pyspcwebgw.const import ZoneInput, ZoneType
 from pyspcwebgw.zone import Zone
 
@@ -13,9 +14,8 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_API, SIGNAL_UPDATE_SENSOR
+from . import SIGNAL_UPDATE_SENSOR, ConfigEntry, SPCConfigEntry
 
 
 def _get_device_class(zone_type: ZoneType) -> BinarySensorDeviceClass | None:
@@ -27,22 +27,16 @@ def _get_device_class(zone_type: ZoneType) -> BinarySensorDeviceClass | None:
     }.get(zone_type)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the SPC binary sensor."""
-    if discovery_info is None:
-        return
-    api: SpcWebGateway = hass.data[DATA_API]
+    """Set up the SPC binary sensors from a config entry."""
+    entry = cast(SPCConfigEntry, entry)
+    api = entry.runtime_data
     async_add_entities(
-        [
-            SpcBinarySensor(zone)
-            for zone in api.zones.values()
-            if _get_device_class(zone.type)
-        ]
+        SpcBinarySensor(zone)
+        for zone in api.zones.values()
+        if _get_device_class(zone.type)
     )
 
 
@@ -56,6 +50,7 @@ class SpcBinarySensor(BinarySensorEntity):
         self._zone = zone
         self._attr_name = zone.name
         self._attr_device_class = _get_device_class(zone.type)
+        self._attr_unique_id = zone.id
 
     async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 from pyspcwebgw import SpcWebGateway
 from pyspcwebgw.area import Area
 from pyspcwebgw.const import AreaMode
@@ -14,14 +16,12 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DATA_API, SIGNAL_UPDATE_ALARM
+from . import SIGNAL_UPDATE_ALARM, ConfigEntry, SPCConfigEntry
 
 
 def _get_alarm_state(area: Area) -> AlarmControlPanelState | None:
     """Get the alarm state."""
-
     if area.verified_alarm:
         return AlarmControlPanelState.TRIGGERED
 
@@ -34,16 +34,12 @@ def _get_alarm_state(area: Area) -> AlarmControlPanelState | None:
     return mode_to_state.get(area.mode)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the SPC alarm control panel platform."""
-    if discovery_info is None:
-        return
-    api: SpcWebGateway = hass.data[DATA_API]
+    """Set up the SPC alarm control panel from a config entry."""
+    entry = cast(SPCConfigEntry, entry)
+    api = entry.runtime_data
     async_add_entities([SpcAlarm(area=area, api=api) for area in api.areas.values()])
 
 
@@ -63,6 +59,7 @@ class SpcAlarm(AlarmControlPanelEntity):
         self._area = area
         self._api = api
         self._attr_name = area.name
+        self._attr_unique_id = area.id
 
     async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""
