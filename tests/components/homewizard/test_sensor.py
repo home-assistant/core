@@ -19,6 +19,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.freeze_time("2025-01-28 21:45:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_fixture", "entity_ids"),

@@ -692,7 +692,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-01-28T20:17:54+00:00',
+    'state': '2025-01-28T21:39:04+00:00',
   })
 # ---
 # name: test_sensors[HWE-BAT-entity_ids10][sensor.device_voltage:device-registry]
