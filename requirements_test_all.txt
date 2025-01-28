@@ -386,7 +386,7 @@ aiotractive==0.6.0
 aiounifi==81
 
 # homeassistant.components.usb
-aiousbwatcher==1.1.0
+aiousbwatcher==1.1.1
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.5.1

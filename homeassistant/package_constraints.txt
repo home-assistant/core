@@ -8,7 +8,7 @@ aiohttp-asyncmdnsresolver==0.0.1
 aiohttp-fast-zlib==0.2.0
 aiohttp==3.11.11
 aiohttp_cors==0.7.0
-aiousbwatcher==1.1.0
+aiousbwatcher==1.1.1
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
