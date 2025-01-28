@@ -27,6 +27,7 @@ from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.system_info import async_get_system_info
@@ -354,7 +355,7 @@ def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
 
         try:
             manager = async_get_backup_manager(request.app[KEY_HASS])
-        except KeyError:
+        except HomeAssistantError:
             return self.json(
                 {"error": "backup_disabled"},
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
