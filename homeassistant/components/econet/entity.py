@@ -10,12 +10,12 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, PUSH_UPDATE
 
 
-class EcoNetEntity(Entity):
+class EcoNetEntity[_EquipmentT: Equipment](Entity):
     """Define a base EcoNet entity."""
 
     _attr_should_poll = False
 
-    def __init__(self, econet: Equipment) -> None:
+    def __init__(self, econet: _EquipmentT) -> None:
         """Initialize."""
         self._econet = econet
         self._attr_name = econet.device_name
