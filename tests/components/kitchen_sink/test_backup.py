@@ -55,7 +55,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": "kitchen_sink.syncer", "name": "syncer"},
+        ],
     }
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -66,7 +69,9 @@ async def test_agents_info(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agents": [{"agent_id": "backup.local"}]}
+    assert response["result"] == {
+        "agents": [{"agent_id": "backup.local", "name": "local"}]
+    }
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,7 +81,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": "kitchen_sink.syncer", "name": "syncer"},
+        ],
     }
 
 
