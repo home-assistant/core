@@ -2140,8 +2140,8 @@
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'spf-total',
-    'unique_id': 'gateway0_deviceSerialVitocal250A-spf-total',
+    'translation_key': 'spf_total',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-spf_total',
     'unit_of_measurement': None,
   })
 # ---
@@ -2189,8 +2189,8 @@
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'spf-dhw',
-    'unique_id': 'gateway0_deviceSerialVitocal250A-spf-dhw',
+    'translation_key': 'spf_dhw',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-spf_dhw',
     'unit_of_measurement': None,
   })
 # ---
@@ -2238,8 +2238,8 @@
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'spf-heating',
-    'unique_id': 'gateway0_deviceSerialVitocal250A-spf-heating',
+    'translation_key': 'spf_heating',
+    'unique_id': 'gateway0_deviceSerialVitocal250A-spf_heating',
     'unit_of_measurement': None,
   })
 # ---
