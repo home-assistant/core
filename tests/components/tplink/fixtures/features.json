@@ -380,5 +380,11 @@
     "value": true,
     "type": "Switch",
     "category": "Config"
+  },
+  "vacuum_error": {
+    "value": 0,
+    "type": "Sensor",
+    "category": "Info",
+    "enum_type": "CleanErrorCode"
   }
 }

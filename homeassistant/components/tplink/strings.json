@@ -197,7 +197,7 @@
         "name": "Error",
         "state": {
           "ok": "No error",
-          "sidebrushstuck": "Side brust stuck",
+          "sidebrushstuck": "Side brush stuck",
           "mainbrushstuck": "Main brush stuck",
           "wheelblocked": "Wheel blocked",
           "trapped": "Unable to move",
