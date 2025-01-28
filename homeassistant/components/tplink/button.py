@@ -70,6 +70,8 @@ BUTTON_DESCRIPTIONS: Final = [
         key="tilt_down",
         available_fn=lambda dev: dev.is_on,
     ),
+    TPLinkButtonEntityDescription(key="pair"),
+    TPLinkButtonEntityDescription(key="unpair"),
     TPLinkButtonEntityDescription(
         key="main_brush_reset",
     ),

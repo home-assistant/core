@@ -371,6 +371,16 @@
     "type": "Number",
     "category": "Config"
   },
+  "pair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "unpair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
   "main_brush_reset": {
     "value": "<Action>",
     "type": "Action",
