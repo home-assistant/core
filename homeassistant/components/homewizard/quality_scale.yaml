@@ -48,9 +48,9 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery:
-    status: todo
+    status: done
     comment: |
-      DHCP IP address updates are not implemented for v2 API.
+      DHCP IP address updates are not supported for the v2 API.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
