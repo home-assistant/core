@@ -69,9 +69,13 @@ class RoborockMapStorage:
 async def async_remove_map_storage(hass: HomeAssistant, entry_id: str) -> None:
     """Remove all map storage  associated with a config entry."""
 
+    def remove(path_prefix: Path) -> None:
+        try:
+            if path_prefix.exists():
+                shutil.rmtree(path_prefix, ignore_errors=True)
+        except OSError as err:
+            _LOGGER.error("Unable to remove map files in %s: %s", path_prefix, err)
+
     path_prefix = _storage_path_prefix(hass, entry_id)
     _LOGGER.debug("Removing maps from disk store: %s", path_prefix)
-    try:
-        await hass.async_add_executor_job(shutil.rmtree, path_prefix)
-    except OSError as err:
-        _LOGGER.error("Unable to remove map files in %s: %s", path_prefix, err)
+    await hass.async_add_executor_job(remove, path_prefix)
