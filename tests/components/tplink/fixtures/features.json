@@ -195,6 +195,11 @@
     "type": "BinarySensor",
     "category": "Info"
   },
+  "overloaded": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
   "battery_low": {
     "value": false,
     "type": "BinarySensor",
@@ -283,6 +288,12 @@
     "category": "Config",
     "minimum_value": -10,
     "maximum_value": 10
+  },
+  "power_protection_threshold": {
+    "value": 100,
+    "type": "Number",
+    "category": "Config",
+    "minimum_value": 0
   },
   "target_temperature": {
     "value": false,
