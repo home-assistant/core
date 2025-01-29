@@ -138,8 +138,8 @@
       "state_of_charge_pct": {
         "name": "State of charge"
       },
-      "uptime": {
-        "name": "Uptime"
+      "last_restart": {
+        "name": "Last restart"
       }
     },
     "switch": {
