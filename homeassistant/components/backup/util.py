@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import copy
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from io import BytesIO
 import json
 import os
@@ -386,6 +386,12 @@ def _encrypt_backup(
 class _CipherBackupStreamer:
     """Encrypt or decrypt a backup."""
 
+    @dataclass(kw_only=True)
+    class _WorkerStatus:
+        done: asyncio.Event
+        error: Exception | None = None
+        thread: threading.Thread
+
     _cipher_func: Callable[
         [
             IO[bytes],
@@ -406,8 +412,7 @@ class _CipherBackupStreamer:
         password: str | None,
     ) -> None:
         """Initialize."""
-        self.done_event = asyncio.Event()
-        self.error: Exception | None = None
+        self._workers: list[_CipherBackupStreamer._WorkerStatus] = []
         self._backup = backup
         self._hass = hass
         self._open_stream = open_stream
@@ -428,8 +433,8 @@ class _CipherBackupStreamer:
 
         def on_done(error: Exception | None) -> None:
             """Call by the worker thread when it's done."""
-            self.error = error
-            self._hass.loop.call_soon_threadsafe(self.done_event.set)
+            worker_status.error = error
+            self._hass.loop.call_soon_threadsafe(worker_status.done.set)
 
         stream = await self._open_stream()
         reader = AsyncIteratorReader(self._hass, stream)
@@ -438,8 +443,14 @@ class _CipherBackupStreamer:
             target=self._cipher_func,
             args=[reader, writer, self._password, on_done, self.size(), self._nonces],
         )
+        worker_status = self._WorkerStatus(done=asyncio.Event(), thread=worker)
+        self._workers.append(worker_status)
         worker.start()
         return writer
+
+    async def wait(self) -> None:
+        """Wait for the worker threads to finish."""
+        await asyncio.gather(*(worker.done.wait() for worker in self._workers))
 
 
 class DecryptedBackupStreamer(_CipherBackupStreamer):

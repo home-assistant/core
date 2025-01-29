@@ -180,6 +180,7 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
     decrypted_output = b""
     async for chunk in decrypted_stream:
         decrypted_output += chunk
+    await decryptor.wait()
 
     # Expect the output to match the stored decrypted backup file, with additional
     # padding.
@@ -217,8 +218,8 @@ async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> 
     async for _ in decrypted_stream:
         pass
 
-    await decryptor.done_event.wait()
-    assert isinstance(decryptor.error, securetar.SecureTarReadError)
+    await decryptor.wait()
+    assert isinstance(decryptor._workers[0].error, securetar.SecureTarReadError)
 
 
 async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
@@ -269,6 +270,7 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
     encrypted_output = b""
     async for chunk in encrypted_stream:
         encrypted_output += chunk
+    await encryptor.wait()
 
     # Expect the output to match the stored encrypted backup file, with additional
     # padding.
@@ -321,6 +323,10 @@ async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> No
     encrypted_output3 = await read_stream(await encryptor2.open_stream())
     encrypted_output4 = await read_stream(await encryptor2.open_stream())
     assert encrypted_output3 == encrypted_output4
+
+    # Wait for workers to terminate
+    await encryptor1.wait()
+    await encryptor2.wait()
 
     # Output from the two streames should differ but have the same length.
     assert encrypted_output1 != encrypted_output3
@@ -376,5 +382,5 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
 
     # Expect the output to match the stored encrypted backup file, with additional
     # padding.
-    await encryptor.done_event.wait()
-    assert isinstance(encryptor.error, tarfile.TarError)
+    await encryptor.wait()
+    assert isinstance(encryptor._workers[0].error, tarfile.TarError)

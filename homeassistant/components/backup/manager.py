@@ -497,7 +497,7 @@ class BackupManager:
                 backup=_backup,
             )
             if streamer:
-                await streamer.done_event.wait()
+                await streamer.wait()
 
         sync_backup_results = await asyncio.gather(
             *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),
