@@ -48,23 +48,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect select entities."""
 
-    def get_entities_for_appliance(
-        appliance: HomeConnectApplianceData,
-    ) -> list[HomeConnectProgramSelectEntity]:
-        """Get a list of entities."""
-        if appliance.info.type not in APPLIANCES_WITH_PROGRAMS:
-            return []
-        return [
-            HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
-            for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
-        ]
-
-    entities = [
-        entity
+    async_add_entities(
+        HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
         for appliance in entry.runtime_data.data.values()
-        for entity in get_entities_for_appliance(appliance)
-    ]
-    async_add_entities(entities)
+        for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
+        if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+    )
 
 
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
@@ -94,7 +83,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         self._attr_current_option = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(cast(ProgramKey, event.value), None)
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(cast(ProgramKey, event.value))
             if event
             else None
         )

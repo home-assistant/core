@@ -1,6 +1,7 @@
 """Coordinator for Home Connect."""
 
 import asyncio
+from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 import logging
@@ -81,15 +82,15 @@ class HomeConnectCoordinator(
             config_entry=config_entry,
             name=config_entry.entry_id,
         )
-        self.client: HomeConnectClient = client
+        self.client = client
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
         """Return a dict of all listeners registered for a given context."""
-        listeners: dict[tuple[str, EventKey], list[CALLBACK_TYPE]] = {}
+        listeners: dict[tuple[str, EventKey], list[CALLBACK_TYPE]] = defaultdict(list)
         for listener, context in list(self._listeners.values()):
             assert isinstance(context, tuple)
-            listeners.setdefault(context, []).append(listener)
+            listeners[context].append(listener)
         return listeners
 
     @callback
@@ -131,7 +132,6 @@ class HomeConnectCoordinator(
                                     statuses[status_key] = Status(
                                         status_key, event.value
                                     )
-                            self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
                             settings = self.data[event_message.ha_id].settings
@@ -147,13 +147,13 @@ class HomeConnectCoordinator(
                                         )
                                 else:
                                     events[event.key] = event
-                            self._call_event_listener(event_message)
 
                         case EventType.EVENT:
                             events = self.data[event_message.ha_id].events
                             for event in event_message.data.items:
                                 events[event.key] = event
-                            self._call_event_listener(event_message)
+
+                    self._call_event_listener(event_message)
 
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(

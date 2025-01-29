@@ -120,10 +120,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect binary sensor."""
 
-    def get_entities_for_appliance(
-        appliance: HomeConnectApplianceData,
-    ) -> list[BinarySensorEntity]:
-        entities: list[BinarySensorEntity] = []
+    entities: list[BinarySensorEntity] = []
+    for appliance in entry.runtime_data.data.values():
         entities.extend(
             HomeConnectBinarySensor(entry.runtime_data, appliance, description)
             for description in BINARY_SENSORS
@@ -131,13 +129,7 @@ async def async_setup_entry(
         )
         if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
             entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
-        return entities
 
-    entities = [
-        entity
-        for appliance in entry.runtime_data.data.values()
-        for entity in get_entities_for_appliance(appliance)
-    ]
     async_add_entities(entities)
 
 

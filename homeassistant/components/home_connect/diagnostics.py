@@ -62,9 +62,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     ha_id = next(
         (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
-        None,
     )
-    assert ha_id, "No Home Connect identifier found"
     return await _generate_appliance_diagnostics(
         entry.runtime_data.client, entry.runtime_data.data[ha_id]
     )

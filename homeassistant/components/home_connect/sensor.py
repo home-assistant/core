@@ -24,7 +24,7 @@ from .const import (
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
 )
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
@@ -251,11 +251,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
 
-    async def get_entities_for_appliance(
-        appliance: HomeConnectApplianceData,
-    ) -> list[SensorEntity]:
-        """Get a list of entities."""
-        entities: list[SensorEntity] = []
+    entities: list[SensorEntity] = []
+    for appliance in entry.runtime_data.data.values():
         entities.extend(
             HomeConnectEventSensor(
                 entry.runtime_data,
@@ -276,13 +273,7 @@ async def async_setup_entry(
             for description in SENSORS
             if description.key in appliance.status
         )
-        return entities
 
-    entities = [
-        entity
-        for appliance in entry.runtime_data.data.values()
-        for entity in await get_entities_for_appliance(appliance)
-    ]
     async_add_entities(entities)
 
 

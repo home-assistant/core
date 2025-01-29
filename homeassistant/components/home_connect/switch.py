@@ -19,6 +19,7 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import (
     BSH_POWER_OFF,
@@ -106,11 +107,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
 
-    def get_entities_for_appliance(
-        appliance: HomeConnectApplianceData,
-    ) -> list[SwitchEntity]:
-        """Get a list of entities."""
-        entities: list[SwitchEntity] = []
+    entities: list[SwitchEntity] = []
+    for appliance in entry.runtime_data.data.values():
         entities.extend(
             HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
             for program in appliance.programs
@@ -128,13 +126,6 @@ async def async_setup_entry(
             if description.key in appliance.settings
         )
 
-        return entities
-
-    entities = [
-        entity
-        for appliance in entry.runtime_data.data.values()
-        for entity in get_entities_for_appliance(appliance)
-    ]
     async_add_entities(entities)
 
 
@@ -202,24 +193,18 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
                 ["Program", program.key.split(".")[-3], program.key.split(".")[-1]]
             )
         super().__init__(
-            coordinator, appliance, SwitchEntityDescription(key=program.key)
+            coordinator,
+            appliance,
+            SwitchEntityDescription(key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM),
         )
         self._attr_name = f"{appliance.info.name} {desc}"
         self._attr_unique_id = f"{appliance.info.ha_id}-{desc}"
         self._attr_has_entity_name = False
         self.program = program
 
-    async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(
-                self._handle_coordinator_update,
-                (
-                    self.appliance.info.ha_id,
-                    EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                ),
-            )
-        )
+        await super().async_added_to_hass()
         automations = automations_with_entity(self.hass, self.entity_id)
         scripts = scripts_with_entity(self.hass, self.entity_id)
         items = automations + scripts
@@ -298,21 +283,18 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
     def update_native_value(self) -> None:
         """Update the switch's status based on if the program related to this entity is currently active."""
         event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
-        if event and event.value == self.program.key:
-            self._attr_is_on = True
-        else:
-            self._attr_is_on = False
+        self._attr_is_on = bool(event and event.value == self.program.key)
 
 
 class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     """Power switch class for Home Connect."""
 
-    power_off_state: str | None
+    power_off_state: str | None | UndefinedType = UNDEFINED
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if not hasattr(self, "power_off_state"):
+        if isinstance(self.power_off_state, UndefinedType):
             await self.async_fetch_power_off_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -336,7 +318,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
-        if not hasattr(self, "power_off_state"):
+        if isinstance(self.power_off_state, UndefinedType):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_retrieve_turn_off",
@@ -378,12 +360,12 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         if value == BSH_POWER_ON:
             self._attr_is_on = True
         elif (
-            hasattr(self, "power_off_state")
+            isinstance(self.power_off_state, str)
             and self.power_off_state
             and value == self.power_off_state
         ):
             self._attr_is_on = False
-        elif not hasattr(self, "power_off_state") and value in [
+        elif isinstance(self.power_off_state, UndefinedType) and value in [
             BSH_POWER_OFF,
             BSH_POWER_STANDBY,
         ]:
@@ -415,4 +397,3 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             self.power_off_state = BSH_POWER_STANDBY
         else:
             self.power_off_state = None
-        return
