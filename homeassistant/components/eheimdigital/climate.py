@@ -1,6 +1,6 @@
 """EHEIM Digital climate."""
 
-from typing import Any, Literal, overload
+from typing import Any
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.heater import EheimDigitalHeater
@@ -40,39 +40,23 @@ async def async_setup_entry(
     """Set up the callbacks for the coordinator so climate entities can be added as devices are found."""
     coordinator = entry.runtime_data
 
-    @overload
     def async_setup_device_entities(
-        device_address: str, *, return_entities: Literal[False]
-    ) -> None: ...
+        device_address: str | dict[str, EheimDigitalDevice],
+    ) -> None:
+        """Set up the climate entities for one or multiple devices."""
+        entities: list[EheimDigitalHeaterClimate] = []
+        if isinstance(device_address, str):
+            device_address = {device_address: coordinator.hub.devices[device_address]}
+        for device in device_address.values():
+            if isinstance(device, EheimDigitalHeater):
+                entities.append(EheimDigitalHeaterClimate(coordinator, device))
+                coordinator.known_devices.add(device.mac_address)
 
-    @overload
-    def async_setup_device_entities(
-        device_address: str, *, return_entities: Literal[True]
-    ) -> list[EheimDigitalEntity[EheimDigitalDevice]]: ...
-
-    def async_setup_device_entities(
-        device_address: str, *, return_entities: bool
-    ) -> None | list[EheimDigitalEntity[EheimDigitalDevice]]:
-        """Set up the light entities for a device."""
-        device = coordinator.hub.devices[device_address]
-        entities: list[EheimDigitalEntity[EheimDigitalDevice]] = []
-
-        if isinstance(device, EheimDigitalHeater):
-            entities.append(EheimDigitalHeaterClimate(coordinator, device))
-            coordinator.known_devices.add(device.mac_address)
-
-        if return_entities:
-            return entities
         async_add_entities(entities)
-        return None
 
     coordinator.add_platform_callback(async_setup_device_entities)
 
-    entities: list[EheimDigitalEntity[EheimDigitalDevice]] = []
-
-    for device_address in entry.runtime_data.hub.devices:
-        entities += async_setup_device_entities(device_address, return_entities=True)
-    async_add_entities(entities)
+    async_setup_device_entities(coordinator.hub.devices)
 
 
 class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateEntity):
