@@ -287,11 +287,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 decrypted_locations.append(hassio_agent.location)
         _LOGGER.debug("Encrypted locations: %s", encrypted_locations)
         _LOGGER.debug("Decrypted locations: %s", decrypted_locations)
-        locations = (
-            encrypted_locations
-            if len(encrypted_locations) >= len(decrypted_locations)
-            else decrypted_locations
-        )
+        if hassio_agents:
+            if len(encrypted_locations) >= len(decrypted_locations):
+                locations = encrypted_locations
+            else:
+                locations = decrypted_locations
+                password = None
+        else:
+            locations = []
         locations = locations or [LOCATION_CLOUD_BACKUP]
 
         try:

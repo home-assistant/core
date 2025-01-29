@@ -876,27 +876,30 @@ async def test_reader_writer_create(
     (
         "commands",
         "password",
+        "agent_ids",
+        "password_sent_to_supervisor",
         "create_locations",
         "create_protected",
         "upload_locations",
-        "upload_protected",
     ),
     [
         (
             [],
             None,
+            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            None,
             [None, "share1", "share2", "share3"],
             False,
             [],
-            False,
         ),
         (
             [],
             "hunter2",
+            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
             [None, "share1", "share2", "share3"],
             True,
             [],
-            True,
         ),
         (
             [
@@ -908,10 +911,11 @@ async def test_reader_writer_create(
                 }
             ],
             "hunter2",
+            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
             ["share1", "share2", "share3"],
             True,
             [None],
-            False,
         ),
         (
             [
@@ -924,10 +928,45 @@ async def test_reader_writer_create(
                 }
             ],
             "hunter2",
+            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            "hunter2",
             ["share2", "share3"],
             True,
             [None, "share1"],
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.local": {"protected": False},
+                        "hassio.share1": {"protected": False},
+                        "hassio.share2": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
+            None,
+            [None, "share1", "share2"],
+            True,
+            ["share3"],
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "hassio.local": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            ["hassio.local"],
+            None,
+            [None],
             False,
+            [],
         ),
     ],
 )
@@ -937,13 +976,13 @@ async def test_reader_writer_create_per_agent_encryption(
     supervisor_client: AsyncMock,
     commands: dict[str, Any],
     password: str | None,
+    agent_ids: list[str],
+    password_sent_to_supervisor: str | None,
     create_locations: list[str | None],
     create_protected: bool,
     upload_locations: list[str | None],
-    upload_protected: bool,
 ) -> None:
     """Test generating a backup."""
-    agent_ids = ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"]
     client = await hass_ws_client(hass)
     mounts = MountsInfo(
         default_backup_mount=None,
@@ -1008,7 +1047,11 @@ async def test_reader_writer_create_per_agent_encryption(
     assert response["result"] == {"backup_job_id": "abc123"}
 
     supervisor_client.backups.partial_backup.assert_called_once_with(
-        replace(DEFAULT_BACKUP_OPTIONS, password=password, location=create_locations)
+        replace(
+            DEFAULT_BACKUP_OPTIONS,
+            password=password_sent_to_supervisor,
+            location=create_locations,
+        )
     )
 
     await client.send_json_auto_id(
