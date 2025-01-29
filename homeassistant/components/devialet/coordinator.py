@@ -33,7 +33,6 @@ class DevialetCoordinator(DataUpdateCoordinator[None]):
             config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
-            config_entry=entry,
         )
         self.client = client
 

@@ -55,7 +55,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Devialet entry."""
-    async_add_entities([DevialetMediaPlayerEntity(entry.runtime_data, entry)])
+    async_add_entities([DevialetMediaPlayerEntity(entry.runtime_data)])
 
 
 class DevialetMediaPlayerEntity(
