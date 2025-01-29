@@ -85,10 +85,10 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
             self._host = discovery_info.ip
             self._model = info["title"]
             self.context["title_placeholders"] = {CONF_MODEL: self._model}
-            return await self.async_step_confirm_discovery()
+            return await self.async_step_discovery_confirm()
         return self.async_abort(reason=error)
 
-    async def async_step_confirm_discovery(
+    async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
@@ -98,7 +98,7 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         return self.async_show_form(
-            step_id="confirm_discovery",
+            step_id="discovery_confirm",
             description_placeholders={CONF_HOST: self._host},
         )
 
@@ -117,7 +117,9 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["formatted_mac"])
+                await self.async_set_unique_id(
+                    info["formatted_mac"], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 

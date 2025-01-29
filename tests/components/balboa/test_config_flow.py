@@ -197,7 +197,7 @@ async def test_dhcp_discovery(hass: HomeAssistant, client: MagicMock) -> None:
         assert result["reason"] == "already_configured"
 
 
-async def test_discovery_dhcp_updates_host(
+async def test_dhcp_discovery_updates_host(
     hass: HomeAssistant, client: MagicMock
 ) -> None:
     """Test dhcp discovery updates host and aborts."""
@@ -241,3 +241,35 @@ async def test_dhcp_discovery_failed(
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == reason
+
+
+async def test_dhcp_discovery_manual_user_setup(
+    hass: HomeAssistant, client: MagicMock
+) -> None:
+    """Test dhcp discovery with manual user setup."""
+    with patch(
+        "homeassistant.components.balboa.config_flow.SpaClient.__aenter__",
+        return_value=client,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=TEST_DHCP_SERVICE_INFO,
+        )
+
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        assert result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            TEST_DATA,
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == TEST_DATA
