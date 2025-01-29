@@ -19,6 +19,13 @@
             "name": "[%key:common::config_flow::data::name%]",
             "state": "Initial state"
           }
+        },
+        "reconfigure_sensor": {
+          "description": "Reconfigure the sensor",
+          "data": {
+            "name": "[%key:component::kitchen_sink::config_subentries::entity::step::reconfigure_sensor::data::state%]",
+            "state": "Initial state"
+          }
         }
       }
     }

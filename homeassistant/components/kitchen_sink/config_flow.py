@@ -112,7 +112,7 @@ class SubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage the options."""
+        """User flow to create a sensor subentry."""
         return await self.async_step_add_sensor()
 
     async def async_step_add_sensor(
@@ -136,13 +136,13 @@ class SubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Manage the options."""
+        """Reconfigure a sensor subentry."""
         return await self.async_step_reconfigure_sensor()
 
     async def async_step_reconfigure_sensor(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Add a new sensor."""
+        """Reconfigure a sensor."""
         if user_input is not None:
             title = user_input.pop("name")
             return self.async_update_and_abort(
