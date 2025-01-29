@@ -68,7 +68,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         self,
         coordinator: TotalConnectDataUpdateCoordinator,
         location: TotalConnectLocation,
-        partition_id: int,
+        partition_id: str,
         require_code: bool,
     ) -> None:
         """Initialize the TotalConnect status."""
@@ -81,7 +81,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         for most users with new support for partitions.
         Add _# for partition 2 and beyond.
         """
-        if partition_id == 1:
+        if partition_id == "1":
             self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:
@@ -107,7 +107,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             "triggered_zone": None,
         }
 
-        if self._partition_id == 1:
+        if self._partition_id == "1":
             attr["location_name"] = self.device.name
         else:
             attr["location_name"] = f"{self.device.name} partition {self._partition_id}"
