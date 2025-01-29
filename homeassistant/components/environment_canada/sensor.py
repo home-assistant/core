@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from env_canada import ECWeather
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -27,7 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_STATION
-from .coordinator import ECConfigEntry
+from .coordinator import ECConfigEntry, ECDataType, ECDataUpdateCoordinator
 
 ATTR_TIME = "alert time"
 
@@ -268,13 +270,19 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class ECBaseSensorEntity(CoordinatorEntity, SensorEntity):
+class ECBaseSensorEntity[DataT: ECDataType](
+    CoordinatorEntity[ECDataUpdateCoordinator[DataT]], SensorEntity
+):
     """Environment Canada sensor base."""
 
     entity_description: ECSensorEntityDescription
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, description):
+    def __init__(
+        self,
+        coordinator: ECDataUpdateCoordinator[DataT],
+        description: ECSensorEntityDescription,
+    ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self.entity_description = description
@@ -292,10 +300,14 @@ class ECBaseSensorEntity(CoordinatorEntity, SensorEntity):
         return value
 
 
-class ECSensorEntity(ECBaseSensorEntity):
+class ECSensorEntity[DataT: ECDataType](ECBaseSensorEntity[DataT]):
     """Environment Canada sensor for conditions."""
 
-    def __init__(self, coordinator, description):
+    def __init__(
+        self,
+        coordinator: ECDataUpdateCoordinator[DataT],
+        description: ECSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, description)
         self._attr_extra_state_attributes = {
@@ -304,7 +316,7 @@ class ECSensorEntity(ECBaseSensorEntity):
         }
 
 
-class ECAlertSensorEntity(ECBaseSensorEntity):
+class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
     """Environment Canada sensor for alerts."""
 
     @property
