@@ -139,8 +139,8 @@
       "power_phase_3": {
         "name": "Power phase 3"
       },
-      "uptime": {
-        "name": "Uptime"
+      "last_restart": {
+        "name": "Last restart"
       },
       "voltage_phase_1": {
         "name": "Voltage phase 1"

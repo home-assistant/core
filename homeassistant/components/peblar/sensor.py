@@ -217,7 +217,7 @@ DESCRIPTIONS: tuple[PeblarSensorDescription, ...] = (
     ),
     PeblarSensorDescription(
         key="uptime",
-        translation_key="uptime",
+        translation_key="last_restart",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
