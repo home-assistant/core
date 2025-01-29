@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .test_common import (
     help_custom_config,

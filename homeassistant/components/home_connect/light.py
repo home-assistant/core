@@ -18,7 +18,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
 from .api import HomeConnectDevice

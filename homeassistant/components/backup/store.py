@@ -48,7 +48,9 @@ class _BackupStore(Store[StoredBackupData]):
         data = old_data
         if old_major_version == 1:
             if old_minor_version < 2:
-                # Version 1.2 adds configurable backup time and custom days
+                # Version 1.2 adds per agent settings, configurable backup time
+                # and custom days
+                data["config"]["agents"] = {}
                 data["config"]["schedule"]["time"] = None
                 if (state := data["config"]["schedule"]["state"]) in ("daily", "never"):
                     data["config"]["schedule"]["days"] = []

@@ -11,6 +11,8 @@
         }),
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -53,6 +55,8 @@
         }),
       ]),
       'config': dict({
+        'agents': dict({
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -96,6 +100,11 @@
         }),
       ]),
       'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -138,6 +147,11 @@
         }),
       ]),
       'config': dict({
+        'agents': dict({
+          'test.remote': dict({
+            'protected': True,
+          }),
+        }),
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',

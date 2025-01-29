@@ -1,6 +1,7 @@
 """Tests for the humidifier platform."""
 
 from contextlib import nullcontext
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +13,7 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -21,6 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     ENTITY_HUMIDIFIER,
@@ -225,3 +227,61 @@ async def test_set_mode(
         )
     await hass.async_block_till_done()
     method_mock.assert_called_once()
+
+
+async def test_base_unique_id(
+    hass: HomeAssistant,
+    humidifier_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that unique_id is based on subDeviceNo."""
+    # vesync-device.json defines subDeviceNo for 200s-humidifier as 4321.
+    entity = entity_registry.async_get(ENTITY_HUMIDIFIER)
+    assert entity.unique_id.endswith("4321")
+
+
+async def test_invalid_mist_modes(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    humidifier,
+    manager,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unsupported mist mode."""
+
+    humidifier.mist_modes = ["invalid_mode"]
+
+    with patch(
+        "homeassistant.components.vesync.async_generate_device_list",
+        return_value=[humidifier],
+    ):
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert "Unknown mode 'invalid_mode'" in caplog.text
+
+
+async def test_valid_mist_modes(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    humidifier,
+    manager,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test supported mist mode."""
+
+    humidifier.mist_modes = ["auto", "manual"]
+
+    with patch(
+        "homeassistant.components.vesync.async_generate_device_list",
+        return_value=[humidifier],
+    ):
+        caplog.clear()
+        caplog.set_level(logging.WARNING)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert "Unknown mode 'auto'" not in caplog.text
+        assert "Unknown mode 'manual'" not in caplog.text

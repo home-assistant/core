@@ -19,7 +19,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_TIME,
