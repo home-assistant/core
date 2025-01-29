@@ -6,7 +6,7 @@ from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import roomba_reported_state
 from .const import DOMAIN
