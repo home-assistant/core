@@ -41,7 +41,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     Platform,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 
 from .const import (
