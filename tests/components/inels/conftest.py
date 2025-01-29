@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNA
 from homeassistant.core import HomeAssistant
 
 from . import HA_INELS_PATH
-from .common import MockConfigEntry, get_entity, inels, set_mock_mqtt
+from .common import DOMAIN, MockConfigEntry, get_entity, set_mock_mqtt
 
 
 @pytest.fixture(autouse=True)
@@ -105,10 +105,10 @@ def entity_config(request: pytest.FixtureRequest):
 
 async def setup_inels_test_integration(hass: HomeAssistant):
     """Load inels integration with mocked mqtt broker."""
-    hass.config.components.add(inels.DOMAIN)
+    hass.config.components.add(DOMAIN)
 
     entry = MockConfigEntry(
-        domain=inels.DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 1883,
@@ -123,4 +123,4 @@ async def setup_inels_test_integration(hass: HomeAssistant):
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert inels.DOMAIN in hass.config.components
+    assert DOMAIN in hass.config.components
