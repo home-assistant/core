@@ -383,14 +383,15 @@ def _encrypt_backup(
             output_tar.addfile(encrypted_obj, encrypted)
 
 
+@dataclass(kw_only=True)
+class _CipherWorkerStatus:
+    done: asyncio.Event
+    error: Exception | None = None
+    thread: threading.Thread
+
+
 class _CipherBackupStreamer:
     """Encrypt or decrypt a backup."""
-
-    @dataclass(kw_only=True)
-    class _WorkerStatus:
-        done: asyncio.Event
-        error: Exception | None = None
-        thread: threading.Thread
 
     _cipher_func: Callable[
         [
@@ -412,7 +413,7 @@ class _CipherBackupStreamer:
         password: str | None,
     ) -> None:
         """Initialize."""
-        self._workers: list[_CipherBackupStreamer._WorkerStatus] = []
+        self._workers: list[_CipherWorkerStatus] = []
         self._backup = backup
         self._hass = hass
         self._open_stream = open_stream
@@ -443,7 +444,7 @@ class _CipherBackupStreamer:
             target=self._cipher_func,
             args=[reader, writer, self._password, on_done, self.size(), self._nonces],
         )
-        worker_status = self._WorkerStatus(done=asyncio.Event(), thread=worker)
+        worker_status = _CipherWorkerStatus(done=asyncio.Event(), thread=worker)
         self._workers.append(worker_status)
         worker.start()
         return writer
