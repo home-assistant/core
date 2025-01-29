@@ -62,7 +62,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await airq.validate()
         except ClientConnectionError:
-            _LOGGER.debug(
+            _LOGGER.error(
                 (
                     "Failed to connect to device %s. Check the IP address / device"
                     " ID as well as whether the device is connected to power and"
@@ -72,17 +72,18 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             errors["base"] = "cannot_connect"
         except InvalidAuth:
-            _LOGGER.debug(
+            _LOGGER.error(
                 "Incorrect password for device %s", user_input[CONF_IP_ADDRESS]
             )
             errors["base"] = "invalid_auth"
         else:
-            _LOGGER.debug("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
+            _LOGGER.info("Successfully connected to %s", user_input[CONF_IP_ADDRESS])
 
             device_info = await airq.fetch_device_info()
             await self.async_set_unique_id(device_info["id"])
             self._abort_if_unique_id_configured()
 
+            _LOGGER.debug("Creating an entry for %s", device_info["name"])
             return self.async_create_entry(title=device_info["name"], data=user_input)
 
         return self.async_show_form(
