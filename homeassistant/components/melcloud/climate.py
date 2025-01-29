@@ -152,6 +152,14 @@ class AtaDeviceClimate(MelCloudClimate):
         self._attr_unique_id = f"{self.api.device.serial}-{self.api.device.mac}"
         self._attr_device_info = self.api.device_info
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # We can only check for vane_horizontal once we fetch the device data from the cloud
+        if self._device.vane_horizontal:
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
+
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
@@ -164,7 +172,6 @@ class AtaDeviceClimate(MelCloudClimate):
                     ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
                 }
             )
-            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
         if vane_vertical := self._device.vane_vertical:
             attr.update(
