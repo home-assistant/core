@@ -254,6 +254,14 @@ async def async_unload_entry(
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
+async def async_remove_entry(
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
+) -> None:
+    """Handle removal of an entry."""
+    store = ReolinkStore(hass, config_entry.entry_id)
+    await store.async_remove()
+
+
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry, device: dr.DeviceEntry
 ) -> bool:
