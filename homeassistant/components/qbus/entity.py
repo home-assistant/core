@@ -26,9 +26,9 @@ def add_new_outputs(
     added_outputs: list[QbusMqttOutput],
     filter_fn: Callable[[QbusMqttOutput], bool],
     entity_type: type[QbusEntity],
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Call add_entities for new outputs."""
+    """Call async_add_entities for new outputs."""
 
     added_ref_ids = {k.ref_id for k in added_outputs}
 
@@ -40,7 +40,7 @@ def add_new_outputs(
 
     if new_outputs:
         added_outputs.extend(new_outputs)
-        add_entities([entity_type(output) for output in new_outputs])
+        async_add_entities([entity_type(output) for output in new_outputs])
 
 
 def format_ref_id(ref_id: str) -> str | None:

@@ -18,7 +18,7 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: QbusConfigEntry, add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: QbusConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up light entities."""
 
@@ -31,7 +31,7 @@ async def async_setup_entry(
             added_outputs,
             lambda output: output.type == "analog",
             QbusLight,
-            add_entities,
+            async_add_entities,
         )
 
     _check_outputs()
