@@ -13,7 +13,7 @@ from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _RobotT
