@@ -81,8 +81,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         except AuthenticationError as err:
             # Raising ConfigEntryAuthFailed will cancel future updates
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
-            if self.last_update_success:
-                self.logger.exception("Authentication error calling %s: ", func_name)
+            self.logger.exception("Authentication error calling %s: ", func_name)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key=f"{translation_prefix}authentication",
