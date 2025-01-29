@@ -47,7 +47,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.unit_conversion import TemperatureConverter
 

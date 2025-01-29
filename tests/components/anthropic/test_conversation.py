@@ -16,7 +16,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from tests.common import MockConfigEntry
 
@@ -472,7 +472,7 @@ async def test_conversation_id(
 
     assert result.conversation_id == conversation_id
 
-    unknown_id = ulid.ulid()
+    unknown_id = ulid_util.ulid()
 
     result = await conversation.async_converse(
         hass, "hello", unknown_id, None, agent_id="conversation.claude"

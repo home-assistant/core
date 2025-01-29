@@ -36,7 +36,7 @@ def _async_get_diagnostics(
     }
     for n in range(nr_heaters):
         status[f"heater_{n}"]["rooms"] = {
-            n: dict(coordinator.incomfort_data.heaters[n].rooms[m].status)
+            m: dict(coordinator.incomfort_data.heaters[n].rooms[m].status)
             for m in range(len(coordinator.incomfort_data.heaters[n].rooms))
         }
     return {

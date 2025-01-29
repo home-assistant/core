@@ -25,7 +25,7 @@ from zigpy.zcl.clusters.general import Basic, Groups
 from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.const as zha_const
+from homeassistant.components.zha import const as zha_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

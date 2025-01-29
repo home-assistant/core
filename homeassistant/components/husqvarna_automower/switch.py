@@ -165,14 +165,14 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, False
+            self.mower_id, self.stay_out_zone_uid, switch=False
         )
 
     @handle_sending_exception(poll_after_sending=True)
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
-            self.mower_id, self.stay_out_zone_uid, True
+            self.mower_id, self.stay_out_zone_uid, switch=True
         )
 
 
