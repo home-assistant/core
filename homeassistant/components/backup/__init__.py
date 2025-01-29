@@ -1,6 +1,7 @@
 """The Backup integration."""
 
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
@@ -19,11 +20,13 @@ from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
     BackupManager,
+    BackupManagerError,
     BackupPlatformProtocol,
     BackupReaderWriter,
     BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
@@ -39,17 +42,20 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
+    "BackupManagerError",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",
     "CreateBackupEvent",
     "Folder",
+    "IdleEvent",
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
     "RestoreBackupEvent",
     "WrittenBackup",
+    "async_get_manager",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -90,18 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_handle_create_automatic_service(call: ServiceCall) -> None:
         """Service handler for creating automatic backups."""
-        config_data = backup_manager.config.data
-        await backup_manager.async_create_backup(
-            agent_ids=config_data.create_backup.agent_ids,
-            include_addons=config_data.create_backup.include_addons,
-            include_all_addons=config_data.create_backup.include_all_addons,
-            include_database=config_data.create_backup.include_database,
-            include_folders=config_data.create_backup.include_folders,
-            include_homeassistant=True,  # always include HA
-            name=config_data.create_backup.name,
-            password=config_data.create_backup.password,
-            with_automatic_settings=True,
-        )
+        await backup_manager.async_create_automatic_backup()
 
     if not with_hassio:
         hass.services.async_register(DOMAIN, "create", async_handle_create_service)
@@ -112,3 +107,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_register_http_views(hass)
 
     return True
+
+
+@callback
+def async_get_manager(hass: HomeAssistant) -> BackupManager:
+    """Get the backup manager instance.
+
+    Raises HomeAssistantError if the backup integration is not available.
+    """
+    if DATA_MANAGER not in hass.data:
+        raise HomeAssistantError("Backup integration is not available")
+
+    return hass.data[DATA_MANAGER]

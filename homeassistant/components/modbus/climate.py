@@ -115,15 +115,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus climate."""
-    if discovery_info is None:
+    if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
         return
-
-    entities = []
-    for entity in discovery_info[CONF_CLIMATES]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        entities.append(ModbusThermostat(hass, hub, entity))
-
-    async_add_entities(entities)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):

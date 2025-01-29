@@ -48,7 +48,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service

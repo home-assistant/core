@@ -12,7 +12,7 @@ from orjson import JSONDecodeError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
 

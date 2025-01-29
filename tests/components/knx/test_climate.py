@@ -850,3 +850,91 @@ async def test_climate_humidity(hass: HomeAssistant, knx: KNXTestKit) -> None:
         HVACMode.HEAT,
         current_humidity=45.6,
     )
+
+
+async def test_swing(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate swing."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_SWING_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_SWING_STATE_ADDRESS: "1/2/7",
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", True)
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        swing_mode="on",
+        swing_modes=["on", "off"],
+    )
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_swing_mode",
+        {"entity_id": "climate.test", "swing_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", False)
+    knx.assert_state("climate.test", HVACMode.HEAT, swing_mode="off")
+
+
+async def test_horizontal_swing(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX climate horizontal swing."""
+    await knx.setup_integration(
+        {
+            ClimateSchema.PLATFORM: {
+                CONF_NAME: "test",
+                ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
+                ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                ClimateSchema.CONF_SWING_HORIZONTAL_ADDRESS: "1/2/6",
+                ClimateSchema.CONF_SWING_HORIZONTAL_STATE_ADDRESS: "1/2/7",
+            }
+        }
+    )
+
+    # read states state updater
+    await knx.assert_read("1/2/3")
+    await knx.assert_read("1/2/5")
+
+    # StateUpdater initialize state
+    await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
+    await knx.receive_response("1/2/3", RAW_FLOAT_21_0)
+
+    # Query status
+    await knx.assert_read("1/2/7")
+    await knx.receive_response("1/2/7", True)
+    knx.assert_state(
+        "climate.test",
+        HVACMode.HEAT,
+        swing_horizontal_mode="on",
+        swing_horizontal_modes=["on", "off"],
+    )
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "set_swing_horizontal_mode",
+        {"entity_id": "climate.test", "swing_horizontal_mode": "off"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", False)
+    knx.assert_state("climate.test", HVACMode.HEAT, swing_horizontal_mode="off")

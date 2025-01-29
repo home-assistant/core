@@ -5,12 +5,17 @@ from __future__ import annotations
 from typing import Any
 
 from hassil.recognize import RecognizeResult
-from hassil.util import PUNCTUATION_ALL
+from hassil.util import (
+    PUNCTUATION_END,
+    PUNCTUATION_END_WORD,
+    PUNCTUATION_START,
+    PUNCTUATION_START_WORD,
+)
 import voluptuous as vol
 
 from homeassistant.const import CONF_COMMAND, CONF_PLATFORM
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.script import ScriptRunResult
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
@@ -22,7 +27,12 @@ from .models import ConversationInput
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
-        if PUNCTUATION_ALL.search(sentence):
+        if (
+            PUNCTUATION_START.search(sentence)
+            or PUNCTUATION_END.search(sentence)
+            or PUNCTUATION_START_WORD.search(sentence)
+            or PUNCTUATION_END_WORD.search(sentence)
+        ):
             raise vol.Invalid("sentence should not contain punctuation")
 
     return value
