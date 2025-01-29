@@ -1,0 +1,44 @@
+# serializer version: 1
+# name: test_full_flow
+  list([
+    tuple(
+      'get_user',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'user(emailAddress)',
+        }),
+      }),
+    ),
+    tuple(
+      'list_files',
+      tuple(
+      ),
+      dict({
+        'params': dict({
+          'fields': 'files(id,name)',
+          'q': "properties has { key='home_assistant' and value='root' } and properties has { key='instance_id' and value='0a123c' } and trashed=false",
+        }),
+      }),
+    ),
+    tuple(
+      'create_file',
+      tuple(
+      ),
+      dict({
+        'json': dict({
+          'mimeType': 'application/vnd.google-apps.folder',
+          'name': 'Home Assistant',
+          'properties': dict({
+            'home_assistant': 'root',
+            'instance_id': '0a123c',
+          }),
+        }),
+        'params': dict({
+          'fields': 'id,name',
+        }),
+      }),
+    ),
+  ])
+# ---

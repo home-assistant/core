@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from letpot.models import LetPotDevice
 import pytest
 
 from homeassistant.components.letpot.const import (
@@ -14,7 +15,7 @@ from homeassistant.components.letpot.const import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL
 
-from . import AUTHENTICATION
+from . import AUTHENTICATION, STATUS
 
 from tests.common import MockConfigEntry
 
@@ -26,6 +27,49 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.letpot.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_client() -> Generator[AsyncMock]:
+    """Mock a LetPotClient."""
+    with (
+        patch(
+            "homeassistant.components.letpot.LetPotClient",
+            autospec=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.letpot.config_flow.LetPotClient",
+            new=mock_client,
+        ),
+    ):
+        client = mock_client.return_value
+        client.login.return_value = AUTHENTICATION
+        client.refresh_token.return_value = AUTHENTICATION
+        client.get_devices.return_value = [
+            LetPotDevice(
+                serial_number="LPH21ABCD",
+                name="Garden",
+                device_type="LPH21",
+                is_online=True,
+                is_remote=False,
+            )
+        ]
+        yield client
+
+
+@pytest.fixture
+def mock_device_client() -> Generator[AsyncMock]:
+    """Mock a LetPotDeviceClient."""
+    with patch(
+        "homeassistant.components.letpot.coordinator.LetPotDeviceClient",
+        autospec=True,
+    ) as mock_device_client:
+        device_client = mock_device_client.return_value
+        device_client.device_model_code = "LPH21"
+        device_client.device_model_name = "LetPot Air"
+        device_client.get_current_status.return_value = STATUS
+        device_client.last_status.return_value = STATUS
+        yield device_client
 
 
 @pytest.fixture

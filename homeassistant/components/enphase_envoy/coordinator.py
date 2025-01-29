@@ -16,7 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, INVALID_AUTH_ERRORS
 

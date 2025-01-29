@@ -4,8 +4,9 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
+from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.hub import EheimDigitalHub
-from eheimdigital.types import EheimDeviceType, LightMode
+from eheimdigital.types import EheimDeviceType, HeaterMode, HeaterUnit, LightMode
 import pytest
 
 from homeassistant.components.eheimdigital.const import DOMAIN
@@ -39,7 +40,26 @@ def classic_led_ctrl_mock():
 
 
 @pytest.fixture
-def eheimdigital_hub_mock(classic_led_ctrl_mock: MagicMock) -> Generator[AsyncMock]:
+def heater_mock():
+    """Mock a Heater device."""
+    heater_mock = MagicMock(spec=EheimDigitalHeater)
+    heater_mock.mac_address = "00:00:00:00:00:02"
+    heater_mock.device_type = EheimDeviceType.VERSION_EHEIM_EXT_HEATER
+    heater_mock.name = "Mock Heater"
+    heater_mock.aquarium_name = "Mock Aquarium"
+    heater_mock.temperature_unit = HeaterUnit.CELSIUS
+    heater_mock.current_temperature = 24.2
+    heater_mock.target_temperature = 25.5
+    heater_mock.is_heating = True
+    heater_mock.is_active = True
+    heater_mock.operation_mode = HeaterMode.MANUAL
+    return heater_mock
+
+
+@pytest.fixture
+def eheimdigital_hub_mock(
+    classic_led_ctrl_mock: MagicMock, heater_mock: MagicMock
+) -> Generator[AsyncMock]:
     """Mock eheimdigital hub."""
     with (
         patch(
@@ -52,7 +72,8 @@ def eheimdigital_hub_mock(classic_led_ctrl_mock: MagicMock) -> Generator[AsyncMo
         ),
     ):
         eheimdigital_hub_mock.return_value.devices = {
-            "00:00:00:00:00:01": classic_led_ctrl_mock
+            "00:00:00:00:00:01": classic_led_ctrl_mock,
+            "00:00:00:00:00:02": heater_mock,
         }
         eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
         yield eheimdigital_hub_mock

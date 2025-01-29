@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
