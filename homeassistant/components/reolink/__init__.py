@@ -32,6 +32,7 @@ from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
+from .store import ReolinkStore
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch
 from .views import PlaybackProxyView
 
@@ -98,7 +99,7 @@ async def async_setup_entry(
     if (
         host.api.port != config_entry.data[CONF_PORT]
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
-        or (privacy_mode := host.api.supported(None, "privacy_mode"))
+        or host.api.supported(None, "privacy_mode")
         != config_entry.data.get(CONF_PRIVACY)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
@@ -112,7 +113,7 @@ async def async_setup_entry(
             **config_entry.data,
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
-            CONF_PRIVACY: privacy_mode,
+            CONF_PRIVACY: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 

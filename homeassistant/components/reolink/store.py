@@ -60,7 +60,7 @@ class ReolinkStore:
         async with self._lock:
             await self._hass.async_add_executor_job(self._remove)
 
-    def remove(self) -> None:
+    def _remove(self) -> None:
         """Remove storage file associated with the config entry."""
         try:
             if self._path.exists():
