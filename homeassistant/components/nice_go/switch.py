@@ -5,24 +5,19 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientError
-from nice_go import ApiError, AuthFailedError
-
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .const import (
-    DOMAIN,
     KNOWN_UNSUPPORTED_DEVICE_TYPES,
     SUPPORTED_DEVICE_TYPES,
     UNSUPPORTED_DEVICE_WARNING,
 )
 from .coordinator import NiceGOConfigEntry
 from .entity import NiceGOEntity
+from .util import retry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,62 +61,14 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
             assert self.data.vacation_mode is not None
         return self.data.vacation_mode
 
+    @retry("switch_on_error")
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
-        try:
-            await self.coordinator.api.vacation_mode_on(self.data.id)
-        except (ApiError, ClientError) as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="switch_on_error",
-                translation_placeholders={"exception": str(error)},
-            ) from error
-        except AuthFailedError:
-            # Try refreshing token and retry
-            await self.coordinator.update_refresh_token()
-            try:
-                await self.coordinator.api.vacation_mode_on(self._device_id)
-            except (ApiError, ClientError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="switch_on_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
-            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="switch_on_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
+        await self.coordinator.api.vacation_mode_on(self.data.id)
 
+    @retry("switch_off_error")
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 
-        try:
-            await self.coordinator.api.vacation_mode_off(self.data.id)
-        except (ApiError, ClientError) as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="switch_off_error",
-                translation_placeholders={"exception": str(error)},
-            ) from error
-        except AuthFailedError:
-            # Try refreshing token and retry
-            await self.coordinator.update_refresh_token()
-            try:
-                await self.coordinator.api.vacation_mode_off(self._device_id)
-            except (ApiError, ClientError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="switch_off_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
-            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="switch_off_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
+        await self.coordinator.api.vacation_mode_off(self.data.id)

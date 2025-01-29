@@ -2,22 +2,17 @@
 
 from typing import Any
 
-from aiohttp import ClientError
-from nice_go import ApiError, AuthFailedError
-
 from homeassistant.components.cover import (
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .const import DOMAIN
 from .coordinator import NiceGOConfigEntry
 from .entity import NiceGOEntity
+from .util import retry
 
 DEVICE_CLASSES = {
     "WallStation": CoverDeviceClass.GARAGE,
@@ -72,66 +67,18 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
         """Return if cover is closing."""
         return self.data.barrier_status == "closing"
 
+    @retry("close_cover_error")
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
         if self.is_closed:
             return
 
-        try:
-            await self.coordinator.api.close_barrier(self._device_id)
-        except (ApiError, ClientError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="close_cover_error",
-                translation_placeholders={"exception": str(err)},
-            ) from err
-        except AuthFailedError:
-            # Try refreshing token and retry
-            try:
-                await self.coordinator.update_refresh_token()
-                await self.coordinator.api.close_barrier(self._device_id)
-            except (ApiError, ClientError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="close_cover_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
-            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="close_cover_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
+        await self.coordinator.api.close_barrier(self._device_id)
 
+    @retry("open_cover_error")
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
         if self.is_opened:
             return
 
-        try:
-            await self.coordinator.api.open_barrier(self._device_id)
-        except (ApiError, ClientError) as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="open_cover_error",
-                translation_placeholders={"exception": str(err)},
-            ) from err
-        except AuthFailedError:
-            # Try refreshing token and retry
-            await self.coordinator.update_refresh_token()
-            try:
-                await self.coordinator.api.open_barrier(self._device_id)
-            except (ApiError, ClientError) as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="open_cover_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
-            except (AuthFailedError, ConfigEntryAuthFailed, UpdateFailed) as err:
-                self.coordinator.config_entry.async_start_reauth(self.hass)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="open_cover_error",
-                    translation_placeholders={"exception": str(err)},
-                ) from err
+        await self.coordinator.api.open_barrier(self._device_id)
