@@ -3383,6 +3383,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'in_progress',
     }),
@@ -3404,6 +3405,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': 'home_assistant',
       'state': 'in_progress',
     }),
@@ -3415,6 +3417,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': 'upload_to_agents',
       'state': 'in_progress',
     }),
@@ -3426,6 +3429,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'completed',
     }),
@@ -3454,6 +3458,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'in_progress',
     }),
@@ -3475,6 +3480,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': 'home_assistant',
       'state': 'in_progress',
     }),
@@ -3486,6 +3492,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': 'upload_to_agents',
       'state': 'in_progress',
     }),
@@ -3497,6 +3504,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'completed',
     }),
@@ -3525,6 +3533,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'in_progress',
     }),
@@ -3546,6 +3555,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': 'home_assistant',
       'state': 'in_progress',
     }),
@@ -3557,6 +3567,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': 'upload_to_agents',
       'state': 'in_progress',
     }),
@@ -3568,6 +3579,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'completed',
     }),
@@ -3912,6 +3924,7 @@
   dict({
     'event': dict({
       'manager_state': 'create_backup',
+      'reason': None,
       'stage': None,
       'state': 'in_progress',
     }),

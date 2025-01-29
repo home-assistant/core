@@ -753,6 +753,7 @@ async def test_reader_writer_create(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -780,6 +781,7 @@ async def test_reader_writer_create(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": "upload_to_agents",
         "state": "in_progress",
     }
@@ -787,6 +789,7 @@ async def test_reader_writer_create(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "completed",
     }
@@ -800,14 +803,20 @@ async def test_reader_writer_create(
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
 @pytest.mark.parametrize(
-    ("side_effect", "error_code", "error_message"),
+    ("side_effect", "error_code", "error_message", "expected_reason"),
     [
         (
             SupervisorError("Boom!"),
             "home_assistant_error",
             "Error creating backup: Boom!",
+            "backup_manager_error",
         ),
-        (Exception("Boom!"), "unknown_error", "Unknown error"),
+        (
+            Exception("Boom!"),
+            "unknown_error",
+            "Unknown error",
+            "unknown_error",
+        ),
     ],
 )
 async def test_reader_writer_create_partial_backup_error(
@@ -817,6 +826,7 @@ async def test_reader_writer_create_partial_backup_error(
     side_effect: Exception,
     error_code: str,
     error_message: str,
+    expected_reason: str,
 ) -> None:
     """Test client partial backup error when generating a backup."""
     client = await hass_ws_client(hass)
@@ -834,6 +844,7 @@ async def test_reader_writer_create_partial_backup_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -841,6 +852,7 @@ async def test_reader_writer_create_partial_backup_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": expected_reason,
         "stage": None,
         "state": "failed",
     }
@@ -878,6 +890,7 @@ async def test_reader_writer_create_missing_reference_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -903,6 +916,7 @@ async def test_reader_writer_create_missing_reference_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": "upload_failed",
         "stage": None,
         "state": "failed",
     }
@@ -961,6 +975,7 @@ async def test_reader_writer_create_download_remove_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -986,6 +1001,7 @@ async def test_reader_writer_create_download_remove_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": "upload_to_agents",
         "state": "in_progress",
     }
@@ -993,6 +1009,7 @@ async def test_reader_writer_create_download_remove_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": "upload_failed",
         "stage": None,
         "state": "failed",
     }
@@ -1042,6 +1059,7 @@ async def test_reader_writer_create_info_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1067,6 +1085,7 @@ async def test_reader_writer_create_info_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": "upload_failed",
         "stage": None,
         "state": "failed",
     }
@@ -1114,6 +1133,7 @@ async def test_reader_writer_create_remote_backup(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1141,6 +1161,7 @@ async def test_reader_writer_create_remote_backup(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": "upload_to_agents",
         "state": "in_progress",
     }
@@ -1148,6 +1169,7 @@ async def test_reader_writer_create_remote_backup(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "completed",
     }
@@ -1204,6 +1226,7 @@ async def test_reader_writer_create_wrong_parameters(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1211,6 +1234,7 @@ async def test_reader_writer_create_wrong_parameters(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "create_backup",
+        "reason": "unknown_error",
         "stage": None,
         "state": "failed",
     }
@@ -1316,6 +1340,7 @@ async def test_reader_writer_restore(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "restore_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1347,6 +1372,7 @@ async def test_reader_writer_restore(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "restore_backup",
+        "reason": None,
         "stage": None,
         "state": "completed",
     }
@@ -1360,15 +1386,13 @@ async def test_reader_writer_restore(
 
 
 @pytest.mark.parametrize(
-    ("supervisor_error_string", "expected_error_code"),
+    ("supervisor_error_string", "expected_error_code", "expected_reason"),
     [
-        (
-            "Invalid password for backup",
-            "password_incorrect",
-        ),
+        ("Invalid password for backup", "password_incorrect", "password_incorrect"),
         (
             "Backup was made on supervisor version 2025.12.0, can't restore on 2024.12.0. Must update supervisor first.",
             "home_assistant_error",
+            "unknown_error",
         ),
     ],
 )
@@ -1379,6 +1403,7 @@ async def test_reader_writer_restore_error(
     supervisor_client: AsyncMock,
     supervisor_error_string: str,
     expected_error_code: str,
+    expected_reason: str,
 ) -> None:
     """Test restoring a backup."""
     client = await hass_ws_client(hass)
@@ -1400,6 +1425,7 @@ async def test_reader_writer_restore_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "restore_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1419,6 +1445,7 @@ async def test_reader_writer_restore_error(
     response = await client.receive_json()
     assert response["event"] == {
         "manager_state": "restore_backup",
+        "reason": expected_reason,
         "stage": None,
         "state": "failed",
     }

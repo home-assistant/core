@@ -360,6 +360,7 @@ async def test_update_addon(
             None,
             {
                 "agent_ids": ["hassio.local"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
                 "include_addons": ["test"],
                 "include_all_addons": False,
                 "include_database": False,
@@ -374,6 +375,7 @@ async def test_update_addon(
             "my_nas",
             {
                 "agent_ids": ["hassio.my_nas"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
                 "include_addons": ["test"],
                 "include_all_addons": False,
                 "include_database": False,
@@ -401,6 +403,7 @@ async def test_update_addon(
             None,
             {
                 "agent_ids": ["hassio.local"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
                 "include_addons": ["test"],
                 "include_all_addons": False,
                 "include_database": False,

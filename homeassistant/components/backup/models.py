@@ -71,5 +71,13 @@ class AgentBackup:
         )
 
 
-class BackupManagerError(HomeAssistantError):
+class BackupError(HomeAssistantError):
+    """Base class for backup errors."""
+
+    error_code = "unknown"
+
+
+class BackupManagerError(BackupError):
     """Backup manager error."""
+
+    error_code = "backup_manager_error"

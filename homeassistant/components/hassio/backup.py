@@ -509,6 +509,7 @@ async def backup_addon_before_update(
     try:
         await backup_manager.async_create_backup(
             agent_ids=[await _default_agent(client)],
+            extra_metadata={"supervisor.addon_update": addon},
             include_addons=[addon],
             include_all_addons=False,
             include_database=False,
