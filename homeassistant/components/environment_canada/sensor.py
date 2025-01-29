@@ -30,7 +30,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import device_info
 from .const import ATTR_STATION
-from .coordinator import ECConfigEntry, ECDataTypeT, ECDataUpdateCoordinator
+from .coordinator import ECConfigEntry, ECDataType, ECDataUpdateCoordinator
 
 ATTR_TIME = "alert time"
 
@@ -271,8 +271,8 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class ECBaseSensorEntity(
-    CoordinatorEntity[ECDataUpdateCoordinator[ECDataTypeT]], SensorEntity
+class ECBaseSensorEntity[DataT: ECDataType](
+    CoordinatorEntity[ECDataUpdateCoordinator[DataT]], SensorEntity
 ):
     """Environment Canada sensor base."""
 
@@ -281,7 +281,7 @@ class ECBaseSensorEntity(
 
     def __init__(
         self,
-        coordinator: ECDataUpdateCoordinator[ECDataTypeT],
+        coordinator: ECDataUpdateCoordinator[DataT],
         description: ECSensorEntityDescription,
     ) -> None:
         """Initialize the base sensor."""
@@ -301,12 +301,12 @@ class ECBaseSensorEntity(
         return value
 
 
-class ECSensorEntity(ECBaseSensorEntity[ECDataTypeT]):
+class ECSensorEntity[DataT: ECDataType](ECBaseSensorEntity[DataT]):
     """Environment Canada sensor for conditions."""
 
     def __init__(
         self,
-        coordinator: ECDataUpdateCoordinator[ECDataTypeT],
+        coordinator: ECDataUpdateCoordinator[DataT],
         description: ECSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
