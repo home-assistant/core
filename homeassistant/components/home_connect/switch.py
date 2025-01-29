@@ -294,7 +294,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         await super().async_added_to_hass()
-        if isinstance(self.power_off_state, UndefinedType):
+        if self.power_off_state is UNDEFINED:
             await self.async_fetch_power_off_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -318,7 +318,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
-        if isinstance(self.power_off_state, UndefinedType):
+        if self.power_off_state is UNDEFINED:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_retrieve_turn_off",
@@ -365,7 +365,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             and value == self.power_off_state
         ):
             self._attr_is_on = False
-        elif isinstance(self.power_off_state, UndefinedType) and value in [
+        elif self.power_off_state is UNDEFINED and value in [
             BSH_POWER_OFF,
             BSH_POWER_STANDBY,
         ]:
