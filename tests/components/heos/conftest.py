@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
+from collections.abc import Iterator
 from unittest.mock import AsyncMock, Mock, patch
 
 from pyheos import (
-    Heos,
     HeosGroup,
     HeosHost,
     HeosNowPlayingMedia,
@@ -38,6 +37,8 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from . import MockHeos
+
 from tests.common import MockConfigEntry
 
 
@@ -64,6 +65,17 @@ def config_entry_options_fixture() -> MockConfigEntry:
     )
 
 
+@pytest.fixture(name="new_mock", autouse=True)
+def new_heos_mock_fixture(controller: MockHeos) -> Iterator[Mock]:
+    """Patch the Heos class to return the mock instance."""
+    new_mock = Mock(return_value=controller)
+    with (
+        patch("homeassistant.components.heos.coordinator.Heos", new=new_mock),
+        patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
+    ):
+        yield new_mock
+
+
 @pytest_asyncio.fixture(name="controller", autouse=True)
 async def controller_fixture(
     players: dict[int, HeosPlayer],
@@ -72,49 +84,36 @@ async def controller_fixture(
     playlists: list[MediaItem],
     change_data: PlayerUpdateResult,
     group: dict[int, HeosGroup],
-) -> AsyncIterator[Heos]:
+) -> MockHeos:
     """Create a mock Heos controller fixture."""
-    mock_heos = Heos(HeosOptions(host="127.0.0.1"))
-    for player in players.values():
-        player.heos = mock_heos
-    mock_heos.connect = AsyncMock()
-    mock_heos.disconnect = AsyncMock()
-    mock_heos.sign_in = AsyncMock()
-    mock_heos.sign_out = AsyncMock()
-    mock_heos.get_players = AsyncMock(return_value=players)
-    mock_heos._players = players
-    mock_heos.get_favorites = AsyncMock(return_value=favorites)
-    mock_heos.get_input_sources = AsyncMock(return_value=input_sources)
-    mock_heos.get_playlists = AsyncMock(return_value=playlists)
-    mock_heos.load_players = AsyncMock(return_value=change_data)
-    mock_heos._signed_in_username = "user@user.com"
-    mock_heos.get_groups = AsyncMock(return_value=group)
-    mock_heos._groups = group
-    mock_heos.set_group = AsyncMock(return_value=None)
-    new_mock = Mock(return_value=mock_heos)
-    mock_heos.new_mock = new_mock
-    with (
-        patch("homeassistant.components.heos.coordinator.Heos", new=new_mock),
-        patch("homeassistant.components.heos.config_flow.Heos", new=new_mock),
-    ):
-        yield mock_heos
+
+    mock_heos = MockHeos(HeosOptions(host="127.0.0.1"))
+    mock_heos.mock_set_signed_in_username("user@user.com")
+    mock_heos.mock_set_players(players)
+    mock_heos.mock_set_groups(group)
+    mock_heos.get_favorites.return_value = favorites
+    mock_heos.get_input_sources.return_value = input_sources
+    mock_heos.get_playlists.return_value = playlists
+    mock_heos.load_players.return_value = change_data
+    return mock_heos
 
 
 @pytest.fixture(name="system")
-def system_info_fixture() -> dict[str, str]:
+def system_info_fixture() -> HeosSystem:
     """Create a system info fixture."""
+    main_host = HeosHost(
+        "Test Player",
+        "HEOS Drive HS2",
+        "123456",
+        "1.0.0",
+        "127.0.0.1",
+        NetworkType.WIRED,
+    )
     return HeosSystem(
         "user@user.com",
-        "127.0.0.1",
+        main_host,
         hosts=[
-            HeosHost(
-                "Test Player",
-                "HEOS Drive HS2",
-                "123456",
-                "1.0.0",
-                "127.0.0.1",
-                NetworkType.WIRED,
-            ),
+            main_host,
             HeosHost(
                 "Test Player 2",
                 "Speaker",
@@ -148,7 +147,6 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
             shuffle=False,
             repeat=RepeatType.OFF,
             volume=25,
-            heos=None,
         )
         player.now_playing_media = HeosNowPlayingMedia(
             type=MediaType.STATION,
