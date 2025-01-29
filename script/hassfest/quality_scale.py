@@ -1872,7 +1872,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "pioneer",
     "pjlink",
     "plaato",
-    "plugwise",
     "plant",
     "plex",
     "plum_lightpad",
