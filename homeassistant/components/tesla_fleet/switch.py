@@ -82,7 +82,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
     ),
     TeslaFleetSwitchEntityDescription(
         key="charge_state_charging_state",
-        unique_id="charge_state_charge_enable_request",
+        unique_id="charge_state_user_charge_enable_request",
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
         value_func=lambda state: state in {"Starting", "Charging"},
