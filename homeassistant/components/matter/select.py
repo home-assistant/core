@@ -101,10 +101,7 @@ class MatterMapSelectEntity(MatterEntity, SelectEntity):
             self.get_matter_attribute_value(self.entity_description.list_supported),
         )
         map_values = self.entity_description.state_map
-        list_values = []
-        for key, value in map_values.items():
-            if key in allowed_values:
-                list_values.append(value)
+        list_values = [value for key, value in map_values.items() if key in allowed_values]
         self._attr_options = list_values
         current_option_idx: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
