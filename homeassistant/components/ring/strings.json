@@ -56,9 +56,6 @@
     "binary_sensor": {
       "ding": {
         "name": "Ding"
-      },
-      "motion": {
-        "name": "Motion"
       }
     },
     "event": {
@@ -122,9 +119,6 @@
       },
       "wifi_signal_category": {
         "name": "Wi-Fi signal category"
-      },
-      "wifi_signal_strength": {
-        "name": "Wi-Fi signal strength"
       }
     },
     "switch": {
