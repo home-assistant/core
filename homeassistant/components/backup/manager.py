@@ -298,6 +298,7 @@ class BackupManager:
 
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = IdleEvent()
+        self.last_non_idle_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
 
     async def async_setup(self) -> None:
@@ -620,7 +621,7 @@ class BackupManager:
         *,
         agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
-    ) -> None:
+    ) -> str:
         """Receive and store a backup file from upload."""
         if self.state is not BackupManagerState.IDLE:
             raise BackupManagerError(f"Backup manager busy: {self.state}")
@@ -632,7 +633,9 @@ class BackupManager:
             )
         )
         try:
-            await self._async_receive_backup(agent_ids=agent_ids, contents=contents)
+            backup_id = await self._async_receive_backup(
+                agent_ids=agent_ids, contents=contents
+            )
         except Exception:
             self.async_on_backup_event(
                 ReceiveBackupEvent(
@@ -650,6 +653,7 @@ class BackupManager:
                     state=ReceiveBackupState.COMPLETED,
                 )
             )
+            return backup_id
         finally:
             self.async_on_backup_event(IdleEvent())
 
@@ -658,7 +662,7 @@ class BackupManager:
         *,
         agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
-    ) -> None:
+    ) -> str:
         """Receive and store a backup file from upload."""
         contents.chunk_size = BUF_SIZE
         self.async_on_backup_event(
@@ -687,6 +691,7 @@ class BackupManager:
         )
         await written_backup.release_stream()
         self.known_backups.add(written_backup.backup, agent_errors)
+        return written_backup.backup.backup_id
 
     async def async_create_backup(
         self,
@@ -1041,6 +1046,8 @@ class BackupManager:
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
+        if not isinstance(event, IdleEvent):
+            self.last_non_idle_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
