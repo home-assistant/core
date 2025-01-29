@@ -275,17 +275,3 @@ class PGLabDiscovery:
 
         discovery_info = self._discovered[device_id]
         discovery_info.add_entity(entity)
-
-
-async def create_discovery(
-    hass: HomeAssistant, entry: PGLABConfigEntry, mqtt: PyPGLabMqttClient
-):
-    """Create and initialize a discovery instance."""
-
-    pglab_discovery = PGLabDiscovery()
-
-    # Store the discovery instance.
-    entry.runtime_data = pglab_discovery
-
-    # Start to discovery PG Lab devices.
-    await pglab_discovery.start(hass, mqtt, entry)

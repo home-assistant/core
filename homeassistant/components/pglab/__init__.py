@@ -17,11 +17,27 @@ from homeassistant.components.mqtt import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import LOGGER
-from .discovery import PGLabDiscovery, create_discovery
+from .const import DOMAIN, LOGGER
+from .discovery import PGLabDiscovery
 
 type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up PG LAB Electronics integration."""
+
+    # Make sure MQTT integration is enabled and the client is available
+    if not await mqtt.async_wait_for_mqtt_client(hass):
+        LOGGER.error("MQTT integration is not available")
+        return False
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
@@ -55,17 +71,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> boo
     async def mqtt_unsubscribe(sub_state: PyPGLabSubState) -> None:
         async_unsubscribe_topics(hass, sub_state)
 
-        # Make sure MQTT integration is enabled and the client is available
-
     if not await mqtt.async_wait_for_mqtt_client(hass):
-        LOGGER.error("MQTT integration is not available")
-        return False
+        LOGGER.error("MQTT integration not available")
+        raise ConfigEntryNotReady("MQTT integration not available")
 
     # Create an MQTT client for PGLab used for PGLab python module.
     pglab_mqtt = PyPGLabMqttClient(mqtt_publish, mqtt_subscribe, mqtt_unsubscribe)
 
     # Setup PGLab device discovery.
-    await create_discovery(hass, entry, pglab_mqtt)
+    entry.runtime_data = PGLabDiscovery()
+
+    # Start to discovery PG Lab devices.
+    await entry.runtime_data.start(hass, pglab_mqtt, entry)
 
     return True
 
