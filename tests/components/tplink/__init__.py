@@ -60,6 +60,7 @@ def _load_feature_fixtures():
 
 
 FEATURES_FIXTURE = _load_feature_fixtures()
+FIXTURE_ENUM_TYPES = {"CleanErrorCode": ErrorCode}
 
 
 async def setup_platform_for_device(
@@ -275,6 +276,10 @@ def _mocked_feature(
     if fixture := FEATURES_FIXTURE.get(id):
         # copy the fixture so tests do not interfere with each other
         fixture = dict(fixture)
+        if enum_type := fixture.get("enum_type"):
+            val = FIXTURE_ENUM_TYPES[enum_type](fixture["value"])
+            fixture["value"] = val
+
     else:
         assert require_fixture is False, (
             f"No fixture defined for feature {id} and require_fixture is True"

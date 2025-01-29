@@ -16,11 +16,10 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
     FritzSecurityError,
-    FritzServiceError,
 )
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
-from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH, FritzGuestWLAN
+from fritzconnection.lib.fritzwlan import FritzGuestWLAN
 import xmltodict
 
 from homeassistant.components.device_tracker import (
@@ -29,7 +28,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -46,7 +45,6 @@ from .const import (
     DEFAULT_USERNAME,
     DOMAIN,
     FRITZ_EXCEPTIONS,
-    SERVICE_SET_GUEST_WIFI_PW,
     MeshRoles,
 )
 
@@ -692,34 +690,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 device_reg.async_update_device(
                     device.id, remove_config_entry_id=config_entry.entry_id
                 )
-
-    async def service_fritzbox(
-        self, service_call: ServiceCall, config_entry: ConfigEntry
-    ) -> None:
-        """Define FRITZ!Box services."""
-        _LOGGER.debug("FRITZ!Box service: %s", service_call.service)
-
-        if not self.connection:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="unable_to_connect"
-            )
-
-        try:
-            if service_call.service == SERVICE_SET_GUEST_WIFI_PW:
-                await self.async_trigger_set_guest_password(
-                    service_call.data.get("password"),
-                    service_call.data.get("length", DEFAULT_PASSWORD_LENGTH),
-                )
-                return
-
-        except (FritzServiceError, FritzActionError) as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="service_parameter_unknown"
-            ) from ex
-        except FritzConnectionException as ex:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="service_not_supported"
-            ) from ex
 
 
 class AvmWrapper(FritzBoxTools):

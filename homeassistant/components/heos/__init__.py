@@ -40,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     ):
         for domain, player_id in device.identifiers:
             if domain == DOMAIN and not isinstance(player_id, str):
-                device_registry.async_update_device(
+                device_registry.async_update_device(  # type: ignore[unreachable]
                     device.id, new_identifiers={(DOMAIN, str(player_id))}
                 )
             break
