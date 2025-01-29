@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, cast
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -137,11 +136,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         value_convert = self.entity_description.ha_to_native_value
         if TYPE_CHECKING:
             assert value_convert is not None
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id, self._entity_info.primary_attribute
-            ),
+        await self.write_attribute(
             value=value_convert(option),
         )
 
@@ -168,10 +163,8 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
         for mode in cluster.supportedModes:
             if mode.label != option:
                 continue
-            await self.matter_client.send_device_command(
-                node_id=self._endpoint.node.node_id,
-                endpoint_id=self._endpoint.endpoint_id,
-                command=cluster.Commands.ChangeToMode(newMode=mode.mode),
+            await self.send_device_command(
+                cluster.Commands.ChangeToMode(newMode=mode.mode),
             )
             break
 
@@ -235,10 +228,8 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         option_id = self._attr_options.index(option)
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=self.entity_description.command(option_id),
+        await self.send_device_command(
+            self.entity_description.command(option_id),
         )
 
     @callback
@@ -379,6 +370,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
+        # allow None value for previous state
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,

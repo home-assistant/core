@@ -59,6 +59,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Dimmer,
     DeviceType.Fan,
     DeviceType.Thermostat,
+    DeviceType.Vacuum,
 }
 
 # Primary features to always include even when the device type has its own platform

@@ -23,9 +23,9 @@ from .const import (
 def _get_bridges(service_call: ServiceCall) -> list[DynaliteBridge]:
     host = service_call.data.get(ATTR_HOST, "")
     bridges = [
-        bridge
-        for bridge in service_call.hass.data[DOMAIN].values()
-        if not host or bridge.host == host
+        entry.runtime_data
+        for entry in service_call.hass.config_entries.async_loaded_entries(DOMAIN)
+        if not host or entry.runtime_data.host == host
     ]
     LOGGER.debug("Selected bridges for service call: %s", bridges)
     return bridges

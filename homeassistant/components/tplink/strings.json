@@ -109,6 +109,9 @@
       "overheated": {
         "name": "Overheated"
       },
+      "overloaded": {
+        "name": "Overloaded"
+      },
       "cloud_connection": {
         "name": "Cloud connection"
       },
@@ -138,6 +141,12 @@
       },
       "tilt_down": {
         "name": "Tilt down"
+      },
+      "pair": {
+        "name": "Pair new device"
+      },
+      "unpair": {
+        "name": "Unpair device"
       }
     },
     "camera": {
@@ -192,6 +201,23 @@
       },
       "alarm_source": {
         "name": "Alarm source"
+      },
+      "vacuum_error": {
+        "name": "Error",
+        "state": {
+          "ok": "No error",
+          "sidebrushstuck": "Side brush stuck",
+          "mainbrushstuck": "Main brush stuck",
+          "wheelblocked": "Wheel blocked",
+          "trapped": "Unable to move",
+          "trappedcliff": "Unable to move (cliff sensor)",
+          "dustbinremoved": "Missing dust bin",
+          "unabletomove": "Unable to move",
+          "lidarblocked": "Lidar blocked",
+          "unabletofinddock": "Unable to find dock",
+          "batterylow": "Low on battery",
+          "unknowninternal": "Unknown error, report to upstream"
+        }
       }
     },
     "switch": {
@@ -227,6 +253,9 @@
       },
       "baby_cry_detection": {
         "name": "Baby cry detection"
+      },
+      "carpet_boost": {
+        "name": "Carpet boost"
       }
     },
     "number": {
@@ -242,11 +271,17 @@
       "temperature_offset": {
         "name": "Temperature offset"
       },
+      "power_protection_threshold": {
+        "name": "Power protection"
+      },
       "pan_step": {
         "name": "Pan degrees"
       },
       "tilt_step": {
         "name": "Tilt degrees"
+      },
+      "clean_count": {
+        "name": "Clean count"
       }
     }
   },
@@ -367,6 +402,9 @@
     },
     "unsupported_mode": {
       "message": "Tried to set unsupported mode: {mode}"
+    },
+    "invalid_alarm_duration": {
+      "message": "Invalid duration {duration} available: 1-{duration_max}s"
     }
   },
   "issues": {

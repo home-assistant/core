@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import time, timedelta
 
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     mock_config_entry,

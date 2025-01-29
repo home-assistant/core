@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
+from datetime import datetime
 from functools import reduce, wraps
 from operator import ior
 from typing import Any
@@ -38,9 +39,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import HeosConfigEntry
 from .const import DOMAIN as HEOS_DOMAIN
-from .coordinator import HeosCoordinator
+from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -57,6 +57,7 @@ BASE_SUPPORTED_FEATURES = (
 )
 
 PLAY_STATE_TO_STATE = {
+    None: MediaPlayerState.IDLE,
     PlayState.PLAY: MediaPlayerState.PLAYING,
     PlayState.STOP: MediaPlayerState.IDLE,
     PlayState.PAUSE: MediaPlayerState.PAUSED,
@@ -134,7 +135,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     def __init__(self, coordinator: HeosCoordinator, player: HeosPlayer) -> None:
         """Initialize."""
-        self._media_position_updated_at = None
+        self._media_position_updated_at: datetime | None = None
         self._player: HeosPlayer = player
         self._attr_unique_id = str(player.player_id)
         model_parts = player.model.split(maxsplit=1)
@@ -150,7 +151,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         )
         super().__init__(coordinator, context=player.player_id)
 
-    async def _player_update(self, event):
+    async def _player_update(self, event: str) -> None:
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()
@@ -280,13 +281,12 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             return
 
         if media_type == MediaType.PLAYLIST:
-            playlists = await self._player.heos.get_playlists()
+            playlists = await self.coordinator.heos.get_playlists()
             playlist = next((p for p in playlists if p.name == media_id), None)
             if not playlist:
                 raise ValueError(f"Invalid playlist '{media_id}'")
-            add_queue_option = HA_HEOS_ENQUEUE_MAP.get(kwargs.get(ATTR_MEDIA_ENQUEUE))
-
-            await self._player.add_to_queue(playlist, add_queue_option)
+            add_queue_option = HA_HEOS_ENQUEUE_MAP[kwargs.get(ATTR_MEDIA_ENQUEUE)]
+            await self._player.play_media(playlist, add_queue_option)
             return
 
         if media_type == "favorite":
@@ -401,38 +401,40 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return self._player.is_muted
 
     @property
-    def media_album_name(self) -> str:
+    def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self._player.now_playing_media.album
 
     @property
-    def media_artist(self) -> str:
+    def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self._player.now_playing_media.artist
 
     @property
-    def media_content_id(self) -> str:
+    def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self._player.now_playing_media.media_id
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         duration = self._player.now_playing_media.duration
         if isinstance(duration, int):
-            return duration / 1000
+            return int(duration / 1000)
         return None
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         # Some media doesn't have duration but reports position, return None
         if not self._player.now_playing_media.duration:
             return None
-        return self._player.now_playing_media.current_position / 1000
+        if isinstance(self._player.now_playing_media.current_position, int):
+            return int(self._player.now_playing_media.current_position / 1000)
+        return None
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
         # Some media doesn't have duration but reports position, return None
         if not self._player.now_playing_media.duration:
@@ -447,7 +449,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         return image_url if image_url else None
 
     @property
-    def media_title(self) -> str:
+    def media_title(self) -> str | None:
         """Title of current playing media."""
         return self._player.now_playing_media.song
 

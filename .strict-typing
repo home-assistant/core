@@ -217,6 +217,7 @@ homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_cloud.*
+homeassistant.components.google_drive.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.govee_ble.*
@@ -227,6 +228,7 @@ homeassistant.components.guardian.*
 homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.history_stats.*
@@ -316,6 +318,7 @@ homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mcp.*
 homeassistant.components.mcp_server.*
 homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
@@ -358,6 +361,7 @@ homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
+homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*

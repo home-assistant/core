@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -13,15 +12,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import services
 from .const import DOMAIN
-from .coordinator import HeosCoordinator
+from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 MIN_UPDATE_SOURCES = timedelta(seconds=1)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-type HeosConfigEntry = ConfigEntry[HeosCoordinator]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -43,7 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     ):
         for domain, player_id in device.identifiers:
             if domain == DOMAIN and not isinstance(player_id, str):
-                device_registry.async_update_device(
+                device_registry.async_update_device(  # type: ignore[unreachable]
                     device.id, new_identifiers={(DOMAIN, str(player_id))}
                 )
             break
