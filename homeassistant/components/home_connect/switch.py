@@ -291,12 +291,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     power_off_state: str | None | UndefinedType = UNDEFINED
 
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        if self.power_off_state is UNDEFINED:
-            await self.async_fetch_power_off_state()
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
         try:
@@ -319,13 +313,15 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         if self.power_off_state is UNDEFINED:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="unable_to_retrieve_turn_off",
-                translation_placeholders={
-                    SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name
-                },
-            )
+            await self.async_fetch_power_off_state()
+            if self.power_off_state is UNDEFINED:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_retrieve_turn_off",
+                    translation_placeholders={
+                        SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME: self.appliance.info.name
+                    },
+                )
 
         if self.power_off_state is None:
             raise HomeAssistantError(
