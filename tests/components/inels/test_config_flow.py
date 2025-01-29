@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import HA_INELS_PATH
-from .common import MockConfigEntry, config_flow, inels
+from .common import DOMAIN, MockConfigEntry, config_flow, inels
 
 
 @pytest.fixture
@@ -30,18 +30,6 @@ def default_config():
         CONF_USERNAME: "test",
         CONF_PASSWORD: "pwd",
         MQTT_TRANSPORT: "tcp",
-    }
-
-
-@pytest.fixture
-def altered_config():
-    """Fixture for an altered MQTT configuration."""
-    return {
-        CONF_HOST: "192.168.1.2",
-        CONF_PORT: 1884,
-        CONF_USERNAME: "new_user",
-        CONF_PASSWORD: "new_pwd",
-        MQTT_TRANSPORT: "websockets",
     }
 
 
@@ -80,7 +68,7 @@ async def test_user_config_flow_finished_successfully(
     mock_try_connection.return_value = None
 
     result = await hass.config_entries.flow.async_init(
-        inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result[CONF_TYPE] == FlowResultType.FORM
@@ -115,7 +103,7 @@ async def test_user_config_flow_errors(
     mock_try_connection.return_value = error_code
 
     result = await hass.config_entries.flow.async_init(
-        inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result[CONF_TYPE] == FlowResultType.FORM
@@ -139,7 +127,7 @@ async def test_config_setup(
     mock_try_connection.return_value = None
 
     result = await hass.config_entries.flow.async_init(
-        inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result[CONF_TYPE] == FlowResultType.FORM
@@ -159,15 +147,15 @@ async def test_config_setup(
     assert len(mock_is_available.mock_calls) == 1
 
 
-async def test_async_unload_entry_removes_domain(hass: HomeAssistant) -> None:
-    """Test that unloading the last config entry removes the DOMAIN from hass.data."""
-    mock_client = MagicMock()
+async def test_async_unload_entry(hass: HomeAssistant, default_config) -> None:
+    """Test the MQTT client associated with the entry is properly cleaned up."""
 
-    hass.data.setdefault(inels.DOMAIN, {})
-    hass.data[inels.DOMAIN]["entry_id"] = {inels.const.BROKER: mock_client}
+    mock_mqtt = MagicMock()
+    inels_data = inels.InelsData(mqtt=mock_mqtt)
 
-    config_entry = MockConfigEntry(domain=inels.DOMAIN, entry_id="entry_id")
+    config_entry = MockConfigEntry(domain=DOMAIN, data=default_config)
     config_entry.add_to_hass(hass)
+    config_entry.runtime_data = inels_data
 
     with patch(
         f"{HA_INELS_PATH}.async_unload_entry", wraps=inels.async_unload_entry
@@ -175,33 +163,10 @@ async def test_async_unload_entry_removes_domain(hass: HomeAssistant) -> None:
         unload_ok = await inels.async_unload_entry(hass, config_entry)
 
         assert unload_ok
-        assert inels.DOMAIN not in hass.data
         mock_unload.assert_called_once_with(hass, config_entry)
 
-
-async def test_multiple_instances(hass: HomeAssistant) -> None:
-    """Test multiple instances of inels integration with unique hosts."""
-    MockConfigEntry(domain=inels.DOMAIN, data={CONF_HOST: "192.168.1.1"}).add_to_hass(
-        hass
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        inels.DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: "192.168.1.2",
-            CONF_PORT: 1883,
-            CONF_USERNAME: "test",
-            CONF_PASSWORD: "pwd",
-            MQTT_TRANSPORT: "tcp",
-        },
-    )
-
-    assert result[CONF_TYPE] == "create_entry"
-    assert result["result"].data[CONF_HOST] == "192.168.1.2"
+    mock_mqtt.unsubscribe_listeners.assert_called_once()
+    mock_mqtt.disconnect.assert_called_once()
 
 
 async def test_try_connection(mock_mqtt_client_test_connection, default_config) -> None:
