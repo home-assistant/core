@@ -127,7 +127,7 @@ async def test_subentry_flow(hass: HomeAssistant) -> None:
         user_input={"name": "Sensor 1", "state": 15},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    subentry_id = list(config_entry.subentries.keys())[0]
+    subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: config_entries.ConfigSubentry(
             data={"state": 15},
