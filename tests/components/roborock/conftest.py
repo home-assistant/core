@@ -2,8 +2,11 @@
 
 from collections.abc import Generator
 from copy import deepcopy
+import pathlib
+import shutil
 from typing import Any
 from unittest.mock import Mock, patch
+import uuid
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
@@ -70,6 +73,9 @@ def bypass_api_fixture() -> None:
     with (
         patch("homeassistant.components.roborock.RoborockMqttClientV1.async_connect"),
         patch("homeassistant.components.roborock.RoborockMqttClientV1._send_command"),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockMqttClientV1._send_command"
+        ),
         patch(
             "homeassistant.components.roborock.RoborockApiClient.get_home_data_v2",
             return_value=HOME_DATA,
@@ -196,6 +202,7 @@ async def setup_entry(
     hass: HomeAssistant,
     bypass_api_fixture,
     mock_roborock_entry: MockConfigEntry,
+    cleanup_map_storage: pathlib.Path,
     platforms: list[Platform],
 ) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
@@ -203,3 +210,19 @@ async def setup_entry(
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield mock_roborock_entry
+
+
+@pytest.fixture
+def cleanup_map_storage(
+    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+) -> Generator[pathlib.Path]:
+    """Test cleanup, remove any map storage persisted during the test."""
+    tmp_path = str(uuid.uuid4())
+    with patch(
+        "homeassistant.components.roborock.roborock_storage.STORAGE_PATH", new=tmp_path
+    ):
+        storage_path = (
+            pathlib.Path(hass.config.path(tmp_path)) / mock_roborock_entry.entry_id
+        )
+        yield storage_path
+        shutil.rmtree(str(storage_path), ignore_errors=True)
