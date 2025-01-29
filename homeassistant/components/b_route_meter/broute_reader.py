@@ -45,7 +45,7 @@ class BRouteReader:
         self.serial_port_path = serial_port
 
         self.serial_port = None
-        self.scanRes = {}
+        self.scanRes: dict[str, str] = {}
         self.ipv6Addr = None
 
     def connect(self):

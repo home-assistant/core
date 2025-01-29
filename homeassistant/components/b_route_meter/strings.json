@@ -1,0 +1,54 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "B-Route Meter Configuration",
+                "description": "Set up your B-Route meter connection",
+                "data": {
+                    "route_b_id": "B-Route ID",
+                    "route_b_pwd": "B-Route Password",
+                    "serial_port": "Serial Port",
+                    "retry_count": "Retry Count"
+                },
+                "data_description": {
+                    "route_b_id": "32-digit authentication ID issued when applying for B-Route service",
+                    "route_b_pwd": "12-digit password issued when applying for B-Route service",
+                    "serial_port": "USB dongle serial port (e.g., /dev/ttyUSB0 for Linux, COM3 for Windows)",
+                    "retry_count": "Number of retry attempts on communication error (1-10)"
+                }
+            }
+        },
+        "error": {
+            "invalid_retry_count": "Please enter a number between 1 and 10",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "B-Route Meter Options",
+                "description": "Update your B-Route meter settings",
+                "data": {
+                    "route_b_id": "B-Route ID",
+                    "route_b_pwd": "B-Route Password",
+                    "serial_port": "Serial Port",
+                    "retry_count": "Retry Count"
+                },
+                "data_description": {
+                    "route_b_id": "32-digit authentication ID issued when applying for B-Route service",
+                    "route_b_pwd": "12-digit password issued when applying for B-Route service",
+                    "serial_port": "USB dongle serial port (e.g., /dev/ttyUSB0 for Linux, COM3 for Windows)",
+                    "retry_count": "Number of retry attempts on communication error (1-10)"
+                }
+            }
+        },
+        "error": {
+            "invalid_retry_count": "Please enter a number between 1 and 10",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        }
+    }
+}
