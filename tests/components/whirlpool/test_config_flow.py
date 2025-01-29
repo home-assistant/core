@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import aiohttp
 import pytest
+from whirlpool.auth import AccountLockedError
 
 from homeassistant import config_entries
 from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
@@ -82,6 +83,7 @@ async def test_form_invalid_auth(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
+        (AccountLockedError, "account_locked"),
         (aiohttp.ClientConnectionError, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (Exception, "unknown"),
@@ -249,6 +251,7 @@ async def test_reauth_flow_invalid_auth(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
+        (AccountLockedError, "account_locked"),
         (aiohttp.ClientConnectionError, "cannot_connect"),
         (TimeoutError, "cannot_connect"),
         (Exception, "unknown"),
