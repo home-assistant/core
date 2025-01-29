@@ -57,7 +57,6 @@ class ECDataUpdateCoordinator[_ECDataTypeT: ECAirQuality | ECRadar | ECWeather](
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Environment Canada",
-            name=entry.title,
             configuration_url="https://weather.gc.ca/",
         )
 
