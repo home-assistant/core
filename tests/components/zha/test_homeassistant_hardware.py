@@ -1,9 +1,13 @@
 """Test Home Assistant Hardware platform for ZHA."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from zigpy.application import ControllerApplication
 
+from homeassistant.components.homeassistant_hardware.helpers import (
+    register_firmware_info_callback,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -12,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.zha.homeassistant_hardware import get_firmware_info
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -87,3 +92,29 @@ async def test_get_firmware_info_errors(
     zha.add_to_hass(hass)
 
     assert (get_firmware_info(hass, zha)) is None
+
+
+async def test_hardware_firmware_info_provider_notification(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_zigpy_connect: ControllerApplication,
+) -> None:
+    """Test that the ZHA gateway provides hardware and firmware information."""
+    config_entry.add_to_hass(hass)
+
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    callback = MagicMock()
+    register_firmware_info_callback(hass, "/dev/ttyUSB0", callback)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    callback.assert_called_once_with(
+        FirmwareInfo(
+            device="/dev/ttyUSB0",
+            firmware_type=ApplicationType.EZSP,
+            firmware_version="7.1.4.0 build 389",
+            source="zha",
+            owners=[OwningIntegration(config_entry_id=config_entry.entry_id)],
+        )
+    )
