@@ -43,7 +43,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
     """A Cookidoo Data Update Coordinator."""
 
     config_entry: CookidooConfigEntry
-    user: CookidooUserInfo | None
+    user: CookidooUserInfo
 
     def __init__(
         self, hass: HomeAssistant, cookidoo: Cookidoo, entry: CookidooConfigEntry
