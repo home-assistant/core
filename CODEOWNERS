@@ -1450,6 +1450,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/steamist/ @bdraco
 /tests/components/steamist/ @bdraco
 /homeassistant/components/stiebel_eltron/ @fucm @ThyMYthOS
+/tests/components/stiebel_eltron/ @fucm @ThyMYthOS
 /homeassistant/components/stookwijzer/ @fwestenberg
 /tests/components/stookwijzer/ @fwestenberg
 /homeassistant/components/stream/ @hunterjm @uvjustin @allenporter
