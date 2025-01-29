@@ -28,7 +28,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
@@ -100,7 +100,7 @@ async def async_setup_entry(
         host.api.port != config_entry.data[CONF_PORT]
         or host.api.use_https != config_entry.data[CONF_USE_HTTPS]
         or host.api.supported(None, "privacy_mode")
-        != config_entry.data.get(CONF_PRIVACY)
+        != config_entry.data.get(CONF_SUPPORTS_PRIVACY_MODE)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -113,7 +113,7 @@ async def async_setup_entry(
             **config_entry.data,
             CONF_PORT: host.api.port,
             CONF_USE_HTTPS: host.api.use_https,
-            CONF_PRIVACY: host.api.supported(None, "privacy_mode"),
+            CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 

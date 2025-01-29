@@ -32,7 +32,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_PRIVACY, CONF_USE_HTTPS, DOMAIN
+from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
@@ -157,7 +157,7 @@ class ReolinkHost:
         store: ReolinkStore | None = None
         if self._config_entry_id is not None:
             store = ReolinkStore(self._hass, self._config_entry_id)
-            if self._config.get(CONF_PRIVACY):
+            if self._config.get(CONF_SUPPORTS_PRIVACY_MODE):
                 data = await store.async_load()
                 self._api.set_raw_host_data(data)
 
