@@ -12,6 +12,7 @@ class MockHeos(Heos):
         """Initialize the mock."""
         super().__init__(options)
         # Overwrite the methods with async mocks, changing type
+        self.add_to_queue: AsyncMock = AsyncMock()
         self.connect: AsyncMock = AsyncMock()
         self.disconnect: AsyncMock = AsyncMock()
         self.get_favorites: AsyncMock = AsyncMock()
@@ -20,23 +21,21 @@ class MockHeos(Heos):
         self.get_playlists: AsyncMock = AsyncMock()
         self.get_players: AsyncMock = AsyncMock()
         self.load_players: AsyncMock = AsyncMock()
+        self.play_media: AsyncMock = AsyncMock()
+        self.play_preset_station: AsyncMock = AsyncMock()
+        self.play_url: AsyncMock = AsyncMock()
+        self.player_clear_queue: AsyncMock = AsyncMock()
+        self.player_get_quick_selects: AsyncMock = AsyncMock()
+        self.player_play_next: AsyncMock = AsyncMock()
+        self.player_play_previous: AsyncMock = AsyncMock()
+        self.player_play_quick_select: AsyncMock = AsyncMock()
+        self.player_set_mute: AsyncMock = AsyncMock()
+        self.player_set_play_mode: AsyncMock = AsyncMock()
+        self.player_set_play_state: AsyncMock = AsyncMock()
+        self.player_set_volume: AsyncMock = AsyncMock()
         self.set_group: AsyncMock = AsyncMock()
         self.sign_in: AsyncMock = AsyncMock()
         self.sign_out: AsyncMock = AsyncMock()
-
-        self.add_to_queue: AsyncMock = AsyncMock()
-        self.player_clear_queue: AsyncMock = AsyncMock()
-        self.player_get_quick_selects: AsyncMock = AsyncMock()
-        self.player_set_mute: AsyncMock = AsyncMock()
-        self.player_set_play_state: AsyncMock = AsyncMock()
-        self.player_set_play_mode: AsyncMock = AsyncMock()
-        self.play_media: AsyncMock = AsyncMock()
-        self.player_play_next: AsyncMock = AsyncMock()
-        self.player_play_previous: AsyncMock = AsyncMock()
-        self.play_preset_station: AsyncMock = AsyncMock()
-        self.player_play_quick_select: AsyncMock = AsyncMock()
-        self.play_url: AsyncMock = AsyncMock()
-        self.player_set_volume: AsyncMock = AsyncMock()
 
     def mock_set_players(self, players: dict[int, HeosPlayer]) -> None:
         """Set the players on the mock instance."""
