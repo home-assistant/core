@@ -23,7 +23,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
