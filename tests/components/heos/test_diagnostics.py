@@ -2,14 +2,16 @@
 
 from unittest import mock
 
-from pyheos import Heos, HeosSystem
+from pyheos import HeosSystem
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.heos.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+
+from . import MockHeos
 
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import (
@@ -23,7 +25,7 @@ async def test_config_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     config_entry: MockConfigEntry,
-    controller: Heos,
+    controller: MockHeos,
     system: HeosSystem,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -77,7 +79,7 @@ async def test_device_diagnostics(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_device({(DOMAIN, "1")})
-
+    assert device is not None
     diagnostics = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     )

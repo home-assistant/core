@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import FritzDeviceLightMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
@@ -155,8 +155,8 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_color_temp.call_count == 1
-    assert device.set_color_temp.call_args_list == [call(3000)]
-    assert device.set_level.call_args_list == [call(100)]
+    assert device.set_color_temp.call_args_list == [call(3000, 0, True)]
+    assert device.set_level.call_args_list == [call(100, True)]
 
 
 async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
@@ -178,9 +178,9 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_unmapped_color.call_count == 1
-    assert device.set_level.call_args_list == [call(100)]
+    assert device.set_level.call_args_list == [call(100, True)]
     assert device.set_unmapped_color.call_args_list == [
-        call((100, round(70 * 255.0 / 100.0)))
+        call((100, round(70 * 255.0 / 100.0)), 0, True)
     ]
 
 
@@ -212,8 +212,8 @@ async def test_turn_on_color_unsupported_api_method(
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_color.call_count == 1
-    assert device.set_level.call_args_list == [call(100)]
-    assert device.set_color.call_args_list == [call((100, 70))]
+    assert device.set_level.call_args_list == [call(100, True)]
+    assert device.set_color.call_args_list == [call((100, 70), 0, True)]
 
     # test for unknown error
     error.response.status_code = 500

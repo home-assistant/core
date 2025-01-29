@@ -81,3 +81,13 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.fyta.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture(autouse=True)
+def mock_getrandbits():
+    """Mock image access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.image.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield

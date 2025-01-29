@@ -7,7 +7,7 @@ from pynobo import nobo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_AUTO_DISCOVERED, CONF_SERIAL, DOMAIN
 
