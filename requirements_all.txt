@@ -1143,7 +1143,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250109.2
+home-assistant-frontend==20250129.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -2991,7 +2991,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.3.0
+voip-utils==0.3.1
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -3043,7 +3043,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.1.15
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.11
+whirlpool-sixth-sense==0.18.12
 
 # homeassistant.components.whois
 whois==0.9.27
