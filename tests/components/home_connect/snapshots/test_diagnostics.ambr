@@ -7,7 +7,8 @@
       'e_number': 'HCS000000/00',
       'ha_id': 'BOSCH-000000000-000000000000',
       'name': 'DNE',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
       }),
       'status': dict({
@@ -28,7 +29,7 @@
       'name': 'WasherDryer',
       'programs': list([
         'LaundryCare.WasherDryer.Program.Mix',
-        'unknown',
+        'LaundryCare.Washer.Option.Temperature',
       ]),
       'settings': dict({
       }),
@@ -48,7 +49,8 @@
       'e_number': 'HCS000000/02',
       'ha_id': 'BOSCH-HCS000000-D00000000002',
       'name': 'Refrigerator',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
       }),
       'status': dict({
@@ -67,7 +69,8 @@
       'e_number': 'HCS000000/03',
       'ha_id': 'BOSCH-HCS000000-D00000000003',
       'name': 'Freezer',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
       }),
       'status': dict({
@@ -86,7 +89,8 @@
       'e_number': 'HCS000000/04',
       'ha_id': 'BOSCH-HCS000000-D00000000004',
       'name': 'Hood',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
         'BSH.Common.Setting.AmbientLightBrightness': 70,
         'BSH.Common.Setting.AmbientLightColor': 'BSH.Common.EnumType.AmbientLightColor.Color43',
@@ -113,7 +117,8 @@
       'e_number': 'HCS000000/05',
       'ha_id': 'BOSCH-HCS000000-D00000000005',
       'name': 'Hob',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
       }),
       'status': dict({
@@ -132,7 +137,8 @@
       'e_number': 'HCS000000/06',
       'ha_id': 'BOSCH-HCS000000-D00000000006',
       'name': 'CookProcessor',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
       }),
       'status': dict({
@@ -283,7 +289,8 @@
       'e_number': 'HCS05FRF1/03',
       'ha_id': 'SIEMENS-HCS05FRF1-304F4F9E541D',
       'name': 'FridgeFreezer',
-      'programs': None,
+      'programs': list([
+      ]),
       'settings': dict({
         'Refrigeration.Common.Setting.Dispenser.Enabled': False,
         'Refrigeration.Common.Setting.Light.External.Brightness': 70,

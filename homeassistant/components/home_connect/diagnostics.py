@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-import contextlib
 from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
-from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -18,29 +16,13 @@ from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 async def _generate_appliance_diagnostics(
     client: HomeConnectClient, appliance: HomeConnectApplianceData
 ) -> dict[str, Any]:
-    program_keys = None
-    with contextlib.suppress(HomeConnectError):
-        # Using get_available_programs serializes the response, and any
-        # programs not in the enum are set to Program.UNKNOWN.
-        # That's why here  we fetch the programs with a raw response so we can
-        # get the actual program keys and the user can suggest the addition
-        # of the missing programs to the enum to the aiohomeconnect library.
-        program_response = await client._auth.request(  # noqa: SLF001
-            "GET",
-            f"/homeappliances/{appliance.info.ha_id}/programs/available",
-        )
-        if not program_response.is_error:
-            program_keys = [
-                program["key"]
-                for program in program_response.json()["data"]["programs"]
-            ]
     return {
         **appliance.info.to_dict(),
         "status": {key.value: status.value for key, status in appliance.status.items()},
         "settings": {
             key.value: setting.value for key, setting in appliance.settings.items()
         },
-        "programs": program_keys,
+        "programs": [program.raw_key for program in appliance.programs],
     }
 
 
