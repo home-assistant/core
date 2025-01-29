@@ -43,14 +43,14 @@ from homeassistant.core import (
     State,
     callback,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
-import homeassistant.util.dt as dt_util
 
 from .const import (
     CONF_FILTER_LOWER_BOUND,
