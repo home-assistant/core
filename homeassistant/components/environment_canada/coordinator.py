@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TypeVar
 import xml.etree.ElementTree as ET
 
 from env_canada import ECAirQuality, ECRadar, ECWeather, ec_exc
@@ -18,6 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type ECConfigEntry = ConfigEntry[ECRuntimeData]
+ECDataTypeT = TypeVar("ECDataTypeT", ECAirQuality, ECRadar, ECWeather)
 
 
 @dataclass
@@ -29,16 +31,16 @@ class ECRuntimeData:
     weather_coordinator: ECDataUpdateCoordinator[ECWeather]
 
 
-class ECDataUpdateCoordinator[_ECDataTypeT: ECAirQuality | ECRadar | ECWeather](
-    DataUpdateCoordinator[_ECDataTypeT]
-):
+class ECDataUpdateCoordinator[ECDataTypeT](DataUpdateCoordinator[ECDataTypeT]):
     """Class to manage fetching EC data."""
+
+    config_entry: ECConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ECConfigEntry,
-        ec_data: _ECDataTypeT,
+        ec_data: ECDataTypeT,
         name: str,
         update_interval: timedelta,
     ) -> None:
@@ -53,7 +55,7 @@ class ECDataUpdateCoordinator[_ECDataTypeT: ECAirQuality | ECRadar | ECWeather](
         self.ec_data = ec_data
         self.last_update_success = False
 
-    async def _async_update_data(self) -> _ECDataTypeT:
+    async def _async_update_data(self) -> ECDataTypeT:
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
