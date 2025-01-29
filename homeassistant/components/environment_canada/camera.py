@@ -30,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = config_entry.runtime_data.radar_coordinator
-    async_add_entities([ECCamera(coordinator)])
+    async_add_entities([ECCameraEntity(coordinator)])
 
     platform = async_get_current_platform()
     platform.async_register_entity_service(
@@ -40,7 +40,7 @@ async def async_setup_entry(
     )
 
 
-class ECCamera(CoordinatorEntity, Camera):
+class ECCameraEntity(CoordinatorEntity, Camera):
     """Implementation of an Environment Canada radar camera."""
 
     _attr_has_entity_name = True

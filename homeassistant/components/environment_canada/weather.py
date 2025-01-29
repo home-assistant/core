@@ -75,7 +75,7 @@ async def async_setup_entry(
     ):
         entity_registry.async_remove(hourly_entity_id)
 
-    async_add_entities([ECWeather(config_entry.runtime_data.weather_coordinator)])
+    async_add_entities([ECWeatherEntity(config_entry.runtime_data.weather_coordinator)])
 
 
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
@@ -83,7 +83,7 @@ def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> st
     return f"{config_entry_unique_id}{'-hourly' if hourly else '-daily'}"
 
 
-class ECWeather(SingleCoordinatorWeatherEntity):
+class ECWeatherEntity(SingleCoordinatorWeatherEntity):
     """Representation of a weather condition."""
 
     _attr_has_entity_name = True
