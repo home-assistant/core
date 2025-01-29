@@ -4,13 +4,13 @@ from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pysmlight import Firmware, Info
+from pysmlight import Firmware, Info, Radio
 from pysmlight.const import Events as SmEvents
 from pysmlight.sse import MessageEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.smlight.const import SCAN_FIRMWARE_INTERVAL
+from homeassistant.components.smlight.const import DOMAIN, SCAN_FIRMWARE_INTERVAL
 from homeassistant.components.update import (
     ATTR_IN_PROGRESS,
     ATTR_INSTALLED_VERSION,
@@ -27,7 +27,12 @@ from homeassistant.helpers import entity_registry as er
 from . import get_mock_event_function
 from .conftest import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 from tests.typing import WebSocketGenerator
 
 pytestmark = [
@@ -67,6 +72,8 @@ MOCK_FIRMWARE_NOTES = [
         notes=None,
     )
 ]
+
+MOCK_RADIO = Radio(chip_index=1, zb_channel=0, zb_type=0, zb_version="20240716")
 
 
 @pytest.fixture
@@ -137,6 +144,47 @@ async def test_update_firmware(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.5.2"
     assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+
+
+async def test_update_zigbee2_firmware(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test update of zigbee2 firmware where available."""
+    mock_smlight_client.get_info.return_value = Info.from_dict(
+        load_json_object_fixture("info-MR1.json", DOMAIN)
+    )
+    await setup_integration(hass, mock_config_entry)
+    entity_id = "update.mock_title_zigbee_2_firmware"
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "20240314"
+    assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
+
+    await hass.services.async_call(
+        PLATFORM,
+        SERVICE_INSTALL,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=False,
+    )
+
+    assert len(mock_smlight_client.fw_update.mock_calls) == 1
+
+    event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
+
+    event_function(MOCK_FIRMWARE_DONE)
+
+    with patch("homeassistant.components.smlight.get_radio", return_value=MOCK_RADIO):
+        freezer.tick(timedelta(seconds=5))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(entity_id)
+        assert state.state == STATE_OFF
+        assert state.attributes[ATTR_INSTALLED_VERSION] == "20240716"
+        assert state.attributes[ATTR_LATEST_VERSION] == "20240716"
 
 
 async def test_update_legacy_firmware_v2(
