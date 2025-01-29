@@ -1058,7 +1058,7 @@ israel-rail-api==0.1.2
 jaraco.abode==6.2.1
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.9.2
+jellyfin-apiclient-python==1.10.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
