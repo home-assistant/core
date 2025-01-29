@@ -309,6 +309,11 @@
       "valve": {
         "name": "[%key:component::valve::title%]"
       }
+    },
+    "water_heater": {
+      "water_heater": {
+        "name": "Water heater"
+      }
     }
   },
   "issues": {
