@@ -13,8 +13,8 @@ from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
 from homeassistant.components.homeassistant_hardware.helpers import (
-    notify_firmware_info,
-    register_firmware_info_provider,
+    async_notify_firmware_info,
+    async_register_firmware_info_provider,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -115,7 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ha_zha_data = HAZHAData(yaml_config=config.get(DOMAIN, {}))
     hass.data[DATA_ZHA] = ha_zha_data
 
-    register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+    async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
 
     return True
 
@@ -226,7 +226,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     if fw_info := homeassistant_hardware.get_firmware_info(hass, config_entry):
-        await notify_firmware_info(
+        await async_notify_firmware_info(
             hass,
             DOMAIN,
             firmware_info=fw_info,

@@ -6,9 +6,9 @@ import pytest
 
 from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT
 from homeassistant.components.homeassistant_hardware.helpers import (
-    notify_firmware_info,
-    register_firmware_info_callback,
-    register_firmware_info_provider,
+    async_notify_firmware_info,
+    async_register_firmware_info_callback,
+    async_register_firmware_info_provider,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -53,7 +53,7 @@ async def test_dispatcher_registration(hass: HomeAssistant) -> None:
 
     provider1_firmware = MagicMock(spec=["get_firmware_info"])
     provider1_firmware.get_firmware_info = MagicMock(return_value=FIRMWARE_INFO_EZSP)
-    register_firmware_info_provider(hass, "zha", provider1_firmware)
+    async_register_firmware_info_provider(hass, "zha", provider1_firmware)
 
     # Mock provider 2 with an asynchronous method to pull firmware info
     provider2_config_entry = MockConfigEntry(
@@ -68,11 +68,11 @@ async def test_dispatcher_registration(hass: HomeAssistant) -> None:
     provider2_firmware.async_get_firmware_info = AsyncMock(
         return_value=FIRMWARE_INFO_SPINEL
     )
-    register_firmware_info_provider(hass, "otbr", provider2_firmware)
+    async_register_firmware_info_provider(hass, "otbr", provider2_firmware)
 
     # Double registration won't work
     with pytest.raises(ValueError, match="Domain zha is already registered"):
-        register_firmware_info_provider(hass, "zha", provider1_firmware)
+        async_register_firmware_info_provider(hass, "zha", provider1_firmware)
 
     # We can iterate over the results
     info = [i async for i in hass.data[DATA_COMPONENT].iter_firmware_info()]
@@ -82,22 +82,22 @@ async def test_dispatcher_registration(hass: HomeAssistant) -> None:
     ]
 
     callback1 = Mock()
-    cancel1 = register_firmware_info_callback(
+    cancel1 = async_register_firmware_info_callback(
         hass, "/dev/serial/by-id/device1", callback1
     )
 
     callback2 = Mock()
-    cancel2 = register_firmware_info_callback(
+    cancel2 = async_register_firmware_info_callback(
         hass, "/dev/serial/by-id/device2", callback2
     )
 
     # And receive notification callbacks
-    await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
-    await notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
-    await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    await async_notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    await async_notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
+    await async_notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
     cancel1()
-    await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
-    await notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
+    await async_notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    await async_notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
     cancel2()
 
     assert callback1.mock_calls == [

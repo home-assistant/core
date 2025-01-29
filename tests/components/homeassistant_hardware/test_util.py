@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.helpers import (
-    register_firmware_info_provider,
+    async_register_firmware_info_provider,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -112,7 +112,7 @@ async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
 
     mock_zha_hardware_info = MagicMock(spec=["get_firmware_info"])
     mock_zha_hardware_info.get_firmware_info = MagicMock(return_value=zha_firmware_info)
-    register_firmware_info_provider(hass, "zha", mock_zha_hardware_info)
+    async_register_firmware_info_provider(hass, "zha", mock_zha_hardware_info)
 
     async def mock_otbr_async_get_firmware_info(
         hass: HomeAssistant, config_entry: ConfigEntry
@@ -126,7 +126,7 @@ async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
     mock_otbr_hardware_info.async_get_firmware_info = AsyncMock(
         side_effect=mock_otbr_async_get_firmware_info
     )
-    register_firmware_info_provider(hass, "otbr", mock_otbr_hardware_info)
+    async_register_firmware_info_provider(hass, "otbr", mock_otbr_hardware_info)
 
     # ZHA wins for the first stick, since it's actually running
     assert (

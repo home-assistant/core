@@ -6,7 +6,7 @@ import pytest
 from zigpy.application import ControllerApplication
 
 from homeassistant.components.homeassistant_hardware.helpers import (
-    register_firmware_info_callback,
+    async_register_firmware_info_callback,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -105,7 +105,7 @@ async def test_hardware_firmware_info_provider_notification(
     await async_setup_component(hass, "homeassistant_hardware", {})
 
     callback = MagicMock()
-    register_firmware_info_callback(hass, "/dev/ttyUSB0", callback)
+    async_register_firmware_info_callback(hass, "/dev/ttyUSB0", callback)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 

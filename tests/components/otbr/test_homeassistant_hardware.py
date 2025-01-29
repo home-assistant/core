@@ -6,7 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homeassistant_hardware.helpers import (
-    register_firmware_info_callback,
+    async_register_firmware_info_callback,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -198,7 +198,7 @@ async def test_hardware_firmware_info_provider_notification(
     await async_setup_component(hass, "homeassistant_hardware", {})
 
     callback = Mock()
-    register_firmware_info_callback(hass, "/dev/ttyUSB1", callback)
+    async_register_firmware_info_callback(hass, "/dev/ttyUSB1", callback)
 
     with (
         patch(

@@ -8,8 +8,8 @@ import aiohttp
 import python_otbr_api
 
 from homeassistant.components.homeassistant_hardware.helpers import (
-    notify_firmware_info,
-    register_firmware_info_provider,
+    async_notify_firmware_info,
+    async_register_firmware_info_provider,
 )
 from homeassistant.components.thread import async_add_dataset
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Open Thread Border Router component."""
     websocket_api.async_setup(hass)
 
-    register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+    async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
 
     return True
 
@@ -85,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
     entry.runtime_data = otbrdata
 
     if fw_info := await homeassistant_hardware.async_get_firmware_info(hass, entry):
-        await notify_firmware_info(hass, DOMAIN, fw_info)
+        await async_notify_firmware_info(hass, DOMAIN, fw_info)
 
     return True
 

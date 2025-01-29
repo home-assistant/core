@@ -111,7 +111,7 @@ class HardwareInfoDispatcher:
 
 
 @hass_callback
-def register_firmware_info_provider(
+def async_register_firmware_info_provider(
     hass: HomeAssistant, domain: str, platform: HardwareFirmwareInfoModule
 ) -> None:
     """Register a firmware info provider."""
@@ -119,7 +119,7 @@ def register_firmware_info_provider(
 
 
 @hass_callback
-def register_firmware_info_callback(
+def async_register_firmware_info_callback(
     hass: HomeAssistant, device: str, callback: Callable[[FirmwareInfo], None]
 ) -> CALLBACK_TYPE:
     """Register a firmware info provider."""
@@ -127,7 +127,7 @@ def register_firmware_info_callback(
 
 
 @hass_callback
-def notify_firmware_info(
+def async_notify_firmware_info(
     hass: HomeAssistant, domain: str, firmware_info: FirmwareInfo
 ) -> Awaitable[None]:
     """Notify the dispatcher of new firmware information."""
