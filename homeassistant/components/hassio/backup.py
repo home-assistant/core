@@ -29,6 +29,7 @@ from homeassistant.components.backup import (
     BackupReaderWriterError,
     CreateBackupEvent,
     Folder,
+    IdleEvent,
     IncorrectPasswordError,
     NewBackup,
     RestoreBackupEvent,
@@ -510,6 +511,13 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             await restore_complete.wait()
         finally:
             unsub()
+
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Check restore status after core restart."""
 
     @callback
     def _async_listen_job_events(
