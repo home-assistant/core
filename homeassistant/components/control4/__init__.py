@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 import logging
+from typing import Any
 
 from aiohttp import client_exceptions
 from pyControl4.account import C4Account
@@ -25,14 +27,7 @@ from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import (
     API_RETRY_TIMES,
-    CONF_ACCOUNT,
-    CONF_CONFIG_LISTENER,
     CONF_CONTROLLER_UNIQUE_ID,
-    CONF_DIRECTOR,
-    CONF_DIRECTOR_ALL_ITEMS,
-    CONF_DIRECTOR_MODEL,
-    CONF_DIRECTOR_SW_VERSION,
-    CONF_UI_CONFIGURATION,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
@@ -40,6 +35,23 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.LIGHT, Platform.MEDIA_PLAYER]
+
+
+@dataclass
+class Control4RuntimeData:
+    """Control4 runtime data."""
+
+    account: C4Account
+    controller_unique_id: str
+    director: C4Director
+    director_all_items: list[dict[str, Any]]
+    director_model: str
+    director_sw_version: str
+    scan_interval: int
+    ui_configuration: dict[str, Any] | None
+
+
+type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]
 
 
 async def call_c4_api_retry(func, *func_args):
@@ -54,10 +66,8 @@ async def call_c4_api_retry(func, *func_args):
                 raise ConfigEntryNotReady(exception) from exception
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
     """Set up Control4 from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    entry_data = hass.data[DOMAIN].setdefault(entry.entry_id, {})
     account_session = aiohttp_client.async_get_clientsession(hass)
 
     config = entry.data
@@ -76,10 +86,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             exception,
         )
         return False
-    entry_data[CONF_ACCOUNT] = account
 
-    controller_unique_id = config[CONF_CONTROLLER_UNIQUE_ID]
-    entry_data[CONF_CONTROLLER_UNIQUE_ID] = controller_unique_id
+    controller_unique_id: str = config[CONF_CONTROLLER_UNIQUE_ID]
 
     director_token_dict = await call_c4_api_retry(
         account.getDirectorBearerToken, controller_unique_id
@@ -89,15 +97,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     director = C4Director(
         config[CONF_HOST], director_token_dict[CONF_TOKEN], director_session
     )
-    entry_data[CONF_DIRECTOR] = director
 
     controller_href = (await call_c4_api_retry(account.getAccountControllers))["href"]
-    entry_data[CONF_DIRECTOR_SW_VERSION] = await call_c4_api_retry(
+    director_sw_version = await call_c4_api_retry(
         account.getControllerOSVersion, controller_href
     )
 
     _, model, mac_address = controller_unique_id.split("_", 3)
-    entry_data[CONF_DIRECTOR_MODEL] = model.upper()
+    director_model = model.upper()
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
@@ -106,57 +113,60 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connections={(dr.CONNECTION_NETWORK_MAC, mac_address)},
         manufacturer="Control4",
         name=controller_unique_id,
-        model=entry_data[CONF_DIRECTOR_MODEL],
-        sw_version=entry_data[CONF_DIRECTOR_SW_VERSION],
+        model=director_model,
+        sw_version=director_sw_version,
     )
 
     # Store all items found on controller for platforms to use
-    director_all_items = await director.getAllItemInfo()
-    director_all_items = json.loads(director_all_items)
-    entry_data[CONF_DIRECTOR_ALL_ITEMS] = director_all_items
-
-    # Check if OS version is 3 or higher to get UI configuration
-    entry_data[CONF_UI_CONFIGURATION] = None
-    if int(entry_data[CONF_DIRECTOR_SW_VERSION].split(".")[0]) >= 3:
-        entry_data[CONF_UI_CONFIGURATION] = json.loads(
-            await director.getUiConfiguration()
-        )
-
-    # Load options from config entry
-    entry_data[CONF_SCAN_INTERVAL] = entry.options.get(
-        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+    director_all_items: list[dict[str, Any]] = json.loads(
+        await director.getAllItemInfo()
     )
 
-    entry_data[CONF_CONFIG_LISTENER] = entry.add_update_listener(update_listener)
+    # Check if OS version is 3 or higher to get UI configuration
+    ui_configuration: dict[str, Any] | None = None
+    if int(director_sw_version.split(".")[0]) >= 3:
+        ui_configuration = json.loads(await director.getUiConfiguration())
+
+    # Load options from config entry
+    scan_interval: int = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
+    entry.runtime_data = Control4RuntimeData(
+        account=account,
+        controller_unique_id=controller_unique_id,
+        director=director,
+        director_all_items=director_all_items,
+        director_model=director_model,
+        director_sw_version=director_sw_version,
+        scan_interval=scan_interval,
+        ui_configuration=ui_configuration,
+    )
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def update_listener(
+    hass: HomeAssistant, config_entry: Control4ConfigEntry
+) -> None:
     """Update when config_entry options update."""
     _LOGGER.debug("Config entry was updated, rerunning setup")
     await hass.config_entries.async_reload(config_entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    hass.data[DOMAIN][entry.entry_id][CONF_CONFIG_LISTENER]()
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-        _LOGGER.debug("Unloaded entry for %s", entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def get_items_of_category(hass: HomeAssistant, entry: ConfigEntry, category: str):
+async def get_items_of_category(
+    hass: HomeAssistant, entry: Control4ConfigEntry, category: str
+):
     """Return a list of all Control4 items with the specified category."""
-    director_all_items = hass.data[DOMAIN][entry.entry_id][CONF_DIRECTOR_ALL_ITEMS]
     return [
         item
-        for item in director_all_items
+        for item in entry.runtime_data.director_all_items
         if "categories" in item and category in item["categories"]
     ]

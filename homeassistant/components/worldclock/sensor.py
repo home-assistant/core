@@ -10,7 +10,7 @@ from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_TIME_FORMAT, DOMAIN
 

@@ -290,6 +290,12 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [],
+            "agents": {
+                "synology_dsm.mocked_syno_dsm_entry": {
+                    "protected": True,
+                    "size": 13916160,
+                }
+            },
             "backup_id": "abcd12ef",
             "date": "2025-01-09T20:14:35.457323+01:00",
             "database_included": True,
@@ -297,9 +303,6 @@ async def test_agents_list_backups(
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.0.dev0",
             "name": "Automatic backup 2025.2.0.dev0",
-            "protected": True,
-            "size": 13916160,
-            "agent_ids": ["synology_dsm.mocked_syno_dsm_entry"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -329,8 +332,10 @@ async def test_agents_list_backups_error(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
 
@@ -355,6 +360,12 @@ async def test_agents_list_backups_disabled_filestation(
             "abcd12ef",
             {
                 "addons": [],
+                "agents": {
+                    "synology_dsm.mocked_syno_dsm_entry": {
+                        "protected": True,
+                        "size": 13916160,
+                    }
+                },
                 "backup_id": "abcd12ef",
                 "date": "2025-01-09T20:14:35.457323+01:00",
                 "database_included": True,
@@ -362,9 +373,6 @@ async def test_agents_list_backups_disabled_filestation(
                 "homeassistant_included": True,
                 "homeassistant_version": "2025.2.0.dev0",
                 "name": "Automatic backup 2025.2.0.dev0",
-                "protected": True,
-                "size": 13916160,
-                "agent_ids": ["synology_dsm.mocked_syno_dsm_entry"],
                 "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },

@@ -262,7 +262,7 @@
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'charge_state_user_charge_enable_request',
+    'translation_key': 'charge_state_charging_state',
     'unique_id': 'LRWXF7EK4KC700000-charge_state_user_charge_enable_request',
     'unit_of_measurement': None,
   })
@@ -278,7 +278,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switch[switch.test_defrost-entry]
@@ -456,7 +456,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_switch_alt[switch.test_defrost-statealt]
