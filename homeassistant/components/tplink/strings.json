@@ -109,6 +109,9 @@
       "overheated": {
         "name": "Overheated"
       },
+      "overloaded": {
+        "name": "Overloaded"
+      },
       "cloud_connection": {
         "name": "Cloud connection"
       },
@@ -267,6 +270,9 @@
       },
       "temperature_offset": {
         "name": "Temperature offset"
+      },
+      "power_protection_threshold": {
+        "name": "Power protection"
       },
       "pan_step": {
         "name": "Pan degrees"
