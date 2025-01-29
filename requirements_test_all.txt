@@ -7,7 +7,7 @@
 AEMET-OpenData==0.6.4
 
 # homeassistant.components.honeywell
-AIOSomecomfort==0.0.30
+AIOSomecomfort==0.0.32
 
 # homeassistant.components.adax
 Adax-local==0.1.5
@@ -401,7 +401,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.6.0
+aiowebostv==0.6.1
 
 # homeassistant.components.withings
 aiowithings==3.1.5
@@ -941,13 +941,13 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.12.0
+habluetooth==3.14.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
 
 # homeassistant.components.conversation
-hassil==2.1.0
+hassil==2.2.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.11.1
@@ -975,13 +975,13 @@ holidays==0.65
 home-assistant-frontend==20250109.2
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.1.1
+home-assistant-intents==2025.1.28
 
 # homeassistant.components.home_connect
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.6
+homematicip==1.1.7
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1074,7 +1074,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.1.18.164225
+knx-frontend==2025.1.28.225404
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1355,7 +1355,7 @@ pdunehd==1.3.2
 peblar==0.4.0
 
 # homeassistant.components.peco
-peco==0.0.30
+peco==0.1.2
 
 # homeassistant.components.escea
 pescea==1.0.12
@@ -1933,7 +1933,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.1.1
+python-homewizard-energy==v8.3.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -1979,7 +1979,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.8.4
+python-roborock==2.9.7
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2468,7 +2468,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.33.0
 
 # homeassistant.components.knx
-xknx==3.4.0
+xknx==3.5.0
 
 # homeassistant.components.knx
 xknxproject==3.8.1
@@ -2493,7 +2493,7 @@ yalexs-ble==2.5.6
 yalexs==8.10.0
 
 # homeassistant.components.yeelight
-yeelight==0.7.14
+yeelight==0.7.16
 
 # homeassistant.components.yolink
 yolink-api==0.4.7
@@ -2517,7 +2517,7 @@ zeroconf==0.141.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.45
+zha==0.0.46
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
