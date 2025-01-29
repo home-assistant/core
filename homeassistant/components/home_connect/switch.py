@@ -376,10 +376,9 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     async def async_fetch_power_off_state(self) -> None:
         """Fetch the power off state."""
-        data = self.appliance.settings.get(
-            SettingKey.BSH_COMMON_POWER_STATE,
-        )
-        if not data or not data.constraints or not data.constraints.allowed_values:
+        data = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
+
+        if not data.constraints or not data.constraints.allowed_values:
             try:
                 data = await self.coordinator.client.get_setting(
                     self.appliance.info.ha_id,
