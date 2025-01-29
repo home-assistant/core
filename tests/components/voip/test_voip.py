@@ -941,3 +941,43 @@ async def test_voip_id_is_ip_address(
         await announce_task
 
         mock_send_tts.assert_called_once_with(_MEDIA_ID, wait_for_tone=False)
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_announce_timeout(
+    hass: HomeAssistant,
+    voip_devices: VoIPDevices,
+    voip_device: VoIPDevice,
+) -> None:
+    """Test announcement when user does not pick up the phone in time."""
+    assert await async_setup_component(hass, "voip", {})
+
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    assert isinstance(satellite, VoipAssistSatellite)
+    assert (
+        satellite.supported_features
+        & assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+    )
+
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
+
+    # Protocol has already been mocked, but some methods are not async
+    mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
+    mock_protocol.outgoing_call = Mock()
+    mock_protocol.cancel_call = Mock()
+
+    # Very short timeout which will trigger because we don't send any audio in
+    with (
+        patch(
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_RING_TIMEOUT",
+            0.01,
+        ),
+    ):
+        satellite.transport = Mock()
+        with pytest.raises(TimeoutError):
+            await satellite.async_announce(announcement)

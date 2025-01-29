@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Final
 import wave
 
 from voip_utils import SIP_PORT, RtpDatagramProtocol
-from voip_utils.sip import SipEndpoint, get_sip_endpoint
+from voip_utils.sip import SipDatagramProtocol, SipEndpoint, get_sip_endpoint
 
 from homeassistant.components import tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
@@ -43,6 +43,7 @@ _PIPELINE_TIMEOUT_SEC: Final = 30
 _ANNOUNCEMENT_BEFORE_DELAY: Final = 0.5
 _ANNOUNCEMENT_AFTER_DELAY: Final = 1.0
 _ANNOUNCEMENT_HANGUP_SEC: Final = 0.5
+_ANNOUNCEMENT_RING_TIMEOUT: Final = 30
 
 
 class Tones(IntFlag):
@@ -116,7 +117,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._processing_tone_done = asyncio.Event()
 
         self._announcement: AssistSatelliteAnnouncement | None = None
-        self._announcement_done = asyncio.Event()
+        self._announcement_future: asyncio.Future[Any] = asyncio.Future()
+        self._announcment_start_time: float = 0.0
         self._check_announcement_ended_task: asyncio.Task | None = None
         self._last_chunk_time: float | None = None
         self._rtp_port: int | None = None
@@ -170,7 +172,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         Plays announcement in a loop, blocking until the caller hangs up.
         """
-        self._announcement_done.clear()
+        self._announcement_future = asyncio.Future()
 
         if self._rtp_port is None:
             # Choose random port for RTP
@@ -194,16 +196,34 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 host=self.voip_device.voip_id, port=SIP_PORT
             )
 
+        # Reset state so we can time out if needed
+        self._last_chunk_time = None
+        self._announcment_start_time = time.monotonic()
         self._announcement = announcement
 
         # Make the call
-        self.hass.data[DOMAIN].protocol.outgoing_call(
+        sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
+        call_info = sip_protocol.outgoing_call(
             source=source_endpoint,
             destination=destination_endpoint,
             rtp_port=self._rtp_port,
         )
 
-        await self._announcement_done.wait()
+        # Check if caller hung up or didn't pick up
+        self._check_announcement_ended_task = (
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self._check_announcement_ended(),
+                "voip_announcement_ended",
+            )
+        )
+
+        try:
+            await self._announcement_future
+        except TimeoutError:
+            # Stop ringing
+            sip_protocol.cancel_call(call_info)
+            raise
 
     async def _check_announcement_ended(self) -> None:
         """Continuously checks if an audio chunk was received within a time limit.
@@ -211,12 +231,32 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         If not, the caller is presumed to have hung up and the announcement is ended.
         """
         while self._announcement is not None:
+            current_time = time.monotonic()
+            _LOGGER.debug(
+                "%s %s %s",
+                self._last_chunk_time,
+                current_time,
+                self._announcment_start_time,
+            )
+            if (self._last_chunk_time is None) and (
+                (current_time - self._announcment_start_time)
+                > _ANNOUNCEMENT_RING_TIMEOUT
+            ):
+                # Ring timeout
+                self._announcement = None
+                self._check_announcement_ended_task = None
+                self._announcement_future.set_exception(
+                    TimeoutError("User did not pick up in time")
+                )
+                _LOGGER.debug("Timed out waiting for the user to pick up the phone")
+                break
+
             if (self._last_chunk_time is not None) and (
-                (time.monotonic() - self._last_chunk_time) > _ANNOUNCEMENT_HANGUP_SEC
+                (current_time - self._last_chunk_time) > _ANNOUNCEMENT_HANGUP_SEC
             ):
                 # Caller hung up
                 self._announcement = None
-                self._announcement_done.set()
+                self._announcement_future.set_result(None)
                 self._check_announcement_ended_task = None
                 _LOGGER.debug("Announcement ended")
                 break
@@ -248,16 +288,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self._audio_queue.put_nowait(audio_bytes)
         elif self._run_pipeline_task is None:
             # Announcement only
-            if self._check_announcement_ended_task is None:
-                # Check if caller hung up
-                self._check_announcement_ended_task = (
-                    self.config_entry.async_create_background_task(
-                        self.hass,
-                        self._check_announcement_ended(),
-                        "voip_announcement_ended",
-                    )
-                )
-
             # Play announcement (will repeat)
             self._run_pipeline_task = self.config_entry.async_create_background_task(
                 self.hass,
