@@ -195,6 +195,11 @@
     "type": "BinarySensor",
     "category": "Info"
   },
+  "overloaded": {
+    "value": false,
+    "type": "BinarySensor",
+    "category": "Info"
+  },
   "battery_low": {
     "value": false,
     "type": "BinarySensor",
@@ -284,6 +289,12 @@
     "minimum_value": -10,
     "maximum_value": 10
   },
+  "power_protection_threshold": {
+    "value": 100,
+    "type": "Number",
+    "category": "Config",
+    "minimum_value": 0
+  },
   "target_temperature": {
     "value": false,
     "type": "Number",
@@ -370,5 +381,31 @@
     "value": 10,
     "type": "Number",
     "category": "Config"
+  },
+  "clean_count": {
+    "value": 1,
+    "type": "Number",
+    "category": "Config"
+  },
+  "carpet_boost": {
+    "value": true,
+    "type": "Switch",
+    "category": "Config"
+  },
+  "vacuum_error": {
+    "value": 0,
+    "type": "Sensor",
+    "category": "Info",
+    "enum_type": "CleanErrorCode"
+  },
+  "pair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Config"
+  },
+  "unpair": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
   }
 }

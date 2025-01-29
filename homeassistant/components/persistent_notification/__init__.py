@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 from homeassistant.util.uuid import random_uuid_hex
 

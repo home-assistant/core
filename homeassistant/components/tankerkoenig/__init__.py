@@ -17,11 +17,7 @@ async def async_setup_entry(
     """Set a tankerkoenig configuration entry up."""
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = TankerkoenigDataUpdateCoordinator(
-        hass,
-        name=entry.unique_id or DOMAIN,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+    coordinator = TankerkoenigDataUpdateCoordinator(hass, entry, DEFAULT_SCAN_INTERVAL)
     await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 

@@ -33,7 +33,7 @@ from homeassistant.core import (
     validate_state,
 )
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     TrackTemplate,

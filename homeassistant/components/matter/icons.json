@@ -36,9 +36,17 @@
         }
       }
     },
+    "select": {
+      "temperature_level": {
+        "default": "mdi:thermometer"
+      }
+    },
     "sensor": {
       "contamination_state": {
         "default": "mdi:air-filter"
+      },
+      "current_phase": {
+        "default": "mdi:state-machine"
       },
       "air_quality": {
         "default": "mdi:air-filter"

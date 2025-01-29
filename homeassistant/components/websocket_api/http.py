@@ -387,7 +387,14 @@ class WebSocketHandler:
             raise Disconnect("Received close message during auth phase")
 
         if msg.type is not WSMsgType.TEXT:
-            raise Disconnect("Received non-Text message during auth phase")
+            if msg.type is WSMsgType.ERROR:
+                # msg.data is the exception
+                raise Disconnect(
+                    f"Received error message during auth phase: {msg.data}"
+                )
+            raise Disconnect(
+                f"Received non-Text message of type {msg.type} during auth phase"
+            )
 
         try:
             auth_msg_data = json_loads(msg.data)
@@ -477,7 +484,12 @@ class WebSocketHandler:
                 continue
 
             if msg_type is not WSMsgType.TEXT:
-                raise Disconnect("Received non-Text message.")
+                if msg_type is WSMsgType.ERROR:
+                    # msg.data is the exception
+                    raise Disconnect(
+                        f"Received error message during command phase: {msg.data}"
+                    )
+                raise Disconnect(f"Received non-Text message of type {msg_type}.")
 
             try:
                 command_msg_data = json_loads(msg_data)
