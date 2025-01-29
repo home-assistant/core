@@ -132,7 +132,7 @@ async def test_switch_grid_operation_with_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to switch {test_entity} off, host",
+        match=f"Failed to execute async_turn_off for {test_entity}, host",
     ):
         # test grid status switch operation
         await hass.services.async_call(
@@ -144,7 +144,7 @@ async def test_switch_grid_operation_with_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to switch {test_entity} on, host",
+        match=f"Failed to execute async_turn_on for {test_entity}, host",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -232,7 +232,7 @@ async def test_switch_charge_from_grid_operation_with_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to switch {test_entity} off, host",
+        match=f"Failed to execute async_turn_off for {test_entity}, host",
     ):
         # test grid status switch operation
         await hass.services.async_call(
@@ -244,7 +244,7 @@ async def test_switch_charge_from_grid_operation_with_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to switch {test_entity} on, host",
+        match=f"Failed to execute async_turn_on for {test_entity}, host",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -350,7 +350,7 @@ async def test_switch_relay_operation_with_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to switch {relay} off, host",
+        match=f"Failed to execute async_turn_off for {test_entity}, host",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -361,7 +361,7 @@ async def test_switch_relay_operation_with_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to switch {relay} on, host",
+        match=f"Failed to execute async_turn_on for {test_entity}, host",
     ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
