@@ -198,7 +198,6 @@ async def test_token_refresh_success(
         client_mock.side_effect = MagicMock(side_effect=init_side_effect)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-    config_entry.runtime_data.client = client
     assert config_entry.state == ConfigEntryState.LOADED
 
     # Verify token request

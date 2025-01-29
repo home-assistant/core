@@ -140,8 +140,6 @@ async def mock_integration_setup(
             client_mock.return_value = client
             result = await hass.config_entries.async_setup(config_entry.entry_id)
             await hass.async_block_till_done()
-        if result:
-            config_entry.runtime_data.client = client
         return result
 
     return run

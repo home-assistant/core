@@ -1,7 +1,7 @@
 """Test for Home Connect coordinator."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any, cast
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
@@ -29,7 +29,6 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_PRESENT,
     BSH_POWER_OFF,
 )
-from homeassistant.components.home_connect.coordinator import HomeConnectConfigEntry
 from homeassistant.config_entries import ConfigEntries, ConfigEntryState
 from homeassistant.const import EVENT_STATE_REPORTED, Platform
 from homeassistant.core import (
@@ -59,8 +58,6 @@ async def test_coordinator_update(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
-
-    assert cast(HomeConnectConfigEntry, config_entry).runtime_data.data
 
 
 async def test_coordinator_update_failing_get_appliances(
@@ -92,8 +89,6 @@ async def test_coordinator_update_failing_get_settings_status(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     await integration_setup(client_with_exception)
     assert config_entry.state == ConfigEntryState.LOADED
-
-    assert cast(HomeConnectConfigEntry, config_entry).runtime_data.data
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)

@@ -175,7 +175,6 @@ async def test_program_switch_functionality(
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    # appliance.status.update(status)
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}
     )
@@ -334,7 +333,6 @@ async def test_ent_desc_switch_functionality(
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
 
-    # appliance.status.update(status)
     await hass.services.async_call(SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: entity_id})
     await hass.async_block_till_done()
     assert hass.states.is_state(entity_id, state)
