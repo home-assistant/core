@@ -98,6 +98,7 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         """Initialize the sensor."""
         super().__init__(device, coordinator)
         self.entity_description = description
+        self._attr_unique_id = f"{super().unique_id}-{description.key}"
         if is_outlet(self.device):
             self._attr_device_class = SwitchDeviceClass.OUTLET
         elif is_wall_switch(self.device):
