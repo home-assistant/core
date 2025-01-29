@@ -12,7 +12,6 @@ import os
 from pathlib import Path, PurePath
 from queue import SimpleQueue
 import tarfile
-import threading
 from typing import IO, Any, Self, cast
 
 import aiohttp
@@ -22,6 +21,7 @@ from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import JsonObjectType, json_loads_object
+from homeassistant.util.thread import ThreadWithException
 
 from .const import BUF_SIZE, LOGGER
 from .models import AddonInfo, AgentBackup, Folder
@@ -55,6 +55,12 @@ class BackupEmpty(DecryptError):
     """No tar files found in the backup."""
 
     _message = "No tar files found in the backup."
+
+
+class AbortCipher(HomeAssistantError):
+    """Abort the cipher operation."""
+
+    _message = "Abort cipher operation."
 
 
 def make_backup_dir(path: Path) -> None:
@@ -264,6 +270,8 @@ def decrypt_backup(
     except (DecryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error decrypting backup: %s", err)
         error = err
+    except AbortCipher:
+        LOGGER.debug("Cipher operation aborted")
     else:
         # Pad the output stream to the requested minimum size
         padding = max(minimum_size - output_stream.tell(), 0)
@@ -334,6 +342,8 @@ def encrypt_backup(
     except (EncryptError, SecureTarError, tarfile.TarError) as err:
         LOGGER.warning("Error encrypting backup: %s", err)
         error = err
+    except AbortCipher:
+        LOGGER.debug("Cipher operation aborted")
     else:
         # Pad the output stream to the requested minimum size
         padding = max(minimum_size - output_stream.tell(), 0)
@@ -387,7 +397,7 @@ def _encrypt_backup(
 class _CipherWorkerStatus:
     done: asyncio.Event
     error: Exception | None = None
-    thread: threading.Thread
+    thread: ThreadWithException
 
 
 class _CipherBackupStreamer:
@@ -440,7 +450,7 @@ class _CipherBackupStreamer:
         stream = await self._open_stream()
         reader = AsyncIteratorReader(self._hass, stream)
         writer = AsyncIteratorWriter(self._hass)
-        worker = threading.Thread(
+        worker = ThreadWithException(
             target=self._cipher_func,
             args=[reader, writer, self._password, on_done, self.size(), self._nonces],
         )
@@ -451,6 +461,8 @@ class _CipherBackupStreamer:
 
     async def wait(self) -> None:
         """Wait for the worker threads to finish."""
+        for worker in self._workers:
+            worker.thread.raise_exc(AbortCipher)
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
 
 
