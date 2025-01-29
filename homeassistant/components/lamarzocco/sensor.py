@@ -207,7 +207,6 @@ class LaMarzoccoKeySensorEntity(LaMarzoccoEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator, description)
         self.key = key
-        self._attr_translation_key = "drink_stats_coffee_key"
         self._attr_translation_placeholders = {"key": str(key)}
         self._attr_unique_id = f"{super()._attr_unique_id}_key{key}"
 
