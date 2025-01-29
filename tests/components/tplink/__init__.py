@@ -2,7 +2,7 @@
 
 from collections import namedtuple
 from dataclasses import replace
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -279,6 +279,8 @@ def _mocked_feature(
         if enum_type := fixture.get("enum_type"):
             val = FIXTURE_ENUM_TYPES[enum_type](fixture["value"])
             fixture["value"] = val
+        if timedelta_type := fixture.get("timedelta_type"):
+            fixture["value"] = timedelta(**{timedelta_type: fixture["value"]})
 
     else:
         assert require_fixture is False, (
