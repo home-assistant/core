@@ -76,10 +76,10 @@ ENTITY_ID = f"{DOMAIN}.{NAME}"
 
 
 class _EventCallback:
-    def __init__(self):
+    def __init__(self) -> None:
         self.event: Event | None = None
 
-    def listener(self, event: Event):
+    def listener(self, event: Event) -> None:
         self.event = event
 
 
