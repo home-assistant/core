@@ -204,10 +204,9 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
     service_icons = icons.get("services", {})
 
     # Try loading translation strings
-    if integration.core:
-        strings_file = integration.path / "strings.json"
-    else:
-        # For custom integrations, use the en.json file
+    strings_file = integration.path / "strings.json"
+    if not integration.core and not strings_file.is_file():
+        # For custom integrations, fallback to the en.json file
         strings_file = integration.path / "translations/en.json"
 
     strings = {}
