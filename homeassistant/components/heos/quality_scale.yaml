@@ -64,4 +64,4 @@ rules:
   inject-websession:
     status: done
     comment: The integration does not use websession
-  strict-typing: todo
+  strict-typing: done
