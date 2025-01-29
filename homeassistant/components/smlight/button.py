@@ -70,7 +70,6 @@ async def async_setup_entry(
     """Set up SMLIGHT buttons based on a config entry."""
     coordinator = entry.runtime_data.data
     radios = coordinator.data.info.radios
-    assert radios is not None
 
     async_add_entities(SmButton(coordinator, button) for button in BUTTONS)
     entity_created = [False, False]
