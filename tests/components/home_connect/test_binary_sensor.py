@@ -78,6 +78,7 @@ async def test_binary_sensors_door_states(
                     [
                         Event(
                             EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+                            EventKey.BSH_COMMON_STATUS_DOOR_STATE.value,
                             0,
                             "",
                             "",
@@ -165,6 +166,7 @@ async def test_binary_sensors_functionality(
                     [
                         Event(
                             event_key,
+                            event_key.value,
                             0,
                             "",
                             "",

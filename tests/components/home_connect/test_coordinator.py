@@ -147,6 +147,7 @@ async def test_event_listener(
             [
                 Event(
                     event_key,
+                    event_key.value,
                     0,
                     "",
                     "",
@@ -212,6 +213,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
                     [
                         Event(
                             EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL,
+                            EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL.value,
                             0,
                             "",
                             "",
@@ -227,6 +229,7 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
                     [
                         Event(
                             EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+                            EventKey.BSH_COMMON_STATUS_DOOR_STATE.value,
                             0,
                             "",
                             "",
@@ -334,7 +337,7 @@ async def test_event_listener_resilience(
     assert hass.states.is_state(entity_id, initial_state)
 
     client.get_status.return_value = ArrayOfStatus(
-        [Status(status_key, status_value)],
+        [Status(status_key, status_key.value, status_value)],
     )
     await hass.async_block_till_done()
     future.set_exception(exception)
@@ -353,6 +356,7 @@ async def test_event_listener_resilience(
                     [
                         Event(
                             event_key,
+                            event_key.value,
                             0,
                             "",
                             "",

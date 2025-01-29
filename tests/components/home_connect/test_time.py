@@ -104,8 +104,9 @@ async def test_time_entity_error(
     client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                key=setting_key,
-                value=30,
+                setting_key,
+                setting_key.value,
+                30,
             )
         ]
     )

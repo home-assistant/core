@@ -97,8 +97,9 @@ async def test_number_entity_functionality(
     client.get_setting.side_effect = None
     client.get_setting = AsyncMock(
         return_value=GetSetting(
-            key=setting_key,
-            value="",  # This should not change the value
+            setting_key,
+            setting_key.value,
+            "",  # This should not change the value
             unit=unit_of_measurement,
             type=type,
             constraints=SettingConstraints(
@@ -164,8 +165,9 @@ async def test_number_entity_error(
     client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                key=setting_key,
-                value=DEFAULT_MIN_VALUE,
+                setting_key,
+                setting_key.value,
+                DEFAULT_MIN_VALUE,
                 constraints=SettingConstraints(
                     min=int(DEFAULT_MIN_VALUE),
                     max=int(DEFAULT_MAX_VALUE),

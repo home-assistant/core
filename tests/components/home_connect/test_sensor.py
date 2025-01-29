@@ -161,6 +161,7 @@ async def test_event_sensors(
     client.get_status.return_value.status.extend(
         Status(
             StatusKey(event_key.value),
+            event_key.value,
             value,
         )
         for event_key, value in EVENT_PROG_DELAYED_START[EventType.STATUS].items()
@@ -177,6 +178,7 @@ async def test_event_sensors(
                     [
                         Event(
                             event_key,
+                            event_key.value,
                             0,
                             "",
                             "",
@@ -243,6 +245,7 @@ async def test_remaining_prog_time_edge_cases(
                         [
                             Event(
                                 event_key,
+                                event_key.value,
                                 0,
                                 "",
                                 "",
@@ -388,6 +391,7 @@ async def test_sensors_states(
                     [
                         Event(
                             event_key,
+                            str(event_key),
                             0,
                             "",
                             "",

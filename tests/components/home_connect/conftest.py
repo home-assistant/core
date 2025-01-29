@@ -162,6 +162,7 @@ def _get_set_program_side_effect(
                         [
                             Event(
                                 event_key,
+                                event_key.value,
                                 0,
                                 "",
                                 "",
@@ -169,7 +170,8 @@ def _get_set_program_side_effect(
                             ),
                             *[
                                 Event(
-                                    EventKey(option.key),
+                                    (option_event := EventKey(option.key)),
+                                    option_event.value,
                                     0,
                                     "",
                                     "",
@@ -194,6 +196,7 @@ def _get_set_key_value_side_effect(
     """Set program options side effect."""
 
     async def set_key_value_side_effect(ha_id: str, *_, **kwargs) -> None:
+        event_key = EventKey(kwargs[parameter_key])
         await event_queue.put(
             [
                 EventMessage(
@@ -202,7 +205,8 @@ def _get_set_key_value_side_effect(
                     ArrayOfEvents(
                         [
                             Event(
-                                EventKey(kwargs[parameter_key]),
+                                event_key,
+                                event_key.value,
                                 0,
                                 "",
                                 "",

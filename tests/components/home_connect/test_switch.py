@@ -158,6 +158,7 @@ async def test_program_switch_functionality(
                         [
                             Event(
                                 EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
                                 0,
                                 "",
                                 "",
@@ -256,6 +257,7 @@ async def test_switch_exception_handling(
             [
                 EnumerateAvailableProgram(
                     ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
                 )
             ]
         )
@@ -265,10 +267,12 @@ async def test_switch_exception_handling(
         [
             GetSetting(
                 SettingKey.BSH_COMMON_CHILD_LOCK,
+                SettingKey.BSH_COMMON_CHILD_LOCK.value,
                 False,
             ),
             GetSetting(
                 SettingKey.BSH_COMMON_POWER_STATE,
+                SettingKey.BSH_COMMON_POWER_STATE.value,
                 BSH_POWER_ON,
                 constraints=SettingConstraints(
                     allowed_values=[BSH_POWER_ON, BSH_POWER_OFF]
@@ -384,6 +388,7 @@ async def test_ent_desc_switch_exception_handling(
         [
             GetSetting(
                 key,
+                key.value,
                 value,
             )
             for key, value in status.items()
@@ -466,8 +471,9 @@ async def test_power_swtich(
     client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                key=SettingKey.BSH_COMMON_POWER_STATE,
-                value="",
+                SettingKey.BSH_COMMON_POWER_STATE,
+                SettingKey.BSH_COMMON_POWER_STATE.value,
+                "",
                 constraints=SettingConstraints(
                     allowed_values=allowed_values,
                 ),
@@ -509,8 +515,9 @@ async def test_power_switch_fetch_off_state_from_current_value(
     client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                key=SettingKey.BSH_COMMON_POWER_STATE,
-                value=initial_value,
+                SettingKey.BSH_COMMON_POWER_STATE,
+                SettingKey.BSH_COMMON_POWER_STATE.value,
+                initial_value,
             )
         ]
     )
@@ -563,16 +570,18 @@ async def test_power_switch_service_validation_errors(
         client.get_settings.return_value = ArrayOfSettings(
             [
                 GetSetting(
-                    key=SettingKey.BSH_COMMON_POWER_STATE,
-                    value=BSH_POWER_ON,
+                    SettingKey.BSH_COMMON_POWER_STATE,
+                    SettingKey.BSH_COMMON_POWER_STATE.value,
+                    BSH_POWER_ON,
                 )
             ]
         )
         client.get_setting = AsyncMock(side_effect=exception)
     else:
         setting = GetSetting(
-            key=SettingKey.BSH_COMMON_POWER_STATE,
-            value=BSH_POWER_ON,
+            SettingKey.BSH_COMMON_POWER_STATE,
+            SettingKey.BSH_COMMON_POWER_STATE.value,
+            BSH_POWER_ON,
             constraints=SettingConstraints(
                 allowed_values=allowed_values,
             ),
