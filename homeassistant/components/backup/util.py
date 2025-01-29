@@ -258,26 +258,29 @@ def decrypt_backup(
     """Decrypt a backup."""
     error: Exception | None = None
     try:
-        with (
-            tarfile.open(
-                fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
-            ) as input_tar,
-            tarfile.open(
-                fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
-            ) as output_tar,
-        ):
-            _decrypt_backup(input_tar, output_tar, password)
-    except (DecryptError, SecureTarError, tarfile.TarError) as err:
-        LOGGER.warning("Error decrypting backup: %s", err)
-        error = err
+        try:
+            with (
+                tarfile.open(
+                    fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
+                ) as input_tar,
+                tarfile.open(
+                    fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
+                ) as output_tar,
+            ):
+                _decrypt_backup(input_tar, output_tar, password)
+        except (DecryptError, SecureTarError, tarfile.TarError) as err:
+            LOGGER.warning("Error decrypting backup: %s", err)
+            error = err
+        else:
+            # Pad the output stream to the requested minimum size
+            padding = max(minimum_size - output_stream.tell(), 0)
+            output_stream.write(b"\0" * padding)
+        finally:
+            # Write an empty chunk to signal the end of the stream
+            output_stream.write(b"")
     except AbortCipher:
         LOGGER.debug("Cipher operation aborted")
-    else:
-        # Pad the output stream to the requested minimum size
-        padding = max(minimum_size - output_stream.tell(), 0)
-        output_stream.write(b"\0" * padding)
     finally:
-        output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
         on_done(error)
 
 
@@ -330,26 +333,29 @@ def encrypt_backup(
     """Encrypt a backup."""
     error: Exception | None = None
     try:
-        with (
-            tarfile.open(
-                fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
-            ) as input_tar,
-            tarfile.open(
-                fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
-            ) as output_tar,
-        ):
-            _encrypt_backup(input_tar, output_tar, password, nonces)
-    except (EncryptError, SecureTarError, tarfile.TarError) as err:
-        LOGGER.warning("Error encrypting backup: %s", err)
-        error = err
+        try:
+            with (
+                tarfile.open(
+                    fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
+                ) as input_tar,
+                tarfile.open(
+                    fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
+                ) as output_tar,
+            ):
+                _encrypt_backup(input_tar, output_tar, password, nonces)
+        except (EncryptError, SecureTarError, tarfile.TarError) as err:
+            LOGGER.warning("Error encrypting backup: %s", err)
+            error = err
+        else:
+            # Pad the output stream to the requested minimum size
+            padding = max(minimum_size - output_stream.tell(), 0)
+            output_stream.write(b"\0" * padding)
+        finally:
+            # Write an empty chunk to signal the end of the stream
+            output_stream.write(b"")
     except AbortCipher:
         LOGGER.debug("Cipher operation aborted")
-    else:
-        # Pad the output stream to the requested minimum size
-        padding = max(minimum_size - output_stream.tell(), 0)
-        output_stream.write(b"\0" * padding)
     finally:
-        output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
         on_done(error)
 
 
