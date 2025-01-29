@@ -37,7 +37,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import device_info
 from .const import DOMAIN
 from .coordinator import ECConfigEntry
 
@@ -104,7 +103,7 @@ class ECWeather(SingleCoordinatorWeatherEntity):
         self._attr_unique_id = _calculate_unique_id(
             coordinator.config_entry.unique_id, False
         )
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_temperature(self):

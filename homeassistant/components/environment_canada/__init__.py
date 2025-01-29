@@ -8,9 +8,8 @@ from env_canada import ECAirQuality, ECRadar, ECWeather
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
-from .const import CONF_STATION, DOMAIN
+from .const import CONF_STATION
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator, ECRuntimeData
 
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -81,14 +80,3 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-
-
-def device_info(config_entry: ECConfigEntry) -> DeviceInfo:
-    """Build and return the device info for EC."""
-    return DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
-        identifiers={(DOMAIN, config_entry.entry_id)},
-        manufacturer="Environment Canada",
-        name=config_entry.title,
-        configuration_url="https://weather.gc.ca/",
-    )
