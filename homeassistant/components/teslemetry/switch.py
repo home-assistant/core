@@ -42,7 +42,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         key="vehicle_state_sentry_mode",
         on_func=lambda api: api.set_sentry_mode(on=True),
         off_func=lambda api: api.set_sentry_mode(on=False),
-        value_func=lambda state: state in ("Starting", "Charging"),
         scopes=[Scope.VEHICLE_CMDS],
     ),
     TeslemetrySwitchEntityDescription(
@@ -86,6 +85,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         unique_id="charge_state_charge_enable_request",
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
+        value_func=lambda state: state in ("Starting", "Charging"),
         scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
     ),
 )
@@ -168,17 +168,6 @@ class TeslemetryVehicleSwitchEntity(TeslemetryVehicleEntity, TeslemetrySwitchEnt
         await handle_vehicle_command(self.entity_description.off_func(self.api))
         self._attr_is_on = False
         self.async_write_ha_state()
-
-
-class TeslemetryChargeSwitchEntity(TeslemetryVehicleSwitchEntity):
-    """Entity class for Teslemetry charge switch."""
-
-    def _async_update_attrs(self) -> None:
-        """Update the attributes of the entity."""
-        if self._value is None:
-            self._attr_is_on = self.get("charge_state_charge_enable_request")
-        else:
-            self._attr_is_on = self._value
 
 
 class TeslemetryChargeFromGridSwitchEntity(
