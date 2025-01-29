@@ -487,6 +487,33 @@ async def test_options_flow_remote_adapter(hass: HomeAssistant) -> None:
     assert result["reason"] == "remote_adapters_not_supported"
 
 
+@pytest.mark.usefixtures(
+    "one_adapter", "mock_bleak_scanner_start", "mock_bluetooth_adapters"
+)
+async def test_options_flow_local_no_passive_support(hass: HomeAssistant) -> None:
+    """Test options are not available for local adapters without passive support."""
+    source_entry = MockConfigEntry(
+        domain="test",
+    )
+    source_entry.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+        options={},
+        unique_id="BB:BB:BB:BB:BB:BB",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    _get_manager()._adapters["hci0"]["passive_scan"] = False
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "local_adapters_no_passive_support"
+
+
 @pytest.mark.usefixtures("one_adapter")
 async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> None:
     """Test we give a hint that the adapter is ignored."""

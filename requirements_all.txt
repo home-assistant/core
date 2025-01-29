@@ -419,7 +419,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.6.0
+aiowebostv==0.6.1
 
 # homeassistant.components.withings
 aiowithings==3.1.5
@@ -1109,7 +1109,7 @@ hass-nabucasa==0.88.1
 hass-splunk==0.1.1
 
 # homeassistant.components.conversation
-hassil==2.1.0
+hassil==2.2.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.11.1
@@ -1152,7 +1152,7 @@ home-assistant-intents==2025.1.28
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.6
+homematicip==1.1.7
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -2388,7 +2388,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.2.0
+python-homewizard-energy==v8.3.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -3128,7 +3128,7 @@ zeroconf==0.141.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.45
+zha==0.0.46
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

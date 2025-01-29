@@ -639,7 +639,7 @@
           'brightness': dict({
             'name': 'brightness',
             'text': '100',
-            'value': 100,
+            'value': 100.0,
           }),
           'name': dict({
             'name': 'name',
@@ -691,7 +691,7 @@
         'targets': dict({
         }),
         'unmatched_slots': dict({
-          'brightness': 1001,
+          'brightness': 1001.0,
         }),
       }),
     ]),

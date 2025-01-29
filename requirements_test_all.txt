@@ -401,7 +401,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.6.0
+aiowebostv==0.6.1
 
 # homeassistant.components.withings
 aiowithings==3.1.5
@@ -947,7 +947,7 @@ habluetooth==3.13.0
 hass-nabucasa==0.88.1
 
 # homeassistant.components.conversation
-hassil==2.1.0
+hassil==2.2.0
 
 # homeassistant.components.jewish_calendar
 hdate==0.11.1
@@ -981,7 +981,7 @@ home-assistant-intents==2025.1.28
 homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.1.6
+homematicip==1.1.7
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
@@ -1933,7 +1933,7 @@ python-fullykiosk==0.0.14
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.2.0
+python-homewizard-energy==v8.3.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2517,7 +2517,7 @@ zeroconf==0.141.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.45
+zha==0.0.46
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
