@@ -1929,6 +1929,9 @@ python-fullykiosk==0.0.14
 # homeassistant.components.sms
 # python-gammu==3.2.4
 
+# homeassistant.components.google_drive
+python-google-drive-api==0.0.2
+
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.8.1
 
