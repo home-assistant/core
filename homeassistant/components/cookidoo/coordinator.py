@@ -43,6 +43,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
     """A Cookidoo Data Update Coordinator."""
 
     config_entry: CookidooConfigEntry
+    user: CookidooUserInfo | None
 
     def __init__(
         self, hass: HomeAssistant, cookidoo: Cookidoo, entry: CookidooConfigEntry
@@ -56,7 +57,6 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             config_entry=entry,
         )
         self.cookidoo = cookidoo
-        self.user: CookidooUserInfo | None = None
 
     async def _async_setup(self) -> None:
         try:

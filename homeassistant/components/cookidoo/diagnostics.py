@@ -1,5 +1,6 @@
 """Diagnostics for the Cookidoo integration."""
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
@@ -20,6 +21,6 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "data": entry.runtime_data.data,
-        "user": entry.runtime_data.user,
+        "data": asdict(entry.runtime_data.data),
+        "user": asdict(entry.runtime_data.user) if entry.runtime_data.user else None,
     }

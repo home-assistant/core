@@ -2,8 +2,31 @@
 # name: test_diagnostics
   dict({
     'data': dict({
-      '__type': "<class 'homeassistant.components.cookidoo.coordinator.CookidooData'>",
-      'repr': "CookidooData(ingredient_items=[CookidooIngredientItem(id='unique_id_mehl', name='Mehl', is_owned=False, description='200 g')], additional_items=[CookidooAdditionalItem(id='unique_id_tomaten', name='Tomaten', is_owned=False)], subscription=CookidooSubscription(active=True, expires='2025-12-16T23:59:00Z', start_date='2024-12-16T00:00:00Z', status='ACTIVE', subscription_level='FULL', subscription_source='COMMERCE', type='REGULAR', extended_type='REGULAR'))",
+      'additional_items': list([
+        dict({
+          'id': 'unique_id_tomaten',
+          'is_owned': False,
+          'name': 'Tomaten',
+        }),
+      ]),
+      'ingredient_items': list([
+        dict({
+          'description': '200 g',
+          'id': 'unique_id_mehl',
+          'is_owned': False,
+          'name': 'Mehl',
+        }),
+      ]),
+      'subscription': dict({
+        'active': True,
+        'expires': '2025-12-16T23:59:00Z',
+        'extended_type': 'REGULAR',
+        'start_date': '2024-12-16T00:00:00Z',
+        'status': 'ACTIVE',
+        'subscription_level': 'FULL',
+        'subscription_source': 'COMMERCE',
+        'type': 'REGULAR',
+      }),
     }),
     'entry_data': dict({
       'country': 'CH',
@@ -12,8 +35,9 @@
       'password': '**REDACTED**',
     }),
     'user': dict({
-      '__type': "<class 'cookidoo_api.types.CookidooUserInfo'>",
-      'repr': "CookidooUserInfo(username='username_1234', description=None, picture=None)",
+      'description': None,
+      'picture': None,
+      'username': 'username_1234',
     }),
   })
 # ---
