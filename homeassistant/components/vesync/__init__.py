@@ -97,7 +97,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     if config_entry.version == 1:
         # Migrate switch/outlets entity to a new unique ID
         # How do we get unique id of the switch entity?
-        old_unique_ids = config_entry.data.get("switches", [])
+        entity_registry = await hass.helpers.entity_registry.async_get_registry()
+        old_unique_ids = [
+            entry.unique_id
+            for entry in entity_registry.entities.values()
+            if DOMAIN in entry.platform and "--" not in entry.unique_id
+        ]
+
         for old_unique_id in old_unique_ids:
             new_unique_id = f"{old_unique_id}-device_status"
             entity_registry = await hass.helpers.entity_registry.async_get_registry()
@@ -106,5 +112,5 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 entity_registry.async_update_entity(
                     entity_entry.entity_id, new_unique_id=new_unique_id
                 )
-        hass.config_entries.async_update_entry(config_entry, version=4)
+        hass.config_entries.async_update_entry(config_entry, version=2)
     return True
