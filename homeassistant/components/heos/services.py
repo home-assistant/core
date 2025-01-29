@@ -28,7 +28,7 @@ HEOS_SIGN_IN_SCHEMA = vol.Schema(
 HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
 
 
-def register(hass: HomeAssistant):
+def register(hass: HomeAssistant) -> None:
     """Register HEOS services."""
     hass.services.async_register(
         DOMAIN,

@@ -44,6 +44,7 @@ from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 LOCATION_CLOUD_BACKUP = ".cloud_backup"
+LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 _LOGGER = logging.getLogger(__name__)
 
