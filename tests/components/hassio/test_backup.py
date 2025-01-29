@@ -35,7 +35,7 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.hassio.backup import LOCATION_CLOUD_BACKUP
+from homeassistant.components.hassio.backup import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -53,6 +53,11 @@ TEST_BACKUP = supervisor_backups.Backup(
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     location=None,
+    location_attributes={
+        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+            protected=False, size_bytes=1048576
+        )
+    },
     locations={None},
     name="Test",
     protected=False,
@@ -77,6 +82,7 @@ TEST_BACKUP_DETAILS = supervisor_backups.BackupComplete(
     homeassistant_exclude_database=False,
     homeassistant="2024.12.0",
     location=TEST_BACKUP.location,
+    location_attributes=TEST_BACKUP.location_attributes,
     locations=TEST_BACKUP.locations,
     name=TEST_BACKUP.name,
     protected=TEST_BACKUP.protected,
@@ -97,6 +103,11 @@ TEST_BACKUP_2 = supervisor_backups.Backup(
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     location=None,
+    location_attributes={
+        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+            protected=False, size_bytes=1048576
+        )
+    },
     locations={None},
     name="Test",
     protected=False,
@@ -121,6 +132,7 @@ TEST_BACKUP_DETAILS_2 = supervisor_backups.BackupComplete(
     homeassistant_exclude_database=False,
     homeassistant=None,
     location=TEST_BACKUP_2.location,
+    location_attributes=TEST_BACKUP_2.location_attributes,
     locations=TEST_BACKUP_2.locations,
     name=TEST_BACKUP_2.name,
     protected=TEST_BACKUP_2.protected,
@@ -141,6 +153,11 @@ TEST_BACKUP_3 = supervisor_backups.Backup(
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     location="share",
+    location_attributes={
+        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+            protected=False, size_bytes=1048576
+        )
+    },
     locations={"share"},
     name="Test",
     protected=False,
@@ -165,6 +182,7 @@ TEST_BACKUP_DETAILS_3 = supervisor_backups.BackupComplete(
     homeassistant_exclude_database=False,
     homeassistant=None,
     location=TEST_BACKUP_3.location,
+    location_attributes=TEST_BACKUP_3.location_attributes,
     locations=TEST_BACKUP_3.locations,
     name=TEST_BACKUP_3.name,
     protected=TEST_BACKUP_3.protected,
@@ -186,6 +204,11 @@ TEST_BACKUP_4 = supervisor_backups.Backup(
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     location=None,
+    location_attributes={
+        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+            protected=False, size_bytes=1048576
+        )
+    },
     locations={None},
     name="Test",
     protected=False,
@@ -210,6 +233,7 @@ TEST_BACKUP_DETAILS_4 = supervisor_backups.BackupComplete(
     homeassistant_exclude_database=True,
     homeassistant="2024.12.0",
     location=TEST_BACKUP.location,
+    location_attributes=TEST_BACKUP.location_attributes,
     locations=TEST_BACKUP.locations,
     name=TEST_BACKUP.name,
     protected=TEST_BACKUP.protected,
