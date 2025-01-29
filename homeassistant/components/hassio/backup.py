@@ -96,7 +96,7 @@ def async_register_backup_agents_listener(
 
 
 def _backup_details_to_agent_backup(
-    details: supervisor_backups.BackupComplete,
+    details: supervisor_backups.BackupComplete, location: str | None
 ) -> AgentBackup:
     """Convert a supervisor backup details object to an agent backup."""
     homeassistant_included = details.homeassistant is not None
@@ -108,6 +108,7 @@ def _backup_details_to_agent_backup(
         AddonInfo(name=addon.name, slug=addon.slug, version=addon.version)
         for addon in details.addons
     ]
+    location = location or LOCATION_LOCAL
     return AgentBackup(
         addons=addons,
         backup_id=details.slug,
@@ -118,8 +119,8 @@ def _backup_details_to_agent_backup(
         homeassistant_included=homeassistant_included,
         homeassistant_version=details.homeassistant,
         name=details.name,
-        protected=details.protected,
-        size=details.size_bytes,
+        protected=details.location_attributes[location].protected,
+        size=details.location_attributes[location].size_bytes,
     )
 
 
@@ -157,8 +158,23 @@ class SupervisorBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup.
 
-        Not required for supervisor, the SupervisorBackupReaderWriter stores files.
+        The upload will be skipped if the backup already exists in the agent's location.
         """
+        if await self.async_get_backup(backup.backup_id):
+            _LOGGER.debug(
+                "Backup %s already exists in location %s",
+                backup.backup_id,
+                self.location,
+            )
+            return
+        stream = await open_stream()
+        upload_options = supervisor_backups.UploadBackupOptions(
+            location={self.location}
+        )
+        await self._client.backups.upload_backup(
+            stream,
+            upload_options,
+        )
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
@@ -168,7 +184,7 @@ class SupervisorBackupAgent(BackupAgent):
             if not backup.locations or self.location not in backup.locations:
                 continue
             details = await self._client.backups.backup_info(backup.slug)
-            result.append(_backup_details_to_agent_backup(details))
+            result.append(_backup_details_to_agent_backup(details, self.location))
         return result
 
     async def async_get_backup(
@@ -180,7 +196,7 @@ class SupervisorBackupAgent(BackupAgent):
         details = await self._client.backups.backup_info(backup_id)
         if self.location not in details.locations:
             return None
-        return _backup_details_to_agent_backup(details)
+        return _backup_details_to_agent_backup(details, self.location)
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
@@ -245,7 +261,32 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             for agent_id in agent_ids
             if manager.backup_agents[agent_id].domain == DOMAIN
         ]
-        locations = [agent.location for agent in hassio_agents]
+
+        # Check which location should be encrypted or decrypted, and send the
+        # longest list to the supervisor. If it's a tie, send the encrypted list.
+        # The remaining locations will be handled by async_upload_backup.
+        encrypted_locations: list[str | None] = []
+        decrypted_locations: list[str | None] = []
+        agents_settings = manager.config.data.agents
+        for hassio_agent in hassio_agents:
+            if password is not None:
+                if agent_settings := agents_settings.get(hassio_agent.agent_id):
+                    if agent_settings.protected:
+                        encrypted_locations.append(hassio_agent.location)
+                    else:
+                        decrypted_locations.append(hassio_agent.location)
+                else:
+                    encrypted_locations.append(hassio_agent.location)
+            else:
+                decrypted_locations.append(hassio_agent.location)
+        _LOGGER.debug("Encrypted locations: %s", encrypted_locations)
+        _LOGGER.debug("Decrypted locations: %s", decrypted_locations)
+        locations = (
+            encrypted_locations
+            if len(encrypted_locations) >= len(decrypted_locations)
+            else decrypted_locations
+        )
+        locations = locations or [LOCATION_CLOUD_BACKUP]
 
         try:
             backup = await self._client.backups.partial_backup(
@@ -256,7 +297,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                     name=backup_name,
                     password=password,
                     compressed=True,
-                    location=locations or LOCATION_CLOUD_BACKUP,
+                    location=locations,
                     homeassistant_exclude_database=not include_database,
                     background=True,
                     extra=extra_metadata,
@@ -266,7 +307,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             raise BackupReaderWriterError(f"Error creating backup: {err}") from err
         backup_task = self._hass.async_create_task(
             self._async_wait_for_backup(
-                backup, remove_after_upload=not bool(locations)
+                backup,
+                locations,
+                remove_after_upload=locations == [LOCATION_CLOUD_BACKUP],
             ),
             name="backup_manager_create_backup",
             eager_start=False,  # To ensure the task is not started before we return
@@ -275,7 +318,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         return (NewBackup(backup_job_id=backup.job_id), backup_task)
 
     async def _async_wait_for_backup(
-        self, backup: supervisor_backups.NewBackup, *, remove_after_upload: bool
+        self,
+        backup: supervisor_backups.NewBackup,
+        locations: list[str | None],
+        *,
+        remove_after_upload: bool,
     ) -> WrittenBackup:
         """Wait for a backup to complete."""
         backup_complete = asyncio.Event()
@@ -326,7 +373,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             ) from err
 
         return WrittenBackup(
-            backup=_backup_details_to_agent_backup(details),
+            backup=_backup_details_to_agent_backup(details, locations[0]),
             open_stream=open_backup,
             release_stream=remove_backup,
         )
@@ -346,20 +393,19 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             for agent_id in agent_ids
             if manager.backup_agents[agent_id].domain == DOMAIN
         ]
-        locations = {agent.location for agent in hassio_agents}
+        locations = [agent.location for agent in hassio_agents]
+        locations = locations or [LOCATION_CLOUD_BACKUP]
 
         backup_id = await self._client.backups.upload_backup(
             stream,
-            supervisor_backups.UploadBackupOptions(
-                location=locations or {LOCATION_CLOUD_BACKUP}
-            ),
+            supervisor_backups.UploadBackupOptions(location=set(locations)),
         )
 
         async def open_backup() -> AsyncIterator[bytes]:
             return await self._client.backups.download_backup(backup_id)
 
         async def remove_backup() -> None:
-            if locations:
+            if locations != [LOCATION_CLOUD_BACKUP]:
                 return
             await self._client.backups.remove_backup(
                 backup_id,
@@ -371,7 +417,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         details = await self._client.backups.backup_info(backup_id)
 
         return WrittenBackup(
-            backup=_backup_details_to_agent_backup(details),
+            backup=_backup_details_to_agent_backup(details, locations[0]),
             open_stream=open_backup,
             release_stream=remove_backup,
         )
