@@ -41,7 +41,7 @@ TEST_AGENT_BACKUP = AgentBackup(
     protected=False,
     size=987,
 )
-TEST_AGENT_BACKUP_FRONTEND_JSON = {
+TEST_AGENT_BACKUP_RESULT = {
     "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
     "backup_id": "test-backup",
     "database_included": True,
@@ -52,6 +52,9 @@ TEST_AGENT_BACKUP_FRONTEND_JSON = {
     "name": "Test",
     "protected": False,
     "size": 987,
+    "agent_ids": [TEST_AGENT_ID],
+    "failed_agent_ids": [],
+    "with_automatic_settings": None,
 }
 
 
@@ -121,14 +124,7 @@ async def test_agents_list_backups(
 
     assert response["success"]
     assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backups"] == [
-        TEST_AGENT_BACKUP_FRONTEND_JSON
-        | {
-            "agent_ids": [TEST_AGENT_ID],
-            "failed_agent_ids": [],
-            "with_automatic_settings": None,
-        }
-    ]
+    assert response["result"]["backups"] == [TEST_AGENT_BACKUP_RESULT]
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
 
@@ -154,19 +150,8 @@ async def test_agents_list_backups_fail(
 @pytest.mark.parametrize(
     ("backup_id", "expected_result"),
     [
-        (
-            TEST_AGENT_BACKUP.backup_id,
-            TEST_AGENT_BACKUP_FRONTEND_JSON
-            | {
-                "agent_ids": [TEST_AGENT_ID],
-                "failed_agent_ids": [],
-                "with_automatic_settings": None,
-            },
-        ),
-        (
-            "12345",
-            None,
-        ),
+        (TEST_AGENT_BACKUP.backup_id, TEST_AGENT_BACKUP_RESULT),
+        ("12345", None),
     ],
     ids=["found", "not_found"],
 )
