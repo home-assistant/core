@@ -32,6 +32,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     domain = DOMAIN
     name = "local"
+    unique_id = "local"
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the backup agent."""

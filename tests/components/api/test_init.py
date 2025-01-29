@@ -11,10 +11,9 @@ from aiohttp.test_utils import TestClient
 import pytest
 import voluptuous as vol
 
-from homeassistant import const
+from homeassistant import const, core as ha
 from homeassistant.auth.models import Credentials
 from homeassistant.bootstrap import DATA_LOGGING
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 

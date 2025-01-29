@@ -15,7 +15,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFl
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_API_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from . import CoinbaseConfigEntry, get_accounts
 from .const import (

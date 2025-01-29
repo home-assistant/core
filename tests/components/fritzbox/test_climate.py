@@ -44,7 +44,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
     FritzDeviceClimateMock,
