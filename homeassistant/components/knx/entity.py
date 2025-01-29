@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, is_dataclass
-from typing import TYPE_CHECKING, Any, Self, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 from xknx.devices import Device as XknxDevice
 
@@ -117,6 +117,46 @@ class KnxUiEntity(_KnxEntityBase):
             self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, device_info)})
 
 
+class StorageSerialization(ABC):
+    """Adds storage-based serialization/deserialization to a dataclass.
+
+    This class provides two methods for converting between a dataclass
+    instance and a dictionary suitable for persistence in storage.
+    The target class must be a dataclass.
+    """
+
+    @classmethod
+    @abstractmethod
+    def from_storage_dict(cls, data: dict[str, Any]) -> Self:
+        """Instantiate the class from a storage-compatible dictionary.
+
+        This method filters out any keys not matching the dataclass fields
+        and then uses the remaining data to initialize an instance.
+
+        Args:
+            data (dict[str, Any]): A dictionary representing the object
+                in storage format.
+
+        Returns:
+            InstanceType: A newly instantiated object of this class.
+
+        """
+
+    def to_storage_dict(self) -> dict[str, Any]:
+        """Convert the current instance into a dictionary suitable for storage.
+
+        Uses `asdict` to serialize all dataclass fields into a standard dictionary.
+
+        Returns:
+            dict[str, Any]: A dictionary representation of this instance
+            suitable for storing in databases, files, etc.
+
+        """
+        if is_dataclass(self):
+            return cast(dict[str, Any], asdict(self))  # type: ignore[unreachable]
+        raise TypeError(f"{self} is not a dataclass.")
+
+
 @dataclass
 class BasePlatformConfiguration(ABC):
     """Abstract base class for platform configuration.
@@ -137,6 +177,19 @@ class BasePlatformConfiguration(ABC):
     Optional:
     - Override `to_dict` if reverse serialization is required for the specific use case.
     """
+
+    @classmethod
+    @abstractmethod
+    def get_platform(cls) -> str:
+        """Retrieve the platform identifier.
+
+        Subclasses must provide a string representing the platform to which the
+        configuration applies.
+
+        Returns:
+            str: The platform identifier.
+
+        """
 
     @classmethod
     @abstractmethod
@@ -180,46 +233,3 @@ class BasePlatformConfiguration(ABC):
 
         """
         return {}
-
-
-InstanceType = TypeVar("InstanceType", bound=object)
-
-
-class StorageSerialization(ABC):
-    """Adds storage-based serialization/deserialization to a dataclass.
-
-    This mixin provides two methods for converting between a dataclass
-    instance and a dictionary suitable for persistence in storage.
-    The target class must be a dataclass (i.e., support `fields(cls)`).
-    """
-
-    @classmethod
-    @abstractmethod
-    def from_storage_dict(cls, data: dict[str, Any]) -> Self:
-        """Instantiate the class from a storage-compatible dictionary.
-
-        This method filters out any keys not matching the dataclass fields
-        and then uses the remaining data to initialize an instance.
-
-        Args:
-            data (dict[str, Any]): A dictionary representing the object
-                in storage format.
-
-        Returns:
-            InstanceType: A newly instantiated object of this class.
-
-        """
-
-    def to_storage_dict(self) -> dict[str, Any]:
-        """Convert the current instance into a dictionary suitable for storage.
-
-        Uses `asdict` to serialize all dataclass fields into a standard dictionary.
-
-        Returns:
-            dict[str, Any]: A dictionary representation of this instance
-            suitable for storing in databases, files, etc.
-
-        """
-        if is_dataclass(self):
-            return cast(dict[str, Any], asdict(self))  # type: ignore[unreachable]
-        raise TypeError(f"{self} is not a dataclass.")

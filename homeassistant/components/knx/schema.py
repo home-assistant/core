@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from functools import cache
 from typing import (
     Any,
@@ -46,6 +47,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
+    CONF_DESCRIPTION,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
@@ -60,12 +62,14 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.helpers.typing import VolSchemaType
 
 from .const import (
     CONF_CONTEXT_TIMEOUT,
     CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
     CONF_KNX_EXPOSE,
+    CONF_LABEL,
     CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
@@ -78,9 +82,6 @@ from .const import (
 from .storage.const import (
     CONF_DEVICE_INFO,
     CONF_DPT,
-    CONF_DPT_MAIN,
-    CONF_DPT_SUB,
-    CONF_DPT_UNIT,
     CONF_GA_PASSIVE,
     CONF_GA_STATE,
     CONF_GA_WRITE,
@@ -1067,6 +1068,9 @@ class SerializableSchema(Protocol):
       - Returns a dictionary representation of the schema that adheres to JSON serialization rules.
     """
 
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+
     @classmethod
     def serialize(cls, value: Self, convert: Callable[[Any], Any]) -> dict[str, Any]:
         """Serialize a Voluptuous schema definition into a JSON-compatible dictionary.
@@ -1096,7 +1100,24 @@ class SerializableSchema(Protocol):
         """
 
 
-class ConfigGroupSchema(VolValidator, SerializableSchema):
+@dataclass
+class VolMarkerDesc:
+    """Represents a description of a Voluptuous marker and its expected translation details.
+
+    Attributes:
+        translation_keys (list[str]):
+            A list of expected translation keys specific to the VolSchemaType the marker is associated with.
+            For example, a marker attached to a `ConfigGroupSchema` might require translation keys for
+            the group's title and description. These keys enable unit tests to generate a skeleton,
+            verify that all required translation keys are present in the schema, and ensure there are no
+            extraneous or missing translations.
+
+    """
+
+    translation_keys: list[str] = field(default_factory=list)
+
+
+class ConfigGroupSchema(SerializableSchema):
     """Data entry flow section."""
 
     class UIOptions(TypedDict, total=False):
@@ -1130,6 +1151,10 @@ class ConfigGroupSchema(VolValidator, SerializableSchema):
         """Validate value against schema."""
         return self.schema(value)
 
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+        return self.schema
+
     @classmethod
     def serialize(
         cls, value: ConfigGroupSchema, convert: Callable[[Any], Any]
@@ -1150,7 +1175,7 @@ class ConfigGroupSchema(VolValidator, SerializableSchema):
         return result
 
 
-class GroupAddressSchema(VolValidator, SerializableSchema):
+class GroupAddressSchema(SerializableSchema):
     """Voluptuous-compatible validator for a KNX group address."""
 
     def __init__(
@@ -1181,6 +1206,10 @@ class GroupAddressSchema(VolValidator, SerializableSchema):
             ) from exc
         return value
 
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+        return vol.Schema(None)
+
     @classmethod
     def serialize(
         cls,
@@ -1195,7 +1224,7 @@ class GroupAddressSchema(VolValidator, SerializableSchema):
         }
 
 
-class GroupAddressListSchema(VolValidator, SerializableSchema):
+class GroupAddressListSchema(SerializableSchema):
     """Voluptuous-compatible validator for a collection of KNX group addresses."""
 
     schema: vol.Schema
@@ -1224,6 +1253,10 @@ class GroupAddressListSchema(VolValidator, SerializableSchema):
             )
         )
 
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+        return self.schema
+
     @classmethod
     def serialize(
         cls, value: GroupAddressListSchema, convert: Callable[[Any], Any]
@@ -1239,10 +1272,10 @@ class GroupAddressListSchema(VolValidator, SerializableSchema):
         }
 
 
-class SyncStateSchema(VolValidator, SerializableSchema):
+class SyncStateSchema(SerializableSchema):
     """Voluptuous-compatible validator for sync state selector."""
 
-    SCHEMA: Final = vol.Any(
+    schema: Final = vol.Any(
         vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
         vol.Match(r"^(init|expire|every)( \d*)?$"),
         # Ensure that the value is a type boolean and not coerced to a boolean
@@ -1253,7 +1286,11 @@ class SyncStateSchema(VolValidator, SerializableSchema):
 
     def __call__(self, value: Any) -> Any:
         """Validate value against schema."""
-        return self.SCHEMA(value)
+        return self.schema(value)
+
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+        return self.schema
 
     @classmethod
     def serialize(
@@ -1263,102 +1300,11 @@ class SyncStateSchema(VolValidator, SerializableSchema):
         return {"type": "sync_state"}
 
 
-class DatapointTypeSchema(VolValidator, SerializableSchema):
-    """Class representing a Data Point Type (DPT) used in KNX.
-
-    This class provides functionality to validate and process DPT configurations.
-    """
-
-    SCHEMA: Final[vol.Schema] = vol.Schema(
-        {
-            vol.Required(CONF_DPT_MAIN): int,
-            vol.Optional(CONF_DPT_SUB, default=None): vol.Any(None, int),
-            vol.Remove(CONF_DPT_UNIT): str,
-            vol.Remove(CONF_DPT): str,
-        }
-    )
-
-    def __init__(self, allowed_dpts: tuple[type[DPTBase], ...] | None = None) -> None:
-        """Initialize the DPT instance.
-
-        Args:
-            allowed_dpts: A tuple of allowed XKNX DPT classes. If None, all DPTs are allowed.
-
-        """
-        self.allowed_dpts = allowed_dpts
-
-    def __call__(self, value: Any) -> Any:
-        """Validate and process the input value against the DPT schema.
-
-        Args:
-            value: The input value to validate and process.
-
-        Returns:
-            The validated value if it matches one of the allowed DPTs.
-
-        Raises:
-            vol.Invalid: If the input value does not match any allowed DPT.
-
-        """
-        # Validate the input value using the schema
-        validated_value = self.SCHEMA(value)
-
-        # Return the validated value if no DPTs are specified
-        if self.allowed_dpts is None:
-            return validated_value
-
-        # Check if the value matches any allowed DPT
-        for dpt in self.allowed_dpts:
-            if dpt.dpt_main_number == validated_value[
-                CONF_DPT_MAIN
-            ] and dpt.dpt_sub_number == validated_value.get(CONF_DPT_SUB):
-                return validated_value
-
-        # Raise an error if no matching DPT is found
-        allowed_dpts_str = ", ".join(
-            formatted
-            for dpt in self.allowed_dpts
-            if (formatted := self.format_dpt(dpt)) is not None
-        )
-        raise vol.Invalid(
-            f"DPT not allowed. Got '{value}'. Expected one of: {allowed_dpts_str}"
-        )
-
-    @classmethod
-    def serialize(
-        cls, value: DatapointTypeSchema, convert: Callable[[Any], Any]
-    ) -> dict[str, Any]:
-        """Serialize a DPT instance into a dictionary format.
-
-        Args:
-            value: The value to serialize, expected to be an instance of this class.
-            convert: A recursive function that serializes nested or custom schema elements.
-
-        Returns:
-            A dictionary representation of the DPT instance.
-
-        """
-        schema = {
-            "type": "dpt",
-            "properties": convert(cls.SCHEMA),
-        }
-
-        # Add options only if allowed_dpts is not None
-        if value.allowed_dpts:
-            schema["options"] = tuple(
-                {
-                    CONF_DPT: cls.format_dpt(dpt),
-                    CONF_DPT_MAIN: dpt.dpt_main_number,
-                    CONF_DPT_SUB: dpt.dpt_sub_number,
-                    CONF_DPT_UNIT: dpt.unit,
-                }
-                for dpt in value.allowed_dpts
-            )
-
-        return schema
+class DptUtils:
+    """Utility class for working with KNX Datapoint Types (DPTs)."""
 
     @staticmethod
-    def format_dpt(dpt: type[DPTBase]) -> str | None:
+    def format_dpt(dpt: type[DPTBase]) -> str:
         """Generate a string representation of a DPT class.
 
         Args:
@@ -1368,11 +1314,13 @@ class DatapointTypeSchema(VolValidator, SerializableSchema):
             A formatted string representation of the DPT class, including both main
             and sub numbers (e.g., '1.002'). If the sub number is None, only the
             main number is included (e.g., '14').
-            None: If the DPT class does not have distinct DPT numbers.
+
+        Raises:
+            ValueError: If an invalid DPT class is provided
 
         """
         if not issubclass(dpt, DPTBase) or not dpt.has_distinct_dpt_numbers():
-            return None
+            raise ValueError("Invalid DPT class provided.")
 
         return (
             f"{dpt.dpt_main_number}.{dpt.dpt_sub_number:03}"
@@ -1403,7 +1351,7 @@ class DatapointTypeSchema(VolValidator, SerializableSchema):
         )
 
 
-class GroupAddressConfigSchema(VolValidator, SerializableSchema):
+class GroupAddressConfigSchema(SerializableSchema):
     """Voluptuous-compatible validator for the group address config."""
 
     schema: vol.Schema
@@ -1451,18 +1399,37 @@ class GroupAddressConfigSchema(VolValidator, SerializableSchema):
             if not allowed:
                 schema[vol.Remove(key)] = object
             elif required:
-                schema[vol.Required(key)] = GroupAddressSchema()
+                schema[
+                    vol.Required(
+                        key,
+                        description=VolMarkerDesc(
+                            translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
+                        ),
+                    )
+                ] = GroupAddressSchema()
             else:
-                schema[vol.Optional(key, default=None)] = GroupAddressSchema(
-                    allow_none=True
-                )
+                schema[
+                    vol.Optional(
+                        key,
+                        default=None,
+                        description=VolMarkerDesc(
+                            translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
+                        ),
+                    )
+                ] = GroupAddressSchema(allow_none=True)
 
     def _add_passive(self, schema: dict[vol.Marker, Any]) -> None:
         """Add passive group addresses validator to the schema."""
         if self.passive:
-            schema[vol.Optional(CONF_GA_PASSIVE, default=list)] = (
-                GroupAddressListSchema()
-            )
+            schema[
+                vol.Optional(
+                    CONF_GA_PASSIVE,
+                    default=list,
+                    description=VolMarkerDesc(
+                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
+                    ),
+                )
+            ] = GroupAddressListSchema()
         else:
             schema[vol.Remove(CONF_GA_PASSIVE)] = object
 
@@ -1471,7 +1438,21 @@ class GroupAddressConfigSchema(VolValidator, SerializableSchema):
         if self.allowed_dpts is None:
             schema[vol.Remove(CONF_DPT)] = object
         else:
-            schema[vol.Required(CONF_DPT)] = DatapointTypeSchema(self.allowed_dpts)
+            schema[
+                vol.Required(
+                    CONF_DPT,
+                    description=VolMarkerDesc(
+                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
+                    ),
+                )
+            ] = vol.All(
+                str,
+                vol.In([DptUtils.format_dpt(dpt) for dpt in self.allowed_dpts]),
+            )
+
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+        return self.schema
 
     @classmethod
     def serialize(
@@ -1502,18 +1483,42 @@ class EntityConfigGroupSchema(ConfigGroupSchema):
 
         schema = vol.Schema(
             {
-                vol.Required(CONF_NAME): str,
-                vol.Optional(CONF_ENTITY_CATEGORY, default=None): vol.Maybe(
-                    vol.In(allowed_categories)
-                ),
-                vol.Optional(CONF_DEVICE_INFO, default=None): vol.Maybe(str),
+                vol.Required(
+                    CONF_NAME,
+                    description=VolMarkerDesc(
+                        translation_keys=[
+                            CONF_LABEL,
+                            CONF_DESCRIPTION,
+                        ]
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_ENTITY_CATEGORY,
+                    default=None,
+                    description=VolMarkerDesc(
+                        translation_keys=[
+                            CONF_LABEL,
+                            CONF_DESCRIPTION,
+                        ]
+                    ),
+                ): vol.Maybe(vol.In(allowed_categories)),
+                vol.Optional(
+                    CONF_DEVICE_INFO,
+                    default=None,
+                    description=VolMarkerDesc(
+                        translation_keys=[
+                            CONF_LABEL,
+                            CONF_DESCRIPTION,
+                        ]
+                    ),
+                ): vol.Maybe(str),
             },
         )
 
         super().__init__(schema)
 
 
-class PlatformConfigSchema(VolValidator, SerializableSchema):
+class PlatformConfigSchema(SerializableSchema):
     """Data entry flow section."""
 
     def __init__(
@@ -1525,13 +1530,25 @@ class PlatformConfigSchema(VolValidator, SerializableSchema):
         self.schema = vol.Schema(
             {
                 vol.Required("platform"): platform,
-                vol.Required("config"): ConfigGroupSchema(config_schema),
+                vol.Required(
+                    "config",
+                    description=VolMarkerDesc(
+                        translation_keys=[
+                            CONF_LABEL,
+                            CONF_DESCRIPTION,
+                        ]
+                    ),
+                ): ConfigGroupSchema(config_schema),
             }
         )
 
     def __call__(self, value: Any) -> dict[str, Any]:
         """Validate value against schema."""
         return cast(dict, self.schema(value))
+
+    def get_schema(self) -> VolSchemaType:
+        """Return the Voluptuous schema definition for the class."""
+        return self.schema
 
     @classmethod
     def serialize(
@@ -1550,7 +1567,6 @@ class SchemaSerializer:
 
     _supported_types: tuple[type[SerializableSchema], ...] = (
         ConfigGroupSchema,
-        DatapointTypeSchema,
         GroupAddressConfigSchema,
         GroupAddressListSchema,
         GroupAddressSchema,
@@ -1560,58 +1576,88 @@ class SchemaSerializer:
 
     @classmethod
     def convert(cls, schema: Any) -> Any:
-        """Convert a Voluptuous schema into a dictionary.
+        """Convert a Voluptuous schema into a dictionary representation.
 
-        :param schema: A Voluptuous schema to be converted.
-        :return: A dictionary representing the schema.
+        This method utilizes a custom serializer to transform the given
+        Voluptuous schema into a structured dictionary format.
+
+        Args:
+            schema (Any): A Voluptuous schema object to be converted.
+
+        Returns:
+            Any: A dictionary representing the converted schema.
+
+        Raises:
+            TypeError: If the input schema is not a valid Voluptuous schema.
+
         """
         return volConvert(schema, custom_serializer=cls._serializer)
 
     @classmethod
     def _serializer(cls, value: Any) -> Any | object:
-        """Dispatch method that determines how to serialize the provided value based on its type.
+        """Determine how to serialize the given object based on its type.
 
-        :param value: The object to be serialized. It can be a GASelector, a Section,
-                      or an unsupported object type.
-        :return: A dictionary representing the serialized form of the object.
-                 If the object type is unsupported, returns `UNSUPPORTED`.
+        - If `value` is an instance of one of the types in `_supported_types`,
+            the corresponding `serialize` method is called.
+        - If `value` is a Mapping (e.g., a dictionary), it iterates over
+            its items and creates a serialized list of key-value pairs.
+        - If the type is not supported, `UNSUPPORTED` is returned.
+
+        Args:
+            value (Any): The object to be serialized (e.g., GASelector, Section, etc.).
+
+        Returns:
+            Any | object: A dictionary or list representing the serialized object.
+                            Returns `UNSUPPORTED` if the type is not supported.
+
+        Raises:
+            TypeError: If the serialization process encounters an unexpected type.
+
         """
+        # Check if `value` matches one of the supported types
         for supported_type in cls._supported_types:
-            if isinstance(value, supported_type) or (
-                isinstance(value, type) and issubclass(value, supported_type)
-            ):
+            if isinstance(value, supported_type):
+                # Call the appropriate serialize method
                 return supported_type.serialize(value, cls.convert)
 
-        if isinstance(value, type):
-            return {}
-
+        # If `value` is a Mapping (e.g., a dictionary), handle its items
         if isinstance(value, Mapping):
-            val = []
+            serialized_items = []
 
-            for key, val1 in value.items():
+            for key, child_value in value.items():
+                # Skip entries if the key is of type vol.Remove
                 if isinstance(key, vol.Remove):
                     continue
 
                 description = None
+
+                # If the key is a vol.Marker, extract schema and description
                 if isinstance(key, vol.Marker):
-                    pkey = key.schema
+                    param_name = key.schema
                     description = key.description
                 else:
-                    pkey = key
+                    param_name = key
 
-                pval = cls.convert(val1)
-                pval["name"] = pkey
+                # Convert the child value using the `convert` method
+                serialized_value = cls.convert(child_value)
+                serialized_value["name"] = param_name
+
+                # If there's a description, add it to the serialized output
                 if description is not None:
-                    pval["description"] = description
+                    serialized_value["description"] = description
 
+                # Check if the key is Required or Optional
                 if isinstance(key, (vol.Required, vol.Optional)):
-                    pval[key.__class__.__name__.lower()] = True
+                    key_type_name = key.__class__.__name__.lower()
+                    serialized_value[key_type_name] = True
 
+                    # If the default is defined and callable, call it
                     if key.default is not vol.UNDEFINED and callable(key.default):
-                        pval["default"] = key.default()
+                        serialized_value["default"] = key.default()
 
-                val.append(pval)
+                serialized_items.append(serialized_value)
 
-            return val
+            return serialized_items
 
+        # If no supported type or Mapping is found, return UNSUPPORTED
         return UNSUPPORTED

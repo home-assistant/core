@@ -182,3 +182,9 @@ CURRENT_HVAC_ACTIONS: Final = {
     HVACMode.FAN_ONLY: HVACAction.FAN,
     HVACMode.DRY: HVACAction.DRYING,
 }
+
+# Data Fields
+CONF_TRANSLATION_KEY: Final = "translation_key"
+CONF_LABEL: Final = "label"
+CONF_OPTIONS: Final = "options"
+CONF_PROPERTIES: Final = "properties"

@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, KNX_MODULE_KEY
-from .entity import BasePlatformConfiguration
+from .entity import BasePlatformConfiguration, StorageSerialization
 from .schema import SchemaSerializer
 from .sensor import UiSensorConfig
 from .storage.config_store import ConfigStoreException
@@ -600,7 +600,7 @@ def ws_get_entity_schemas(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "knx/create_entity2",
-        vol.Required(CONF_DATA): vol.Schema(vol.Any(UiSensorConfig.get_schema())),
+        vol.Required(CONF_DATA): dict,
     }
 )
 @websocket_api.async_response
@@ -634,16 +634,22 @@ async def ws_create_entity2(
         )
         return
 
+    if not issubclass(config_class, StorageSerialization):
+        raise TypeError(
+            f"Config class {config_class} must be a subclass of StorageSerialization"
+        )
+
     try:
         config = config_class.from_dict(msg[CONF_DATA])
     except vol.Invalid as exc:
         connection.send_result(
-            msg["id"], {"success": False, "error": exc.error_message}
+            msg["id"], {"success": False, "error": exc.error_message, "path": exc.path}
         )
         return
 
     try:
         # Create entity in the config store
+
         entity_id = await knx.config_store.create_entity(
             platform,
             config.to_storage_dict(),

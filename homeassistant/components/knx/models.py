@@ -5,14 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
-from .storage.const import (
-    CONF_DPT,
-    CONF_DPT_MAIN,
-    CONF_DPT_SUB,
-    CONF_GA_PASSIVE,
-    CONF_GA_STATE,
-    CONF_GA_WRITE,
-)
+from .storage.const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
 
 InstanceType_co = TypeVar("InstanceType_co", bound="Serializable", covariant=True)
 
@@ -76,36 +69,13 @@ class ConfigGroup(Serializable["ConfigGroup"]):
 
 
 @dataclass
-class DatapointType(Serializable["DatapointType"]):
-    """Data class representing a KNX Data Point Type (DPT)."""
-
-    main: int
-    sub: int | None
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert the instance into a dictionary."""
-        return {
-            CONF_DPT_MAIN: self.main,
-            CONF_DPT_SUB: self.sub,
-        }
-
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> DatapointType:
-        """Create an instance from a dictionary."""
-        return cls(
-            main=data[CONF_DPT_MAIN],
-            sub=data.get(CONF_DPT_SUB),
-        )
-
-
-@dataclass
 class GroupAddressConfig(Serializable["GroupAddressConfig"]):
     """Data class representing a KNX group address configuration."""
 
     write_ga: str | int | None
     state_ga: str | int | None
     passive_ga: list[str | int] | None
-    dpt: DatapointType | None
+    dpt: str | None
 
     def to_dict(self) -> dict[str, Any]:
         """Convert the instance into a dictionary."""
@@ -113,7 +83,7 @@ class GroupAddressConfig(Serializable["GroupAddressConfig"]):
             CONF_GA_WRITE: self.write_ga,
             CONF_GA_STATE: self.state_ga,
             CONF_GA_PASSIVE: self.passive_ga,
-            CONF_DPT: self.dpt.to_dict() if self.dpt else None,
+            CONF_DPT: self.dpt,
         }
 
     @classmethod
@@ -123,7 +93,7 @@ class GroupAddressConfig(Serializable["GroupAddressConfig"]):
             write_ga=data.get(CONF_GA_WRITE),
             state_ga=data.get(CONF_GA_STATE),
             passive_ga=data.get(CONF_GA_PASSIVE),
-            dpt=DatapointType.from_dict(data[CONF_DPT]) if data.get(CONF_DPT) else None,
+            dpt=data.get(CONF_DPT),
         )
 
 
