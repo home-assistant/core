@@ -251,6 +251,8 @@ async def test_migrate_entities_unique_ids(hass: HomeAssistant) -> None:
     test_platform = "test_platform"
     test_entity_id = f"{test_platform}.test_entity_id"
     test_entity_unique_id = "zha.test_entity-unique-id"
+    test_entity_id2 = f"{test_platform}.test_entity_id"
+    test_entity_unique_id2 = "zha.test_entity-unique-id"
 
     entity_registry = mock_registry(
         hass,
@@ -258,6 +260,12 @@ async def test_migrate_entities_unique_ids(hass: HomeAssistant) -> None:
             test_entity_id: RegistryEntry(
                 entity_id=test_entity_id,
                 unique_id=test_entity_unique_id,
+                platform=zha_const.DOMAIN,
+                device_id="mock-zha.test_entity-dev-id",
+            ),
+            test_entity_id2: RegistryEntry(
+                entity_id=test_entity_id2,
+                unique_id=test_entity_unique_id2,
                 platform=zha_const.DOMAIN,
                 device_id="mock-zha.test_entity-dev-id",
             ),
@@ -274,8 +282,25 @@ async def test_migrate_entities_unique_ids(hass: HomeAssistant) -> None:
         )
     )
 
-    await migrate_entities_unique_ids(hass, test_platform, [mock_entity_data])
+    mock_entity_data2 = MockEntityData(
+        entity=MockEntity(
+            info_object=MockInfoObject(
+                unique_id=test_entity_unique_id2,
+                previous_unique_id=None,
+            )
+        )
+    )
 
+    await migrate_entities_unique_ids(
+        hass, test_platform, [mock_entity_data, mock_entity_data2]
+    )
+
+    # First entity has a new unique id
     registry_entry = entity_registry.async_get(test_entity_id)
     assert registry_entry.entity_id is test_entity_id
     assert registry_entry.unique_id is test_entity_new_unique_id
+
+    # Second entity is left unchanged
+    registry_entry2 = entity_registry.async_get(test_entity_id2)
+    assert registry_entry2.entity_id is test_entity_id2
+    assert registry_entry2.unique_id is test_entity_unique_id2
