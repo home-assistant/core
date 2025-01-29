@@ -85,7 +85,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
         unique_id="charge_state_charge_enable_request",
         on_func=lambda api: api.charge_start(),
         off_func=lambda api: api.charge_stop(),
-        value_func=lambda state: state in ("Starting", "Charging"),
+        value_func=lambda state: state in {"Starting", "Charging"},
         scopes=[Scope.VEHICLE_CMDS, Scope.VEHICLE_CHARGING_CMDS],
     ),
 )

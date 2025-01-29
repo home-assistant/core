@@ -50,7 +50,6 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         key="climate_state_defrost_mode",
         on_func=lambda: start_defrost,
         off_func=lambda: stop_defrost,
-        value_func=lambda state: state in ("Starting", "Charging"),
     ),
     TessieSwitchEntityDescription(
         key="vehicle_state_sentry_mode",
@@ -72,6 +71,7 @@ DESCRIPTIONS: tuple[TessieSwitchEntityDescription, ...] = (
         unique_id="charge_state_charge_enable_request",
         on_func=lambda: start_charging,
         off_func=lambda: stop_charging,
+        value_func=lambda state: state in {"Starting", "Charging"},
     ),
 )
 
