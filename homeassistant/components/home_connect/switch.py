@@ -387,7 +387,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             except HomeConnectError as err:
                 _LOGGER.error("An error occurred fetching the power settings: %s", err)
                 return
-        if not data or not data.constraints or not data.constraints.allowed_values:
+        if not data.constraints or not data.constraints.allowed_values:
             return
 
         if BSH_POWER_OFF in data.constraints.allowed_values:
