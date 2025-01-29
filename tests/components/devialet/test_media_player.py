@@ -4,14 +4,13 @@ from unittest.mock import PropertyMock, patch
 
 from devialet import DevialetApi
 from devialet.const import UrlSuffix
+from freezegun.api import FrozenDateTimeFactory
 from yarl import URL
 
-from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.components.devialet.media_player import (
     SUPPORT_DEVIALET,
     SUPPORT_MEDIA,
 )
-from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -55,6 +54,7 @@ from homeassistant.setup import async_setup_component
 
 from . import HOST, NAME, setup_integration
 
+from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 SERVICE_TO_URL = {
@@ -114,7 +114,9 @@ SERVICE_TO_DATA = {
 
 
 async def test_media_player_playing(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test the Devialet configuration entry loading and unloading."""
 
@@ -124,16 +126,8 @@ async def test_media_player_playing(
 
         assert entry.state is ConfigEntryState.LOADED
 
-        await hass.services.async_call(
-            "homeassistant",
-            SERVICE_UPDATE_ENTITY,
-            {ATTR_ENTITY_ID: [f"{MP_DOMAIN}.{NAME.lower()}"]},
-            blocking=True,
-        )
-        # import asyncio
-
-        # await asyncio.sleep(1)
-        # await hass.async_block_till_done()
+        freezer.tick(10)
+        async_fire_time_changed(hass)
 
         state = hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}")
         assert state.state == MediaPlayerState.PLAYING
@@ -297,14 +291,12 @@ async def test_media_player_without_serial(
     with patch.object(DevialetApi, "upnp_available", return_value=True):
         entry = await setup_integration(hass, aioclient_mock, serial=None)
 
-        assert entry.entry_id in hass.data[DOMAIN]
         assert entry.state is ConfigEntryState.LOADED
         assert entry.unique_id is None
 
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.entry_id not in hass.data[DOMAIN]
         assert entry.state is ConfigEntryState.NOT_LOADED
 
 
@@ -324,7 +316,6 @@ async def test_media_player_services(
         entry = await setup_integration(
             hass, aioclient_mock, state=MediaPlayerState.PLAYING
         )
-        assert entry.state is ConfigEntryState.LOADED
         assert entry.state is ConfigEntryState.LOADED
 
         target = {ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id}
