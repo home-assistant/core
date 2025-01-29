@@ -66,6 +66,7 @@ def mock_delay_save() -> Generator[None]:
                     }
                 ],
                 "config": {
+                    "agents": {"test.remote": {"protected": True}},
                     "create_backup": {
                         "agent_ids": [],
                         "include_addons": None,

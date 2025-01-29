@@ -21,7 +21,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

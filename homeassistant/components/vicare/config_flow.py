@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 

@@ -21,8 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import VolDictType

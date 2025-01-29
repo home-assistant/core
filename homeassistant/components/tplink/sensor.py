@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from operator import methodcaller
+from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Feature
+from kasa.smart.modules.clean import ErrorCode as VacuumError
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -14,6 +17,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,9 +32,14 @@ class TPLinkSensorEntityDescription(
 ):
     """Base class for a TPLink feature based sensor entity description."""
 
+    #: Optional callable to convert the value
+    convert_fn: Callable[[Any], Any] | None = None
+
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+_TOTAL_SECONDS_METHOD_CALLER = methodcaller("total_seconds")
 
 SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
@@ -115,6 +124,126 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="alarm_source",
     ),
+    # Vacuum cleaning records
+    TPLinkSensorEntityDescription(
+        key="clean_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="clean_area",
+        device_class=SensorDeviceClass.AREA,
+    ),
+    TPLinkSensorEntityDescription(
+        key="clean_progress",
+    ),
+    TPLinkSensorEntityDescription(
+        key="last_clean_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="last_clean_area",
+        device_class=SensorDeviceClass.AREA,
+    ),
+    TPLinkSensorEntityDescription(
+        key="last_clean_timestamp",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    TPLinkSensorEntityDescription(
+        key="total_clean_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="total_clean_area",
+        device_class=SensorDeviceClass.AREA,
+    ),
+    TPLinkSensorEntityDescription(
+        key="total_clean_count",
+    ),
+    TPLinkSensorEntityDescription(
+        key="main_brush_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="main_brush_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="side_brush_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="side_brush_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="filter_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="filter_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="sensor_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="sensor_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="charging_contacts_remaining",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="charging_contacts_used",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
+    ),
+    TPLinkSensorEntityDescription(
+        key="vacuum_error",
+        device_class=SensorDeviceClass.ENUM,
+        options=[name.lower() for name in VacuumError._member_names_],
+        convert_fn=lambda x: x.name.lower(),
+    ),
 )
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
@@ -164,6 +293,9 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             value = round(cast(float, value), self._feature.precision_hint)
             # We probably do not need this, when we are rounding already?
             self._attr_suggested_display_precision = self._feature.precision_hint
+
+        if self.entity_description.convert_fn:
+            value = self.entity_description.convert_fn(value)
 
         if TYPE_CHECKING:
             # pylint: disable-next=import-outside-toplevel
