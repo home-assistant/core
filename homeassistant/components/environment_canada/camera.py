@@ -5,7 +5,6 @@ from __future__ import annotations
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -15,7 +14,8 @@ from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import device_info
-from .const import ATTR_OBSERVATION_TIME, DOMAIN
+from .const import ATTR_OBSERVATION_TIME
+from .coordinator import ECConfigEntry
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
 SET_RADAR_TYPE_SCHEMA: VolDictType = {
@@ -25,11 +25,11 @@ SET_RADAR_TYPE_SCHEMA: VolDictType = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ECConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["radar_coordinator"]
+    coordinator = config_entry.runtime_data.radar_coordinator
     async_add_entities([ECCamera(coordinator)])
 
     platform = async_get_current_platform()
