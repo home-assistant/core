@@ -109,6 +109,7 @@ async def test_migrate_config_entry(
     legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
     entry = MockConfigEntry(domain=DOMAIN, unique_id="my own id", data=legacy_config)
     assert entry.version == 1
+    assert entry.minor_version == 1
 
     entry.add_to_hass(hass)
 
@@ -116,7 +117,8 @@ async def test_migrate_config_entry(
     with patch("os.path.isdir", return_value=True), patch("shutil.rmtree"):
         await hass.config_entries.async_setup(entry.entry_id)
         assert dict(entry.data) == legacy_config
-        assert entry.version == 3
+        assert entry.version == 2
+        assert entry.minor_version == 2
 
 
 @pytest.mark.parametrize(
@@ -139,7 +141,8 @@ async def test_migrate_config_entry_unique_id(
 
     await hass.config_entries.async_setup(entry.entry_id)
     assert entry.unique_id == expected
-    assert entry.version == 3
+    assert entry.version == 2
+    assert entry.minor_version == 2
 
 
 async def test_api_call(

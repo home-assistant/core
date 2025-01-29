@@ -135,9 +135,12 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: VelbusConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    _LOGGER.error("Migrating from version %s", config_entry.version)
+    _LOGGER.error(
+        "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
+    )
 
     # This is the config entry migration for adding the new program selection
+    # migrate from 1.x to 2.1
     if config_entry.version < 2:
         # clean the velbusCache
         cache_path = hass.config.path(
@@ -147,7 +150,12 @@ async def async_migrate_entry(
             await hass.async_add_executor_job(shutil.rmtree, cache_path)
 
     # This is the config entry migration for swapping the usb unique id to the serial number
-    if config_entry.version < 3 and config_entry.unique_id is not None:
+    # migrate from 2.1 to 2.2
+    if (
+        config_entry.version < 3
+        and config_entry.minor_version == 1
+        and config_entry.unique_id is not None
+    ):
         # not all velbus devices have a unique id, so handle this correctly
         parts = config_entry.unique_id.split("_")
         # old one should have 4 item
@@ -155,7 +163,11 @@ async def async_migrate_entry(
             hass.config_entries.async_update_entry(config_entry, unique_id=parts[1])
 
     # update the config entry
-    hass.config_entries.async_update_entry(config_entry, version=3)
+    hass.config_entries.async_update_entry(config_entry, version=2, minor_version=2)
 
-    _LOGGER.error("Migration to version %s successful", config_entry.version)
+    _LOGGER.error(
+        "Migration to version %s.%s successful",
+        config_entry.version,
+        config_entry.minor_version,
+    )
     return True
