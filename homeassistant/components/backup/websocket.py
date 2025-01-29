@@ -198,7 +198,7 @@ async def handle_can_decrypt_on_download(
         vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
         vol.Optional("name"): str,
-        vol.Optional("password"): str,
+        vol.Optional("password"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -306,7 +306,10 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [
+                {"agent_id": agent.agent_id, "name": agent.name}
+                for agent in manager.backup_agents.values()
+            ],
         },
     )
 
@@ -341,6 +344,7 @@ async def handle_config_info(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/config/update",
+        vol.Optional("agents"): vol.Schema({str: {"protected": bool}}),
         vol.Optional("create_backup"): vol.Schema(
             {
                 vol.Optional("agent_ids"): vol.All([str], vol.Unique()),

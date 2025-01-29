@@ -16,7 +16,7 @@ from homeassistant.components.jewish_calendar.const import (
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
 

@@ -847,6 +847,42 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getSupplyPressure(),
         unit_getter=lambda api: api.getSupplyPressureUnit(),
     ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_starts",
+        translation_key="heating_rod_starts",
+        value_getter=lambda api: api.getHeatingRodStarts(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_hours",
+        translation_key="heating_rod_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getHeatingRodHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="spf_total",
+        translation_key="spf_total",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorTotal(),
+    ),
+    ViCareSensorEntityDescription(
+        key="spf_dhw",
+        translation_key="spf_dhw",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorDHW(),
+    ),
+    ViCareSensorEntityDescription(
+        key="spf_heating",
+        translation_key="spf_heating",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorHeating(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (

@@ -59,7 +59,7 @@ SWITCHES = [
         key="cloud_connection",
         translation_key="cloud_connection",
         entity_category=EntityCategory.CONFIG,
-        create_fn=lambda _: True,
+        create_fn=lambda x: x.device.supports_cloud_enable(),
         available_fn=lambda x: x.system is not None,
         is_on_fn=lambda x: x.system.cloud_enabled if x.system else None,
         set_fn=lambda api, active: api.system(cloud_enabled=active),

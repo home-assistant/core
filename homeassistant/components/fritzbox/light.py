@@ -122,7 +122,7 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         """Turn the light on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
             level = kwargs[ATTR_BRIGHTNESS]
-            await self.hass.async_add_executor_job(self.data.set_level, level)
+            await self.hass.async_add_executor_job(self.data.set_level, level, True)
         if kwargs.get(ATTR_HS_COLOR) is not None:
             # Try setunmappedcolor first. This allows free color selection,
             # but we don't know if its supported by all devices.
@@ -133,7 +133,10 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                     cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
                 )
                 await self.hass.async_add_executor_job(
-                    self.data.set_unmapped_color, (unmapped_hue, unmapped_saturation)
+                    self.data.set_unmapped_color,
+                    (unmapped_hue, unmapped_saturation),
+                    0,
+                    True,
                 )
             # This will raise 400 BAD REQUEST if the setunmappedcolor is not available
             except HTTPError as err:
@@ -152,18 +155,18 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                     key=lambda x: abs(x - unmapped_saturation),
                 )
                 await self.hass.async_add_executor_job(
-                    self.data.set_color, (hue, saturation)
+                    self.data.set_color, (hue, saturation), 0, True
                 )
 
         if kwargs.get(ATTR_COLOR_TEMP_KELVIN) is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN]
+                self.data.set_color_temp, kwargs[ATTR_COLOR_TEMP_KELVIN], 0, True
             )
 
-        await self.hass.async_add_executor_job(self.data.set_state_on)
+        await self.hass.async_add_executor_job(self.data.set_state_on, True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.hass.async_add_executor_job(self.data.set_state_off)
+        await self.hass.async_add_executor_job(self.data.set_state_off, True)
         await self.coordinator.async_refresh()
