@@ -26,6 +26,7 @@ from .manager import (
     BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
@@ -47,12 +48,14 @@ __all__ = [
     "BackupReaderWriterError",
     "CreateBackupEvent",
     "Folder",
+    "IdleEvent",
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
     "RestoreBackupEvent",
     "WrittenBackup",
+    "async_get_manager",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

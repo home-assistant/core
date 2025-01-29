@@ -29,6 +29,7 @@ from homeassistant.components.backup import (
     BackupReaderWriterError,
     CreateBackupEvent,
     Folder,
+    IdleEvent,
     IncorrectPasswordError,
     NewBackup,
     RestoreBackupEvent,
@@ -44,6 +45,7 @@ from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 LOCATION_CLOUD_BACKUP = ".cloud_backup"
+LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 _LOGGER = logging.getLogger(__name__)
 
@@ -454,6 +456,13 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             await restore_complete.wait()
         finally:
             unsub()
+
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Check restore status after core restart."""
 
     @callback
     def _async_listen_job_events(
