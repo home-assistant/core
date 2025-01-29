@@ -2388,7 +2388,7 @@ python-gitlab==1.6.0
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.2.0
+python-homewizard-energy==v8.3.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
