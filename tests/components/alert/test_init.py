@@ -115,7 +115,6 @@ async def test_silence(
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
-
     event_callback = _EventCallback()
     hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
 
@@ -145,7 +144,6 @@ async def test_reset(
     assert await async_setup_component(hass, DOMAIN, TEST_CONFIG)
     hass.states.async_set("sensor.test", STATE_ON)
     await hass.async_block_till_done()
-
     event_callback = _EventCallback()
     hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
 
@@ -208,7 +206,6 @@ async def test_notification_no_done_message(
 
     event_callback = _EventCallback()
     hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
-
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 1
@@ -228,7 +225,6 @@ async def test_notification(
 
     event_callback = _EventCallback()
     hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
-
     hass.states.async_set("sensor.test", STATE_OFF)
     await hass.async_block_till_done()
     assert len(mock_notifier) == 2
@@ -351,7 +347,6 @@ async def test_sending_data_notification(
     config = deepcopy(TEST_CONFIG)
     config[DOMAIN][NAME][CONF_DATA] = TEST_DATA
     assert await async_setup_component(hass, DOMAIN, config)
-
     event_callback = _EventCallback()
     hass.bus.async_listen_once(EVENT_ALERT_NOTIFY, event_callback.listener)
 
