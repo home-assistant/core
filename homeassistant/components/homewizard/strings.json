@@ -137,6 +137,9 @@
       },
       "state_of_charge_pct": {
         "name": "State of charge"
+      },
+      "last_restart": {
+        "name": "Last restart"
       }
     },
     "switch": {

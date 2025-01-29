@@ -19,6 +19,7 @@ pytestmark = [
 ]
 
 
+@pytest.mark.freeze_time("2025-01-28 21:45:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     ("device_fixture", "entity_ids"),
@@ -301,6 +302,7 @@ pytestmark = [
                 "sensor.device_frequency",
                 "sensor.device_power",
                 "sensor.device_state_of_charge",
+                "sensor.device_last_restart",
                 "sensor.device_voltage",
             ],
         ),
@@ -449,6 +451,7 @@ async def test_sensors(
             [
                 "sensor.device_current",
                 "sensor.device_frequency",
+                "sensor.device_last_restart",
                 "sensor.device_voltage",
             ],
         ),
@@ -546,6 +549,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -595,6 +599,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -651,6 +656,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_smart_meter_model",
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -701,6 +707,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -739,6 +746,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -790,6 +798,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
@@ -828,6 +837,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
+                "sensor.device_last_restart",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
                 "sensor.device_voltage_phase_3",
