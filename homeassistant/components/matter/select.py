@@ -57,32 +57,25 @@ class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescrip
 
 
 @dataclass(frozen=True, kw_only=True)
-class MatterDynamicListSelectEntityDescription(MatterSelectEntityDescription):
-    """Describe Matter select entities for MatterDynamicListSelectEntity."""
-
-    # list attribute: the attribute descriptor to get the list of values (= list of strings)
-    list_attribute: type[ClusterAttributeDescriptor]
-
-
-@dataclass(frozen=True, kw_only=True)
 class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterMapSelectEntityDescription."""
 
     # list_supported: the attribute descriptor to get the list of supported values (= list of integers)
     list_supported: type[ClusterAttributeDescriptor]
     # state_map: The MatterIntEnum dict
-    state_map: type[dict]
+    state_map: dict
 
 
 @dataclass(frozen=True, kw_only=True)
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
-    # command: a callback to create the command to send to the device
-    # the callback's argument will be the index of the selected list value
-    command: Callable[[int], ClusterCommand]
     # list attribute: the attribute descriptor to get the list of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    # if omitted the command will just be a write_attribute command to the primary attribute
+    command: Callable[[int], ClusterCommand] | None = None
 
 
 class MatterMapSelectEntity(MatterEntity, SelectEntity):
@@ -96,11 +89,7 @@ class MatterMapSelectEntity(MatterEntity, SelectEntity):
 
         if TYPE_CHECKING:
             assert option_id is not None
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id, self._entity_info.primary_attribute
-            ),
+        await self.write_attribute(
             value=option_id,
         )
 
@@ -184,42 +173,6 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
             self._attr_name = desc
 
 
-class MatterDynamicListSelectEntity(MatterEntity, SelectEntity):
-    """Representation of a Matter select entity where the options are dynamically defined in a Matter attribute."""
-
-    entity_description: MatterDynamicListSelectEntityDescription
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        option_id = self._attr_options.index(option)
-
-        if TYPE_CHECKING:
-            assert option_id is not None
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id, self._entity_info.primary_attribute
-            ),
-            value=option_id,
-        )
-
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        list_values = cast(
-            list[str],
-            self.get_matter_attribute_value(self.entity_description.list_attribute),
-        )
-        self._attr_options = list_values
-        current_option_idx: int = self.get_matter_attribute_value(
-            self._entity_info.primary_attribute
-        )
-        try:
-            self._attr_current_option = list_values[current_option_idx]
-        except IndexError:
-            self._attr_current_option = None
-
-
 class MatterListSelectEntity(MatterEntity, SelectEntity):
     """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
 
@@ -228,8 +181,18 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         option_id = self._attr_options.index(option)
-        await self.send_device_command(
-            self.entity_description.command(option_id),
+
+        if TYPE_CHECKING:
+            assert option_id is not None
+
+        if self.entity_description.command:
+            # custom command defined
+            await self.send_device_command(
+                self.entity_description.command(option_id),
+            )
+            return
+        await self.write_attribute(
+            value=option_id,
         )
 
     @callback
@@ -433,12 +396,12 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
-        entity_description=MatterDynamicListSelectEntityDescription(
+        entity_description=MatterListSelectEntityDescription(
             key="LaundryWasherControlsSpinSpeed",
             translation_key="laundry_washer_spin_speed",
             list_attribute=clusters.LaundryWasherControls.Attributes.SpinSpeeds,
         ),
-        entity_class=MatterDynamicListSelectEntity,
+        entity_class=MatterListSelectEntity,
         required_attributes=(
             clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
             clusters.LaundryWasherControls.Attributes.SpinSpeeds,
