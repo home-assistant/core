@@ -401,7 +401,7 @@ async def test_list_sensor(
     assert state.state == "rinse"
 
 
-@pytest.mark.parametrize("node_fixture", ["water_heater"])
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_water_heater(
     hass: HomeAssistant,
     matter_client: MagicMock,

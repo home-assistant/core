@@ -149,7 +149,7 @@ async def test_optional_sensor_from_featuremap(
     assert state is None
 
 
-@pytest.mark.parametrize("node_fixture", ["water_heater"])
+@pytest.mark.parametrize("node_fixture", ["silabs_water_heater"])
 async def test_water_heater(
     hass: HomeAssistant,
     matter_client: MagicMock,
