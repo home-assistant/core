@@ -4,7 +4,6 @@ from unittest.mock import patch
 
 from devialet import DevialetApi
 
-from homeassistant.components.devialet.const import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
