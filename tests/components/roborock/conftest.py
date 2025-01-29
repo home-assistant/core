@@ -2,7 +2,8 @@
 
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
 from roborock import RoborockCategory, RoomMapping
@@ -137,6 +138,22 @@ def bypass_api_fixture() -> None:
         patch("homeassistant.components.roborock.RoborockMqttClientA01", A01Mock),
     ):
         yield
+
+
+@pytest.fixture(name="send_message_side_effect")
+def send_message_side_effect_fixture() -> Any:
+    """Fixture to return a side effect for the send_message method."""
+    return None
+
+
+@pytest.fixture(name="mock_send_message")
+def mock_send_message_fixture(send_message_side_effect: Any) -> Mock:
+    """Fixture to mock the send_message method."""
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockLocalClientV1._send_command",
+        side_effect=send_message_side_effect,
+    ) as mock_send_message:
+        yield mock_send_message
 
 
 @pytest.fixture

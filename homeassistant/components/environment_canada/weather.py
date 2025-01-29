@@ -27,7 +27,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -38,8 +37,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import device_info
 from .const import DOMAIN
+from .coordinator import ECConfigEntry
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -61,11 +60,10 @@ ICON_CONDITION_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ECConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     entity_registry = er.async_get(hass)
 
     # Remove hourly entity from legacy config entries
@@ -76,7 +74,7 @@ async def async_setup_entry(
     ):
         entity_registry.async_remove(hourly_entity_id)
 
-    async_add_entities([ECWeather(coordinator)])
+    async_add_entities([ECWeatherEntity(config_entry.runtime_data.weather_coordinator)])
 
 
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
@@ -84,7 +82,7 @@ def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> st
     return f"{config_entry_unique_id}{'-hourly' if hourly else '-daily'}"
 
 
-class ECWeather(SingleCoordinatorWeatherEntity):
+class ECWeatherEntity(SingleCoordinatorWeatherEntity):
     """Representation of a weather condition."""
 
     _attr_has_entity_name = True
@@ -105,7 +103,7 @@ class ECWeather(SingleCoordinatorWeatherEntity):
         self._attr_unique_id = _calculate_unique_id(
             coordinator.config_entry.unique_id, False
         )
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_temperature(self):

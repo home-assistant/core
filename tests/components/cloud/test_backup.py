@@ -146,7 +146,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "cloud.cloud"}],
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": "cloud.cloud", "name": "cloud"},
+        ],
     }
 
 
@@ -204,6 +207,8 @@ async def test_agents_list_backups_fail_cloud(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
     }
 
 
