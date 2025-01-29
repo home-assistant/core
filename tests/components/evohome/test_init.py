@@ -206,8 +206,9 @@ async def test_service_refresh_system(
         )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ()  # type: ignore[union-attr]
-        assert mock_fcn.await_args.kwargs == {}  # type: ignore[union-attr]
+        assert mock_fcn.await_args is not None  # mypy hint
+        assert mock_fcn.await_args.args == ()
+        assert mock_fcn.await_args.kwargs == {}
 
 
 @pytest.mark.parametrize("install", ["default"])
@@ -227,5 +228,6 @@ async def test_service_reset_system(
         )
 
         assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args.args == ("AutoWithReset",)  # type: ignore[union-attr]
-        assert mock_fcn.await_args.kwargs == {"until": None}  # type: ignore[union-attr]
+        assert mock_fcn.await_args is not None  # mypy hint
+        assert mock_fcn.await_args.args == ("AutoWithReset",)
+        assert mock_fcn.await_args.kwargs == {"until": None}

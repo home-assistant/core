@@ -79,6 +79,7 @@ async def test_set_operation_mode(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
@@ -95,6 +96,7 @@ async def test_set_operation_mode(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs != {}
 
@@ -113,6 +115,7 @@ async def test_set_operation_mode(
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs != {}
 
@@ -138,6 +141,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
@@ -154,6 +158,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
         )
 
         assert mock_fcn.await_count == 1
+        assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs == {}
 
