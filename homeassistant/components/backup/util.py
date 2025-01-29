@@ -468,6 +468,8 @@ class _CipherBackupStreamer:
     async def wait(self) -> None:
         """Wait for the worker threads to finish."""
         for worker in self._workers:
+            if not worker.thread.is_alive():
+                continue
             worker.thread.raise_exc(AbortCipher)
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
 
