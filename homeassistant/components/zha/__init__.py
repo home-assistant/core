@@ -186,13 +186,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     repairs.async_delete_blocking_issues(hass)
 
-    if fw_info := homeassistant_hardware.get_firmware_info(hass, config_entry):
-        await notify_firmware_info(
-            hass,
-            DOMAIN,
-            firmware_info=fw_info,
-        )
-
     ha_zha_data.gateway_proxy = ZHAGatewayProxy(hass, config_entry, zha_gateway)
 
     manufacturer = zha_gateway.state.node_info.manufacturer
@@ -231,6 +224,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     config_entry.async_on_unload(
         hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)
     )
+
+    if fw_info := homeassistant_hardware.get_firmware_info(hass, config_entry):
+        await notify_firmware_info(
+            hass,
+            DOMAIN,
+            firmware_info=fw_info,
+        )
 
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

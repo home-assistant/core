@@ -1,11 +1,11 @@
 """Home Assistant Hardware integration helpers."""
 
-from collections.abc import AsyncIterator, Awaitable
+from collections.abc import AsyncIterator, Awaitable, Callable
 import logging
 from typing import Protocol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
 
 from . import DATA_COMPONENT
 from .util import FirmwareInfo
@@ -47,6 +47,9 @@ class HardwareInfoDispatcher:
         """Initialize the dispatcher."""
         self.hass = hass
         self._providers: dict[str, HardwareFirmwareInfoModule] = {}
+        self._notification_callbacks: dict[
+            str, set[Callable[[FirmwareInfo], None]]
+        ] = {}
 
     def register_firmware_info_provider(
         self, domain: str, platform: HardwareFirmwareInfoModule
@@ -64,6 +67,18 @@ class HardwareInfoDispatcher:
             "Registered firmware info provider from domain %r: %s", domain, platform
         )
 
+    def register_firmware_info_callback(
+        self, device: str, callback: Callable[[FirmwareInfo], None]
+    ) -> CALLBACK_TYPE:
+        """Register a firmware info notification callback."""
+        self._notification_callbacks.setdefault(device, set()).add(callback)
+
+        @hass_callback
+        def async_remove_callback() -> None:
+            self._notification_callbacks[device].discard(callback)
+
+        return async_remove_callback
+
     async def notify_firmware_info(
         self, domain: str, firmware_info: FirmwareInfo
     ) -> None:
@@ -71,6 +86,14 @@ class HardwareInfoDispatcher:
         _LOGGER.debug(
             "Received firmware info notification from %r: %s", domain, firmware_info
         )
+
+        for callback in self._notification_callbacks.get(firmware_info.device, []):
+            try:
+                callback(firmware_info)
+            except Exception:
+                _LOGGER.exception(
+                    "Error while notifying firmware info listener %s", callback
+                )
 
     async def iter_firmware_info(self) -> AsyncIterator[FirmwareInfo]:
         """Iterate over all firmware information for all hardware."""
@@ -87,7 +110,7 @@ class HardwareInfoDispatcher:
                     yield fw_info
 
 
-@callback
+@hass_callback
 def register_firmware_info_provider(
     hass: HomeAssistant, domain: str, platform: HardwareFirmwareInfoModule
 ) -> None:
@@ -95,7 +118,15 @@ def register_firmware_info_provider(
     return hass.data[DATA_COMPONENT].register_firmware_info_provider(domain, platform)
 
 
-@callback
+@hass_callback
+def register_firmware_info_callback(
+    hass: HomeAssistant, device: str, callback: Callable[[FirmwareInfo], None]
+) -> CALLBACK_TYPE:
+    """Register a firmware info provider."""
+    return hass.data[DATA_COMPONENT].register_firmware_info_callback(device, callback)
+
+
+@hass_callback
 def notify_firmware_info(
     hass: HomeAssistant, domain: str, firmware_info: FirmwareInfo
 ) -> Awaitable[None]:
