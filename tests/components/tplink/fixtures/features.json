@@ -407,5 +407,90 @@
     "value": "<Action>",
     "type": "Action",
     "category": "Debug"
+  },
+  "main_brush_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "side_brush_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "sensor_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "filter_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "charging_contacts_reset": {
+    "value": "<Action>",
+    "type": "Action",
+    "category": "Debug"
+  },
+  "main_brush_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "main_brush_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "side_brush_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "side_brush_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "filter_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "filter_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "sensor_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "sensor_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "charging_contacts_remaining": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
+  },
+  "charging_contacts_used": {
+    "value": 360,
+    "type": "Sensor",
+    "category": "Debug",
+    "timedelta_type": "minutes"
   }
 }
