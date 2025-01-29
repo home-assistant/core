@@ -1637,7 +1637,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             except FileNotFoundError:
                 return None
             finally:
-                result_path.unlink(missing_ok=True)
+                try:
+                    result_path.unlink(missing_ok=True)
+                except OSError as err:
+                    LOGGER.warning(
+                        "Unexpected error deleting backup restore result file: %s %s",
+                        type(err),
+                        err,
+                    )
 
             return restore_result
 
