@@ -90,3 +90,21 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.pop(DOMAIN)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    if config_entry.version == 1:
+        # Migrate switch/outlets entity to a new unique ID
+        # How do we get unique id of the switch entity?
+        old_unique_ids = config_entry.data.get("switches", [])
+        for old_unique_id in old_unique_ids:
+            new_unique_id = f"{old_unique_id}-device_status"
+            entity_registry = await hass.helpers.entity_registry.async_get_registry()
+            entity_entry = entity_registry.async_get(old_unique_id)
+            if entity_entry:
+                entity_registry.async_update_entity(
+                    entity_entry.entity_id, new_unique_id=new_unique_id
+                )
+        hass.config_entries.async_update_entry(config_entry, version=4)
+    return True
