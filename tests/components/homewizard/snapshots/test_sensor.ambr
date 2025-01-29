@@ -432,6 +432,89 @@
     'state': '50.0',
   })
 # ---
+# name: test_sensors[HWE-BAT-entity_ids10][sensor.device_last_restart:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Plug-In Battery',
+    'model_id': 'HWE-BAT',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.00',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-BAT-entity_ids10][sensor.device_last_restart:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.device_last_restart',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last restart',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_restart',
+    'unique_id': 'HWE-P1_5c2fafabcdef_last_restart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[HWE-BAT-entity_ids10][sensor.device_last_restart:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Device Last restart',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_last_restart',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-28T21:39:04+00:00',
+  })
+# ---
 # name: test_sensors[HWE-BAT-entity_ids10][sensor.device_power:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,

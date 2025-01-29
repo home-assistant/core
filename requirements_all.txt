@@ -261,7 +261,7 @@ aioguardian==2022.07.0
 aioharmony==0.4.1
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.2b5
+aiohasupervisor==0.2.2b6
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -2023,7 +2023,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.14
+pyiskra==0.1.15
 
 # homeassistant.components.iss
 pyiss==1.0.1

@@ -26,7 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_info
 from .const import ATTR_STATION
 from .coordinator import ECConfigEntry
 
@@ -256,16 +255,20 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from a config_entry."""
     weather_coordinator = config_entry.runtime_data.weather_coordinator
-    sensors: list[ECBaseSensor] = [
-        ECSensor(weather_coordinator, desc) for desc in SENSOR_TYPES
+    sensors: list[ECBaseSensorEntity] = [
+        ECSensorEntity(weather_coordinator, desc) for desc in SENSOR_TYPES
     ]
-    sensors.extend([ECAlertSensor(weather_coordinator, desc) for desc in ALERT_TYPES])
+    sensors.extend(
+        [ECAlertSensorEntity(weather_coordinator, desc) for desc in ALERT_TYPES]
+    )
 
-    sensors.append(ECSensor(config_entry.runtime_data.aqhi_coordinator, AQHI_SENSOR))
+    sensors.append(
+        ECSensorEntity(config_entry.runtime_data.aqhi_coordinator, AQHI_SENSOR)
+    )
     async_add_entities(sensors)
 
 
-class ECBaseSensor(CoordinatorEntity, SensorEntity):
+class ECBaseSensorEntity(CoordinatorEntity, SensorEntity):
     """Environment Canada sensor base."""
 
     entity_description: ECSensorEntityDescription
@@ -278,7 +281,7 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self):
@@ -289,7 +292,7 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         return value
 
 
-class ECSensor(ECBaseSensor):
+class ECSensorEntity(ECBaseSensorEntity):
     """Environment Canada sensor for conditions."""
 
     def __init__(self, coordinator, description):
@@ -301,7 +304,7 @@ class ECSensor(ECBaseSensor):
         }
 
 
-class ECAlertSensor(ECBaseSensor):
+class ECAlertSensorEntity(ECBaseSensorEntity):
     """Environment Canada sensor for alerts."""
 
     @property
