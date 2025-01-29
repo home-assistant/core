@@ -65,6 +65,10 @@ NUMBER_DESCRIPTIONS: Final = (
         key="tilt_step",
         mode=NumberMode.BOX,
     ),
+    TPLinkNumberEntityDescription(
+        key="clean_count",
+        mode=NumberMode.SLIDER,
+    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
