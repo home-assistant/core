@@ -1,99 +1,21 @@
 # serializer version: 1
-# name: test_get_minute_forecast
-  dict({
-    'weather.openweathermap': dict({
-      'current': dict({
-        'clouds': 75,
-        'condition': 'cloudy',
-        'dew_point': 3.99,
-        'feels_like_temperature': 2.07,
-        'humidity': 82,
-        'precipitation_kind': 'Rain',
-        'pressure': 1000,
-        'rain': 1.21,
-        'snow': 0,
-        'temperature': 6.84,
-        'uv_index': 0.13,
-        'visibility_distance': 10000,
-        'weather': 'broken clouds',
-        'weather_code': 803,
-        'wind_bearing': 199,
-        'wind_gust': None,
-        'wind_speed': 9.83,
-      }),
-      'daily_forecast': list([
-        dict({
-          'cloud_coverage': 84,
-          'condition': 'cloudy',
-          'datetime': '2024-04-25T16:45:36+00:00',
-          'humidity': 62,
-          'native_apparent_temperature': dict({
-            'day': 18.76,
-            'evening': 20.51,
-            'max': 21.26,
-            'min': 8.11,
-            'morning': 8.47,
-            'night': 13.06,
-          }),
-          'native_dew_point': 11.34,
-          'native_wind_gust_speed': 11.81,
-          'precipitation': 0,
-          'precipitation_probability': 0,
-          'pressure': 1015,
-          'temperature': 21.26,
-          'templow': 8.11,
-          'uv_index': 4.06,
-          'wind_bearing': 168,
-          'wind_speed': 8.14,
-        }),
-      ]),
-      'hourly_forecast': list([
-      ]),
-      'minute_forecast': dict({
-        'forecast': list([
-          dict({
-            'datetime': 1728672360,
-            'precipitation': 0,
-          }),
-          dict({
-            'datetime': 1728672420,
-            'precipitation': 1.23,
-          }),
-          dict({
-            'datetime': 1728672480,
-            'precipitation': 4.5,
-          }),
-          dict({
-            'datetime': 1728672540,
-            'precipitation': 0,
-          }),
-        ]),
-      }),
-    }),
-  })
-# ---
-# name: test_get_weather
+# name: test_get_minute_forecast[mock_api_response]
   dict({
     'current': dict({
-      'cloud_coverage': 75,
-      'condition': dict({
-        'description': 'broken clouds',
-        'icon': '04d',
-        'id': 803,
-        'main': 'Clouds',
-      }),
-      'date_time': datetime.datetime(2024, 4, 25, 16, 45, 36, tzinfo=datetime.timezone.utc),
+      'clouds': 75,
+      'condition': 'cloudy',
       'dew_point': 3.99,
-      'feels_like': 2.07,
+      'feels_like_temperature': 2.07,
       'humidity': 82,
+      'precipitation_kind': 'Rain',
       'pressure': 1000,
-      'rain': dict({
-        '1h': 1.21,
-      }),
-      'snow': None,
+      'rain': 1.21,
+      'snow': 0,
       'temperature': 6.84,
       'uv_index': 0.13,
-      'visibility': 10000,
+      'visibility_distance': 10000,
+      'weather': 'broken clouds',
+      'weather_code': 803,
       'wind_bearing': 199,
       'wind_gust': None,
       'wind_speed': 9.83,
@@ -101,15 +23,10 @@
     'daily_forecast': list([
       dict({
         'cloud_coverage': 84,
-        'condition': dict({
-          'description': 'broken clouds',
-          'icon': '04d',
-          'id': 803,
-          'main': 'Clouds',
-        }),
-        'date_time': datetime.datetime(2024, 4, 25, 16, 45, 36, tzinfo=datetime.timezone.utc),
-        'dew_point': 11.34,
-        'feels_like': dict({
+        'condition': 'cloudy',
+        'datetime': '2024-04-25T16:45:36+00:00',
+        'humidity': 62,
+        'native_apparent_temperature': dict({
           'day': 18.76,
           'evening': 20.51,
           'max': 21.26,
@@ -117,45 +34,63 @@
           'morning': 8.47,
           'night': 13.06,
         }),
-        'humidity': 62,
+        'native_dew_point': 11.34,
+        'native_wind_gust_speed': 11.81,
+        'precipitation': 0,
         'precipitation_probability': 0,
         'pressure': 1015,
-        'rain': 0,
-        'snow': 0,
-        'summary': 'There will be clear sky until morning, then partly cloudy',
-        'temperature': dict({
-          'day': 18.76,
-          'evening': 20.51,
-          'max': 21.26,
-          'min': 8.11,
-          'morning': 8.47,
-          'night': 13.06,
-        }),
+        'temperature': 21.26,
+        'templow': 8.11,
         'uv_index': 4.06,
         'wind_bearing': 168,
-        'wind_gust': 11.81,
         'wind_speed': 8.14,
       }),
     ]),
     'hourly_forecast': list([
     ]),
-    'minutely_forecast': list([
-      dict({
-        'date_time': 1728672360,
-        'precipitation': 0,
-      }),
-      dict({
-        'date_time': 1728672420,
-        'precipitation': 1.23,
-      }),
-      dict({
-        'date_time': 1728672480,
-        'precipitation': 4.5,
-      }),
-      dict({
-        'date_time': 1728672540,
-        'precipitation': 0,
-      }),
-    ]),
+    'minute_forecast': dict({
+      'forecast': list([
+        dict({
+          'datetime': 1728672360,
+          'precipitation': 0,
+        }),
+        dict({
+          'datetime': 1728672420,
+          'precipitation': 1.23,
+        }),
+        dict({
+          'datetime': 1728672480,
+          'precipitation': 4.5,
+        }),
+        dict({
+          'datetime': 1728672540,
+          'precipitation': 0,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_get_minute_forecast[mock_service_response]
+  dict({
+    'weather.openweathermap': dict({
+      'forecast': list([
+        dict({
+          'datetime': 1728672360,
+          'precipitation': 0,
+        }),
+        dict({
+          'datetime': 1728672420,
+          'precipitation': 1.23,
+        }),
+        dict({
+          'datetime': 1728672480,
+          'precipitation': 4.5,
+        }),
+        dict({
+          'datetime': 1728672540,
+          'precipitation': 0,
+        }),
+      ]),
+    }),
   })
 # ---

@@ -1,6 +1,5 @@
 """Test the OpenWeatherMap weather entity."""
 
-from pyopenweathermap.client.onecall_client import OWMOneCallClient
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -10,7 +9,6 @@ from homeassistant.components.openweathermap.const import (
     OWM_MODE_V25,
     OWM_MODE_V30,
 )
-from homeassistant.components.openweathermap.coordinator import WeatherUpdateCoordinator
 from homeassistant.components.openweathermap.weather import SERVICE_GET_MINUTE_FORECAST
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -24,7 +22,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 
-from .test_config_flow import _create_mocked_owm_factory
+from .test_config_flow import _create_static_weather_report
 
 from tests.common import AsyncMock, MockConfigEntry, patch
 
@@ -35,11 +33,7 @@ LONGITUDE = 56.78
 NAME = "openweathermap"
 
 # Define test data for mocked weather report
-mocked_weather_report = _create_mocked_owm_factory(True)
-coordinator = WeatherUpdateCoordinator(None, None, None, None)
-converted_weather_report = coordinator._convert_weather_response(
-    mocked_weather_report.get_weather.return_value
-)
+static_weather_report = _create_static_weather_report()
 
 
 def mock_config_entry(mode: str) -> MockConfigEntry:
@@ -76,36 +70,13 @@ async def setup_mock_config_entry(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.data
     assert hass.states.get(ENTITY_ID)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @patch(
     "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
-    AsyncMock(return_value=mocked_weather_report),
-)
-async def test_get_weather(
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the get_weather method of OWMOneCallClient(OWMClient) to mock calling the OWM API."""
-    # Create an instance of OWMClient
-    owm_client = OWMOneCallClient(API_KEY, OWM_MODE_V30)
-
-    # Call the get_weather method
-    weather_report = await owm_client.get_weather(lat=LATITUDE, lon=LONGITUDE)
-
-    # Assert the output matches the snapshot
-    assert weather_report.get_weather.return_value == snapshot
-
-
-@patch(
-    "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
-    AsyncMock(return_value=mocked_weather_report),
-)
-@patch(
-    "homeassistant.components.openweathermap.weather.OpenWeatherMapWeather.async_get_minute_forecast",
-    AsyncMock(return_value=converted_weather_report),
+    AsyncMock(return_value=static_weather_report),
 )
 async def test_get_minute_forecast(
     hass: HomeAssistant,
@@ -114,8 +85,10 @@ async def test_get_minute_forecast(
 ) -> None:
     """Test the get_minute_forecast Service call."""
     await setup_mock_config_entry(hass, mock_config_entry_v30)
+    coordinator = mock_config_entry_v30.runtime_data.coordinator
+    weather_report = await coordinator._async_update_data()
+    assert weather_report == snapshot(name="mock_api_response")
 
-    # Assert that the service matches the snapshot
     result = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_MINUTE_FORECAST,
@@ -123,12 +96,12 @@ async def test_get_minute_forecast(
         blocking=True,
         return_response=True,
     )
-    assert result == snapshot
+    assert result == snapshot(name="mock_service_response")
 
 
 @patch(
     "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
-    AsyncMock(return_value=mocked_weather_report),
+    AsyncMock(return_value=static_weather_report),
 )
 async def test_mode_fail(
     hass: HomeAssistant,

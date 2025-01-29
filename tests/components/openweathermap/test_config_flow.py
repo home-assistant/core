@@ -46,7 +46,9 @@ CONFIG = {
 VALID_YAML_CONFIG = {CONF_API_KEY: "foo"}
 
 
-def _create_mocked_owm_factory(is_valid: bool):
+def _create_static_weather_report() -> WeatherReport:
+    """Create a static WeatherReport."""
+
     current_weather = CurrentWeather(
         date_time=datetime.fromtimestamp(1714063536, tz=UTC),
         temperature=6.84,
@@ -112,10 +114,15 @@ def _create_mocked_owm_factory(is_valid: bool):
         MinutelyWeatherForecast(date_time=1728672480, precipitation=4.5),
         MinutelyWeatherForecast(date_time=1728672540, precipitation=0),
     ]
-    weather_report = WeatherReport(
+    return WeatherReport(
         current_weather, minutely_weather_forecast, [], [daily_weather_forecast]
     )
 
+
+def _create_mocked_owm_factory(is_valid: bool):
+    """Create a mocked OWM client."""
+
+    weather_report = _create_static_weather_report()
     mocked_owm_client = MagicMock()
     mocked_owm_client.validate_key = AsyncMock(return_value=is_valid)
     mocked_owm_client.get_weather = AsyncMock(return_value=weather_report)
