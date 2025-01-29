@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from pyheos import (
     HeosGroup,
@@ -84,6 +84,7 @@ async def controller_fixture(
     playlists: list[MediaItem],
     change_data: PlayerUpdateResult,
     group: dict[int, HeosGroup],
+    quick_selects: dict[int, str],
 ) -> MockHeos:
     """Create a mock Heos controller fixture."""
 
@@ -95,6 +96,7 @@ async def controller_fixture(
     mock_heos.get_input_sources.return_value = input_sources
     mock_heos.get_playlists.return_value = playlists
     mock_heos.load_players.return_value = change_data
+    mock_heos.player_get_quick_selects.return_value = quick_selects
     return mock_heos
 
 
@@ -127,7 +129,7 @@ def system_info_fixture() -> HeosSystem:
 
 
 @pytest.fixture(name="players")
-def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
+def players_fixture() -> dict[int, HeosPlayer]:
     """Create two mock HeosPlayers."""
     players = {}
     for i in (1, 2):
@@ -160,24 +162,6 @@ def players_fixture(quick_selects: dict[int, str]) -> dict[int, HeosPlayer]:
             queue_id=1,
             source_id=10,
         )
-        player.add_to_queue = AsyncMock()
-        player.clear_queue = AsyncMock()
-        player.get_quick_selects = AsyncMock(return_value=quick_selects)
-        player.mute = AsyncMock()
-        player.pause = AsyncMock()
-        player.play = AsyncMock()
-        player.play_media = AsyncMock()
-        player.play_next = AsyncMock()
-        player.play_previous = AsyncMock()
-        player.play_preset_station = AsyncMock()
-        player.play_quick_select = AsyncMock()
-        player.play_url = AsyncMock()
-        player.set_mute = AsyncMock()
-        player.set_play_mode = AsyncMock()
-        player.set_quick_select = AsyncMock()
-        player.set_volume = AsyncMock()
-        player.stop = AsyncMock()
-        player.unmute = AsyncMock()
         players[player.player_id] = player
     return players
 

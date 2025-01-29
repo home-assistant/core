@@ -372,14 +372,13 @@ async def test_clear_playlist(
     """Test the clear playlist service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_CLEAR_PLAYLIST,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    assert player.clear_queue.call_count == 1
+    assert controller.player_clear_queue.call_count == 1
 
 
 async def test_clear_playlist_error(
@@ -388,8 +387,7 @@ async def test_clear_playlist_error(
     """Test error raised when clear playlist fails."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.clear_queue.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_clear_queue.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError, match=re.escape("Unable to clear playlist: Failure (1)")
     ):
@@ -399,7 +397,7 @@ async def test_clear_playlist_error(
             {ATTR_ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
-    assert player.clear_queue.call_count == 1
+    assert controller.player_clear_queue.call_count == 1
 
 
 async def test_pause(
@@ -408,14 +406,13 @@ async def test_pause(
     """Test the pause service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PAUSE,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    assert player.pause.call_count == 1
+    assert controller.player_set_play_state.call_count == 1
 
 
 async def test_pause_error(
@@ -424,8 +421,7 @@ async def test_pause_error(
     """Test the pause service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.pause.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_play_state.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError, match=re.escape("Unable to pause: Failure (1)")
     ):
@@ -435,7 +431,7 @@ async def test_pause_error(
             {ATTR_ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
-    assert player.pause.call_count == 1
+    assert controller.player_set_play_state.call_count == 1
 
 
 async def test_play(
@@ -444,14 +440,13 @@ async def test_play(
     """Test the play service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PLAY,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    assert player.play.call_count == 1
+    assert controller.player_set_play_state.call_count == 1
 
 
 async def test_play_error(
@@ -460,8 +455,7 @@ async def test_play_error(
     """Test the play service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.play.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_play_state.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError, match=re.escape("Unable to play: Failure (1)")
     ):
@@ -471,7 +465,7 @@ async def test_play_error(
             {ATTR_ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
-    assert player.play.call_count == 1
+    assert controller.player_set_play_state.call_count == 1
 
 
 async def test_previous_track(
@@ -480,14 +474,13 @@ async def test_previous_track(
     """Test the previous track service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_PREVIOUS_TRACK,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    assert player.play_previous.call_count == 1
+    assert controller.player_play_previous.call_count == 1
 
 
 async def test_previous_track_error(
@@ -496,8 +489,7 @@ async def test_previous_track_error(
     """Test the previous track service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.play_previous.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_play_previous.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to move to previous track: Failure (1)"),
@@ -508,7 +500,7 @@ async def test_previous_track_error(
             {ATTR_ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
-    assert player.play_previous.call_count == 1
+    assert controller.player_play_previous.call_count == 1
 
 
 async def test_next_track(
@@ -517,14 +509,13 @@ async def test_next_track(
     """Test the next track service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_NEXT_TRACK,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    assert player.play_next.call_count == 1
+    assert controller.player_play_next.call_count == 1
 
 
 async def test_next_track_error(
@@ -533,8 +524,7 @@ async def test_next_track_error(
     """Test the next track service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.play_next.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_play_next.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to move to next track: Failure (1)"),
@@ -545,7 +535,7 @@ async def test_next_track_error(
             {ATTR_ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
-    assert player.play_next.call_count == 1
+    assert controller.player_play_next.call_count == 1
 
 
 async def test_stop(
@@ -554,14 +544,13 @@ async def test_stop(
     """Test the stop service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_MEDIA_STOP,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    assert player.stop.call_count == 1
+    assert controller.player_set_play_state.call_count == 1
 
 
 async def test_stop_error(
@@ -570,8 +559,7 @@ async def test_stop_error(
     """Test the stop service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.stop.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_play_state.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to stop: Failure (1)"),
@@ -582,7 +570,7 @@ async def test_stop_error(
             {ATTR_ENTITY_ID: "media_player.test_player"},
             blocking=True,
         )
-    assert player.stop.call_count == 1
+    assert controller.player_set_play_state.call_count == 1
 
 
 async def test_volume_mute(
@@ -591,14 +579,13 @@ async def test_volume_mute(
     """Test the volume mute service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_MUTE,
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: True},
         blocking=True,
     )
-    assert player.set_mute.call_count == 1
+    assert controller.player_set_mute.call_count == 1
 
 
 async def test_volume_mute_error(
@@ -607,8 +594,7 @@ async def test_volume_mute_error(
     """Test the volume mute service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.set_mute.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_mute.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to set mute: Failure (1)"),
@@ -619,7 +605,7 @@ async def test_volume_mute_error(
             {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_MUTED: True},
             blocking=True,
         )
-    assert player.set_mute.call_count == 1
+    assert controller.player_set_mute.call_count == 1
 
 
 async def test_shuffle_set(
@@ -635,7 +621,7 @@ async def test_shuffle_set(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_SHUFFLE: True},
         blocking=True,
     )
-    player.set_play_mode.assert_called_once_with(player.repeat, True)
+    controller.player_set_play_mode.assert_called_once_with(1, player.repeat, True)
 
 
 async def test_shuffle_set_error(
@@ -645,7 +631,7 @@ async def test_shuffle_set_error(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     player = controller.players[1]
-    player.set_play_mode.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_play_mode.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to set shuffle: Failure (1)"),
@@ -656,7 +642,7 @@ async def test_shuffle_set_error(
             {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_SHUFFLE: True},
             blocking=True,
         )
-    player.set_play_mode.assert_called_once_with(player.repeat, True)
+    controller.player_set_play_mode.assert_called_once_with(1, player.repeat, True)
 
 
 async def test_repeat_set(
@@ -672,7 +658,9 @@ async def test_repeat_set(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_REPEAT: RepeatMode.ONE},
         blocking=True,
     )
-    player.set_play_mode.assert_called_once_with(RepeatType.ON_ONE, player.shuffle)
+    controller.player_set_play_mode.assert_called_once_with(
+        1, RepeatType.ON_ONE, player.shuffle
+    )
 
 
 async def test_repeat_set_error(
@@ -682,7 +670,7 @@ async def test_repeat_set_error(
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     player = controller.players[1]
-    player.set_play_mode.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_play_mode.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to set repeat: Failure (1)"),
@@ -696,7 +684,9 @@ async def test_repeat_set_error(
             },
             blocking=True,
         )
-    player.set_play_mode.assert_called_once_with(RepeatType.ON_ALL, player.shuffle)
+    controller.player_set_play_mode.assert_called_once_with(
+        1, RepeatType.ON_ALL, player.shuffle
+    )
 
 
 async def test_volume_set(
@@ -705,14 +695,13 @@ async def test_volume_set(
     """Test the volume set service."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_SET,
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
         blocking=True,
     )
-    player.set_volume.assert_called_once_with(100)
+    controller.player_set_volume.assert_called_once_with(1, 100)
 
 
 async def test_volume_set_error(
@@ -721,8 +710,7 @@ async def test_volume_set_error(
     """Test the volume set service raises error."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.set_volume.side_effect = CommandFailedError("", "Failure", 1)
+    controller.player_set_volume.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to set volume level: Failure (1)"),
@@ -733,7 +721,7 @@ async def test_volume_set_error(
             {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
             blocking=True,
         )
-    player.set_volume.assert_called_once_with(100)
+    controller.player_set_volume.assert_called_once_with(1, 100)
 
 
 async def test_select_favorite(
@@ -754,7 +742,7 @@ async def test_select_favorite(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_preset_station.assert_called_once_with(1)
+    controller.play_preset_station.assert_called_once_with(1, 1)
     # Test state is matched by station name
     player.now_playing_media.type = HeosMediaType.STATION
     player.now_playing_media.station = favorite.name
@@ -785,7 +773,7 @@ async def test_select_radio_favorite(
         {ATTR_ENTITY_ID: "media_player.test_player", ATTR_INPUT_SOURCE: favorite.name},
         blocking=True,
     )
-    player.play_preset_station.assert_called_once_with(2)
+    controller.play_preset_station.assert_called_once_with(1, 2)
     # Test state is matched by album id
     player.now_playing_media.type = HeosMediaType.STATION
     player.now_playing_media.station = "Classical"
@@ -808,10 +796,9 @@ async def test_select_radio_favorite_command_error(
     """Tests command error raises when playing favorite."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     # Test set radio preset
     favorite = favorites[2]
-    player.play_preset_station.side_effect = CommandFailedError("", "Failure", 1)
+    controller.play_preset_station.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to select source: Failure (1)"),
@@ -825,7 +812,7 @@ async def test_select_radio_favorite_command_error(
             },
             blocking=True,
         )
-    player.play_preset_station.assert_called_once_with(2)
+    controller.play_preset_station.assert_called_once_with(1, 2)
 
 
 @pytest.mark.parametrize(
@@ -862,7 +849,9 @@ async def test_select_input_source(
         for input_sources in input_sources
         if input_sources.name == source_name
     )
-    player.play_media.assert_called_once_with(input_source)
+    controller.play_media.assert_called_once_with(
+        1, input_source, AddCriteriaType.PLAY_NOW
+    )
     # Update the now_playing_media to reflect play_media
     player.now_playing_media.source_id = const.MUSIC_SOURCE_AUX_INPUT
     player.now_playing_media.station = station
@@ -903,9 +892,8 @@ async def test_select_input_command_error(
     """Tests selecting an unknown input."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     input_source = input_sources[0]
-    player.play_media.side_effect = CommandFailedError("", "Failure", 1)
+    controller.play_media.side_effect = CommandFailedError("", "Failure", 1)
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to select source: Failure (1)"),
@@ -919,7 +907,9 @@ async def test_select_input_command_error(
             },
             blocking=True,
         )
-    player.play_media.assert_called_once_with(input_source)
+    controller.play_media.assert_called_once_with(
+        1, input_source, AddCriteriaType.PLAY_NOW
+    )
 
 
 async def test_unload_config_entry(
@@ -944,7 +934,6 @@ async def test_play_media(
     """Test the play media service with type url."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     url = "http://news/podcast.mp3"
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
@@ -956,7 +945,7 @@ async def test_play_media(
         },
         blocking=True,
     )
-    player.play_url.assert_called_once_with(url)
+    controller.play_url.assert_called_once_with(1, url)
 
 
 @pytest.mark.parametrize("media_type", [MediaType.URL, MediaType.MUSIC])
@@ -969,8 +958,7 @@ async def test_play_media_error(
     """Test the play media service with type url error raises."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
-    player.play_url.side_effect = CommandFailedError("", "Failure", 1)
+    controller.play_url.side_effect = CommandFailedError("", "Failure", 1)
     url = "http://news/podcast.mp3"
     with pytest.raises(
         HomeAssistantError,
@@ -986,7 +974,7 @@ async def test_play_media_error(
             },
             blocking=True,
         )
-    player.play_url.assert_called_once_with(url)
+    controller.play_url.assert_called_once_with(1, url)
 
 
 @pytest.mark.parametrize(
@@ -1002,7 +990,6 @@ async def test_play_media_quick_select(
     """Test the play media service with type quick_select."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -1013,7 +1000,7 @@ async def test_play_media_quick_select(
         },
         blocking=True,
     )
-    player.play_quick_select.assert_called_once_with(expected_index)
+    controller.player_play_quick_select.assert_called_once_with(1, expected_index)
 
 
 async def test_play_media_quick_select_error(
@@ -1022,7 +1009,6 @@ async def test_play_media_quick_select_error(
     """Test the play media service with invalid quick_select raises."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to play media: Invalid quick select 'Invalid'"),
@@ -1037,7 +1023,7 @@ async def test_play_media_quick_select_error(
             },
             blocking=True,
         )
-    assert player.play_quick_select.call_count == 0
+    assert controller.player_play_quick_select.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -1059,7 +1045,6 @@ async def test_play_media_playlist(
     """Test the play media service with type playlist."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     playlist = playlists[0]
     service_data = {
         ATTR_ENTITY_ID: "media_player.test_player",
@@ -1074,7 +1059,7 @@ async def test_play_media_playlist(
         service_data,
         blocking=True,
     )
-    player.play_media.assert_called_once_with(playlist, criteria)
+    controller.play_media.assert_called_once_with(1, playlist, criteria)
 
 
 async def test_play_media_playlist_error(
@@ -1083,7 +1068,6 @@ async def test_play_media_playlist_error(
     """Test the play media service with an invalid playlist name."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to play media: Invalid playlist 'Invalid'"),
@@ -1098,7 +1082,7 @@ async def test_play_media_playlist_error(
             },
             blocking=True,
         )
-    assert player.add_to_queue.call_count == 0
+    assert controller.add_to_queue.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -1114,7 +1098,6 @@ async def test_play_media_favorite(
     """Test the play media service with type favorite."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_PLAY_MEDIA,
@@ -1125,7 +1108,7 @@ async def test_play_media_favorite(
         },
         blocking=True,
     )
-    player.play_preset_station.assert_called_once_with(expected_index)
+    controller.play_preset_station.assert_called_once_with(1, expected_index)
 
 
 async def test_play_media_favorite_error(
@@ -1134,7 +1117,6 @@ async def test_play_media_favorite_error(
     """Test the play media service with an invalid favorite raises."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
-    player = controller.players[1]
     with pytest.raises(
         HomeAssistantError,
         match=re.escape("Unable to play media: Invalid favorite 'Invalid'"),
@@ -1149,7 +1131,7 @@ async def test_play_media_favorite_error(
             },
             blocking=True,
         )
-    assert player.play_preset_station.call_count == 0
+    assert controller.play_preset_station.call_count == 0
 
 
 async def test_play_media_invalid_type(
