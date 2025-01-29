@@ -1158,87 +1158,130 @@ async def test_config_info(
 
 @pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
 @pytest.mark.parametrize(
-    "command",
+    "commands",
     [
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"copies": None, "days": 7},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "schedule": {"recurrence": "daily", "time": "06:00"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "schedule": {"days": ["mon"], "recurrence": "custom_days"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "schedule": {"recurrence": "never"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "schedule": {"days": ["mon", "sun"], "recurrence": "custom_days"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {
-                "agent_ids": ["test-agent"],
-                "include_addons": ["test-addon"],
-                "include_folders": ["media"],
-                "name": "test-name",
-                "password": "test-password",
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"copies": None, "days": 7},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": {"recurrence": "daily", "time": "06:00"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": {"days": ["mon"], "recurrence": "custom_days"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": {"recurrence": "never"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "schedule": {"days": ["mon", "sun"], "recurrence": "custom_days"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {
+                    "agent_ids": ["test-agent"],
+                    "include_addons": ["test-addon"],
+                    "include_folders": ["media"],
+                    "name": "test-name",
+                    "password": "test-password",
+                },
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"copies": 3, "days": 7},
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"copies": None, "days": None},
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"copies": 3, "days": None},
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"copies": None, "days": 7},
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"copies": 3},
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test-agent"]},
+                "retention": {"days": 7},
+                "schedule": {"recurrence": "daily"},
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "agents": {
+                    "test-agent1": {"protected": True},
+                    "test-agent2": {"protected": False},
+                },
+            }
+        ],
+        [
+            # Test we can update AgentConfig
+            {
+                "type": "backup/config/update",
+                "agents": {
+                    "test-agent1": {"protected": True},
+                    "test-agent2": {"protected": False},
+                },
             },
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"copies": 3, "days": 7},
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"copies": None, "days": None},
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"copies": 3, "days": None},
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"copies": None, "days": 7},
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"copies": 3},
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "create_backup": {"agent_ids": ["test-agent"]},
-            "retention": {"days": 7},
-            "schedule": {"recurrence": "daily"},
-        },
-        {
-            "type": "backup/config/update",
-            "agents": {
-                "test-agent1": {"protected": True},
-                "test-agent2": {"protected": False},
+            {
+                "type": "backup/config/update",
+                "agents": {
+                    "test-agent1": {"protected": False},
+                    "test-agent2": {"protected": True},
+                },
             },
-        },
+        ],
     ],
 )
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
@@ -1247,7 +1290,7 @@ async def test_config_update(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-    command: dict[str, Any],
+    commands: dict[str, Any],
     hass_storage: dict[str, Any],
 ) -> None:
     """Test updating the backup config."""
@@ -1261,14 +1304,14 @@ async def test_config_update(
     await client.send_json_auto_id({"type": "backup/config/info"})
     assert await client.receive_json() == snapshot
 
-    await client.send_json_auto_id(command)
-    result = await client.receive_json()
+    for command in commands:
+        await client.send_json_auto_id(command)
+        result = await client.receive_json()
+        assert result["success"]
 
-    assert result["success"]
-
-    await client.send_json_auto_id({"type": "backup/config/info"})
-    assert await client.receive_json() == snapshot
-    await hass.async_block_till_done()
+        await client.send_json_auto_id({"type": "backup/config/info"})
+        assert await client.receive_json() == snapshot
+        await hass.async_block_till_done()
 
     # Trigger store write
     freezer.tick(60)

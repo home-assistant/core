@@ -554,7 +554,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command0]
+# name: test_config_update[commands0]
   dict({
     'id': 1,
     'result': dict({
@@ -591,7 +591,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command0].1
+# name: test_config_update[commands0].1
   dict({
     'id': 3,
     'result': dict({
@@ -629,7 +629,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command0].2
+# name: test_config_update[commands0].2
   dict({
     'data': dict({
       'backups': list([
@@ -668,7 +668,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command10]
+# name: test_config_update[commands10]
   dict({
     'id': 1,
     'result': dict({
@@ -705,7 +705,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command10].1
+# name: test_config_update[commands10].1
   dict({
     'id': 3,
     'result': dict({
@@ -743,7 +743,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command10].2
+# name: test_config_update[commands10].2
   dict({
     'data': dict({
       'backups': list([
@@ -782,7 +782,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command11]
+# name: test_config_update[commands11]
   dict({
     'id': 1,
     'result': dict({
@@ -819,7 +819,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command11].1
+# name: test_config_update[commands11].1
   dict({
     'id': 3,
     'result': dict({
@@ -857,7 +857,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command11].2
+# name: test_config_update[commands11].2
   dict({
     'data': dict({
       'backups': list([
@@ -896,7 +896,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command12]
+# name: test_config_update[commands12]
   dict({
     'id': 1,
     'result': dict({
@@ -933,7 +933,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command12].1
+# name: test_config_update[commands12].1
   dict({
     'id': 3,
     'result': dict({
@@ -976,7 +976,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command12].2
+# name: test_config_update[commands12].2
   dict({
     'data': dict({
       'backups': list([
@@ -1020,7 +1020,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command1]
+# name: test_config_update[commands13]
   dict({
     'id': 1,
     'result': dict({
@@ -1057,7 +1057,174 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command1].1
+# name: test_config_update[commands13].1
+  dict({
+    'id': 3,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': True,
+          }),
+          'test-agent2': dict({
+            'protected': False,
+          }),
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[commands13].2
+  dict({
+    'id': 5,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': False,
+          }),
+          'test-agent2': dict({
+            'protected': True,
+          }),
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[commands13].3
+  dict({
+    'data': dict({
+      'backups': list([
+      ]),
+      'config': dict({
+        'agents': dict({
+          'test-agent1': dict({
+            'protected': False,
+          }),
+          'test-agent2': dict({
+            'protected': True,
+          }),
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'state': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'key': 'backup',
+    'minor_version': 2,
+    'version': 1,
+  })
+# ---
+# name: test_config_update[commands1]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': True,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_update[commands1].1
   dict({
     'id': 3,
     'result': dict({
@@ -1095,7 +1262,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command1].2
+# name: test_config_update[commands1].2
   dict({
     'data': dict({
       'backups': list([
@@ -1134,7 +1301,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command2]
+# name: test_config_update[commands2]
   dict({
     'id': 1,
     'result': dict({
@@ -1171,7 +1338,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command2].1
+# name: test_config_update[commands2].1
   dict({
     'id': 3,
     'result': dict({
@@ -1210,7 +1377,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command2].2
+# name: test_config_update[commands2].2
   dict({
     'data': dict({
       'backups': list([
@@ -1250,7 +1417,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command3]
+# name: test_config_update[commands3]
   dict({
     'id': 1,
     'result': dict({
@@ -1287,7 +1454,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command3].1
+# name: test_config_update[commands3].1
   dict({
     'id': 3,
     'result': dict({
@@ -1325,7 +1492,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command3].2
+# name: test_config_update[commands3].2
   dict({
     'data': dict({
       'backups': list([
@@ -1364,7 +1531,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command4]
+# name: test_config_update[commands4]
   dict({
     'id': 1,
     'result': dict({
@@ -1401,7 +1568,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command4].1
+# name: test_config_update[commands4].1
   dict({
     'id': 3,
     'result': dict({
@@ -1441,7 +1608,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command4].2
+# name: test_config_update[commands4].2
   dict({
     'data': dict({
       'backups': list([
@@ -1482,7 +1649,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command5]
+# name: test_config_update[commands5]
   dict({
     'id': 1,
     'result': dict({
@@ -1519,7 +1686,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command5].1
+# name: test_config_update[commands5].1
   dict({
     'id': 3,
     'result': dict({
@@ -1561,7 +1728,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command5].2
+# name: test_config_update[commands5].2
   dict({
     'data': dict({
       'backups': list([
@@ -1604,7 +1771,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command6]
+# name: test_config_update[commands6]
   dict({
     'id': 1,
     'result': dict({
@@ -1641,7 +1808,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command6].1
+# name: test_config_update[commands6].1
   dict({
     'id': 3,
     'result': dict({
@@ -1679,7 +1846,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command6].2
+# name: test_config_update[commands6].2
   dict({
     'data': dict({
       'backups': list([
@@ -1718,7 +1885,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command7]
+# name: test_config_update[commands7]
   dict({
     'id': 1,
     'result': dict({
@@ -1755,7 +1922,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command7].1
+# name: test_config_update[commands7].1
   dict({
     'id': 3,
     'result': dict({
@@ -1793,7 +1960,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command7].2
+# name: test_config_update[commands7].2
   dict({
     'data': dict({
       'backups': list([
@@ -1832,7 +1999,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command8]
+# name: test_config_update[commands8]
   dict({
     'id': 1,
     'result': dict({
@@ -1869,7 +2036,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command8].1
+# name: test_config_update[commands8].1
   dict({
     'id': 3,
     'result': dict({
@@ -1907,7 +2074,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command8].2
+# name: test_config_update[commands8].2
   dict({
     'data': dict({
       'backups': list([
@@ -1946,7 +2113,7 @@
     'version': 1,
   })
 # ---
-# name: test_config_update[command9]
+# name: test_config_update[commands9]
   dict({
     'id': 1,
     'result': dict({
@@ -1983,7 +2150,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command9].1
+# name: test_config_update[commands9].1
   dict({
     'id': 3,
     'result': dict({
@@ -2021,7 +2188,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_update[command9].2
+# name: test_config_update[commands9].2
   dict({
     'data': dict({
       'backups': list([
