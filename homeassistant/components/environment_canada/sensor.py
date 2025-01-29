@@ -26,7 +26,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_info
 from .const import ATTR_STATION
 from .coordinator import ECConfigEntry
 
@@ -282,7 +281,7 @@ class ECBaseSensorEntity(CoordinatorEntity, SensorEntity):
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self):
