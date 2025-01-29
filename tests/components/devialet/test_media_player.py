@@ -31,6 +31,7 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
 )
 from homeassistant.components.media_source import PlayMedia
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -56,6 +57,7 @@ from . import HOST, NAME, setup_integration
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import WebSocketGenerator
 
 SERVICE_TO_URL = {
     SERVICE_MEDIA_SEEK: [UrlSuffix.SEEK],
@@ -298,6 +300,45 @@ async def test_media_player_without_serial(
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_browse_media(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test the Devialet services."""
+
+    entry = await setup_integration(
+        hass, aioclient_mock, state=MediaPlayerState.PLAYING
+    )
+    assert entry.state is ConfigEntryState.LOADED
+
+    client = await hass_ws_client(hass)
+
+    with (
+        patch.object(DevialetApi, "upnp_available", return_value=True),
+        patch(
+            "homeassistant.components.devialet.media_player.DevialetMediaPlayerEntity.async_browse_media",
+            return_value={"bla": "yo"},
+        ) as mock_browse_media,
+    ):
+        await client.send_json(
+            {
+                "id": 5,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.livingroom",
+                "media_content_type": "album",
+                "media_content_id": "abcd",
+            }
+        )
+        msg = await client.receive_json()
+
+        assert msg["id"] == 5
+        assert msg["type"] == TYPE_RESULT
+        assert msg["success"]
+        assert msg["result"] == {"bla": "yo"}
+        assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
 
 async def test_media_player_services(
