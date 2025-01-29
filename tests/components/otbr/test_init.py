@@ -26,7 +26,6 @@ from . import (
     ROUTER_DISCOVERY_HASS,
     TEST_BORDER_AGENT_EXTENDED_ADDRESS,
     TEST_BORDER_AGENT_ID,
-    TEST_COPROCESSOR_VERSION,
 )
 
 from tests.common import MockConfigEntry
@@ -44,7 +43,6 @@ def enable_mocks_fixture(
     get_active_dataset_tlvs: AsyncMock,
     get_border_agent_id: AsyncMock,
     get_extended_address: AsyncMock,
-    get_coprocessor_version: AsyncMock,
 ) -> None:
     """Enable API mocks."""
 
@@ -300,7 +298,6 @@ async def test_config_entry_update(hass: HomeAssistant) -> None:
     mock_api.get_extended_address = AsyncMock(
         return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS
     )
-    mock_api.get_coprocessor_version = AsyncMock(return_value=TEST_COPROCESSOR_VERSION)
     with patch("python_otbr_api.OTBR", return_value=mock_api) as mock_otrb_api:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
 
