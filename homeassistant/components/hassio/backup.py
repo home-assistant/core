@@ -262,9 +262,15 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             if manager.backup_agents[agent_id].domain == DOMAIN
         ]
 
-        # Check which location should be encrypted or decrypted, and send the
-        # longest list to the supervisor. If it's a tie, send the encrypted list.
-        # The remaining locations will be handled by async_upload_backup.
+        # Supervisor does not support creating backups spread across multiple
+        # locations, where some locations are encrypted and some are not.
+        # It's inefficient to let core do all the copying so we want to let
+        # supervisor handle as much as possible.
+        # Therefore, we split the locations into two lists: encrypted and decrypted.
+        # The longest list will be sent to supervisor, and the remaining locations
+        # will be handled by async_upload_backup.
+        # If the lists are the same length, it does not matter which one we send,
+        # we send the encrypted list to have a well defined behavior.
         encrypted_locations: list[str | None] = []
         decrypted_locations: list[str | None] = []
         agents_settings = manager.config.data.agents
