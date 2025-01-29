@@ -264,7 +264,6 @@ class AssistSatelliteEntity(entity.Entity):
             await self.async_start_conversation(announcement)
         finally:
             self._is_announcing = False
-            self._extra_system_prompt = None
 
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
