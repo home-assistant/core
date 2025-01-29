@@ -1671,7 +1671,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "linux_battery",
     "lirc",
     "litejet",
-    "litterrobot",
     "livisi",
     "llamalab_automate",
     "local_calendar",
