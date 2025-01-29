@@ -53,6 +53,7 @@ __all__ = [
     "NewBackup",
     "RestoreBackupEvent",
     "WrittenBackup",
+    "async_get_manager",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

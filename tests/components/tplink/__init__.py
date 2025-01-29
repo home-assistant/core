@@ -106,7 +106,7 @@ async def snapshot_platform(
         if entity_entry.translation_key:
             key = f"component.{DOMAIN}.entity.{entity_entry.domain}.{entity_entry.translation_key}.name"
             single_device_class_translation = False
-            if key not in translations and entity_entry.original_device_class:
+            if key not in translations:  # No name translation
                 if entity_entry.original_device_class not in unique_device_classes:
                     single_device_class_translation = True
                     unique_device_classes.append(entity_entry.original_device_class)
