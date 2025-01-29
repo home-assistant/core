@@ -3,6 +3,8 @@
 from unittest.mock import MagicMock
 
 from homeassistant.components.cover import (
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
     CoverState,
@@ -10,7 +12,11 @@ from homeassistant.components.cover import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
@@ -20,7 +26,7 @@ from . import build_mock_node, setup_integration
 from tests.common import MockConfigEntry
 
 
-async def test_open_cover(
+async def test_open_close_stop_cover(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
@@ -36,39 +42,12 @@ async def test_open_cover(
         {ATTR_ENTITY_ID: "cover.test_cover"},
         blocking=True,
     )
-    mock_homee.set_value.assert_called_once_with(mock_homee.nodes[0].id, 1, 0)
-
-
-async def test_close_cover(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test opening the cover."""
-    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
-
-    await setup_integration(hass, mock_config_entry)
-
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {ATTR_ENTITY_ID: "cover.test_cover"},
         blocking=True,
     )
-
-    mock_homee.set_value.assert_called_once_with(mock_homee.nodes[0].id, 1, 1)
-
-
-async def test_stop_cover(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test opening the cover."""
-    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
-
-    await setup_integration(hass, mock_config_entry)
-
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER,
@@ -76,7 +55,116 @@ async def test_stop_cover(
         blocking=True,
     )
 
-    mock_homee.set_value.assert_called_once_with(mock_homee.nodes[0].id, 1, 2)
+    calls = mock_homee.set_value.call_args_list
+    for index, call in enumerate(calls):
+        assert call[0] == (mock_homee.nodes[0].id, 1, index)
+
+
+async def test_set_cover_position(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting the cover position."""
+    mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Slats have a range of -45 to 90.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_POSITION: 100},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_POSITION: 0},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_POSITION: 50},
+        blocking=True,
+    )
+
+    calls = mock_homee.set_value.call_args_list
+    positions = [0, 100, 50]
+    for call in calls:
+        assert call[0] == (1, 2, positions.pop(0))
+
+
+async def test_close_open_slats(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test closing and opening slats."""
+    mock_homee.nodes = [build_mock_node("cover_with_slats_position.json")]
+
+    await setup_integration(hass, mock_config_entry)
+
+    attributes = hass.states.get("cover.test_slats").attributes
+    assert attributes.get("supported_features") == (
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test_slats"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.test_slats"},
+        blocking=True,
+    )
+
+    calls = mock_homee.set_value.call_args_list
+    for index, call in enumerate(calls, start=1):
+        assert call[0] == (mock_homee.nodes[0].id, 2, index)
+
+
+async def test_set_slat_position(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting slats position."""
+    mock_homee.nodes = [build_mock_node("cover_with_slats_position.json")]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Slats have a range of -45 to 90 on this device.
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_TILT_POSITION: 100},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_TILT_POSITION: 0},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: "cover.test_slats", ATTR_TILT_POSITION: 50},
+        blocking=True,
+    )
+
+    calls = mock_homee.set_value.call_args_list
+    positions = [-45, 90, 22.5]
+    for call in calls:
+        assert call[0] == (1, 1, positions.pop(0))
 
 
 async def test_cover_positions(
