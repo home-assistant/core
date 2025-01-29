@@ -246,7 +246,10 @@
           "stopped": "Stopped",
           "running": "Running",
           "paused": "[%key:common::state::paused%]",
-          "error": "Error"
+          "error": "Error",
+          "seeking_charger": "Seeking charger",
+          "charging": "Charging",
+          "docked": "Docked"
         }
       },
       "switch_current_position": {
