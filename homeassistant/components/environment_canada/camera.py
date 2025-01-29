@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from env_canada import ECRadar
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
@@ -14,7 +15,7 @@ from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_OBSERVATION_TIME
-from .coordinator import ECConfigEntry
+from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 SERVICE_SET_RADAR_TYPE = "set_radar_type"
 SET_RADAR_TYPE_SCHEMA: VolDictType = {
@@ -39,13 +40,13 @@ async def async_setup_entry(
     )
 
 
-class ECCameraEntity(CoordinatorEntity, Camera):
+class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera):
     """Implementation of an Environment Canada radar camera."""
 
     _attr_has_entity_name = True
     _attr_translation_key = "radar"
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: ECDataUpdateCoordinator[ECRadar]) -> None:
         """Initialize the camera."""
         super().__init__(coordinator)
         Camera.__init__(self)
