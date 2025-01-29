@@ -24,7 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import _generate_mock_feed_entry
 

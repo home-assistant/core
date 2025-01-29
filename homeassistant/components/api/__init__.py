@@ -11,6 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadRequest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.auth.models import User
 from homeassistant.auth.permissions.const import POLICY_READ
 from homeassistant.components.http import (
@@ -36,7 +37,6 @@ from homeassistant.const import (
     URL_API_STREAM,
     URL_API_TEMPLATE,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant
 from homeassistant.exceptions import (
     InvalidEntityFormatError,

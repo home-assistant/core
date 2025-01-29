@@ -246,7 +246,7 @@ aioguardian==2022.07.0
 aioharmony==0.4.1
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.2b5
+aiohasupervisor==0.2.2b6
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -637,7 +637,7 @@ dbus-fast==2.30.2
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==11.0.0
+deebot-client==11.1.0b1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1646,7 +1646,7 @@ pyipp==0.17.0
 pyiqvia==2022.04.0
 
 # homeassistant.components.iskra
-pyiskra==0.1.14
+pyiskra==0.1.15
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -1929,6 +1929,9 @@ python-fullykiosk==0.0.14
 # homeassistant.components.sms
 # python-gammu==3.2.4
 
+# homeassistant.components.google_drive
+python-google-drive-api==0.0.2
+
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.8.1
 
@@ -2073,7 +2076,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2024.2.59
 
 # homeassistant.components.qbus
-qbusmqttapi==1.2.3
+qbusmqttapi==1.2.4
 
 # homeassistant.components.qingping
 qingping-ble==0.10.0

@@ -36,6 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     CONF_OLD_DISCOVERY,
@@ -50,8 +51,12 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
 
-def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
+type FritzConfigEntry = ConfigEntry[AvmWrapper]
+
+
+def _is_tracked(mac: str, current_devices: ValuesView[set[str]]) -> bool:
     """Check if device is already tracked."""
     return any(mac in tracked for tracked in current_devices)
 
@@ -59,7 +64,7 @@ def _is_tracked(mac: str, current_devices: ValuesView) -> bool:
 def device_filter_out_from_trackers(
     mac: str,
     device: FritzDevice,
-    current_devices: ValuesView,
+    current_devices: ValuesView[set[str]],
 ) -> bool:
     """Check if device should be filtered out from trackers."""
     reason: str | None = None
@@ -160,11 +165,12 @@ class UpdateCoordinatorDataType(TypedDict):
 class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """FritzBoxTools class."""
 
-    config_entry: ConfigEntry
+    config_entry: FritzConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: FritzConfigEntry,
         password: str,
         port: int,
         username: str = DEFAULT_USERNAME,
@@ -174,6 +180,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         """Initialize FritzboxTools class."""
         super().__init__(
             hass=hass,
+            config_entry=config_entry,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=30),
@@ -869,9 +876,9 @@ class AvmWrapper(FritzBoxTools):
 class FritzData:
     """Storage class for platform global data."""
 
-    tracked: dict = field(default_factory=dict)
-    profile_switches: dict = field(default_factory=dict)
-    wol_buttons: dict = field(default_factory=dict)
+    tracked: dict[str, set[str]] = field(default_factory=dict)
+    profile_switches: dict[str, set[str]] = field(default_factory=dict)
+    wol_buttons: dict[str, set[str]] = field(default_factory=dict)
 
 
 class FritzDevice:
