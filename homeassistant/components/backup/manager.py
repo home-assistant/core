@@ -65,6 +65,10 @@ from .models import (
     BaseBackup,
     Folder,
 )
+from .repairs import (
+    create_automatic_backup_agents_not_loaded_issue,
+    delete_automatic_backup_agents_not_loaded_issue,
+)
 from .store import BackupStore
 from .util import (
     AsyncIteratorReader,
@@ -416,6 +420,19 @@ class BackupManager:
                 if isinstance(agent, LocalBackupAgent)
             }
         )
+        if missing_agent_ids := set(self.config.data.create_backup.agent_ids) - set(
+            self.backup_agents
+        ):
+            LOGGER.debug(
+                "Agents %s are configured for automatic backup but are not loaded",
+                missing_agent_ids,
+            )
+            for agent_id in missing_agent_ids:
+                create_automatic_backup_agents_not_loaded_issue(self.hass, agent_id)
+
+        # Remove any issues for agents that are now loaded
+        for agent_id in self.backup_agents:
+            delete_automatic_backup_agents_not_loaded_issue(self.hass, agent_id)
 
     async def _add_platform(
         self,
