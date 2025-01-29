@@ -77,6 +77,12 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [],
+            "agents": {
+                f"{DOMAIN}.{mock_config_entry.entry_id}": {
+                    "protected": False,
+                    "size": 34519040,
+                }
+            },
             "backup_id": "23e64aec",
             "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
@@ -84,9 +90,6 @@ async def test_agents_list_backups(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "protected": False,
-            "size": 34519040,
-            "agent_ids": [f"{DOMAIN}.{mock_config_entry.entry_id}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -109,6 +112,12 @@ async def test_agents_get_backup(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
         "addons": [],
+        "agents": {
+            f"{DOMAIN}.{mock_config_entry.entry_id}": {
+                "protected": False,
+                "size": 34519040,
+            }
+        },
         "backup_id": "23e64aec",
         "date": "2024-11-22T11:48:48.727189+01:00",
         "database_included": True,
@@ -116,9 +125,6 @@ async def test_agents_get_backup(
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0.dev0",
         "name": "Core 2024.12.0.dev0",
-        "protected": False,
-        "size": 34519040,
-        "agent_ids": [f"{DOMAIN}.{mock_config_entry.entry_id}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
