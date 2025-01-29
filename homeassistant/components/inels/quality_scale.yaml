@@ -4,15 +4,7 @@ rules:
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: done
-  runtime-data:
-    status: exempt
-    comment: >
-      Because the hardware does not publish configuration to MQTT, this is a
-      workaround to the current hardware limitation.
-
-      As a result, I must keep a persistent record of device history
-      (OLD_ENTITIES) in persistent storage rather than runtime_data to handle
-      cleanup properly.
+  runtime-data: done
   test-before-setup:
     status: done
     comment: >
