@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from pyenphase import Envoy
 from pyenphase.const import URL_TARIFF
 import voluptuous as vol
 
@@ -58,13 +57,10 @@ def _find_envoy_coordinator(
 async def setup_hass_services(hass: HomeAssistant) -> ServiceResponse:
     """Configure Home Assistant services for Enphase_Envoy."""
 
-    if hass.services.async_services_for_domain(DOMAIN):
-        return None
-
     async def get_raw_service(call: ServiceCall) -> ServiceResponse:
         """Return tariff data from envoy.data.raw cache."""
-        coordinator: EnphaseUpdateCoordinator = _find_envoy_coordinator(hass, call)
-        envoy_to_use: Envoy = coordinator.envoy
+        coordinator = _find_envoy_coordinator(hass, call)
+        envoy_to_use = coordinator.envoy
         if not envoy_to_use.data or not envoy_to_use.data.raw:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

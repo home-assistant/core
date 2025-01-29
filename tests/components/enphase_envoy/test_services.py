@@ -10,7 +10,6 @@ from homeassistant.components.enphase_envoy.const import DOMAIN, Platform
 from homeassistant.components.enphase_envoy.services import (
     ATTR_CONFIG_ENTRY_ID,
     RAW_SERVICE_LIST,
-    setup_hass_services,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -75,9 +74,6 @@ async def test_service_load_unload(
     ):
         await setup_integration(hass, config_entry)
         assert config_entry.state is ConfigEntryState.LOADED
-
-        # test COV for services loaded already
-        await setup_hass_services(hass)
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         assert config_entry.state is ConfigEntryState.NOT_LOADED

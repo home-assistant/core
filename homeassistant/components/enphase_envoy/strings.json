@@ -423,8 +423,8 @@
       "description": "Full tariff information from cache.",
       "fields": {
         "config_entry_id": {
-          "name": "Select Envoy",
-          "description": "Envoy to get data for. Select an Envoy from the integration list. In YAML format this is the config entry id of the Envoy."
+          "name": "Envoy entry",
+          "description": "Envoy to get data for."
         }
       }
     }
