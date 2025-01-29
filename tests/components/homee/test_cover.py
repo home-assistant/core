@@ -2,7 +2,11 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverState
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
+    CoverState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -91,7 +95,13 @@ async def test_cover_positions(
     assert hass.states.get("cover.test_cover").state == CoverState.OPEN
 
     attributes = hass.states.get("cover.test_cover").attributes
-    assert attributes.get("supported_features") == 143
+    assert attributes.get("supported_features") == (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
     assert attributes.get("current_position") == 100
     assert attributes.get("current_tilt_position") == 100
 
@@ -127,3 +137,31 @@ async def test_cover_positions(
     attributes = hass.states.get("cover.test_cover").attributes
     assert attributes.get("current_position") == 75
     assert attributes.get("current_tilt_position") == 74
+
+
+async def test_reversed_cover(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a cover with inverted UP_DOWN attribute without position."""
+    mock_homee.nodes = [build_mock_node("cover_without_position.json")]
+    cover = mock_homee.nodes[0]
+
+    await setup_integration(hass, mock_config_entry)
+
+    cover.attributes[0].is_reversed = True
+    cover.add_on_changed_listener.call_args_list[0][0][0](cover)
+    await hass.async_block_till_done()
+
+    attributes = hass.states.get("cover.test_cover").attributes
+    assert attributes.get("supported_features") == (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    assert hass.states.get("cover.test_cover").state == CoverState.OPEN
+
+    cover.attributes[0].current_value = 0
+    cover.add_on_changed_listener.call_args_list[0][0][0](cover)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("cover.test_cover").state == CoverState.CLOSED
