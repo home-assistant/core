@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, intent, llm, template
+from homeassistant.helpers import device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -367,42 +367,6 @@ class GoogleGenerativeAIConversationEntity(
         return conversation.ConversationResult(
             response=response, conversation_id=session.conversation_id
         )
-
-    async def _async_render_prompt(
-        self,
-        user_input: conversation.ConversationInput,
-        llm_api: llm.APIInstance | None,
-        llm_context: llm.LLMContext,
-    ) -> str:
-        user_name: str | None = None
-        if (
-            user_input.context
-            and user_input.context.user_id
-            and (
-                user := await self.hass.auth.async_get_user(user_input.context.user_id)
-            )
-        ):
-            user_name = user.name
-
-        parts = [
-            template.Template(
-                llm.BASE_PROMPT
-                + self.entry.options.get(CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT),
-                self.hass,
-            ).async_render(
-                {
-                    "ha_name": self.hass.config.location_name,
-                    "user_name": user_name,
-                    "llm_context": llm_context,
-                },
-                parse_result=False,
-            )
-        ]
-
-        if llm_api:
-            parts.append(llm_api.api_prompt)
-
-        return "\n".join(parts)
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
