@@ -175,7 +175,7 @@ class ReolinkHost:
         self.privacy_mode = self._api.baichuan.privacy_mode()
 
         if (
-            store is not None
+            store
             and self._api.supported(None, "privacy_mode")
             and not self.privacy_mode
         ):
