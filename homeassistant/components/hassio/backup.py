@@ -484,11 +484,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 )
                 return
 
-            success = True
-            state = (
-                RestoreBackupState.COMPLETED if success else RestoreBackupState.FAILED
+            on_progress(
+                RestoreBackupEvent(
+                    reason="", stage=None, state=RestoreBackupState.COMPLETED
+                )
             )
-            on_progress(RestoreBackupEvent(reason="", stage=None, state=state))
             on_progress(IdleEvent())
             unsub()
 
