@@ -2295,6 +2295,12 @@
           "iot_class": "cloud_push",
           "name": "Google Cloud"
         },
+        "google_drive": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Google Drive"
+        },
         "google_generative_ai_conversation": {
           "integration_type": "service",
           "config_flow": true,
@@ -3607,6 +3613,12 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "mcp": {
+      "name": "Model Context Protocol",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "mcp_server": {
       "name": "Model Context Protocol Server",
       "integration_type": "service",
@@ -3795,6 +3807,12 @@
           "config_flow": false,
           "iot_class": "cloud_push",
           "name": "Microsoft Teams"
+        },
+        "onedrive": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "OneDrive"
         },
         "xbox": {
           "integration_type": "hub",
@@ -7418,7 +7436,7 @@
     },
     "filter": {
       "integration_type": "helper",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "generic_hygrostat": {

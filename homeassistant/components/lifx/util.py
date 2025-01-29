@@ -24,7 +24,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .const import (
     _ATTR_COLOR_TEMP,

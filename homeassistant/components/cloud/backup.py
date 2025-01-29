@@ -82,8 +82,7 @@ def async_register_backup_agents_listener(
 class CloudBackupAgent(BackupAgent):
     """Cloud backup agent."""
 
-    domain = DOMAIN
-    name = DOMAIN
+    domain = name = unique_id = DOMAIN
 
     def __init__(self, hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
         """Initialize the cloud backup sync agent."""

@@ -36,7 +36,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.event_type import EventType
 
 from .const import (
