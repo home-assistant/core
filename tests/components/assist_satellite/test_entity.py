@@ -489,27 +489,38 @@ async def test_vad_sensitivity_entity_not_found(
             (
                 "Better system prompt",
                 AssistSatelliteAnnouncement(
-                    "Hello", "https://www.home-assistant.io/resolved.mp3", "tts"
+                    message="Hello",
+                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    original_media_id="media-source://generated",
+                    media_id_source="tts",
                 ),
             ),
         ),
         (
             {
                 "start_message": "Hello",
-                "start_media_id": "media-source://bla",
+                "start_media_id": "media-source://given",
             },
             (
                 "Hello",
                 AssistSatelliteAnnouncement(
-                    "Hello", "https://www.home-assistant.io/resolved.mp3", "media_id"
+                    message="Hello",
+                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    original_media_id="media-source://given",
+                    media_id_source="media_id",
                 ),
             ),
         ),
         (
-            {"start_media_id": "http://example.com/bla.mp3"},
+            {"start_media_id": "http://example.com/given.mp3"},
             (
                 None,
-                AssistSatelliteAnnouncement("", "http://example.com/bla.mp3", "url"),
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                ),
             ),
         ),
     ],
@@ -531,7 +542,7 @@ async def test_start_conversation(
     with (
         patch(
             "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
-            return_value="media-source://bla",
+            return_value="media-source://generated",
         ),
         patch(
             "homeassistant.components.media_source.async_resolve_media",
