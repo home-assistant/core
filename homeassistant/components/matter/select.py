@@ -27,6 +27,9 @@ NUMBER_OF_RINSES_STATE_MAP = {
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kMax: "max",
     clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kUnknownEnumValue: None,
 }
+NUMBER_OF_RINSES_STATE_MAP_REVERSE = {
+    v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()
+}
 
 type SelectCluster = (
     clusters.ModeSelect
@@ -60,10 +63,11 @@ class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescrip
 class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterMapSelectEntityDescription."""
 
-    # list_supported: the attribute descriptor to get the list of supported values (= list of integers)
-    list_supported: type[ClusterAttributeDescriptor]
-    # state_map: The MatterIntEnum dict
-    state_map: dict
+    measurement_to_ha: Callable[[int], str | None]
+    ha_to_native_value: Callable[[str], int | None]
+
+    # list attribute: the attribute descriptor to get the list of values (= list of integers)
+    list_attribute: type[ClusterAttributeDescriptor]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -76,40 +80,6 @@ class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     # the callback's argument will be the index of the selected list value
     # if omitted the command will just be a write_attribute command to the primary attribute
     command: Callable[[int], ClusterCommand] | None = None
-
-
-class MatterMapSelectEntity(MatterEntity, SelectEntity):
-    """Representation of a Matter select entity where the options are dynamically defined in a State map and a Matter attribute."""
-
-    entity_description: MatterMapSelectEntityDescription
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        option_id = self._attr_options.index(option)
-
-        if TYPE_CHECKING:
-            assert option_id is not None
-        await self.write_attribute(
-            value=option_id,
-        )
-
-    @callback
-    def _update_from_device(self) -> None:
-        """Update from device."""
-        allowed_values = cast(
-            list[str],
-            self.get_matter_attribute_value(self.entity_description.list_supported),
-        )
-        map_values = self.entity_description.state_map
-        list_values = [value for key, value in map_values.items() if key in allowed_values]
-        self._attr_options = list_values
-        current_option_idx: int = self.get_matter_attribute_value(
-            self._entity_info.primary_attribute
-        )
-        try:
-            self._attr_current_option = map_values[current_option_idx]
-        except IndexError:
-            self._attr_current_option = None
 
 
 class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
@@ -135,6 +105,29 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         if TYPE_CHECKING:
             assert value_convert is not None
         self._attr_current_option = value_convert(value)
+
+
+class MatterMapSelectEntity(MatterAttributeSelectEntity):
+    """Representation of a Matter select entity where the options are defined in a State map."""
+
+    entity_description: MatterMapSelectEntityDescription
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        # the options can dynamically change based on the state of the device
+        available_values = cast(
+            list[int],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        # map available (int) values to string representation
+        self._attr_options = [
+            mapped_value
+            for value in available_values
+            if (mapped_value := self.entity_description.measurement_to_ha(value))
+        ]
+        # use base implementation from MatterAttributeSelectEntity to set the current option
+        super()._update_from_device()
 
 
 class MatterModeSelectEntity(MatterAttributeSelectEntity):
@@ -183,11 +176,12 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
             assert option_id is not None
 
         if self.entity_description.command:
-            # custom command defined
+            # custom command defined to set the new value
             await self.send_device_command(
                 self.entity_description.command(option_id),
             )
             return
+        # regular write attribute to set the new value
         await self.write_attribute(
             value=option_id,
         )
@@ -409,8 +403,9 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterMapSelectEntityDescription(
             key="MatterLaundryWasherNumberOfRinses",
             translation_key="laundry_washer_number_of_rinses",
-            list_supported=clusters.LaundryWasherControls.Attributes.SupportedRinses,
-            state_map=NUMBER_OF_RINSES_STATE_MAP,
+            list_attribute=clusters.LaundryWasherControls.Attributes.SupportedRinses,
+            measurement_to_ha=NUMBER_OF_RINSES_STATE_MAP.get,
+            ha_to_native_value=NUMBER_OF_RINSES_STATE_MAP_REVERSE.get,
         ),
         entity_class=MatterMapSelectEntity,
         required_attributes=(
