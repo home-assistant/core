@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock, patch
 
 import aiohttp
-from aiohttp.client_exceptions import ClientConnectionError
 import pytest
 
 from homeassistant import config_entries
@@ -219,7 +218,7 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
 
 
 @pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
-async def test_reauth_flow_auth_error(
+async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant, region, brand, mock_auth_api: MagicMock
 ) -> None:
     """Test an authorization error reauth flow."""
@@ -247,8 +246,21 @@ async def test_reauth_flow_auth_error(
 
 
 @pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
-async def test_reauth_flow_connnection_error(
-    hass: HomeAssistant, region, brand, mock_auth_api: MagicMock
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reauth_flow_auth_error(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
+    region,
+    brand,
+    mock_auth_api: MagicMock,
 ) -> None:
     """Test a connection error reauth flow."""
 
@@ -265,11 +277,10 @@ async def test_reauth_flow_connnection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_auth_api.return_value.do_auth.side_effect = ClientConnectionError
+    mock_auth_api.return_value.do_auth.side_effect = exception
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
     )
-
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": expected_error}
