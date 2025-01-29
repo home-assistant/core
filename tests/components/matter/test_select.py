@@ -146,15 +146,8 @@ async def test_list_select_entities(
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state.state == "unknown"
 
-
-@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
-async def test_dynamic_list_select_entities(
-    hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
-) -> None:
-    """Test MatterDynamicListSelectEntity entities are discovered and working from a laundrywasher fixture."""
     # SpinSpeedCurrent
+    matter_client.write_attribute.reset_mock()
     state = hass.states.get("select.laundrywasher_spin_speed")
     assert state
     assert state.state == "Off"
