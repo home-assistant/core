@@ -1,12 +1,13 @@
 """Test hardware helpers."""
 
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, call
 
 import pytest
 
 from homeassistant.components.homeassistant_hardware.const import DATA_COMPONENT
 from homeassistant.components.homeassistant_hardware.helpers import (
     notify_firmware_info,
+    register_firmware_info_callback,
     register_firmware_info_provider,
 )
 from homeassistant.components.homeassistant_hardware.util import (
@@ -80,18 +81,31 @@ async def test_dispatcher_registration(hass: HomeAssistant) -> None:
         FIRMWARE_INFO_SPINEL,
     ]
 
-    # And receive notifications
-    with patch.object(
-        hass.data[DATA_COMPONENT],
-        "notify_firmware_info",
-        AsyncMock(wraps=hass.data[DATA_COMPONENT].notify_firmware_info),
-    ) as notify_listener:
-        await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_SPINEL)
-        await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
-        await notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
+    callback1 = Mock()
+    cancel1 = register_firmware_info_callback(
+        hass, "/dev/serial/by-id/device1", callback1
+    )
 
-    assert notify_listener.mock_calls == [
-        call("zha", FIRMWARE_INFO_SPINEL),
-        call("zha", FIRMWARE_INFO_EZSP),
-        call("otbr", FIRMWARE_INFO_SPINEL),
+    callback2 = Mock()
+    cancel2 = register_firmware_info_callback(
+        hass, "/dev/serial/by-id/device2", callback2
+    )
+
+    # And receive notification callbacks
+    await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    await notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
+    await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    cancel1()
+    await notify_firmware_info(hass, "zha", firmware_info=FIRMWARE_INFO_EZSP)
+    await notify_firmware_info(hass, "otbr", firmware_info=FIRMWARE_INFO_SPINEL)
+    cancel2()
+
+    assert callback1.mock_calls == [
+        call(FIRMWARE_INFO_EZSP),
+        call(FIRMWARE_INFO_EZSP),
+    ]
+
+    assert callback2.mock_calls == [
+        call(FIRMWARE_INFO_SPINEL),
+        call(FIRMWARE_INFO_SPINEL),
     ]
