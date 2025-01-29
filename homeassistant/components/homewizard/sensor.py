@@ -116,8 +116,15 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        has_fn=lambda data: data.measurement.wifi_strength is not None,
-        value_fn=lambda data: data.measurement.wifi_strength,
+        has_fn=(
+            lambda data: data.system is not None
+            and data.system.wifi_strength_pct is not None
+        ),
+        value_fn=(
+            lambda data: data.system.wifi_strength_pct
+            if data.system is not None
+            else None
+        ),
     ),
     HomeWizardSensorEntityDescription(
         key="total_power_import_kwh",

@@ -126,6 +126,9 @@
         "state": {
           "on": "mdi:baby-face"
         }
+      },
+      "carpet_boost": {
+        "default": "mdi:rug"
       }
     },
     "sensor": {
@@ -169,7 +172,10 @@
         "default": "mdi:eye-outline"
       },
       "charging_contacts_remaining": {},
-      "charging_contacts_used": {}
+      "charging_contacts_used": {},
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
+      }
     },
     "number": {
       "smooth_transition_off": {
@@ -189,6 +195,9 @@
       },
       "tilt_step": {
         "default": "mdi:unfold-more-horizontal"
+      },
+      "clean_count": {
+        "default": "mdi:counter"
       }
     }
   },
