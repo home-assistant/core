@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from inelsmqtt import InelsMqtt
 from inelsmqtt.devices import Device
 from inelsmqtt.discovery import InelsDiscovery
+from paho.mqtt import MQTTException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -95,12 +96,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
 
     entry.runtime_data = inels_data
 
+    # Raising ConfigEntryNotReady signals to Home Assistant that the setup should be retried later.
+    # It is better to retry the entire setup than to recover from errors.
     try:
         i_disc = InelsDiscovery(mqtt)
         await hass.async_add_executor_job(i_disc.discovery)
 
         inels_data.devices = i_disc.devices
+    except (
+        MQTTException,
+        TimeoutError,
+        OSError,
+        RuntimeError,
+        ValueError,
+        TypeError,
+        AttributeError,
+        KeyError,
+    ) as exc:
+        LOGGER.error("Discovery error %s, reason %s", exc.__class__.__name__, exc)
+        await hass.async_add_executor_job(mqtt.close)
+        raise ConfigEntryNotReady from exc
     except Exception as exc:
+        LOGGER.error(
+            "Discovery unexpected error %s, reason %s", exc.__class__.__name__, exc
+        )
         await hass.async_add_executor_job(mqtt.close)
         raise ConfigEntryNotReady from exc
 
