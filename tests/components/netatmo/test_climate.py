@@ -20,11 +20,7 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.components.netatmo.climate import (
-    PRESET_FROST_GUARD,
-    PRESET_SCHEDULE,
-    PRESET_MANUAL,
-)
+from homeassistant.components.netatmo.climate import (PRESET_FROST_GUARD, PRESET_SCHEDULE, PRESET_MANUAL)
 from homeassistant.components.netatmo.const import (
     ATTR_END_DATETIME,
     ATTR_SCHEDULE_NAME,
