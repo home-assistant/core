@@ -22,5 +22,5 @@ async def async_get_config_entry_diagnostics(
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
         "data": asdict(entry.runtime_data.data),
-        "user": asdict(entry.runtime_data.user) if entry.runtime_data.user else None,
+        "user": asdict(entry.runtime_data.user),
     }
