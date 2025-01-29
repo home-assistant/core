@@ -31,7 +31,7 @@ class ECRuntimeData:
     weather_coordinator: ECDataUpdateCoordinator[ECWeather]
 
 
-class ECDataUpdateCoordinator[ECDataTypeT](DataUpdateCoordinator[ECDataTypeT]):
+class ECDataUpdateCoordinator(DataUpdateCoordinator[ECDataTypeT]):
     """Class to manage fetching EC data."""
 
     config_entry: ECConfigEntry

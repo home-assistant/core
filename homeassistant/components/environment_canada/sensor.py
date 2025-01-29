@@ -271,7 +271,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class ECBaseSensorEntity[ECDataTypeT](
+class ECBaseSensorEntity(
     CoordinatorEntity[ECDataUpdateCoordinator[ECDataTypeT]], SensorEntity
 ):
     """Environment Canada sensor base."""
@@ -301,7 +301,7 @@ class ECBaseSensorEntity[ECDataTypeT](
         return value
 
 
-class ECSensorEntity[ECDataTypeT](ECBaseSensorEntity[ECDataTypeT]):
+class ECSensorEntity(ECBaseSensorEntity[ECDataTypeT]):
     """Environment Canada sensor for conditions."""
 
     def __init__(
