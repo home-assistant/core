@@ -251,8 +251,8 @@ async def test_migrate_entities_unique_ids(hass: HomeAssistant) -> None:
     test_platform = "test_platform"
     test_entity_id = f"{test_platform}.test_entity_id"
     test_entity_unique_id = "zha.test_entity-unique-id"
-    test_entity_id2 = f"{test_platform}.test_entity_id"
-    test_entity_unique_id2 = "zha.test_entity-unique-id"
+    test_entity_id2 = f"{test_platform}.test_entity_id2"
+    test_entity_unique_id2 = "zha.test_entity-unique-id2"
 
     entity_registry = mock_registry(
         hass,
