@@ -19,7 +19,11 @@ from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
 
-from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
+from homeassistant.backup_restore import (
+    RESTORE_BACKUP_FILE,
+    RESTORE_BACKUP_RESULT_FILE,
+    password_to_key,
+)
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -28,7 +32,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.json import json_bytes
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 
 from . import util as backup_util
 from .agent import (
@@ -261,6 +265,14 @@ class BackupReaderWriter(abc.ABC):
     ) -> None:
         """Restore a backup."""
 
+    @abc.abstractmethod
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Get restore events after core restart."""
+
 
 class BackupReaderWriterError(BackupError):
     """Backup reader/writer error."""
@@ -317,6 +329,10 @@ class BackupManager:
         if stored:
             self.config.load(stored["config"])
             self.known_backups.load(stored["backups"])
+
+        await self._reader_writer.async_resume_restore_progress_after_restart(
+            on_progress=self.async_on_backup_event
+        )
 
         await self.load_platforms()
 
@@ -1604,6 +1620,54 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
+
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Check restore status after core restart."""
+
+        def _read_restore_file() -> json_util.JsonObjectType | None:
+            """Read the restore file."""
+            result_path = Path(self._hass.config.path(RESTORE_BACKUP_RESULT_FILE))
+
+            try:
+                restore_result = json_util.json_loads_object(result_path.read_bytes())
+            except FileNotFoundError:
+                return None
+            finally:
+                try:
+                    result_path.unlink(missing_ok=True)
+                except OSError as err:
+                    LOGGER.warning(
+                        "Unexpected error deleting backup restore result file: %s %s",
+                        type(err),
+                        err,
+                    )
+
+            return restore_result
+
+        restore_result = await self._hass.async_add_executor_job(_read_restore_file)
+        if not restore_result:
+            return
+
+        success = restore_result["success"]
+        if not success:
+            LOGGER.warning(
+                "Backup restore failed with %s: %s",
+                restore_result["error_type"],
+                restore_result["error"],
+            )
+        state = RestoreBackupState.COMPLETED if success else RestoreBackupState.FAILED
+        on_progress(
+            RestoreBackupEvent(
+                reason=cast(str, restore_result["error"]),
+                stage=None,
+                state=state,
+            )
+        )
+        on_progress(IdleEvent())
 
 
 def _generate_backup_id(date: str, name: str) -> str:
