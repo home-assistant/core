@@ -4,13 +4,13 @@
 try:
     from homeassistant.components import inels
     from homeassistant.components.inels import config_flow
-    from homeassistant.components.inels.const import DOMAIN, OLD_ENTITIES
+    from homeassistant.components.inels.const import DOMAIN
 
     from tests.common import MockConfigEntry
 except ImportError:
     from custom_components import inels
     from custom_components.inels import config_flow
-    from custom_components.inels.const import DOMAIN, OLD_ENTITIES
+    from custom_components.inels.const import DOMAIN
     from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 
@@ -23,12 +23,12 @@ from homeassistant.helpers.entity import Entity
 
 __all__ = [
     "MockConfigEntry",
-    "inels",
     "config_flow",
     "get_entity",
     "get_entity_id",
-    "set_mock_mqtt",
+    "inels",
     "old_entity_and_device_removal",
+    "set_mock_mqtt",
 ]
 
 MAC_ADDRESS = "001122334455"
@@ -129,28 +129,17 @@ async def old_entity_and_device_removal(
         device_registry.async_get_device({(DOMAIN, old_entity.unique_id)}) is not None
     )
 
-    # Add the old entity to the OLD_ENTITIES
-    hass.data[DOMAIN] = {
-        config_entry.entry_id: {OLD_ENTITIES: {platform: [old_entity.entity_id]}}
-    }
-
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    # The device was discovered, and at this point, the async_remove_old_entities function was called
+    assert config_entry.runtime_data.devices
+    assert old_entity.entity_id not in config_entry.runtime_data.old_entities[platform]
 
     # Get the new entity
     new_entity = entity_registry.async_get(get_entity_id(entity_config, index).lower())
 
     assert new_entity is not None
-
-    # Check that the OLD_ENTITIES list has been updated correctly
-    assert (
-        old_entity.entity_id
-        in hass.data[DOMAIN][config_entry.entry_id][OLD_ENTITIES][platform]
-    )
-    assert (
-        new_entity.entity_id
-        not in hass.data[DOMAIN][config_entry.entry_id][OLD_ENTITIES][platform]
-    )
 
     # Verify that the new entity is in the registry
     assert entity_registry.async_get(new_entity.entity_id) is not None
@@ -160,9 +149,3 @@ async def old_entity_and_device_removal(
 
     # Verify that the device no longer exists in the registry
     assert device_registry.async_get_device({(DOMAIN, old_entity.unique_id)}) is None
-
-    # Assert that old_entity.entity_id is in the OLD_ENTITIES list
-    assert (
-        old_entity.entity_id
-        in hass.data[DOMAIN][config_entry.entry_id][OLD_ENTITIES][platform]
-    )
