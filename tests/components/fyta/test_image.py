@@ -10,6 +10,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.fyta.const import DOMAIN as FYTA_DOMAIN
+from homeassistant.components.image import ImageEntity
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -93,3 +94,36 @@ async def test_add_remove_entities(
 
     assert hass.states.get("image.kakaobaum") is None
     assert hass.states.get("image.tomatenpflanze") is not None
+
+
+async def test_update_image(
+    hass: HomeAssistant,
+    mock_fyta_connector: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test if entity picture is updated."""
+
+    await setup_platform(hass, mock_config_entry, [Platform.IMAGE])
+
+    image_entity: ImageEntity = hass.data["domain_entities"]["image"]["image.gummibaum"]
+
+    assert image_entity.image_url == "http://www.plant_picture.com/picture"
+
+    plants: dict[int, Plant] = {
+        0: Plant.from_dict(
+            load_json_object_fixture("plant_status1_update.json", FYTA_DOMAIN)
+        ),
+        2: Plant.from_dict(load_json_object_fixture("plant_status3.json", FYTA_DOMAIN)),
+    }
+    mock_fyta_connector.update_all_plants.return_value = plants
+    mock_fyta_connector.plant_list = {
+        0: "Kautschukbaum",
+        2: "Tomatenpflanze",
+    }
+
+    freezer.tick(delta=timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert image_entity.image_url == "http://www.plant_picture.com/picture1"

@@ -36,13 +36,7 @@ rules:
     comment: |
       Coordinator and only sensor platform.
 
-  test-coverage:
-    status: exempt
-    comment: |
-      No way to trigger image.image_url in order to test change of source url.
-      In consultation with @joostlek status has been set to exempt until issue
-      could be resolved.
-
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters:
