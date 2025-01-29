@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from operator import methodcaller
 from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Feature
@@ -37,6 +38,8 @@ class TPLinkSensorEntityDescription(
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
+
+_TOTAL_SECONDS_METHOD_CALLER = methodcaller("total_seconds")
 
 SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
@@ -124,62 +127,72 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="main_brush_remaining",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="main_brush_used",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="side_brush_remaining",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="side_brush_used",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="filter_remaining",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="filter_used",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="sensor_remaining",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="sensor_used",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="charging_contacts_remaining",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="charging_contacts_used",
         device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        convert_fn=lambda x: x.total_seconds() / 3600,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="vacuum_error",
