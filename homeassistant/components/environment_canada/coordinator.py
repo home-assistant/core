@@ -19,7 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type ECConfigEntry = ConfigEntry[ECRuntimeData]
-ECDataTypeT = TypeVar("ECDataTypeT", ECAirQuality, ECRadar, ECWeather)
+ECDataTypeT = TypeVar("ECDataTypeT", bound=ECAirQuality | ECRadar | ECWeather)
 
 
 @dataclass
