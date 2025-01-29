@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from kasa import Feature
+from kasa.smart.modules.clean import ErrorCode as VacuumError
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -19,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .const import UNIT_MAPPING
-from .deprecate import async_cleanup_deprecated
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -28,6 +29,9 @@ class TPLinkSensorEntityDescription(
     SensorEntityDescription, TPLinkFeatureEntityDescription
 ):
     """Base class for a TPLink feature based sensor entity description."""
+
+    #: Optional callable to convert the value
+    convert_fn: Callable[[Any], Any] | None = None
 
 
 # Coordinator is used to centralize the data updates
@@ -116,6 +120,12 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="alarm_source",
     ),
+    TPLinkSensorEntityDescription(
+        key="vacuum_error",
+        device_class=SensorDeviceClass.ENUM,
+        options=[name.lower() for name in VacuumError._member_names_],
+        convert_fn=lambda x: x.name.lower(),
+    ),
 )
 
 SENSOR_DESCRIPTIONS_MAP = {desc.key: desc for desc in SENSOR_DESCRIPTIONS}
@@ -141,10 +151,10 @@ async def async_setup_entry(
             feature_type=Feature.Type.Sensor,
             entity_class=TPLinkSensorEntity,
             descriptions=SENSOR_DESCRIPTIONS_MAP,
+            platform_domain=SENSOR_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )
-        async_cleanup_deprecated(hass, SENSOR_DOMAIN, config_entry.entry_id, entities)
         async_add_entities(entities)
 
     _check_device()
@@ -165,6 +175,9 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             value = round(cast(float, value), self._feature.precision_hint)
             # We probably do not need this, when we are rounding already?
             self._attr_suggested_display_precision = self._feature.precision_hint
+
+        if self.entity_description.convert_fn:
+            value = self.entity_description.convert_fn(value)
 
         if TYPE_CHECKING:
             # pylint: disable-next=import-outside-toplevel

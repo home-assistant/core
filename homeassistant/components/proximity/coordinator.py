@@ -23,7 +23,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
 
@@ -75,16 +74,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     config_entry: ProximityConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, friendly_name: str, config: ConfigType
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
         """Initialize the Proximity coordinator."""
-        self.ignored_zone_ids: list[str] = config[CONF_IGNORED_ZONES]
-        self.tracked_entities: list[str] = config[CONF_TRACKED_ENTITIES]
-        self.tolerance: int = config[CONF_TOLERANCE]
-        self.proximity_zone_id: str = config[CONF_ZONE]
+        self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
+        self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
+        self.tolerance: int = config_entry.data[CONF_TOLERANCE]
+        self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
         self.proximity_zone_name: str = self.proximity_zone_id.split(".")[-1]
-        self.unit_of_measurement: str = config.get(
+        self.unit_of_measurement: str = config_entry.data.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
         self.entity_mapping: dict[str, list[str]] = defaultdict(list)
@@ -92,7 +89,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         super().__init__(
             hass,
             _LOGGER,
-            name=friendly_name,
+            config_entry=config_entry,
+            name=config_entry.title,
             update_interval=None,
         )
 

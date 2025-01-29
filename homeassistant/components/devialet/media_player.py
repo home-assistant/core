@@ -16,7 +16,6 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
@@ -25,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, SOUND_MODES
-from .coordinator import DevialetCoordinator
+from .coordinator import DevialetConfigEntry, DevialetCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,14 +50,12 @@ DEVIALET_TO_HA_FEATURE_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DevialetConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Devialet entry."""
-    client = hass.data[DOMAIN][entry.entry_id]
-    coordinator = DevialetCoordinator(hass, client, entry)
-    await coordinator.async_config_entry_first_refresh()
-
-    async_add_entities([DevialetMediaPlayerEntity(coordinator, entry)])
+    async_add_entities([DevialetMediaPlayerEntity(entry.runtime_data, entry)])
 
 
 class DevialetMediaPlayerEntity(
@@ -69,18 +66,18 @@ class DevialetMediaPlayerEntity(
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator: DevialetCoordinator, entry: ConfigEntry) -> None:
+    def __init__(self, coordinator: DevialetCoordinator) -> None:
         """Initialize the Devialet device."""
-        self.coordinator = coordinator
         super().__init__(coordinator)
+        entry = coordinator.config_entry
 
         self._attr_unique_id = str(entry.unique_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             manufacturer=MANUFACTURER,
-            model=self.coordinator.client.model,
+            model=coordinator.client.model,
             name=entry.data[CONF_NAME],
-            sw_version=self.coordinator.client.version,
+            sw_version=coordinator.client.version,
         )
 
     @callback

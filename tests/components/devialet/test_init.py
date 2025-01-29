@@ -39,7 +39,6 @@ async def test_load_unload_config_entry_when_device_unavailable(
     """Test the Devialet configuration entry loading and unloading when the device is unavailable."""
     entry = await setup_integration(hass, aioclient_mock, state="unavailable")
 
-    assert entry.entry_id in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id is not None
 
@@ -49,5 +48,4 @@ async def test_load_unload_config_entry_when_device_unavailable(
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.entry_id not in hass.data[DOMAIN]
     assert entry.state is ConfigEntryState.NOT_LOADED

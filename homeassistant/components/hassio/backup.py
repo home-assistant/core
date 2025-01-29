@@ -8,6 +8,7 @@ import logging
 from pathlib import Path
 from typing import Any, cast
 
+from aiohasupervisor import SupervisorClient
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
     SupervisorError,
@@ -23,6 +24,7 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgent,
+    BackupManagerError,
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
@@ -31,7 +33,9 @@ from homeassistant.components.backup import (
     NewBackup,
     RestoreBackupEvent,
     WrittenBackup,
+    async_get_manager as async_get_backup_manager,
 )
+from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +44,7 @@ from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
 LOCATION_CLOUD_BACKUP = ".cloud_backup"
+LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +134,7 @@ class SupervisorBackupAgent(BackupAgent):
         self._hass = hass
         self._backup_dir = Path("/backups")
         self._client = get_supervisor_client(hass)
-        self.name = name
+        self.name = self.unique_id = name
         self.location = location
 
     async def async_download_backup(
@@ -477,3 +482,67 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             self._hass, EVENT_SUPERVISOR_EVENT, handle_signal
         )
         return unsub
+
+
+async def _default_agent(client: SupervisorClient) -> str:
+    """Return the default agent for creating a backup."""
+    mounts = await client.mounts.info()
+    default_mount = mounts.default_backup_mount
+    return f"hassio.{default_mount if default_mount is not None else 'local'}"
+
+
+async def backup_addon_before_update(
+    hass: HomeAssistant,
+    addon: str,
+    addon_name: str | None,
+    installed_version: str | None,
+) -> None:
+    """Prepare for updating an add-on."""
+    backup_manager = hass.data[DATA_MANAGER]
+    client = get_supervisor_client(hass)
+
+    # Use the password from automatic settings if available
+    if backup_manager.config.data.create_backup.agent_ids:
+        password = backup_manager.config.data.create_backup.password
+    else:
+        password = None
+
+    try:
+        await backup_manager.async_create_backup(
+            agent_ids=[await _default_agent(client)],
+            extra_metadata={"supervisor.addon_update": addon},
+            include_addons=[addon],
+            include_all_addons=False,
+            include_database=False,
+            include_folders=None,
+            include_homeassistant=False,
+            name=f"{addon_name or addon} {installed_version or '<unknown>'}",
+            password=password,
+        )
+    except BackupManagerError as err:
+        raise HomeAssistantError(f"Error creating backup: {err}") from err
+
+
+async def backup_core_before_update(hass: HomeAssistant) -> None:
+    """Prepare for updating core."""
+    backup_manager = async_get_backup_manager(hass)
+    client = get_supervisor_client(hass)
+
+    try:
+        if backup_manager.config.data.create_backup.agent_ids:
+            # Create a backup with automatic settings
+            await backup_manager.async_create_automatic_backup()
+        else:
+            # Create a manual backup
+            await backup_manager.async_create_backup(
+                agent_ids=[await _default_agent(client)],
+                include_addons=None,
+                include_all_addons=False,
+                include_database=True,
+                include_folders=None,
+                include_homeassistant=True,
+                name=f"Home Assistant Core {HAVERSION}",
+                password=None,
+            )
+    except BackupManagerError as err:
+        raise HomeAssistantError(f"Error creating backup: {err}") from err

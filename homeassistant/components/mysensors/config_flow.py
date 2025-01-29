@@ -20,8 +20,7 @@ from homeassistant.components.mqtt import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import callback
-from homeassistant.helpers import selector
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
