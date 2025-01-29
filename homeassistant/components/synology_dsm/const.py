@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from aiohttp import ClientTimeout
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 from synology_dsm.exceptions import (
@@ -15,8 +17,12 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.const import Platform
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "synology_dsm"
+DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
+    f"{DOMAIN}_backup_agent_listeners"
+)
 ATTRIBUTION = "Data provided by Synology"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -34,6 +40,8 @@ CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
 CONF_DEVICE_TOKEN = "device_token"
 CONF_SNAPSHOT_QUALITY = "snap_profile_type"
+CONF_BACKUP_SHARE = "backup_share"
+CONF_BACKUP_PATH = "backup_path"
 
 DEFAULT_USE_SSL = True
 DEFAULT_VERIFY_SSL = False
@@ -43,6 +51,7 @@ DEFAULT_PORT_SSL = 5001
 DEFAULT_SCAN_INTERVAL = 15  # min
 DEFAULT_TIMEOUT = ClientTimeout(total=60, connect=15)
 DEFAULT_SNAPSHOT_QUALITY = SNAPSHOT_PROFILE_BALANCED
+DEFAULT_BACKUP_PATH = "ha_backup"
 
 ENTITY_UNIT_LOAD = "load"
 

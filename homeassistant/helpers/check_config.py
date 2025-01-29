@@ -29,7 +29,7 @@ from homeassistant.requirements import (
     async_clear_install_history,
     async_get_integration_with_requirements,
 )
-import homeassistant.util.yaml.loader as yaml_loader
+from homeassistant.util.yaml import loader as yaml_loader
 
 from . import config_validation as cv
 from .typing import ConfigType

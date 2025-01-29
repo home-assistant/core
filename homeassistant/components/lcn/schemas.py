@@ -9,7 +9,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     UnitOfTemperature,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (

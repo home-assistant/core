@@ -40,6 +40,7 @@ BACKUP_START_TIME_JITTER = 60 * 60
 class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
+    agents: dict[str, StoredAgentConfig]
     create_backup: StoredCreateBackupConfig
     last_attempted_automatic_backup: str | None
     last_completed_automatic_backup: str | None
@@ -51,6 +52,7 @@ class StoredBackupConfig(TypedDict):
 class BackupConfigData:
     """Represent loaded backup config data."""
 
+    agents: dict[str, AgentConfig]
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
     last_completed_automatic_backup: datetime | None = None
@@ -84,6 +86,10 @@ class BackupConfigData:
         days = [Day(day) for day in data["schedule"]["days"]]
 
         return cls(
+            agents={
+                agent_id: AgentConfig(protected=agent_data["protected"])
+                for agent_id, agent_data in data["agents"].items()
+            },
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
                 include_addons=data["create_backup"]["include_addons"],
@@ -102,7 +108,7 @@ class BackupConfigData:
             schedule=BackupSchedule(
                 days=days,
                 recurrence=ScheduleRecurrence(data["schedule"]["recurrence"]),
-                state=ScheduleState(data["schedule"]["state"]),
+                state=ScheduleState(data["schedule"].get("state", ScheduleState.NEVER)),
                 time=time,
             ),
         )
@@ -120,6 +126,9 @@ class BackupConfigData:
             last_completed = None
 
         return StoredBackupConfig(
+            agents={
+                agent_id: agent.to_dict() for agent_id, agent in self.agents.items()
+            },
             create_backup=self.create_backup.to_dict(),
             last_attempted_automatic_backup=last_attempted,
             last_completed_automatic_backup=last_completed,
@@ -134,6 +143,7 @@ class BackupConfig:
     def __init__(self, hass: HomeAssistant, manager: BackupManager) -> None:
         """Initialize backup config."""
         self.data = BackupConfigData(
+            agents={},
             create_backup=CreateBackupConfig(),
             retention=RetentionConfig(),
             schedule=BackupSchedule(),
@@ -149,11 +159,20 @@ class BackupConfig:
     async def update(
         self,
         *,
+        agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         retention: RetentionParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
+        if agents is not UNDEFINED:
+            for agent_id, agent_config in agents.items():
+                if agent_id not in self.data.agents:
+                    self.data.agents[agent_id] = AgentConfig(**agent_config)
+                else:
+                    self.data.agents[agent_id] = replace(
+                        self.data.agents[agent_id], **agent_config
+                    )
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:
@@ -168,6 +187,31 @@ class BackupConfig:
                 self.data.schedule.apply(self._manager)
 
         self._manager.store.save()
+
+
+@dataclass(kw_only=True)
+class AgentConfig:
+    """Represent the config for an agent."""
+
+    protected: bool
+
+    def to_dict(self) -> StoredAgentConfig:
+        """Convert agent config to a dict."""
+        return {
+            "protected": self.protected,
+        }
+
+
+class StoredAgentConfig(TypedDict):
+    """Represent the stored config for an agent."""
+
+    protected: bool
+
+
+class AgentParametersDict(TypedDict, total=False):
+    """Represent the parameters for an agent."""
+
+    protected: bool
 
 
 @dataclass(kw_only=True)
@@ -320,6 +364,7 @@ class BackupSchedule:
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
     next_automatic_backup: datetime | None = field(init=False, default=None)
+    next_automatic_backup_additional = False
 
     @callback
     def apply(
@@ -378,25 +423,22 @@ class BackupSchedule:
             # add a day to the next time to avoid scheduling at the same time again
             self.cron_event = CronSim(cron_pattern, now + timedelta(days=1))
 
+            # Compare the computed next time with the next time from the cron pattern
+            # to determine if an additional backup has been scheduled
+            cron_event_configured = CronSim(cron_pattern, now)
+            next_configured_time = next(cron_event_configured)
+            self.next_automatic_backup_additional = next_time < next_configured_time
+        else:
+            self.next_automatic_backup_additional = False
+
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
             manager.remove_next_backup_event = None
-            config_data = manager.config.data
             self._schedule_next(cron_pattern, manager)
 
             # create the backup
             try:
-                await manager.async_create_backup(
-                    agent_ids=config_data.create_backup.agent_ids,
-                    include_addons=config_data.create_backup.include_addons,
-                    include_all_addons=config_data.create_backup.include_all_addons,
-                    include_database=config_data.create_backup.include_database,
-                    include_folders=config_data.create_backup.include_folders,
-                    include_homeassistant=True,  # always include HA
-                    name=config_data.create_backup.name,
-                    password=config_data.create_backup.password,
-                    with_automatic_settings=True,
-                )
+                await manager.async_create_automatic_backup()
             except BackupManagerError as err:
                 LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001

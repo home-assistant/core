@@ -49,6 +49,12 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
+
+        # The iot HS300 allows a limited number of concurrent requests and
+        # fetching the emeter information requires separate ones, so child
+        # coordinators are created below in get_child_coordinator.
+        self._update_children = not isinstance(device, IotStrip)
+
         super().__init__(
             hass,
             _LOGGER,
@@ -68,7 +74,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:
-            await self.device.update(update_children=False)
+            await self.device.update(update_children=self._update_children)
         except AuthenticationError as ex:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,

@@ -1,9 +1,12 @@
 """Data coordinators for the ring integration."""
 
+from __future__ import annotations
+
 from asyncio import TaskGroup
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ring_doorbell import (
     AuthenticationError,
@@ -15,7 +18,7 @@ from ring_doorbell import (
 )
 from ring_doorbell.listen import RingEventListener
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import (
@@ -27,6 +30,19 @@ from homeassistant.helpers.update_coordinator import (
 from .const import SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class RingData:
+    """Class to support type hinting of ring data collection."""
+
+    api: Ring
+    devices: RingDevices
+    devices_coordinator: RingDataCoordinator
+    listen_coordinator: RingListenCoordinator
+
+
+type RingConfigEntry = ConfigEntry[RingData]
 
 
 async def _call_api[*_Ts, _R](
@@ -52,9 +68,12 @@ async def _call_api[*_Ts, _R](
 class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
     """Base class for device coordinators."""
 
+    config_entry: RingConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RingConfigEntry,
         ring_api: Ring,
     ) -> None:
         """Initialize my coordinator."""
@@ -63,6 +82,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
             name="devices",
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
         )
         self.ring_api: Ring = ring_api
         self.first_call: bool = True
@@ -107,11 +127,12 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
 class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
     """Global notifications coordinator."""
 
-    config_entry: config_entries.ConfigEntry
+    config_entry: RingConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RingConfigEntry,
         ring_api: Ring,
         listen_credentials: dict[str, Any] | None,
         listen_credentials_updater: Callable[[dict[str, Any]], None],
@@ -126,9 +147,6 @@ class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._listen_callback_id: int | None = None
 
-        config_entry = config_entries.current_entry.get()
-        if TYPE_CHECKING:
-            assert config_entry
         self.config_entry = config_entry
         self.start_timeout = 10
         self.config_entry.async_on_unload(self.async_shutdown)

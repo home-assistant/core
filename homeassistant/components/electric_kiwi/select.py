@@ -5,14 +5,13 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, HOP_COORDINATOR
-from .coordinator import ElectricKiwiHOPDataCoordinator
+from .const import ATTRIBUTION
+from .coordinator import ElectricKiwiConfigEntry, ElectricKiwiHOPDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 ATTR_EK_HOP_SELECT = "hop_select"
@@ -25,12 +24,12 @@ HOP_SELECT = SelectEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ElectricKiwiConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Electric Kiwi select setup."""
-    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        HOP_COORDINATOR
-    ]
+    hop_coordinator = entry.runtime_data.hop
 
     _LOGGER.debug("Setting up select entity")
     async_add_entities([ElectricKiwiSelectHOPEntity(hop_coordinator, HOP_SELECT)])
