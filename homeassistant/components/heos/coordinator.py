@@ -5,9 +5,10 @@ The coordinator is responsible for refreshing data in response to system-wide ev
 entities to update. Entities subscribe to entity-specific updates within the entity class itself.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from pyheos import (
     Credentials,
@@ -23,7 +24,7 @@ from pyheos import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
@@ -60,13 +61,18 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         self._update_sources_pending: bool = False
         self._source_list: list[str] = []
         self._favorites: dict[int, MediaItem] = {}
-        self._inputs: list[MediaItem] = []
+        self._inputs: Sequence[MediaItem] = []
         super().__init__(hass, _LOGGER, config_entry=config_entry, name=DOMAIN)
 
     @property
-    def inputs(self) -> list[MediaItem]:
+    def inputs(self) -> Sequence[MediaItem]:
         """Get input sources across all devices."""
         return self._inputs
+
+    @property
+    def favorites(self) -> dict[int, MediaItem]:
+        """Get favorite stations."""
+        return self._favorites
 
     async def async_setup(self) -> None:
         """Set up the coordinator; connect to the host; and retrieve initial data."""
@@ -101,7 +107,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         await self.heos.disconnect()
         await super().async_shutdown()
 
-    def async_add_listener(self, update_callback, context=None) -> Callable[[], None]:
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
         """Add a listener for the coordinator."""
         remove_listener = super().async_add_listener(update_callback, context)
         # Update entities so group_member entity_ids fully populate.
@@ -133,8 +141,6 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
             assert data is not None
             if data.updated_player_ids:
                 self._async_update_player_ids(data.updated_player_ids)
-        elif event == const.EVENT_GROUPS_CHANGED:
-            await self._async_update_players()
         elif (
             event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED)
             and not self._update_sources_pending

@@ -9,7 +9,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,

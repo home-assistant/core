@@ -81,10 +81,12 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "permanent": "permanent",
-              "ventilation": "schedule",
-              "sensor_driven": "sensor",
-              "sensor_override": "schedule with sensor-override"
+              "standby": "[%key:common::state::standby%]",
+              "permanent": "Permanent",
+              "ventilation": "Schedule",
+              "sensor_driven": "Sensor-driven",
+              "sensor_override": "Schedule with sensor-override",
+              "standard": "Minimal"
             }
           }
         }
@@ -375,25 +377,25 @@
         "name": "Energy export to grid"
       },
       "photovoltaic_power_production_current": {
-        "name": "Solar power"
+        "name": "PV power"
       },
       "photovoltaic_energy_production_today": {
-        "name": "Solar energy production today"
+        "name": "PV energy production today"
       },
       "photovoltaic_energy_production_this_week": {
-        "name": "Solar energy production this week"
+        "name": "PV energy production this week"
       },
       "photovoltaic_energy_production_this_month": {
-        "name": "Solar energy production this month"
+        "name": "PV energy production this month"
       },
       "photovoltaic_energy_production_this_year": {
-        "name": "Solar energy production this year"
+        "name": "PV energy production this year"
       },
       "photovoltaic_energy_production_total": {
-        "name": "Solar energy production total"
+        "name": "PV energy production total"
       },
       "photovoltaic_status": {
-        "name": "Solar state",
+        "name": "PV state",
         "state": {
           "ready": "Standby",
           "production": "Producing"
@@ -464,6 +466,15 @@
       },
       "heating_rod_hours": {
         "name": "Heating rod hours"
+      },
+      "spf_total": {
+        "name": "Seasonal performance factor"
+      },
+      "spf_dhw": {
+        "name": "Seasonal performance factor - domestic hot water"
+      },
+      "spf_heating": {
+        "name": "Seasonal performance factor - heating"
       }
     },
     "water_heater": {
