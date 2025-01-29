@@ -2384,6 +2384,9 @@ python-gc100==1.0.3a0
 # homeassistant.components.gitlab_ci
 python-gitlab==1.6.0
 
+# homeassistant.components.google_drive
+python-google-drive-api==0.0.2
+
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.8.1
 
