@@ -8,13 +8,13 @@ from typing import Any
 from inelsmqtt.devices import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .const import DEVICES, DOMAIN, ICON_SWITCH, LOGGER, OLD_ENTITIES
+from . import InelsConfigEntry
+from .const import ICON_SWITCH, LOGGER
 from .entity import InelsBaseEntity
 
 
@@ -48,18 +48,15 @@ INELS_SWITCH_TYPES: dict[str, InelsSwitchType] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: InelsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load iNELS switch.."""
-    device_list: list[Device] = hass.data[DOMAIN][config_entry.entry_id][DEVICES]
-    old_entities: list[str] = hass.data[DOMAIN][config_entry.entry_id][
-        OLD_ENTITIES
-    ].get(Platform.SWITCH, [])
+    old_entities: list[str] = entry.runtime_data.old_entities.get(Platform.SWITCH, [])
 
     items = INELS_SWITCH_TYPES.items()
     entities: list[InelsBaseEntity] = []
-    for device in device_list:
+    for device in entry.runtime_data.devices:
         for key, type_dict in items:
             if hasattr(device.state, key):
                 if len(device.state.__dict__[key]) == 1:
@@ -85,7 +82,7 @@ async def async_setup_entry(
                                 index=k,
                                 description=InelsSwitchEntityDescription(
                                     key=f"{key}{k}",
-                                    name=f"{type_dict.name} {k+1}"
+                                    name=f"{type_dict.name} {k + 1}"
                                     if device.inels_type != "BITS"
                                     else f"Bit {device.state.__dict__[key][k].addr}",
                                     icon=type_dict.icon,
@@ -101,10 +98,6 @@ async def async_setup_entry(
         for entity in entities:
             if entity.entity_id in old_entities:
                 old_entities.pop(old_entities.index(entity.entity_id))
-
-    hass.data[DOMAIN][config_entry.entry_id][OLD_ENTITIES][Platform.SWITCH] = (
-        old_entities
-    )
 
 
 @dataclass(frozen=True)
