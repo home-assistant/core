@@ -32,8 +32,7 @@ from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
-from .store import ReolinkStore
-from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch
+from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
 from .views import PlaybackProxyView
 
 _LOGGER = logging.getLogger(__name__)
@@ -259,7 +258,7 @@ async def async_remove_entry(
     hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> None:
     """Handle removal of an entry."""
-    store = ReolinkStore(hass, config_entry.entry_id)
+    store = get_store(hass, config_entry.entry_id)
     await store.async_remove()
 
 

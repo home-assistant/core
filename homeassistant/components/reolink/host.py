@@ -30,6 +30,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
 from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
@@ -39,7 +40,7 @@ from .exceptions import (
     ReolinkWebhookException,
     UserNotAdmin,
 )
-from .store import ReolinkStore
+from .util import get_store
 
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
@@ -154,12 +155,13 @@ class ReolinkHost:
                 f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
             )
 
-        store: ReolinkStore | None = None
+        store: Store[str] | None = None
         if self._config_entry_id is not None:
-            store = ReolinkStore(self._hass, self._config_entry_id)
+            store = get_store(self._hass, self._config_entry_id)
             if self._config.get(CONF_SUPPORTS_PRIVACY_MODE):
                 data = await store.async_load()
-                self._api.set_raw_host_data(data)
+                if data:
+                    self._api.set_raw_host_data(data)
 
         await self._api.get_host_data()
 
@@ -183,7 +185,7 @@ class ReolinkHost:
                 "Saving raw host data for next reload in case privacy mode is enabled"
             )
             data = self._api.get_raw_host_data()
-            await store.async_store(data)
+            await store.async_save(data)
 
         onvif_supported = self._api.supported(None, "ONVIF")
         self._onvif_push_supported = onvif_supported

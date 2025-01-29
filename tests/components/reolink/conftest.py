@@ -9,7 +9,11 @@ from reolink_aio.baichuan import Baichuan
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.const import (
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -59,9 +63,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def reolink_connect_class() -> Generator[MagicMock]:
     """Mock reolink connection and return both the host_mock and host_mock_class."""
     with (
-        patch(
-            "homeassistant.components.reolink.store.Path", autospec=True
-        ) as path_mock_class,
         patch(
             "homeassistant.components.reolink.host.Host", autospec=True
         ) as host_mock_class,
@@ -118,6 +119,9 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
         host_mock.checked_api_versions = {"GetEvents": 1}
         host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}
+        host_mock.get_raw_host_data.return_value = (
+            "{'host':'TEST_RESPONSE','channel':'TEST_RESPONSE'}"
+        )
 
         # enums
         host_mock.whiteled_mode.return_value = 1
@@ -133,9 +137,6 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.baichuan.events_active = False
         host_mock.baichuan.privacy_mode.return_value = False
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
-
-        # store path_mock
-        host_mock.path_mock = path_mock_class.return_value
 
         yield host_mock_class
 
