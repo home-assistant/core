@@ -160,9 +160,9 @@ async def test_event_sensors(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     client.get_status.return_value.status.extend(
         Status(
-            StatusKey(event_key.value),
-            event_key.value,
-            value,
+            key=StatusKey(event_key.value),
+            raw_key=event_key.value,
+            value=value,
         )
         for event_key, value in EVENT_PROG_DELAYED_START[EventType.STATUS].items()
     )
@@ -177,12 +177,12 @@ async def test_event_sensors(
                 ArrayOfEvents(
                     [
                         Event(
-                            event_key,
-                            event_key.value,
-                            0,
-                            "",
-                            "",
-                            value,
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=value,
                         )
                     ],
                 ),
@@ -244,12 +244,12 @@ async def test_remaining_prog_time_edge_cases(
                     ArrayOfEvents(
                         [
                             Event(
-                                event_key,
-                                event_key.value,
-                                0,
-                                "",
-                                "",
-                                value,
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=value,
                             )
                         ],
                     ),
@@ -390,12 +390,12 @@ async def test_sensors_states(
                 ArrayOfEvents(
                     [
                         Event(
-                            event_key,
-                            str(event_key),
-                            0,
-                            "",
-                            "",
-                            event_value_update,
+                            key=event_key,
+                            raw_key=str(event_key),
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=event_value_update,
                         )
                     ],
                 ),

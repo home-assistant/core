@@ -130,7 +130,9 @@ class HomeConnectCoordinator(
                                     statuses[status_key].value = event.value
                                 else:
                                     statuses[status_key] = Status(
-                                        status_key, status_key.value, event.value
+                                        key=status_key,
+                                        raw_key=status_key.value,
+                                        value=event.value,
                                     )
 
                         case EventType.NOTIFY:
@@ -143,7 +145,9 @@ class HomeConnectCoordinator(
                                         settings[setting_key].value = event.value
                                     else:
                                         settings[setting_key] = GetSetting(
-                                            setting_key, setting_key.value, event.value
+                                            key=setting_key,
+                                            raw_key=setting_key.value,
+                                            value=event.value,
                                         )
                                 else:
                                     events[event.key] = event

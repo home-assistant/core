@@ -161,21 +161,21 @@ def _get_set_program_side_effect(
                     ArrayOfEvents(
                         [
                             Event(
-                                event_key,
-                                event_key.value,
-                                0,
-                                "",
-                                "",
-                                str(kwargs["program_key"]),
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=str(kwargs["program_key"]),
                             ),
                             *[
                                 Event(
-                                    (option_event := EventKey(option.key)),
-                                    option_event.value,
-                                    0,
-                                    "",
-                                    "",
-                                    str(option.key),
+                                    key=(option_event := EventKey(option.key)),
+                                    raw_key=option_event.value,
+                                    timestamp=0,
+                                    level="",
+                                    handling="",
+                                    value=str(option.key),
                                 )
                                 for option in cast(
                                     list[Option], kwargs.get("options", [])
@@ -205,12 +205,12 @@ def _get_set_key_value_side_effect(
                     ArrayOfEvents(
                         [
                             Event(
-                                event_key,
-                                event_key.value,
-                                0,
-                                "",
-                                "",
-                                kwargs["value"],
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=kwargs["value"],
                             )
                         ]
                     ),

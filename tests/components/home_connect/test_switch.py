@@ -157,12 +157,12 @@ async def test_program_switch_functionality(
                     ArrayOfEvents(
                         [
                             Event(
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
-                                0,
-                                "",
-                                "",
-                                ProgramKey.UNKNOWN,
+                                key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                                raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=ProgramKey.UNKNOWN,
                             )
                         ]
                     ),
@@ -256,8 +256,8 @@ async def test_switch_exception_handling(
         ArrayOfAvailablePrograms(
             [
                 EnumerateAvailableProgram(
-                    ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
                 )
             ]
         )
@@ -266,14 +266,14 @@ async def test_switch_exception_handling(
     client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                SettingKey.BSH_COMMON_CHILD_LOCK,
-                SettingKey.BSH_COMMON_CHILD_LOCK.value,
-                False,
+                key=SettingKey.BSH_COMMON_CHILD_LOCK,
+                raw_key=SettingKey.BSH_COMMON_CHILD_LOCK.value,
+                value=False,
             ),
             GetSetting(
-                SettingKey.BSH_COMMON_POWER_STATE,
-                SettingKey.BSH_COMMON_POWER_STATE.value,
-                BSH_POWER_ON,
+                key=SettingKey.BSH_COMMON_POWER_STATE,
+                raw_key=SettingKey.BSH_COMMON_POWER_STATE.value,
+                value=BSH_POWER_ON,
                 constraints=SettingConstraints(
                     allowed_values=[BSH_POWER_ON, BSH_POWER_OFF]
                 ),
@@ -387,9 +387,9 @@ async def test_ent_desc_switch_exception_handling(
     client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                key,
-                key.value,
-                value,
+                key=key,
+                raw_key=key.value,
+                value=value,
             )
             for key, value in status.items()
         ]
@@ -471,9 +471,9 @@ async def test_power_swtich(
     client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                SettingKey.BSH_COMMON_POWER_STATE,
-                SettingKey.BSH_COMMON_POWER_STATE.value,
-                "",
+                key=SettingKey.BSH_COMMON_POWER_STATE,
+                raw_key=SettingKey.BSH_COMMON_POWER_STATE.value,
+                value="",
                 constraints=SettingConstraints(
                     allowed_values=allowed_values,
                 ),
@@ -515,9 +515,9 @@ async def test_power_switch_fetch_off_state_from_current_value(
     client.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                SettingKey.BSH_COMMON_POWER_STATE,
-                SettingKey.BSH_COMMON_POWER_STATE.value,
-                initial_value,
+                key=SettingKey.BSH_COMMON_POWER_STATE,
+                raw_key=SettingKey.BSH_COMMON_POWER_STATE.value,
+                value=initial_value,
             )
         ]
     )
@@ -570,18 +570,18 @@ async def test_power_switch_service_validation_errors(
         client.get_settings.return_value = ArrayOfSettings(
             [
                 GetSetting(
-                    SettingKey.BSH_COMMON_POWER_STATE,
-                    SettingKey.BSH_COMMON_POWER_STATE.value,
-                    BSH_POWER_ON,
+                    key=SettingKey.BSH_COMMON_POWER_STATE,
+                    raw_key=SettingKey.BSH_COMMON_POWER_STATE.value,
+                    value=BSH_POWER_ON,
                 )
             ]
         )
         client.get_setting = AsyncMock(side_effect=exception)
     else:
         setting = GetSetting(
-            SettingKey.BSH_COMMON_POWER_STATE,
-            SettingKey.BSH_COMMON_POWER_STATE.value,
-            BSH_POWER_ON,
+            key=SettingKey.BSH_COMMON_POWER_STATE,
+            raw_key=SettingKey.BSH_COMMON_POWER_STATE.value,
+            value=BSH_POWER_ON,
             constraints=SettingConstraints(
                 allowed_values=allowed_values,
             ),

@@ -146,12 +146,12 @@ async def test_event_listener(
         ArrayOfEvents(
             [
                 Event(
-                    event_key,
-                    event_key.value,
-                    0,
-                    "",
-                    "",
-                    event_value,
+                    key=event_key,
+                    raw_key=event_key.value,
+                    timestamp=0,
+                    level="",
+                    handling="",
+                    value=event_value,
                 )
             ],
         ),
@@ -212,12 +212,12 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
                 ArrayOfEvents(
                     [
                         Event(
-                            EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL,
-                            EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL.value,
-                            0,
-                            "",
-                            "",
-                            "some value",
+                            key=EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL,
+                            raw_key=EventKey.LAUNDRY_CARE_WASHER_SETTING_I_DOS_1_BASE_LEVEL.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="some value",
                         )
                     ],
                 ),
@@ -228,12 +228,12 @@ async def tests_receive_setting_and_status_for_first_time_at_events(
                 ArrayOfEvents(
                     [
                         Event(
-                            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
-                            EventKey.BSH_COMMON_STATUS_DOOR_STATE.value,
-                            0,
-                            "",
-                            "",
-                            "some value",
+                            key=EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+                            raw_key=EventKey.BSH_COMMON_STATUS_DOOR_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="some value",
                         )
                     ],
                 ),
@@ -337,7 +337,7 @@ async def test_event_listener_resilience(
     assert hass.states.is_state(entity_id, initial_state)
 
     client.get_status.return_value = ArrayOfStatus(
-        [Status(status_key, status_key.value, status_value)],
+        [Status(key=status_key, raw_key=status_key.value, value=status_value)],
     )
     await hass.async_block_till_done()
     future.set_exception(exception)
@@ -355,12 +355,12 @@ async def test_event_listener_resilience(
                 ArrayOfEvents(
                     [
                         Event(
-                            event_key,
-                            event_key.value,
-                            0,
-                            "",
-                            "",
-                            event_value,
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=event_value,
                         )
                     ],
                 ),

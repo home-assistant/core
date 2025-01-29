@@ -65,12 +65,12 @@ async def test_filter_unknown_programs(
     client.get_available_programs.return_value = ArrayOfAvailablePrograms(
         [
             EnumerateAvailableProgram(
-                ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
             ),
             EnumerateAvailableProgram(
-                ProgramKey.UNKNOWN,
-                "an unknown program",
+                key=ProgramKey.UNKNOWN,
+                raw_key="an unknown program",
             ),
         ]
     )
@@ -152,12 +152,12 @@ async def test_select_program_functionality(
                 ArrayOfEvents(
                     [
                         Event(
-                            event_key,
-                            event_key.value,
-                            0,
-                            "",
-                            "",
-                            "A not known program",
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="A not known program",
                         )
                     ]
                 ),
@@ -207,8 +207,8 @@ async def test_select_exception_handling(
         ArrayOfAvailablePrograms(
             [
                 EnumerateAvailableProgram(
-                    ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
                 )
             ]
         )

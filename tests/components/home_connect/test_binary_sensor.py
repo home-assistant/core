@@ -77,12 +77,12 @@ async def test_binary_sensors_door_states(
                 ArrayOfEvents(
                     [
                         Event(
-                            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
-                            EventKey.BSH_COMMON_STATUS_DOOR_STATE.value,
-                            0,
-                            "",
-                            "",
-                            value,
+                            key=EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+                            raw_key=EventKey.BSH_COMMON_STATUS_DOOR_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=value,
                         )
                     ],
                 ),
@@ -165,12 +165,12 @@ async def test_binary_sensors_functionality(
                 ArrayOfEvents(
                     [
                         Event(
-                            event_key,
-                            event_key.value,
-                            0,
-                            "",
-                            "",
-                            event_value_update,
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=event_value_update,
                         )
                     ],
                 ),

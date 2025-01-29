@@ -262,12 +262,12 @@ async def test_light_color_different_than_custom(
                 ArrayOfEvents(
                     [
                         Event(
-                            event_key,
-                            event_key.value,
-                            0,
-                            "",
-                            "",
-                            value,
+                            key=event_key,
+                            raw_key=event_key.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=value,
                         )
                         for event_key, value in events.items()
                     ]
@@ -408,9 +408,9 @@ async def test_light_exception_handling(
     client_with_exception.get_settings.return_value = ArrayOfSettings(
         [
             GetSetting(
-                setting_key,
-                setting_key.value,
-                value,
+                key=setting_key,
+                raw_key=setting_key.value,
+                value=value,
             )
             for setting_key, value in setting.items()
         ]
