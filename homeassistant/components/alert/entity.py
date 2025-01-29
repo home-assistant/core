@@ -195,7 +195,9 @@ class AlertEntity(Entity):
             self._async_fire_event(
                 AlertNotifyAction.generate,
                 message,
-                self._next_delay - int(self._skip_first),
+                # The first notification that gets sent will have a repeat value of 0.
+                # So if the first repeat was skipped, offset the count by 1.
+                repeat=self._next_delay - int(self._skip_first),
             )
 
             await self._send_notification_message(message)
