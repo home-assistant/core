@@ -344,7 +344,8 @@
   "clean_time": {
     "type": "Sensor",
     "category": "Info",
-    "value": 60
+    "value": 12,
+    "timedelta_type": "minutes"
   },
   "clean_area": {
     "type": "Sensor",
@@ -362,7 +363,8 @@
   "total_clean_time": {
     "type": "Sensor",
     "category": "Debug",
-    "value": 5
+    "value": 120,
+    "timedelta_type": "minutes"
   },
   "total_clean_area": {
     "type": "Sensor",
@@ -374,7 +376,8 @@
   "last_clean_time": {
     "type": "Sensor",
     "category": "Debug",
-    "value": 5
+    "value": 60,
+    "timedelta_type": "minutes"
   },
   "last_clean_area": {
     "type": "Sensor",

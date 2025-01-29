@@ -128,6 +128,9 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="clean_time",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="clean_area",
@@ -139,6 +142,9 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="last_clean_time",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="last_clean_area",
@@ -151,6 +157,9 @@ SENSOR_DESCRIPTIONS: tuple[TPLinkSensorEntityDescription, ...] = (
     TPLinkSensorEntityDescription(
         key="total_clean_time",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        convert_fn=_TOTAL_SECONDS_METHOD_CALLER,
     ),
     TPLinkSensorEntityDescription(
         key="total_clean_area",
