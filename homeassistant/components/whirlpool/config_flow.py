@@ -9,7 +9,7 @@ from typing import Any
 from aiohttp import ClientError
 import voluptuous as vol
 from whirlpool.appliancesmanager import AppliancesManager
-from whirlpool.auth import Auth
+from whirlpool.auth import AccountLockedError as WhirlpoolAccountLocked, Auth
 from whirlpool.backendselector import BackendSelector
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -55,6 +55,8 @@ async def authenticate(
 
     try:
         await auth.do_auth()
+    except WhirlpoolAccountLocked:
+        return "account_locked"
     except (TimeoutError, ClientError):
         return "cannot_connect"
     except Exception:
