@@ -198,7 +198,7 @@ async def handle_can_decrypt_on_download(
         vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
         vol.Optional("name"): str,
-        vol.Optional("password"): str,
+        vol.Optional("password"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
