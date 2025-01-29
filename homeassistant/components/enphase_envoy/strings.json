@@ -400,6 +400,12 @@
     },
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
+    },
+    "switch_on_error": {
+      "message": "Failed to switch {switch} on, host: {host}: {args}"
+    },
+    "switch_off_error": {
+      "message": "Failed to switch {switch} off, host: {host}: {args}"
     }
   }
 }

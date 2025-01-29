@@ -6,13 +6,16 @@ from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
 
+from httpx import HTTPError
 from pyenphase import Envoy, EnvoyDryContactStatus, EnvoyEnpower
 from pyenphase.const import SupportedFeatures
+from pyenphase.exceptions import EnvoyError
 from pyenphase.models.dry_contacts import DryContactStatus
 from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -21,6 +24,7 @@ from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 from .entity import EnvoyBaseEntity
 
 PARALLEL_UPDATES = 1
+ACTIONERRORS = (EnvoyError, HTTPError)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -149,12 +153,34 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Enpower switch."""
-        await self.entity_description.turn_on_fn(self.envoy)
+        try:
+            await self.entity_description.turn_on_fn(self.envoy)
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_on_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "switch": self.entity_id,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Enpower switch."""
-        await self.entity_description.turn_off_fn(self.envoy)
+        try:
+            await self.entity_description.turn_off_fn(self.envoy)
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_off_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "switch": self.entity_id,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
 
 
@@ -197,13 +223,35 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on (close) the dry contact."""
-        if await self.entity_description.turn_on_fn(self.envoy, self.relay_id):
-            self.async_write_ha_state()
+        try:
+            if await self.entity_description.turn_on_fn(self.envoy, self.relay_id):
+                self.async_write_ha_state()
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_on_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "switch": self.relay_id,
+                },
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off (open) the dry contact."""
-        if await self.entity_description.turn_off_fn(self.envoy, self.relay_id):
-            self.async_write_ha_state()
+        try:
+            if await self.entity_description.turn_off_fn(self.envoy, self.relay_id):
+                self.async_write_ha_state()
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_off_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "switch": self.relay_id,
+                },
+            ) from err
 
 
 class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
@@ -254,10 +302,32 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the storage settings switch."""
-        await self.entity_description.turn_on_fn(self.envoy)
+        try:
+            await self.entity_description.turn_on_fn(self.envoy)
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_on_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "switch": self.entity_id,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the storage switch."""
-        await self.entity_description.turn_off_fn(self.envoy)
+        try:
+            await self.entity_description.turn_off_fn(self.envoy)
+        except ACTIONERRORS as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="switch_off_error",
+                translation_placeholders={
+                    "host": self.envoy.host,
+                    "args": err.args[0],
+                    "switch": self.entity_id,
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
