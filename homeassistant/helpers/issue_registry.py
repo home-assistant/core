@@ -12,8 +12,8 @@ from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-import homeassistant.util.dt as dt_util
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 

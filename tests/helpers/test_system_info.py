@@ -9,17 +9,7 @@ import pytest
 from homeassistant.components import hassio
 from homeassistant.const import __version__ as current_version
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.system_info import async_get_system_info, is_official_image
-
-
-async def test_is_official_image() -> None:
-    """Test is_official_image."""
-    is_official_image.cache_clear()
-    with patch("homeassistant.helpers.system_info.os.path.isfile", return_value=True):
-        assert is_official_image() is True
-    is_official_image.cache_clear()
-    with patch("homeassistant.helpers.system_info.os.path.isfile", return_value=False):
-        assert is_official_image() is False
+from homeassistant.helpers.system_info import async_get_system_info
 
 
 async def test_get_system_info(hass: HomeAssistant) -> None:

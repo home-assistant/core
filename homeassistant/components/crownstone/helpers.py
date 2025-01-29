@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 import os
 
 from serial.tools.list_ports_common import ListPortInfo
@@ -12,7 +13,7 @@ from .const import DONT_USE_USB, MANUAL_PATH, REFRESH_LIST
 
 
 def list_ports_as_str(
-    serial_ports: list[ListPortInfo], no_usb_option: bool = True
+    serial_ports: Sequence[ListPortInfo], no_usb_option: bool = True
 ) -> list[str]:
     """Represent currently available serial ports as string.
 

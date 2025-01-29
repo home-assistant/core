@@ -20,13 +20,13 @@ class BringBaseEntity(CoordinatorEntity[BringDataUpdateCoordinator]):
         bring_list: BringData,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, bring_list.lst.listUuid)
 
-        self._list_uuid = bring_list["listUuid"]
+        self._list_uuid = bring_list.lst.listUuid
 
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            name=bring_list["name"],
+            name=bring_list.lst.name,
             identifiers={
                 (DOMAIN, f"{coordinator.config_entry.unique_id}_{self._list_uuid}")
             },

@@ -16,15 +16,25 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("fixture_type", "fixture_data"),
+    [
+        ("type:boiler", "vicare/Vitodens300W.json"),
+        ("type:heatpump", "vicare/Vitocal250A.json"),
+        ("type:ventilation", "vicare/ViAir300F.json"),
+    ],
+)
 async def test_all_entities(
     hass: HomeAssistant,
+    fixture_type: str,
+    fixture_data: str,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
     fixtures: list[Fixture] = [
-        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
+        Fixture({fixture_type}, fixture_data),
     ]
     with (
         patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),

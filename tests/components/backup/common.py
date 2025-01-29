@@ -64,6 +64,7 @@ class BackupAgentTest(BackupAgent):
     def __init__(self, name: str, backups: list[AgentBackup] | None = None) -> None:
         """Initialize the backup agent."""
         self.name = name
+        self.unique_id = name
         if backups is None:
             backups = [
                 AgentBackup(
@@ -166,3 +167,15 @@ async def setup_backup_integration(
                 agent._loaded_backups = True
 
         return result
+
+
+async def setup_backup_platform(
+    hass: HomeAssistant,
+    *,
+    domain: str,
+    platform: Any,
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, f"{domain}.backup", platform)
+    assert await async_setup_component(hass, domain, {})
+    await hass.async_block_till_done()

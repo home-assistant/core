@@ -8,7 +8,7 @@ import itertools
 import logging
 from typing import Any, cast
 
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
@@ -33,7 +33,7 @@ from homeassistant.core import (
     validate_state,
 )
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     TrackTemplate,

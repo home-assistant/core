@@ -1,5 +1,8 @@
 {
   "battery_level": 80,
+  "fertilisation": {
+    "was_repotted": false
+  },
   "low_battery": true,
   "last_updated": "2023-01-02 10:10:00",
   "light": 2,

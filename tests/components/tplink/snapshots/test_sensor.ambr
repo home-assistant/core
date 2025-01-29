@@ -115,7 +115,7 @@
     'state': '2024-06-24T09:03:11+00:00',
   })
 # ---
-# name: test_states[sensor.my_device_battery_level-entry]
+# name: test_states[sensor.my_device_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -129,7 +129,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_device_battery_level',
+    'entity_id': 'sensor.my_device_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -141,7 +141,7 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery level',
+    'original_name': 'Battery',
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -150,16 +150,16 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_states[sensor.my_device_battery_level-state]
+# name: test_states[sensor.my_device_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'my_device Battery level',
+      'friendly_name': 'my_device Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_device_battery_level',
+    'entity_id': 'sensor.my_device_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -305,6 +305,82 @@
     'translation_key': 'device_time',
     'unique_id': '123456789ABCDEFGH_device_time',
     'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.my_device_error-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ok',
+        'sidebrushstuck',
+        'mainbrushstuck',
+        'wheelblocked',
+        'trapped',
+        'trappedcliff',
+        'dustbinremoved',
+        'unabletomove',
+        'lidarblocked',
+        'unabletofinddock',
+        'batterylow',
+        'unknowninternal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_device_error',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Error',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'vacuum_error',
+    'unique_id': '123456789ABCDEFGH_vacuum_error',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.my_device_error-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'my_device Error',
+      'options': list([
+        'ok',
+        'sidebrushstuck',
+        'mainbrushstuck',
+        'wheelblocked',
+        'trapped',
+        'trappedcliff',
+        'dustbinremoved',
+        'unabletomove',
+        'lidarblocked',
+        'unabletofinddock',
+        'batterylow',
+        'unknowninternal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_device_error',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ok',
   })
 # ---
 # name: test_states[sensor.my_device_humidity-entry]

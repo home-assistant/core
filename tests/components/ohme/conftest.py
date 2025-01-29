@@ -53,6 +53,10 @@ def mock_client():
         client.async_login.return_value = True
         client.status = ChargerStatus.CHARGING
         client.power = ChargerPower(0, 0, 0, 0)
+
+        client.target_soc = 50
+        client.target_time = (8, 0)
+        client.battery = 80
         client.serial = "chargerid"
         client.ct_connected = True
         client.energy = 1000

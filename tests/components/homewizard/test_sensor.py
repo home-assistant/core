@@ -3,7 +3,6 @@
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import RequestError
-from homewizard_energy.v1.models import Data
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -292,6 +291,19 @@ pytestmark = [
                 "sensor.water_meter_water",
             ],
         ),
+        (
+            "HWE-BAT",
+            [
+                "sensor.device_battery_cycles",
+                "sensor.device_current",
+                "sensor.device_energy_export",
+                "sensor.device_energy_import",
+                "sensor.device_frequency",
+                "sensor.device_power",
+                "sensor.device_state_of_charge",
+                "sensor.device_voltage",
+            ],
+        ),
     ],
 )
 async def test_sensors(
@@ -432,6 +444,14 @@ async def test_sensors(
                 "sensor.device_wi_fi_strength",
             ],
         ),
+        (
+            "HWE-BAT",
+            [
+                "sensor.device_current",
+                "sensor.device_frequency",
+                "sensor.device_voltage",
+            ],
+        ),
     ],
 )
 async def test_disabled_by_default_sensors(
@@ -456,7 +476,7 @@ async def test_sensors_unreachable(
     assert (state := hass.states.get("sensor.device_energy_import_tariff_1"))
     assert state.state == "10830.511"
 
-    mock_homewizardenergy.data.side_effect = exception
+    mock_homewizardenergy.combined.side_effect = exception
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
@@ -464,15 +484,17 @@ async def test_sensors_unreachable(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize("exception", [RequestError])
 async def test_external_sensors_unreachable(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
+    exception: Exception,
 ) -> None:
     """Test external device sensor handles API unreachable."""
     assert (state := hass.states.get("sensor.gas_meter_gas"))
     assert state.state == "111.111"
 
-    mock_homewizardenergy.data.return_value = Data.from_dict({})
+    mock_homewizardenergy.combined.side_effect = exception
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
@@ -491,6 +513,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -520,6 +543,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_reactive_power",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
                 "sensor.device_voltage_phase_1",
@@ -542,6 +566,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_2",
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -567,6 +592,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_reactive_power_phase_3",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
                 "sensor.device_voltage_phase_1",
@@ -589,6 +615,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -622,6 +649,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_reactive_power",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_voltage_phase_1",
                 "sensor.device_voltage_phase_2",
@@ -643,6 +671,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_average_demand",
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -669,6 +698,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_reactive_power_phase_3",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
                 "sensor.device_voltage_phase_1",
@@ -687,6 +717,7 @@ async def test_external_sensors_unreachable(
             "SDM630",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -705,6 +736,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_power_failures_detected",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
                 "sensor.device_voltage_phase_1",
@@ -728,6 +760,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_average_demand",
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -754,6 +787,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_reactive_power_phase_3",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
                 "sensor.device_voltage_phase_1",
@@ -772,6 +806,7 @@ async def test_external_sensors_unreachable(
             "HWE-KWH3",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -790,6 +825,7 @@ async def test_external_sensors_unreachable(
                 "sensor.device_power_failures_detected",
                 "sensor.device_smart_meter_identifier",
                 "sensor.device_smart_meter_model",
+                "sensor.device_state_of_charge",
                 "sensor.device_tariff",
                 "sensor.device_total_water_usage",
                 "sensor.device_voltage_phase_1",
@@ -802,6 +838,54 @@ async def test_external_sensors_unreachable(
                 "sensor.device_voltage_swells_detected_phase_2",
                 "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_voltage",
+                "sensor.device_water_usage",
+            ],
+        ),
+        (
+            "HWE-BAT",
+            [
+                "sensor.device_apparent_power_phase_1",
+                "sensor.device_apparent_power_phase_2",
+                "sensor.device_apparent_power_phase_3",
+                "sensor.device_apparent_power",
+                "sensor.device_average_demand",
+                "sensor.device_current_phase_1",
+                "sensor.device_current_phase_2",
+                "sensor.device_current_phase_3",
+                "sensor.device_dsmr_version",
+                "sensor.device_energy_export_tariff_1",
+                "sensor.device_energy_export_tariff_2",
+                "sensor.device_energy_export_tariff_4",
+                "sensor.device_energy_import_tariff_1",
+                "sensor.device_energy_import_tariff_2",
+                "sensor.device_energy_import_tariff_3",
+                "sensor.device_energy_import_tariff_4",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_factor_phase_1",
+                "sensor.device_power_factor_phase_2",
+                "sensor.device_power_factor_phase_3",
+                "sensor.device_power_factor",
+                "sensor.device_power_failures_detected",
+                "sensor.device_power_phase_1",
+                "sensor.device_power_phase_3",
+                "sensor.device_reactive_power_phase_1",
+                "sensor.device_reactive_power_phase_2",
+                "sensor.device_reactive_power_phase_3",
+                "sensor.device_reactive_power",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_tariff",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_phase_1",
+                "sensor.device_voltage_phase_2",
+                "sensor.device_voltage_phase_3",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
                 "sensor.device_water_usage",
             ],
         ),

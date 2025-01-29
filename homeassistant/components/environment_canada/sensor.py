@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCATION,
     DEGREE,
@@ -28,7 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import device_info
-from .const import ATTR_STATION, DOMAIN
+from .const import ATTR_STATION
+from .coordinator import ECConfigEntry
 
 ATTR_TIME = "alert time"
 
@@ -251,15 +251,17 @@ ALERT_TYPES: tuple[ECSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ECConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
-    sensors: list[ECBaseSensor] = [ECSensor(coordinator, desc) for desc in SENSOR_TYPES]
-    sensors.extend([ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES])
-    aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
-    sensors.append(ECSensor(aqhi_coordinator, AQHI_SENSOR))
+    weather_coordinator = config_entry.runtime_data.weather_coordinator
+    sensors: list[ECBaseSensor] = [
+        ECSensor(weather_coordinator, desc) for desc in SENSOR_TYPES
+    ]
+    sensors.extend([ECAlertSensor(weather_coordinator, desc) for desc in ALERT_TYPES])
+
+    sensors.append(ECSensor(config_entry.runtime_data.aqhi_coordinator, AQHI_SENSOR))
     async_add_entities(sensors)
 
 
