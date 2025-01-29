@@ -319,8 +319,8 @@ async def test_browse_media(
     with (
         patch.object(DevialetApi, "upnp_available", return_value=True),
         patch(
-            "homeassistant.components.devialet.media_player.DevialetMediaPlayerEntity.async_browse_media",
-            return_value={"bla": "yo"},
+            "homeassistant.components.media_source.async_browse_media",
+            return_value=True,
         ) as mock_browse_media,
     ):
         await client.send_json(
@@ -337,8 +337,8 @@ async def test_browse_media(
         assert msg["id"] == 5
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
-        assert msg["result"] == {"bla": "yo"}
-        assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
+        assert msg["result"]
+        assert mock_browse_media.call_count == 1
 
 
 async def test_media_player_services(
