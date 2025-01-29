@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_state_attributes
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'entity_picture': 'http://',
+      'friendly_name': 'Test Player',
+      'group_members': list([
+        'media_player.test_player',
+        'media_player.test_player_2',
+      ]),
+      'is_volume_muted': False,
+      'media_album_id': '1',
+      'media_album_name': 'Album',
+      'media_artist': 'Artist',
+      'media_content_id': '1',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_queue_id': 1,
+      'media_source_id': 10,
+      'media_station': 'Station Name',
+      'media_title': 'Song',
+      'media_type': <MediaType.STATION: 'station'>,
+      'repeat': <RepeatMode.OFF: 'off'>,
+      'shuffle': False,
+      'source_list': list([
+        "Today's Hits Radio",
+        'Classical MPR (Classical Music)',
+        'HEOS Drive - Line In 1',
+        'Speaker - Line In 1',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 3079741>,
+      'volume_level': 0.25,
+    }),
+    'entity_id': 'media_player.test_player',
+    'state': 'idle',
+  })
+# ---

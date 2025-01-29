@@ -19,6 +19,11 @@ MQTT = {
     "pglab": [
         "pglab/discovery/#",
     ],
+    "qbus": [
+        "cloudapp/QBUSMQTTGW/state",
+        "cloudapp/QBUSMQTTGW/config",
+        "cloudapp/QBUSMQTTGW/+/state",
+    ],
     "tasmota": [
         "tasmota/discovery/#",
     ],

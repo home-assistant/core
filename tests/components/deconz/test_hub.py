@@ -6,18 +6,18 @@ from pydeconz.websocket import State
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components import ssdp
 from homeassistant.components.deconz.config_flow import DECONZ_MANUFACTURERURL
 from homeassistant.components.deconz.const import DOMAIN as DECONZ_DOMAIN
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_MANUFACTURER_URL,
-    ATTR_UPNP_SERIAL,
-    ATTR_UPNP_UDN,
-)
 from homeassistant.config_entries import SOURCE_SSDP
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER_URL,
+    ATTR_UPNP_SERIAL,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from .conftest import BRIDGE_ID
 
@@ -81,7 +81,7 @@ async def test_update_address(
     ):
         await hass.config_entries.flow.async_init(
             DECONZ_DOMAIN,
-            data=ssdp.SsdpServiceInfo(
+            data=SsdpServiceInfo(
                 ssdp_st="mock_st",
                 ssdp_usn="mock_usn",
                 ssdp_location="http://2.3.4.5:80/",

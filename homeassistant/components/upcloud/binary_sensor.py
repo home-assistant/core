@@ -7,7 +7,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpCloudConfigEntry
+from .coordinator import UpCloudConfigEntry
 from .entity import UpCloudServerEntity
 
 

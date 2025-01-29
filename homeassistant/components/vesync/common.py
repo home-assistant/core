@@ -7,7 +7,31 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.core import HomeAssistant
 
+from .const import VeSyncHumidifierDevice
+
 _LOGGER = logging.getLogger(__name__)
+
+
+def rgetattr(obj: object, attr: str):
+    """Return a string in the form word.1.2.3 and return the item as 3. Note that this last value could be in a dict as well."""
+    _this_func = rgetattr
+    sp = attr.split(".", 1)
+    if len(sp) == 1:
+        left, right = sp[0], ""
+    else:
+        left, right = sp
+
+    if isinstance(obj, dict):
+        obj = obj.get(left)
+    elif hasattr(obj, left):
+        obj = getattr(obj, left)
+    else:
+        return None
+
+    if right:
+        obj = _this_func(obj, right)
+
+    return obj
 
 
 async def async_generate_device_list(
@@ -24,3 +48,9 @@ async def async_generate_device_list(
     devices.extend(manager.switches)
 
     return devices
+
+
+def is_humidifier(device: VeSyncBaseDevice) -> bool:
+    """Check if the device represents a humidifier."""
+
+    return isinstance(device, VeSyncHumidifierDevice)

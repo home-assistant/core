@@ -11,7 +11,7 @@ from homeassistant.components.tts import (
     Provider,
 )
 from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"

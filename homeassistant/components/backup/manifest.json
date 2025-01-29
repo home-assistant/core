@@ -8,5 +8,5 @@
   "integration_type": "system",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["cronsim==2.6", "securetar==2024.11.0"]
+  "requirements": ["cronsim==2.6", "securetar==2025.1.4"]
 }

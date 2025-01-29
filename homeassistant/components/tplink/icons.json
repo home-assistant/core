@@ -113,6 +113,9 @@
         "state": {
           "on": "mdi:baby-face"
         }
+      },
+      "carpet_boost": {
+        "default": "mdi:rug"
       }
     },
     "sensor": {
@@ -130,6 +133,9 @@
       },
       "water_alert_timestamp": {
         "default": "mdi:clock-alert-outline"
+      },
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
       }
     },
     "number": {
@@ -145,14 +151,14 @@
       "temperature_offset": {
         "default": "mdi:contrast"
       },
-      "target_temperature": {
-        "default": "mdi:thermometer"
-      },
       "pan_step": {
         "default": "mdi:unfold-more-vertical"
       },
       "tilt_step": {
         "default": "mdi:unfold-more-horizontal"
+      },
+      "clean_count": {
+        "default": "mdi:counter"
       }
     }
   },

@@ -22,7 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
+from . import DOMAIN, DeconzConfigEntry
 from .deconz_event import (
     CONF_DECONZ_EVENT,
     CONF_GESTURE,
@@ -31,7 +31,6 @@ from .deconz_event import (
     DeconzPresenceEvent,
     DeconzRelativeRotaryEvent,
 )
-from .hub import DeconzHub
 
 CONF_SUBTYPE = "subtype"
 
@@ -684,9 +683,9 @@ def _get_deconz_event_from_device(
     device: dr.DeviceEntry,
 ) -> DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent:
     """Resolve deconz event from device."""
-    hubs: dict[str, DeconzHub] = hass.data.get(DOMAIN, {})
-    for hub in hubs.values():
-        for deconz_event in hub.events:
+    entry: DeconzConfigEntry
+    for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        for deconz_event in entry.runtime_data.events:
             if device.id == deconz_event.device_id:
                 return deconz_event
 

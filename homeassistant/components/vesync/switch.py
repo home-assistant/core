@@ -45,18 +45,13 @@ def _setup_entities(
     async_add_entities,
     coordinator: VeSyncDataCoordinator,
 ):
-    """Check if device is online and add entity."""
+    """Check if device is a switch and add entity."""
     entities: list[VeSyncBaseSwitch] = []
     for dev in devices:
         if DEV_TYPE_TO_HA.get(dev.device_type) == "outlet":
             entities.append(VeSyncSwitchHA(dev, coordinator))
         elif DEV_TYPE_TO_HA.get(dev.device_type) == "switch":
             entities.append(VeSyncLightSwitch(dev, coordinator))
-        else:
-            _LOGGER.warning(
-                "%s - Unknown device type - %s", dev.device_name, dev.device_type
-            )
-            continue
 
     async_add_entities(entities, update_before_add=True)
 

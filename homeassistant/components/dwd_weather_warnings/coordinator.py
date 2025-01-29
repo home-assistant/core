@@ -7,7 +7,7 @@ from dwdwfsapi import DwdWeatherWarningsAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 
 from .const import (
     CONF_REGION_DEVICE_TRACKER,
@@ -58,7 +58,7 @@ class DwdWeatherWarningsCoordinator(DataUpdateCoordinator[None]):
 
             distance = None
             if self._previous_position is not None:
-                distance = location.distance(
+                distance = location_util.distance(
                     self._previous_position[0],
                     self._previous_position[1],
                     position[0],

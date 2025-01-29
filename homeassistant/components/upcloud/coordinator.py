@@ -4,18 +4,18 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
 import upcloud_api
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-if TYPE_CHECKING:
-    from . import UpCloudConfigEntry
-
 _LOGGER = logging.getLogger(__name__)
+
+
+type UpCloudConfigEntry = ConfigEntry[UpCloudDataUpdateCoordinator]
 
 
 class UpCloudDataUpdateCoordinator(
@@ -27,13 +27,18 @@ class UpCloudDataUpdateCoordinator(
         self,
         hass: HomeAssistant,
         *,
+        config_entry: UpCloudConfigEntry,
         cloud_manager: upcloud_api.CloudManager,
         update_interval: timedelta,
         username: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, _LOGGER, name=f"{username}@UpCloud", update_interval=update_interval
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{username}@UpCloud",
+            update_interval=update_interval,
         )
         self.cloud_manager = cloud_manager
 

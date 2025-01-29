@@ -21,8 +21,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.helpers import discovery_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -386,7 +385,7 @@ async def async_start(  # noqa: C901
         _async_add_component(discovery_payload)
 
     @callback
-    def async_discovery_message_received(msg: ReceiveMessage) -> None:  # noqa: C901
+    def async_discovery_message_received(msg: ReceiveMessage) -> None:
         """Process the received message."""
         mqtt_data.last_discovery = msg.timestamp
         payload = msg.payload
