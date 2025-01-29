@@ -13,6 +13,7 @@ from io import StringIO
 import os
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
+from uuid import UUID
 
 from aiohasupervisor.exceptions import (
     SupervisorBadRequestError,
@@ -21,6 +22,7 @@ from aiohasupervisor.exceptions import (
 )
 from aiohasupervisor.models import (
     backups as supervisor_backups,
+    jobs as supervisor_jobs,
     mounts as supervisor_mounts,
 )
 from aiohasupervisor.models.mounts import MountsInfo
@@ -35,7 +37,11 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.hassio.backup import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL
+from homeassistant.components.hassio.backup import (
+    LOCATION_CLOUD_BACKUP,
+    LOCATION_LOCAL,
+    RESTORE_JOB_ID_ENV,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -1528,3 +1534,69 @@ async def test_reader_writer_restore_wrong_parameters(
         "code": "home_assistant_error",
         "message": expected_error,
     }
+
+
+@pytest.mark.usefixtures("hassio_client")
+async def test_restore_progress_after_restart(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test restore backup progress after restart."""
+
+    supervisor_client.jobs.get_job.return_value = supervisor_jobs.Job(
+        name="backup_manager_partial_backup",
+        reference="1ef41507",
+        uuid=UUID("d17bd02be1f0437fa7264b16d38f700e"),
+        progress=0.0,
+        stage="copy_additional_locations",
+        done=True,
+        errors=[],
+        child_jobs=[],
+    )
+
+    with patch.dict(
+        os.environ,
+        MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: "d17bd02be1f0437fa7264b16d38f700e"},
+    ):
+        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["last_non_idle_event"] == {
+        "manager_state": "restore_backup",
+        "reason": "",
+        "stage": None,
+        "state": "completed",
+    }
+    assert response["result"]["state"] == "idle"
+
+
+@pytest.mark.usefixtures("hassio_client")
+async def test_restore_progress_after_restart_unknown_job(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test restore backup progress after restart."""
+
+    supervisor_client.jobs.get_job.side_effect = SupervisorError
+
+    with patch.dict(
+        os.environ,
+        MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: "d17bd02be1f0437fa7264b16d38f700e"},
+    ):
+        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({"type": "backup/info"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["last_non_idle_event"] is None
+    assert response["result"]["state"] == "idle"

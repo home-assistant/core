@@ -5,8 +5,10 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import logging
+import os
 from pathlib import Path
 from typing import Any, cast
+from uuid import UUID
 
 from aiohasupervisor import SupervisorClient
 from aiohasupervisor.exceptions import (
@@ -33,6 +35,7 @@ from homeassistant.components.backup import (
     IncorrectPasswordError,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
 )
@@ -47,6 +50,7 @@ from .handler import get_supervisor_client
 LOCATION_CLOUD_BACKUP = ".cloud_backup"
 LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
+RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -463,6 +467,37 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
     ) -> None:
         """Check restore status after core restart."""
+        if not (restore_job_id := os.environ.get(RESTORE_JOB_ID_ENV)):
+            _LOGGER.debug("No restore job ID found in environment")
+            return
+
+        _LOGGER.debug("Found restore job ID %s in environment", restore_job_id)
+
+        @callback
+        def on_job_progress(data: Mapping[str, Any]) -> None:
+            """Handle backup restore progress."""
+            if data.get("done") is not True:
+                on_progress(
+                    RestoreBackupEvent(
+                        reason="", stage=None, state=RestoreBackupState.IN_PROGRESS
+                    )
+                )
+                return
+
+            success = True
+            state = (
+                RestoreBackupState.COMPLETED if success else RestoreBackupState.FAILED
+            )
+            on_progress(RestoreBackupEvent(reason="", stage=None, state=state))
+            on_progress(IdleEvent())
+            unsub()
+
+        unsub = self._async_listen_job_events(restore_job_id, on_job_progress)
+        try:
+            await self._get_job_state(restore_job_id, on_job_progress)
+        except SupervisorError as err:
+            _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
+            unsub()
 
     @callback
     def _async_listen_job_events(
@@ -490,6 +525,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             self._hass, EVENT_SUPERVISOR_EVENT, handle_signal
         )
         return unsub
+
+    async def _get_job_state(
+        self, job_id: str, on_event: Callable[[Mapping[str, Any]], None]
+    ) -> None:
+        """Poll a job for its state."""
+        job = await self._client.jobs.get_job(UUID(job_id))
+        _LOGGER.debug("Job state: %s", job)
+        on_event(job.to_dict())
 
 
 async def _default_agent(client: SupervisorClient) -> str:
