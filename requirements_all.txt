@@ -1434,9 +1434,6 @@ motioneye-client==0.3.14
 # homeassistant.components.bang_olufsen
 mozart-api==4.1.1.116.4
 
-# homeassistant.components.onedrive
-msgraph-sdk==1.16.0
-
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
@@ -1557,6 +1554,9 @@ omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
+
+# homeassistant.components.onedrive
+onedrive_personal_sdk==0.0.1a2
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
