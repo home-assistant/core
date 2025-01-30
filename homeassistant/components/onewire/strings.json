@@ -60,7 +60,7 @@
         "name": "Voltage {id}"
       },
       "latestvolt_id": {
-        "name": "Latest Voltage {id}"
+        "name": "Latest voltage {id}"
       },
       "counter_id": {
         "name": "Counter {id}"
