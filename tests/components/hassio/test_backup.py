@@ -544,7 +544,7 @@ async def test_agent_download(
     hass_client: ClientSessionGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test agent download backup, when cloud user is logged in."""
+    """Test agent download backup."""
     client = await hass_client()
     backup_id = "abc123"
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
@@ -568,7 +568,7 @@ async def test_agent_download_unavailable_backup(
     hass_client: ClientSessionGenerator,
     supervisor_client: AsyncMock,
 ) -> None:
-    """Test agent download backup, when cloud user is logged in."""
+    """Test agent download backup which does not exist."""
     client = await hass_client()
     backup_id = "abc123"
     supervisor_client.backups.list.return_value = [TEST_BACKUP_3]
@@ -631,6 +631,91 @@ async def test_agent_upload(
 
 
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
+async def test_agent_get_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test agent get backup."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    backup_id = "abc123"
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/details",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "agent_errors": {},
+        "backup": {
+            "addons": [
+                {"name": "Terminal & SSH", "slug": "core_ssh", "version": "9.14.0"}
+            ],
+            "agents": {"hassio.local": {"protected": False, "size": 1048576}},
+            "backup_id": "abc123",
+            "database_included": True,
+            "date": "1970-01-01T00:00:00+00:00",
+            "failed_agent_ids": [],
+            "folders": ["share"],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0",
+            "name": "Test",
+            "with_automatic_settings": None,
+        },
+    }
+    supervisor_client.backups.backup_info.assert_called_once_with(backup_id)
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.parametrize(
+    ("backup_info_side_effect", "expected_response"),
+    [
+        (
+            SupervisorBadRequestError("blah"),
+            {
+                "success": False,
+                "error": {"code": "unknown_error", "message": "Unknown error"},
+            },
+        ),
+        (
+            SupervisorNotFoundError(),
+            {
+                "success": True,
+                "result": {"agent_errors": {}, "backup": None},
+            },
+        ),
+    ],
+)
+async def test_agent_get_backup_with_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    backup_info_side_effect: Exception,
+    expected_response: dict[str, Any],
+) -> None:
+    """Test agent get backup."""
+    client = await hass_ws_client(hass)
+    backup_id = "abc123"
+
+    supervisor_client.backups.backup_info.side_effect = backup_info_side_effect
+    await client.send_json_auto_id(
+        {
+            "type": "backup/details",
+            "backup_id": backup_id,
+        }
+    )
+    response = await client.receive_json()
+
+    assert response == {"id": 1, "type": "result"} | expected_response
+    supervisor_client.backups.backup_info.assert_called_once_with(backup_id)
+
+
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_agent_delete_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -664,13 +749,6 @@ async def test_agent_delete_backup(
             {
                 "success": False,
                 "error": {"code": "unknown_error", "message": "Unknown error"},
-            },
-        ),
-        (
-            SupervisorBadRequestError("Backup does not exist"),
-            {
-                "success": True,
-                "result": {"agent_errors": {}},
             },
         ),
         (
