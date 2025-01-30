@@ -279,7 +279,7 @@ async def test_agents_download(
     ("side_effect", "error"),
     [
         (
-            APIError(response_status_code=404, message="File not found."),
+            APIError(response_status_code=500),
             "Backup operation failed",
         ),
         (TimeoutError(), "Backup operation timed out"),
