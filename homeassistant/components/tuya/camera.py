@@ -20,6 +20,7 @@ CAMERAS: tuple[str, ...] = (
     # Smart Camera (including doorbells)
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sp",
+    "dghsxj"
 )
 
 

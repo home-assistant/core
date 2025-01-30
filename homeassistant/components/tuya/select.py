@@ -128,6 +128,39 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="motion_sensitivity",
         ),
     ),
+    # Smart Camera - Unsupported
+    "dghsxj": (
+        SelectEntityDescription(
+            key=DPCode.IPC_WORK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="ipc_work_mode",
+        ),
+        SelectEntityDescription(
+            key=DPCode.DECIBEL_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="decibel_sensitivity",
+        ),
+        SelectEntityDescription(
+            key=DPCode.RECORD_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="record_mode",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BASIC_NIGHTVISION,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="basic_nightvision",
+        ),
+        SelectEntityDescription(
+            key=DPCode.BASIC_ANTI_FLICKER,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="basic_anti_flicker",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOTION_SENSITIVITY,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="motion_sensitivity",
+        ),
+    ),
     # IoT Switch?
     # Note: Undocumented
     "tdq": (

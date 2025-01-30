@@ -44,6 +44,12 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
             key=DPCode.SIREN_SWITCH,
         ),
     ),
+    # Smart Camera - Unsupported
+    "dghsxj": (
+        SirenEntityDescription(
+            key=DPCode.SIREN_SWITCH,
+        ),
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
