@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -12,6 +13,7 @@ from bring_api import (
     BringRequestException,
 )
 from bring_api.types import BringItemsResponse, BringList, BringUserSettingsResponse
+from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL
@@ -24,8 +26,12 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BringData(BringList, BringItemsResponse):
+@dataclass(frozen=True)
+class BringData(DataClassORJSONMixin):
     """Coordinator data class."""
+
+    lst: BringList
+    content: BringItemsResponse
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -67,11 +73,11 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             return self.data
 
         list_dict: dict[str, BringData] = {}
-        for lst in lists_response["lists"]:
-            if (ctx := set(self.async_contexts())) and lst["listUuid"] not in ctx:
+        for lst in lists_response.lists:
+            if (ctx := set(self.async_contexts())) and lst.listUuid not in ctx:
                 continue
             try:
-                items = await self.bring.get_list(lst["listUuid"])
+                items = await self.bring.get_list(lst.listUuid)
             except BringRequestException as e:
                 raise UpdateFailed(
                     "Unable to connect and retrieve data from bring"
@@ -79,7 +85,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             except BringParseException as e:
                 raise UpdateFailed("Unable to parse response from bring") from e
             else:
-                list_dict[lst["listUuid"]] = BringData(**lst, **items)
+                list_dict[lst.listUuid] = BringData(lst, items)
 
         return list_dict
 

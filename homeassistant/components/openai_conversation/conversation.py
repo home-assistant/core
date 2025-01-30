@@ -93,12 +93,13 @@ def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessagePar
 
 
 def _chat_message_convert(
-    message: conversation.ChatMessage[ChatCompletionMessageParam],
-    agent_id: str | None,
+    message: conversation.Content
+    | conversation.NativeContent[ChatCompletionMessageParam],
 ) -> ChatCompletionMessageParam:
     """Convert any native chat message for this agent to the native format."""
-    if message.native is not None and message.agent_id == agent_id:
-        return message.native
+    if message.role == "native":
+        # mypy doesn't understand that checking role ensures content type
+        return message.content  # type: ignore[return-value]
     return cast(
         ChatCompletionMessageParam,
         {"role": message.role, "content": message.content},
@@ -157,14 +158,15 @@ class OpenAIConversationEntity(
         async with conversation.async_get_chat_session(
             self.hass, user_input
         ) as session:
-            return await self._async_call_api(user_input, session)
+            return await self._async_handle_message(user_input, session)
 
-    async def _async_call_api(
+    async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
         session: conversation.ChatSession[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
+        assert user_input.agent_id
         options = self.entry.options
 
         try:
@@ -185,8 +187,7 @@ class OpenAIConversationEntity(
             ]
 
         messages = [
-            _chat_message_convert(message, user_input.agent_id)
-            for message in session.async_get_messages()
+            _chat_message_convert(message) for message in session.async_get_messages()
         ]
 
         client = self.entry.runtime_data
@@ -212,11 +213,10 @@ class OpenAIConversationEntity(
             messages.append(_message_convert(response))
 
             session.async_add_message(
-                conversation.ChatMessage(
+                conversation.Content(
                     role=response.role,
                     agent_id=user_input.agent_id,
                     content=response.content or "",
-                    native=messages[-1],
                 ),
             )
 
@@ -237,11 +237,9 @@ class OpenAIConversationEntity(
                     )
                 )
                 session.async_add_message(
-                    conversation.ChatMessage(
-                        role="native",
+                    conversation.NativeContent(
                         agent_id=user_input.agent_id,
-                        content="",
-                        native=messages[-1],
+                        content=messages[-1],
                     )
                 )
 

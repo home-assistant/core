@@ -14,16 +14,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ACCOUNT_COORDINATOR, ATTRIBUTION, DOMAIN, HOP_COORDINATOR
+from .const import ATTRIBUTION
 from .coordinator import (
     ElectricKiwiAccountDataCoordinator,
+    ElectricKiwiConfigEntry,
     ElectricKiwiHOPDataCoordinator,
 )
 
@@ -122,12 +122,12 @@ HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ElectricKiwiConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Electric Kiwi Sensors Setup."""
-    account_coordinator: ElectricKiwiAccountDataCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][ACCOUNT_COORDINATOR]
+    account_coordinator = entry.runtime_data.account
 
     entities: list[SensorEntity] = [
         ElectricKiwiAccountEntity(
@@ -137,9 +137,7 @@ async def async_setup_entry(
         for description in ACCOUNT_SENSOR_TYPES
     ]
 
-    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        HOP_COORDINATOR
-    ]
+    hop_coordinator = entry.runtime_data.hop
     entities.extend(
         [
             ElectricKiwiHOPEntity(hop_coordinator, description)
