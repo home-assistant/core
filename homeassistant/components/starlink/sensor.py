@@ -155,10 +155,4 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda data: data.consumption["total_energy"],
     ),
-    StarlinkSensorEntityDescription(
-        key="status",
-        translation_key="status",
-        icon="mdi:satellite-uplink",
-        value_fn=lambda data: data.status["state"],
-    ),
 )
