@@ -11,7 +11,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
 
-from .agent import BackupAgent, LocalBackupAgent
+from .agent import BackupAgent, BackupAgentError, LocalBackupAgent
 from .const import DOMAIN, LOGGER
 from .models import AgentBackup
 from .util import read_backup
@@ -114,9 +114,12 @@ class CoreLocalBackupAgent(LocalBackupAgent):
     def get_backup_path(self, backup_id: str) -> Path:
         """Return the local path to an existing backup.
 
-        Raises KeyError if the backup does not exist.
+        Raises BackupAgentError if the backup does not exist.
         """
-        return self._backups[backup_id][1]
+        try:
+            return self._backups[backup_id][1]
+        except KeyError as err:
+            raise BackupAgentError(f"Backup {backup_id} does not exist") from err
 
     def get_new_backup_path(self, backup: AgentBackup) -> Path:
         """Return the local path to a new backup."""

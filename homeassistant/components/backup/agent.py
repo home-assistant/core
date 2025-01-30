@@ -97,7 +97,7 @@ class LocalBackupAgent(BackupAgent):
         """Return the local path to an existing backup.
 
         The method should return the path to the backup file with the specified id.
-        Raises KeyError if the backup does not exist.
+        Raises BackupAgentError if the backup does not exist.
         """
 
     @abc.abstractmethod
