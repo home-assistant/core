@@ -341,6 +341,61 @@
       "Connection 2"
     ]
   },
+  "clean_time": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": 12,
+    "timedelta_type": "minutes"
+  },
+  "clean_area": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": 2,
+    "unit": 1,
+    "unit_enum_type": "CleanAreaUnit"
+  },
+  "clean_progress": {
+    "type": "Sensor",
+    "category": "Info",
+    "value": 30,
+    "unit": "%"
+  },
+  "total_clean_time": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 120,
+    "timedelta_type": "minutes"
+  },
+  "total_clean_area": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 2,
+    "unit": 1,
+    "unit_enum_type": "CleanAreaUnit"
+  },
+  "last_clean_time": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 60,
+    "timedelta_type": "minutes"
+  },
+  "last_clean_area": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 2,
+    "unit": 1,
+    "unit_enum_type": "CleanAreaUnit"
+  },
+  "last_clean_timestamp": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": "2024-06-24 10:03:11.046643+01:00"
+  },
+  "total_clean_count": {
+    "type": "Sensor",
+    "category": "Debug",
+    "value": 12
+  },
   "alarm_volume": {
     "value": "normal",
     "type": "Choice",
