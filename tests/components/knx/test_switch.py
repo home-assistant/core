@@ -155,7 +155,7 @@ async def test_switch_ui_create(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test creating a switch."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.SWITCH,
         entity_data={"name": "test"},

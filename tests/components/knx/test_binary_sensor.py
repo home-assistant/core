@@ -329,7 +329,7 @@ async def test_binary_sensor_ui_create(
     knx_data: dict[str, Any],
 ) -> None:
     """Test creating a binary sensor."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.BINARY_SENSOR,
         entity_data={"name": "test"},
