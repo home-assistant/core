@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
+    EntityCategory,
     UnitOfArea,
     UnitOfLength,
     UnitOfMass,
@@ -49,7 +50,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
-from homeassistant.helpers.typing import TemplateVarsType
+from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
@@ -3838,6 +3839,56 @@ async def test_config_entry_id(
         hass, f"{{{{ config_entry_id('{entity_entry.entity_id}') }}}}"
     )
     assert_result_info(info, config_entry.entry_id)
+    assert info.rate_limit is None
+
+
+@pytest.mark.parametrize(
+    ("category", "expected"),
+    [
+        (EntityCategory.CONFIG, "config"),
+        (EntityCategory.DIAGNOSTIC, "diagnostic"),
+        (None, None),
+        (UNDEFINED, None),
+    ],
+)
+async def test_entity_category(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    category: EntityCategory | UndefinedType | None,
+    expected: str | None,
+) -> None:
+    """Test entity_category function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "test",
+        suggested_object_id="test",
+        config_entry=config_entry,
+        entity_category=category,
+    )
+
+    info = render_to_info(hass, "{{ 'sensor.fail' | entity_category }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, "{{ 56 | entity_category }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(hass, "{{ 'not_a_real_entity_id' | entity_category }}")
+    assert_result_info(info, None)
+
+    info = render_to_info(
+        hass, f"{{{{ entity_category('{entity_entry.entity_id}') }}}}"
+    )
+    assert_result_info(info, expected)
+    assert info.rate_limit is None
+
+    info = render_to_info(
+        hass, f"{{{{ '{entity_entry.entity_id}' | entity_category }}}}"
+    )
+    assert_result_info(info, expected)
     assert info.rate_limit is None
 
 
