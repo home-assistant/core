@@ -1166,7 +1166,11 @@ class BackupManager:
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={"failed_agents": ", ".join(agent_errors)},
+            translation_placeholders={
+                "failed_agents": ", ".join(
+                    self.backup_agents[agent].name for agent in agent_errors
+                )
+            },
         )
 
     async def async_can_decrypt_on_download(
