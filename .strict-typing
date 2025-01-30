@@ -402,6 +402,7 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.redgtech.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*

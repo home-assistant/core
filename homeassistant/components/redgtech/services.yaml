@@ -1,0 +1,12 @@
+login:
+  description: "Log in to the Redgtech service"
+  fields:
+    email:
+      description: "The email address for the Redgtech account"
+      example: "user@example.com"
+    password:
+      description: "The password for the Redgtech account"
+      example: "your_password"
+
+logout:
+  description: "Log out from the Redgtech service"
