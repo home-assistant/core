@@ -67,7 +67,11 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        title = f"{approot.owner.display_name}'s OneDrive"
+        title = (
+            f"{approot.created_by.user.display_name}'s OneDrive"
+            if approot.created_by.user
+            else "OneDrive"
+        )
         return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(

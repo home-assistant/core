@@ -5,11 +5,12 @@ from json import dumps
 
 from onedrive_personal_sdk.models.items import (
     AppRoot,
+    CreatedBy,
     File,
     Folder,
     Hashes,
-    ItemOwner,
     ItemParentReference,
+    User,
 )
 
 CLIENT_ID = "1234"
@@ -30,6 +31,13 @@ BACKUP_METADATA = {
     "size": 34519040,
 }
 
+CREATED_BY = CreatedBy(
+    user=User(
+        display_name="John Doe",
+        id="id",
+        email="john@doe.com",
+    )
+)
 
 MOCK_APPROOT = AppRoot(
     id="id",
@@ -39,11 +47,7 @@ MOCK_APPROOT = AppRoot(
     parent_reference=ItemParentReference(
         drive_id="mock_drive_id", id="id", path="path"
     ),
-    owner=ItemOwner(
-        display_name="John Doe",
-        id="id",
-        email="john@doe.com",
-    ),
+    created_by=CREATED_BY,
 )
 
 MOCK_BACKUP_FOLDER = Folder(
@@ -54,6 +58,7 @@ MOCK_BACKUP_FOLDER = Folder(
     parent_reference=ItemParentReference(
         drive_id="mock_drive_id", id="id", path="path"
     ),
+    created_by=CREATED_BY,
 )
 
 MOCK_BACKUP_FILE = File(
@@ -68,4 +73,5 @@ MOCK_BACKUP_FILE = File(
     ),
     mime_type="application/x-tar",
     description=escape(dumps(BACKUP_METADATA)),
+    created_by=CREATED_BY,
 )
