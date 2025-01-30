@@ -106,6 +106,9 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+        self._attr_target_temperature = self._get_temperature_in_degrees(
+            clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+        )
         BoostState = self.get_matter_attribute_value(
             clusters.WaterHeaterManagement.Attributes.BoostState
         )
