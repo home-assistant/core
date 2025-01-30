@@ -1543,7 +1543,7 @@ async def test_receive_backup(
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            side_effect=mock_read_backup,
+            return_value=TEST_BACKUP_ABC123,
         ),
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
@@ -1766,7 +1766,7 @@ async def test_receive_backup_agent_error(
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            side_effect=mock_read_backup,
+            return_value=TEST_BACKUP_ABC123,
         ),
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
@@ -1912,7 +1912,7 @@ async def test_receive_backup_non_agent_upload_error(
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            side_effect=mock_read_backup,
+            return_value=TEST_BACKUP_ABC123,
         ),
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
@@ -2038,10 +2038,6 @@ async def test_receive_backup_file_write_error(
 
     with (
         patch("pathlib.Path.open", open_mock),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            side_effect=mock_read_backup,
-        ),
     ):
         resp = await client.post(
             "/api/backup/upload?agent_id=test.remote",
@@ -2337,7 +2333,7 @@ async def test_receive_backup_file_read_error(
         patch("pathlib.Path.unlink", side_effect=unlink_exception) as unlink_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            side_effect=mock_read_backup,
+            return_value=TEST_BACKUP_ABC123,
         ),
     ):
         resp = await client.post(
@@ -2639,8 +2635,8 @@ async def test_restore_backup_wrong_password(
     ("parameters", "expected_error", "expected_reason"),
     [
         (
-            {"backup_id": TEST_BACKUP_DEF456.backup_id},
-            f"Backup def456 not found in agent {LOCAL_AGENT_ID}",
+            {"backup_id": "no_such_backup"},
+            f"Backup no_such_backup not found in agent {LOCAL_AGENT_ID}",
             "backup_manager_error",
         ),
         (
