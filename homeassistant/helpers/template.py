@@ -1448,6 +1448,16 @@ def config_entry_attr(
     return getattr(config_entry, attr_name)
 
 
+def entity_category(hass: HomeAssistant, entity_id: str) -> str | None:
+    """Get the entity category for a specific entity."""
+    entity_reg = entity_registry.async_get(hass)
+
+    if entity := entity_reg.async_get(entity_id):
+        return str(entity.entity_category)
+
+    return None
+
+
 def is_device_attr(
     hass: HomeAssistant, device_or_entity_id: str, attr_name: str, attr_value: Any
 ) -> bool:
@@ -3007,6 +3017,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["config_entry_attr"] = hassfunction(config_entry_attr)
         self.filters["config_entry_attr"] = self.globals["config_entry_attr"]
+
+        self.globals["entity_category"] = hassfunction(entity_category)
+        self.filters["entity_category"] = self.globals["entity_category"]
 
         self.globals["is_device_attr"] = hassfunction(is_device_attr)
         self.tests["is_device_attr"] = hassfunction(is_device_attr, pass_eval_context)
