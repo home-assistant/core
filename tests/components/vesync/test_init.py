@@ -48,6 +48,7 @@ async def test_async_setup_entry__no_devices(
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
+            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
@@ -78,6 +79,7 @@ async def test_async_setup_entry__loads_fans(
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
+            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,

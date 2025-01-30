@@ -261,7 +261,10 @@ aioguardian==2022.07.0
 aioharmony==0.4.1
 
 # homeassistant.components.hassio
-aiohasupervisor==0.2.2b5
+aiohasupervisor==0.2.2b6
+
+# homeassistant.components.home_connect
+aiohomeconnect==0.12.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -747,7 +750,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==11.0.0
+deebot-client==11.1.0b1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1143,13 +1146,10 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250109.2
+home-assistant-frontend==20250129.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
-
-# homeassistant.components.home_connect
-homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -2023,7 +2023,7 @@ pyiqvia==2022.04.0
 pyirishrail==0.0.2
 
 # homeassistant.components.iskra
-pyiskra==0.1.14
+pyiskra==0.1.15
 
 # homeassistant.components.iss
 pyiss==1.0.1
@@ -2564,7 +2564,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2024.2.59
 
 # homeassistant.components.qbus
-qbusmqttapi==1.2.3
+qbusmqttapi==1.2.4
 
 # homeassistant.components.qingping
 qingping-ble==0.10.0
@@ -2991,7 +2991,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.3.0
+voip-utils==0.3.1
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0
@@ -3043,7 +3043,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.1.15
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.11
+whirlpool-sixth-sense==0.18.12
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -3131,7 +3131,7 @@ zeroconf==0.141.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.46
+zha==0.0.47
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

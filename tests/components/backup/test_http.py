@@ -233,12 +233,14 @@ async def test_uploading_a_backup_file(
 
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_receive_backup",
+        return_value=TEST_BACKUP_ABC123.backup_id,
     ) as async_receive_backup_mock:
         resp = await client.post(
             "/api/backup/upload?agent_id=backup.local",
             data={"file": StringIO("test")},
         )
         assert resp.status == 201
+        assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}
         assert async_receive_backup_mock.called
 
 
