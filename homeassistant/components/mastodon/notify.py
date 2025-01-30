@@ -76,7 +76,7 @@ class MastodonNotificationService(BaseNotificationService):
             self.hass,
             DOMAIN,
             "deprecated_notify_action_mastodon",
-            breaks_in_ha_version="2025.8.0",
+            breaks_in_ha_version="2025.9.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
