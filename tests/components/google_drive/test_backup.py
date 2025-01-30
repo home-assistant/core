@@ -43,6 +43,7 @@ TEST_AGENT_BACKUP = AgentBackup(
 )
 TEST_AGENT_BACKUP_RESULT = {
     "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
+    "agents": {TEST_AGENT_ID: {"protected": False, "size": 987}},
     "backup_id": "test-backup",
     "database_included": True,
     "date": "2025-01-01T01:23:45.678Z",
@@ -50,9 +51,6 @@ TEST_AGENT_BACKUP_RESULT = {
     "homeassistant_included": True,
     "homeassistant_version": "2024.12.0",
     "name": "Test",
-    "protected": False,
-    "size": 987,
-    "agent_ids": [TEST_AGENT_ID],
     "failed_agent_ids": [],
     "with_automatic_settings": None,
 }
