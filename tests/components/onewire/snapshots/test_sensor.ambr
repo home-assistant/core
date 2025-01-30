@@ -260,7 +260,7 @@
     'state': '248125',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_a-entry]
+# name: test_sensors[sensor.20_111111111111_voltage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -274,7 +274,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_a',
+    'entity_id': 'sensor.20_111111111111_voltage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -286,34 +286,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Latest voltage A',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'latestvolt_id',
     'unique_id': '/20.111111111111/latestvolt.A',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_a-state]
+# name: test_sensors[sensor.20_111111111111_voltage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/latestvolt.A',
-      'friendly_name': '20.111111111111 Latest voltage A',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 1.11,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_a',
+    'entity_id': 'sensor.20_111111111111_voltage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.11',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_b-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -327,7 +327,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_b',
+    'entity_id': 'sensor.20_111111111111_voltage_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -339,34 +339,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Latest voltage B',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'latestvolt_id',
     'unique_id': '/20.111111111111/latestvolt.B',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_b-state]
+# name: test_sensors[sensor.20_111111111111_voltage_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/latestvolt.B',
-      'friendly_name': '20.111111111111 Latest voltage B',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 2.22,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_b',
+    'entity_id': 'sensor.20_111111111111_voltage_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.22',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_c-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -380,7 +380,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_c',
+    'entity_id': 'sensor.20_111111111111_voltage_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -392,34 +392,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Latest voltage C',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'latestvolt_id',
     'unique_id': '/20.111111111111/latestvolt.C',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_c-state]
+# name: test_sensors[sensor.20_111111111111_voltage_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/latestvolt.C',
-      'friendly_name': '20.111111111111 Latest voltage C',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 3.33,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_c',
+    'entity_id': 'sensor.20_111111111111_voltage_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.33',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_d-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -433,7 +433,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_d',
+    'entity_id': 'sensor.20_111111111111_voltage_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -445,34 +445,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Latest voltage D',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'latestvolt_id',
     'unique_id': '/20.111111111111/latestvolt.D',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_latest_voltage_d-state]
+# name: test_sensors[sensor.20_111111111111_voltage_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/latestvolt.D',
-      'friendly_name': '20.111111111111 Latest voltage D',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 4.44,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_latest_voltage_d',
+    'entity_id': 'sensor.20_111111111111_voltage_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.44',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_a-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -486,7 +486,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_voltage_a',
+    'entity_id': 'sensor.20_111111111111_voltage_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -498,34 +498,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage A',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'volt_id',
     'unique_id': '/20.111111111111/volt.A',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_a-state]
+# name: test_sensors[sensor.20_111111111111_voltage_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/volt.A',
-      'friendly_name': '20.111111111111 Voltage A',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 1.1,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_voltage_a',
+    'entity_id': 'sensor.20_111111111111_voltage_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.1',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_b-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -539,7 +539,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_voltage_b',
+    'entity_id': 'sensor.20_111111111111_voltage_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -551,34 +551,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage B',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'volt_id',
     'unique_id': '/20.111111111111/volt.B',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_b-state]
+# name: test_sensors[sensor.20_111111111111_voltage_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/volt.B',
-      'friendly_name': '20.111111111111 Voltage B',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 2.2,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_voltage_b',
+    'entity_id': 'sensor.20_111111111111_voltage_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.2',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_c-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -592,7 +592,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_voltage_c',
+    'entity_id': 'sensor.20_111111111111_voltage_7',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -604,34 +604,34 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage C',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'volt_id',
     'unique_id': '/20.111111111111/volt.C',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_c-state]
+# name: test_sensors[sensor.20_111111111111_voltage_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/volt.C',
-      'friendly_name': '20.111111111111 Voltage C',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 3.3,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_voltage_c',
+    'entity_id': 'sensor.20_111111111111_voltage_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.3',
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_d-entry]
+# name: test_sensors[sensor.20_111111111111_voltage_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -645,7 +645,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.20_111111111111_voltage_d',
+    'entity_id': 'sensor.20_111111111111_voltage_8',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -657,27 +657,27 @@
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
-    'original_name': 'Voltage D',
+    'original_name': 'Voltage',
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'volt_id',
     'unique_id': '/20.111111111111/volt.D',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
-# name: test_sensors[sensor.20_111111111111_voltage_d-state]
+# name: test_sensors[sensor.20_111111111111_voltage_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
       'device_file': '/20.111111111111/volt.D',
-      'friendly_name': '20.111111111111 Voltage D',
+      'friendly_name': '20.111111111111 Voltage',
       'raw_value': 4.4,
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.20_111111111111_voltage_d',
+    'entity_id': 'sensor.20_111111111111_voltage_8',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

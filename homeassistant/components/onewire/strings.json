@@ -56,6 +56,12 @@
       }
     },
     "sensor": {
+      "volt_id": {
+        "name": "Voltage {id}"
+      },
+      "latestvolt_id": {
+        "name": "Latest Voltage {id}"
+      },
       "counter_id": {
         "name": "Counter {id}"
       },
