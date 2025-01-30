@@ -55,7 +55,8 @@ OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
 
 
-def get_redirect_uri(hass: HomeAssistant) -> str:
+@callback
+def async_get_redirect_uri(hass: HomeAssistant) -> str:
     """Return the redirect uri."""
     if "my" in hass.config.components:
         return MY_AUTH_CALLBACK_PATH
@@ -158,7 +159,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return get_redirect_uri(self.hass)
+        return async_get_redirect_uri(self.hass)
 
     @property
     def extra_authorize_data(self) -> dict:
