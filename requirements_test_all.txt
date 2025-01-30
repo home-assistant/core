@@ -248,6 +248,9 @@ aioharmony==0.4.1
 # homeassistant.components.hassio
 aiohasupervisor==0.2.2b6
 
+# homeassistant.components.home_connect
+aiohomeconnect==0.12.1
+
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
 
@@ -976,9 +979,6 @@ home-assistant-frontend==20250129.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
-
-# homeassistant.components.home_connect
-homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
