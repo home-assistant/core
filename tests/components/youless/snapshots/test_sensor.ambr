@@ -200,7 +200,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '400',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_phase_1-entry]
@@ -251,7 +251,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.123',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_phase_2-entry]
@@ -302,7 +302,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.123',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_phase_3-entry]
@@ -353,7 +353,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.123',
   })
 # ---
 # name: test_sensors[sensor.power_meter_current_power_usage-entry]
@@ -557,7 +557,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1200',
   })
 # ---
 # name: test_sensors[sensor.power_meter_power_phase_1-entry]
@@ -608,7 +608,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '462',
   })
 # ---
 # name: test_sensors[sensor.power_meter_power_phase_2-entry]
@@ -659,7 +659,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230',
   })
 # ---
 # name: test_sensors[sensor.power_meter_power_phase_3-entry]
@@ -710,7 +710,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230',
   })
 # ---
 # name: test_sensors[sensor.power_meter_tariff-entry]
@@ -766,7 +766,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1',
   })
 # ---
 # name: test_sensors[sensor.power_meter_total_energy_import-entry]
@@ -868,7 +868,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.power_meter_voltage_phase_2-entry]
@@ -919,7 +919,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.power_meter_voltage_phase_3-entry]
@@ -970,7 +970,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '240',
   })
 # ---
 # name: test_sensors[sensor.s0_meter_current_usage-entry]
