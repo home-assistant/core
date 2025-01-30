@@ -96,7 +96,8 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         user = drive.get("createdBy", {}).get("user", {}).get("displayName")
 
-        title = f"{user}'s OneDrive" or "OneDrive"
+        title = f"{user}'s OneDrive" if user else "OneDrive"
+
         return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(
