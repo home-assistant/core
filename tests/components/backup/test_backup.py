@@ -108,30 +108,21 @@ async def test_upload(
 
 @pytest.mark.usefixtures("read_backup")
 @pytest.mark.parametrize(
-    ("found_backups", "backup_id", "backup_exists", "unlink_calls", "unlink_path"),
+    ("found_backups", "backup_id", "unlink_calls", "unlink_path"),
     [
         (
             [TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456],
             TEST_BACKUP_ABC123.backup_id,
-            True,
             1,
             TEST_BACKUP_PATH_ABC123,
         ),
         (
             [TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456],
             TEST_BACKUP_DEF456.backup_id,
-            True,
             1,
             TEST_BACKUP_PATH_DEF456,
         ),
-        (
-            [TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456],
-            TEST_BACKUP_ABC123.backup_id,
-            False,
-            0,
-            None,
-        ),
-        (([], TEST_BACKUP_ABC123.backup_id, True, 0, None)),
+        (([], TEST_BACKUP_ABC123.backup_id, 0, None)),
     ],
 )
 async def test_delete_backup(
@@ -142,7 +133,6 @@ async def test_delete_backup(
     path_glob: MagicMock,
     found_backups: list[Path],
     backup_id: str,
-    backup_exists: bool,
     unlink_calls: int,
     unlink_path: Path | None,
 ) -> None:
@@ -153,7 +143,6 @@ async def test_delete_backup(
     path_glob.return_value = found_backups
 
     with (
-        patch("pathlib.Path.exists", return_value=backup_exists),
         patch("pathlib.Path.unlink", autospec=True) as unlink,
     ):
         await client.send_json_auto_id(

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_delete_backup[found_backups0-abc123-True-1-unlink_path0]
+# name: test_delete_backup[found_backups0-abc123-1-unlink_path0]
   dict({
     'id': 1,
     'result': dict({
@@ -10,7 +10,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_backup[found_backups1-def456-True-1-unlink_path1]
+# name: test_delete_backup[found_backups1-def456-1-unlink_path1]
   dict({
     'id': 1,
     'result': dict({
@@ -21,18 +21,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_backup[found_backups2-abc123-False-0-None]
-  dict({
-    'id': 1,
-    'result': dict({
-      'agent_errors': dict({
-      }),
-    }),
-    'success': True,
-    'type': 'result',
-  })
-# ---
-# name: test_delete_backup[found_backups3-abc123-True-0-None]
+# name: test_delete_backup[found_backups2-abc123-0-None]
   dict({
     'id': 1,
     'result': dict({
