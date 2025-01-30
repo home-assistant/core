@@ -19,6 +19,7 @@ from homeassistant.components.roborock.const import (
     CONF_USER_DATA,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -213,7 +214,7 @@ async def setup_entry(
 
 
 @pytest.fixture
-def cleanup_map_storage(
+async def cleanup_map_storage(
     hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
 ) -> Generator[pathlib.Path]:
     """Test cleanup, remove any map storage persisted during the test."""
@@ -225,4 +226,8 @@ def cleanup_map_storage(
             pathlib.Path(hass.config.path(tmp_path)) / mock_roborock_entry.entry_id
         )
         yield storage_path
+        # We need to first unload the config entry because unloading it will
+        # persist any unsaved maps to storage.
+        if mock_roborock_entry.state is ConfigEntryState.LOADED:
+            await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
         shutil.rmtree(str(storage_path), ignore_errors=True)

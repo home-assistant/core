@@ -12,6 +12,7 @@ from roborock import RoborockException
 from vacuum_map_parser_base.map_data import ImageConfig, ImageData
 
 from homeassistant.components.roborock import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -120,7 +121,7 @@ async def test_load_stored_image(
     MAP_DATA.image.data.save(img_byte_arr, format="PNG")
     img_bytes = img_byte_arr.getvalue()
 
-    # Load the image on demand, which should ensure it is cached on disk
+    # Load the image on demand, which should queue it to be cached on disk
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert resp.status == HTTPStatus.OK
@@ -151,22 +152,25 @@ async def test_fail_to_save_image(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that we gracefully handle a oserror on saving an image."""
-    # Reload the config entry so that the map is saved in storage and entities exist.
+    await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    # Ensure that map is still working properly.
+    assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
+    client = await hass_client()
+    resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
+    # Test that we can get the image and it correctly serialized and unserialized.
+    assert resp.status == HTTPStatus.OK
+
     with patch(
         "homeassistant.components.roborock.roborock_storage.Path.write_bytes",
         side_effect=OSError,
     ):
-        await async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
+        await hass.config_entries.async_unload(mock_roborock_entry.entry_id)
+        assert "Unable to write map file" in caplog.text
 
-        # Ensure that map is still working properly.
-        assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
-        client = await hass_client()
-        resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
-        # Test that we can get the image and it correctly serialized and unserialized.
-        assert resp.status == HTTPStatus.OK
-
-    assert "Unable to write map file" in caplog.text
+        # Config entry is unloaded successfully
+        assert mock_roborock_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_fail_to_load_image(

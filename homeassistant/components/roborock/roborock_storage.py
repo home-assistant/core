@@ -1,5 +1,6 @@
 """Roborock storage."""
 
+import asyncio
 import logging
 from pathlib import Path
 import shutil
@@ -31,6 +32,7 @@ class RoborockMapStorage:
         self._path_prefix = (
             _storage_path_prefix(hass, entry_id) / MAPS_PATH / device_id_slug
         )
+        self._write_queue: dict[int, bytes] = {}
 
     async def async_load_map(self, map_flag: int) -> bytes | None:
         """Load maps from disk."""
@@ -48,9 +50,20 @@ class RoborockMapStorage:
             return None
 
     async def async_save_map(self, map_flag: int, content: bytes) -> None:
-        """Write map if it should be updated."""
-        filename = self._path_prefix / f"{map_flag}{MAP_FILENAME_SUFFIX}"
-        await self._hass.async_add_executor_job(self._save_map, filename, content)
+        """Save the map to a pending write queue."""
+        self._write_queue[map_flag] = content
+
+    async def flush(self) -> None:
+        """Flush all maps to disk."""
+        tasks = []
+        _LOGGER.debug("Flushing %s maps to disk", len(self._write_queue))
+        for map_flag, content in self._write_queue.items():
+            filename = self._path_prefix / f"{map_flag}{MAP_FILENAME_SUFFIX}"
+            tasks.append(
+                self._hass.async_add_executor_job(self._save_map, filename, content)
+            )
+        self._write_queue.clear()
+        await asyncio.gather(*tasks)
 
     def _save_map(self, filename: Path, content: bytes) -> None:
         """Write the map to disk."""
