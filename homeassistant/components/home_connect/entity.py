@@ -56,3 +56,8 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     def bsh_key(self) -> str:
         """Return the BSH key."""
         return self.entity_description.key
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.appliance.info.connected is True and self._attr_available
