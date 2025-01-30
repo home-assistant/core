@@ -190,7 +190,13 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        await self._get_backup_file_item(backup_id).delete()
+
+        try:
+            await self._get_backup_file_item(backup_id).delete()
+        except APIError as err:
+            if err.response_status_code == 404:
+                return
+            raise
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
