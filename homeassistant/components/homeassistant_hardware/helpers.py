@@ -100,12 +100,20 @@ class HardwareInfoDispatcher:
         """Iterate over all firmware information for all hardware."""
         for domain, fw_info_module in self._providers.items():
             for config_entry in self.hass.config_entries.async_entries(domain):
-                if hasattr(fw_info_module, "get_firmware_info"):
-                    fw_info = fw_info_module.get_firmware_info(self.hass, config_entry)
-                else:
-                    fw_info = await fw_info_module.async_get_firmware_info(
-                        self.hass, config_entry
+                try:
+                    if hasattr(fw_info_module, "get_firmware_info"):
+                        fw_info = fw_info_module.get_firmware_info(
+                            self.hass, config_entry
+                        )
+                    else:
+                        fw_info = await fw_info_module.async_get_firmware_info(
+                            self.hass, config_entry
+                        )
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while getting firmware info from %r", fw_info_module
                     )
+                    continue
 
                 if fw_info is not None:
                     yield fw_info
