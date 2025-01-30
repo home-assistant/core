@@ -54,7 +54,9 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             for station in self.stations
         ]
 
-    async def _find_station_with_fallback(self, station_name: str) -> dict[str, Any] | None:
+    async def _find_station_with_fallback(
+        self, station_name: str
+    ) -> dict[str, Any] | None:
         """Find station by name, fallback to liveboard API if not found."""
         # First check exact matches
         for station in self.stations:
@@ -138,7 +140,9 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="api_unavailable")
 
         # Find stations with fallback
-        station_from = await self._find_station_with_fallback(user_input[CONF_STATION_FROM])
+        station_from = await self._find_station_with_fallback(
+            user_input[CONF_STATION_FROM]
+        )
         station_to = await self._find_station_with_fallback(user_input[CONF_STATION_TO])
         station_live = (
             await self._find_station_with_fallback(user_input[CONF_STATION_LIVE])
