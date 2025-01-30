@@ -51,4 +51,4 @@ voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.6
 yarl==1.18.3
 webrtc-models==0.3.0
-zeroconf==0.141.0
+zeroconf==0.142.0
