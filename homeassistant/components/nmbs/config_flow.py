@@ -54,6 +54,24 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             for station in self.stations
         ]
 
+    async def _find_station_with_fallback(self, station_name: str) -> dict | None:
+        """Find station by name, fallback to liveboard API if not found."""
+        # First check exact matches
+        for station in self.stations:
+            if station_name in (station["standardname"], station["name"]):
+                return station
+
+        # If not found, try liveboard API
+        liveboard = self._api_client.get_liveboard(station_name)
+        if liveboard == API_FAILURE:
+            _LOGGER.warning("API failed in NMBSLiveBoard")
+            return None
+        if not (stationinfo := liveboard.get("stationinfo")):
+            _LOGGER.warning("API returned no station: %r", liveboard)
+            return None
+        _LOGGER.debug("API returned station: %r", stationinfo)
+        return stationinfo
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,25 +140,14 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="api_unavailable")
 
-        station_from = None
-        station_to = None
-        station_live = None
-        for station in self.stations:
-            if user_input[CONF_STATION_FROM] in (
-                station["standardname"],
-                station["name"],
-            ):
-                station_from = station
-            if user_input[CONF_STATION_TO] in (
-                station["standardname"],
-                station["name"],
-            ):
-                station_to = station
-            if CONF_STATION_LIVE in user_input and user_input[CONF_STATION_LIVE] in (
-                station["standardname"],
-                station["name"],
-            ):
-                station_live = station
+        # Find stations with fallback
+        station_from = await find_station_with_fallback(user_input[CONF_STATION_FROM])
+        station_to = await find_station_with_fallback(user_input[CONF_STATION_TO])
+        station_live = (
+            await find_station_with_fallback(user_input[CONF_STATION_LIVE])
+            if CONF_STATION_LIVE in user_input
+            else None
+        )
 
         if station_from is None or station_to is None:
             return self.async_abort(reason="invalid_station")
