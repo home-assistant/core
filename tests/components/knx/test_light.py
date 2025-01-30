@@ -1335,7 +1335,6 @@ async def test_light_ui_multi_mode(
 
 
 async def test_light_ui_load(
-    hass: HomeAssistant,
     knx: KNXTestKit,
     entity_registry: er.EntityRegistry,
 ) -> None:
