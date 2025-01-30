@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock, patch
 from devialet import DevialetApi
 from devialet.const import UrlSuffix
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from yarl import URL
 
 from homeassistant.components.devialet.media_player import (
@@ -51,6 +52,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from . import HOST, NAME, setup_integration
@@ -386,7 +388,56 @@ async def test_media_player_services(
 
                 assert call_available
 
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
 
-        assert entry.state is ConfigEntryState.NOT_LOADED
+async def test_play_media_exceptions(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the Devialet services."""
+    with patch.object(DevialetApi, "upnp_available", return_value=True):
+        entry = await setup_integration(
+            hass, aioclient_mock, state=MediaPlayerState.PLAYING
+        )
+        assert entry.state is ConfigEntryState.LOADED
+
+    with (
+        patch(
+            "homeassistant.components.devialet.media_player.DevialetMediaPlayerEntity.supported_features",
+            new_callable=PropertyMock,
+        ) as mock1,
+        patch.object(DevialetApi, "upnp_available", new_callable=PropertyMock) as mock2,
+    ):
+        mock1.return_value = SUPPORT_MEDIA
+        mock2.return_value = False
+
+        service_data = {
+            ATTR_ENTITY_ID: hass.states.get(f"{MP_DOMAIN}.{NAME}").entity_id
+        }
+        service_data.update(SERVICE_TO_DATA[SERVICE_PLAY_MEDIA][0])
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                MP_DOMAIN,
+                SERVICE_PLAY_MEDIA,
+                service_data=service_data,
+                blocking=True,
+            )
+
+        with (
+            patch.object(DevialetApi, "async_play_url_source", return_value=False),
+            patch(
+                "homeassistant.components.media_source.async_resolve_media",
+                return_value=PlayMedia("https://home-assistant.io/test.mp3", "music"),
+            ),
+        ):
+            mock2.return_value = True
+            with pytest.raises(ServiceValidationError):
+                await hass.services.async_call(
+                    MP_DOMAIN,
+                    SERVICE_PLAY_MEDIA,
+                    service_data=service_data,
+                    blocking=True,
+                )
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
