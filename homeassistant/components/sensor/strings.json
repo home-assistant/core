@@ -70,7 +70,7 @@
       "distance": "{entity_name} distance changes",
       "duration": "{entity_name} duration changes",
       "energy": "{entity_name} energy changes",
-      "energy_distance": "{entity_name} energy distance changes",
+      "energy_distance": "{entity_name} energy per distance changes",
       "frequency": "{entity_name} frequency changes",
       "gas": "{entity_name} gas changes",
       "humidity": "{entity_name} humidity changes",
