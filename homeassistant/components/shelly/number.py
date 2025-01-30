@@ -186,7 +186,7 @@ RPC_NUMBERS: Final = {
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
-        step_fn=lambda config: config["meta"]["ui"]["step"],
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
         # If the unit is not set, the device sends an empty string
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
