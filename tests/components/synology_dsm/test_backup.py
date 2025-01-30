@@ -685,11 +685,7 @@ async def test_agents_delete_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agent_errors": {
-            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete the backup"
-        }
-    }
+    assert response["result"] == {"agent_errors": {}}
 
 
 async def test_agents_delete_error(
@@ -714,11 +710,7 @@ async def test_agents_delete_error(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agent_errors": {
-            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete the backup"
-        }
-    }
+    assert response["result"] == {"agent_errors": {}}
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 1
     assert mock.call_args_list[0].kwargs["filename"] == "abcd12ef.tar"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from contextlib import suppress
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -161,15 +162,13 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        try:
+        with suppress(SynologyDSMAPIErrorException):
             await self._file_station.delete_file(
                 path=self.path, filename=f"{backup_id}.tar"
             )
             await self._file_station.delete_file(
                 path=self.path, filename=f"{backup_id}_meta.json"
             )
-        except SynologyDSMAPIErrorException as err:
-            raise BackupAgentError("Failed to delete the backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
