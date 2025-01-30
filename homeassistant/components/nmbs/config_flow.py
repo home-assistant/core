@@ -58,18 +58,22 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, station_name: str
     ) -> dict[str, Any] | None:
         """Find station by name, fallback to liveboard API if not found."""
+
         # First check exact matches
         for station in self.stations:
             if station_name in (station["standardname"], station["name"]):
                 return station
 
         # If not found, try liveboard API
-        liveboard = await self.hass.async_add_executor_job(
-            self.api_client.get_liveboard, station_name
-        )
-        if liveboard == -1 or "stationinfo" not in liveboard:
+        try:
+            liveboard = await self.hass.async_add_executor_job(
+                self.api_client.get_liveboard, station_name
+            )
+            if liveboard == -1 or "stationinfo" not in liveboard:
+                return None
+            return liveboard["stationinfo"]
+        except Exception as e:
             return None
-        return liveboard["stationinfo"]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
