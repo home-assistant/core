@@ -52,7 +52,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load iNELS switch.."""
-    old_entities: list[str] = entry.runtime_data.old_entities.get(Platform.SWITCH, [])
 
     items = INELS_SWITCH_TYPES.items()
     entities: list[InelsBaseEntity] = []
@@ -93,11 +92,6 @@ async def async_setup_entry(
                         ]
                     )
     async_add_entities(entities, False)
-
-    if old_entities:
-        for entity in entities:
-            if entity.entity_id in old_entities:
-                old_entities.pop(old_entities.index(entity.entity_id))
 
 
 @dataclass(frozen=True)
