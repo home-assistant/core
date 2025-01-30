@@ -81,6 +81,9 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [],
+            "agents": {
+                "onedrive.mock_drive_id": {"protected": False, "size": 34519040}
+            },
             "backup_id": "23e64aec",
             "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
@@ -88,9 +91,6 @@ async def test_agents_list_backups(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "protected": False,
-            "size": 34519040,
-            "agent_ids": [f"{DOMAIN}.{mock_config_entry.unique_id}"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -117,6 +117,12 @@ async def test_agents_get_backup(
     assert response["result"]["agent_errors"] == {}
     assert response["result"]["backup"] == {
         "addons": [],
+        "agents": {
+            f"{DOMAIN}.{mock_config_entry.unique_id}": {
+                "protected": False,
+                "size": 34519040,
+            }
+        },
         "backup_id": "23e64aec",
         "date": "2024-11-22T11:48:48.727189+01:00",
         "database_included": True,
@@ -124,9 +130,6 @@ async def test_agents_get_backup(
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0.dev0",
         "name": "Core 2024.12.0.dev0",
-        "protected": False,
-        "size": 34519040,
-        "agent_ids": [f"{DOMAIN}.{mock_config_entry.unique_id}"],
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
@@ -138,6 +141,28 @@ async def test_agents_delete(
     mock_drive_items: MagicMock,
 ) -> None:
     """Test agent delete backup."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": BACKUP_METADATA["backup_id"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    mock_drive_items.delete.assert_called_once()
+
+
+async def test_agents_delete_not_found_does_not_throw(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test agent delete backup."""
+    mock_drive_items.delete = AsyncMock(side_effect=APIError(response_status_code=404))
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -254,7 +279,7 @@ async def test_agents_download(
     ("side_effect", "error"),
     [
         (
-            APIError(response_status_code=404, message="File not found."),
+            APIError(response_status_code=500),
             "Backup operation failed",
         ),
         (TimeoutError(), "Backup operation timed out"),
