@@ -198,7 +198,10 @@ class SupervisorBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup | None:
         """Return a backup."""
-        details = await self._client.backups.backup_info(backup_id)
+        try:
+            details = await self._client.backups.backup_info(backup_id)
+        except SupervisorNotFoundError:
+            return None
         if self.location not in details.locations:
             return None
         return _backup_details_to_agent_backup(details, self.location)
@@ -212,10 +215,6 @@ class SupervisorBackupAgent(BackupAgent):
                     location={self.location}
                 ),
             )
-        except SupervisorBadRequestError as err:
-            if err.args[0] != "Backup does not exist":
-                raise
-            _LOGGER.debug("Backup %s does not exist", backup_id)
         except SupervisorNotFoundError:
             _LOGGER.debug("Backup %s does not exist", backup_id)
 
