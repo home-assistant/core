@@ -36,7 +36,7 @@ class YouLessSensorEntityDescription(SensorEntityDescription):
     """Describes a YouLess sensor entity."""
 
     device_group: str
-    value_func: Callable[[YoulessAPI], float | None]
+    value_func: Callable[[YoulessAPI], float | None | str]
 
 
 SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
@@ -210,6 +210,38 @@ SENSOR_TYPES: tuple[YouLessSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         value_func=(
             lambda device: device.phase3.current.value if device.phase1 else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
+        key="tariff",
+        device_group="power",
+        translation_key="active_tariff",
+        device_class=SensorDeviceClass.ENUM,
+        options=["1", "2"],
+        value_func=(
+            lambda device: str(device.current_tariff) if device.current_tariff else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
+        key="average_peak",
+        device_group="power",
+        translation_key="average_peak",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_func=(
+            lambda device: device.average_power.value if device.average_power else None
+        ),
+    ),
+    YouLessSensorEntityDescription(
+        key="month_peak",
+        device_group="power",
+        translation_key="month_peak",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_func=(
+            lambda device: device.peak_power.value if device.peak_power else None
         ),
     ),
     YouLessSensorEntityDescription(
