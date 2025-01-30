@@ -62,15 +62,12 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return station
 
         # If not found, try liveboard API
-        liveboard = self._api_client.get_liveboard(station_name)
-        if liveboard == API_FAILURE:
-            _LOGGER.warning("API failed in NMBSLiveBoard")
+        liveboard = await self.hass.async_add_executor_job(
+            self.api_client.get_liveboard, station_name
+        )
+        if liveboard == -1 or "stationinfo" not in liveboard:
             return None
-        if not (stationinfo := liveboard.get("stationinfo")):
-            _LOGGER.warning("API returned no station: %r", liveboard)
-            return None
-        _LOGGER.debug("API returned station: %r", stationinfo)
-        return stationinfo
+        return liveboard["stationinfo"]
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -141,10 +138,10 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="api_unavailable")
 
         # Find stations with fallback
-        station_from = await find_station_with_fallback(user_input[CONF_STATION_FROM])
-        station_to = await find_station_with_fallback(user_input[CONF_STATION_TO])
+        station_from = await _find_station_with_fallback(user_input[CONF_STATION_FROM])
+        station_to = await _find_station_with_fallback(user_input[CONF_STATION_TO])
         station_live = (
-            await find_station_with_fallback(user_input[CONF_STATION_LIVE])
+            await _find_station_with_fallback(user_input[CONF_STATION_LIVE])
             if CONF_STATION_LIVE in user_input
             else None
         )
