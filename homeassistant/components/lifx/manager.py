@@ -27,7 +27,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DATA_LIFX_MANAGER, DOMAIN

@@ -16,8 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify

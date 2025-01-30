@@ -36,8 +36,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import raise_if_invalid_filename
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, raise_if_invalid_filename
 from homeassistant.util.yaml.loader import load_yaml_dict
 
 _LOGGER = logging.getLogger(__name__)
