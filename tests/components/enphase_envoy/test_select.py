@@ -186,7 +186,7 @@ async def test_update_dry_contact_actions_with_error(
     mock_envoy.update_dry_contact.side_effect = EnvoyError("Test")
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to change {test_entity} to {action}, host",
+        match=f"Failed to execute async_select_option for {test_entity}, host",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
@@ -264,7 +264,7 @@ async def test_set_storage_modes_with_error(
     mock_envoy.set_storage_mode.side_effect = EnvoyError("Test")
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to change {test_entity} to {mode}, host",
+        match=f"Failed to execute async_select_option for {test_entity}, host",
     ):
         await hass.services.async_call(
             SELECT_DOMAIN,
