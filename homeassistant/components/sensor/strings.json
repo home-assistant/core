@@ -186,7 +186,7 @@
       "name": "Energy"
     },
     "energy_distance": {
-      "name": "Energy distance"
+      "name": "Energy per distance"
     },
     "energy_storage": {
       "name": "Stored energy"
