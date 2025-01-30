@@ -17,7 +17,7 @@
       "is_distance": "Current {entity_name} distance",
       "is_duration": "Current {entity_name} duration",
       "is_energy": "Current {entity_name} energy",
-      "is_energy_distance": "Current {entity_name} energy distance",
+      "is_energy_distance": "Current {entity_name} energy per distance",
       "is_frequency": "Current {entity_name} frequency",
       "is_gas": "Current {entity_name} gas",
       "is_humidity": "Current {entity_name} humidity",
