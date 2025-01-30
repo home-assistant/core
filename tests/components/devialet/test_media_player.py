@@ -346,7 +346,7 @@ async def test_browse_media(
 async def test_media_player_services(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test the Devialet services."""
+    """Test the Devialet exceptions."""
 
     with (
         patch.object(DevialetApi, "upnp_available", return_value=True),
