@@ -1,5 +1,6 @@
 """Home Assistant Hardware integration helpers."""
 
+from collections import defaultdict
 from collections.abc import AsyncIterator, Awaitable, Callable
 import logging
 from typing import Protocol
@@ -47,9 +48,9 @@ class HardwareInfoDispatcher:
         """Initialize the dispatcher."""
         self.hass = hass
         self._providers: dict[str, HardwareFirmwareInfoModule] = {}
-        self._notification_callbacks: dict[
+        self._notification_callbacks: defaultdict[
             str, set[Callable[[FirmwareInfo], None]]
-        ] = {}
+        ] = defaultdict(set)
 
     def register_firmware_info_provider(
         self, domain: str, platform: HardwareFirmwareInfoModule
@@ -71,7 +72,7 @@ class HardwareInfoDispatcher:
         self, device: str, callback: Callable[[FirmwareInfo], None]
     ) -> CALLBACK_TYPE:
         """Register a firmware info notification callback."""
-        self._notification_callbacks.setdefault(device, set()).add(callback)
+        self._notification_callbacks[device].add(callback)
 
         @hass_callback
         def async_remove_callback() -> None:
