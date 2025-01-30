@@ -1168,7 +1168,7 @@ class BackupManager:
             translation_key="automatic_backup_failed_upload_agents",
             translation_placeholders={
                 "failed_agents": ", ".join(
-                    self.backup_agents[agent].name for agent in agent_errors
+                    self.backup_agents[agent_id].name for agent_id in agent_errors
                 )
             },
         )
