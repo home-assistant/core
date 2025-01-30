@@ -345,7 +345,6 @@ async def test_binary_sensor_ui_create(
 async def test_binary_sensor_ui_load(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test loading a binary sensor from storage."""
     await knx.setup_integration(config_store_fixture="config_store_binarysensor.json")
