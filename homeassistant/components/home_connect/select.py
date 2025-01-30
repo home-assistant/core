@@ -1,9 +1,11 @@
 """Provides a select platform for Home Connect."""
 
+from dataclasses import dataclass
 from typing import cast
 
 from aiohomeconnect.model import EventKey, ProgramKey
 from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.program import Execution
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -29,14 +31,26 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectSensorEntityDescription(
+    SelectEntityDescription,
+):
+    """Entity Description class for sensors."""
+
+    allowed_executions: tuple[Execution, ...]
+
+
 PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
-    SelectEntityDescription(
+    HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         translation_key="active_program",
+        allowed_executions=(Execution.SELECT_AND_START, Execution.START_ONLY),
     ),
-    SelectEntityDescription(
+    HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         translation_key="selected_program",
+        allowed_executions=(Execution.SELECT_AND_START, Execution.SELECT_ONLY),
     ),
 )
 
@@ -59,11 +73,13 @@ async def async_setup_entry(
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     """Select class for Home Connect programs."""
 
+    entity_description: HomeConnectSensorEntityDescription
+
     def __init__(
         self,
         coordinator: HomeConnectCoordinator,
         appliance: HomeConnectApplianceData,
-        desc: SelectEntityDescription,
+        desc: HomeConnectSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
@@ -71,12 +87,17 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             appliance,
             desc,
         )
+        self.start_on_select = desc.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in appliance.programs
             if program.key != ProgramKey.UNKNOWN
+            and (
+                program.constraints.execution in desc.allowed_executions
+                if program.constraints is not None
+                else True
+            )
         ]
-        self.start_on_select = desc.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
         self._attr_current_option = None
 
     def update_native_value(self) -> None:
