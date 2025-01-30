@@ -127,7 +127,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             OneWireSensorEntityDescription(
                 key=f"volt.{device_key}",
                 device_class=SensorDeviceClass.VOLTAGE,
-                entity_registry_enabled_default=True,
                 native_unit_of_measurement=UnitOfElectricPotential.VOLT,
                 read_mode=READ_MODE_FLOAT,
                 state_class=SensorStateClass.MEASUREMENT,
