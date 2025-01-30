@@ -118,6 +118,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         1000,
     ),
     EnergyConverter: (UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
+    EnergyDistanceConverter: (
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        0.621371,
+    ),
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
