@@ -27,6 +27,12 @@ class BackupAgentUnreachableError(BackupAgentError):
     _message = "The backup agent is unreachable."
 
 
+class BackupNotFound(BackupAgentError):
+    """Raised when a backup is not found."""
+
+    error_code = "backup_not_found"
+
+
 class BackupAgent(abc.ABC):
     """Backup agent interface."""
 

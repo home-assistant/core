@@ -11,7 +11,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
 
-from .agent import BackupAgent, BackupAgentError, LocalBackupAgent
+from .agent import BackupAgent, BackupNotFound, LocalBackupAgent
 from .const import DOMAIN, LOGGER
 from .models import AgentBackup
 from .util import read_backup
@@ -119,7 +119,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         try:
             return self._backups[backup_id][1]
         except KeyError as err:
-            raise BackupAgentError(f"Backup {backup_id} does not exist") from err
+            raise BackupNotFound(f"Backup {backup_id} does not exist") from err
 
     def get_new_backup_path(self, backup: AgentBackup) -> Path:
         """Return the local path to a new backup."""
@@ -127,10 +127,10 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup file."""
-        if await self.async_get_backup(backup_id) is None:
+        try:
+            backup_path = self.get_backup_path(backup_id)
+        except BackupNotFound:
             return
-
-        backup_path = self.get_backup_path(backup_id)
         await self._hass.async_add_executor_job(backup_path.unlink, True)
         LOGGER.debug("Deleted backup located at %s", backup_path)
         self._backups.pop(backup_id)
