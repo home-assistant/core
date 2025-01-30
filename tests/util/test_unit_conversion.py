@@ -118,11 +118,6 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         1000,
     ),
     EnergyConverter: (UnitOfEnergy.WATT_HOUR, UnitOfEnergy.KILO_WATT_HOUR, 1000),
-    EnergyDistanceConverter: (
-        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
-        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
-        1000 / 1609.344,
-    ),
     InformationConverter: (UnitOfInformation.BITS, UnitOfInformation.BYTES, 8),
     MassConverter: (UnitOfMass.STONES, UnitOfMass.KILOGRAMS, 0.157473),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
@@ -498,12 +493,6 @@ _CONVERTED_VALUE: dict[
         (
             10,
             UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
-            16.09344,
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
-        ),
-        (
-            10,
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
             6.213712,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
         ),
@@ -520,12 +509,6 @@ _CONVERTED_VALUE: dict[
             UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         ),
         (
-            20,
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
-            5,
-            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-        ),
-        (
             10,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
             16.09344,
@@ -536,18 +519,6 @@ _CONVERTED_VALUE: dict[
             UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
             10,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-        ),
-        (
-            1,
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
-            100,
-            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-        ),
-        (
-            100,
-            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-            1,
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
         ),
     ],
     InformationConverter: [

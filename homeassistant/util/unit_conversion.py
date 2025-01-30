@@ -305,7 +305,6 @@ class EnergyDistanceConverter(BaseUnitConverter):
     UNIT_CLASS = "energy_distance"
     _UNIT_CONVERSION: dict[str | None, float] = {
         UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
-        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI: _MILE_TO_M / _KM_TO_M,
         UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
         UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
     }
@@ -313,14 +312,6 @@ class EnergyDistanceConverter(BaseUnitConverter):
         (
             UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-        ),
-        (
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
-            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-        ),
-        (
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
-            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
         ),
         (
             UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
