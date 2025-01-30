@@ -154,7 +154,7 @@ async def test_delete_backup(
 
     with (
         patch("pathlib.Path.exists", return_value=backup_exists),
-        patch("os.unlink") as unlink,
+        patch("pathlib.Path.unlink", autospec=True) as unlink,
     ):
         await client.send_json_auto_id(
             {"type": "backup/delete", "backup_id": backup_id}
