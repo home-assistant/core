@@ -401,9 +401,6 @@
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
     },
-    "number_error": {
-      "message": "Failed to change {number} to {value}, host: {host}: {args}"
-    },
     "action_error": {
       "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     }

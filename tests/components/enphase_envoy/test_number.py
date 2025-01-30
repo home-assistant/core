@@ -125,7 +125,7 @@ async def test_number_operation_storage_with_error(
     mock_envoy.set_reserve_soc.side_effect = EnvoyError("Test")
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to change {test_entity} to {test_value}, host",
+        match=f"Failed to execute async_set_native_value for {test_entity}, host",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -218,7 +218,7 @@ async def test_number_operation_relays_with_error(
     mock_envoy.update_dry_contact.side_effect = EnvoyError("Test")
     with pytest.raises(
         HomeAssistantError,
-        match=f"Failed to change {test_entity} to {test_value}, host",
+        match=f"Failed to execute async_set_native_value for {test_entity}, host",
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,

@@ -7,10 +7,8 @@ from dataclasses import dataclass
 from operator import attrgetter
 from typing import Any
 
-from httpx import HTTPError
 from pyenphase import Envoy, EnvoyDryContactSettings
 from pyenphase.const import SupportedFeatures
-from pyenphase.exceptions import EnvoyError
 from pyenphase.models.tariff import EnvoyStorageSettings
 
 from homeassistant.components.number import (
@@ -20,16 +18,14 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyBaseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
-ACTIONERRORS = (EnvoyError, HTTPError)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -136,23 +132,12 @@ class EnvoyRelayNumberEntity(EnvoyBaseEntity, NumberEntity):
             self.data.dry_contact_settings[self._relay_id]
         )
 
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Update the relay."""
-        try:
-            await self.envoy.update_dry_contact(
-                {"id": self._relay_id, self.entity_description.key: int(value)}
-            )
-        except ACTIONERRORS as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="number_error",
-                translation_placeholders={
-                    "host": self.envoy.host,
-                    "args": err.args[0],
-                    "number": self.entity_id,
-                    "value": str(value),
-                },
-            ) from err
+        await self.envoy.update_dry_contact(
+            {"id": self._relay_id, self.entity_description.key: int(value)}
+        )
         await self.coordinator.async_request_refresh()
 
 
@@ -201,19 +186,8 @@ class EnvoyStorageSettingsNumberEntity(EnvoyBaseEntity, NumberEntity):
         assert self.data.tariff.storage_settings is not None
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Update the storage setting."""
-        try:
-            await self.entity_description.update_fn(self.envoy, value)
-        except ACTIONERRORS as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="number_error",
-                translation_placeholders={
-                    "host": self.envoy.host,
-                    "args": err.args[0],
-                    "number": self.entity_id,
-                    "value": str(value),
-                },
-            ) from err
+        await self.entity_description.update_fn(self.envoy, value)
         await self.coordinator.async_request_refresh()
