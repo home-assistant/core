@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["onedrive-personal-sdk"],
   "quality_scale": "bronze",
-  "requirements": ["onedrive-personal-sdk==0.0.1a2"]
+  "requirements": ["onedrive-personal-sdk==0.0.1a4"]
 }

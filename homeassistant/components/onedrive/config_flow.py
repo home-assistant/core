@@ -69,7 +69,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         title = (
             f"{approot.created_by.user.display_name}'s OneDrive"
-            if approot.created_by.user
+            if approot.created_by.user and approot.created_by.user.display_name
             else "OneDrive"
         )
         return self.async_create_entry(title=title, data=data)
