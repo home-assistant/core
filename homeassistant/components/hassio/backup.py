@@ -350,8 +350,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 backup_id = data.get("reference")
                 backup_complete.set()
 
+        unsub = self._async_listen_job_events(backup.job_id, on_job_progress)
         try:
-            unsub = self._async_listen_job_events(backup.job_id, on_job_progress)
+            await self._get_job_state(backup.job_id, on_job_progress)
             await backup_complete.wait()
         finally:
             unsub()
@@ -506,12 +507,13 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
-            """Handle backup progress."""
+            """Handle backup restore progress."""
             if data.get("done") is True:
                 restore_complete.set()
 
+        unsub = self._async_listen_job_events(job.job_id, on_job_progress)
         try:
-            unsub = self._async_listen_job_events(job.job_id, on_job_progress)
+            await self._get_job_state(job.job_id, on_job_progress)
             await restore_complete.wait()
         finally:
             unsub()
