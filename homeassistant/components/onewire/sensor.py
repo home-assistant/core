@@ -118,7 +118,7 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
                 native_unit_of_measurement=UnitOfElectricPotential.VOLT,
                 read_mode=READ_MODE_FLOAT,
                 state_class=SensorStateClass.MEASUREMENT,
-                translation_key="latestvolt_id",
+                translation_key="latest_voltage_id",
                 translation_placeholders={"id": str(device_key)},
             )
             for device_key in DEVICE_KEYS_A_D
