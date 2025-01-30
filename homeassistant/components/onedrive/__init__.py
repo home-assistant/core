@@ -66,16 +66,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         ) from err
 
     instance_id = await async_get_instance_id(hass)
+    backup_folder_name = f"backups_{instance_id[:8]}"
     try:
         backup_folder = await client.create_folder(
-            parent_id=approot.id, name=f"backups_{instance_id[:8]}"
+            parent_id=approot.id, name=backup_folder_name
         )
     except (HttpRequestException, OneDriveException, TimeoutError) as err:
         _LOGGER.debug("Failed to create backup folder", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="failed_to_get_folder",
-            translation_placeholders={"folder": "backups"},
+            translation_placeholders={"folder": backup_folder_name},
         ) from err
 
     entry.runtime_data = OneDriveRuntimeData(

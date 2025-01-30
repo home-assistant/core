@@ -113,7 +113,7 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        # this forces the query to return a raw httpx response, but breaks typing
+
         stream = await self._client.download_drive_item(
             self._get_backup_path(backup_id)
         )
@@ -129,20 +129,15 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup."""
 
-        if backup.size < 50 * 1024 * 1024:  # upload directly if smaller than 50MB
-            await self._client.upload_file(
-                self._folder_id, f"{backup.backup_id}.tar", await open_stream()
-            )
-        else:  # upload chunked otherwise
-            file = FileInfo(
-                f"{backup.backup_id}.tar",
-                backup.size,
-                self._folder_id,
-                await open_stream(),
-            )
-            await LargeFileUploadClient.upload(
-                self._token_provider, file, session=async_get_clientsession(self._hass)
-            )
+        file = FileInfo(
+            f"{backup.backup_id}.tar",
+            backup.size,
+            self._folder_id,
+            await open_stream(),
+        )
+        await LargeFileUploadClient.upload(
+            self._token_provider, file, session=async_get_clientsession(self._hass)
+        )
 
         # store metadata in description
         backup_dict = backup.as_dict()
