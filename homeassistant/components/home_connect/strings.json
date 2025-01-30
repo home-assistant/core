@@ -22,6 +22,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication error: {error}. Please, delete and add again the Home Connect integration"
+    },
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
 from aiohomeconnect.model import SettingKey, StatusKey
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.error import HomeConnectError, UnauthorizedError
 import pytest
 import requests_mock
 import respx
@@ -216,7 +216,16 @@ async def test_token_refresh_success(
     )
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (HomeConnectError(), ConfigEntryState.SETUP_RETRY),
+        (UnauthorizedError("error.key"), ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_client_error(
+    exception: HomeConnectError,
+    expected_state: ConfigEntryState,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
@@ -224,10 +233,10 @@ async def test_client_error(
 ) -> None:
     """Test client errors during setup integration."""
     client_with_exception.get_home_appliances.return_value = None
-    client_with_exception.get_home_appliances.side_effect = HomeConnectError()
+    client_with_exception.get_home_appliances.side_effect = exception
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert not await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state == expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
 
 
