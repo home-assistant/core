@@ -76,9 +76,6 @@
       },
       "download": {
         "name": "Download"
-      },
-      "status": {
-        "name": "Status"
       }
     },
     "switch": {
