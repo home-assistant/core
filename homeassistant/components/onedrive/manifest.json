@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/onedrive",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "loggers": ["onedrive_personal_sdk"],
+  "loggers": ["onedrive-personal-sdk"],
   "quality_scale": "bronze",
-  "requirements": ["onedrive_personal_sdk==0.0.1a2"]
+  "requirements": ["onedrive-personal-sdk==0.0.1a2"]
 }
