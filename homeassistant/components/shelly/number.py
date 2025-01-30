@@ -208,7 +208,7 @@ RPC_NUMBERS: Final = {
         method_params_fn=lambda idx, value: {
             "id": idx,
             "method": "Trv.SetPosition",
-            "params": {"id": 0, "pos": value},
+            "params": {"id": 0, "pos": int(value)},
         },
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,
