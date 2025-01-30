@@ -75,7 +75,9 @@ async def async_unload_entry(
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: ElectricKiwiConfigEntry
+) -> bool:
     """Migrate old entry."""
     if config_entry.version == 1 and config_entry.minor_version == 1:
         implementation = (
@@ -101,4 +103,3 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         )
 
     return True
-    
