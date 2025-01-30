@@ -3892,6 +3892,55 @@ async def test_entity_category(
     assert info.rate_limit is None
 
 
+@pytest.mark.parametrize(
+    ("test", "expected"),
+    [
+        ("'config'", True),
+        ("['config', 'diagnostic']", True),
+        ("'diagnostic'", False),
+        ("'sensor.abc'", False),
+        ("None", False),
+        ("73", False),
+    ],
+)
+async def test_is_entity_category(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    test: str,
+    expected: bool,
+) -> None:
+    """Test entity_category function."""
+    config_entry = MockConfigEntry(domain="light", title="Some integration")
+    config_entry.add_to_hass(hass)
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "test",
+        suggested_object_id="test",
+        config_entry=config_entry,
+        entity_category=EntityCategory.CONFIG,
+    )
+    info = render_to_info(
+        hass, f"{{{{ is_entity_category('{entity_entry.entity_id}', {test}) }}}}"
+    )
+    assert_result_info(info, expected)
+    assert info.rate_limit is None
+
+    info = render_to_info(
+        hass, f"{{{{ '{entity_entry.entity_id}' is is_entity_category({test}) }}}}"
+    )
+    assert_result_info(info, expected)
+    assert info.rate_limit is None
+
+    result = [entity_entry.entity_id] if expected else []
+    info = render_to_info(
+        hass,
+        f"{{{{ ['{entity_entry.entity_id}'] | select('is_entity_category', {test}) | list }}}}",
+    )
+    assert_result_info(info, result)
+    assert info.rate_limit is None
+
+
 async def test_device_id(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
