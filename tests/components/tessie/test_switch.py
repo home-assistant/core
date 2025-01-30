@@ -20,7 +20,7 @@ from .common import RESPONSE_OK, assert_entities, setup_platform
 async def test_switches(
     hass: HomeAssistant, snapshot: SnapshotAssertion, entity_registry: er.EntityRegistry
 ) -> None:
-    """Tests that the switche entities are correct."""
+    """Tests that the switch entities are correct."""
 
     entry = await setup_platform(hass, [Platform.SWITCH])
 
