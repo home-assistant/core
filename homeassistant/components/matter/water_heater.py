@@ -40,6 +40,13 @@ SUPPORT_FLAGS_HEATER = (
 TEMPERATURE_SCALING_FACTOR = 100
 
 
+BOOST_STATE_MAP = {
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive: "active",
+    clusters.WaterHeaterManagement.Enums.BoostStateEnum.kUnknownEnumValue: None,
+}
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -99,7 +106,13 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
-        self._attr_current_operation = STATE_HEAT_PUMP  # replace by dynamic value
+        BoostState = self.get_matter_attribute_value(
+            clusters.WaterHeaterManagement.Attributes.BoostState
+        )
+        if (BoostState) == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
+            self._attr_current_operation = STATE_HIGH_DEMAND
+        else:
+            self._attr_current_operation = STATE_HEAT_PUMP
         self._attr_temperature = cast(
             float,
             self._get_temperature_in_degrees(
@@ -118,7 +131,6 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
             ),
         )
-        # self._attr_operation_mode = STATE_HEAT_PUMP
 
     @callback
     def _get_temperature_in_degrees(
