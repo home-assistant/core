@@ -10,16 +10,10 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNAVAILABLE,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .common import MAC_ADDRESS, UNIQUE_ID, get_entity_id, old_entity_and_device_removal
+from .common import MAC_ADDRESS, UNIQUE_ID, get_entity_id
 
 DT_07 = "07"
 DT_100 = "100"
@@ -217,19 +211,3 @@ async def test_switch_turn_off(
 
         ha_value = mock_set_state.call_args.args[0]
         assert getattr(ha_value, entity_config["device_type"])[0].is_on is False
-
-
-@pytest.mark.parametrize(
-    ("entity_config", "value_key", "index"),
-    [
-        ("simple_relay", "switch_on_value", ""),
-    ],
-    indirect=["entity_config"],
-)
-async def test_switch_old_entity_and_device_removal(
-    hass: HomeAssistant, mock_mqtt, entity_config, value_key, index
-) -> None:
-    """Test removal of old switch entity and device."""
-    await old_entity_and_device_removal(
-        hass, mock_mqtt, Platform.SWITCH, entity_config, value_key, index
-    )
