@@ -296,7 +296,7 @@ class RpcEntityDescription(EntityDescription):
     value: Callable[[Any, Any], Any] | None = None
     available: Callable[[dict], bool] | None = None
     removal_condition: Callable[[dict, dict, str], bool] | None = None
-    extra_state_attributes: Callable[[dict, dict], dict | None] | None = None
+    extra_state_attributes: Callable[[StateType], dict | None] | None = None
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
@@ -680,6 +680,17 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
             )
         elif entry is not None:
             self._attr_name = cast(str, entry.original_name)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes."""
+        if (
+            self.entity_description.extra_state_attributes is None
+            or not self.coordinator.device.initialized
+        ):
+            return None
+
+        return self.entity_description.extra_state_attributes(self.attribute_value)
 
     async def async_update(self) -> None:
         """Update the entity."""

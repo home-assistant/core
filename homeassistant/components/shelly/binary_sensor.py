@@ -272,6 +272,26 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_class=RpcBluTrvBinarySensor,
     ),
+    "flood": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="alarm",
+        name="Flood",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+    ),
+    "mute": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="mute",
+        name="Mute",
+        device_class=BinarySensorDeviceClass.SOUND,
+    ),
+    "error": RpcBinarySensorDescription(
+        key="flood",
+        sub_key="errors",
+        name="Error",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        extra_state_attributes=lambda value: {"error": value},
+    ),
 }
 
 
