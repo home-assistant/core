@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import contextlib
+import logging
 from typing import Any
 
 import aiodns
@@ -33,6 +33,8 @@ from .const import (
     DEFAULT_PORT,
     DOMAIN,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -70,9 +72,13 @@ async def async_validate_hostname(
         if resolver is not None:
             args["nameservers"] = [resolver]
 
-        with contextlib.suppress(DNSError):
-            return bool(await aiodns.DNSResolver(**args).query(hostname, qtype))
-        return False
+        try:
+            result = bool(await aiodns.DNSResolver(**args).query(hostname, qtype))
+        except DNSError as err:
+            _LOGGER.warning("Exception while resolving host: %s", err)
+            result = False
+
+        return result
 
     result: dict[str, bool] = {}
 
