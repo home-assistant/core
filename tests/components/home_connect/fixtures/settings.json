@@ -3,6 +3,11 @@
     "data": {
       "settings": [
         {
+          "key": "BSH.Common.Setting.ChildLock",
+          "value": false,
+          "type": "Boolean"
+        },
+        {
           "key": "BSH.Common.Setting.AmbientLightEnabled",
           "value": true,
           "type": "Boolean"
@@ -26,7 +31,13 @@
         {
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
-          "type": "BSH.Common.EnumType.PowerState"
+          "type": "BSH.Common.EnumType.PowerState",
+          "constraints": {
+            "allowedvalues": [
+              "BSH.Common.EnumType.PowerState.On",
+              "BSH.Common.EnumType.PowerState.Off"
+            ]
+          }
         },
         {
           "key": "BSH.Common.Setting.ChildLock",
@@ -92,6 +103,11 @@
           "key": "BSH.Common.Setting.PowerState",
           "value": "BSH.Common.EnumType.PowerState.On",
           "type": "BSH.Common.EnumType.PowerState"
+        },
+        {
+          "key": "BSH.Common.Setting.AlarmClock",
+          "value": 0,
+          "type": "Integer"
         }
       ]
     }
@@ -154,6 +170,12 @@
             "max": 100,
             "access": "readWrite"
           }
+        },
+        {
+          "key": "Refrigeration.FridgeFreezer.Setting.SetpointTemperatureRefrigerator",
+          "value": 8,
+          "unit": "°C",
+          "type": "Double"
         }
       ]
     }

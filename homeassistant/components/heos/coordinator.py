@@ -8,6 +8,7 @@ entities to update. Entities subscribe to entity-specific updates within the ent
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from pyheos import (
     Credentials,
@@ -23,7 +24,7 @@ from pyheos import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
@@ -68,6 +69,11 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         """Get input sources across all devices."""
         return self._inputs
 
+    @property
+    def favorites(self) -> dict[int, MediaItem]:
+        """Get favorite stations."""
+        return self._favorites
+
     async def async_setup(self) -> None:
         """Set up the coordinator; connect to the host; and retrieve initial data."""
         # Add before connect as it may occur during initial connection
@@ -101,7 +107,9 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         await self.heos.disconnect()
         await super().async_shutdown()
 
-    def async_add_listener(self, update_callback, context=None) -> Callable[[], None]:
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
         """Add a listener for the coordinator."""
         remove_listener = super().async_add_listener(update_callback, context)
         # Update entities so group_member entity_ids fully populate.

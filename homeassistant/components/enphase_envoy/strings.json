@@ -403,6 +403,9 @@
     },
     "select_error": {
       "message": "Failed to change {select} to {value}, host: {host}: {args}"
+    },
+    "action_error": {
+      "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     }
   }
 }

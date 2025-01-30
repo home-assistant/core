@@ -1122,6 +1122,7 @@ class PipelineRun:
                     context=user_input.context,
                     language=user_input.language,
                     agent_id=user_input.agent_id,
+                    extra_system_prompt=user_input.extra_system_prompt,
                 )
                 speech = conversation_result.response.speech.get("plain", {}).get(
                     "speech", ""
