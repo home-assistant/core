@@ -30,6 +30,7 @@ from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN
@@ -48,7 +49,7 @@ class HomeConnectApplianceData:
 
     events: dict[EventKey, Event] = field(default_factory=dict)
     info: HomeAppliance
-    programs: list[EnumerateAvailableProgram] = field(default_factory=list)
+    programs: list[EnumerateAvailableProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
 
@@ -83,6 +84,9 @@ class HomeConnectCoordinator(
             name=config_entry.entry_id,
         )
         self.client = client
+        self._special_listeners: dict[
+            CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[str, EventType] | None]
+        ] = {}
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -106,6 +110,25 @@ class HomeConnectCoordinator(
             self.__dict__.pop("context_listeners", None)
 
         return remove_listener_and_invalidate_context_listeners
+
+    @callback
+    def async_add_special_listener(
+        self,
+        update_callback: CALLBACK_TYPE,
+        context: tuple[str, EventType] | None = None,
+    ) -> Callable[[], None]:
+        """Listen for special data updates. These listeners will not be called on refresh."""
+
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._special_listeners.pop(remove_listener)
+            if not self._special_listeners:
+                self._unschedule_refresh()
+
+        self._special_listeners[remove_listener] = (update_callback, context)
+
+        return remove_listener
 
     @callback
     def start_event_listener(self) -> None:
@@ -134,6 +157,7 @@ class HomeConnectCoordinator(
                                         raw_key=status_key.value,
                                         value=event.value,
                                     )
+                            self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
                             settings = self.data[event_message.ha_id].settings
@@ -151,13 +175,56 @@ class HomeConnectCoordinator(
                                         )
                                 else:
                                     events[event.key] = event
+                            self._call_event_listener(event_message)
 
                         case EventType.EVENT:
                             events = self.data[event_message.ha_id].events
                             for event in event_message.data.items:
                                 events[event.key] = event
+                            self._call_event_listener(event_message)
 
-                    self._call_event_listener(event_message)
+                        case EventType.CONNECTED | EventType.PAIRED:
+                            appliance_info = await self.client.get_specific_appliance(
+                                event_message.ha_id
+                            )
+
+                            appliance_data = await self._get_appliance_data(
+                                appliance_info, self.data.get(appliance_info.ha_id)
+                            )
+                            if event_message.ha_id in self.data:
+                                self.data[event_message.ha_id].update(appliance_data)
+                            else:
+                                self.data[event_message.ha_id] = appliance_data
+                            for listener, context in list(
+                                self._special_listeners.values()
+                            ) + list(self._listeners.values()):
+                                if context is None or (
+                                    isinstance(context, tuple)
+                                    and context[0] == event_message.ha_id
+                                    and context[1]
+                                    is not EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
+                                ):
+                                    listener()
+
+                        case EventType.DEPAIRED:
+                            device_registry = dr.async_get(self.hass)
+                            device = device_registry.async_get_device(
+                                identifiers={(DOMAIN, event_message.ha_id)}
+                            )
+                            if device:
+                                device_registry.async_update_device(
+                                    device_id=device.id,
+                                    remove_config_entry_id=self.config_entry.entry_id,
+                                )
+                            for listener in self.context_listeners.get(
+                                (
+                                    event_message.ha_id,
+                                    EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,
+                                ),
+                                [],
+                            ):
+                                listener()
+                            self.data.pop(event_message.ha_id, None)
 
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(
@@ -197,62 +264,72 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
 
-        appliances_data = self.data or {}
-        for appliance in appliances.homeappliances:
-            try:
-                settings = {
-                    setting.key: setting
-                    for setting in (
-                        await self.client.get_settings(appliance.ha_id)
-                    ).settings
-                }
-            except HomeConnectError as error:
-                _LOGGER.debug(
-                    "Error fetching settings for %s: %s",
-                    appliance.ha_id,
-                    error
-                    if isinstance(error, HomeConnectApiError)
-                    else type(error).__name__,
-                )
-                settings = {}
-            try:
-                status = {
-                    status.key: status
-                    for status in (await self.client.get_status(appliance.ha_id)).status
-                }
-            except HomeConnectError as error:
-                _LOGGER.debug(
-                    "Error fetching status for %s: %s",
-                    appliance.ha_id,
-                    error
-                    if isinstance(error, HomeConnectApiError)
-                    else type(error).__name__,
-                )
-                status = {}
-            appliance_data = HomeConnectApplianceData(
-                info=appliance, settings=settings, status=status
+        return {
+            appliance.ha_id: await self._get_appliance_data(
+                appliance, self.data.get(appliance.ha_id) if self.data else None
             )
-            if appliance.ha_id in appliances_data:
-                appliances_data[appliance.ha_id].update(appliance_data)
-                appliance_data = appliances_data[appliance.ha_id]
-            else:
-                appliances_data[appliance.ha_id] = appliance_data
-            if (
-                appliance.type in APPLIANCES_WITH_PROGRAMS
-                and not appliance_data.programs
-            ):
-                try:
-                    appliance_data.programs.extend(
-                        (
-                            await self.client.get_available_programs(appliance.ha_id)
-                        ).programs
-                    )
-                except HomeConnectError as error:
-                    _LOGGER.debug(
-                        "Error fetching programs for %s: %s",
-                        appliance.ha_id,
-                        error
-                        if isinstance(error, HomeConnectApiError)
-                        else type(error).__name__,
-                    )
-        return appliances_data
+            for appliance in appliances.homeappliances
+        }
+
+    async def _get_appliance_data(
+        self,
+        appliance: HomeAppliance,
+        appliance_data_to_update: HomeConnectApplianceData | None = None,
+    ) -> HomeConnectApplianceData:
+        """Get appliance data."""
+        try:
+            settings = {
+                setting.key: setting
+                for setting in (
+                    await self.client.get_settings(appliance.ha_id)
+                ).settings
+            }
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching settings for %s: %s",
+                appliance.ha_id,
+                error
+                if isinstance(error, HomeConnectApiError)
+                else type(error).__name__,
+            )
+            settings = {}
+        try:
+            status = {
+                status.key: status
+                for status in (await self.client.get_status(appliance.ha_id)).status
+            }
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching status for %s: %s",
+                appliance.ha_id,
+                error
+                if isinstance(error, HomeConnectApiError)
+                else type(error).__name__,
+            )
+            status = {}
+
+        programs = []
+        if appliance.type in APPLIANCES_WITH_PROGRAMS and not (
+            appliance_data_to_update and appliance_data_to_update.programs
+        ):
+            try:
+                programs = (
+                    await self.client.get_available_programs(appliance.ha_id)
+                ).programs
+            except HomeConnectError as error:
+                _LOGGER.debug(
+                    "Error fetching programs for %s: %s",
+                    appliance.ha_id,
+                    error
+                    if isinstance(error, HomeConnectApiError)
+                    else type(error).__name__,
+                )
+
+        appliance_data = HomeConnectApplianceData(
+            info=appliance, programs=programs, settings=settings, status=status
+        )
+        if appliance_data_to_update:
+            appliance_data_to_update.update(appliance_data)
+            appliance_data = appliance_data_to_update
+
+        return appliance_data

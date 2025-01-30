@@ -1,5 +1,6 @@
 """Provides a switch for Home Connect."""
 
+from collections.abc import Callable
 import logging
 from typing import Any, cast
 
@@ -107,8 +108,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
 
-    entities: list[SwitchEntity] = []
-    for appliance in entry.runtime_data.data.values():
+    def get_entities_for_appliance(
+        appliance: HomeConnectApplianceData,
+    ) -> list[SwitchEntity]:
+        """Get a list of entities."""
+        remove_listener: Callable[[], None] | None = None
+
+        def handle_removed_device() -> None:
+            """Handle removed device."""
+            for entity_unique_id in added_entities.copy():
+                if entity_unique_id and appliance.info.ha_id in entity_unique_id:
+                    added_entities.remove(entity_unique_id)
+            assert remove_listener
+            remove_listener()
+
+        remove_listener = entry.runtime_data.async_add_listener(
+            handle_removed_device,
+            (appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_DEPAIRED),
+        )
+        entry.async_on_unload(remove_listener)
+
+        entities: list[SwitchEntity] = []
         entities.extend(
             HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
             for program in appliance.programs
@@ -126,7 +146,31 @@ async def async_setup_entry(
             if description.key in appliance.settings
         )
 
+        return entities
+
+    entities = [
+        entity
+        for appliance in entry.runtime_data.data.values()
+        for entity in get_entities_for_appliance(appliance)
+    ]
     async_add_entities(entities)
+
+    added_entities = {entity.unique_id for entity in entities}
+
+    def handle_paired_or_connected_device() -> None:
+        """Handle new paired device or a device that has been connected."""
+        for appliance in entry.runtime_data.data.values():
+            new_entities = [
+                entity
+                for entity in get_entities_for_appliance(appliance)
+                if entity.unique_id not in added_entities
+            ]
+            async_add_entities(new_entities)
+            added_entities.update(entity.unique_id for entity in new_entities)
+
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(handle_paired_or_connected_device)
+    )
 
 
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):

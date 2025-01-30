@@ -1,5 +1,6 @@
 """Provides a sensor for Home Connect."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
@@ -23,7 +24,7 @@ from .const import (
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
 )
-from .coordinator import HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
@@ -250,30 +251,68 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect sensor."""
 
-    entities: list[SensorEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectEventSensor(
-                entry.runtime_data,
-                appliance,
-                description,
-            )
-            for description in EVENT_SENSORS
-            if description.appliance_types
-            and appliance.info.type in description.appliance_types
-        )
-        entities.extend(
-            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
-            for desc in BSH_PROGRAM_SENSORS
-            if desc.appliance_types and appliance.info.type in desc.appliance_types
-        )
-        entities.extend(
-            HomeConnectSensor(entry.runtime_data, appliance, description)
-            for description in SENSORS
-            if description.key in appliance.status
-        )
+    def get_entities_for_appliance(
+        appliance: HomeConnectApplianceData,
+    ) -> list[SensorEntity]:
+        """Get a list of entities."""
+        remove_listener: Callable[[], None] | None = None
 
+        def handle_removed_device() -> None:
+            """Handle removed device."""
+            for entity_unique_id in added_entities.copy():
+                if entity_unique_id and appliance.info.ha_id in entity_unique_id:
+                    added_entities.remove(entity_unique_id)
+            assert remove_listener
+            remove_listener()
+
+        remove_listener = entry.runtime_data.async_add_listener(
+            handle_removed_device,
+            (appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_DEPAIRED),
+        )
+        entry.async_on_unload(remove_listener)
+
+        return [
+            *[
+                HomeConnectEventSensor(entry.runtime_data, appliance, description)
+                for description in EVENT_SENSORS
+                if description.appliance_types
+                and appliance.info.type in description.appliance_types
+            ],
+            *[
+                HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
+                for desc in BSH_PROGRAM_SENSORS
+                if desc.appliance_types and appliance.info.type in desc.appliance_types
+            ],
+            *[
+                HomeConnectSensor(entry.runtime_data, appliance, description)
+                for description in SENSORS
+                if description.key in appliance.status
+            ],
+        ]
+
+    entities = [
+        entity
+        for appliance in entry.runtime_data.data.values()
+        for entity in get_entities_for_appliance(appliance)
+    ]
     async_add_entities(entities)
+
+    added_entities = {entity.unique_id for entity in entities}
+
+    def handle_paired_or_connected_device() -> None:
+        """Handle new paired device or a device that has been connected."""
+        for appliance in entry.runtime_data.data.values():
+            new_entities = [
+                entity
+                for entity in get_entities_for_appliance(appliance)
+                if entity.unique_id not in added_entities
+            ]
+            async_add_entities(new_entities)
+            added_entities.update(entity.unique_id for entity in new_entities)
+
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(handle_paired_or_connected_device)
+    )
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):
