@@ -900,6 +900,66 @@ async def test_reader_writer_create(
     assert response["event"] == {"manager_state": "idle"}
 
 
+@pytest.mark.usefixtures("hassio_client", "setup_integration")
+async def test_reader_writer_create_job_done(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test generating a backup, and backup job finishes early."""
+    client = await hass_ws_client(hass)
+    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
+    supervisor_client.jobs.get_job.return_value = TEST_JOB_DONE
+
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "backup/generate", "agent_ids": ["hassio.local"], "name": "Test"}
+    )
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": None,
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"backup_job_id": TEST_JOB_ID}
+
+    supervisor_client.backups.partial_backup.assert_called_once_with(
+        DEFAULT_BACKUP_OPTIONS
+    )
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": "upload_to_agents",
+        "state": "in_progress",
+    }
+
+    response = await client.receive_json()
+    assert response["event"] == {
+        "manager_state": "create_backup",
+        "reason": None,
+        "stage": None,
+        "state": "completed",
+    }
+
+    supervisor_client.backups.download_backup.assert_not_called()
+    supervisor_client.backups.remove_backup.assert_not_called()
+
+    response = await client.receive_json()
+    assert response["event"] == {"manager_state": "idle"}
+
+
 @pytest.mark.usefixtures("hassio_client")
 @pytest.mark.parametrize(
     (
@@ -1642,18 +1702,33 @@ async def test_agent_receive_remote_backup(
     )
 
 
+@pytest.mark.parametrize(
+    ("get_job_result", "supervisor_events"),
+    [
+        (
+            TEST_JOB_NOT_DONE,
+            [{"event": "job", "data": {"done": True, "uuid": TEST_JOB_ID}}],
+        ),
+        (
+            TEST_JOB_DONE,
+            [],
+        ),
+    ],
+)
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_reader_writer_restore(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
+    get_job_result: supervisor_jobs.Job,
+    supervisor_events: list[dict[str, Any]],
 ) -> None:
     """Test restoring a backup."""
     client = await hass_ws_client(hass)
     supervisor_client.backups.partial_restore.return_value.job_id = TEST_JOB_ID
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
-    supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
+    supervisor_client.jobs.get_job.return_value = get_job_result
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     response = await client.receive_json()
@@ -1686,17 +1761,10 @@ async def test_reader_writer_restore(
         ),
     )
 
-    await client.send_json_auto_id(
-        {
-            "type": "supervisor/event",
-            "data": {
-                "event": "job",
-                "data": {"done": True, "uuid": TEST_JOB_ID},
-            },
-        }
-    )
-    response = await client.receive_json()
-    assert response["success"]
+    for event in supervisor_events:
+        await client.send_json_auto_id({"type": "supervisor/event", "data": event})
+        response = await client.receive_json()
+        assert response["success"]
 
     response = await client.receive_json()
     assert response["event"] == {
