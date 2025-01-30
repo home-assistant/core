@@ -56,6 +56,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     _attr_current_temperature: float | None = None
     # _attr_min_temp: float | None = None
     # _attr_max_temp: float | None = None
+    _attr_current_operation: str
     _attr_operation_list = [
         STATE_ECO,
         STATE_ELECTRIC,
@@ -98,6 +99,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         self._attr_current_temperature = self._get_temperature_in_degrees(
             clusters.Thermostat.Attributes.LocalTemperature
         )
+        self._attr_current_operation = STATE_HEAT_PUMP  # replace by dynamic value
         self._attr_temperature = cast(
             float,
             self._get_temperature_in_degrees(
