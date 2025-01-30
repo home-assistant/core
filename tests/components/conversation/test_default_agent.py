@@ -11,7 +11,7 @@ import pytest
 from syrupy import SnapshotAssertion
 import yaml
 
-from homeassistant.components import conversation, cover, media_player
+from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
@@ -3152,3 +3152,29 @@ async def test_handle_intents_with_response_errors(
         assert response is not None and response.error_code == error_code
     else:
         assert response is None
+
+
+@pytest.mark.usefixtures("init_components")
+async def test_state_names_are_not_translated(
+    hass: HomeAssistant,
+    init_components: None,
+) -> None:
+    """Test that state names are not translated in responses."""
+    await async_setup_component(hass, "weather", {})
+
+    hass.states.async_set("weather.test_weather", weather.ATTR_CONDITION_PARTLYCLOUDY)
+    expose_entity(hass, "weather.test_weather", True)
+
+    with patch(
+        "homeassistant.helpers.template.Template.async_render"
+    ) as mock_async_render:
+        result = await conversation.async_converse(
+            hass, "what is the weather like?", None, Context(), None
+        )
+        assert result.response.response_type == intent.IntentResponseType.QUERY_ANSWER
+        mock_async_render.assert_called_once()
+
+        assert (
+            mock_async_render.call_args.args[0]["state"].state
+            == weather.ATTR_CONDITION_PARTLYCLOUDY
+        )

@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -25,18 +24,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONST_CMD_FAN_MAP, CONST_CMD_STATE_MAP, DOMAIN
-from .coordinator import CCM15Coordinator
+from .coordinator import CCM15ConfigEntry, CCM15Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: CCM15ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up all climate."""
-    coordinator: CCM15Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     ac_data: CCM15DeviceState = coordinator.data
     entities = [
