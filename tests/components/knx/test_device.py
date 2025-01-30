@@ -54,7 +54,7 @@ async def test_remove_device(
 ) -> None:
     """Test device removal."""
     assert await async_setup_component(hass, "config", {})
-    await knx.setup_integration(config_store_fixture="config_store.json")
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
     client = await hass_ws_client(hass)
 
     await knx.assert_read("1/0/21", response=True, ignore_order=True)  # test light

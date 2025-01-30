@@ -1340,7 +1340,7 @@ async def test_light_ui_load(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test loading a light from storage."""
-    await knx.setup_integration(config_store_fixture="config_store.json")
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
 
     await knx.assert_read("1/0/21", response=True, ignore_order=True)
     # unrelated switch in config store

@@ -340,3 +340,14 @@ async def test_binary_sensor_ui_create(
     await knx.receive_response("2/2/2", not knx_data.get("invert"))
     state = hass.states.get("binary_sensor.test")
     assert state.state is STATE_ON
+
+
+async def test_binary_sensor_ui_load(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test loading a binary sensor from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_binarysensor.json")
+    await knx.assert_read("3/2/21", response=True, ignore_order=True)
+    knx.assert_state("binary_sensor.test", STATE_ON)
