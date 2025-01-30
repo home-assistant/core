@@ -263,6 +263,9 @@ aioharmony==0.4.1
 # homeassistant.components.hassio
 aiohasupervisor==0.2.2b6
 
+# homeassistant.components.home_connect
+aiohomeconnect==0.12.1
+
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
 
@@ -1033,7 +1036,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==7.1.0
+google-nest-sdm==7.1.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1143,13 +1146,10 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250129.0
+home-assistant-frontend==20250130.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
-
-# homeassistant.components.home_connect
-homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -2310,7 +2310,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.6
+pysmlight==0.2.0
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -3131,7 +3131,7 @@ zeroconf==0.141.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.46
+zha==0.0.47
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
