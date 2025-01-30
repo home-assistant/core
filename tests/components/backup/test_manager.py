@@ -908,7 +908,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_upload_agents",
-                    "translation_placeholders": {"failed_agents": "test.remote"},
+                    "translation_placeholders": {"failed_agents": "remote"},
                 }
             },
         ),
