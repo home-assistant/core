@@ -1,0 +1,15 @@
+{
+  "services": {
+    "send_message": {
+      "description": "Send a translated test notification",
+      "fields": {
+        "message": {
+          "description": "Translated message description"
+        },
+        "title": {
+          "description": "Translated title description"
+        }
+      }
+    }
+  }
+}

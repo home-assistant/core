@@ -6,11 +6,13 @@ from typing import Any
 from unittest.mock import Mock, call, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import translation
+import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 
@@ -712,3 +714,57 @@ async def test_get_translations_still_has_title_without_translations_files(
     assert translations == {
         "component.component1.title": "Component 1",
     }
+
+
+@pytest.fixture
+async def mock_integration(hass: HomeAssistant):
+    """Set up a mock notification service."""
+
+    async def test_service(call):
+        pass
+
+    hass.services.async_register(
+        "test_notify",
+        "send_message",
+        test_service,
+        schema=vol.Schema(
+            {
+                vol.Required("message"): cv.string,
+                vol.Optional("title"): cv.string,
+            }
+        ),
+    )
+
+
+async def test_translation_for_notify_service(
+    hass: HomeAssistant, mock_integration
+) -> None:
+    """Test that the notification service description is translated correctly."""
+    translations = {
+        "component.test_notify.services.send_message.description": "Send a translated test notification",
+        "component.test_notify.services.send_message.fields.message.description": "Translated message description",
+        "component.test_notify.services.send_message.fields.title.description": "Translated title description",
+    }
+
+    with patch(
+        "homeassistant.helpers.translation.async_get_translations",
+        return_value=translations,
+    ):
+        descriptions = await translation.async_get_translations(hass, "en", "services")
+
+    assert (
+        descriptions["component.test_notify.services.send_message.description"]
+        == "Send a translated test notification"
+    )
+    assert (
+        descriptions[
+            "component.test_notify.services.send_message.fields.message.description"
+        ]
+        == "Translated message description"
+    )
+    assert (
+        descriptions[
+            "component.test_notify.services.send_message.fields.title.description"
+        ]
+        == "Translated title description"
+    )

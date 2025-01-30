@@ -1,0 +1,8 @@
+{
+  "domain": "test_notify",
+  "name": "Test Notify",
+  "documentation": "https://example.com",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": []
+}
