@@ -1,45 +1,20 @@
 rules:
-  # Adjust platform files for consistent flow:
-  #   [entity description classes]
-  #   [entity descriptions]
-  #   [async_setup_entry]
-  #   [entity classes])
-  # Remove RequiredKeyMixins and add kw_only to classes
-  # Wrap multiline lambdas in parenthesis
-  # Extend entity description in switch.py to use value_fn instead of getattr
-  # Deprecate extra state attributes in vacuum.py
   # Bronze
-  action-setup:
-    status: todo
-    comment: |
-      Action async_set_sleep_mode is currently setup in the vacuum platform
+  action-setup: done
   appropriate-polling:
     status: done
     comment: |
       Primarily relies on push data, but polls every 5 minutes for missed updates
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      hub.py should be renamed to coordinator.py and updated accordingly
-      Also should not need to return bool (never used)
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Fix stale title and docstring
-      Make sure every test ends in either ABORT or CREATE_ENTRY
-      so we also test that the flow is able to recover
+  common-modules: done
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: todo
-    comment: Can be finished after async_set_sleep_mode is moved to async_setup
+  docs-actions: done
   docs-high-level-description: done
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
-  entity-event-setup:
-    status: todo
-    comment: Do we need to subscribe to both the coordinator and robot itself?
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -66,9 +41,7 @@ rules:
       Other fields can be moved to const.py. Consider snapshots and testing data updates
 
   # Gold
-  devices:
-    status: done
-    comment: Currently uses the device_info property, could be moved to _attr_device_info
+  devices: done
   diagnostics: todo
   discovery-update-info:
     status: done
@@ -86,16 +59,12 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: todo
-    comment: Check if we should disable any entities by default
+  entity-disabled-by-default: done
   entity-translations:
     status: todo
     comment: Make sure all translated states are in sentence case
   exception-translations: todo
-  icon-translations:
-    status: todo
-    comment: BRIGHTNESS_LEVEL_ICON_MAP should be migrated to icons.json
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: done

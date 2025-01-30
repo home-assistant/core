@@ -39,6 +39,10 @@ def async_load_history_from_system(
     now_monotonic = monotonic_time_coarse()
     connectable_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
     all_loaded_history: dict[str, BluetoothServiceInfoBleak] = {}
+    adapter_to_source_address = {
+        adapter: details[ADAPTER_ADDRESS]
+        for adapter, details in adapters.adapters.items()
+    }
 
     # Restore local adapters
     for address, history in adapters.history.items():
@@ -50,7 +54,11 @@ def async_load_history_from_system(
                 BluetoothServiceInfoBleak.from_device_and_advertisement_data(
                     history.device,
                     history.advertisement_data,
-                    history.source,
+                    # history.source is really the adapter name
+                    # for historical compatibility since BlueZ
+                    # does not know the MAC address of the adapter
+                    # so we need to convert it to the source address (MAC)
+                    adapter_to_source_address.get(history.source, history.source),
                     now_monotonic,
                     True,
                 )
