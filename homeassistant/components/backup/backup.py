@@ -39,7 +39,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         super().__init__()
         self._hass = hass
         self._backup_dir = Path(hass.config.path("backups"))
-        self._backups: dict[str, AgentBackup] = {}
+        self._backups: dict[str, tuple[AgentBackup, Path]] = {}
         self._loaded_backups = False
 
     async def _load_backups(self) -> None:
@@ -49,13 +49,13 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         self._backups = backups
         self._loaded_backups = True
 
-    def _read_backups(self) -> dict[str, AgentBackup]:
+    def _read_backups(self) -> dict[str, tuple[AgentBackup, Path]]:
         """Read backups from disk."""
-        backups: dict[str, AgentBackup] = {}
+        backups: dict[str, tuple[AgentBackup, Path]] = {}
         for backup_path in self._backup_dir.glob("*.tar"):
             try:
                 backup = read_backup(backup_path)
-                backups[backup.backup_id] = backup
+                backups[backup.backup_id] = (backup, backup_path)
             except (OSError, TarError, json.JSONDecodeError, KeyError) as err:
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
@@ -76,13 +76,13 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-        self._backups[backup.backup_id] = backup
+        self._backups[backup.backup_id] = (backup, self.get_new_backup_path(backup))
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         if not self._loaded_backups:
             await self._load_backups()
-        return list(self._backups.values())
+        return [backup for backup, _ in self._backups.values()]
 
     async def async_get_backup(
         self,
@@ -93,10 +93,10 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         if not self._loaded_backups:
             await self._load_backups()
 
-        if not (backup := self._backups.get(backup_id)):
+        if backup_id not in self._backups:
             return None
 
-        backup_path = self.get_backup_path(backup_id)
+        backup, backup_path = self._backups[backup_id]
         if not await self._hass.async_add_executor_job(backup_path.exists):
             LOGGER.debug(
                 (
@@ -112,8 +112,15 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         return backup
 
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup."""
-        return self._backup_dir / f"{backup_id}.tar"
+        """Return the local path to an existing backup.
+
+        Raises KeyError if the backup does not exist.
+        """
+        return self._backups[backup_id][1]
+
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
+        return self._backup_dir / f"{backup.backup_id}.tar"
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup file."""

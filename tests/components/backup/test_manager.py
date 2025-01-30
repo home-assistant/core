@@ -54,6 +54,8 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
+    TEST_BACKUP_PATH_ABC123,
+    TEST_BACKUP_PATH_DEF456,
     BackupAgentTest,
     setup_backup_platform,
 )
@@ -87,6 +89,15 @@ def generate_backup_id_fixture() -> Generator[MagicMock]:
     with patch("homeassistant.components.backup.manager._generate_backup_id") as mock:
         mock.return_value = "abc123"
         yield mock
+
+
+def mock_read_backup(backup_path: Path) -> AgentBackup:
+    """Mock read backup."""
+    mock_backups = {
+        "abc123": TEST_BACKUP_ABC123,
+        "custom_def456": TEST_BACKUP_DEF456,
+    }
+    return mock_backups[backup_path.stem]
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -1311,7 +1322,11 @@ class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
     """Local backup agent."""
 
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup."""
+        """Return the local path to an existing backup."""
+        return Path("test.tar")
+
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
         return Path("test.tar")
 
 
@@ -1528,7 +1543,7 @@ async def test_receive_backup(
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
@@ -1751,7 +1766,7 @@ async def test_receive_backup_agent_error(
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
@@ -1897,7 +1912,7 @@ async def test_receive_backup_non_agent_upload_error(
         patch("shutil.move") as move_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
@@ -2025,7 +2040,7 @@ async def test_receive_backup_file_write_error(
         patch("pathlib.Path.open", open_mock),
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         resp = await client.post(
@@ -2322,7 +2337,7 @@ async def test_receive_backup_file_read_error(
         patch("pathlib.Path.unlink", side_effect=unlink_exception) as unlink_mock,
         patch(
             "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         resp = await client.post(
@@ -2375,18 +2390,61 @@ async def test_receive_backup_file_read_error(
 
 @pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("agent_id", "password_param", "restore_database", "restore_homeassistant", "dir"),
+    (
+        "agent_id",
+        "backup_id",
+        "password_param",
+        "backup_path",
+        "restore_database",
+        "restore_homeassistant",
+        "dir",
+    ),
     [
-        (LOCAL_AGENT_ID, {}, True, False, "backups"),
-        (LOCAL_AGENT_ID, {"password": "abc123"}, False, True, "backups"),
-        ("test.remote", {}, True, True, "tmp_backups"),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_DEF456.backup_id,
+            {},
+            TEST_BACKUP_PATH_DEF456,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {"password": "abc123"},
+            TEST_BACKUP_PATH_ABC123,
+            False,
+            True,
+            "backups",
+        ),
+        (
+            "test.remote",
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            True,
+            "tmp_backups",
+        ),
     ],
 )
 async def test_restore_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     agent_id: str,
+    backup_id: str,
     password_param: dict[str, str],
+    backup_path: Path,
     restore_database: bool,
     restore_homeassistant: bool,
     dir: str,
@@ -2426,14 +2484,14 @@ async def test_restore_backup(
         patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
-                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "backup_id": backup_id,
                 "agent_id": agent_id,
                 "restore_database": restore_database,
                 "restore_homeassistant": restore_homeassistant,
@@ -2473,17 +2531,17 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["success"] is True
 
-    backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
+    full_backup_path = f"{hass.config.path()}/{dir}/{backup_path.name}"
     expected_restore_file = json.dumps(
         {
-            "path": backup_path,
+            "path": full_backup_path,
             "password": password,
             "remove_after_restore": agent_id != LOCAL_AGENT_ID,
             "restore_database": restore_database,
             "restore_homeassistant": restore_homeassistant,
         }
     )
-    validate_password_mock.assert_called_once_with(Path(backup_path), password)
+    validate_password_mock.assert_called_once_with(Path(full_backup_path), password)
     assert mocked_write_text.call_args[0][0] == expected_restore_file
     assert mocked_service_call.called
 
@@ -2533,7 +2591,7 @@ async def test_restore_backup_wrong_password(
         patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
@@ -2629,7 +2687,7 @@ async def test_restore_backup_wrong_parameters(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         await ws_client.send_json_auto_id(
