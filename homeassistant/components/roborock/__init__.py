@@ -118,16 +118,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
     valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
 
-    async def on_unload(_: Any) -> None:
+    async def on_stop(_: Any) -> None:
         _LOGGER.debug("Shutting down roborock")
         await asyncio.gather(
-            *(coordinator.async_stop() for coordinator in valid_coordinators.values())
+            *(
+                coordinator.async_shutdown()
+                for coordinator in valid_coordinators.values()
+            )
         )
 
     entry.async_on_unload(
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP,
-            on_unload,
+            on_stop,
         )
     )
     entry.runtime_data = valid_coordinators
@@ -214,7 +217,7 @@ async def setup_device_v1(
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:
-        await coordinator.release()
+        await coordinator.async_shutdown()
         if isinstance(coordinator.api, RoborockMqttClientV1):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
