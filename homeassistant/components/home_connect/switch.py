@@ -192,6 +192,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             desc = " ".join(
                 ["Program", program.key.split(".")[-3], program.key.split(".")[-1]]
             )
+        self.program = program
         super().__init__(
             coordinator,
             appliance,
@@ -200,7 +201,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         self._attr_name = f"{appliance.info.name} {desc}"
         self._attr_unique_id = f"{appliance.info.ha_id}-{desc}"
         self._attr_has_entity_name = False
-        self.program = program
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""

@@ -66,18 +66,17 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         desc: SelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        super().__init__(
-            coordinator,
-            appliance,
-            desc,
-        )
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in appliance.programs
             if program.key != ProgramKey.UNKNOWN
         ]
+        super().__init__(
+            coordinator,
+            appliance,
+            desc,
+        )
         self.start_on_select = desc.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
-        self._attr_current_option = None
 
     def update_native_value(self) -> None:
         """Set the program value."""

@@ -125,11 +125,18 @@ async def test_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "program_key", "appliance_ha_id"),
+    ("entity_id", "program_key", "initial_state", "appliance_ha_id"),
     [
         (
             "switch.dryer_program_mix",
             ProgramKey.LAUNDRY_CARE_DRYER_MIX,
+            STATE_OFF,
+            "Dryer",
+        ),
+        (
+            "switch.dryer_program_cotton",
+            ProgramKey.LAUNDRY_CARE_DRYER_COTTON,
+            STATE_ON,
             "Dryer",
         ),
     ],
@@ -138,6 +145,7 @@ async def test_switch_functionality(
 async def test_program_switch_functionality(
     entity_id: str,
     program_key: ProgramKey,
+    initial_state: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -174,6 +182,7 @@ async def test_program_switch_functionality(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, initial_state)
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}
