@@ -290,7 +290,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'latestvolt_id',
+    'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.A',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -343,7 +343,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'latestvolt_id',
+    'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.B',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -396,7 +396,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'latestvolt_id',
+    'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.C',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -449,7 +449,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'latestvolt_id',
+    'translation_key': 'latest_voltage_id',
     'unique_id': '/20.111111111111/latestvolt.D',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -502,7 +502,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'volt_id',
+    'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.A',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -555,7 +555,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'volt_id',
+    'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.B',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -608,7 +608,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'volt_id',
+    'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.C',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
@@ -661,7 +661,7 @@
     'platform': 'onewire',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'volt_id',
+    'translation_key': 'voltage_id',
     'unique_id': '/20.111111111111/volt.D',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
