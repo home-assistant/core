@@ -67,7 +67,7 @@
   "services": {
     "post": {
       "name": "Post",
-      "description": "Post a status to Mastodon",
+      "description": "Posts a status on your Mastodon account.",
       "fields": {
         "config_entry_id": {
           "name": "Mastodon account",
