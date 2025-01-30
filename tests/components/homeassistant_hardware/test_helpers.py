@@ -149,7 +149,7 @@ async def test_dispatcher_iter_error_handling(
         info = [i async for i in hass.data[DATA_COMPONENT].iter_firmware_info()]
 
     assert info == [FIRMWARE_INFO_SPINEL]
-    assert "Error while getting firmware info for" in caplog.text
+    assert "Error while getting firmware info from" in caplog.text
 
 
 async def test_dispatcher_callback_error_handling(
