@@ -43,19 +43,7 @@ def add_lcn_entities(
         if entity_config[CONF_DOMAIN_DATA][CONF_MOTOR] in "OUTPUTS":
             entities.append(LcnOutputsCover(entity_config, config_entry))
         else:  # in RELAYS
-            positioning_mode = entity_config[CONF_DOMAIN_DATA].get(
-                CONF_POSITIONING_MODE, pypck.lcn_defs.MotorPositioningMode.NONE.value
-            )
-            if positioning_mode == pypck.lcn_defs.MotorPositioningMode.NONE.value:
-                entities.append(LcnRelayCover(entity_config, config_entry))
-            else:  # in BS4 or MODULE
-                entities.append(
-                    LcnRelayCoverPositioning(
-                        entity_config,
-                        config_entry,
-                        pypck.lcn_defs.MotorPositioningMode(positioning_mode),
-                    )
-                )
+            entities.append(LcnRelayCover(entity_config, config_entry))
 
     async_add_entities(entities)
 
@@ -197,11 +185,21 @@ class LcnRelayCover(LcnEntity, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
-    positioning_mode = pypck.lcn_defs.MotorPositioningMode.NONE
+
+    positioning_mode: pypck.lcn_defs.MotorPositioningMode
 
     def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
         """Initialize the LCN cover."""
         super().__init__(config, config_entry)
+
+        self.positioning_mode = pypck.lcn_defs.MotorPositioningMode(
+            config[CONF_DOMAIN_DATA].get(
+                CONF_POSITIONING_MODE, pypck.lcn_defs.MotorPositioningMode.NONE.value
+            )
+        )
+
+        if self.positioning_mode != pypck.lcn_defs.MotorPositioningMode.NONE:
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         self.motor = pypck.lcn_defs.MotorPort[config[CONF_DOMAIN_DATA][CONF_MOTOR]]
         self.motor_port_onoff = self.motor.value * 2
@@ -262,46 +260,6 @@ class LcnRelayCover(LcnEntity, CoverEntity):
         self._attr_is_opening = False
         self.async_write_ha_state()
 
-    def input_received(self, input_obj: InputType) -> None:
-        """Set cover states when LCN input object (command) is received."""
-        if isinstance(input_obj, pypck.inputs.ModStatusRelays):
-            self._attr_is_opening = input_obj.is_opening(self.motor.value)
-            self._attr_is_closing = input_obj.is_closing(self.motor.value)
-
-            if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.NONE:
-                self._attr_is_closed = input_obj.is_assumed_closed(self.motor.value)
-            self.async_write_ha_state()
-
-
-class LcnRelayCoverPositioning(LcnRelayCover):
-    """Representation of a LCN cover connected to relays with BS4 or module positioning mode."""
-
-    _attr_supported_features = (
-        CoverEntityFeature.OPEN
-        | CoverEntityFeature.CLOSE
-        | CoverEntityFeature.STOP
-        | CoverEntityFeature.SET_POSITION
-    )
-
-    input_mapping = {
-        pypck.lcn_defs.MotorPositioningMode.BS4: pypck.inputs.ModStatusMotorPositionBS4,
-        pypck.lcn_defs.MotorPositioningMode.MODULE: pypck.inputs.ModStatusMotorPositionModule,
-    }
-
-    def __init__(
-        self,
-        config: ConfigType,
-        config_entry: ConfigEntry,
-        positioning_mode: pypck.lcn_defs.MotorPositioningMode,
-    ) -> None:
-        """Initialize the LCN cover with positioning."""
-        super().__init__(config, config_entry)
-
-        self.positioning_mode = positioning_mode
-
-        if self._attr_current_cover_position is None:
-            self._attr_current_cover_position = 0
-
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
@@ -312,21 +270,33 @@ class LcnRelayCoverPositioning(LcnRelayCover):
         self._attr_is_closed = (self._attr_current_cover_position == 0) & (
             position == 0
         )
-        self._attr_is_closing = self._attr_current_cover_position > position
-        self._attr_is_opening = self._attr_current_cover_position < position
+        if self._attr_current_cover_position is not None:
+            self._attr_is_closing = self._attr_current_cover_position > position
+            self._attr_is_opening = self._attr_current_cover_position < position
         self._attr_current_cover_position = position
 
         self.async_write_ha_state()
 
     def input_received(self, input_obj: InputType) -> None:
         """Set cover states when LCN input object (command) is received."""
-        super().input_received(input_obj)
+        if isinstance(input_obj, pypck.inputs.ModStatusRelays):
+            self._attr_is_opening = input_obj.is_opening(self.motor.value)
+            self._attr_is_closing = input_obj.is_closing(self.motor.value)
 
-        if (
-            isinstance(input_obj, self.input_mapping[self.positioning_mode])
+            if self.positioning_mode == pypck.lcn_defs.MotorPositioningMode.NONE:
+                self._attr_is_closed = input_obj.is_assumed_closed(self.motor.value)
+            self.async_write_ha_state()
+        elif (
+            isinstance(
+                input_obj,
+                (
+                    pypck.inputs.ModStatusMotorPositionBS4,
+                    pypck.inputs.ModStatusMotorPositionModule,
+                ),
+            )
             and input_obj.motor == self.motor.value
         ):
-            self._attr_current_cover_position = input_obj.position_percent
+            self._attr_current_cover_position = input_obj.position
             if self._attr_current_cover_position in [0, 100]:
                 self._attr_is_opening = False
                 self._attr_is_closing = False
