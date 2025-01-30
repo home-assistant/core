@@ -156,6 +156,28 @@ async def test_agents_delete(
     mock_drive_items.delete.assert_called_once()
 
 
+async def test_agents_delete_not_found_does_not_throw(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test agent delete backup."""
+    mock_drive_items.delete = AsyncMock(side_effect=APIError(response_status_code=404))
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": BACKUP_METADATA["backup_id"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    mock_drive_items.delete.assert_called_once()
+
+
 async def test_agents_upload(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
