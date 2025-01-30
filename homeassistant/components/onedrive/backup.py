@@ -159,7 +159,10 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        await self._client.delete_drive_item(self._get_backup_path(backup_id))
+        try:
+            await self._client.delete_drive_item(self._get_backup_path(backup_id))
+        except NotFoundError:
+            return
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:

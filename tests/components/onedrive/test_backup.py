@@ -242,6 +242,28 @@ async def test_delete_error(
     }
 
 
+async def test_agents_delete_not_found_does_not_throw(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test agent delete backup."""
+    mock_onedrive_client.delete_drive_item.side_effect = NotFoundError(404, "Not found")
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": BACKUP_METADATA["backup_id"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    mock_onedrive_client.delete_drive_item.assert_called_once()
+
+
 async def test_agents_backup_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
