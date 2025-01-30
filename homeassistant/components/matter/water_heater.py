@@ -131,6 +131,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 clusters.Thermostat.Attributes.AbsMaxHeatSetpointLimit
             ),
         )
+        self._attr_target_temperature_low = self._attr_min_temp
+        self._attr_target_temperature_high = self._attr_max_temp
 
     @callback
     def _get_temperature_in_degrees(
