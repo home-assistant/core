@@ -7,7 +7,7 @@ from typing import Any
 import evohomeasync2 as evo
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, EvoService
 from .coordinator import EvoDataUpdateCoordinator
@@ -15,23 +15,23 @@ from .coordinator import EvoDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class EvoDevice(Entity):
+class EvoDevice(CoordinatorEntity):
     """Base for any evohome-compatible entity (controller, DHW, zone).
 
     This includes the controller, (1 to 12) heating zones and (optionally) a
     DHW controller.
     """
 
-    _attr_should_poll = False
+    coordinator: EvoDataUpdateCoordinator
 
     def __init__(
         self,
-        evo_broker: EvoDataUpdateCoordinator,
+        coordinator: EvoDataUpdateCoordinator,
         evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
         """Initialize an evohome-compatible entity (TCS, DHW, zone)."""
+        super().__init__(coordinator)
         self._evo_device = evo_device
-        self._evo_broker = evo_broker
 
         self._device_state_attrs: dict[str, Any] = {}
 
@@ -67,6 +67,7 @@ class EvoDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
         async_dispatcher_connect(self.hass, DOMAIN, self.async_refresh)
 
 
@@ -80,10 +81,10 @@ class EvoChild(EvoDevice):
     _evo_id: str
 
     def __init__(
-        self, evo_broker: EvoDataUpdateCoordinator, evo_device: evo.HotWater | evo.Zone
+        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater | evo.Zone
     ) -> None:
         """Initialize an evohome-compatible child entity (DHW, zone)."""
-        super().__init__(evo_broker, evo_device)
+        super().__init__(coordinator, evo_device)
 
         self._evo_tcs = evo_device.tcs
 
@@ -96,7 +97,7 @@ class EvoChild(EvoDevice):
 
         assert isinstance(self._evo_device, evo.HotWater | evo.Zone)  # mypy check
 
-        if (temp := self._evo_broker.temps.get(self._evo_id)) is not None:
+        if (temp := self.coordinator.temps.get(self._evo_id)) is not None:
             # use high-precision temps if available
             return temp
         return self._evo_device.temperature
@@ -114,7 +115,7 @@ class EvoChild(EvoDevice):
         """Get the latest schedule, if any."""
 
         try:
-            schedule = await self._evo_broker.call_client_api(
+            schedule = await self.coordinator.call_client_api(
                 self._evo_device.get_schedule(),  # type: ignore[arg-type]
                 update_state=False,
             )

@@ -49,8 +49,8 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker: EvoDataUpdateCoordinator = hass.data[EVOHOME_KEY].coordinator
-    tcs: evo.ControlSystem = hass.data[EVOHOME_KEY].tcs
+    coordinator = hass.data[EVOHOME_KEY].coordinator
+    tcs = hass.data[EVOHOME_KEY].tcs
 
     assert tcs.hotwater is not None  # mypy check
 
@@ -60,7 +60,7 @@ async def async_setup_platform(
         tcs.hotwater.id,
     )
 
-    new_entity = EvoDHW(broker, tcs.hotwater)
+    new_entity = EvoDHW(coordinator, tcs.hotwater)
 
     async_add_entities([new_entity], update_before_add=True)
 
@@ -76,18 +76,18 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _evo_device: evo.HotWater  # mypy hint
 
     def __init__(
-        self, evo_broker: EvoDataUpdateCoordinator, evo_device: evo.HotWater
+        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater
     ) -> None:
         """Initialize an evohome-compatible DHW controller."""
 
-        super().__init__(evo_broker, evo_device)
+        super().__init__(coordinator, evo_device)
         self._evo_id = evo_device.id
 
         self._attr_unique_id = evo_device.id
         self._attr_name = evo_device.name  # is static
 
         self._attr_precision = (
-            PRECISION_TENTHS if evo_broker.client_v1 else PRECISION_WHOLE
+            PRECISION_TENTHS if coordinator.client_v1 else PRECISION_WHOLE
         )
         self._attr_supported_features = (
             WaterHeaterEntityFeature.AWAY_MODE | WaterHeaterEntityFeature.OPERATION_MODE
@@ -113,34 +113,34 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         Except for Auto, the mode is only until the next SetPoint.
         """
         if operation_mode == STATE_AUTO:
-            await self._evo_broker.call_client_api(self._evo_device.reset())
+            await self.coordinator.call_client_api(self._evo_device.reset())
         else:
             await self._update_schedule()
             until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
             until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
-                await self._evo_broker.call_client_api(self._evo_device.on(until=until))
+                await self.coordinator.call_client_api(self._evo_device.on(until=until))
             else:  # STATE_OFF
-                await self._evo_broker.call_client_api(
+                await self.coordinator.call_client_api(
                     self._evo_device.off(until=until)
                 )
 
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
-        await self._evo_broker.call_client_api(self._evo_device.off())
+        await self.coordinator.call_client_api(self._evo_device.off())
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
-        await self._evo_broker.call_client_api(self._evo_device.reset())
+        await self.coordinator.call_client_api(self._evo_device.reset())
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on."""
-        await self._evo_broker.call_client_api(self._evo_device.on())
+        await self.coordinator.call_client_api(self._evo_device.on())
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
-        await self._evo_broker.call_client_api(self._evo_device.off())
+        await self.coordinator.call_client_api(self._evo_device.off())
 
     async def async_update(self) -> None:
         """Get the latest state data for a DHW controller."""

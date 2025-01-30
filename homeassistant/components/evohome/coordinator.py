@@ -32,7 +32,7 @@ from .const import CONF_LOCATION_IDX, DOMAIN
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
-    """Broker for evohome client broker."""
+    """Coordinator for evohome integration/client."""
 
     def __init__(
         self,
@@ -154,7 +154,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         client_api: Awaitable[dict[str, Any] | None],
         update_state: bool = True,
     ) -> dict[str, Any] | None:
-        """Call a client API and update the broker state if required."""
+        """Call a client API and update the Coordinator state if required."""
 
         try:
             result = await client_api

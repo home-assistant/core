@@ -91,9 +91,9 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    broker: EvoDataUpdateCoordinator = hass.data[EVOHOME_KEY].coordinator
-    loc_idx: int = hass.data[EVOHOME_KEY].loc_idx
-    tcs: evo.ControlSystem = hass.data[EVOHOME_KEY].tcs
+    coordinator = hass.data[EVOHOME_KEY].coordinator
+    loc_idx = hass.data[EVOHOME_KEY].loc_idx
+    tcs = hass.data[EVOHOME_KEY].tcs
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
@@ -103,7 +103,7 @@ async def async_setup_platform(
         loc_idx,
     )
 
-    entities: list[EvoClimateEntity] = [EvoController(broker, tcs)]
+    entities: list[EvoClimateEntity] = [EvoController(coordinator, tcs)]
 
     for zone in tcs.zones:
         if (
@@ -118,7 +118,7 @@ async def async_setup_platform(
                 zone.name,
             )
 
-            new_entity = EvoZone(broker, zone)
+            new_entity = EvoZone(coordinator, zone)
             entities.append(new_entity)
 
         else:
@@ -181,7 +181,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
         if service == EvoService.RESET_ZONE_OVERRIDE:
-            await self._evo_broker.call_client_api(self._evo_device.reset())
+            await self.coordinator.call_client_api(self._evo_device.reset())
             return
 
         # otherwise it is EvoService.SET_ZONE_OVERRIDE
@@ -198,7 +198,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             until = None  # indefinitely
 
         until = dt_util.as_utc(until) if until else None
-        await self._evo_broker.call_client_api(
+        await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
 
@@ -263,7 +263,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
                 )
 
         until = dt_util.as_utc(until) if until else None
-        await self._evo_broker.call_client_api(
+        await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
 
@@ -285,18 +285,18 @@ class EvoZone(EvoChild, EvoClimateEntity):
         and 'Away', Zones to (by default) 12C.
         """
         if hvac_mode == HVACMode.OFF:
-            await self._evo_broker.call_client_api(
+            await self.coordinator.call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
         else:  # HVACMode.HEAT
-            await self._evo_broker.call_client_api(self._evo_device.reset())
+            await self.coordinator.call_client_api(self._evo_device.reset())
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EvoZoneMode.FOLLOW_SCHEDULE)
 
         if evo_preset_mode == EvoZoneMode.FOLLOW_SCHEDULE:
-            await self._evo_broker.call_client_api(self._evo_device.reset())
+            await self.coordinator.call_client_api(self._evo_device.reset())
             return
 
         if evo_preset_mode == EvoZoneMode.TEMPORARY_OVERRIDE:
@@ -309,7 +309,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         assert temperature is not None  # mypy check
 
         until = dt_util.as_utc(until) if until else None
-        await self._evo_broker.call_client_api(
+        await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
 
@@ -337,11 +337,11 @@ class EvoController(EvoClimateEntity):
     _evo_device: evo.ControlSystem  # mypy hint
 
     def __init__(
-        self, evo_broker: EvoDataUpdateCoordinator, evo_device: evo.ControlSystem
+        self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.ControlSystem
     ) -> None:
         """Initialize an evohome-compatible controller."""
 
-        super().__init__(evo_broker, evo_device)
+        super().__init__(coordinator, evo_device)
         self._evo_id = evo_device.id
 
         self._attr_unique_id = evo_device.id
@@ -384,7 +384,7 @@ class EvoController(EvoClimateEntity):
     ) -> None:
         """Set a Controller to any of its native operating modes."""
         until = dt_util.as_utc(until) if until else None
-        await self._evo_broker.call_client_api(
+        await self.coordinator.call_client_api(
             self._evo_device.set_mode(mode, until=until)
         )
 
