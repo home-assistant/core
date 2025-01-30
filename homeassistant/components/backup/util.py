@@ -20,6 +20,7 @@ from securetar import SecureTarError, SecureTarFile, SecureTarReadError
 from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 from homeassistant.util.thread import ThreadWithException
 
@@ -115,6 +116,12 @@ def read_backup(backup_path: Path) -> AgentBackup:
             protected=cast(bool, data.get("protected", False)),
             size=backup_path.stat().st_size,
         )
+
+
+def suggested_filename(backup: AgentBackup) -> str:
+    """Suggest a filename for the backup."""
+    date = dt_util.parse_datetime(backup.date, raise_on_error=True)
+    return f"{backup.name} - {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar"
 
 
 def validate_password(path: Path, password: str | None) -> bool:

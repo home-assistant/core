@@ -199,7 +199,7 @@ async def handle_can_decrypt_on_download(
         vol.Optional("include_database", default=True): bool,
         vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
-        vol.Optional("name"): str,
+        vol.Optional("name"): vol.Any(str, None),
         vol.Optional("password"): vol.Any(str, None),
     }
 )

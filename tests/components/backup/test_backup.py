@@ -103,7 +103,9 @@ async def test_upload(
     assert resp.status == 201
     assert open_mock.call_count == 1
     assert move_mock.call_count == 1
-    assert move_mock.mock_calls[0].args[1].name == "abc123.tar"
+    assert (
+        move_mock.mock_calls[0].args[1].name == "Test - 1970-01-01 00.00 00000000.tar"
+    )
 
 
 @pytest.mark.usefixtures("read_backup")

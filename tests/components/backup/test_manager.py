@@ -21,6 +21,7 @@ from unittest.mock import (
     patch,
 )
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.backup import (
@@ -345,18 +346,70 @@ async def test_create_backup_wrong_parameters(
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("agent_ids", "backup_directory", "temp_file_unlink_call_count"),
+    (
+        "agent_ids",
+        "backup_directory",
+        "name",
+        "expected_name",
+        "expected_filename",
+        "temp_file_unlink_call_count",
+    ),
     [
-        ([LOCAL_AGENT_ID], "backups", 0),
-        (["test.remote"], "tmp_backups", 1),
-        ([LOCAL_AGENT_ID, "test.remote"], "backups", 0),
+        (
+            [LOCAL_AGENT_ID],
+            "backups",
+            None,
+            "Custom backup 2025.1.0",
+            "Custom backup 2025.1.0 - 2025-01-30 05.42 12345678.tar",
+            0,
+        ),
+        (
+            ["test.remote"],
+            "tmp_backups",
+            None,
+            "Custom backup 2025.1.0",
+            "abc123.tar",  # We don't use friendly name for temporary backups
+            1,
+        ),
+        (
+            [LOCAL_AGENT_ID, "test.remote"],
+            "backups",
+            None,
+            "Custom backup 2025.1.0",
+            "Custom backup 2025.1.0 - 2025-01-30 05.42 12345678.tar",
+            0,
+        ),
+        (
+            [LOCAL_AGENT_ID],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name - 2025-01-30 05.42 12345678.tar",
+            0,
+        ),
+        (
+            ["test.remote"],
+            "tmp_backups",
+            "custom_name",
+            "custom_name",
+            "abc123.tar",  # We don't use friendly name for temporary backups
+            1,
+        ),
+        (
+            [LOCAL_AGENT_ID, "test.remote"],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name - 2025-01-30 05.42 12345678.tar",
+            0,
+        ),
     ],
 )
 @pytest.mark.parametrize(
     "params",
     [
         {},
-        {"include_database": True, "name": "abc123"},
+        {"include_database": True},
         {"include_database": False},
         {"password": "pass123"},
     ],
@@ -364,6 +417,7 @@ async def test_create_backup_wrong_parameters(
 async def test_initiate_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
@@ -371,6 +425,9 @@ async def test_initiate_backup(
     params: dict[str, Any],
     agent_ids: list[str],
     backup_directory: str,
+    name: str | None,
+    expected_name: str,
+    expected_filename: str,
     temp_file_unlink_call_count: int,
 ) -> None:
     """Test generate backup."""
@@ -393,9 +450,9 @@ async def test_initiate_backup(
         )
 
     ws_client = await hass_ws_client(hass)
+    freezer.move_to("2025-01-30 13:42:12.345678")
 
     include_database = params.get("include_database", True)
-    name = params.get("name", "Custom backup 2025.1.0")
     password = params.get("password")
     path_glob.return_value = []
 
@@ -427,7 +484,7 @@ async def test_initiate_backup(
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
         await ws_client.send_json_auto_id(
-            {"type": "backup/generate", "agent_ids": agent_ids} | params
+            {"type": "backup/generate", "agent_ids": agent_ids, "name": name} | params
         )
         result = await ws_client.receive_json()
         assert result["event"] == {
@@ -487,7 +544,7 @@ async def test_initiate_backup(
             "exclude_database": not include_database,
             "version": "2025.1.0",
         },
-        "name": name,
+        "name": expected_name,
         "protected": bool(password),
         "slug": backup_id,
         "type": "partial",
@@ -514,7 +571,7 @@ async def test_initiate_backup(
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
-        "name": name,
+        "name": expected_name,
         "with_automatic_settings": False,
     }
 
@@ -528,7 +585,7 @@ async def test_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_id}.tar"
+    assert tar_file_path == f"{backup_directory}/{expected_filename}"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -1482,7 +1539,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             "agent_id=backup.local&agent_id=test.remote",
             2,
             1,
-            ["abc123.tar"],
+            ["Test - 1970-01-01 00.00 00000000.tar"],
             {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
             b"test",
             0,
@@ -1491,7 +1548,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             "agent_id=backup.local",
             1,
             1,
-            ["abc123.tar"],
+            ["Test - 1970-01-01 00.00 00000000.tar"],
             {},
             None,
             0,
