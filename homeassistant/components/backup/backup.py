@@ -127,6 +127,9 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup file."""
+        if not self._loaded_backups:
+            await self._load_backups()
+
         try:
             backup_path = self.get_backup_path(backup_id)
         except BackupNotFound:
