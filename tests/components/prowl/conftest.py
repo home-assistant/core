@@ -10,7 +10,7 @@ from homeassistant.setup import async_setup_component
 API_BASE_URL = "https://api.prowlapp.com/publicapi/"
 
 
-@pytest.fixture(name="configure_prowl_through_yaml")
+@pytest.fixture
 async def configure_prowl_through_yaml(hass: HomeAssistant):
     """Configure the notify domain with YAML for the Prowl platform."""
     await async_setup_component(

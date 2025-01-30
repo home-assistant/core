@@ -2222,6 +2222,9 @@ pyprof2calltree==1.4.5
 # homeassistant.components.prosegur
 pyprosegur==0.0.9
 
+# homeassistant.components.prowl
+pyprowl==3.0.1
+
 # homeassistant.components.prusalink
 pyprusalink==2.1.1
 

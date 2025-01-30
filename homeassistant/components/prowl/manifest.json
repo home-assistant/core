@@ -4,5 +4,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/prowl",
   "iot_class": "cloud_push",
-  "quality_scale": "legacy"
+  "quality_scale": "legacy",
+  "requirements": ["pyprowl==3.0.1"]
 }

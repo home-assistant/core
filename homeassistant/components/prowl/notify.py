@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from http import HTTPStatus
 import logging
+from typing import Any
 
+import pyprowl
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -18,7 +19,6 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,40 +39,29 @@ async def async_get_service(
 class ProwlNotificationService(BaseNotificationService):
     """Implement the notification service for Prowl."""
 
-    def __init__(self, hass, api_key):
+    def __init__(self, hass: HomeAssistant, api_key: str) -> None:
         """Initialize the service."""
         self._hass = hass
-        self._api_key = api_key
+        self._prowl = pyprowl.Prowl(api_key)
 
-    async def async_send_message(self, message, **kwargs):
+    async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
-        response = None
-        session = None
         url = f"{_RESOURCE}add"
         data = kwargs.get(ATTR_DATA)
-        payload = {
-            "apikey": self._api_key,
-            "application": "Home-Assistant",
-            "event": kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
-            "description": message,
-            "priority": data["priority"] if data and "priority" in data else 0,
-        }
+
         if data and data.get("url"):
-            payload["url"] = data["url"]
-
-        _LOGGER.debug("Attempting call Prowl service at %s", url)
-        session = async_get_clientsession(self._hass)
-
+            url = data["url"]
         try:
             async with asyncio.timeout(10):
-                response = await session.post(url, data=payload)
-                result = await response.text()
-
-            if response.status != HTTPStatus.OK or "error" in result:
-                _LOGGER.error(
-                    "Prowl service returned http status %d, response %s",
-                    response.status,
-                    result,
+                self._prowl.notify(
+                    appName="Home-Assistant",
+                    event=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
+                    description=message,
+                    priority=data["priority"] if data and "priority" in data else 0,
+                    url=url,
                 )
         except TimeoutError:
             _LOGGER.error("Timeout accessing Prowl at %s", url)
+        except Exception as e:  # noqa: BLE001
+            # pyprowl just specifically raises an Exception with a string at API failures unfortunately.
+            _LOGGER.error(str(e))
