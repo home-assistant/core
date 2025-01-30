@@ -9,6 +9,7 @@ import json
 import logging
 from typing import Any, Concatenate
 
+from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
 from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
@@ -115,7 +116,8 @@ class OneDriveBackupAgent(BackupAgent):
         """Download a backup file."""
 
         stream = await self._client.download_drive_item(
-            self._get_backup_path(backup_id)
+            self._get_backup_path(backup_id),
+            timeout=ClientTimeout(connect=10, total=43200),  # 12 hours
         )
         return stream.iter_chunked(1024)
 

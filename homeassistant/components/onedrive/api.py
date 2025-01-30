@@ -16,7 +16,7 @@ class OneDriveConfigFlowAccessTokenProvider(TokenProvider):
         super().__init__()
         self._token = token
 
-    async def async_get_access_token(self) -> str:
+    def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return self._token
 
@@ -29,6 +29,6 @@ class OneDriveConfigEntryAccessTokenProvider(TokenProvider):
         super().__init__()
         self._oauth_session = oauth_session
 
-    async def async_get_access_token(self) -> str:
+    def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return cast(str, self._oauth_session.token[CONF_ACCESS_TOKEN])
