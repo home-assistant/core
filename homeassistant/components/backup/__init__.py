@@ -31,6 +31,7 @@ from .manager import (
     ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupState,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -54,6 +55,7 @@ __all__ = [
     "ManagerBackup",
     "NewBackup",
     "RestoreBackupEvent",
+    "RestoreBackupState",
     "WrittenBackup",
     "async_get_manager",
 ]

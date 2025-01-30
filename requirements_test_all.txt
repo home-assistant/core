@@ -248,6 +248,9 @@ aioharmony==0.4.1
 # homeassistant.components.hassio
 aiohasupervisor==0.2.2b6
 
+# homeassistant.components.home_connect
+aiohomeconnect==0.12.1
+
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
 
@@ -976,9 +979,6 @@ home-assistant-frontend==20250129.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
-
-# homeassistant.components.home_connect
-homeconnect==0.8.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -2407,7 +2407,7 @@ venstarcolortouch==0.19
 vilfo-api-client==0.5.0
 
 # homeassistant.components.voip
-voip-utils==0.3.0
+voip-utils==0.3.1
 
 # homeassistant.components.volvooncall
 volvooncall==0.10.3
@@ -2447,7 +2447,7 @@ webmin-xmlrpc==0.0.2
 weheat==2025.1.15
 
 # homeassistant.components.whirlpool
-whirlpool-sixth-sense==0.18.11
+whirlpool-sixth-sense==0.18.12
 
 # homeassistant.components.whois
 whois==0.9.27
@@ -2520,7 +2520,7 @@ zeroconf==0.141.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.46
+zha==0.0.47
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
