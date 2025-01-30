@@ -632,6 +632,16 @@ class UnitOfEnergy(StrEnum):
     GIGA_CALORIE = "Gcal"
 
 
+# Energy Distance units
+class UnitOfEnergyDistance(StrEnum):
+    """Energy Distance units."""
+
+    KILO_WATT_HOUR_PER_100_KM = "kWh/100km"
+    KILO_WATT_HOUR_PER_100_MI = "kWh/100mi"
+    MILES_PER_KILO_WATT_HOUR = "mi/kWh"
+    KM_PER_KILO_WATT_HOUR = "km/kWh"
+
+
 # Electric_current units
 class UnitOfElectricCurrent(StrEnum):
     """Electric current units."""

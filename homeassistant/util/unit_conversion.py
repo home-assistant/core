@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfInformation,
     UnitOfLength,
     UnitOfMass,
@@ -90,6 +91,7 @@ class BaseUnitConverter:
     VALID_UNITS: set[str | None]
 
     _UNIT_CONVERSION: dict[str | None, float]
+    _UNIT_INVERSES: set[tuple[str, str]] = set()
 
     @classmethod
     def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
@@ -105,6 +107,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        if cls._is_unit_inverses(from_unit, to_unit):
+            return lambda val: to_ratio / (val / from_ratio)
         return lambda val: (val / from_ratio) * to_ratio
 
     @classmethod
@@ -129,6 +133,8 @@ class BaseUnitConverter:
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
+        if cls._is_unit_inverses(from_unit, to_unit):
+            return lambda val: None if val is None else to_ratio / (val / from_ratio)
         return lambda val: None if val is None else (val / from_ratio) * to_ratio
 
     @classmethod
@@ -137,6 +143,15 @@ class BaseUnitConverter:
         """Get unit ratio between units of measurement."""
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
         return from_ratio / to_ratio
+
+    @classmethod
+    @lru_cache
+    def _is_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
+        """Return true if units are inverses to one another."""
+        return (from_unit, to_unit) in cls._UNIT_INVERSES or (
+            to_unit,
+            from_unit,
+        ) in cls._UNIT_INVERSES
 
 
 class DataRateConverter(BaseUnitConverter):
@@ -282,6 +297,37 @@ class EnergyConverter(BaseUnitConverter):
         UnitOfEnergy.GIGA_CALORIE: _WH_TO_CAL / 1e6,
     }
     VALID_UNITS = set(UnitOfEnergy)
+
+
+class EnergyDistanceConverter(BaseUnitConverter):
+    """Utility to convert vehicle energy consumption values."""
+
+    UNIT_CLASS = "energy_distance"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM: 1,
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI: _MILE_TO_M / _KM_TO_M,
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
+    }
+    _UNIT_INVERSES: set[tuple[str, str]] = {
+        (
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        ),
+        (
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
+            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        ),
+        (
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_MI,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        ),
+        (
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        ),
+    }
+    VALID_UNITS = set(UnitOfEnergyDistance)
 
 
 class InformationConverter(BaseUnitConverter):
