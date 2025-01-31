@@ -20,7 +20,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import group
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -4412,6 +4414,55 @@ async def test_area_devices(
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_area_attr(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test area_attr functions."""
+    # Test non existing area id (area_attr)
+    info = render_to_info(hass, "{{ area_attr('deadbeef', 'name') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test non existing area name (area_attr)
+    info = render_to_info(hass, "{{ area_attr('fake area name', 'name') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type (area_attr)
+    info = render_to_info(hass, "{{ area_attr(56, 'name') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    hass.states.async_set(
+        "sensor.mock_temperature",
+        "20",
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
+            ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
+        },
+    )
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    area_registry.async_update(
+        area_entry.id, temperature_entity_id="sensor.mock_temperature"
+    )
+
+    # Test non existent area attribute (area_attr)
+    info = render_to_info(
+        hass, f"{{{{ area_attr('{area_entry.id}', 'invalid_attr') }}}}"
+    )
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test temperature_entity_id area attribute (area_attr)
+    info = render_to_info(
+        hass, f"{{{{ area_attr('{area_entry.id}', 'temperature_entity_id') }}}}"
+    )
+    assert_result_info(info, "sensor.mock_temperature")
 
 
 def test_closest_function_to_coord(hass: HomeAssistant) -> None:

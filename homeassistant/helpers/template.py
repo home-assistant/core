@@ -1649,6 +1649,20 @@ def area_devices(hass: HomeAssistant, area_id_or_name: str) -> Iterable[str]:
     return [entry.id for entry in entries]
 
 
+def area_attr(hass: HomeAssistant, area_id_or_name: str, attr_name: str) -> Any:
+    """Get area specific attribute."""
+    area_reg = area_registry.async_get(hass)
+    area = area_reg.async_get_area(area_id_or_name)
+
+    if area is None:
+        return None
+
+    if not hasattr(area, attr_name):
+        return None
+
+    return getattr(area, attr_name)
+
+
 def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None]:
     """Return all labels, or those from a area ID, device ID, or entity ID."""
     label_reg = label_registry.async_get(hass)
@@ -3035,6 +3049,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["area_devices"] = hassfunction(area_devices)
         self.filters["area_devices"] = self.globals["area_devices"]
+
+        self.globals["area_attr"] = hassfunction(area_attr)
+        self.filters["area_attr"] = self.globals["area_attr"]
 
         self.globals["floors"] = hassfunction(floors)
         self.filters["floors"] = self.globals["floors"]
