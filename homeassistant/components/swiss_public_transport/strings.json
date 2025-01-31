@@ -64,8 +64,8 @@
       "departure2": {
         "name": "Departure +2"
       },
-      "duration": {
-        "name": "Duration"
+      "trip_duration": {
+        "name": "Trip duration"
       },
       "transfers": {
         "name": "Transfers"
