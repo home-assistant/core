@@ -136,17 +136,16 @@ async def test_media_player_playing(
         patch.object(
             DevialetApi, "night_mode", new_callable=PropertyMock
         ) as mock_night_mode,
-        patch.object(DevialetApi, "available_operations", new_callable=PropertyMock),
         patch.object(DevialetApi, "source", new_callable=PropertyMock) as mock_source,
     ):
+        entry = await setup_integration(hass, aioclient_mock)
+        assert entry.state is ConfigEntryState.LOADED
+
         mock_upnp_available.return_value = True
         mock_playing_state.return_value = MediaPlayerState.PLAYING
         mock_equalizer.return_value = "flat"
         mock_night_mode.return_value = False
         mock_source.return_value = "spotifyconnect"
-
-        entry = await setup_integration(hass, aioclient_mock)
-        assert entry.state is ConfigEntryState.LOADED
 
         freezer.tick(10)
         async_fire_time_changed(hass)
@@ -169,10 +168,7 @@ async def test_media_player_playing(
         assert state.attributes[ATTR_SUPPORTED_FEATURES] is not None
         assert state.attributes[ATTR_INPUT_SOURCE] is not None
         assert state.attributes[ATTR_SOUND_MODE] is not None
-        assert (
-            state.attributes[ATTR_SUPPORTED_FEATURES]
-            == SUPPORT_DEVIALET | SUPPORT_MEDIA
-        )
+        assert len(state.attributes[ATTR_SUPPORTED_FEATURES]) == 13
 
         mock_playing_state.return_value = MediaPlayerState.PAUSED
         freezer.tick(10)
@@ -221,18 +217,33 @@ async def test_media_player_playing(
             not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
         )
 
-        mock_source.return_value = "someSource"
-        freezer.tick(10)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
-        assert (
-            ATTR_INPUT_SOURCE
-            not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
-        )
+        with patch.object(
+            DevialetApi, "available_operations", new_callable=PropertyMock
+        ) as mock:
+            mock.return_value = None
+            freezer.tick(10)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert (
+                hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes[
+                    ATTR_SUPPORTED_FEATURES
+                ]
+                == SUPPORT_DEVIALET | SUPPORT_MEDIA
+            )
 
-        await hass.config_entries.async_unload(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.NOT_LOADED
+        with patch.object(DevialetApi, "source", new_callable=PropertyMock) as mock:
+            mock.return_value = "someSource"
+            freezer.tick(10)
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+            assert (
+                ATTR_INPUT_SOURCE
+                not in hass.states.get(f"{MP_DOMAIN}.{NAME.lower()}").attributes
+            )
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_media_player_offline(
