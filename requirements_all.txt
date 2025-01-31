@@ -1247,7 +1247,7 @@ israel-rail-api==0.1.2
 jaraco.abode==6.2.1
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.9.2
+jellyfin-apiclient-python==1.10.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
@@ -2346,7 +2346,7 @@ pytautulli==23.1.1
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==2.2.0
+python-MotionMount==2.3.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -2902,7 +2902,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2024.12
+total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4

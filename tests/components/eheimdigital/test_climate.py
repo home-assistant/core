@@ -56,6 +56,41 @@ async def test_setup_heater(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_dynamic_new_devices(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    heater_mock: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test light platform setup with at first no devices and dynamically adding a device."""
+    mock_config_entry.add_to_hass(hass)
+
+    eheimdigital_hub_mock.return_value.devices = {}
+
+    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.CLIMATE]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert (
+        len(
+            entity_registry.entities.get_entries_for_config_entry_id(
+                mock_config_entry.entry_id
+            )
+        )
+        == 0
+    )
+
+    eheimdigital_hub_mock.return_value.devices = {"00:00:00:00:00:02": heater_mock}
+
+    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
+        "00:00:00:00:00:02", EheimDeviceType.VERSION_EHEIM_EXT_HEATER
+    )
+    await hass.async_block_till_done()
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     ("preset_mode", "heater_mode"),
     [

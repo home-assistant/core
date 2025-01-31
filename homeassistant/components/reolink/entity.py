@@ -25,6 +25,7 @@ class ReolinkEntityDescription(EntityDescription):
 
     cmd_key: str | None = None
     cmd_id: int | None = None
+    always_available: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -92,6 +93,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
+        if self.entity_description.always_available:
+            return True
+
         return (
             self._host.api.session_active
             and not self._host.api.baichuan.privacy_mode()
