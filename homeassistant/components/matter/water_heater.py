@@ -90,7 +90,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _platform_translation_key = "water_heater"
 
-    async def set_temperature(self, **kwargs: Any) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
         self._attr_target_temperature = target_temperature
@@ -105,7 +105,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
                 )
             return
 
-    async def set_operation_mode(self, operation_mode: str) -> None:
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
 
@@ -123,13 +123,13 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         self._endpoint.set_attribute_value(system_mode_path, system_mode_value)
         self._update_from_device()
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""
-        self.set_operation_mode("eco")
+        await self.async_set_operation_mode("eco")
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off water heater."""
-        self.set_operation_mode("off")
+        await self.async_set_operation_mode("off")
 
     @callback
     def _update_from_device(self) -> None:
