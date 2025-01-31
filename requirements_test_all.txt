@@ -2330,7 +2330,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2024.12
+total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.4.3
