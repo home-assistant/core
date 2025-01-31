@@ -29,6 +29,7 @@ from .const import (
     VS_FAN_MODE_ADVANCED_SLEEP,
     VS_FAN_MODE_AUTO,
     VS_FAN_MODE_MANUAL,
+    VS_FAN_MODE_NORMAL,
     VS_FAN_MODE_PET,
     VS_FAN_MODE_PRESET_LIST_HA,
     VS_FAN_MODE_SLEEP,
@@ -195,18 +196,18 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if not self.device.is_on:
             self.device.turn_on()
 
-        if preset_mode == FAN_MODE_AUTO:
-            self.smartfan.auto_mode()
-        elif preset_mode == FAN_MODE_SLEEP:
-            self.smartfan.sleep_mode()
-        elif preset_mode == FAN_MODE_ADVANCED_SLEEP:
-            self.smartfan.advanced_sleep_mode()
-        elif preset_mode == FAN_MODE_PET:
-            self.smartfan.pet_mode()
-        elif preset_mode == FAN_MODE_TURBO:
-            self.smartfan.turbo_mode()
-        elif preset_mode == FAN_MODE_NORMAL:
-            self.smartfan.normal_mode()
+        if preset_mode == VS_FAN_MODE_AUTO:
+            self.device.auto_mode()
+        elif preset_mode == VS_FAN_MODE_SLEEP:
+            self.device.sleep_mode()
+        elif preset_mode == VS_FAN_MODE_ADVANCED_SLEEP:
+            self.device.advanced_sleep_mode()
+        elif preset_mode == VS_FAN_MODE_PET:
+            self.device.pet_mode()
+        elif preset_mode == VS_FAN_MODE_TURBO:
+            self.device.turbo_mode()
+        elif preset_mode == VS_FAN_MODE_NORMAL:
+            self.device.normal_mode()
 
         self.schedule_update_ha_state()
 

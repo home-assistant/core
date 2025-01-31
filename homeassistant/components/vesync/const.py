@@ -41,6 +41,7 @@ VS_FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
 VS_FAN_MODE_TURBO = "turbo"
 VS_FAN_MODE_PET = "pet"
 VS_FAN_MODE_MANUAL = "manual"
+VS_FAN_MODE_NORMAL = "normal"
 
 # not a full list as manual is used as speed not present
 VS_FAN_MODE_PRESET_LIST_HA = [
@@ -49,6 +50,7 @@ VS_FAN_MODE_PRESET_LIST_HA = [
     VS_FAN_MODE_ADVANCED_SLEEP,
     VS_FAN_MODE_TURBO,
     VS_FAN_MODE_PET,
+    VS_FAN_MODE_NORMAL,
 ]
 
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
