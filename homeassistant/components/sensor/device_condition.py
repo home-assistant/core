@@ -48,6 +48,7 @@ CONF_IS_DATA_SIZE = "is_data_size"
 CONF_IS_DISTANCE = "is_distance"
 CONF_IS_DURATION = "is_duration"
 CONF_IS_ENERGY = "is_energy"
+CONF_IS_ENERGY_DISTANCE = "is_energy_distance"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
@@ -102,6 +103,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_IS_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    SensorDeviceClass.ENERGY_DISTANCE: [{CONF_TYPE: CONF_IS_ENERGY_DISTANCE}],
     SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
@@ -168,6 +170,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_DISTANCE,
                     CONF_IS_DURATION,
                     CONF_IS_ENERGY,
+                    CONF_IS_ENERGY_DISTANCE,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,
