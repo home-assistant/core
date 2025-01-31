@@ -86,13 +86,15 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
 
-    RingCam.process_entities(
+    RingCam.process_devices(
         hass,
+        lambda device, description: RingCam(
+            device, devices_coordinator, description, ffmpeg_manager=ffmpeg_manager
+        ),
         devices_coordinator,
         async_add_entities=async_add_entities,
         domain=CAMERA_DOMAIN,
         descriptions=CAMERA_DESCRIPTIONS,
-        ffmpeg_manager=ffmpeg_manager,
     )
 
 

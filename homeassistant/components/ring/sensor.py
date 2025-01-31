@@ -49,8 +49,11 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    RingSensor.process_entities(
+    RingSensor.process_devices(
         hass,
+        lambda device, description: RingSensor(
+            device, devices_coordinator, description
+        ),
         devices_coordinator,
         async_add_entities=async_add_entities,
         domain=SENSOR_DOMAIN,

@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_call_at
 
 from . import RingConfigEntry
 from .coordinator import RingListenCoordinator
-from .entity import DeprecatedInfo, RingDeviceT, RingEntityDescription, RingListenEntity
+from .entity import DeprecatedInfo, RingBaseEntity, RingDeviceT, RingEntityDescription
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -68,17 +68,21 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     listen_coordinator = ring_data.listen_coordinator
 
-    RingBinarySensor.process_entities(
+    RingBinarySensor.process_devices(
         hass,
+        lambda device, description: RingBinarySensor(
+            device, listen_coordinator, description
+        ),
         devices_coordinator,
-        listen_coordinator,
         async_add_entities=async_add_entities,
         domain=BINARY_SENSOR_DOMAIN,
         descriptions=BINARY_SENSOR_TYPES,
     )
 
 
-class RingBinarySensor(RingListenEntity[RingDeviceT], BinarySensorEntity):
+class RingBinarySensor(
+    RingBaseEntity[RingListenCoordinator, RingDeviceT], BinarySensorEntity
+):
     """A binary sensor implementation for Ring device."""
 
     _active_alert: RingEvent | None = None

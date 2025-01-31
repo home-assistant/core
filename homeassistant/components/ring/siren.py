@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, Self, cast
+from typing import Any, cast
 
 from ring_doorbell import RingCapability, RingChime, RingEventKind, RingStickUpCam
 
@@ -35,9 +35,6 @@ class RingSirenEntityDescription(
 ):
     """Describes a Ring siren entity."""
 
-    unique_id_fn: Callable[[Self, RingDeviceT], str] = lambda _, device: str(
-        device.device_api_id
-    )
     is_on_fn: Callable[[RingDeviceT], bool] | None = None
     turn_on_fn: (
         Callable[[RingDeviceT, SirenTurnOnServiceParameters], Coroutine[Any, Any, Any]]
@@ -51,8 +48,6 @@ SIRENS: tuple[RingSirenEntityDescription[Any], ...] = (
         key="siren",
         translation_key="siren",
         available_tones=[RingEventKind.DING.value, RingEventKind.MOTION.value],
-        # Historically the chime siren entity has appended `siren` to the unique id
-        unique_id_fn=lambda _, device: f"{device.device_api_id}-siren",
         exists_fn=lambda device: isinstance(device, RingChime),
         turn_on_fn=lambda device, kwargs: device.async_test_sound(
             kind=str(kwargs.get(ATTR_TONE) or "") or RingEventKind.DING.value
@@ -65,6 +60,9 @@ SIRENS: tuple[RingSirenEntityDescription[Any], ...] = (
         is_on_fn=lambda device: device.siren > 0,
         turn_on_fn=lambda device, _: device.async_set_siren(1),
         turn_off_fn=lambda device: device.async_set_siren(0),
+        # Historically the non-chime siren entity did not
+        # include `siren` in the unique id
+        unique_id_fn=lambda _, device: str(device.device_api_id),
     ),
 )
 
@@ -78,8 +76,9 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    RingSiren.process_entities(
+    RingSiren.process_devices(
         hass,
+        lambda device, description: RingSiren(device, devices_coordinator, description),
         devices_coordinator,
         async_add_entities=async_add_entities,
         domain=SIREN_DOMAIN,

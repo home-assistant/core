@@ -35,8 +35,11 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    RingNumber.process_entities(
+    RingNumber.process_devices(
         hass,
+        lambda device, description: RingNumber(
+            device, devices_coordinator, description
+        ),
         devices_coordinator,
         async_add_entities=async_add_entities,
         domain=NUMBER_DOMAIN,

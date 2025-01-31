@@ -16,7 +16,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RingConfigEntry
-from .entity import RingDeviceT, RingEntityDescription, RingListenEntity
+from .coordinator import RingListenCoordinator
+from .entity import RingBaseEntity, RingDeviceT, RingEntityDescription
 
 # Event entity does not perform updates or actions.
 PARALLEL_UPDATES = 0
@@ -64,17 +65,17 @@ async def async_setup_entry(
     devices_coordinator = ring_data.devices_coordinator
     listen_coordinator = ring_data.listen_coordinator
 
-    RingEvent.process_entities(
+    RingEvent.process_devices(
         hass,
+        lambda device, description: RingEvent(device, listen_coordinator, description),
         devices_coordinator,
-        listen_coordinator,
         async_add_entities=async_add_entities,
         domain=EVENT_DOMAIN,
         descriptions=EVENT_DESCRIPTIONS,
     )
 
 
-class RingEvent(RingListenEntity[RingDeviceT], EventEntity):
+class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity):
     """An event implementation for Ring device."""
 
     entity_description: RingEventEntityDescription

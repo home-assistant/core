@@ -21,7 +21,7 @@ from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingDeviceT, RingEntity, RingEntityDescription, exception_wrap
+from .entity import RingEntity, RingEntityDescription, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 @dataclass(frozen=True, kw_only=True)
 class RingLightEntityDescription(
-    LightEntityDescription, RingEntityDescription[RingDeviceT]
+    LightEntityDescription, RingEntityDescription[RingStickUpCam]
 ):
     """Describes a Ring light entity."""
 
@@ -70,8 +70,9 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    RingLight.process_entities(
+    RingLight.process_devices(
         hass,
+        lambda device, description: RingLight(device, devices_coordinator, description),
         devices_coordinator,
         async_add_entities=async_add_entities,
         domain=LIGHT_DOMAIN,
@@ -89,7 +90,7 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
         self,
         device: RingStickUpCam,
         coordinator: RingDataCoordinator,
-        description: RingLightEntityDescription[RingStickUpCam],
+        description: RingLightEntityDescription,
     ) -> None:
         """Initialize the light."""
         super().__init__(device, coordinator, description)
