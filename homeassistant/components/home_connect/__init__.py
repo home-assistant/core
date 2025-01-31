@@ -6,7 +6,7 @@ import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
-from aiohomeconnect.model import CommandKey, Option, OptionKey
+from aiohomeconnect.model import CommandKey, Option, OptionKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 import voluptuous as vol
 
@@ -50,7 +50,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): str,
+        vol.Required(ATTR_KEY): vol.In(
+            [setting.value for setting in SettingKey if setting != SettingKey.UNKNOWN]
+        ),
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
     }
 )
@@ -58,7 +60,9 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
 SERVICE_OPTION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): str,
+        vol.Required(ATTR_KEY): vol.In(
+            [option.value for option in OptionKey if option != OptionKey.UNKNOWN]
+        ),
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
     }
@@ -67,14 +71,20 @@ SERVICE_OPTION_SCHEMA = vol.Schema(
 SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): str,
-        vol.Required(ATTR_KEY): str,
+        vol.Required(ATTR_PROGRAM): vol.In(
+            [program.value for program in ProgramKey if program != ProgramKey.UNKNOWN]
+        ),
+        vol.Required(ATTR_KEY): vol.In(
+            [option.value for option in OptionKey if option != OptionKey.UNKNOWN]
+        ),
         vol.Required(ATTR_VALUE): vol.Any(int, str),
         vol.Optional(ATTR_UNIT): str,
     },
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): str,
+        vol.Required(ATTR_PROGRAM): vol.In(
+            [program.value for program in ProgramKey if program != ProgramKey.UNKNOWN]
+        ),
     },
 )
 
@@ -134,7 +144,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _async_service_program(call: ServiceCall, start: bool):
         """Execute calls to services taking a program."""
-        program = call.data[ATTR_PROGRAM]
+        program = ProgramKey(call.data[ATTR_PROGRAM])
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
         option_key = call.data.get(ATTR_KEY)
@@ -228,7 +238,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_service_setting(call: ServiceCall):
         """Service for changing a setting."""
-        key = call.data[ATTR_KEY]
+        key = SettingKey(call.data[ATTR_KEY])
         value = call.data[ATTR_VALUE]
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
