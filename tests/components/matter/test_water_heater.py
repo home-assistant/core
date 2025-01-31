@@ -6,12 +6,20 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.water_heater import STATE_ECO, WaterHeaterEntityFeature
+from homeassistant.components.water_heater import (
+    STATE_ECO,
+    STATE_HIGH_DEMAND,
+    WaterHeaterEntityFeature,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import snapshot_matter_entities
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -40,10 +48,15 @@ async def test_water_heater(
     assert state.state == STATE_ECO
 
     # test supported features correctly parsed
-    # including temperature_range support
     mask = (
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.ON_OFF
         | WaterHeaterEntityFeature.OPERATION_MODE
     )
     assert state.attributes["supported_features"] & mask == mask
+
+    # test BoostState update from device
+    set_node_attribute(matter_node, 2, 148, 5, 1)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get("water_heater.water_heater_none")
+    assert state.state == STATE_HIGH_DEMAND
