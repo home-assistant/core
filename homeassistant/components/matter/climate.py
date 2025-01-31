@@ -430,7 +430,7 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
     _attr_target_temperature_step: float | None
     _feature_map: int | None = None
 
-    _platform_translation_key = "thermostat"
+    _platform_translation_key = "temperature_control"
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
