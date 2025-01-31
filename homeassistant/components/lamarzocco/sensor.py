@@ -164,12 +164,12 @@ async def async_setup_entry(
     )
 
     num_keys = KEYS_PER_MODEL[MachineModel(config_coordinator.device.model)]
-    entities.extend(
-        LaMarzoccoKeySensorEntity(statistics_coordinator, description, key)
-        for description in KEY_STATISTIC_ENTITIES
-        for key in range(1, num_keys + 1)
-        if num_keys > 0
-    )
+    if num_keys > 0:
+        entities.extend(
+            LaMarzoccoKeySensorEntity(statistics_coordinator, description, key)
+            for description in KEY_STATISTIC_ENTITIES
+            for key in range(1, num_keys + 1)
+        )
 
     def _async_add_new_scale() -> None:
         async_add_entities(
