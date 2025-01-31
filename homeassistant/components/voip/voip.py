@@ -16,6 +16,7 @@ from voip_utils import (
     SdpInfo,
     VoipDatagramProtocol,
 )
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.components.assist_pipeline import (
     Pipeline,
@@ -79,7 +80,9 @@ def make_protocol(
 class HassVoipDatagramProtocol(VoipDatagramProtocol):
     """HA UDP server for Voice over IP (VoIP)."""
 
-    def __init__(self, hass: HomeAssistant, devices: VoIPDevices) -> None:
+    def __init__(
+        self, hass: HomeAssistant, devices: VoIPDevices, local_endpoint: SipEndpoint
+    ) -> None:
         """Set up VoIP call handler."""
         super().__init__(
             sdp_info=SdpInfo(
@@ -102,7 +105,16 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
         )
         self.hass = hass
         self.devices = devices
+        self.local_endpoint = local_endpoint
         self._closed_event = asyncio.Event()
+
+    def on_call(self, call_info: CallInfo):
+        """Set up state when starting a call."""
+        device = self.devices.async_get_or_create(call_info)
+        device.set_is_active(call_info)
+        _LOGGER.debug("Set call [%s] on device [%s]", call_info, device)
+
+        super().on_call(call_info)
 
     def is_valid_call(self, call_info: CallInfo) -> bool:
         """Filter calls."""
@@ -116,6 +128,12 @@ class HassVoipDatagramProtocol(VoipDatagramProtocol):
     async def wait_closed(self) -> None:
         """Wait for connection_lost to be called."""
         await self._closed_event.wait()
+
+    def on_hangup(self, call_info: CallInfo):
+        """Handle the end of a call."""
+        _LOGGER.debug("Handling hangup: %s", call_info)
+        device = self.devices.async_get_or_create(call_info)
+        device.set_is_active(None)
 
 
 class PreRecordMessageProtocol(RtpDatagramProtocol):

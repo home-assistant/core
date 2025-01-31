@@ -16,7 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_SIP_PORT, DOMAIN
+from .const import CONF_SIP_PORT, CONF_SIP_USER, DEFAULT_SIP_USER, DOMAIN
 
 
 class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -58,6 +58,9 @@ class VoipOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
+            if "enable_advanced" in user_input:
+                return await self.async_step_advanced()
+
             return self.async_create_entry(title="", data=user_input)
 
         return self.async_show_form(
@@ -70,7 +73,35 @@ class VoipOptionsFlowHandler(OptionsFlow):
                             CONF_SIP_PORT,
                             SIP_PORT,
                         ),
-                    ): cv.port
+                    ): cv.port,
+                    vol.Optional("enable_advanced"): bool,
+                }
+            ),
+            description_placeholders={
+                "note": "Enable advanced options by checking the box.",
+            },
+        )
+
+    async def async_step_advanced(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the advanced options."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input}
+            )
+
+        return self.async_show_form(
+            step_id="advanced",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SIP_USER,
+                        default=self.config_entry.options.get(
+                            CONF_SIP_USER,
+                            DEFAULT_SIP_USER,
+                        ),
+                    ): str,
                 }
             ),
         )

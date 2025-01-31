@@ -3,6 +3,8 @@
 from http import HTTPStatus
 
 import pytest
+from voip_utils import CallInfo
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.components.voip import DOMAIN
@@ -26,12 +28,20 @@ async def test_call_in_progress(
     assert state is not None
     assert state.state == "off"
 
-    voip_device.set_is_active(True)
+    call_info = CallInfo(
+        caller_endpoint=SipEndpoint("sip:192.168.1.2:5060"),
+        local_endpoint=SipEndpoint("sip:192.168.1.1:5060"),
+        caller_rtp_port=10000,
+        server_ip="127.0.0.1",
+        headers={},
+    )
+
+    voip_device.set_is_active(call_info)
 
     state = hass.states.get("binary_sensor.192_168_1_210_call_in_progress")
     assert state.state == "on"
 
-    voip_device.set_is_active(False)
+    voip_device.set_is_active(None)
 
     state = hass.states.get("binary_sensor.192_168_1_210_call_in_progress")
     assert state.state == "off"
