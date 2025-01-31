@@ -176,3 +176,10 @@ def mock_instance_id() -> Generator[AsyncMock]:
         return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     ):
         yield
+
+
+@pytest.fixture(autouse=True)
+def mock_asyncio_sleep() -> Generator[AsyncMock]:
+    """Mock asyncio.sleep."""
+    with patch("homeassistant.components.onedrive.backup.asyncio.sleep", AsyncMock()):
+        yield
