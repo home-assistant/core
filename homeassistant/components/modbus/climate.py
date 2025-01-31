@@ -508,8 +508,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
 
-        self.async_write_ha_state()
-
     async def _async_read_register(
         self, register_type: str, register: int, raw: bool | None = False
     ) -> float | None:
