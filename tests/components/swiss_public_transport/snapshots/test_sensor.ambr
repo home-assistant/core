@@ -220,7 +220,7 @@
     'platform': 'swiss_public_transport',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
+    'translation_key': 'duration',
     'unique_id': 'Zürich Bern_duration',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
