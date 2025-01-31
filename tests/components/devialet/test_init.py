@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-from devialet import DevialetApi
-
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerState
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -17,7 +15,10 @@ async def test_load_unload_config_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test the Devialet configuration entry loading and unloading."""
-    with patch.object(DevialetApi, "upnp_available", return_value=True):
+    with patch(
+        "homeassistant.components.devialet.DevialetApi.upnp_available",
+        return_value=True,
+    ):
         entry = await setup_integration(hass, aioclient_mock)
 
         assert entry.state is ConfigEntryState.LOADED
