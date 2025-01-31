@@ -4,8 +4,8 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 from aiohomeconnect.model import (
-    ArrayOfAvailablePrograms,
     ArrayOfEvents,
+    ArrayOfPrograms,
     Event,
     EventKey,
     EventMessage,
@@ -13,7 +13,7 @@ from aiohomeconnect.model import (
     ProgramKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
-from aiohomeconnect.model.program import EnumerateAvailableProgram
+from aiohomeconnect.model.program import EnumerateProgram
 import pytest
 
 from homeassistant.components.home_connect.const import DOMAIN
@@ -155,14 +155,14 @@ async def test_filter_unknown_programs(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select that only known programs are shown."""
-    client.get_available_programs.side_effect = None
-    client.get_available_programs.return_value = ArrayOfAvailablePrograms(
+    client.get_all_programs.side_effect = None
+    client.get_all_programs.return_value = ArrayOfPrograms(
         [
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
                 raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
             ),
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.UNKNOWN,
                 raw_key="an unknown program",
             ),
@@ -296,16 +296,14 @@ async def test_select_exception_handling(
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
-    client_with_exception.get_available_programs.side_effect = None
-    client_with_exception.get_available_programs.return_value = (
-        ArrayOfAvailablePrograms(
-            [
-                EnumerateAvailableProgram(
-                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
-                )
-            ]
-        )
+    client_with_exception.get_all_programs.side_effect = None
+    client_with_exception.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+            )
+        ]
     )
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED

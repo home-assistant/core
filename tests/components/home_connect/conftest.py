@@ -9,9 +9,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
-    ArrayOfAvailablePrograms,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
+    ArrayOfPrograms,
     ArrayOfSettings,
     ArrayOfStatus,
     Event,
@@ -40,9 +40,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 MOCK_APPLIANCES = ArrayOfHomeAppliances.from_dict(
     load_json_object_fixture("home_connect/appliances.json")["data"]
 )
-MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture(
-    "home_connect/programs-available.json"
-)
+MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture("home_connect/programs.json")
 MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
 MOCK_STATUS = ArrayOfStatus.from_dict(
     load_json_object_fixture("home_connect/status.json")["data"]
@@ -230,8 +228,8 @@ def _get_set_key_value_side_effect(
     return set_key_value_side_effect
 
 
-async def _get_available_programs_side_effect(ha_id: str) -> ArrayOfAvailablePrograms:
-    """Get available programs."""
+async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
+    """Get all programs."""
     appliance_type = next(
         appliance
         for appliance in MOCK_APPLIANCES.homeappliances
@@ -240,7 +238,7 @@ async def _get_available_programs_side_effect(ha_id: str) -> ArrayOfAvailablePro
     if appliance_type not in MOCK_PROGRAMS:
         raise HomeConnectApiError("error.key", "error description")
 
-    return ArrayOfAvailablePrograms.from_dict(MOCK_PROGRAMS[appliance_type]["data"])
+    return ArrayOfPrograms.from_dict(MOCK_PROGRAMS[appliance_type]["data"])
 
 
 async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
@@ -323,9 +321,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
     mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
-    mock.get_available_programs = AsyncMock(
-        side_effect=_get_available_programs_side_effect
-    )
+    mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.put_command = AsyncMock()
 
     mock.side_effect = mock
@@ -356,7 +352,6 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
 
     mock.start_program = AsyncMock(side_effect=exception)
     mock.stop_program = AsyncMock(side_effect=exception)
-    mock.get_available_programs = AsyncMock(side_effect=exception)
     mock.set_selected_program = AsyncMock(side_effect=exception)
     mock.set_active_program_option = AsyncMock(side_effect=exception)
     mock.set_selected_program_option = AsyncMock(side_effect=exception)
@@ -364,7 +359,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_settings = AsyncMock(side_effect=exception)
     mock.get_setting = AsyncMock(side_effect=exception)
     mock.get_status = AsyncMock(side_effect=exception)
-    mock.get_available_programs = AsyncMock(side_effect=exception)
+    mock.get_all_programs = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)
 
     return mock

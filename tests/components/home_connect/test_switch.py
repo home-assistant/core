@@ -15,10 +15,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 from aiohomeconnect.model.event import ArrayOfEvents, EventType
-from aiohomeconnect.model.program import (
-    ArrayOfAvailablePrograms,
-    EnumerateAvailableProgram,
-)
+from aiohomeconnect.model.program import ArrayOfPrograms, EnumerateProgram
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
@@ -167,10 +164,10 @@ async def test_connected_devices(
     client.get_settings = get_settings_original_mock
     client.get_available_programs = get_available_programs_mock
 
-    # Because this platform doesn't have entities that are always created,
-    # the device will not be created (and of course, the entities won't be created either)
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
-    assert not device
+    assert device
+    entities = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert entities
 
     await client.add_events(
         [
@@ -185,8 +182,8 @@ async def test_connected_devices(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
     assert device
-    entities = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entities
+    new_entities = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert len(new_entities) > len(entities)
 
 
 @pytest.mark.parametrize(
@@ -371,16 +368,14 @@ async def test_switch_exception_handling(
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
-    client_with_exception.get_available_programs.side_effect = None
-    client_with_exception.get_available_programs.return_value = (
-        ArrayOfAvailablePrograms(
-            [
-                EnumerateAvailableProgram(
-                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
-                )
-            ]
-        )
+    client_with_exception.get_all_programs.side_effect = None
+    client_with_exception.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+            )
+        ]
     )
     client_with_exception.get_settings.side_effect = None
     client_with_exception.get_settings.return_value = ArrayOfSettings(

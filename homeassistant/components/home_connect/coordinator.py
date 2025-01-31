@@ -25,7 +25,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     HomeConnectRequestError,
 )
-from aiohomeconnect.model.program import EnumerateAvailableProgram
+from aiohomeconnect.model.program import EnumerateProgram
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -49,7 +49,7 @@ class HomeConnectApplianceData:
 
     events: dict[EventKey, Event] = field(default_factory=dict)
     info: HomeAppliance
-    programs: list[EnumerateAvailableProgram]
+    programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
 
@@ -314,7 +314,7 @@ class HomeConnectCoordinator(
         ):
             try:
                 programs = (
-                    await self.client.get_available_programs(appliance.ha_id)
+                    await self.client.get_all_programs(appliance.ha_id)
                 ).programs
             except HomeConnectError as error:
                 _LOGGER.debug(

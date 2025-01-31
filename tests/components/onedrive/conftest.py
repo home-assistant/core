@@ -88,7 +88,7 @@ def mock_adapter() -> Generator[MagicMock]:
             status_code=200,
             json={
                 "parentReference": {"driveId": "mock_drive_id"},
-                "shared": {"owner": {"user": {"displayName": "John Doe"}}},
+                "createdBy": {"user": {"displayName": "John Doe"}},
             },
         )
         yield adapter

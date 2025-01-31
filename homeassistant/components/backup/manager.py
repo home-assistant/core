@@ -1166,7 +1166,11 @@ class BackupManager:
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={"failed_agents": ", ".join(agent_errors)},
+            translation_placeholders={
+                "failed_agents": ", ".join(
+                    self.backup_agents[agent_id].name for agent_id in agent_errors
+                )
+            },
         )
 
     async def async_can_decrypt_on_download(
@@ -1346,10 +1350,24 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if agent_config and not agent_config.protected:
             password = None
 
+        backup = AgentBackup(
+            addons=[],
+            backup_id=backup_id,
+            database_included=include_database,
+            date=date_str,
+            extra_metadata=extra_metadata,
+            folders=[],
+            homeassistant_included=True,
+            homeassistant_version=HAVERSION,
+            name=backup_name,
+            protected=password is not None,
+            size=0,
+        )
+
         local_agent_tar_file_path = None
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            local_agent_tar_file_path = local_agent.get_backup_path(backup_id)
+            local_agent_tar_file_path = local_agent.get_new_backup_path(backup)
 
         on_progress(
             CreateBackupEvent(
@@ -1391,19 +1409,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             # ValueError from json_bytes
             raise BackupReaderWriterError(str(err)) from err
         else:
-            backup = AgentBackup(
-                addons=[],
-                backup_id=backup_id,
-                database_included=include_database,
-                date=date_str,
-                extra_metadata=extra_metadata,
-                folders=[],
-                homeassistant_included=True,
-                homeassistant_version=HAVERSION,
-                name=backup_name,
-                protected=password is not None,
-                size=size_in_bytes,
-            )
+            backup = replace(backup, size=size_in_bytes)
 
             async_add_executor_job = self._hass.async_add_executor_job
 
@@ -1517,7 +1523,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         manager = self._hass.data[DATA_MANAGER]
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_backup_path(backup.backup_id)
+            tar_file_path = local_agent.get_new_backup_path(backup)
             await async_add_executor_job(make_backup_dir, tar_file_path.parent)
             await async_add_executor_job(shutil.move, temp_file, tar_file_path)
         else:
