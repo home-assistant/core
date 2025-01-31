@@ -85,7 +85,7 @@ class HomeConnectCoordinator(
         )
         self.client = client
         self._special_listeners: dict[
-            CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[str, EventType] | None]
+            CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
         ] = {}
 
     @cached_property
@@ -115,7 +115,7 @@ class HomeConnectCoordinator(
     def async_add_special_listener(
         self,
         update_callback: CALLBACK_TYPE,
-        context: tuple[str, EventType] | None = None,
+        context: tuple[EventKey, ...],
     ) -> Callable[[], None]:
         """Listen for special data updates. These listeners will not be called on refresh."""
 
@@ -198,11 +198,10 @@ class HomeConnectCoordinator(
                             for listener, context in list(
                                 self._special_listeners.values()
                             ) + list(self._listeners.values()):
-                                if context is None or (
-                                    isinstance(context, tuple)
-                                    and context[0] == event_message.ha_id
-                                    and context[1]
-                                    is not EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
+                                assert isinstance(context, tuple)
+                                if (
+                                    EventKey.BSH_COMMON_APPLIANCE_DEPAIRED
+                                    not in context
                                 ):
                                     listener()
 
@@ -216,15 +215,11 @@ class HomeConnectCoordinator(
                                     device_id=device.id,
                                     remove_config_entry_id=self.config_entry.entry_id,
                                 )
-                            for listener in self.context_listeners.get(
-                                (
-                                    event_message.ha_id,
-                                    EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,
-                                ),
-                                [],
-                            ):
-                                listener()
                             self.data.pop(event_message.ha_id, None)
+                            for listener, context in self._special_listeners.values():
+                                assert isinstance(context, tuple)
+                                if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
+                                    listener()
 
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(

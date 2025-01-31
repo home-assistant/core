@@ -1,6 +1,5 @@
 """Provides a select platform for Home Connect."""
 
-from collections.abc import Callable
 from typing import cast
 
 from aiohomeconnect.model import EventKey, ProgramKey
@@ -9,6 +8,7 @@ from aiohomeconnect.model.error import HomeConnectError
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN, SVE_TRANSLATION_PLACEHOLDER_PROGRAM
@@ -48,27 +48,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect select entities."""
+    known_appliance_ids: set[str] = set()
 
     def get_entities_for_appliance(
         appliance: HomeConnectApplianceData,
     ) -> list[HomeConnectProgramSelectEntity]:
         """Get a list of entities."""
-        remove_listener: Callable[[], None] | None = None
-
-        def handle_removed_device() -> None:
-            """Handle removed device."""
-            for entity_unique_id in added_entities.copy():
-                if entity_unique_id and appliance.info.ha_id in entity_unique_id:
-                    added_entities.remove(entity_unique_id)
-            assert remove_listener
-            remove_listener()
-
-        remove_listener = entry.runtime_data.async_add_listener(
-            handle_removed_device,
-            (appliance.info.ha_id, EventKey.BSH_COMMON_APPLIANCE_DEPAIRED),
-        )
-        entry.async_on_unload(remove_listener)
-
+        known_appliance_ids.add(appliance.info.ha_id)
         return (
             [
                 HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
@@ -78,28 +64,45 @@ async def async_setup_entry(
             else []
         )
 
-    entities = [
+    async_add_entities(
         entity
         for appliance in entry.runtime_data.data.values()
         for entity in get_entities_for_appliance(appliance)
-    ]
-    async_add_entities(entities)
+    )
 
-    added_entities = {entity.unique_id for entity in entities}
-
-    def handle_paired_or_connected_device() -> None:
-        """Handle new device."""
+    def handle_paired_or_connected_appliance() -> None:
+        """Handle new paired appliance or a appliance that has been connected."""
         for appliance in entry.runtime_data.data.values():
-            new_entities = [
-                entity
-                for entity in get_entities_for_appliance(appliance)
-                if entity.unique_id not in added_entities
-            ]
-            async_add_entities(new_entities)
-            added_entities.update(entity.unique_id for entity in new_entities)
+            if appliance.info.ha_id in known_appliance_ids:
+                entity_registry = er.async_get(hass)
+                async_add_entities(
+                    entity
+                    for entity in get_entities_for_appliance(appliance)
+                    if not entity_registry.async_get(cast(str, entity.unique_id))
+                )
+            else:
+                async_add_entities(get_entities_for_appliance(appliance))
+
+    def handle_depaired_appliance() -> None:
+        """Handle removed appliance."""
+        for appliance_id in known_appliance_ids.copy():
+            if appliance_id not in entry.runtime_data.data:
+                known_appliance_ids.remove(appliance_id)
 
     entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(handle_paired_or_connected_device)
+        entry.runtime_data.async_add_special_listener(
+            handle_paired_or_connected_appliance,
+            (
+                EventKey.BSH_COMMON_APPLIANCE_PAIRED,
+                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
+            ),
+        )
+    )
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(
+            handle_depaired_appliance,
+            (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
+        ),
     )
 
 
