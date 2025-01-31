@@ -944,7 +944,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.14.0
+habluetooth==3.15.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -975,7 +975,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250129.0
+home-assistant-frontend==20250130.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -1074,7 +1074,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.1.28.225404
+knx-frontend==2025.1.30.194235
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1328,7 +1328,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.8.8
+opower==0.8.9
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2330,7 +2330,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2024.12
+total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_omada
 tplink-omada-client==1.4.3
@@ -2514,7 +2514,7 @@ yt-dlp[default]==2025.01.26
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.141.0
+zeroconf==0.142.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

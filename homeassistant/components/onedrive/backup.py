@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
 import html
@@ -9,7 +10,7 @@ import json
 import logging
 from typing import Any, Concatenate, cast
 
-from httpx import Response
+from httpx import Response, TimeoutException
 from kiota_abstractions.api_error import APIError
 from kiota_abstractions.authentication import AnonymousAuthenticationProvider
 from kiota_abstractions.headers_collection import HeadersCollection
@@ -42,6 +43,7 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
+MAX_RETRIES = 5
 
 
 async def async_get_backup_agents(
@@ -96,7 +98,7 @@ def handle_backup_errors[_R, **P](
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError("Backup operation failed") from err
-        except TimeoutError as err:
+        except TimeoutException as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
@@ -190,7 +192,13 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        await self._get_backup_file_item(backup_id).delete()
+
+        try:
+            await self._get_backup_file_item(backup_id).delete()
+        except APIError as err:
+            if err.response_status_code == 404:
+                return
+            raise
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -262,6 +270,7 @@ class OneDriveBackupAgent(BackupAgent):
         start = 0
         buffer: list[bytes] = []
         buffer_size = 0
+        retries = 0
 
         async for chunk in stream:
             buffer.append(chunk)
@@ -273,11 +282,28 @@ class OneDriveBackupAgent(BackupAgent):
                     buffer_size > UPLOAD_CHUNK_SIZE
                 ):  # Loop in case the buffer is >= UPLOAD_CHUNK_SIZE * 2
                     slice_start = uploaded_chunks * UPLOAD_CHUNK_SIZE
-                    await async_upload(
-                        start,
-                        start + UPLOAD_CHUNK_SIZE - 1,
-                        chunk_data[slice_start : slice_start + UPLOAD_CHUNK_SIZE],
-                    )
+                    try:
+                        await async_upload(
+                            start,
+                            start + UPLOAD_CHUNK_SIZE - 1,
+                            chunk_data[slice_start : slice_start + UPLOAD_CHUNK_SIZE],
+                        )
+                    except APIError as err:
+                        if (
+                            err.response_status_code and err.response_status_code < 500
+                        ):  # no retry on 4xx errors
+                            raise
+                        if retries < MAX_RETRIES:
+                            await asyncio.sleep(2**retries)
+                            retries += 1
+                            continue
+                        raise
+                    except TimeoutException:
+                        if retries < MAX_RETRIES:
+                            retries += 1
+                            continue
+                        raise
+                    retries = 0
                     start += UPLOAD_CHUNK_SIZE
                     uploaded_chunks += 1
                     buffer_size -= UPLOAD_CHUNK_SIZE
