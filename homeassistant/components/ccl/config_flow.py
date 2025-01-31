@@ -18,7 +18,6 @@ from .const import DOMAIN
 class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
     _webhook_id: str
 
     async def async_step_user(
