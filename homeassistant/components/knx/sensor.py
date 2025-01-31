@@ -39,7 +39,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
-from .const import ATTR_SOURCE, CONF_LABEL, CONF_SYNC_STATE, KNX_MODULE_KEY
+from .const import ATTR_SOURCE, CONF_SYNC_STATE, KNX_MODULE_KEY
 from .entity import (
     BasePlatformConfiguration,
     KnxUiEntity,
@@ -50,7 +50,6 @@ from .entity import (
 from .knx_module import KNXModule
 from .models import GroupAddressConfig
 from .schema import (
-    CONF_DESCRIPTION,
     ConfigGroupSchema,
     DptUtils,
     EntityConfigGroupSchema,
@@ -58,7 +57,6 @@ from .schema import (
     PlatformConfigSchema,
     SensorSchema,
     SyncStateSchema,
-    VolMarkerDesc,
 )
 from .storage.const import CONF_ALWAYS_CALLBACK, CONF_DEVICE_INFO, CONF_GA_SENSOR
 
@@ -316,17 +314,11 @@ class UiSensorConfig(SensorConfig, StorageSerialization):
                 {
                     vol.Required(
                         "platform_config",
-                        description=VolMarkerDesc(
-                            translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                        ),
                     ): ConfigGroupSchema(
                         vol.Schema(
                             {
                                 vol.Required(
                                     CONF_GA_SENSOR,
-                                    description=VolMarkerDesc(
-                                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                                    ),
                                 ): GroupAddressConfigSchema(
                                     write=False,
                                     state_required=True,
@@ -337,44 +329,23 @@ class UiSensorConfig(SensorConfig, StorageSerialization):
                                 vol.Optional(
                                     CONF_STATE_CLASS,
                                     default=None,
-                                    description=VolMarkerDesc(
-                                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                                    ),
                                 ): vol.Maybe(vol.Coerce(SensorStateClass)),
                                 vol.Optional(
                                     CONF_DEVICE_CLASS,
                                     default=None,
-                                    description=VolMarkerDesc(
-                                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                                    ),
                                 ): vol.Maybe(vol.Coerce(SensorDeviceClass)),
                                 vol.Optional(
                                     "advanced",
-                                    description=VolMarkerDesc(
-                                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                                    ),
                                 ): ConfigGroupSchema(
                                     vol.Schema(
                                         {
                                             vol.Optional(
                                                 CONF_ALWAYS_CALLBACK,
                                                 default=False,
-                                                description=VolMarkerDesc(
-                                                    translation_keys=[
-                                                        CONF_LABEL,
-                                                        CONF_DESCRIPTION,
-                                                    ]
-                                                ),
                                             ): bool,
                                             vol.Optional(
                                                 CONF_SYNC_STATE,
                                                 default=True,
-                                                description=VolMarkerDesc(
-                                                    translation_keys=[
-                                                        CONF_LABEL,
-                                                        CONF_DESCRIPTION,
-                                                    ]
-                                                ),
                                             ): SyncStateSchema(),
                                         }
                                     ),
@@ -385,9 +356,6 @@ class UiSensorConfig(SensorConfig, StorageSerialization):
                     ),
                     vol.Required(
                         "entity_config",
-                        description=VolMarkerDesc(
-                            translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                        ),
                     ): EntityConfigGroupSchema(
                         allowed_categories=(EntityCategory.DIAGNOSTIC,)
                     ),

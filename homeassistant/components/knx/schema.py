@@ -5,7 +5,6 @@ from __future__ import annotations
 from abc import ABC
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
 from functools import cache
 from typing import (
     Any,
@@ -47,7 +46,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
-    CONF_DESCRIPTION,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
@@ -69,7 +67,6 @@ from .const import (
     CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
     CONF_KNX_EXPOSE,
-    CONF_LABEL,
     CONF_PAYLOAD_LENGTH,
     CONF_RESET_AFTER,
     CONF_RESPOND_TO_READ,
@@ -1100,23 +1097,6 @@ class SerializableSchema(Protocol):
         """
 
 
-@dataclass
-class VolMarkerDesc:
-    """Represents a description of a Voluptuous marker and its expected translation details.
-
-    Attributes:
-        translation_keys (list[str]):
-            A list of expected translation keys specific to the VolSchemaType the marker is associated with.
-            For example, a marker attached to a `ConfigGroupSchema` might require translation keys for
-            the group's title and description. These keys enable unit tests to generate a skeleton,
-            verify that all required translation keys are present in the schema, and ensure there are no
-            extraneous or missing translations.
-
-    """
-
-    translation_keys: list[str] = field(default_factory=list)
-
-
 class ConfigGroupSchema(SerializableSchema):
     """Data entry flow section."""
 
@@ -1399,22 +1379,12 @@ class GroupAddressConfigSchema(SerializableSchema):
             if not allowed:
                 schema[vol.Remove(key)] = object
             elif required:
-                schema[
-                    vol.Required(
-                        key,
-                        description=VolMarkerDesc(
-                            translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                        ),
-                    )
-                ] = GroupAddressSchema()
+                schema[vol.Required(key)] = GroupAddressSchema()
             else:
                 schema[
                     vol.Optional(
                         key,
                         default=None,
-                        description=VolMarkerDesc(
-                            translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                        ),
                     )
                 ] = GroupAddressSchema(allow_none=True)
 
@@ -1425,9 +1395,6 @@ class GroupAddressConfigSchema(SerializableSchema):
                 vol.Optional(
                     CONF_GA_PASSIVE,
                     default=list,
-                    description=VolMarkerDesc(
-                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                    ),
                 )
             ] = GroupAddressListSchema()
         else:
@@ -1441,9 +1408,6 @@ class GroupAddressConfigSchema(SerializableSchema):
             schema[
                 vol.Required(
                     CONF_DPT,
-                    description=VolMarkerDesc(
-                        translation_keys=[CONF_LABEL, CONF_DESCRIPTION]
-                    ),
                 )
             ] = vol.All(
                 str,
@@ -1485,32 +1449,14 @@ class EntityConfigGroupSchema(ConfigGroupSchema):
             {
                 vol.Required(
                     CONF_NAME,
-                    description=VolMarkerDesc(
-                        translation_keys=[
-                            CONF_LABEL,
-                            CONF_DESCRIPTION,
-                        ]
-                    ),
                 ): str,
                 vol.Optional(
                     CONF_ENTITY_CATEGORY,
                     default=None,
-                    description=VolMarkerDesc(
-                        translation_keys=[
-                            CONF_LABEL,
-                            CONF_DESCRIPTION,
-                        ]
-                    ),
                 ): vol.Maybe(vol.In(allowed_categories)),
                 vol.Optional(
                     CONF_DEVICE_INFO,
                     default=None,
-                    description=VolMarkerDesc(
-                        translation_keys=[
-                            CONF_LABEL,
-                            CONF_DESCRIPTION,
-                        ]
-                    ),
                 ): vol.Maybe(str),
             },
         )
@@ -1532,12 +1478,6 @@ class PlatformConfigSchema(SerializableSchema):
                 vol.Required("platform"): platform,
                 vol.Required(
                     "config",
-                    description=VolMarkerDesc(
-                        translation_keys=[
-                            CONF_LABEL,
-                            CONF_DESCRIPTION,
-                        ]
-                    ),
                 ): ConfigGroupSchema(config_schema),
             }
         )
