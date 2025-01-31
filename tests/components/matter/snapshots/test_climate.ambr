@@ -252,7 +252,7 @@
     'state': 'heat_cool',
   })
 # ---
-# name: test_climates[silabs_refrigerator][climate.refrigerator-entry]
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -270,7 +270,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.refrigerator',
+    'entity_id': 'climate.refrigerator_temperature_control_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -282,7 +282,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Temperature control (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
@@ -291,11 +291,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[silabs_refrigerator][climate.refrigerator-state]
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
-      'friendly_name': 'Refrigerator',
+      'friendly_name': 'Refrigerator Temperature control (2)',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -305,14 +305,14 @@
       'temperature': -18.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.refrigerator',
+    'entity_id': 'climate.refrigerator_temperature_control_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat_cool',
   })
 # ---
-# name: test_climates[silabs_refrigerator][climate.refrigerator_2-entry]
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -330,7 +330,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.refrigerator_2',
+    'entity_id': 'climate.refrigerator_temperature_control_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -342,7 +342,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Temperature control (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
@@ -351,11 +351,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climates[silabs_refrigerator][climate.refrigerator_2-state]
+# name: test_climates[silabs_refrigerator][climate.refrigerator_temperature_control_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
-      'friendly_name': 'Refrigerator',
+      'friendly_name': 'Refrigerator Temperature control (3)',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
@@ -365,7 +365,7 @@
       'temperature': 4.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.refrigerator_2',
+    'entity_id': 'climate.refrigerator_temperature_control_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
