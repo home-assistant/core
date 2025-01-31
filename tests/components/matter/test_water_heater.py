@@ -6,6 +6,7 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.water_heater import STATE_ECO
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -32,3 +33,7 @@ async def test_water_heater(
     """Test water heater sensor."""
     state = hass.states.get("water_heater.water_heater_none")
     assert state
+    assert state.attributes["min_temp"] == 40
+    assert state.attributes["max_temp"] == 65
+    assert state.attributes["temperature"] == 65
+    assert state.state == STATE_ECO
