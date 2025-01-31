@@ -56,7 +56,6 @@ class RingEntityDescription(EntityDescription, Generic[RingDeviceT]):
     unique_id_fn: Callable[[Self, RingDeviceT], str] = (
         lambda self, device: f"{device.device_api_id}-{self.key}"
     )
-    dynamic_setting_description: str = "other settings"
 
 
 def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
@@ -177,12 +176,6 @@ class RingBaseEntity(
             model=device.model,
             name=device.name,
         )
-        self._removed = False
-
-    async def async_removed_from_registry(self) -> None:
-        """Run when entity has been removed from entity registry."""
-        await self.platform.async_remove_entity(self.entity_id)
-        self._removed = True
 
 
 class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEntity):
@@ -206,8 +199,6 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if self._removed:
-            return
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),
@@ -229,9 +220,10 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
         **kwargs: Any,
     ) -> None:
         """Process device entities."""
-        processed_device_entities: dict[int, dict[str, RingEntity[RingDeviceT]]] = {}
+        processed_device_ids: set[int] = set()
 
         def _entities_for_device(device: RingDeviceT) -> list[RingEntity[RingDeviceT]]:
+            """Get all the entities for a device."""
             return [
                 cls(device, coordinator, description, **kwargs)
                 for description in descriptions
@@ -244,103 +236,24 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
                 )
             ]
 
-        def _async_delete_entities(entities: list[RingEntity[RingDeviceT]]) -> None:
-            """Delete entities for entities not existing."""
-            entity_registry = er.async_get(hass)
-            device_ids: set[str] = set()
-            for entity in entities:
-                entity_id = entity_registry.async_get_entity_id(
-                    domain, DOMAIN, entity.unique_id
-                )
-                if entity_id:
-                    ent_reg = entity_registry.async_get(entity_id)
-                    if ent_reg and ent_reg.device_id:
-                        device_ids.add(ent_reg.device_id)
-                    entity_registry.async_remove(entity_id)
-            for device_id in device_ids:
-                ents = er.async_entries_for_device(entity_registry, device_id)
-                if not ents:
-                    device_registry = dr.async_get(hass)
-                    device_registry.async_update_device(
-                        device_id, remove_config_entry_id=entry.entry_id
+        def _async_add_new_device_entities() -> None:
+            """Handle new devices."""
+            # Remove any device ids that the coordinator has removed so
+            # they will be re-added if they re-appear.
+            for removed_device_id in coordinator.removed_device_ids:
+                processed_device_ids.discard(removed_device_id)
+
+            if new_device_ids := coordinator.device_api_ids - processed_device_ids:
+                entities = []
+                for device_api_id in new_device_ids:
+                    device = cast(
+                        RingDeviceT,
+                        coordinator.ring_api.devices().get_device(device_api_id),
                     )
+                    entities.extend(_entities_for_device(device))
+                    processed_device_ids.add(device_api_id)
 
-        def _async_entity_listener() -> None:
-            """Handle additions/deletions of entities."""
-            received_devices = set(coordinator.device_api_ids)
-            processed_devices = set(processed_device_entities.keys())
-            new_devices = received_devices - processed_devices
-            removed_devices = processed_devices - received_devices
-            entities_to_add = []
-            entities_to_remove = []
+                async_add_entities(entities)
 
-            # process entity changes for already added devices.
-            for device_api_id in received_devices:
-                if device_api_id in new_devices:
-                    continue
-                device = cast(
-                    RingDeviceT,
-                    coordinator.ring_api.devices().get_device(device_api_id),
-                )
-                processed_entities = processed_device_entities[device_api_id]
-                received_entities = {
-                    entity.unique_id: entity for entity in _entities_for_device(device)
-                }
-                entities_to_add.extend(
-                    [
-                        entity
-                        for unique_id, entity in received_entities.items()
-                        if unique_id not in processed_entities
-                    ]
-                )
-                entities_to_remove.extend(
-                    [
-                        entity
-                        for unique_id, entity in processed_entities.items()
-                        if unique_id not in received_entities
-                    ]
-                )
-                processed_device_entities[device_api_id] = received_entities
-
-            # process entity changes for newly added devices.
-            for device_api_id in new_devices:
-                device = cast(
-                    RingDeviceT,
-                    coordinator.ring_api.devices().get_device(device_api_id),
-                )
-                entities = _entities_for_device(device)
-                entities_to_add.extend(entities)
-                processed_device_entities[device_api_id] = {
-                    entity.unique_id: entity for entity in entities
-                }
-
-            # process entity changes for removed devices.
-            for device_api_id in removed_devices:
-                entities_to_remove.extend(
-                    processed_device_entities.pop(device_api_id, {}).values()
-                )
-            if entities_to_add:
-                async_add_entities(entities_to_add)
-            if entities_to_remove:
-                _async_delete_entities(entities_to_remove)
-
-        def _async_clean_registry() -> None:
-            """Clean entities at config entry load."""
-            entity_registry = er.async_get(hass)
-            entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
-            unique_ids = [
-                unique_id
-                for entities in processed_device_entities.values()
-                for unique_id in entities
-            ]
-            for reg_entry in entries:
-                if (
-                    reg_entry.domain == domain
-                    and (unique_id := reg_entry.unique_id)
-                    and unique_id not in unique_ids
-                ):
-                    entity_registry.async_remove(reg_entry.entity_id)
-
-        coordinator.async_add_listener(_async_entity_listener)
-        _async_entity_listener()
-        _async_clean_registry()
+        _async_add_new_device_entities()
+        coordinator.async_add_listener(_async_add_new_device_entities)

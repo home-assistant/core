@@ -1,6 +1,6 @@
 """The tests for the Ring component."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -20,7 +20,7 @@ from homeassistant.components.ring.coordinator import RingEventListener
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_DEVICE_ID, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_HARDWARE_ID
@@ -330,10 +330,8 @@ async def test_update_unique_id_existing(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_not_migrated = entity_registry.async_get(entity.entity_id)
     entity_existing = entity_registry.async_get(entity_existing.entity_id)
-    # entity will be removed as it's no longer provided
-    assert entity_not_migrated is None
+
     assert entity_existing
 
     assert (
@@ -495,3 +493,48 @@ async def test_migrate_create_device_id(
     assert entry.data[CONF_DEVICE_ID] == MOCK_HARDWARE_ID
 
     assert "Migration to version 1.2 complete" in caplog.text
+
+
+async def test_dynamic_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ring_client: Mock,
+    mock_ring_devices: Mock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the in-home chime switch added/removed during setup entry."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
+    device_identifier = front_door_mock.device_id  # mac
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device_identifier)}
+    )
+    assert device_entry
+
+    mock_ring_devices._hide_device(FRONT_DOOR_DEVICE_ID)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device_identifier)}
+    )
+    assert not device_entry
+
+    mock_ring_devices._unhide_device(FRONT_DOOR_DEVICE_ID)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, device_identifier)}
+    )
+    assert device_entry

@@ -136,8 +136,6 @@ class RingSiren(RingEntity[RingDeviceT], SirenEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        if self._removed:
-            return
         if not self.entity_description.is_on_fn:
             return
         self._device = cast(

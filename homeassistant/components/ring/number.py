@@ -135,8 +135,6 @@ class RingNumber(RingEntity[RingDeviceT], NumberEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        if self._removed:
-            return
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),

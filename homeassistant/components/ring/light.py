@@ -100,8 +100,6 @@ class RingLight(RingEntity[RingStickUpCam], LightEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        if self._removed:
-            return
         if self._no_updates_until > dt_util.utcnow():
             return
         device = self._get_coordinator_data().get_stickup_cam(

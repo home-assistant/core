@@ -137,8 +137,6 @@ class RingBinarySensor(
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if self._removed:
-            return
         if alert := self._get_coordinator_alert():
             self._async_handle_event(alert)
         super()._handle_coordinator_update()

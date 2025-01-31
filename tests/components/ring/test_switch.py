@@ -2,12 +2,11 @@
 
 from unittest.mock import Mock
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 import ring_doorbell
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.ring.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.ring.const import DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import (
@@ -23,9 +22,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .common import MockConfigEntry, setup_platform
-from .device_mocks import FRONT_DOOR_DEVICE_ID
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from tests.common import snapshot_platform
 
 
 @pytest.fixture
@@ -171,140 +169,3 @@ async def test_switch_errors_when_turned_on(
         )
         == reauth_expected
     )
-
-
-async def test_switch_dynamic_entity_exists_startup(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_ring_client: Mock,
-    mock_ring_devices: Mock,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test the in-home chime switch added/removed during setup entry."""
-
-    mock_config_entry.add_to_hass(hass)
-    entity_id = "switch.front_door_in_home_chime"
-
-    # Create the switch as it's present
-    front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
-    front_door_mock.configure_mock(existing_doorbell_type="Mechanical")
-    await setup_platform(hass, Platform.SWITCH)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    state = hass.states.get(entity_id)
-    assert state
-
-    # Not present will result in the exists check returning false.
-    front_door_mock.configure_mock(existing_doorbell_type="Not Present")
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
-    state = hass.states.get(entity_id)
-    assert state is None
-
-    # Another reload should keep the same state
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
-    state = hass.states.get(entity_id)
-    assert state is None
-
-
-async def test_switch_dynamic_entity_refresh(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_ring_client: Mock,
-    mock_ring_devices: Mock,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the in-home chime switch added/removed during refresh entry."""
-
-    mock_config_entry.add_to_hass(hass)
-    entity_id = "switch.front_door_in_home_chime"
-
-    # Create the switch as it's present
-    front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
-    front_door_mock.configure_mock(existing_doorbell_type="Mechanical")
-    await setup_platform(hass, Platform.SWITCH)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    state = hass.states.get(entity_id)
-    assert state
-
-    # Not present will result in the exists check returning false.
-    front_door_mock.configure_mock(existing_doorbell_type="Not Present")
-
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
-    state = hass.states.get(entity_id)
-    assert state is None
-
-    # Mechanical will result in the exists check returning true.
-    front_door_mock.configure_mock(existing_doorbell_type="Mechanical")
-
-    # Now the entity should return.
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    state = hass.states.get(entity_id)
-    assert state
-
-
-async def test_switch_dynamic_device_exists_refresh(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_ring_client: Mock,
-    mock_ring_devices: Mock,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test the switches added/removed when devices added/removed."""
-
-    mock_config_entry.add_to_hass(hass)
-    entity_id = "switch.front_door_motion_detection"
-
-    # Hide the device from the initial call
-    mock_ring_devices._hide_device(FRONT_DOOR_DEVICE_ID)
-    front_door_mock = mock_ring_devices.get_device(FRONT_DOOR_DEVICE_ID)
-    assert front_door_mock is None
-
-    await setup_platform(hass, Platform.SWITCH)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
-    state = hass.states.get(entity_id)
-    assert state is None
-
-    # Unhide the device
-    mock_ring_devices._unhide_device(FRONT_DOOR_DEVICE_ID)
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    state = hass.states.get(entity_id)
-    assert state
-
-    # Hide the device again
-    mock_ring_devices._hide_device(FRONT_DOOR_DEVICE_ID)
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    entry = entity_registry.async_get(entity_id)
-    assert entry is None
-    state = hass.states.get(entity_id)
-    assert state is None

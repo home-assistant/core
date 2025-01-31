@@ -65,7 +65,6 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
         translation_key="in_home_chime",
         exists_fn=lambda device: device.family == "doorbots"
         and device.existing_doorbell_type in IN_HOME_CHIME_IS_PRESENT,
-        dynamic_setting_description="In-home chime Not Present",
         is_on_fn=lambda device: device.existing_doorbell_type_enabled or False,
         turn_on_fn=lambda device: device.async_set_existing_doorbell_type_enabled(True),
         turn_off_fn=lambda device: device.async_set_existing_doorbell_type_enabled(
@@ -121,8 +120,6 @@ class RingSwitch(RingEntity[RingDeviceT], SwitchEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        if self._removed:
-            return
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),

@@ -127,8 +127,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-        if self._removed:
-            return
         self._device = self._get_coordinator_data().get_video_device(
             self._device.device_api_id
         )

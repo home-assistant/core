@@ -21,13 +21,14 @@ from ring_doorbell.listen import RingEventListener
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import (
     BaseDataUpdateCoordinatorProtocol,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,12 +87,13 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         )
         self.ring_api: Ring = ring_api
         self.first_call: bool = True
-        self._device_api_ids: list[int] = []
+        self._processed_device_ids: dict[int, str] = {}
+        self.removed_device_ids: set[int] = set()
 
     @property
-    def device_api_ids(self) -> list[int]:
+    def device_api_ids(self) -> set[int]:
         """Return list of device ids."""
-        return self._device_api_ids
+        return set(self._processed_device_ids.keys())
 
     async def _async_update_data(self) -> RingDevices:
         """Fetch data from API endpoint."""
@@ -102,9 +104,9 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
         subscribed_device_ids = set(self.async_contexts())
-        self._device_api_ids = []
+        device_ids = {}
         for device in devices.all_devices:
-            self._device_api_ids.append(device.device_api_id)
+            device_ids[device.device_api_id] = device.device_id
             # Don't update all devices in the ring api, only those that set
             # their device id as context when they subscribed.
             if device.device_api_id in subscribed_device_ids:
@@ -129,7 +131,26 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                 except ExceptionGroup as eg:
                     raise eg.exceptions[0]  # noqa: B904
 
+        self._process_stale_devices(device_ids)
         return devices
+
+    def _process_stale_devices(self, device_ids: dict[int, str]) -> None:
+        """Delete devices no longer existing."""
+        processed_device_api_ids = set(self._processed_device_ids.keys())
+        device_api_ids = set(device_ids.keys())
+        if stale_device_ids := processed_device_api_ids - device_api_ids:
+            device_registry = dr.async_get(self.hass)
+            for device_id in stale_device_ids:
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, self._processed_device_ids[device_id])}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+        self._processed_device_ids = device_ids
+        self.removed_device_ids = stale_device_ids
 
 
 class RingListenCoordinator(BaseDataUpdateCoordinatorProtocol):
