@@ -1,6 +1,5 @@
 """Roborock storage."""
 
-import asyncio
 import logging
 from pathlib import Path
 import shutil
@@ -55,15 +54,17 @@ class RoborockMapStorage:
 
     async def flush(self) -> None:
         """Flush all maps to disk."""
-        tasks = []
         _LOGGER.debug("Flushing %s maps to disk", len(self._write_queue))
-        for map_flag, content in self._write_queue.items():
-            filename = self._path_prefix / f"{map_flag}{MAP_FILENAME_SUFFIX}"
-            tasks.append(
-                self._hass.async_add_executor_job(self._save_map, filename, content)
-            )
+
+        queue = self._write_queue.copy()
+
+        def _flush_all() -> None:
+            for map_flag, content in queue.items():
+                filename = self._path_prefix / f"{map_flag}{MAP_FILENAME_SUFFIX}"
+                self._save_map(filename, content)
+
+        await self._hass.async_add_executor_job(_flush_all)
         self._write_queue.clear()
-        await asyncio.gather(*tasks)
 
     def _save_map(self, filename: Path, content: bytes) -> None:
         """Write the map to disk."""
