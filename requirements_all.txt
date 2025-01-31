@@ -2346,7 +2346,7 @@ pytautulli==23.1.1
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==2.2.0
+python-MotionMount==2.3.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
