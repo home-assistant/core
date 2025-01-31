@@ -22,7 +22,6 @@ from homeassistant.components.roborock.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .mock_data import (
     BASE_URL,
@@ -208,7 +207,7 @@ async def setup_entry(
 ) -> Generator[MockConfigEntry]:
     """Set up the Roborock platform."""
     with patch("homeassistant.components.roborock.PLATFORMS", platforms):
-        assert await async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
         await hass.async_block_till_done()
         yield mock_roborock_entry
 
