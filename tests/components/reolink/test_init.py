@@ -859,3 +859,15 @@ async def test_privacy_mode_change_callback(
 
     assert reolink_connect.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_remove(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test removing of the reolink integration."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)
