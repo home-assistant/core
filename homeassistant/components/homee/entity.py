@@ -1,7 +1,5 @@
 """Base Entities for Homee integration."""
 
-import logging
-
 from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
 from websockets.exceptions import ConnectionClosed
@@ -13,8 +11,6 @@ from homeassistant.helpers.entity import Entity
 from . import HomeeConfigEntry
 from .const import DOMAIN
 from .helpers import get_name_for_enum
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HomeeEntity(Entity):
@@ -146,7 +142,6 @@ class HomeeNodeEntity(Entity):
         try:
             await homee.set_value(attribute.node_id, attribute.id, value)
         except ConnectionClosed as exception:
-            _LOGGER.debug("Websocket connection closed: %s", str(exception.__cause__))
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="connection_closed",
