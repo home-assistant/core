@@ -706,6 +706,24 @@ async def test_service_climate_update(
             [0x00],
             [0x00],
         ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            "unavailable",
+            [0x00],
+            None,
+        ),
     ],
 )
 async def test_hvac_onoff_coil_update(
