@@ -136,5 +136,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Change of {entity} was not successful, as the connection closed due to {error_message}"
+    }
   }
 }
