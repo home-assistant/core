@@ -33,14 +33,14 @@ from .entity import SmEntity
 class SmUpdateEntityDescription(UpdateEntityDescription):
     """Describes SMLIGHT SLZB-06 update entity."""
 
-    installed_version: Callable[[Info], StateType]
+    installed_version: Callable[[Info, int], StateType]
     fw_list: Callable[[SmFwData], list[Firmware] | None]
 
 
 CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="core_update",
     translation_key="core_update",
-    installed_version=lambda x: x.sw_version,
+    installed_version=lambda x, idx: x.sw_version,
     fw_list=lambda x: x.esp_firmware,
 )
 
@@ -48,13 +48,13 @@ ZB_UPDATE_ENTITIES: list[SmUpdateEntityDescription] = [
     SmUpdateEntityDescription(
         key="zigbee_update",
         translation_key="zigbee_update",
-        installed_version=lambda x: get_radio_attr(x, 0, "zb_version"),
+        installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
         fw_list=lambda x: x.zb_firmware,
     ),
     SmUpdateEntityDescription(
         key="zigbee_update2",
         translation_key="zigbee_update2",
-        installed_version=lambda x: get_radio_attr(x, 1, "zb_version"),
+        installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
         fw_list=lambda x: x.zb_firmware2,
     ),
 ]
@@ -117,7 +117,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         """Version installed.."""
         data = self.coordinator.data
 
-        version = self.entity_description.installed_version(data.info)
+        version = self.entity_description.installed_version(data.info, self.idx)
         return str(version) if version is not None and version != "-1" else None
 
     @property
