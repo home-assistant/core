@@ -264,7 +264,6 @@ class AssistSatelliteEntity(entity.Entity):
             await self.async_start_conversation(announcement)
         finally:
             self._is_announcing = False
-            self._extra_system_prompt = None
 
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
@@ -281,6 +280,10 @@ class AssistSatelliteEntity(entity.Entity):
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
+
+        # Consume system prompt in first pipeline
+        extra_system_prompt = self._extra_system_prompt
+        self._extra_system_prompt = None
 
         if self._wake_word_intercept_future and start_stage in (
             PipelineStage.WAKE_WORD,
@@ -358,7 +361,7 @@ class AssistSatelliteEntity(entity.Entity):
                 ),
                 start_stage=start_stage,
                 end_stage=end_stage,
-                conversation_extra_system_prompt=self._extra_system_prompt,
+                conversation_extra_system_prompt=extra_system_prompt,
             ),
             f"{self.entity_id}_pipeline",
         )
