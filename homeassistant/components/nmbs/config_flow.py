@@ -17,6 +17,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    async_find_station_with_fallback,
     CONF_EXCLUDE_VIAS,
     CONF_SHOW_ON_MAP,
     CONF_STATION_FROM,
@@ -53,27 +54,6 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             SelectOptionDict(value=station["id"], label=station["standardname"])
             for station in self.stations
         ]
-
-    async def _find_station_with_fallback(
-        self, station_name: str
-    ) -> dict[str, Any] | None:
-        """Find station by name, fallback to liveboard API if not found."""
-
-        # First check exact matches
-        for station in self.stations:
-            if station_name in (station["standardname"], station["name"]):
-                return station
-
-        # If not found, try liveboard API
-        try:
-            liveboard = await self.hass.async_add_executor_job(
-                self.api_client.get_liveboard, station_name
-            )
-            if liveboard == -1 or "stationinfo" not in liveboard:
-                return None
-            return liveboard["stationinfo"]
-        except Exception as e:
-            return None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -144,12 +124,12 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="api_unavailable")
 
         # Find stations with fallback
-        station_from = await self._find_station_with_fallback(
+        station_from = await async_find_station_with_fallback(
             user_input[CONF_STATION_FROM]
         )
-        station_to = await self._find_station_with_fallback(user_input[CONF_STATION_TO])
+        station_to = await async_find_station_with_fallback(user_input[CONF_STATION_TO])
         station_live = (
-            await self._find_station_with_fallback(user_input[CONF_STATION_LIVE])
+            await async_find_station_with_fallback(user_input[CONF_STATION_LIVE])
             if CONF_STATION_LIVE in user_input
             else None
         )
