@@ -2,9 +2,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "Define the velbus connection type",
+        "title": "Define the Velbus connection type",
         "data": {
-          "name": "The name for this velbus connection",
+          "name": "The name for this Velbus connection",
           "port": "Connection string"
         }
       }
@@ -31,21 +31,21 @@
   "services": {
     "sync_clock": {
       "name": "Sync clock",
-      "description": "Syncs the velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
+      "description": "Syncs the Velbus modules clock to the Home Assistant clock, this is the same as the 'sync clock' from VelbusLink.",
       "fields": {
         "interface": {
           "name": "Interface",
-          "description": "The velbus interface to send the command to, this will be the same value as used during configuration."
+          "description": "The Velbus interface to send the command to, this will be the same value as used during configuration."
         },
         "config_entry": {
           "name": "Config entry",
-          "description": "The config entry of the velbus integration"
+          "description": "The config entry of the Velbus integration"
         }
       }
     },
     "scan": {
       "name": "Scan",
-      "description": "Scans the velbus modules, this will be needed if you see unknown module warnings in the logs, or when you added new modules.",
+      "description": "Scans the Velbus modules, this will be needed if you see unknown module warnings in the logs, or when you added new modules.",
       "fields": {
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
@@ -59,7 +59,7 @@
     },
     "clear_cache": {
       "name": "Clear cache",
-      "description": "Clears the velbuscache and then starts a new scan.",
+      "description": "Clears the Velbus cache and then starts a new scan.",
       "fields": {
         "interface": {
           "name": "[%key:component::velbus::services::sync_clock::fields::interface::name%]",
@@ -101,7 +101,7 @@
   "issues": {
     "deprecated_interface_parameter": {
       "title": "Deprecated 'interface' parameter",
-      "description": "The 'interface' parameter in the Velbus service calls is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
+      "description": "The 'interface' parameter in the Velbus actions is deprecated. The 'config_entry' parameter should be used going forward.\n\nPlease adjust your automations or scripts to fix this issue."
     }
   }
 }

@@ -28,6 +28,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .roborock_storage import async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -259,3 +260,8 @@ async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> No
     """Handle options update."""
     # Reload entry to update data
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
+    """Handle removal of an entry."""
+    await async_remove_map_storage(hass, entry.entry_id)

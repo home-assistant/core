@@ -19,7 +19,7 @@ from fyta_cli.fyta_models import Plant
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import CONF_EXPIRATION, DOMAIN
