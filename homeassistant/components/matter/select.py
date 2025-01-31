@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, cast
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
 from chip.clusters.Types import Nullable
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +19,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+NUMBER_OF_RINSES_STATE_MAP = {
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNone: "off",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kNormal: "normal",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kExtra: "extra",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kMax: "max",
+    clusters.LaundryWasherControls.Enums.NumberOfRinsesEnum.kUnknownEnumValue: None,
+}
+NUMBER_OF_RINSES_STATE_MAP_REVERSE = {
+    v: k for k, v in NUMBER_OF_RINSES_STATE_MAP.items()
+}
 
 type SelectCluster = (
     clusters.ModeSelect
@@ -50,14 +60,26 @@ class MatterSelectEntityDescription(SelectEntityDescription, MatterEntityDescrip
 
 
 @dataclass(frozen=True, kw_only=True)
+class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
+    """Describe Matter select entities for MatterMapSelectEntityDescription."""
+
+    measurement_to_ha: Callable[[int], str | None]
+    ha_to_native_value: Callable[[str], int | None]
+
+    # list attribute: the attribute descriptor to get the list of values (= list of integers)
+    list_attribute: type[ClusterAttributeDescriptor]
+
+
+@dataclass(frozen=True, kw_only=True)
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
-    # command: a callback to create the command to send to the device
-    # the callback's argument will be the index of the selected list value
-    command: Callable[[int], ClusterCommand]
     # list attribute: the attribute descriptor to get the list of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
+    # command: a custom callback to create the command to send to the device
+    # the callback's argument will be the index of the selected list value
+    # if omitted the command will just be a write_attribute command to the primary attribute
+    command: Callable[[int], ClusterCommand] | None = None
 
 
 class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
@@ -70,11 +92,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         value_convert = self.entity_description.ha_to_native_value
         if TYPE_CHECKING:
             assert value_convert is not None
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id, self._entity_info.primary_attribute
-            ),
+        await self.write_attribute(
             value=value_convert(option),
         )
 
@@ -89,6 +107,29 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
         self._attr_current_option = value_convert(value)
 
 
+class MatterMapSelectEntity(MatterAttributeSelectEntity):
+    """Representation of a Matter select entity where the options are defined in a State map."""
+
+    entity_description: MatterMapSelectEntityDescription
+
+    @callback
+    def _update_from_device(self) -> None:
+        """Update from device."""
+        # the options can dynamically change based on the state of the device
+        available_values = cast(
+            list[int],
+            self.get_matter_attribute_value(self.entity_description.list_attribute),
+        )
+        # map available (int) values to string representation
+        self._attr_options = [
+            mapped_value
+            for value in available_values
+            if (mapped_value := self.entity_description.measurement_to_ha(value))
+        ]
+        # use base implementation from MatterAttributeSelectEntity to set the current option
+        super()._update_from_device()
+
+
 class MatterModeSelectEntity(MatterAttributeSelectEntity):
     """Representation of a select entity from Matter (Mode) Cluster attribute(s)."""
 
@@ -101,10 +142,8 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
         for mode in cluster.supportedModes:
             if mode.label != option:
                 continue
-            await self.matter_client.send_device_command(
-                node_id=self._endpoint.node.node_id,
-                endpoint_id=self._endpoint.endpoint_id,
-                command=cluster.Commands.ChangeToMode(newMode=mode.mode),
+            await self.send_device_command(
+                cluster.Commands.ChangeToMode(newMode=mode.mode),
             )
             break
 
@@ -132,10 +171,19 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         option_id = self._attr_options.index(option)
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=self.entity_description.command(option_id),
+
+        if TYPE_CHECKING:
+            assert option_id is not None
+
+        if self.entity_description.command:
+            # custom command defined to set the new value
+            await self.send_device_command(
+                self.entity_description.command(option_id),
+            )
+            return
+        # regular write attribute to set the new value
+        await self.write_attribute(
+            value=option_id,
         )
 
     @callback
@@ -169,6 +217,8 @@ DISCOVERY_SCHEMAS = [
             clusters.ModeSelect.Attributes.CurrentMode,
             clusters.ModeSelect.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -181,6 +231,8 @@ DISCOVERY_SCHEMAS = [
             clusters.OvenMode.Attributes.CurrentMode,
             clusters.OvenMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -193,6 +245,8 @@ DISCOVERY_SCHEMAS = [
             clusters.LaundryWasherMode.Attributes.CurrentMode,
             clusters.LaundryWasherMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -205,6 +259,8 @@ DISCOVERY_SCHEMAS = [
             clusters.RefrigeratorAndTemperatureControlledCabinetMode.Attributes.CurrentMode,
             clusters.RefrigeratorAndTemperatureControlledCabinetMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -217,6 +273,8 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcCleanMode.Attributes.CurrentMode,
             clusters.RvcCleanMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -229,6 +287,8 @@ DISCOVERY_SCHEMAS = [
             clusters.DishwasherMode.Attributes.CurrentMode,
             clusters.DishwasherMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -241,6 +301,8 @@ DISCOVERY_SCHEMAS = [
             clusters.EnergyEvseMode.Attributes.CurrentMode,
             clusters.EnergyEvseMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -253,6 +315,8 @@ DISCOVERY_SCHEMAS = [
             clusters.DeviceEnergyManagementMode.Attributes.CurrentMode,
             clusters.DeviceEnergyManagementMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -276,6 +340,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(clusters.OnOff.Attributes.StartUpOnOff,),
+        # allow None value for previous state
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -334,5 +400,39 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
             clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
         ),
+        # don't discover this entry if the supported levels list is empty
+        secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterListSelectEntityDescription(
+            key="LaundryWasherControlsSpinSpeed",
+            translation_key="laundry_washer_spin_speed",
+            list_attribute=clusters.LaundryWasherControls.Attributes.SpinSpeeds,
+        ),
+        entity_class=MatterListSelectEntity,
+        required_attributes=(
+            clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
+            clusters.LaundryWasherControls.Attributes.SpinSpeeds,
+        ),
+        # don't discover this entry if the spinspeeds list is empty
+        secondary_value_is_not=[],
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterMapSelectEntityDescription(
+            key="MatterLaundryWasherNumberOfRinses",
+            translation_key="laundry_washer_number_of_rinses",
+            list_attribute=clusters.LaundryWasherControls.Attributes.SupportedRinses,
+            measurement_to_ha=NUMBER_OF_RINSES_STATE_MAP.get,
+            ha_to_native_value=NUMBER_OF_RINSES_STATE_MAP_REVERSE.get,
+        ),
+        entity_class=MatterMapSelectEntity,
+        required_attributes=(
+            clusters.LaundryWasherControls.Attributes.NumberOfRinses,
+            clusters.LaundryWasherControls.Attributes.SupportedRinses,
+        ),
+        # don't discover this entry if the supported rinses list is empty
+        secondary_value_is_not=[],
     ),
 ]

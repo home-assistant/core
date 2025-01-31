@@ -26,64 +26,67 @@
       "message": "Appliance for device ID {device_id} not found"
     },
     "turn_on_light": {
-      "message": "Error turning on {entity_id}: {description}"
+      "message": "Error turning on {entity_id}: {error}"
     },
     "turn_off_light": {
-      "message": "Error turning off {entity_id}: {description}"
+      "message": "Error turning off {entity_id}: {error}"
     },
     "set_light_brightness": {
-      "message": "Error setting brightness of {entity_id}: {description}"
+      "message": "Error setting brightness of {entity_id}: {error}"
     },
     "select_light_custom_color": {
-      "message": "Error selecting custom color of {entity_id}: {description}"
+      "message": "Error selecting custom color of {entity_id}: {error}"
     },
     "set_light_color": {
-      "message": "Error setting color of {entity_id}: {description}"
+      "message": "Error setting color of {entity_id}: {error}"
     },
     "set_setting_entity": {
-      "message": "Error assigning the value \"{value}\" to the setting \"{key}\" for {entity_id}: {description}"
+      "message": "Error assigning the value \"{value}\" to the setting \"{key}\" for {entity_id}: {error}"
     },
     "set_setting": {
-      "message": "Error assigning the value \"{value}\" to the setting \"{key}\": {description}"
+      "message": "Error assigning the value \"{value}\" to the setting \"{key}\": {error}"
     },
     "turn_on": {
-      "message": "Error turning on {entity_id} ({key}): {description}"
+      "message": "Error turning on {entity_id} ({key}): {error}"
     },
     "turn_off": {
-      "message": "Error turning off {entity_id} ({key}): {description}"
+      "message": "Error turning off {entity_id} ({key}): {error}"
     },
     "select_program": {
-      "message": "Error selecting program {program}: {description}"
+      "message": "Error selecting program {program}: {error}"
     },
     "start_program": {
-      "message": "Error starting program {program}: {description}"
+      "message": "Error starting program {program}: {error}"
     },
     "pause_program": {
-      "message": "Error pausing program: {description}"
+      "message": "Error pausing program: {error}"
     },
     "stop_program": {
-      "message": "Error stopping program: {description}"
+      "message": "Error stopping program: {error}"
     },
     "set_options_active_program": {
-      "message": "Error setting options for the active program: {description}"
+      "message": "Error setting options for the active program: {error}"
     },
     "set_options_selected_program": {
-      "message": "Error setting options for the selected program: {description}"
+      "message": "Error setting options for the selected program: {error}"
     },
     "execute_command": {
-      "message": "Error executing command {command}: {description}"
+      "message": "Error executing command {command}: {error}"
     },
     "power_on": {
-      "message": "Error turning on {appliance_name}: {description}"
+      "message": "Error turning on {appliance_name}: {error}"
     },
     "power_off": {
-      "message": "Error turning off {appliance_name} with value \"{value}\": {description}"
+      "message": "Error turning off {appliance_name} with value \"{value}\": {error}"
     },
     "turn_off_not_supported": {
       "message": "{appliance_name} does not support turning off or entering standby mode."
     },
     "unable_to_retrieve_turn_off": {
       "message": "Unable to turn off {appliance_name} because its support for turning off or entering standby mode could not be determined."
+    },
+    "fetch_api_error": {
+      "message": "Error obtaining data from the API: {error}"
     }
   },
   "issues": {

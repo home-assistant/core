@@ -5,7 +5,7 @@ import logging
 
 from aiohttp import ClientError
 from whirlpool.appliancesmanager import AppliancesManager
-from whirlpool.auth import Auth
+from whirlpool.auth import AccountLockedError as WhirlpoolAccountLocked, Auth
 from whirlpool.backendselector import BackendSelector
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,6 +39,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WhirlpoolConfigEntry) ->
         await auth.do_auth(store=False)
     except (ClientError, TimeoutError) as ex:
         raise ConfigEntryNotReady("Cannot connect") from ex
+    except WhirlpoolAccountLocked as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="account_locked"
+        ) from ex
 
     if not auth.is_access_token_valid():
         _LOGGER.error("Authentication failed")

@@ -6,13 +6,14 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
+from env_canada import ECWeather
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LOCATION,
     DEGREE,
@@ -27,8 +28,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import device_info
-from .const import ATTR_STATION, DOMAIN
+from .const import ATTR_STATION
+from .coordinator import ECConfigEntry, ECDataType, ECDataUpdateCoordinator
 
 ATTR_TIME = "alert time"
 
@@ -251,32 +252,44 @@ ALERT_TYPES: tuple[ECSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ECConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
-    sensors: list[ECBaseSensor] = [ECSensor(coordinator, desc) for desc in SENSOR_TYPES]
-    sensors.extend([ECAlertSensor(coordinator, desc) for desc in ALERT_TYPES])
-    aqhi_coordinator = hass.data[DOMAIN][config_entry.entry_id]["aqhi_coordinator"]
-    sensors.append(ECSensor(aqhi_coordinator, AQHI_SENSOR))
+    weather_coordinator = config_entry.runtime_data.weather_coordinator
+    sensors: list[ECBaseSensorEntity] = [
+        ECSensorEntity(weather_coordinator, desc) for desc in SENSOR_TYPES
+    ]
+    sensors.extend(
+        [ECAlertSensorEntity(weather_coordinator, desc) for desc in ALERT_TYPES]
+    )
+
+    sensors.append(
+        ECSensorEntity(config_entry.runtime_data.aqhi_coordinator, AQHI_SENSOR)
+    )
     async_add_entities(sensors)
 
 
-class ECBaseSensor(CoordinatorEntity, SensorEntity):
+class ECBaseSensorEntity[DataT: ECDataType](
+    CoordinatorEntity[ECDataUpdateCoordinator[DataT]], SensorEntity
+):
     """Environment Canada sensor base."""
 
     entity_description: ECSensorEntityDescription
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, description):
+    def __init__(
+        self,
+        coordinator: ECDataUpdateCoordinator[DataT],
+        description: ECSensorEntityDescription,
+    ) -> None:
         """Initialize the base sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._ec_data = coordinator.ec_data
         self._attr_attribution = self._ec_data.metadata["attribution"]
         self._attr_unique_id = f"{coordinator.config_entry.title}-{description.key}"
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_value(self):
@@ -287,10 +300,14 @@ class ECBaseSensor(CoordinatorEntity, SensorEntity):
         return value
 
 
-class ECSensor(ECBaseSensor):
+class ECSensorEntity[DataT: ECDataType](ECBaseSensorEntity[DataT]):
     """Environment Canada sensor for conditions."""
 
-    def __init__(self, coordinator, description):
+    def __init__(
+        self,
+        coordinator: ECDataUpdateCoordinator[DataT],
+        description: ECSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, description)
         self._attr_extra_state_attributes = {
@@ -299,7 +316,7 @@ class ECSensor(ECBaseSensor):
         }
 
 
-class ECAlertSensor(ECBaseSensor):
+class ECAlertSensorEntity(ECBaseSensorEntity[ECWeather]):
     """Environment Canada sensor for alerts."""
 
     @property

@@ -477,7 +477,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '200s-humidifier',
+          '200s-humidifier4321',
         ),
       }),
       'is_new': False,
@@ -621,6 +621,7 @@
           'advancedSleep',
           'auto',
           'turbo',
+          'normal',
         ]),
       }),
       'config_entry_id': <ANY>,
@@ -665,6 +666,7 @@
         'advancedSleep',
         'auto',
         'turbo',
+        'normal',
       ]),
       'screen_status': False,
       'supported_features': <FanEntityFeature: 57>,
