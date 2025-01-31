@@ -148,7 +148,7 @@ async def test_post_service_failed(
     hass.config.is_allowed_path = Mock(return_value=True)
     mock_mastodon_client.media_post.return_value = {"id": "1"}
 
-    getattr(mock_mastodon_client, "status_post").side_effect = MastodonAPIError
+    mock_mastodon_client.status_post.side_effect = MastodonAPIError
 
     with pytest.raises(HomeAssistantError, match="Unable to send message"):
         await hass.services.async_call(
@@ -172,7 +172,7 @@ async def test_post_media_upload_failed(
 
     payload = {"status": "test toot", "media": "/fail.jpg"}
 
-    getattr(mock_mastodon_client, "media_post").side_effect = MastodonAPIError
+    mock_mastodon_client.media_post.side_effect = MastodonAPIError
 
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
