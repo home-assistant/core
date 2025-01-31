@@ -28,7 +28,7 @@
           "pin": "[%key:common::config_flow::data::pin%]"
         },
         "data_description": {
-          "pin": "The user level pincode configured on the MotionMount."
+          "pin": "The user level PIN configured on the MotionMount."
         }
       },
       "backoff": {
