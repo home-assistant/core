@@ -49,14 +49,6 @@ USER = {
     "UserFeatureList": "Master=0,User Administration=0,Configuration Administration=0",
 }
 
-RESPONSE_AUTHENTICATE = {
-    "ResultCode": ResultCode.SUCCESS.value,
-    "SessionID": 1,
-    "Locations": LOCATIONS,
-    "ModuleFlags": MODULE_FLAGS,
-    "UserInfo": USER,
-}
-
 RESPONSE_SESSION_DETAILS = {
     "ResultCode": ResultCode.SUCCESS.value,
     "ResultData": "Success",
@@ -65,12 +57,6 @@ RESPONSE_SESSION_DETAILS = {
     "ModuleFlags": MODULE_FLAGS,
     "UserInfo": USER,
 }
-
-RESPONSE_AUTHENTICATE_FAILED = {
-    "ResultCode": ResultCode.BAD_USER_OR_PASSWORD.value,
-    "ResultData": "test bad authentication",
-}
-
 
 PARTITION_DISARMED = {
     "PartitionID": "1",
