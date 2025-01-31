@@ -54,7 +54,7 @@ async def get_unifi_api(
     )
 
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(30):
             await api.login()
 
     except aiounifi.Unauthorized as err:
