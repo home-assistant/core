@@ -284,6 +284,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
             if model := self._client.system_info.get("modelName"):
                 self._attr_device_info["model"] = model
 
+            if serial_number := self._client.system_info.get("serialNumber"):
+                self._attr_device_info["serial_number"] = serial_number
+
         self._attr_extra_state_attributes = {}
         if self._client.sound_output is not None or self.state != MediaPlayerState.OFF:
             self._attr_extra_state_attributes = {
