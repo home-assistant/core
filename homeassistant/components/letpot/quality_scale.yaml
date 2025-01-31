@@ -29,7 +29,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading:
     status: done
     comment: |
