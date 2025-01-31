@@ -1,6 +1,6 @@
 """The NMBS integration."""
 
-from typing import Final
+from typing import Any, Final
 
 from pyrail import iRail
 
