@@ -1936,7 +1936,7 @@ python-google-drive-api==0.0.2
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.3.0
+python-homewizard-energy==v8.3.2
 
 # homeassistant.components.izone
 python-izone==1.2.9
