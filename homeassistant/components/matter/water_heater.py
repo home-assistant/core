@@ -10,11 +10,8 @@ from matter_server.common.helpers.util import create_attribute_path_from_attribu
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
-    STATE_ELECTRIC,
-    STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_OFF,
-    STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
@@ -42,11 +39,8 @@ TEMPERATURE_SCALING_FACTOR = 100
 
 WATER_HEATER_SYSTEM_MODE_MAP = {
     STATE_ECO: 4,
-    STATE_ELECTRIC: 4,
-    STATE_HEAT_PUMP: 4,
     STATE_HIGH_DEMAND: 4,
     STATE_OFF: 0,
-    STATE_PERFORMANCE: 4,
 }
 
 BOOST_STATE_MAP = {
@@ -70,16 +64,11 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     """Representation of a Matter WaterHeater entity."""
 
     _attr_current_temperature: float | None = None
-    # _attr_min_temp: float | None = None
-    # _attr_max_temp: float | None = None
     _attr_current_operation: str
     _attr_operation_list = [
         STATE_ECO,
-        STATE_ELECTRIC,
-        STATE_HEAT_PUMP,
         STATE_HIGH_DEMAND,
         STATE_OFF,
-        STATE_PERFORMANCE,
     ]
     _attr_precision = PRECISION_WHOLE
     _attr_supported_features = (
@@ -109,8 +98,10 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
         # Boost 1h (3600s)
-        boostInfo: type[clusters.WaterHeaterManagement.WaterHeaterBoostInfoStruct] = (
-            clusters.WaterHeaterManagement.WaterHeaterBoostInfoStruct(duration=3600)
+        boostInfo: type[
+            clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
+        ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
+            duration=3600
         )
         system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP.get(operation_mode)
         if system_mode_value is None:
@@ -155,7 +146,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         if (BoostState) == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
             self._attr_current_operation = STATE_HIGH_DEMAND
         else:
-            self._attr_current_operation = STATE_HEAT_PUMP
+            self._attr_current_operation = STATE_ECO
         self._attr_temperature = cast(
             float,
             self._get_temperature_in_degrees(
