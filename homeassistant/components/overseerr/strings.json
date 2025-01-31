@@ -27,7 +27,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "Invalid authentication or CSRF protection is turned on.",
+      "invalid_auth": "Authentication failed. Your api key is invalid or CSRF protection is turned on, preventing authentication.",
       "invalid_host": "The provided URL is not a valid host."
     }
   },
