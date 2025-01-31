@@ -18,7 +18,7 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Follow the [documentation]({url}) to get your api key"
+          "api_key": "Follow the [documentation]({url}) to get your API key"
         }
       },
       "reauth_confirm": {
