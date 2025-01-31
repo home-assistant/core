@@ -76,6 +76,7 @@ class EheimDigitalHeaterClimate(EheimDigitalEntity[EheimDigitalHeater], ClimateE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_mode = PRESET_NONE
     _attr_translation_key = "heater"
+    _attr_name = None
 
     def __init__(
         self, coordinator: EheimDigitalUpdateCoordinator, device: EheimDigitalHeater
