@@ -47,6 +47,7 @@ CONF_DATA_SIZE = "data_size"
 CONF_DISTANCE = "distance"
 CONF_DURATION = "duration"
 CONF_ENERGY = "energy"
+CONF_ENERGY_DISTANCE = "energy_distance"
 CONF_FREQUENCY = "frequency"
 CONF_GAS = "gas"
 CONF_HUMIDITY = "humidity"
@@ -101,6 +102,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_ENERGY}],
+    SensorDeviceClass.ENERGY_DISTANCE: [{CONF_TYPE: CONF_ENERGY_DISTANCE}],
     SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_GAS}],
@@ -168,6 +170,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_DISTANCE,
                     CONF_DURATION,
                     CONF_ENERGY,
+                    CONF_ENERGY_DISTANCE,
                     CONF_FREQUENCY,
                     CONF_GAS,
                     CONF_HUMIDITY,

@@ -1103,7 +1103,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.15.0
+habluetooth==3.17.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1305,7 +1305,7 @@ led-ble==1.1.4
 lektricowifi==0.0.43
 
 # homeassistant.components.letpot
-letpot==0.3.0
+letpot==0.4.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -2391,7 +2391,7 @@ python-google-drive-api==0.0.2
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.3.0
+python-homewizard-energy==v8.3.2
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
