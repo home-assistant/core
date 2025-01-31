@@ -164,7 +164,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot sensors using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
+    entities: list[LitterRobotSensorEntity] = [
         LitterRobotSensorEntity(
             robot=robot, coordinator=coordinator, description=description
         )
@@ -172,14 +172,15 @@ async def async_setup_entry(
         for robot_type, entity_descriptions in ROBOT_SENSOR_MAP.items()
         if isinstance(robot, robot_type)
         for description in entity_descriptions
-    )
-    async_add_entities(
+    ]
+    entities.extend(
         LitterRobotSensorEntity(
             robot=pet, coordinator=coordinator, description=description
         )
         for pet in coordinator.account.pets
         for description in PET_SENSORS
     )
+    async_add_entities(entities)
 
 
 class LitterRobotSensorEntity(LitterRobotEntity[_WhiskerEntityT], SensorEntity):
