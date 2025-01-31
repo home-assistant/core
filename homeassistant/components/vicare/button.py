@@ -59,7 +59,7 @@ def _build_entities(
         )
         for device in device_list
         for description in BUTTON_DESCRIPTIONS
-        if is_supported(description.key, description, device.api)
+        if is_supported(description.key, description.value_getter, device.api)
     ]
 
 
