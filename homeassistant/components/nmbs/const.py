@@ -16,6 +16,25 @@ CONF_EXCLUDE_VIAS = "exclude_vias"
 CONF_SHOW_ON_MAP = "show_on_map"
 
 
+async def async_find_station_with_fallback(
+    hass: HomeAssistant, 
+    station_name: str,
+    api_client: Any
+) -> dict[str, Any] | None:
+    """Find station with fallback to liveboard API."""
+    # First check exact matches
+    if station := find_station_by_name(hass, station_name):
+        return station
+    
+    # Fallback to liveboard API
+    liveboard = await hass.async_add_executor_job(
+        api_client.get_liveboard, station_name
+    )
+    if liveboard != -1 and "stationinfo" in liveboard:
+        return liveboard["stationinfo"]
+    return None
+
+
 def find_station_by_name(hass: HomeAssistant, station_name: str):
     """Find given station_name in the station list."""
     return next(
