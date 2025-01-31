@@ -27,7 +27,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
 )
 
-from . import RingConfigEntry
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import RingDataCoordinator, RingListenCoordinator
 
@@ -165,10 +164,13 @@ class RingBaseEntity(
         self,
         device: RingDeviceT,
         coordinator: _RingCoordinatorT,
+        description: RingEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(coordinator, context=device.id)
         self._device = device
+        self.entity_description = description
+        self._attr_unique_id = description.unique_id_fn(description, device)
         self._attr_extra_state_attributes = {}
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},  # device_id is the mac
@@ -180,19 +182,6 @@ class RingBaseEntity(
 
 class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEntity):
     """Implementation for Ring devices."""
-
-    unique_id: str
-
-    def __init__(
-        self,
-        device: RingDeviceT,
-        coordinator: RingDataCoordinator,
-        description: RingEntityDescription[RingDeviceT],
-    ) -> None:
-        """Initialize a sensor for Ring device."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = description.unique_id_fn(description, device)
 
     def _get_coordinator_data(self) -> RingDevices:
         return self.coordinator.data
@@ -213,7 +202,6 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
         hass: HomeAssistant,
         coordinator: RingDataCoordinator,
         *,
-        entry: RingConfigEntry,
         async_add_entities: AddEntitiesCallback,
         domain: str,
         descriptions: Iterable[_D],
@@ -257,3 +245,67 @@ class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEn
 
         _async_add_new_device_entities()
         coordinator.async_add_listener(_async_add_new_device_entities)
+
+
+class RingListenEntity(RingBaseEntity[RingListenCoordinator, RingDeviceT]):
+    """Implementation for Ring devices."""
+
+    @classmethod
+    def process_entities[
+        _D: RingEntityDescription[Any],
+    ](
+        cls,
+        hass: HomeAssistant,
+        devices_coordinator: RingDataCoordinator,
+        listen_coordinator: RingListenCoordinator,
+        *,
+        async_add_entities: AddEntitiesCallback,
+        domain: str,
+        descriptions: Iterable[_D],
+        **kwargs: Any,
+    ) -> None:
+        """Process device entities."""
+        processed_device_ids: set[int] = set()
+
+        def _entities_for_device(
+            device: RingDeviceT,
+        ) -> list[RingListenEntity[RingDeviceT]]:
+            """Get all the entities for a device."""
+            return [
+                cls(device, listen_coordinator, description, **kwargs)
+                for description in descriptions
+                if description.exists_fn(device)
+                and async_check_create_deprecated(
+                    hass,
+                    domain,
+                    description.unique_id_fn(description, device),
+                    description,
+                )
+            ]
+
+        def _async_add_new_device_entities() -> None:
+            """Handle new devices."""
+            # Remove any device ids that the coordinator has removed so
+            # they will be re-added if they re-appear.
+            for removed_device_id in devices_coordinator.removed_device_ids:
+                processed_device_ids.discard(removed_device_id)
+
+            if (
+                new_device_ids := devices_coordinator.device_api_ids
+                - processed_device_ids
+            ):
+                entities = []
+                for device_api_id in new_device_ids:
+                    device = cast(
+                        RingDeviceT,
+                        devices_coordinator.ring_api.devices().get_device(
+                            device_api_id
+                        ),
+                    )
+                    entities.extend(_entities_for_device(device))
+                    processed_device_ids.add(device_api_id)
+
+                async_add_entities(entities)
+
+        _async_add_new_device_entities()
+        devices_coordinator.async_add_listener(_async_add_new_device_entities)

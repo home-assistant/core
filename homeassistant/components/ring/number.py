@@ -8,6 +8,7 @@ from ring_doorbell import RingChime, RingDoorBell, RingOther
 import ring_doorbell.const
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -34,11 +35,12 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    async_add_entities(
-        RingNumber(device, devices_coordinator, description)
-        for description in NUMBER_TYPES
-        for device in ring_data.devices.all_devices
-        if description.exists_fn(device)
+    RingNumber.process_entities(
+        hass,
+        devices_coordinator,
+        async_add_entities=async_add_entities,
+        domain=NUMBER_DOMAIN,
+        descriptions=NUMBER_TYPES,
     )
 
 

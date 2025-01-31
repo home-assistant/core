@@ -52,7 +52,6 @@ async def async_setup_entry(
     RingSensor.process_entities(
         hass,
         devices_coordinator,
-        entry=entry,
         async_add_entities=async_add_entities,
         domain=SENSOR_DOMAIN,
         descriptions=SENSOR_TYPES,

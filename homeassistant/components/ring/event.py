@@ -1,12 +1,13 @@
 """Component providing support for ring events."""
 
 from dataclasses import dataclass
-from typing import Generic
+from typing import Any
 
-from ring_doorbell import RingCapability, RingEvent as RingAlert
+from ring_doorbell import RingCapability, RingEvent as RingAlert, RingGeneric
 from ring_doorbell.const import KIND_DING, KIND_INTERCOM_UNLOCK, KIND_MOTION
 
 from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -15,41 +16,40 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RingConfigEntry
-from .coordinator import RingListenCoordinator
-from .entity import RingBaseEntity, RingDeviceT
+from .entity import RingDeviceT, RingEntityDescription, RingListenEntity
 
 # Event entity does not perform updates or actions.
 PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingEventEntityDescription(EventEntityDescription, Generic[RingDeviceT]):
+class RingEventEntityDescription(
+    EventEntityDescription, RingEntityDescription[RingGeneric]
+):
     """Base class for event entity description."""
 
-    capability: RingCapability
 
-
-EVENT_DESCRIPTIONS: tuple[RingEventEntityDescription, ...] = (
+EVENT_DESCRIPTIONS: tuple[RingEntityDescription[Any], ...] = (
     RingEventEntityDescription(
         key=KIND_DING,
         translation_key=KIND_DING,
         device_class=EventDeviceClass.DOORBELL,
         event_types=[KIND_DING],
-        capability=RingCapability.DING,
+        exists_fn=lambda device: device.has_capability(RingCapability.DING),
     ),
     RingEventEntityDescription(
         key=KIND_MOTION,
         translation_key=KIND_MOTION,
         device_class=EventDeviceClass.MOTION,
         event_types=[KIND_MOTION],
-        capability=RingCapability.MOTION_DETECTION,
+        exists_fn=lambda device: device.has_capability(RingCapability.MOTION_DETECTION),
     ),
     RingEventEntityDescription(
         key=KIND_INTERCOM_UNLOCK,
         translation_key=KIND_INTERCOM_UNLOCK,
         device_class=EventDeviceClass.BUTTON,
         event_types=[KIND_INTERCOM_UNLOCK],
-        capability=RingCapability.OPEN,
+        exists_fn=lambda device: device.has_capability(RingCapability.OPEN),
     ),
 )
 
@@ -61,31 +61,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up events for a Ring device."""
     ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
     listen_coordinator = ring_data.listen_coordinator
 
-    async_add_entities(
-        RingEvent(device, listen_coordinator, description)
-        for description in EVENT_DESCRIPTIONS
-        for device in ring_data.devices.all_devices
-        if device.has_capability(description.capability)
+    RingEvent.process_entities(
+        hass,
+        devices_coordinator,
+        listen_coordinator,
+        async_add_entities=async_add_entities,
+        domain=EVENT_DOMAIN,
+        descriptions=EVENT_DESCRIPTIONS,
     )
 
 
-class RingEvent(RingBaseEntity[RingListenCoordinator, RingDeviceT], EventEntity):
+class RingEvent(RingListenEntity[RingDeviceT], EventEntity):
     """An event implementation for Ring device."""
 
-    entity_description: RingEventEntityDescription[RingDeviceT]
-
-    def __init__(
-        self,
-        device: RingDeviceT,
-        coordinator: RingListenCoordinator,
-        description: RingEventEntityDescription[RingDeviceT],
-    ) -> None:
-        """Initialize a event entity for Ring device."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
+    entity_description: RingEventEntityDescription
 
     @callback
     def _async_handle_event(self, event: str) -> None:

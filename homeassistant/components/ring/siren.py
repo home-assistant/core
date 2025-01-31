@@ -81,7 +81,6 @@ async def async_setup_entry(
     RingSiren.process_entities(
         hass,
         devices_coordinator,
-        entry=entry,
         async_add_entities=async_add_entities,
         domain=SIREN_DOMAIN,
         descriptions=SIRENS,

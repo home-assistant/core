@@ -73,7 +73,6 @@ async def async_setup_entry(
     RingLight.process_entities(
         hass,
         devices_coordinator,
-        entry=entry,
         async_add_entities=async_add_entities,
         domain=LIGHT_DOMAIN,
         descriptions=LIGHTS,

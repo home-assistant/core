@@ -11,6 +11,7 @@ from ring_doorbell import RingCapability, RingEvent
 from ring_doorbell.const import KIND_DING, KIND_MOTION
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -22,13 +23,7 @@ from homeassistant.helpers.event import async_call_at
 
 from . import RingConfigEntry
 from .coordinator import RingListenCoordinator
-from .entity import (
-    DeprecatedInfo,
-    RingBaseEntity,
-    RingDeviceT,
-    RingEntityDescription,
-    async_check_create_deprecated,
-)
+from .entity import DeprecatedInfo, RingDeviceT, RingEntityDescription, RingListenEntity
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -70,25 +65,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Ring binary sensors from a config entry."""
     ring_data = entry.runtime_data
+    devices_coordinator = ring_data.devices_coordinator
     listen_coordinator = ring_data.listen_coordinator
 
-    async_add_entities(
-        RingBinarySensor(device, listen_coordinator, description)
-        for description in BINARY_SENSOR_TYPES
-        for device in ring_data.devices.all_devices
-        if description.exists_fn(device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.BINARY_SENSOR,
-            f"{device.id}-{description.key}",
-            description,
-        )
+    RingBinarySensor.process_entities(
+        hass,
+        devices_coordinator,
+        listen_coordinator,
+        async_add_entities=async_add_entities,
+        domain=BINARY_SENSOR_DOMAIN,
+        descriptions=BINARY_SENSOR_TYPES,
     )
 
 
-class RingBinarySensor(
-    RingBaseEntity[RingListenCoordinator, RingDeviceT], BinarySensorEntity
-):
+class RingBinarySensor(RingListenEntity[RingDeviceT], BinarySensorEntity):
     """A binary sensor implementation for Ring device."""
 
     _active_alert: RingEvent | None = None
@@ -104,9 +94,8 @@ class RingBinarySensor(
         super().__init__(
             device,
             coordinator,
+            description,
         )
-        self.entity_description = description
-        self._attr_unique_id = description.unique_id_fn(description, device)
         self._attr_is_on = False
         self._active_alert: RingEvent | None = None
         self._cancel_callback: CALLBACK_TYPE | None = None

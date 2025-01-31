@@ -89,7 +89,6 @@ async def async_setup_entry(
     RingCam.process_entities(
         hass,
         devices_coordinator,
-        entry=entry,
         async_add_entities=async_add_entities,
         domain=CAMERA_DOMAIN,
         descriptions=CAMERA_DESCRIPTIONS,

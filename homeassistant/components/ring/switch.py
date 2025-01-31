@@ -94,7 +94,6 @@ async def async_setup_entry(
     RingSwitch.process_entities(
         hass,
         devices_coordinator,
-        entry=entry,
         async_add_entities=async_add_entities,
         domain=SWITCH_DOMAIN,
         descriptions=SWITCHES,
