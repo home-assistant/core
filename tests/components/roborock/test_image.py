@@ -170,7 +170,7 @@ async def test_fail_to_save_image(
         assert "Unable to write map file" in caplog.text
 
         # Config entry is unloaded successfully
-        assert mock_roborock_entry.state == ConfigEntryState.NOT_LOADED
+        assert mock_roborock_entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_fail_to_load_image(
