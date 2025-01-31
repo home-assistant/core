@@ -35,13 +35,11 @@ class EvoDevice(CoordinatorEntity):
 
         self._device_state_attrs: dict[str, Any] = {}
 
-    async def async_refresh(self, payload: dict | None = None) -> None:
+    async def process_signal(self, payload: dict | None = None) -> None:
         """Process any signals."""
 
         if payload is None:
-            # force_refresh invokes self.async_update() before self.async_write_ha_state()
-            self.async_schedule_update_ha_state(force_refresh=True)
-            return
+            raise NotImplementedError
         if payload["unique_id"] != self._attr_unique_id:
             return
         if payload["service"] in (
@@ -68,7 +66,7 @@ class EvoDevice(CoordinatorEntity):
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        async_dispatcher_connect(self.hass, DOMAIN, self.async_refresh)
+        async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
 
 
 class EvoChild(EvoDevice):
@@ -135,7 +133,7 @@ class EvoChild(EvoDevice):
         """Get the latest state data."""
 
         if not self._schedule:
-            await self._update_schedule()
+            # await self._update_schedule()
 
             if not self._schedule:
                 self._device_state_attrs = {}

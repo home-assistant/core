@@ -164,7 +164,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             return None
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            await self.async_request_refresh()
+            await self.async_request_refresh()  # hass.async_create_task() won't help
 
         return result
 
