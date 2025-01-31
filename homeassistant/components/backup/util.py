@@ -118,12 +118,15 @@ def read_backup(backup_path: Path) -> AgentBackup:
         )
 
 
+def suggested_filename_from_name_date(name: str, date_str: str) -> str:
+    """Suggest a filename for the backup."""
+    date = dt_util.parse_datetime(date_str, raise_on_error=True)
+    return "_".join(f"{name} - {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split())
+
+
 def suggested_filename(backup: AgentBackup) -> str:
     """Suggest a filename for the backup."""
-    date = dt_util.parse_datetime(backup.date, raise_on_error=True)
-    return "_".join(
-        f"{backup.name} - {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split()
-    )
+    return suggested_filename_from_name_date(backup.name, backup.date)
 
 
 def validate_password(path: Path, password: str | None) -> bool:
