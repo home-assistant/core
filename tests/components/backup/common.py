@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterable
 from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
@@ -52,8 +52,15 @@ TEST_BACKUP_DEF456 = AgentBackup(
     protected=False,
     size=1,
 )
+TEST_BACKUP_PATH_DEF456 = Path("custom_def456.tar")
 
 TEST_DOMAIN = "test"
+
+
+async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
+    """Convert an iterable to an async iterator."""
+    for i in iterable:
+        yield i
 
 
 class BackupAgentTest(BackupAgent):
@@ -64,6 +71,7 @@ class BackupAgentTest(BackupAgent):
     def __init__(self, name: str, backups: list[AgentBackup] | None = None) -> None:
         """Initialize the backup agent."""
         self.name = name
+        self.unique_id = name
         if backups is None:
             backups = [
                 AgentBackup(
@@ -161,7 +169,13 @@ async def setup_backup_integration(
             if with_hassio and agent_id == LOCAL_AGENT_ID:
                 continue
             agent = hass.data[DATA_MANAGER].backup_agents[agent_id]
-            agent._backups = {backups.backup_id: backups for backups in agent_backups}
+
+            async def open_stream() -> AsyncIterator[bytes]:
+                """Open a stream."""
+                return aiter_from_iter((b"backup data",))
+
+            for backup in agent_backups:
+                await agent.async_upload_backup(open_stream=open_stream, backup=backup)
             if agent_id == LOCAL_AGENT_ID:
                 agent._loaded_backups = True
 
