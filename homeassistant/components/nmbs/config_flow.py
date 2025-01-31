@@ -125,11 +125,15 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Find stations with fallback
         station_from = await async_find_station_with_fallback(
-            user_input[CONF_STATION_FROM]
+            self.hass, user_input[CONF_STATION_FROM], self.api_client
         )
-        station_to = await async_find_station_with_fallback(user_input[CONF_STATION_TO])
+        station_to = await async_find_station_with_fallback(
+            self.hass, user_input[CONF_STATION_TO], self.api_client
+        )
         station_live = (
-            await async_find_station_with_fallback(user_input[CONF_STATION_LIVE])
+            await async_find_station_with_fallback(
+                self.hass, user_input[CONF_STATION_LIVE], self.api_client
+            )
             if CONF_STATION_LIVE in user_input
             else None
         )
