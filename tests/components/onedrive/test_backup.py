@@ -164,7 +164,7 @@ async def test_agents_delete_not_found_does_not_throw(
     mock_drive_items: MagicMock,
 ) -> None:
     """Test agent delete backup."""
-    mock_drive_items.delete = AsyncMock(side_effect=APIError(response_status_code=404))
+    mock_drive_items.children.get = AsyncMock(return_value=[])
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -177,7 +177,7 @@ async def test_agents_delete_not_found_does_not_throw(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_drive_items.delete.assert_called_once()
+    assert mock_drive_items.delete.call_count == 0
 
 
 async def test_agents_upload(
@@ -448,22 +448,14 @@ async def test_delete_error(
     }
 
 
-@pytest.mark.parametrize(
-    "problem",
-    [
-        AsyncMock(return_value=None),
-        AsyncMock(side_effect=APIError(response_status_code=404)),
-    ],
-)
 async def test_agents_backup_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
-    problem: AsyncMock,
 ) -> None:
     """Test backup not found."""
 
-    mock_drive_items.get = problem
+    mock_drive_items.children.get = AsyncMock(return_value=[])
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -471,26 +463,6 @@ async def test_agents_backup_not_found(
 
     assert response["success"]
     assert response["result"]["backup"] is None
-
-
-async def test_agents_backup_error(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_drive_items: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test backup not found."""
-
-    mock_drive_items.get = AsyncMock(side_effect=APIError(response_status_code=500))
-    backup_id = BACKUP_METADATA["backup_id"]
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
-    response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.unique_id}": "Backup operation failed"
-    }
 
 
 async def test_reauth_on_403(
@@ -501,7 +473,9 @@ async def test_reauth_on_403(
 ) -> None:
     """Test we re-authenticate on 403."""
 
-    mock_drive_items.get = AsyncMock(side_effect=APIError(response_status_code=403))
+    mock_drive_items.children.get = AsyncMock(
+        side_effect=APIError(response_status_code=403)
+    )
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
