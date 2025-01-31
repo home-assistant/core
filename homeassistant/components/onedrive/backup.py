@@ -34,8 +34,10 @@ from msgraph.generated.models.drive_item_uploadable_properties import (
 )
 from msgraph_core.models import LargeFileUploadSession
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
-from homeassistant.components.backup.util import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
