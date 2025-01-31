@@ -252,7 +252,7 @@ class RetentionConfig:
             """Delete backups older than days."""
             self._schedule_next(manager)
 
-            def _backups_filter(
+            def _delete_filter(
                 backups: dict[str, ManagerBackup],
             ) -> dict[str, ManagerBackup]:
                 """Return backups older than days to delete."""
@@ -269,7 +269,11 @@ class RetentionConfig:
                     < now
                 }
 
-            await _delete_filtered_backups(manager, _backups_filter)
+            await delete_filtered_backups(
+                manager,
+                include_filter=_automatic_backups_filter,
+                delete_filter=_delete_filter,
+            )
 
         manager.remove_next_delete_event = async_call_later(
             manager.hass, timedelta(days=1), _delete_backups
@@ -521,14 +525,30 @@ class CreateBackupParametersDict(TypedDict, total=False):
     password: str | None
 
 
-async def _delete_filtered_backups(
+def _automatic_backups_filter(
+    backups: dict[str, ManagerBackup],
+) -> dict[str, ManagerBackup]:
+    """Return automatic backups."""
+    return {
+        backup_id: backup
+        for backup_id, backup in backups.items()
+        if backup.with_automatic_settings
+    }
+
+
+async def delete_filtered_backups(
     manager: BackupManager,
-    backup_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
+    *,
+    include_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
+    delete_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
 ) -> None:
     """Delete backups parsed with a filter.
 
     :param manager: The backup manager.
-    :param backup_filter: A filter that should return the backups to delete.
+    :param include_filter: A filter that should return the backups to consider for
+    deletion. Note: The newest of the backups returned by include_ filter will
+    unconditionally be kept, even if delete_filter returns all backups.
+    :param delete_filter: A filter that should return the backups to delete.
     """
     backups, get_agent_errors = await manager.async_get_backups()
     if get_agent_errors:
@@ -537,41 +557,38 @@ async def _delete_filtered_backups(
             get_agent_errors,
         )
 
-    # only delete backups that are created with the saved automatic settings
-    backups = {
-        backup_id: backup
-        for backup_id, backup in backups.items()
-        if backup.with_automatic_settings
-    }
+    # Run the include filter first to ensure we only consider backups that
+    # should be included in the deletion process.
+    backups = include_filter(backups)
 
     LOGGER.debug("Total automatic backups: %s", backups)
 
-    filtered_backups = backup_filter(backups)
+    backups_to_delete = delete_filter(backups)
 
-    if not filtered_backups:
+    if not backups_to_delete:
         return
 
     # always delete oldest backup first
-    filtered_backups = dict(
+    backups_to_delete = dict(
         sorted(
-            filtered_backups.items(),
+            backups_to_delete.items(),
             key=lambda backup_item: backup_item[1].date,
         )
     )
 
-    if len(filtered_backups) >= len(backups):
+    if len(backups_to_delete) >= len(backups):
         # Never delete the last backup.
-        last_backup = filtered_backups.popitem()
+        last_backup = backups_to_delete.popitem()
         LOGGER.debug("Keeping the last backup: %s", last_backup)
 
-    LOGGER.debug("Backups to delete: %s", filtered_backups)
+    LOGGER.debug("Backups to delete: %s", backups_to_delete)
 
-    if not filtered_backups:
+    if not backups_to_delete:
         return
 
-    backup_ids = list(filtered_backups)
+    backup_ids = list(backups_to_delete)
     delete_results = await asyncio.gather(
-        *(manager.async_delete_backup(backup_id) for backup_id in filtered_backups)
+        *(manager.async_delete_backup(backup_id) for backup_id in backups_to_delete)
     )
     agent_errors = {
         backup_id: error
@@ -588,7 +605,7 @@ async def _delete_filtered_backups(
 async def delete_backups_exceeding_configured_count(manager: BackupManager) -> None:
     """Delete backups exceeding the configured retention count."""
 
-    def _backups_filter(
+    def _delete_filter(
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
@@ -603,4 +620,6 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
             )[: max(len(backups) - manager.config.data.retention.copies, 0)]
         )
 
-    await _delete_filtered_backups(manager, _backups_filter)
+    await delete_filtered_backups(
+        manager, include_filter=_automatic_backups_filter, delete_filter=_delete_filter
+    )
