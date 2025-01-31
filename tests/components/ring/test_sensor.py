@@ -228,4 +228,5 @@ async def test_only_chime_devices(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
+    mock_ring_devices._single_family = None
     assert "UnboundLocalError" not in caplog.text  # For issue #109210
