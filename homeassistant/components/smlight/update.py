@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any
 
 from pysmlight.const import Events as SmEvents
 from pysmlight.models import Firmware, Info
@@ -37,13 +37,14 @@ class SmUpdateEntityDescription(UpdateEntityDescription):
     fw_list: Callable[[SmFwData], list[Firmware] | None]
 
 
-UPDATE_ENTITIES: Final = [
-    SmUpdateEntityDescription(
-        key="core_update",
-        translation_key="core_update",
-        installed_version=lambda x: x.sw_version,
-        fw_list=lambda x: x.esp_firmware,
-    ),
+CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
+    key="core_update",
+    translation_key="core_update",
+    installed_version=lambda x: x.sw_version,
+    fw_list=lambda x: x.esp_firmware,
+)
+
+ZB_UPDATE_ENTITIES: list[SmUpdateEntityDescription] = [
     SmUpdateEntityDescription(
         key="zigbee_update",
         translation_key="zigbee_update",
@@ -64,12 +65,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SMLIGHT update entities."""
     coordinator = entry.runtime_data.firmware
+    entities = [SmUpdateEntity(coordinator, CORE_UPDATE_ENTITY)]
+    radios = coordinator.data.info.radios
+    assert radios is not None
 
-    async_add_entities(
-        SmUpdateEntity(coordinator, description, idx - 1)
-        for idx, description in enumerate(UPDATE_ENTITIES)
-        if description.installed_version(coordinator.data.info) is not None
+    entities.extend(
+        SmUpdateEntity(coordinator, ZB_UPDATE_ENTITIES[idx], idx)
+        for idx, _ in enumerate(radios)
     )
+
+    async_add_entities(entities)
 
 
 class SmUpdateEntity(SmEntity, UpdateEntity):
