@@ -585,7 +585,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.11.0
+bthome-ble==3.12.3
 
 # homeassistant.components.buienradar
 buienradar==1.0.6
