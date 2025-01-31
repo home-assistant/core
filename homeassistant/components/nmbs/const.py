@@ -2,6 +2,8 @@
 
 from typing import Final
 
+from pyrail import iRail
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -17,15 +19,13 @@ CONF_SHOW_ON_MAP = "show_on_map"
 
 
 async def async_find_station_with_fallback(
-    hass: HomeAssistant, 
-    station_name: str,
-    api_client: Any
+    hass: HomeAssistant, station_name: str, api_client: iRail
 ) -> dict[str, Any] | None:
     """Find station with fallback to liveboard API."""
     # First check exact matches
     if station := find_station_by_name(hass, station_name):
         return station
-    
+
     # Fallback to liveboard API
     liveboard = await hass.async_add_executor_job(
         api_client.get_liveboard, station_name
