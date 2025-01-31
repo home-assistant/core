@@ -257,19 +257,27 @@ async def test_broken_upload_session(
     assert "Failed to start backup upload" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        APIError(response_status_code=500),
+        TimeoutException("Timeout"),
+    ],
+)
 async def test_agents_upload_errors_retried(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
     mock_drive_items: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_adapter: MagicMock,
+    side_effect: Exception,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
     test_backup = AgentBackup.from_dict(BACKUP_METADATA)
 
     mock_adapter.send_async.side_effect = [
-        APIError(response_status_code=500),
+        side_effect,
         LargeFileUploadSession(next_expected_ranges=["2-"]),
         LargeFileUploadSession(next_expected_ranges=["2-"]),
     ]
@@ -336,18 +344,27 @@ async def test_agents_upload_4xx_errors_not_retried(
     assert "Backup operation failed" in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (APIError(response_status_code=500), "Backup operation failed"),
+        (TimeoutException("Timeout"), "Backup operation timed out"),
+    ],
+)
 async def test_agents_upload_fails_after_max_retries(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
     mock_drive_items: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_adapter: MagicMock,
+    side_effect: Exception,
+    error: str,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
     test_backup = AgentBackup.from_dict(BACKUP_METADATA)
 
-    mock_adapter.send_async.side_effect = APIError(response_status_code=500)
+    mock_adapter.send_async.side_effect = side_effect
 
     with (
         patch(
@@ -371,7 +388,7 @@ async def test_agents_upload_fails_after_max_retries(
     assert mock_adapter.send_async.call_count == 6
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     assert mock_drive_items.patch.call_count == 0
-    assert "Backup operation failed" in caplog.text
+    assert error in caplog.text
 
 
 async def test_agents_download(

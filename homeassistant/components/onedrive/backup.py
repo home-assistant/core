@@ -288,15 +288,18 @@ class OneDriveBackupAgent(BackupAgent):
                             start + UPLOAD_CHUNK_SIZE - 1,
                             chunk_data[slice_start : slice_start + UPLOAD_CHUNK_SIZE],
                         )
-                    except (APIError, TimeoutException) as err:
+                    except APIError as err:
                         if (
-                            isinstance(err, APIError)
-                            and err.response_status_code
-                            and err.response_status_code < 500
-                        ):  # raise on 4xx errors
+                            err.response_status_code and err.response_status_code < 500
+                        ):  # no retry on 4xx errors
                             raise
                         if retries < MAX_RETRIES:
                             await asyncio.sleep(2**retries)
+                            retries += 1
+                            continue
+                        raise
+                    except TimeoutException:
+                        if retries < MAX_RETRIES:
                             retries += 1
                             continue
                         raise
