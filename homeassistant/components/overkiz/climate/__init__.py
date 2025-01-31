@@ -25,6 +25,7 @@ from .atlantic_pass_apc_heat_pump_main_component import (
 from .atlantic_pass_apc_heating_zone import AtlanticPassAPCHeatingZone
 from .atlantic_pass_apc_zone_control import AtlanticPassAPCZoneControl
 from .atlantic_pass_apc_zone_control_zone import AtlanticPassAPCZoneControlZone
+from .evo_home_controller import EvoHomeController
 from .hitachi_air_to_air_heat_pump_hlrrwifi import HitachiAirToAirHeatPumpHLRRWIFI
 from .hitachi_air_to_air_heat_pump_ovp import HitachiAirToAirHeatPumpOVP
 from .hitachi_air_to_water_heating_zone import HitachiAirToWaterHeatingZone
@@ -53,6 +54,7 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_PASS_APC_HEATING_ZONE: AtlanticPassAPCHeatingZone,
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: AtlanticPassAPCZoneControl,
     UIWidget.HITACHI_AIR_TO_WATER_HEATING_ZONE: HitachiAirToWaterHeatingZone,
+    UIWidget.EVO_HOME_CONTROLLER: EvoHomeController,
     UIWidget.SOMFY_HEATING_TEMPERATURE_INTERFACE: SomfyHeatingTemperatureInterface,
     UIWidget.SOMFY_THERMOSTAT: SomfyThermostat,
     UIWidget.VALVE_HEATING_TEMPERATURE_INTERFACE: ValveHeatingTemperatureInterface,

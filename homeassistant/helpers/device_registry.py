@@ -24,11 +24,11 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_suggest_report_issue
+from homeassistant.util import uuid as uuid_util
 from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
-import homeassistant.util.uuid as uuid_util
 
 from . import storage, translation
 from .debounce import Debouncer
@@ -40,13 +40,13 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with attrs
-    from propcache import cached_property as under_cached_property
+    from propcache.api import cached_property as under_cached_property
 
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
 else:
-    from propcache import under_cached_property
+    from propcache.api import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -957,16 +957,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if config_entries != old.config_entries:
             new_values["config_entries"] = config_entries
             old_values["config_entries"] = old.config_entries
-
-        for attr_name, setvalue in (
-            ("connections", merge_connections),
-            ("identifiers", merge_identifiers),
-        ):
-            old_value = getattr(old, attr_name)
-            # If not undefined, check if `value` contains new items.
-            if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
-                new_values[attr_name] = old_value | setvalue
-                old_values[attr_name] = old_value
 
         if merge_connections is not UNDEFINED:
             normalized_connections = self._validate_connections(

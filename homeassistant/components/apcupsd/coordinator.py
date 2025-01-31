@@ -44,7 +44,10 @@ class APCUPSdData(dict[str, str]):
     @property
     def serial_no(self) -> str | None:
         """Return the unique serial number of the UPS, if available."""
-        return self.get("SERIALNO")
+        sn = self.get("SERIALNO")
+        # We had user reports that some UPS models simply return "Blank" as serial number, in
+        # which case we fall back to `None` to indicate that it is actually not available.
+        return None if sn == "Blank" else sn
 
 
 class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):

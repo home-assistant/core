@@ -65,11 +65,11 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with attrs
-    from propcache import cached_property as under_cached_property
+    from propcache.api import cached_property as under_cached_property
 
     from homeassistant.config_entries import ConfigEntry
 else:
-    from propcache import under_cached_property
+    from propcache.api import under_cached_property
 
 DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
@@ -648,6 +648,7 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
+    config_entry_id: str | None | UndefinedType = None,
     device_id: str | None | UndefinedType = None,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
@@ -672,6 +673,11 @@ def _validate_item(
             unique_id,
             report_issue,
         )
+    if config_entry_id and config_entry_id is not UNDEFINED:
+        if not hass.config_entries.async_get_entry(config_entry_id):
+            raise ValueError(
+                f"Can't link entity to unknown config entry {config_entry_id}"
+            )
     if device_id and device_id is not UNDEFINED:
         device_registry = dr.async_get(hass)
         if not device_registry.async_get(device_id):
@@ -864,6 +870,7 @@ class EntityRegistry(BaseRegistry):
             self.hass,
             domain,
             platform,
+            config_entry_id=config_entry_id,
             device_id=device_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
@@ -1096,6 +1103,7 @@ class EntityRegistry(BaseRegistry):
                 self.hass,
                 old.domain,
                 old.platform,
+                config_entry_id=config_entry_id,
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity_category,

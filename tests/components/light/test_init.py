@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .common import MockLight
 
@@ -2626,7 +2626,9 @@ def test_filter_supported_color_modes() -> None:
     assert light.filter_supported_color_modes(supported) == {light.ColorMode.BRIGHTNESS}
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test deprecated supported features ints."""
 
     class MockLightEntityEntity(light.LightEntity):
@@ -2636,6 +2638,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockLightEntityEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     assert entity.supported_features_compat is light.LightEntityFeature(1)
     assert "MockLightEntityEntity" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

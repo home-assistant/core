@@ -32,11 +32,13 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
-ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="message")
+ERROR_RESPONSE = HabiticaErrorResponse(success=False, error="error", message="reason")
 ERROR_NOT_AUTHORIZED = NotAuthorizedError(error=ERROR_RESPONSE, headers={})
 ERROR_NOT_FOUND = NotFoundError(error=ERROR_RESPONSE, headers={})
 ERROR_BAD_REQUEST = BadRequestError(error=ERROR_RESPONSE, headers={})
-ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(error=ERROR_RESPONSE, headers={})
+ERROR_TOO_MANY_REQUESTS = TooManyRequestsError(
+    error=ERROR_RESPONSE, headers={"retry-after": 5}
+)
 
 
 @pytest.fixture(name="config_entry")

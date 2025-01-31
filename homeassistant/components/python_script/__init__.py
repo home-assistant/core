@@ -36,8 +36,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import raise_if_invalid_filename
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, raise_if_invalid_filename
 from homeassistant.util.yaml.loader import load_yaml_dict
 
 _LOGGER = logging.getLogger(__name__)
@@ -239,20 +238,13 @@ def execute(
         if name.startswith("async_"):
             raise ScriptError("Not allowed to access async methods")
         if (
-            obj is hass
-            and name not in ALLOWED_HASS
-            or obj is hass.bus
-            and name not in ALLOWED_EVENTBUS
-            or obj is hass.states
-            and name not in ALLOWED_STATEMACHINE
-            or obj is hass.services
-            and name not in ALLOWED_SERVICEREGISTRY
-            or obj is dt_util
-            and name not in ALLOWED_DT_UTIL
-            or obj is datetime
-            and name not in ALLOWED_DATETIME
-            or isinstance(obj, TimeWrapper)
-            and name not in ALLOWED_TIME
+            (obj is hass and name not in ALLOWED_HASS)
+            or (obj is hass.bus and name not in ALLOWED_EVENTBUS)
+            or (obj is hass.states and name not in ALLOWED_STATEMACHINE)
+            or (obj is hass.services and name not in ALLOWED_SERVICEREGISTRY)
+            or (obj is dt_util and name not in ALLOWED_DT_UTIL)
+            or (obj is datetime and name not in ALLOWED_DATETIME)
+            or (isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME)
         ):
             raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 

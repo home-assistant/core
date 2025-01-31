@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import struct
 from typing import Any, cast
@@ -113,15 +112,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus climate."""
-    if discovery_info is None:
+    if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
         return
-
-    entities = []
-    for entity in discovery_info[CONF_CLIMATES]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        entities.append(ModbusThermostat(hass, hub, entity))
-
-    async_add_entities(entities)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
@@ -313,7 +307,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         )
                     break
 
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -335,7 +329,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
@@ -358,7 +352,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -413,9 +407,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 CALL_TYPE_WRITE_REGISTERS,
             )
         self._attr_available = result is not None
-        await self.async_update()
+        await self._async_update_write_state()
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
@@ -489,8 +483,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             )
             if onoff == self._hvac_off_value:
                 self._attr_hvac_mode = HVACMode.OFF
-
-        self.async_write_ha_state()
 
     async def _async_read_register(
         self, register_type: str, register: int, raw: bool | None = False

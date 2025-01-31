@@ -10,13 +10,24 @@
           "url": "The URL of the Overseerr instance.",
           "api_key": "The API key of the Overseerr instance."
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::overseerr::config::step::user::data_description::api_key%]"
+        }
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_host": "The provided URL is not a valid host."
     }
   },
@@ -24,13 +35,17 @@
     "event": {
       "last_media_event": {
         "name": "Last media event",
-        "state": {
-          "pending": "Pending",
-          "approved": "Approved",
-          "available": "Available",
-          "failed": "Failed",
-          "declined": "Declined",
-          "auto_approved": "Auto-approved"
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "pending": "Pending",
+              "approved": "Approved",
+              "available": "Available",
+              "failed": "Failed",
+              "declined": "Declined",
+              "auto_approved": "Auto-approved"
+            }
+          }
         }
       }
     },
@@ -61,6 +76,9 @@
   "exceptions": {
     "connection_error": {
       "message": "Error connecting to the Overseerr instance: {error}"
+    },
+    "auth_error": {
+      "message": "Invalid API key."
     },
     "not_loaded": {
       "message": "{target} is not loaded."

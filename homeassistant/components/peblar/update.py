@@ -37,14 +37,14 @@ DESCRIPTIONS: tuple[PeblarUpdateEntityDescription, ...] = (
         key="firmware",
         device_class=UpdateDeviceClass.FIRMWARE,
         installed_fn=lambda x: x.current.firmware,
-        has_fn=lambda x: x.current.firmware is not None,
+        has_fn=lambda x: x.available.firmware is not None,
         available_fn=lambda x: x.available.firmware,
     ),
     PeblarUpdateEntityDescription(
         key="customization",
         translation_key="customization",
         available_fn=lambda x: x.available.customization,
-        has_fn=lambda x: x.current.customization is not None,
+        has_fn=lambda x: x.available.customization is not None,
         installed_fn=lambda x: x.current.customization,
     ),
 )

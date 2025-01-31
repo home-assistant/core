@@ -40,8 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import selector, template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector, template
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
