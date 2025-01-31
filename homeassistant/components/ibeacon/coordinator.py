@@ -18,6 +18,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -104,6 +105,16 @@ def _async_dispatch_update(
         signal_seen(device_id),
         ibeacon_advertisement,
     )
+
+    # Cleanup connections if the address is no longer unique, or
+    # add the connection if it is unique
+    dev_reg = dr.async_get(hass)
+    if device_entry := dev_reg.async_get_device(identifiers={(DOMAIN, device_id)}):
+        connection = (dr.CONNECTION_BLUETOOTH, service_info.address)
+        if unique_address and connection not in device_entry.connections:
+            dev_reg.async_update_device(device_entry.id, new_connections={connection})
+        elif not unique_address and connection in device_entry.connections:
+            dev_reg.async_update_device(device_entry.id, new_connections=set())
 
 
 class IBeaconCoordinator:
