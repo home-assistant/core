@@ -4433,7 +4433,7 @@ async def test_area_attr(
     assert info.rate_limit is None
 
     # Test wrong value type (area_attr)
-    info = render_to_info(hass, "{{ area_attr(56, 'name') }}")
+    info = render_to_info(hass, "{{ area_attr('56', 'name') }}")
     assert_result_info(info, None)
     assert info.rate_limit is None
 
@@ -4461,6 +4461,12 @@ async def test_area_attr(
     # Test temperature_entity_id area attribute (area_attr)
     info = render_to_info(
         hass, f"{{{{ area_attr('{area_entry.id}', 'temperature_entity_id') }}}}"
+    )
+    assert_result_info(info, "sensor.mock_temperature")
+
+    # Test temperature_entity_id area attribute (area_attr)
+    info = render_to_info(
+        hass, f"{{{{ area_attr('{area_entry.name}', 'temperature_entity_id') }}}}"
     )
     assert_result_info(info, "sensor.mock_temperature")
 
