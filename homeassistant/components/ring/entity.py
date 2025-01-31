@@ -65,11 +65,6 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
             return await async_func(self, *args, **kwargs)
         except AuthenticationError as err:
             self.coordinator.config_entry.async_start_reauth(self.hass)
-            _LOGGER.exception(
-                "Authentication error calling %s in platform %s: ",
-                async_func.__name__,
-                self.platform,
-            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_api_authentication",
@@ -78,11 +73,6 @@ def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
                 },
             ) from err
         except RingTimeout as err:
-            _LOGGER.exception(
-                "Timeout error calling %s in platform %s: ",
-                async_func.__name__,
-                self.platform,
-            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_api_timeout",

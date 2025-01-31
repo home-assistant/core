@@ -110,7 +110,6 @@ async def test_error_on_setup(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert log_msg in caplog.text
-    assert str(error_type) in caplog.text
 
 
 async def test_auth_failure_on_global_update(
@@ -207,7 +206,6 @@ async def test_error_on_global_update(
         refresh_spy.assert_called()
         assert coordinator.last_exception.__cause__ == error
         assert log_msg in caplog.text
-        assert str(error) in caplog.text
 
         # Check log is not being spammed.
         refresh_spy.reset_mock()
@@ -221,7 +219,6 @@ async def test_error_on_global_update(
         refresh_spy.assert_called()
         assert coordinator.last_exception.__cause__ == error2
         assert log_msg not in caplog.text
-        assert str(error2) not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -270,7 +267,6 @@ async def test_error_on_device_update(
         refresh_spy.assert_called()
         assert coordinator.last_exception.__cause__ == error
         assert log_msg in caplog.text
-        assert str(error) in caplog.text
 
         # Check log is not being spammed.
         error2 = error_type("Some internal error info 2")
@@ -284,7 +280,6 @@ async def test_error_on_device_update(
         refresh_spy.assert_called()
         assert coordinator.last_exception.__cause__ == error2
         assert log_msg not in caplog.text
-        assert str(error2) not in caplog.text
 
 
 @pytest.mark.parametrize(

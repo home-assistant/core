@@ -219,10 +219,6 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     ) -> None:
         """Handle a WebRTC candidate."""
         if candidate.sdp_m_line_index is None:
-            _LOGGER.error(
-                "The sdp_m_line_index is required for ring webrtc streaming from %s",
-                self._device.name,
-            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="sdp_m_line_index_required",
