@@ -16,7 +16,6 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
-from .config import delete_filtered_backups
 from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
@@ -59,7 +58,6 @@ __all__ = [
     "RestoreBackupState",
     "WrittenBackup",
     "async_get_manager",
-    "delete_filtered_backups",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

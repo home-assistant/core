@@ -39,7 +39,6 @@ from homeassistant.components.backup import (
     RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
-    delete_filtered_backups,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
@@ -53,6 +52,8 @@ LOCATION_CLOUD_BACKUP = ".cloud_backup"
 LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
+# Set on backups automatically created when updating an addon
+TAG_ADDON_UPDATE = "supervisor.addon_update"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -624,13 +625,13 @@ async def backup_addon_before_update(
         return {
             backup_id: backup
             for backup_id, backup in backups.items()
-            if backup.extra_metadata.get("supervisor.addon_update") == addon
+            if backup.extra_metadata.get(TAG_ADDON_UPDATE) == addon
         }
 
     try:
         await backup_manager.async_create_backup(
             agent_ids=[await _default_agent(client)],
-            extra_metadata={"supervisor.addon_update": addon},
+            extra_metadata={TAG_ADDON_UPDATE: addon},
             include_addons=[addon],
             include_all_addons=False,
             include_database=False,
@@ -643,8 +644,7 @@ async def backup_addon_before_update(
         raise HomeAssistantError(f"Error creating backup: {err}") from err
     else:
         try:
-            await delete_filtered_backups(
-                backup_manager,
+            await backup_manager.async_delete_filtered_backups(
                 include_filter=addon_update_backup_filter,
                 delete_filter=lambda backups: backups,
             )
