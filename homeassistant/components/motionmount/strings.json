@@ -72,6 +72,9 @@
         "state": {
           "none": "None",
           "motor": "Motor",
+          "hdmi_cec": "HDMI CEC",
+          "obstruction": "Obstruction",
+          "tv_width_constraint": "TV width constraint",
           "internal": "Internal"
         }
       }

@@ -25,7 +25,14 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
     """The error status sensor of a MotionMount."""
 
     _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = ["none", "motor", "internal"]
+    _attr_options = [
+        "none",
+        "motor",
+        "hdmi_cec",
+        "obstruction",
+        "tv_width_constraint",
+        "internal",
+    ]
     _attr_translation_key = "motionmount_error_status"
 
     def __init__(
@@ -38,13 +45,16 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
     @property
     def native_value(self) -> str:
         """Return error status."""
-        errors = self.mm.error_status or 0
+        status = self.mm.system_status
 
-        if errors & (1 << 31):
-            # Only when but 31 is set are there any errors active at this moment
-            if errors & (1 << 10):
-                return "motor"
-
+        if motionmount.MotionMountSystemError.MotorError in status:
+            return "motor"
+        if motionmount.MotionMountSystemError.ObstructionDetected in status:
+            return "obstruction"
+        if motionmount.MotionMountSystemError.TVWidthConstraintError in status:
+            return "tv_width_constraint"
+        if motionmount.MotionMountSystemError.HDMICECError in status:
+            return "hdmi_cec"
+        if motionmount.MotionMountSystemError.InternalError in status:
             return "internal"
-
         return "none"
