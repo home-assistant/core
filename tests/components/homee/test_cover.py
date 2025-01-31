@@ -25,7 +25,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 
 from . import build_mock_node, setup_integration
 
@@ -274,7 +274,7 @@ async def test_send_error(
     mock_homee.set_value.side_effect = ConnectionClosed(
         rcvd=frames.Close(1002, "Protocol Error"), sent=None
     )
-    with pytest.raises(ServiceValidationError) as exc_info:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
