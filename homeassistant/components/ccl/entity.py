@@ -25,35 +25,25 @@ class CCLEntity(Entity):
         self.internal = internal
         self.device = device
 
+        if self.internal.compartment is not None:
+            self.device_id = (
+                self.device.device_id + "_" + self.internal.compartment
+            ).lower()
+            self.device_name = self.device.name + " " + self.internal.compartment
+        else:
+            self.device_id = self.device.device_id
+            self.device_name = self.device.name
+
         self._attr_unique_id = f"{device.device_id}-{internal.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, self.device_id),
             },
-            name=self.device_name,
             model=device.model,
+            name=self.device_name,
             manufacturer="CCL Electronics",
             sw_version=device.fw_ver,
         )
-
-    @property
-    def device_name(self) -> str:
-        """Return the device name."""
-        if self.internal.compartment is not None:
-            return self.device.name + " " + self.internal.compartment
-        return self.device.name
-
-    @property
-    def device_id(self) -> str:
-        """Return the 6-digits device id."""
-        if self.internal.compartment is not None:
-            return (
-                (self.device_name + "_" + self.internal.compartment)
-                .replace(" ", "")
-                .replace("-", "_")
-                .lower()
-            )
-        return self.device_name.replace(" ", "").replace("-", "_").lower()
 
     @property
     def available(self) -> bool:

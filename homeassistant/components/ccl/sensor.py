@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -32,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import CclConfigEntry
 from .entity import CCLEntity
 
 CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
@@ -171,11 +171,11 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CclConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors for passed config entry in HA."""
-    device: CCLDevice = entry.runtime_data
+    device = entry.runtime_data
 
     def _new_sensor(sensor: CCLSensor) -> None:
         """Add a sensor to the data entry."""
