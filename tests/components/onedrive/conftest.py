@@ -125,7 +125,10 @@ def mock_graph_client(mock_adapter: MagicMock) -> Generator[MagicMock]:
         drive_items.children.get = AsyncMock(
             return_value=DriveItemCollectionResponse(
                 value=[
-                    DriveItem(description=escape(dumps(BACKUP_METADATA))),
+                    DriveItem(
+                        id=BACKUP_METADATA["backup_id"],
+                        description=escape(dumps(BACKUP_METADATA)),
+                    ),
                     DriveItem(),
                 ]
             )

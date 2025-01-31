@@ -67,7 +67,7 @@ dependencies    = [
     "PyYAML==6.0.2",
     "requests==2.32.3",
     "securetar==2025.1.4",
-    "SQLAlchemy==2.0.36",
+    "SQLAlchemy==2.0.37",
     "standard-aifc==3.13.0;python_version>='3.13'",
     "standard-telnetlib==3.13.0;python_version>='3.13'",
     "typing-extensions>=4.12.2,<5.0",
@@ -82,7 +82,7 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.142.0"
+    "zeroconf==0.143.0"
 ]
 
 [project.urls]

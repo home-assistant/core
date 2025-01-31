@@ -110,7 +110,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.36
+SQLAlchemy==2.0.37
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -528,7 +528,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.2.0
+bleak-esphome==2.6.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.8.0
@@ -585,7 +585,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.9.1
+bthome-ble==3.12.3
 
 # homeassistant.components.buienradar
 buienradar==1.0.6
@@ -640,7 +640,7 @@ dbus-fast==2.30.2
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==11.1.0b1
+deebot-client==11.1.0b2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -944,7 +944,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.15.0
+habluetooth==3.17.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -975,7 +975,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250130.0
+home-assistant-frontend==20250131.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -1104,7 +1104,7 @@ led-ble==1.1.4
 lektricowifi==0.0.43
 
 # homeassistant.components.letpot
-letpot==0.3.0
+letpot==0.4.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -1936,7 +1936,7 @@ python-google-drive-api==0.0.2
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.3.0
+python-homewizard-energy==v8.3.2
 
 # homeassistant.components.izone
 python-izone==1.2.9
@@ -2514,7 +2514,7 @@ yt-dlp[default]==2025.01.26
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.142.0
+zeroconf==0.143.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
