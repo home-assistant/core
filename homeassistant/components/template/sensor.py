@@ -384,6 +384,10 @@ class TriggerSensorEntity(TriggerEntity, RestoreSensor):
             else:
                 self._attr_last_reset = parsed_timestamp
 
+        # Ensure that the state is set to None only if the rendered result is "None"
+        if (state := self._rendered.get(CONF_STATE)) is not None and state == "None":
+            self._rendered[CONF_STATE] = None
+
         if (
             state := self._rendered.get(CONF_STATE)
         ) is None or self.device_class not in (

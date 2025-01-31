@@ -1527,6 +1527,43 @@ async def test_trigger_entity_available(hass: HomeAssistant) -> None:
     assert state.state == "unavailable"
 
 
+async def test_numeric_trigger_entity_set_unknown(hass: HomeAssistant) -> None:
+    """Test trigger entity state parsing with numeric sensors."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Numeric",
+                            "state": "{{ trigger.event.data.value }}",
+                            "unit_of_measurement": "kW",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire("test_event", {"value": 1})
+    await hass.async_block_till_done()
+
+    numeric_state = hass.states.get("sensor.numeric")
+    assert numeric_state is not None
+    assert numeric_state.state == "1"
+
+    hass.bus.async_fire("test_event", {"value": None})
+    await hass.async_block_till_done()
+
+    numeric_state = hass.states.get("sensor.numeric")
+    assert numeric_state is not None
+    assert numeric_state.state == STATE_UNKNOWN
+
+
 async def test_trigger_entity_available_skips_state(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
