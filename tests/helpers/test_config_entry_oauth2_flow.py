@@ -595,6 +595,13 @@ async def test_abort_discovered_existing_entries(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("my_enabled", "expected_redirect_uri"),
+    [
+        (False, "https://example.com/auth/external/callback"),
+        (True, "https://my.home-assistant.io/redirect/oauth"),
+    ],
+)
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
@@ -602,8 +609,12 @@ async def test_full_flow(
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    my_enabled: bool,
+    expected_redirect_uri: str,
 ) -> None:
     """Check full flow."""
+    if my_enabled:
+        assert await setup.async_setup_component(hass, "my", {})
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
@@ -625,14 +636,14 @@ async def test_full_flow(
         hass,
         {
             "flow_id": result["flow_id"],
-            "redirect_uri": "https://example.com/auth/external/callback",
+            "redirect_uri": expected_redirect_uri,
         },
     )
 
     assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         f"{AUTHORIZE_URL}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&redirect_uri={expected_redirect_uri}"
         f"&state={state}&scope=read+write"
     )
 
