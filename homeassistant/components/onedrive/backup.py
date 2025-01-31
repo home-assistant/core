@@ -169,9 +169,10 @@ class OneDriveBackupAgent(BackupAgent):
                 },
             )
         )
-        upload_session = await self._get_backup_file_item(
-            suggested_filename(backup)
-        ).create_upload_session.post(upload_session_request_body)
+        file_item = self._get_backup_file_item(suggested_filename(backup))
+        upload_session = await file_item.create_upload_session.post(
+            upload_session_request_body
+        )
 
         if upload_session is None or upload_session.upload_url is None:
             raise BackupAgentError(
@@ -188,9 +189,7 @@ class OneDriveBackupAgent(BackupAgent):
         description = json.dumps(backup_dict)
         _LOGGER.debug("Creating metadata: %s", description)
 
-        await self._get_backup_file_item(suggested_filename(backup)).patch(
-            DriveItem(description=description)
-        )
+        await file_item.patch(DriveItem(description=description))
 
     @handle_backup_errors
     async def async_delete_backup(
