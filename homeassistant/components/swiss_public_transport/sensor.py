@@ -56,6 +56,7 @@ SENSORS: tuple[SwissPublicTransportSensorEntityDescription, ...] = (
     ],
     SwissPublicTransportSensorEntityDescription(
         key="duration",
+        translation_key="duration",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         value_fn=lambda data_connection: data_connection["duration"],
