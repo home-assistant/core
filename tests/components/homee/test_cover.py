@@ -284,4 +284,3 @@ async def test_send_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "connection_closed"
-    assert exc_info.errisinstance(HomeAssistantError)
