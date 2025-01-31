@@ -34,7 +34,11 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
-from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.async_ import create_eager_task
 
@@ -503,7 +507,7 @@ class SonosDiscoveryManager:
     def _async_ssdp_discovered_player(
         self, info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
-        uid = info.upnp[ssdp.ATTR_UPNP_UDN]
+        uid = info.upnp[ATTR_UPNP_UDN]
         if not uid.startswith("uuid:RINCON_"):
             return
         uid = uid[5:]
@@ -522,7 +526,7 @@ class SonosDiscoveryManager:
             cast(str, urlparse(info.ssdp_location).hostname),
             uid,
             info.ssdp_headers.get("X-RINCON-BOOTSEQ"),
-            cast(str, info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME)),
+            cast(str, info.upnp.get(ATTR_UPNP_MODEL_NAME)),
             None,
         )
 

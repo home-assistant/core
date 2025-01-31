@@ -18,7 +18,7 @@
           "2fa": "Two-factor code"
         },
         "data_description": {
-          "2fa": "Account verification code via the method selected in your ring account settings."
+          "2fa": "Account verification code via the method selected in your Ring account settings."
         }
       },
       "reauth_confirm": {
@@ -32,7 +32,7 @@
         }
       },
       "reconfigure": {
-        "title": "Reconfigure Ring Integration",
+        "title": "Reconfigure Ring integration",
         "description": "Will create a new Authorized Device for {username} at ring.com",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"

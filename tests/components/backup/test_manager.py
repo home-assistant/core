@@ -54,6 +54,8 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
+    TEST_BACKUP_PATH_ABC123,
+    TEST_BACKUP_PATH_DEF456,
     BackupAgentTest,
     setup_backup_platform,
 )
@@ -89,14 +91,23 @@ def generate_backup_id_fixture() -> Generator[MagicMock]:
         yield mock
 
 
+def mock_read_backup(backup_path: Path) -> AgentBackup:
+    """Mock read backup."""
+    mock_backups = {
+        "abc123": TEST_BACKUP_ABC123,
+        "custom_def456": TEST_BACKUP_DEF456,
+    }
+    return mock_backups[backup_path.stem]
+
+
 @pytest.mark.usefixtures("mock_backup_generation")
-async def test_async_create_backup(
+async def test_create_backup_service(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
 ) -> None:
-    """Test create backup."""
+    """Test create backup service."""
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -135,6 +146,128 @@ async def test_async_create_backup(
         on_progress=ANY,
         password=None,
     )
+
+
+@pytest.mark.usefixtures("mock_backup_generation")
+@pytest.mark.parametrize(
+    ("manager_kwargs", "expected_writer_kwargs"),
+    [
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Custom backup 2025.1.0",
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+                "with_automatic_settings": True,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Automatic backup 2025.1.0",
+                "extra_metadata": {
+                    "instance_id": ANY,
+                    "with_automatic_settings": True,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "extra_metadata": {"custom": "data"},
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Custom backup 2025.1.0",
+                "extra_metadata": {
+                    "custom": "data",
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+    ],
+)
+async def test_async_create_backup(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mocked_json_bytes: Mock,
+    mocked_tarfile: Mock,
+    manager_kwargs: dict[str, Any],
+    expected_writer_kwargs: dict[str, Any],
+) -> None:
+    """Test create backup."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    manager = hass.data[DATA_MANAGER]
+
+    new_backup = NewBackup(backup_job_id="time-123")
+    backup_task = AsyncMock(
+        return_value=WrittenBackup(
+            backup=TEST_BACKUP_ABC123,
+            open_stream=AsyncMock(),
+            release_stream=AsyncMock(),
+        ),
+    )()  # call it so that it can be awaited
+
+    with patch(
+        "homeassistant.components.backup.manager.CoreBackupReaderWriter.async_create_backup",
+        return_value=(new_backup, backup_task),
+    ) as create_backup:
+        await manager.async_create_backup(**manager_kwargs)
+
+    assert create_backup.called
+    assert create_backup.call_args == call(**expected_writer_kwargs)
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -275,8 +408,10 @@ async def test_initiate_backup(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -297,6 +432,7 @@ async def test_initiate_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
@@ -311,6 +447,7 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -318,6 +455,7 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -325,6 +463,7 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": CreateBackupState.COMPLETED,
     }
@@ -361,11 +500,13 @@ async def test_initiate_backup(
     result = await ws_client.receive_json()
 
     backup_data = result["result"]["backup"]
-    backup_agent_ids = backup_data.pop("agent_ids")
 
-    assert backup_agent_ids == agent_ids
     assert backup_data == {
         "addons": [],
+        "agents": {
+            agent_id: {"protected": bool(password), "size": ANY}
+            for agent_id in agent_ids
+        },
         "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
@@ -374,8 +515,6 @@ async def test_initiate_backup(
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
         "name": name,
-        "protected": bool(password),
-        "size": ANY,
         "with_automatic_settings": False,
     }
 
@@ -417,9 +556,7 @@ async def test_initiate_backup_with_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -431,15 +568,11 @@ async def test_initiate_backup_with_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
         {
             "addons": [],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 1}},
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
@@ -451,8 +584,6 @@ async def test_initiate_backup_with_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test 2",
-            "protected": False,
-            "size": 1,
             "with_automatic_settings": None,
         },
         {
@@ -463,9 +594,7 @@ async def test_initiate_backup_with_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -477,8 +606,6 @@ async def test_initiate_backup_with_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
     ]
@@ -512,8 +639,10 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id(
@@ -548,6 +677,7 @@ async def test_initiate_backup_with_agent_error(
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
             "stage": None,
+            "reason": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
         result = await ws_client.receive_json()
@@ -561,6 +691,7 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -568,6 +699,7 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -575,6 +707,7 @@ async def test_initiate_backup_with_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -584,7 +717,7 @@ async def test_initiate_backup_with_agent_error(
 
     new_expected_backup_data = {
         "addons": [],
-        "agent_ids": ["backup.local"],
+        "agents": {"backup.local": {"protected": False, "size": 123}},
         "backup_id": "abc123",
         "database_included": True,
         "date": ANY,
@@ -593,8 +726,6 @@ async def test_initiate_backup_with_agent_error(
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
         "name": "Custom backup 2025.1.0",
-        "protected": False,
-        "size": 123,
         "with_automatic_settings": False,
     }
 
@@ -608,8 +739,15 @@ async def test_initiate_backup_with_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": {
+            "manager_state": "create_backup",
+            "reason": "upload_failed",
+            "stage": None,
+            "state": "failed",
+        },
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await hass.async_block_till_done()
@@ -770,7 +908,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_upload_agents",
-                    "translation_placeholders": {"failed_agents": "test.remote"},
+                    "translation_placeholders": {"failed_agents": "remote"},
                 }
             },
         ),
@@ -877,8 +1015,10 @@ async def test_initiate_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -903,6 +1043,7 @@ async def test_initiate_backup_non_agent_upload_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
@@ -917,6 +1058,7 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -924,6 +1066,7 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -931,6 +1074,7 @@ async def test_initiate_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -989,8 +1133,10 @@ async def test_initiate_backup_with_task_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1009,6 +1155,7 @@ async def test_initiate_backup_with_task_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -1016,6 +1163,7 @@ async def test_initiate_backup_with_task_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -1095,8 +1243,10 @@ async def test_initiate_backup_file_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1123,6 +1273,7 @@ async def test_initiate_backup_file_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": CreateBackupState.IN_PROGRESS,
         }
@@ -1137,6 +1288,7 @@ async def test_initiate_backup_file_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.HOME_ASSISTANT,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -1144,6 +1296,7 @@ async def test_initiate_backup_file_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
         "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
         "state": CreateBackupState.IN_PROGRESS,
     }
@@ -1151,6 +1304,7 @@ async def test_initiate_backup_file_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": "upload_failed",
         "stage": None,
         "state": CreateBackupState.FAILED,
     }
@@ -1168,7 +1322,11 @@ class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
     """Local backup agent."""
 
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup."""
+        """Return the local path to an existing backup."""
+        return Path("test.tar")
+
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
         return Path("test.tar")
 
 
@@ -1437,6 +1595,7 @@ async def test_receive_backup_busy_manager(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": "create_backup",
+        "reason": None,
         "stage": None,
         "state": "in_progress",
     }
@@ -1492,9 +1651,7 @@ async def test_receive_backup_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -1506,15 +1663,11 @@ async def test_receive_backup_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
         {
             "addons": [],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 1}},
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
@@ -1526,8 +1679,6 @@ async def test_receive_backup_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test 2",
-            "protected": False,
-            "size": 1,
             "with_automatic_settings": None,
         },
         {
@@ -1538,9 +1689,7 @@ async def test_receive_backup_agent_error(
                     "version": "1.0.0",
                 },
             ],
-            "agent_ids": [
-                "test.remote",
-            ],
+            "agents": {"test.remote": {"protected": False, "size": 0}},
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
@@ -1552,8 +1701,6 @@ async def test_receive_backup_agent_error(
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Test",
-            "protected": False,
-            "size": 0,
             "with_automatic_settings": True,
         },
     ]
@@ -1588,8 +1735,10 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id(
@@ -1630,6 +1779,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1637,6 +1787,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1644,6 +1795,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1651,6 +1803,7 @@ async def test_receive_backup_agent_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.COMPLETED,
     }
@@ -1667,8 +1820,15 @@ async def test_receive_backup_agent_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": {
+            "manager_state": "receive_backup",
+            "reason": None,
+            "stage": None,
+            "state": "completed",
+        },
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await hass.async_block_till_done()
@@ -1729,8 +1889,10 @@ async def test_receive_backup_non_agent_upload_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1763,6 +1925,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1770,6 +1933,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1777,6 +1941,7 @@ async def test_receive_backup_non_agent_upload_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1851,8 +2016,10 @@ async def test_receive_backup_file_write_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1871,10 +2038,6 @@ async def test_receive_backup_file_write_error(
 
     with (
         patch("pathlib.Path.open", open_mock),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
-        ),
     ):
         resp = await client.post(
             "/api/backup/upload?agent_id=test.remote",
@@ -1885,6 +2048,7 @@ async def test_receive_backup_file_write_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1892,6 +2056,7 @@ async def test_receive_backup_file_write_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1899,6 +2064,7 @@ async def test_receive_backup_file_write_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": "unknown_error",
         "stage": None,
         "state": ReceiveBackupState.FAILED,
     }
@@ -1961,8 +2127,10 @@ async def test_receive_backup_read_tar_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1992,6 +2160,7 @@ async def test_receive_backup_read_tar_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -1999,6 +2168,7 @@ async def test_receive_backup_read_tar_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2006,6 +2176,7 @@ async def test_receive_backup_read_tar_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": "unknown_error",
         "stage": None,
         "state": ReceiveBackupState.FAILED,
     }
@@ -2029,6 +2200,7 @@ async def test_receive_backup_read_tar_error(
         "unlink_call_count",
         "unlink_exception",
         "final_state",
+        "final_state_reason",
         "response_status",
     ),
     [
@@ -2042,6 +2214,7 @@ async def test_receive_backup_read_tar_error(
             1,
             None,
             ReceiveBackupState.COMPLETED,
+            None,
             201,
         ),
         (
@@ -2054,6 +2227,7 @@ async def test_receive_backup_read_tar_error(
             1,
             None,
             ReceiveBackupState.COMPLETED,
+            None,
             201,
         ),
         (
@@ -2066,6 +2240,7 @@ async def test_receive_backup_read_tar_error(
             1,
             None,
             ReceiveBackupState.COMPLETED,
+            None,
             201,
         ),
         (
@@ -2078,6 +2253,7 @@ async def test_receive_backup_read_tar_error(
             1,
             OSError("Boom!"),
             ReceiveBackupState.FAILED,
+            "unknown_error",
             500,
         ),
     ],
@@ -2096,6 +2272,7 @@ async def test_receive_backup_file_read_error(
     unlink_call_count: int,
     unlink_exception: Exception | None,
     final_state: ReceiveBackupState,
+    final_state_reason: str | None,
     response_status: int,
 ) -> None:
     """Test file read error during backup receive."""
@@ -2130,8 +2307,10 @@ async def test_receive_backup_file_read_error(
         "agent_errors": {},
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
     await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -2166,6 +2345,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": None,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2173,6 +2353,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.RECEIVE_FILE,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2180,6 +2361,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": None,
         "stage": ReceiveBackupStage.UPLOAD_TO_AGENTS,
         "state": ReceiveBackupState.IN_PROGRESS,
     }
@@ -2187,6 +2369,7 @@ async def test_receive_backup_file_read_error(
     result = await ws_client.receive_json()
     assert result["event"] == {
         "manager_state": BackupManagerState.RECEIVE_BACKUP,
+        "reason": final_state_reason,
         "stage": None,
         "state": final_state,
     }
@@ -2203,18 +2386,61 @@ async def test_receive_backup_file_read_error(
 
 @pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("agent_id", "password_param", "restore_database", "restore_homeassistant", "dir"),
+    (
+        "agent_id",
+        "backup_id",
+        "password_param",
+        "backup_path",
+        "restore_database",
+        "restore_homeassistant",
+        "dir",
+    ),
     [
-        (LOCAL_AGENT_ID, {}, True, False, "backups"),
-        (LOCAL_AGENT_ID, {"password": "abc123"}, False, True, "backups"),
-        ("test.remote", {}, True, True, "tmp_backups"),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_DEF456.backup_id,
+            {},
+            TEST_BACKUP_PATH_DEF456,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {"password": "abc123"},
+            TEST_BACKUP_PATH_ABC123,
+            False,
+            True,
+            "backups",
+        ),
+        (
+            "test.remote",
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            True,
+            "tmp_backups",
+        ),
     ],
 )
 async def test_restore_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     agent_id: str,
+    backup_id: str,
     password_param: dict[str, str],
+    backup_path: Path,
     restore_database: bool,
     restore_homeassistant: bool,
     dir: str,
@@ -2254,14 +2480,14 @@ async def test_restore_backup(
         patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
-                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "backup_id": backup_id,
                 "agent_id": agent_id,
                 "restore_database": restore_database,
                 "restore_homeassistant": restore_homeassistant,
@@ -2272,6 +2498,7 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2279,6 +2506,7 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.CORE_RESTART,
         }
@@ -2288,6 +2516,7 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.COMPLETED,
         }
@@ -2298,17 +2527,17 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["success"] is True
 
-    backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
+    full_backup_path = f"{hass.config.path()}/{dir}/{backup_path.name}"
     expected_restore_file = json.dumps(
         {
-            "path": backup_path,
+            "path": full_backup_path,
             "password": password,
             "remove_after_restore": agent_id != LOCAL_AGENT_ID,
             "restore_database": restore_database,
             "restore_homeassistant": restore_homeassistant,
         }
     )
-    validate_password_mock.assert_called_once_with(Path(backup_path), password)
+    validate_password_mock.assert_called_once_with(Path(full_backup_path), password)
     assert mocked_write_text.call_args[0][0] == expected_restore_file
     assert mocked_service_call.called
 
@@ -2358,7 +2587,7 @@ async def test_restore_backup_wrong_password(
         patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
@@ -2375,6 +2604,7 @@ async def test_restore_backup_wrong_password(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2382,6 +2612,7 @@ async def test_restore_backup_wrong_password(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": "password_incorrect",
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2401,23 +2632,27 @@ async def test_restore_backup_wrong_password(
 
 @pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("parameters", "expected_error"),
+    ("parameters", "expected_error", "expected_reason"),
     [
         (
-            {"backup_id": TEST_BACKUP_DEF456.backup_id},
-            f"Backup def456 not found in agent {LOCAL_AGENT_ID}",
+            {"backup_id": "no_such_backup"},
+            f"Backup no_such_backup not found in agent {LOCAL_AGENT_ID}",
+            "backup_manager_error",
         ),
         (
             {"restore_addons": ["blah"]},
             "Addons and folders are not supported in core restore",
+            "backup_reader_writer_error",
         ),
         (
             {"restore_folders": [Folder.ADDONS]},
             "Addons and folders are not supported in core restore",
+            "backup_reader_writer_error",
         ),
         (
             {"restore_database": False, "restore_homeassistant": False},
             "Home Assistant or database must be included in restore",
+            "backup_reader_writer_error",
         ),
     ],
 )
@@ -2426,6 +2661,7 @@ async def test_restore_backup_wrong_parameters(
     hass_ws_client: WebSocketGenerator,
     parameters: dict[str, Any],
     expected_error: str,
+    expected_reason: str,
 ) -> None:
     """Test restore backup wrong parameters."""
     await async_setup_component(hass, DOMAIN, {})
@@ -2447,7 +2683,7 @@ async def test_restore_backup_wrong_parameters(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         await ws_client.send_json_auto_id(
@@ -2462,6 +2698,7 @@ async def test_restore_backup_wrong_parameters(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2469,6 +2706,7 @@ async def test_restore_backup_wrong_parameters(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": expected_reason,
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2518,10 +2756,20 @@ async def test_restore_backup_when_busy(
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("exception", "error_code", "error_message"),
+    ("exception", "error_code", "error_message", "expected_reason"),
     [
-        (BackupAgentError("Boom!"), "home_assistant_error", "Boom!"),
-        (Exception("Boom!"), "unknown_error", "Unknown error"),
+        (
+            BackupAgentError("Boom!"),
+            "home_assistant_error",
+            "Boom!",
+            "backup_agent_error",
+        ),
+        (
+            Exception("Boom!"),
+            "unknown_error",
+            "Unknown error",
+            "unknown_error",
+        ),
     ],
 )
 async def test_restore_backup_agent_error(
@@ -2530,6 +2778,7 @@ async def test_restore_backup_agent_error(
     exception: Exception,
     error_code: str,
     error_message: str,
+    expected_reason: str,
 ) -> None:
     """Test restore backup with agent error."""
     remote_agent = BackupAgentTest("remote", backups=[TEST_BACKUP_ABC123])
@@ -2572,6 +2821,7 @@ async def test_restore_backup_agent_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2579,6 +2829,7 @@ async def test_restore_backup_agent_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": expected_reason,
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2719,6 +2970,7 @@ async def test_restore_backup_file_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": None,
             "stage": None,
             "state": RestoreBackupState.IN_PROGRESS,
         }
@@ -2726,6 +2978,7 @@ async def test_restore_backup_file_error(
         result = await ws_client.receive_json()
         assert result["event"] == {
             "manager_state": BackupManagerState.RESTORE_BACKUP,
+            "reason": "unknown_error",
             "stage": None,
             "state": RestoreBackupState.FAILED,
         }
@@ -2745,3 +2998,307 @@ async def test_restore_backup_file_error(
     assert open_mock.return_value.close.call_count == close_call_count
     assert mocked_write_text.call_count == write_text_call_count
     assert mocked_service_call.call_count == 0
+
+
+@pytest.mark.parametrize(
+    ("commands", "password", "protected_backup"),
+    [
+        (
+            [],
+            None,
+            {"backup.local": False, "test.remote": False},
+        ),
+        (
+            [],
+            "hunter2",
+            {"backup.local": True, "test.remote": True},
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            {"backup.local": False, "test.remote": False},
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": True},
+                    },
+                }
+            ],
+            "hunter2",
+            {"backup.local": False, "test.remote": True},
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": True},
+                        "test.remote": {"protected": False},
+                    },
+                }
+            ],
+            "hunter2",
+            {"backup.local": True, "test.remote": False},
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": True},
+                        "test.remote": {"protected": True},
+                    },
+                }
+            ],
+            "hunter2",
+            {"backup.local": True, "test.remote": True},
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": True},
+                    },
+                }
+            ],
+            None,
+            {"backup.local": False, "test.remote": False},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_backup_generation")
+async def test_initiate_backup_per_agent_encryption(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    generate_backup_id: MagicMock,
+    path_glob: MagicMock,
+    commands: dict[str, Any],
+    password: str | None,
+    protected_backup: dict[str, bool],
+) -> None:
+    """Test generate backup where encryption is selectively set on agents."""
+    agent_ids = ["backup.local", "test.remote"]
+    local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
+    remote_agent = BackupAgentTest("remote", backups=[])
+
+    with patch(
+        "homeassistant.components.backup.backup.async_get_backup_agents"
+    ) as core_get_backup_agents:
+        core_get_backup_agents.return_value = [local_agent]
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        await setup_backup_platform(
+            hass,
+            domain="test",
+            platform=Mock(
+                async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
+                spec_set=BackupAgentPlatformProtocol,
+            ),
+        )
+
+    ws_client = await hass_ws_client(hass)
+
+    path_glob.return_value = []
+
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "backups": [],
+        "agent_errors": {},
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
+        "state": "idle",
+    }
+
+    for command in commands:
+        await ws_client.send_json_auto_id(command)
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+    await ws_client.send_json_auto_id({"type": "backup/subscribe_events"})
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+
+    with (
+        patch("pathlib.Path.open", mock_open(read_data=b"test")),
+    ):
+        await ws_client.send_json_auto_id(
+            {
+                "type": "backup/generate",
+                "agent_ids": agent_ids,
+                "password": password,
+                "name": "test",
+            }
+        )
+        result = await ws_client.receive_json()
+        assert result["event"] == {
+            "manager_state": BackupManagerState.CREATE_BACKUP,
+            "reason": None,
+            "stage": None,
+            "state": CreateBackupState.IN_PROGRESS,
+        }
+        result = await ws_client.receive_json()
+        assert result["success"] is True
+
+        backup_id = result["result"]["backup_job_id"]
+        assert backup_id == generate_backup_id.return_value
+
+        await hass.async_block_till_done()
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.HOME_ASSISTANT,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": CreateBackupStage.UPLOAD_TO_AGENTS,
+        "state": CreateBackupState.IN_PROGRESS,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {
+        "manager_state": BackupManagerState.CREATE_BACKUP,
+        "reason": None,
+        "stage": None,
+        "state": CreateBackupState.COMPLETED,
+    }
+
+    result = await ws_client.receive_json()
+    assert result["event"] == {"manager_state": BackupManagerState.IDLE}
+
+    await ws_client.send_json_auto_id(
+        {"type": "backup/details", "backup_id": backup_id}
+    )
+    result = await ws_client.receive_json()
+
+    backup_data = result["result"]["backup"]
+
+    assert backup_data == {
+        "addons": [],
+        "agents": {
+            agent_id: {"protected": protected_backup[agent_id], "size": ANY}
+            for agent_id in agent_ids
+        },
+        "backup_id": backup_id,
+        "database_included": True,
+        "date": ANY,
+        "failed_agent_ids": [],
+        "folders": [],
+        "homeassistant_included": True,
+        "homeassistant_version": "2025.1.0",
+        "name": "test",
+        "with_automatic_settings": False,
+    }
+
+
+@pytest.mark.parametrize(
+    ("restore_result", "last_non_idle_event"),
+    [
+        (
+            {"error": None, "error_type": None, "success": True},
+            {
+                "manager_state": "restore_backup",
+                "reason": None,
+                "stage": None,
+                "state": "completed",
+            },
+        ),
+        (
+            {"error": "Boom!", "error_type": "ValueError", "success": False},
+            {
+                "manager_state": "restore_backup",
+                "reason": "Boom!",
+                "stage": None,
+                "state": "failed",
+            },
+        ),
+    ],
+)
+async def test_restore_progress_after_restart(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    restore_result: dict[str, Any],
+    last_non_idle_event: dict[str, Any],
+) -> None:
+    """Test restore backup progress after restart."""
+
+    with patch(
+        "pathlib.Path.read_bytes", return_value=json.dumps(restore_result).encode()
+    ):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "agent_errors": {},
+        "backups": [],
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "last_non_idle_event": last_non_idle_event,
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
+        "state": "idle",
+    }
+
+
+async def test_restore_progress_after_restart_fail_to_remove(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test restore backup progress after restart when failing to remove result file."""
+
+    with patch("pathlib.Path.unlink", side_effect=OSError("Boom!")):
+        await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "agent_errors": {},
+        "backups": [],
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
+        "state": "idle",
+    }
+
+    assert (
+        "Unexpected error deleting backup restore result file: <class 'OSError'> Boom!"
+        in caplog.text
+    )
