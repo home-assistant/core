@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import aiohttp
-from aiohttp import WSMsgType
+from aiohttp import WSMsgType, web
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
@@ -258,7 +258,7 @@ async def test_auth_sending_binary_disconnects(
         await ws.send_bytes(b"[INVALID]")
 
         auth_msg = await ws.receive()
-        assert auth_msg.type == WSMsgType.close
+        assert auth_msg.type is WSMsgType.CLOSE
 
 
 async def test_auth_close_disconnects(
@@ -277,7 +277,40 @@ async def test_auth_close_disconnects(
         await ws.close()
 
         auth_msg = await ws.receive()
-        assert auth_msg.type == WSMsgType.CLOSED
+        assert auth_msg.type is WSMsgType.CLOSED
+
+
+async def test_auth_error_disconnects(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error during auth."""
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+    ws_response = web.WebSocketResponse()
+
+    with patch(
+        "homeassistant.components.websocket_api.http.web.WebSocketResponse",
+        return_value=ws_response,
+    ):
+        async with client.ws_connect(URL) as ws:
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+            ws_response._reader.feed_data(
+                aiohttp.WSMessage(
+                    type=WSMsgType.ERROR, data=Exception("explode"), extra=None
+                ),
+                0,
+            )
+
+            auth_msg = await ws.receive()
+            assert auth_msg.type is WSMsgType.CLOSE
+
+    assert "Received error message during auth phase: explode" in caplog.text
 
 
 async def test_auth_sending_unknown_type_disconnects(
@@ -296,3 +329,41 @@ async def test_auth_sending_unknown_type_disconnects(
         await ws._writer.send_frame(b"1" * 130, 0x30)
         auth_msg = await ws.receive()
         assert auth_msg.type == WSMsgType.close
+
+
+async def test_error_right_after_auth_disconnects(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    hass_access_token: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test error right after auth."""
+    assert await async_setup_component(hass, "websocket_api", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+    ws_response = web.WebSocketResponse()
+
+    with patch(
+        "homeassistant.components.websocket_api.http.web.WebSocketResponse",
+        return_value=ws_response,
+    ):
+        async with client.ws_connect(URL) as ws:
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_REQUIRED
+
+            await ws.send_json({"type": TYPE_AUTH, "access_token": hass_access_token})
+            auth_msg = await ws.receive_json()
+            assert auth_msg["type"] == TYPE_AUTH_OK
+
+            ws_response._reader.feed_data(
+                aiohttp.WSMessage(
+                    type=WSMsgType.ERROR, data=Exception("explode"), extra=None
+                ),
+                0,
+            )
+
+            close_error_msg = await ws.receive()
+            assert close_error_msg.type is WSMsgType.CLOSE
+
+    assert "Received error message during command phase: explode" in caplog.text

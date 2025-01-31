@@ -265,3 +265,6 @@ VIRTUAL_NUMBER_MODE_MAP = {
 API_WS_URL = "/api/shelly/ws"
 
 COMPONENT_ID_PATTERN = re.compile(r"[a-z\d]+:\d+")
+
+# value confirmed by Shelly team
+BLU_TRV_TIMEOUT = 60
