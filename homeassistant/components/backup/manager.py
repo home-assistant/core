@@ -898,7 +898,7 @@ class BackupManager:
             )
 
         backup_name = (
-            name
+            (name if name is None else name.strip())
             or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
         extra_metadata = extra_metadata or {}
