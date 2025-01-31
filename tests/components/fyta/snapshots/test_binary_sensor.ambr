@@ -1,0 +1,741 @@
+# serializer version: 1
+# name: test_all_entities[binary_sensor.gummibaum_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.gummibaum_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Gummibaum Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_light_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.gummibaum_light_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_light',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_light_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Light notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_light_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_nutrition_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.gummibaum_nutrition_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nutrition notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_nutrition',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_nutrition',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_nutrition_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Nutrition notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_nutrition_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_productive_plant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gummibaum_productive_plant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Productive plant',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'productive_plant',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-productive_plant',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_productive_plant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Productive plant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_productive_plant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_repotted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.gummibaum_repotted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Repotted',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'repotted',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-repotted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_repotted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Repotted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_repotted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_temperature_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.gummibaum_temperature_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_temperature',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_temperature_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Temperature notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_temperature_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.gummibaum_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Update',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-sensor_update_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'Gummibaum Update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_water_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.gummibaum_water_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_water',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-0-notification_water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.gummibaum_water_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Gummibaum Water notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.gummibaum_water_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.kakaobaum_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Kakaobaum Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_light_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.kakaobaum_light_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_light',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_light_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Light notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_light_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_nutrition_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.kakaobaum_nutrition_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nutrition notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_nutrition',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_nutrition',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_nutrition_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Nutrition notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_nutrition_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_productive_plant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kakaobaum_productive_plant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Productive plant',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'productive_plant',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-productive_plant',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_productive_plant-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Productive plant',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_productive_plant',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_repotted-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.kakaobaum_repotted',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Repotted',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'repotted',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-repotted',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_repotted-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Repotted',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_repotted',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_temperature_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.kakaobaum_temperature_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_temperature',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_temperature',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_temperature_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Temperature notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_temperature_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_update-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.kakaobaum_update',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.UPDATE: 'update'>,
+    'original_icon': None,
+    'original_name': 'Update',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-sensor_update_available',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_update-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'update',
+      'friendly_name': 'Kakaobaum Update',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_update',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_water_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.kakaobaum_water_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Water notification',
+    'platform': 'fyta',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'notification_water',
+    'unique_id': 'ce5f5431554d101905d31797e1232da8-1-notification_water',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[binary_sensor.kakaobaum_water_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kakaobaum Water notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.kakaobaum_water_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

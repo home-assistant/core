@@ -8,11 +8,9 @@ from unittest.mock import MagicMock
 from pylitterbot import Robot
 import pytest
 
-from homeassistant.components.litterrobot import DOMAIN
 from homeassistant.components.litterrobot.vacuum import SERVICE_SET_SLEEP_MODE
 from homeassistant.components.vacuum import (
-    ATTR_STATUS,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
     SERVICE_STOP,
     VacuumActivity,
@@ -21,7 +19,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
-from .common import VACUUM_ENTITY_ID
+from .common import DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 VACUUM_UNIQUE_ID = "LR3C012345-litter_box"
@@ -35,38 +33,24 @@ async def test_vacuum(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_account: MagicMock
 ) -> None:
     """Tests the vacuum entity was set up."""
-
     entity_registry.async_get_or_create(
-        PLATFORM_DOMAIN,
+        VACUUM_DOMAIN,
         DOMAIN,
         VACUUM_UNIQUE_ID,
-        suggested_object_id=VACUUM_ENTITY_ID.replace(PLATFORM_DOMAIN, ""),
+        suggested_object_id=VACUUM_ENTITY_ID.replace(VACUUM_DOMAIN, ""),
     )
     ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
 
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
-    assert len(entity_registry.entities) == 1
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
     assert hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
     assert vacuum.state == VacuumActivity.DOCKED
-    assert vacuum.attributes["is_sleeping"] is False
 
     ent_reg_entry = entity_registry.async_get(VACUUM_ENTITY_ID)
     assert ent_reg_entry.unique_id == VACUUM_UNIQUE_ID
-
-
-async def test_vacuum_status_when_sleeping(
-    hass: HomeAssistant, mock_account_with_sleeping_robot: MagicMock
-) -> None:
-    """Tests the vacuum status when sleeping."""
-    await setup_integration(hass, mock_account_with_sleeping_robot, PLATFORM_DOMAIN)
-
-    vacuum = hass.states.get(VACUUM_ENTITY_ID)
-    assert vacuum
-    assert vacuum.attributes.get(ATTR_STATUS) == "Ready (Sleeping)"
 
 
 async def test_no_robots(
@@ -75,9 +59,7 @@ async def test_no_robots(
     mock_account_with_no_robots: MagicMock,
 ) -> None:
     """Tests the vacuum entity was set up."""
-    entry = await setup_integration(hass, mock_account_with_no_robots, PLATFORM_DOMAIN)
-
-    assert not hass.services.has_service(DOMAIN, SERVICE_SET_SLEEP_MODE)
+    entry = await setup_integration(hass, mock_account_with_no_robots, VACUUM_DOMAIN)
 
     assert len(entity_registry.entities) == 0
 
@@ -89,7 +71,7 @@ async def test_vacuum_with_error(
     hass: HomeAssistant, mock_account_with_error: MagicMock
 ) -> None:
     """Tests a vacuum entity with an error."""
-    await setup_integration(hass, mock_account_with_error, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_error, VACUUM_DOMAIN)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -114,7 +96,7 @@ async def test_activities(
     expected_state: str,
 ) -> None:
     """Test sending commands to the switch."""
-    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_litterrobot_4, VACUUM_DOMAIN)
     robot: Robot = mock_account_with_litterrobot_4.robots[0]
     robot._update_data(robot_data, partial=True)
 
@@ -147,7 +129,7 @@ async def test_commands(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test sending commands to the vacuum."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
 
     vacuum = hass.states.get(VACUUM_ENTITY_ID)
     assert vacuum
@@ -158,7 +140,7 @@ async def test_commands(
     issues = extra.get("issues", set())
 
     await hass.services.async_call(
-        COMPONENT_SERVICE_DOMAIN.get(service, PLATFORM_DOMAIN),
+        COMPONENT_SERVICE_DOMAIN.get(service, VACUUM_DOMAIN),
         service,
         data,
         blocking=True,

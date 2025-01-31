@@ -16,7 +16,7 @@ from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 type KeyType = tuple[str, tuple[str, int], tuple[str, int, str] | None]
@@ -163,16 +163,16 @@ class LogEntry:
     """Store HA log entries."""
 
     __slots__ = (
+        "count",
+        "exception",
         "first_occurred",
-        "timestamp",
-        "name",
+        "key",
         "level",
         "message",
-        "exception",
+        "name",
         "root_cause",
         "source",
-        "count",
-        "key",
+        "timestamp",
     )
 
     def __init__(

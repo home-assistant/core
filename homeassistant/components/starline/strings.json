@@ -64,8 +64,11 @@
       "moving_ban": {
         "name": "Moving ban"
       },
-      "is_running": {
-        "name": "Running"
+      "ignition": {
+        "name": "Ignition"
+      },
+      "autostart": {
+        "name": "Autostart"
       }
     },
     "device_tracker": {

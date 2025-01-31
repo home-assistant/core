@@ -22,8 +22,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -83,7 +83,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
     )
 
     url = (
-        f"{"https" if user_input[CONF_SSL] else "http"}://"
+        f"{'https' if user_input[CONF_SSL] else 'http'}://"
         f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/"
     )
     pyload = PyLoadAPI(

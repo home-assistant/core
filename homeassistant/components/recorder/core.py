@@ -14,7 +14,7 @@ import threading
 import time
 from typing import TYPE_CHECKING, Any, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 import psutil_home_assistant as ha_psutil
 from sqlalchemy import create_engine, event as sqlalchemy_event, exc, select, update
 from sqlalchemy.engine import Engine
@@ -45,13 +45,14 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
 
 from . import migration, statistics
 from .const import (
     DB_WORKER_PREFIX,
+    DEFAULT_MAX_BIND_VARS,
     DOMAIN,
     KEEPALIVE_TIME,
     LAST_REPORTED_SCHEMA_VERSION,
@@ -61,7 +62,6 @@ from .const import (
     MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG,
     MYSQLDB_PYMYSQL_URL_PREFIX,
     MYSQLDB_URL_PREFIX,
-    SQLITE_MAX_BIND_VARS,
     SQLITE_URL_PREFIX,
     SupportedDialect,
 )
@@ -230,12 +230,9 @@ class Recorder(threading.Thread):
         self._dialect_name: SupportedDialect | None = None
         self.enabled = True
 
-        # For safety we default to the lowest value for max_bind_vars
-        # of all the DB types (SQLITE_MAX_BIND_VARS).
-        #
         # We update the value once we connect to the DB
         # and determine what is actually supported.
-        self.max_bind_vars = SQLITE_MAX_BIND_VARS
+        self.max_bind_vars = DEFAULT_MAX_BIND_VARS
 
     @property
     def backlog(self) -> int:

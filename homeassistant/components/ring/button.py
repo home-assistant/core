@@ -20,6 +20,10 @@ from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, RingEntityDescription, exception_wrap
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class RingButtonEntityDescription(

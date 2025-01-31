@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
@@ -25,6 +25,9 @@ from .entity import RingDeviceT, RingEntity, RingEntityDescription, exception_wr
 
 _LOGGER = logging.getLogger(__name__)
 
+# Coordinator is used to centralize the data updates
+# Actions restricted to 1 at a time
+PARALLEL_UPDATES = 1
 
 # It takes a few seconds for the API to correctly return an update indicating
 # that the changes have been made. Once we request a change (i.e. a light

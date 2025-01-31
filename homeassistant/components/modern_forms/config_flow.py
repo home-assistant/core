@@ -7,10 +7,10 @@ from typing import Any
 from aiomodernforms import ModernFormsConnectionError, ModernFormsDevice
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -39,7 +39,7 @@ class ModernFormsFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._handle_config_flow()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.hostname.rstrip(".")

@@ -5,32 +5,36 @@ from __future__ import annotations
 import abc
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from enum import StrEnum
 import hashlib
 import io
 import json
-from pathlib import Path
+from pathlib import Path, PurePath
 import shutil
 import tarfile
 import time
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict
+from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
 
-from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
+from homeassistant.backup_restore import (
+    RESTORE_BACKUP_FILE,
+    RESTORE_BACKUP_RESULT_FILE,
+    password_to_key,
+)
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     instance_id,
     integration_platform,
     issue_registry as ir,
 )
 from homeassistant.helpers.json import json_bytes
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 
+from . import util as backup_util
 from .agent import (
     BackupAgent,
     BackupAgentError,
@@ -46,9 +50,17 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import AgentBackup, BackupManagerError, Folder
+from .models import AgentBackup, BackupError, BackupManagerError, BaseBackup, Folder
 from .store import BackupStore
-from .util import make_backup_dir, read_backup, validate_password
+from .util import (
+    AsyncIteratorReader,
+    DecryptedBackupStreamer,
+    EncryptedBackupStreamer,
+    make_backup_dir,
+    read_backup,
+    validate_password,
+    validate_password_stream,
+)
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -59,10 +71,18 @@ class NewBackup:
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
-class ManagerBackup(AgentBackup):
+class AgentBackupStatus:
+    """Agent specific backup attributes."""
+
+    protected: bool
+    size: int
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class ManagerBackup(BaseBackup):
     """Backup class."""
 
-    agent_ids: list[str]
+    agents: dict[str, AgentBackupStatus]
     failed_agent_ids: list[str]
     with_automatic_settings: bool | None
 
@@ -140,6 +160,7 @@ class RestoreBackupState(StrEnum):
     """Receive backup state enum."""
 
     COMPLETED = "completed"
+    CORE_RESTART = "core_restart"
     FAILED = "failed"
     IN_PROGRESS = "in_progress"
 
@@ -163,6 +184,7 @@ class CreateBackupEvent(ManagerStateEvent):
     """Backup in progress."""
 
     manager_state: BackupManagerState = BackupManagerState.CREATE_BACKUP
+    reason: str | None
     stage: CreateBackupStage | None
     state: CreateBackupState
 
@@ -172,6 +194,7 @@ class ReceiveBackupEvent(ManagerStateEvent):
     """Backup receive."""
 
     manager_state: BackupManagerState = BackupManagerState.RECEIVE_BACKUP
+    reason: str | None
     stage: ReceiveBackupStage | None
     state: ReceiveBackupState
 
@@ -181,6 +204,7 @@ class RestoreBackupEvent(ManagerStateEvent):
     """Backup restore."""
 
     manager_state: BackupManagerState = BackupManagerState.RESTORE_BACKUP
+    reason: str | None
     stage: RestoreBackupStage | None
     state: RestoreBackupState
 
@@ -210,7 +234,7 @@ class BackupReaderWriter(abc.ABC):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[ManagerStateEvent], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Create a backup."""
@@ -231,6 +255,7 @@ class BackupReaderWriter(abc.ABC):
         backup_id: str,
         *,
         agent_id: str,
+        on_progress: Callable[[RestoreBackupEvent], None],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         password: str | None,
         restore_addons: list[str] | None,
@@ -240,13 +265,33 @@ class BackupReaderWriter(abc.ABC):
     ) -> None:
         """Restore a backup."""
 
+    @abc.abstractmethod
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Get restore events after core restart."""
 
-class BackupReaderWriterError(HomeAssistantError):
+
+class BackupReaderWriterError(BackupError):
     """Backup reader/writer error."""
+
+    error_code = "backup_reader_writer_error"
 
 
 class IncorrectPasswordError(BackupReaderWriterError):
     """Raised when the password is incorrect."""
+
+    error_code = "password_incorrect"
+    _message = "The password provided is incorrect."
+
+
+class DecryptOnDowloadNotSupported(BackupManagerError):
+    """Raised when on-the-fly decryption is not supported."""
+
+    error_code = "decrypt_on_download_not_supported"
+    _message = "On-the-fly decryption is not supported for this backup."
 
 
 class BackupManager:
@@ -275,6 +320,7 @@ class BackupManager:
 
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = IdleEvent()
+        self.last_non_idle_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
 
     async def async_setup(self) -> None:
@@ -283,6 +329,10 @@ class BackupManager:
         if stored:
             self.config.load(stored["config"])
             self.known_backups.load(stored["backups"])
+
+        await self._reader_writer.async_resume_restore_progress_after_restart(
+            on_progress=self.async_on_backup_event
+        )
 
         await self.load_platforms()
 
@@ -413,35 +463,79 @@ class BackupManager:
         backup: AgentBackup,
         agent_ids: list[str],
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
+        password: str | None,
     ) -> dict[str, Exception]:
         """Upload a backup to selected agents."""
         agent_errors: dict[str, Exception] = {}
 
         LOGGER.debug("Uploading backup %s to agents %s", backup.backup_id, agent_ids)
 
-        sync_backup_results = await asyncio.gather(
-            *(
-                self.backup_agents[agent_id].async_upload_backup(
-                    open_stream=open_stream,
-                    backup=backup,
+        async def upload_backup_to_agent(agent_id: str) -> None:
+            """Upload backup to a single agent, and encrypt or decrypt as needed."""
+            config = self.config.data.agents.get(agent_id)
+            should_encrypt = config.protected if config else password is not None
+            streamer: DecryptedBackupStreamer | EncryptedBackupStreamer | None = None
+            if should_encrypt == backup.protected or password is None:
+                # The backup we're uploading is already in the correct state, or we
+                # don't have a password to encrypt or decrypt it
+                LOGGER.debug(
+                    "Uploading backup %s to agent %s as is", backup.backup_id, agent_id
                 )
-                for agent_id in agent_ids
-            ),
+                open_stream_func = open_stream
+                _backup = backup
+            elif should_encrypt:
+                # The backup we're uploading is not encrypted, but the agent requires it
+                LOGGER.debug(
+                    "Uploading encrypted backup %s to agent %s",
+                    backup.backup_id,
+                    agent_id,
+                )
+                streamer = EncryptedBackupStreamer(
+                    self.hass, backup, open_stream, password
+                )
+            else:
+                # The backup we're uploading is encrypted, but the agent requires it
+                # decrypted
+                LOGGER.debug(
+                    "Uploading decrypted backup %s to agent %s",
+                    backup.backup_id,
+                    agent_id,
+                )
+                streamer = DecryptedBackupStreamer(
+                    self.hass, backup, open_stream, password
+                )
+            if streamer:
+                open_stream_func = streamer.open_stream
+                _backup = replace(
+                    backup, protected=should_encrypt, size=streamer.size()
+                )
+            await self.backup_agents[agent_id].async_upload_backup(
+                open_stream=open_stream_func,
+                backup=_backup,
+            )
+            if streamer:
+                await streamer.wait()
+
+        sync_backup_results = await asyncio.gather(
+            *(upload_backup_to_agent(agent_id) for agent_id in agent_ids),
             return_exceptions=True,
         )
         for idx, result in enumerate(sync_backup_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupReaderWriterError):
                 # writer errors will affect all agents
                 # no point in continuing
                 raise BackupManagerError(str(result)) from result
             if isinstance(result, BackupAgentError):
-                LOGGER.error("Error uploading to %s: %s", agent_ids[idx], result)
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                LOGGER.error("Upload failed for %s: %s", agent_id, result)
                 continue
             if isinstance(result, Exception):
                 # trap bugs from agents
-                agent_errors[agent_ids[idx]] = result
-                LOGGER.error("Unexpected error: %s", result, exc_info=result)
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result
@@ -479,7 +573,7 @@ class BackupManager:
                         agent_backup, await instance_id.async_get(self.hass)
                     )
                     backups[backup_id] = ManagerBackup(
-                        agent_ids=[],
+                        agents={},
                         addons=agent_backup.addons,
                         backup_id=backup_id,
                         date=agent_backup.date,
@@ -490,11 +584,12 @@ class BackupManager:
                         homeassistant_included=agent_backup.homeassistant_included,
                         homeassistant_version=agent_backup.homeassistant_version,
                         name=agent_backup.name,
-                        protected=agent_backup.protected,
-                        size=agent_backup.size,
                         with_automatic_settings=with_automatic_settings,
                     )
-                backups[backup_id].agent_ids.append(agent_ids[idx])
+                backups[backup_id].agents[agent_ids[idx]] = AgentBackupStatus(
+                    protected=agent_backup.protected,
+                    size=agent_backup.size,
+                )
 
         return (backups, agent_errors)
 
@@ -530,7 +625,7 @@ class BackupManager:
                     result, await instance_id.async_get(self.hass)
                 )
                 backup = ManagerBackup(
-                    agent_ids=[],
+                    agents={},
                     addons=result.addons,
                     backup_id=result.backup_id,
                     date=result.date,
@@ -541,11 +636,12 @@ class BackupManager:
                     homeassistant_included=result.homeassistant_included,
                     homeassistant_version=result.homeassistant_version,
                     name=result.name,
-                    protected=result.protected,
-                    size=result.size,
                     with_automatic_settings=with_automatic_settings,
                 )
-            backup.agent_ids.append(agent_ids[idx])
+            backup.agents[agent_ids[idx]] = AgentBackupStatus(
+                protected=result.protected,
+                size=result.size,
+            )
 
         return (backup, agent_errors)
 
@@ -594,24 +690,39 @@ class BackupManager:
         *,
         agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
-    ) -> None:
+    ) -> str:
         """Receive and store a backup file from upload."""
         if self.state is not BackupManagerState.IDLE:
             raise BackupManagerError(f"Backup manager busy: {self.state}")
         self.async_on_backup_event(
-            ReceiveBackupEvent(stage=None, state=ReceiveBackupState.IN_PROGRESS)
+            ReceiveBackupEvent(
+                reason=None,
+                stage=None,
+                state=ReceiveBackupState.IN_PROGRESS,
+            )
         )
         try:
-            await self._async_receive_backup(agent_ids=agent_ids, contents=contents)
+            backup_id = await self._async_receive_backup(
+                agent_ids=agent_ids, contents=contents
+            )
         except Exception:
             self.async_on_backup_event(
-                ReceiveBackupEvent(stage=None, state=ReceiveBackupState.FAILED)
+                ReceiveBackupEvent(
+                    reason="unknown_error",
+                    stage=None,
+                    state=ReceiveBackupState.FAILED,
+                )
             )
             raise
         else:
             self.async_on_backup_event(
-                ReceiveBackupEvent(stage=None, state=ReceiveBackupState.COMPLETED)
+                ReceiveBackupEvent(
+                    reason=None,
+                    stage=None,
+                    state=ReceiveBackupState.COMPLETED,
+                )
             )
+            return backup_id
         finally:
             self.async_on_backup_event(IdleEvent())
 
@@ -620,11 +731,12 @@ class BackupManager:
         *,
         agent_ids: list[str],
         contents: aiohttp.BodyPartReader,
-    ) -> None:
+    ) -> str:
         """Receive and store a backup file from upload."""
         contents.chunk_size = BUF_SIZE
         self.async_on_backup_event(
             ReceiveBackupEvent(
+                reason=None,
                 stage=ReceiveBackupStage.RECEIVE_FILE,
                 state=ReceiveBackupState.IN_PROGRESS,
             )
@@ -636,6 +748,7 @@ class BackupManager:
         )
         self.async_on_backup_event(
             ReceiveBackupEvent(
+                reason=None,
                 stage=ReceiveBackupStage.UPLOAD_TO_AGENTS,
                 state=ReceiveBackupState.IN_PROGRESS,
             )
@@ -644,14 +757,19 @@ class BackupManager:
             backup=written_backup.backup,
             agent_ids=agent_ids,
             open_stream=written_backup.open_stream,
+            # When receiving a backup, we don't decrypt or encrypt it according to the
+            # agent settings, we just upload it as is.
+            password=None,
         )
         await written_backup.release_stream()
         self.known_backups.add(written_backup.backup, agent_errors)
+        return written_backup.backup.backup_id
 
     async def async_create_backup(
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None = None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -664,6 +782,7 @@ class BackupManager:
         """Create a backup."""
         new_backup = await self.async_initiate_backup(
             agent_ids=agent_ids,
+            extra_metadata=extra_metadata,
             include_addons=include_addons,
             include_all_addons=include_all_addons,
             include_database=include_database,
@@ -678,10 +797,26 @@ class BackupManager:
         await self._backup_finish_task
         return new_backup
 
+    async def async_create_automatic_backup(self) -> NewBackup:
+        """Create a backup with automatic backup settings."""
+        config_data = self.config.data
+        return await self.async_create_backup(
+            agent_ids=config_data.create_backup.agent_ids,
+            include_addons=config_data.create_backup.include_addons,
+            include_all_addons=config_data.create_backup.include_all_addons,
+            include_database=config_data.create_backup.include_database,
+            include_folders=config_data.create_backup.include_folders,
+            include_homeassistant=True,  # always include HA
+            name=config_data.create_backup.name,
+            password=config_data.create_backup.password,
+            with_automatic_settings=True,
+        )
+
     async def async_initiate_backup(
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None = None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -701,11 +836,16 @@ class BackupManager:
             self.store.save()
 
         self.async_on_backup_event(
-            CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS)
+            CreateBackupEvent(
+                reason=None,
+                stage=None,
+                state=CreateBackupState.IN_PROGRESS,
+            )
         )
         try:
             return await self._async_create_backup(
                 agent_ids=agent_ids,
+                extra_metadata=extra_metadata,
                 include_addons=include_addons,
                 include_all_addons=include_all_addons,
                 include_database=include_database,
@@ -716,9 +856,14 @@ class BackupManager:
                 raise_task_error=raise_task_error,
                 with_automatic_settings=with_automatic_settings,
             )
-        except Exception:
+        except Exception as err:
+            reason = err.error_code if isinstance(err, BackupError) else "unknown_error"
             self.async_on_backup_event(
-                CreateBackupEvent(stage=None, state=CreateBackupState.FAILED)
+                CreateBackupEvent(
+                    reason=reason,
+                    stage=None,
+                    state=CreateBackupState.FAILED,
+                )
             )
             self.async_on_backup_event(IdleEvent())
             if with_automatic_settings:
@@ -729,6 +874,7 @@ class BackupManager:
         self,
         *,
         agent_ids: list[str],
+        extra_metadata: dict[str, bool | str] | None,
         include_addons: list[str] | None,
         include_all_addons: bool,
         include_database: bool,
@@ -753,8 +899,9 @@ class BackupManager:
 
         backup_name = (
             name
-            or f"{"Automatic" if with_automatic_settings else "Custom"} backup {HAVERSION}"
+            or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
+        extra_metadata = extra_metadata or {}
 
         try:
             (
@@ -763,7 +910,8 @@ class BackupManager:
             ) = await self._reader_writer.async_create_backup(
                 agent_ids=agent_ids,
                 backup_name=backup_name,
-                extra_metadata={
+                extra_metadata=extra_metadata
+                | {
                     "instance_id": await instance_id.async_get(self.hass),
                     "with_automatic_settings": with_automatic_settings,
                 },
@@ -779,7 +927,7 @@ class BackupManager:
             raise BackupManagerError(str(err)) from err
 
         backup_finish_task = self._backup_finish_task = self.hass.async_create_task(
-            self._async_finish_backup(agent_ids, with_automatic_settings),
+            self._async_finish_backup(agent_ids, with_automatic_settings, password),
             name="backup_manager_finish_backup",
         )
         if not raise_task_error:
@@ -796,7 +944,7 @@ class BackupManager:
         return new_backup
 
     async def _async_finish_backup(
-        self, agent_ids: list[str], with_automatic_settings: bool
+        self, agent_ids: list[str], with_automatic_settings: bool, password: str | None
     ) -> None:
         """Finish a backup."""
         if TYPE_CHECKING:
@@ -819,6 +967,7 @@ class BackupManager:
             )
             self.async_on_backup_event(
                 CreateBackupEvent(
+                    reason=None,
                     stage=CreateBackupStage.UPLOAD_TO_AGENTS,
                     state=CreateBackupState.IN_PROGRESS,
                 )
@@ -829,6 +978,7 @@ class BackupManager:
                     backup=written_backup.backup,
                     agent_ids=agent_ids,
                     open_stream=written_backup.open_stream,
+                    password=password,
                 )
             finally:
                 await written_backup.release_stream()
@@ -849,14 +999,22 @@ class BackupManager:
         finally:
             self._backup_task = None
             self._backup_finish_task = None
-            self.async_on_backup_event(
-                CreateBackupEvent(
-                    stage=None,
-                    state=CreateBackupState.COMPLETED
-                    if backup_success
-                    else CreateBackupState.FAILED,
+            if backup_success:
+                self.async_on_backup_event(
+                    CreateBackupEvent(
+                        reason=None,
+                        stage=None,
+                        state=CreateBackupState.COMPLETED,
+                    )
                 )
-            )
+            else:
+                self.async_on_backup_event(
+                    CreateBackupEvent(
+                        reason="upload_failed",
+                        stage=None,
+                        state=CreateBackupState.FAILED,
+                    )
+                )
             self.async_on_backup_event(IdleEvent())
 
     async def async_restore_backup(
@@ -875,7 +1033,11 @@ class BackupManager:
             raise BackupManagerError(f"Backup manager busy: {self.state}")
 
         self.async_on_backup_event(
-            RestoreBackupEvent(stage=None, state=RestoreBackupState.IN_PROGRESS)
+            RestoreBackupEvent(
+                reason=None,
+                stage=None,
+                state=RestoreBackupState.IN_PROGRESS,
+            )
         )
         try:
             await self._async_restore_backup(
@@ -888,11 +1050,28 @@ class BackupManager:
                 restore_homeassistant=restore_homeassistant,
             )
             self.async_on_backup_event(
-                RestoreBackupEvent(stage=None, state=RestoreBackupState.COMPLETED)
+                RestoreBackupEvent(
+                    reason=None,
+                    stage=None,
+                    state=RestoreBackupState.COMPLETED,
+                )
             )
+        except BackupError as err:
+            self.async_on_backup_event(
+                RestoreBackupEvent(
+                    reason=err.error_code,
+                    stage=None,
+                    state=RestoreBackupState.FAILED,
+                )
+            )
+            raise
         except Exception:
             self.async_on_backup_event(
-                RestoreBackupEvent(stage=None, state=RestoreBackupState.FAILED)
+                RestoreBackupEvent(
+                    reason="unknown_error",
+                    stage=None,
+                    state=RestoreBackupState.FAILED,
+                )
             )
             raise
         finally:
@@ -923,6 +1102,7 @@ class BackupManager:
             backup_id=backup_id,
             open_stream=open_backup,
             agent_id=agent_id,
+            on_progress=self.async_on_backup_event,
             password=password,
             restore_addons=restore_addons,
             restore_database=restore_database,
@@ -939,6 +1119,8 @@ class BackupManager:
         if (current_state := self.state) != (new_state := event.manager_state):
             LOGGER.debug("Backup state: %s -> %s", current_state, new_state)
         self.last_event = event
+        if not isinstance(event, IdleEvent):
+            self.last_non_idle_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
@@ -984,8 +1166,49 @@ class BackupManager:
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={"failed_agents": ", ".join(agent_errors)},
+            translation_placeholders={
+                "failed_agents": ", ".join(
+                    self.backup_agents[agent_id].name for agent_id in agent_errors
+                )
+            },
         )
+
+    async def async_can_decrypt_on_download(
+        self,
+        backup_id: str,
+        *,
+        agent_id: str,
+        password: str | None,
+    ) -> None:
+        """Check if we are able to decrypt the backup on download."""
+        try:
+            agent = self.backup_agents[agent_id]
+        except KeyError as err:
+            raise BackupManagerError(f"Invalid agent selected: {agent_id}") from err
+        if not await agent.async_get_backup(backup_id):
+            raise BackupManagerError(
+                f"Backup {backup_id} not found in agent {agent_id}"
+            )
+        reader: IO[bytes]
+        if agent_id in self.local_backup_agents:
+            local_agent = self.local_backup_agents[agent_id]
+            path = local_agent.get_backup_path(backup_id)
+            reader = await self.hass.async_add_executor_job(open, path.as_posix(), "rb")
+        else:
+            backup_stream = await agent.async_download_backup(backup_id)
+            reader = cast(IO[bytes], AsyncIteratorReader(self.hass, backup_stream))
+        try:
+            await self.hass.async_add_executor_job(
+                validate_password_stream, reader, password
+            )
+        except backup_util.IncorrectPassword as err:
+            raise IncorrectPasswordError from err
+        except backup_util.UnsupportedSecureTarVersion as err:
+            raise DecryptOnDowloadNotSupported from err
+        except backup_util.DecryptError as err:
+            raise BackupManagerError(str(err)) from err
+        finally:
+            reader.close()
 
 
 class KnownBackups:
@@ -1077,7 +1300,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         include_database: bool,
         include_folders: list[Folder] | None,
         include_homeassistant: bool,
-        on_progress: Callable[[ManagerStateEvent], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> tuple[NewBackup, asyncio.Task[WrittenBackup]]:
         """Initiate generating a backup."""
@@ -1117,19 +1340,38 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         date_str: str,
         extra_metadata: dict[str, bool | str],
         include_database: bool,
-        on_progress: Callable[[ManagerStateEvent], None],
+        on_progress: Callable[[CreateBackupEvent], None],
         password: str | None,
     ) -> WrittenBackup:
         """Generate a backup."""
         manager = self._hass.data[DATA_MANAGER]
 
+        agent_config = manager.config.data.agents.get(self._local_agent_id)
+        if agent_config and not agent_config.protected:
+            password = None
+
+        backup = AgentBackup(
+            addons=[],
+            backup_id=backup_id,
+            database_included=include_database,
+            date=date_str,
+            extra_metadata=extra_metadata,
+            folders=[],
+            homeassistant_included=True,
+            homeassistant_version=HAVERSION,
+            name=backup_name,
+            protected=password is not None,
+            size=0,
+        )
+
         local_agent_tar_file_path = None
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            local_agent_tar_file_path = local_agent.get_backup_path(backup_id)
+            local_agent_tar_file_path = local_agent.get_new_backup_path(backup)
 
         on_progress(
             CreateBackupEvent(
+                reason=None,
                 stage=CreateBackupStage.HOME_ASSISTANT,
                 state=CreateBackupState.IN_PROGRESS,
             )
@@ -1167,19 +1409,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             # ValueError from json_bytes
             raise BackupReaderWriterError(str(err)) from err
         else:
-            backup = AgentBackup(
-                addons=[],
-                backup_id=backup_id,
-                database_included=include_database,
-                date=date_str,
-                extra_metadata=extra_metadata,
-                folders=[],
-                homeassistant_included=True,
-                homeassistant_version=HAVERSION,
-                name=backup_name,
-                protected=password is not None,
-                size=size_in_bytes,
-            )
+            backup = replace(backup, size=size_in_bytes)
 
             async_add_executor_job = self._hass.async_add_executor_job
 
@@ -1231,6 +1461,17 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if not database_included:
             excludes = excludes + EXCLUDE_DATABASE_FROM_BACKUP
 
+        def is_excluded_by_filter(path: PurePath) -> bool:
+            """Filter to filter excludes."""
+
+            for exclude in excludes:
+                if not path.match(exclude):
+                    continue
+                LOGGER.debug("Ignoring %s because of %s", path, exclude)
+                return True
+
+            return False
+
         outer_secure_tarfile = SecureTarFile(
             tar_file_path, "w", gzip=False, bufsize=BUF_SIZE
         )
@@ -1249,7 +1490,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                 atomic_contents_add(
                     tar_file=core_tar,
                     origin_path=Path(self._hass.config.path()),
-                    excludes=excludes,
+                    file_filter=is_excluded_by_filter,
                     arcname="data",
                 )
         return (tar_file_path, tar_file_path.stat().st_size)
@@ -1282,7 +1523,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         manager = self._hass.data[DATA_MANAGER]
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_backup_path(backup.backup_id)
+            tar_file_path = local_agent.get_new_backup_path(backup)
             await async_add_executor_job(make_backup_dir, tar_file_path.parent)
             await async_add_executor_job(shutil.move, temp_file, tar_file_path)
         else:
@@ -1314,6 +1555,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         *,
         agent_id: str,
+        on_progress: Callable[[RestoreBackupEvent], None],
         password: str | None,
         restore_addons: list[str] | None,
         restore_database: bool,
@@ -1358,7 +1600,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             validate_password, path, password
         )
         if not password_valid:
-            raise IncorrectPasswordError("The password provided is incorrect.")
+            raise IncorrectPasswordError
 
         def _write_restore_file() -> None:
             """Write the restore file."""
@@ -1376,7 +1618,62 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
 
         await self._hass.async_add_executor_job(_write_restore_file)
+        on_progress(
+            RestoreBackupEvent(
+                reason=None,
+                stage=None,
+                state=RestoreBackupState.CORE_RESTART,
+            )
+        )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
+
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Check restore status after core restart."""
+
+        def _read_restore_file() -> json_util.JsonObjectType | None:
+            """Read the restore file."""
+            result_path = Path(self._hass.config.path(RESTORE_BACKUP_RESULT_FILE))
+
+            try:
+                restore_result = json_util.json_loads_object(result_path.read_bytes())
+            except FileNotFoundError:
+                return None
+            finally:
+                try:
+                    result_path.unlink(missing_ok=True)
+                except OSError as err:
+                    LOGGER.warning(
+                        "Unexpected error deleting backup restore result file: %s %s",
+                        type(err),
+                        err,
+                    )
+
+            return restore_result
+
+        restore_result = await self._hass.async_add_executor_job(_read_restore_file)
+        if not restore_result:
+            return
+
+        success = restore_result["success"]
+        if not success:
+            LOGGER.warning(
+                "Backup restore failed with %s: %s",
+                restore_result["error_type"],
+                restore_result["error"],
+            )
+        state = RestoreBackupState.COMPLETED if success else RestoreBackupState.FAILED
+        on_progress(
+            RestoreBackupEvent(
+                reason=cast(str, restore_result["error"]),
+                stage=None,
+                state=state,
+            )
+        )
+        on_progress(IdleEvent())
 
 
 def _generate_backup_id(date: str, name: str) -> str:

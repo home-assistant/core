@@ -37,7 +37,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import db_schema_0
 
