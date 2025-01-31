@@ -91,7 +91,7 @@ class BaseUnitConverter:
     VALID_UNITS: set[str | None]
 
     _UNIT_CONVERSION: dict[str | None, float]
-    _UNIT_INVERSES: set[tuple[str, str]] = set()
+    _UNIT_INVERSES: set[str] = set()
 
     @classmethod
     def convert(cls, value: float, from_unit: str | None, to_unit: str | None) -> float:
