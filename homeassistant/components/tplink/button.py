@@ -72,6 +72,21 @@ BUTTON_DESCRIPTIONS: Final = [
     ),
     TPLinkButtonEntityDescription(key="pair"),
     TPLinkButtonEntityDescription(key="unpair"),
+    TPLinkButtonEntityDescription(
+        key="main_brush_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="side_brush_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="sensor_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="filter_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="charging_contacts_reset",
+    ),
 ]
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
