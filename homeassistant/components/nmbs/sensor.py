@@ -29,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import (  # noqa: F401
+    async_find_station_with_fallback,
     CONF_EXCLUDE_VIAS,
     CONF_STATION_FROM,
     CONF_STATION_LIVE,
@@ -101,7 +102,9 @@ async def async_setup_platform(
 
         for station_type in station_types:
             station = (
-                find_station_by_name(hass, config[station_type])
+                await async_find_station_with_fallback(
+                    hass, config[station_type], iRail()
+                )
                 if station_type in config
                 else None
             )
