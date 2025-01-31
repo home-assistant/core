@@ -82,7 +82,7 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.142.0"
+    "zeroconf==0.143.0"
 ]
 
 [project.urls]
