@@ -108,7 +108,10 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
-
+        # Boost 1h (3600s)
+        boostInfo: type[clusters.WaterHeaterManagement.WaterHeaterBoostInfoStruct] = (
+            clusters.WaterHeaterManagement.WaterHeaterBoostInfoStruct(duration=3600)
+        )
         system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP.get(operation_mode)
         if system_mode_value is None:
             raise ValueError(f"Unsupported hvac mode {operation_mode} in Matter")
@@ -122,6 +125,11 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         )
         self._endpoint.set_attribute_value(system_mode_path, system_mode_value)
         self._update_from_device()
+        # Trigger Boost command
+        if operation_mode == STATE_HIGH_DEMAND:
+            await self.send_device_command(
+                clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boostInfo)
+            )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""
