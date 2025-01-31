@@ -6,6 +6,7 @@ from typing import Any, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.water_heater import (
     STATE_ECO,
@@ -39,6 +40,14 @@ SUPPORT_FLAGS_HEATER = (
 )
 TEMPERATURE_SCALING_FACTOR = 100
 
+WATER_HEATER_SYSTEM_MODE_MAP = {
+    STATE_ECO: 4,
+    STATE_ELECTRIC: 4,
+    STATE_HEAT_PUMP: 4,
+    STATE_HIGH_DEMAND: 4,
+    STATE_OFF: 0,
+    STATE_PERFORMANCE: 4,
+}
 
 BOOST_STATE_MAP = {
     clusters.WaterHeaterManagement.Enums.BoostStateEnum.kInactive: "inactive",
@@ -81,15 +90,38 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _platform_translation_key = "water_heater"
 
-    def set_temperature(self, **kwargs: Any) -> None:
+    async def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.schedule_update_ha_state()
+        target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
+        self._attr_target_temperature = target_temperature
+        if target_temperature is not None:
+            if self.target_temperature != target_temperature:
+                matter_attribute = (
+                    clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
+                )
+                await self.write_attribute(
+                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
+                    matter_attribute=matter_attribute,
+                )
+            return
 
-    def set_operation_mode(self, operation_mode: str) -> None:
+    async def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
-        self.schedule_update_ha_state()
+
+        system_mode_value = WATER_HEATER_SYSTEM_MODE_MAP.get(operation_mode)
+        if system_mode_value is None:
+            raise ValueError(f"Unsupported hvac mode {operation_mode} in Matter")
+        await self.write_attribute(
+            value=system_mode_value,
+            matter_attribute=clusters.Thermostat.Attributes.SystemMode,
+        )
+        system_mode_path = create_attribute_path_from_attribute(
+            endpoint_id=self._endpoint.endpoint_id,
+            attribute=clusters.Thermostat.Attributes.SystemMode,
+        )
+        self._endpoint.set_attribute_value(system_mode_path, system_mode_value)
+        self._update_from_device()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on water heater."""
