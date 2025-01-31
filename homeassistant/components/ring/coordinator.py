@@ -132,6 +132,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                     raise eg.exceptions[0]  # noqa: B904
 
         self._process_stale_devices(device_ids)
+        self._processed_device_ids = device_ids
         return devices
 
     def _process_stale_devices(self, device_ids: dict[int, str]) -> None:
@@ -149,7 +150,6 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                         device_id=device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
-        self._processed_device_ids = device_ids
         self.removed_device_ids = stale_device_ids
 
 
