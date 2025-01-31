@@ -1912,7 +1912,7 @@ pyswitchbee==1.8.3
 pytautulli==23.1.1
 
 # homeassistant.components.motionmount
-python-MotionMount==2.2.0
+python-MotionMount==2.3.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
