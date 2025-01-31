@@ -1,0 +1,113 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No actions.
+  appropriate-polling:
+    status: exempt
+    comment: No polling.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No entities.
+  entity-unique-id:
+    status: exempt
+    comment: No entities.
+  has-entity-name:
+    status: exempt
+    comment: No entities.
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration options.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: No entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: No entities.
+  parallel-updates:
+    status: exempt
+    comment: No actions and no entities.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices:
+    status: exempt
+    comment: No devices.
+  diagnostics:
+    status: exempt
+    comment: No data to diagnose.
+  discovery-update-info:
+    status: exempt
+    comment: No discovery.
+  discovery:
+    status: exempt
+    comment: No discovery.
+  docs-data-update:
+    status: exempt
+    comment: No updates.
+  docs-examples:
+    status: exempt
+    comment: |
+      This integration only serves backup.
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: No devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: No devices.
+  entity-category:
+    status: exempt
+    comment: No entities.
+  entity-device-class:
+    status: exempt
+    comment: No entities.
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entities.
+  entity-translations:
+    status: exempt
+    comment: No entities.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: No entities.
+  reconfiguration-flow:
+    status: exempt
+    comment: No configuration options.
+  repair-issues:
+    status: exempt
+    comment: No repairs.
+  stale-devices:
+    status: exempt
+    comment: No devices.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

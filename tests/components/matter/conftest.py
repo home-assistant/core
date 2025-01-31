@@ -116,6 +116,7 @@ async def integration_fixture(
         "window_covering_pa_lift",
         "window_covering_pa_tilt",
         "window_covering_tilt",
+        "yandex_smart_socket",
     ]
 )
 async def matter_devices(

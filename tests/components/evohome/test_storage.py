@@ -15,7 +15,7 @@ from homeassistant.components.evohome import (
     dt_aware_to_naive,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import setup_evohome
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME

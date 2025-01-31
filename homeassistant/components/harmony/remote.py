@@ -20,8 +20,7 @@ from homeassistant.components.remote import (
     RemoteEntityFeature,
 )
 from homeassistant.core import HassJob, HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
