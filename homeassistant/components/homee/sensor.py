@@ -177,6 +177,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.TOTAL_CURRENT: HomeeSensorEntityDescription(
         key="total_current",
         device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.TOTAL_CURRENT_ENERGY_USE: HomeeSensorEntityDescription(
         key="total_power",
@@ -252,7 +253,7 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
         ],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        translation_key="node_sensor_state",
+        translation_key="node_state",
         value_fn=lambda node: get_name_for_enum(NodeState, node.state),
     ),
 )
@@ -331,6 +332,7 @@ class HomeeNodeSensor(HomeeNodeEntity, SensorEntity):
         super().__init__(node, entry)
         self.entity_description = description
         self._node = node
+        self._attr_translation_key = description.translation_key
         self._attr_unique_id = f"{self._attr_unique_id}-{description.key}"
 
     @property
