@@ -34,6 +34,7 @@ from .const import (  # noqa: F401
     CONF_STATION_LIVE,
     CONF_STATION_TO,
     DOMAIN,
+    NMBS_KEY,
     PLATFORMS,
     find_station,
     find_station_by_name,
@@ -91,46 +92,52 @@ async def async_setup_platform(
 ) -> None:
     """Set up the NMBS sensor with iRail API."""
 
-    if config[CONF_PLATFORM] == DOMAIN:
-        if CONF_SHOW_ON_MAP not in config:
-            config[CONF_SHOW_ON_MAP] = False
-        if CONF_EXCLUDE_VIAS not in config:
-            config[CONF_EXCLUDE_VIAS] = False
+    if config[CONF_PLATFORM] != DOMAIN:
+        return
 
-        station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]
+    if CONF_SHOW_ON_MAP not in config:
+        config[CONF_SHOW_ON_MAP] = False
+    if CONF_EXCLUDE_VIAS not in config:
+        config[CONF_EXCLUDE_VIAS] = False
 
-        for station_type in station_types:
-            station = (
-                find_station_by_name(hass, config[station_type])
-                if station_type in config
-                else None
+    station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]
+
+    for station_type in station_types:
+        station = (
+            find_station_by_name(
+                hass, config[station_type], hass.data[NMBS_KEY].localized_names
             )
-            if station is None and station_type in config:
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "deprecated_yaml_import_issue_station_not_found",
-                    breaks_in_ha_version="2025.7.0",
-                    is_fixable=False,
-                    issue_domain=DOMAIN,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_yaml_import_issue_station_not_found",
-                    translation_placeholders={
-                        "domain": DOMAIN,
-                        "integration_title": "NMBS",
-                        "station_name": config[station_type],
-                        "url": "/config/integrations/dashboard/add?domain=nmbs",
-                    },
-                )
-                return
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
+            if station_type in config
+            else None
         )
+        if station is not None and station_type in config:
+            config[station_type] = station["standardname"]
+        elif station is None and station_type in config:
+            async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_yaml_import_issue_station_not_found_{config[station_type]}",
+                breaks_in_ha_version="2025.7.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_station_not_found",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "NMBS",
+                    "station_name": config[station_type],
+                    "url": "/config/integrations/dashboard/add?domain=nmbs",
+                },
+            )
+            return
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
 
     async_create_issue(
         hass,
