@@ -147,11 +147,8 @@ class BaseUnitConverter:
     @classmethod
     @lru_cache
     def _are_unit_inverses(cls, from_unit: str | None, to_unit: str | None) -> bool:
-        """Return true if units are inverses to one another."""
-        return (from_unit, to_unit) in cls._UNIT_INVERSES or (
-            to_unit,
-            from_unit,
-        ) in cls._UNIT_INVERSES
+        """Return true if one unit is an inverse but not the other."""
+        return (from_unit in cls._UNIT_INVERSES) != (to_unit in cls._UNIT_INVERSES)
 
 
 class DataRateConverter(BaseUnitConverter):
@@ -308,15 +305,9 @@ class EnergyDistanceConverter(BaseUnitConverter):
         UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR: 100 * _KM_TO_M / _MILE_TO_M,
         UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR: 100,
     }
-    _UNIT_INVERSES: set[tuple[str, str]] = {
-        (
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
-            UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
-        ),
-        (
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
-            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
-        ),
+    _UNIT_INVERSES: set[str] = {
+        UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
     }
     VALID_UNITS = set(UnitOfEnergyDistance)
 
