@@ -50,8 +50,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 SERVICE_SETTING_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): vol.In(
-            [setting.value for setting in SettingKey if setting != SettingKey.UNKNOWN]
+        vol.Required(ATTR_KEY): vol.All(
+            vol.Coerce(SettingKey),
+            vol.NotIn([SettingKey.UNKNOWN]),
         ),
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
     }
@@ -60,8 +61,9 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
 SERVICE_OPTION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_KEY): vol.In(
-            [option.value for option in OptionKey if option != OptionKey.UNKNOWN]
+        vol.Required(ATTR_KEY): vol.All(
+            vol.Coerce(OptionKey),
+            vol.NotIn([OptionKey.UNKNOWN]),
         ),
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
@@ -71,19 +73,22 @@ SERVICE_OPTION_SCHEMA = vol.Schema(
 SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): vol.In(
-            [program.value for program in ProgramKey if program != ProgramKey.UNKNOWN]
+        vol.Required(ATTR_PROGRAM): vol.All(
+            vol.Coerce(ProgramKey),
+            vol.NotIn([ProgramKey.UNKNOWN]),
         ),
-        vol.Required(ATTR_KEY): vol.In(
-            [option.value for option in OptionKey if option != OptionKey.UNKNOWN]
+        vol.Required(ATTR_KEY): vol.All(
+            vol.Coerce(OptionKey),
+            vol.NotIn([OptionKey.UNKNOWN]),
         ),
         vol.Required(ATTR_VALUE): vol.Any(int, str),
         vol.Optional(ATTR_UNIT): str,
     },
     {
         vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): vol.In(
-            [program.value for program in ProgramKey if program != ProgramKey.UNKNOWN]
+        vol.Required(ATTR_PROGRAM): vol.All(
+            vol.Coerce(ProgramKey),
+            vol.NotIn([ProgramKey.UNKNOWN]),
         ),
     },
 )
@@ -144,14 +149,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _async_service_program(call: ServiceCall, start: bool):
         """Execute calls to services taking a program."""
-        program = ProgramKey(call.data[ATTR_PROGRAM])
+        program = call.data[ATTR_PROGRAM]
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
         option_key = call.data.get(ATTR_KEY)
         options = (
             [
                 Option(
-                    OptionKey(option_key),
+                    option_key,
                     call.data[ATTR_VALUE],
                     unit=call.data.get(ATTR_UNIT),
                 )
@@ -188,14 +193,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if active:
                 await client.set_active_program_option(
                     ha_id,
-                    option_key=OptionKey(option_key),
+                    option_key=option_key,
                     value=value,
                     unit=unit,
                 )
             else:
                 await client.set_selected_program_option(
                     ha_id,
-                    option_key=OptionKey(option_key),
+                    option_key=option_key,
                     value=value,
                     unit=unit,
                 )
@@ -238,7 +243,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_service_setting(call: ServiceCall):
         """Service for changing a setting."""
-        key = SettingKey(call.data[ATTR_KEY])
+        key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
