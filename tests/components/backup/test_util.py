@@ -15,6 +15,7 @@ from homeassistant.components.backup.util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
     read_backup,
+    suggested_filename,
     validate_password,
 )
 from homeassistant.core import HomeAssistant
@@ -384,3 +385,30 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
     # padding.
     await encryptor.wait()
     assert isinstance(encryptor._workers[0].error, tarfile.TarError)
+
+
+@pytest.mark.parametrize(
+    ("name", "resulting_filename"),
+    [
+        ("test", "test - 2025-01-30 13.42 12345678.tar"),
+        ("  leading spaces", "leading spaces - 2025-01-30 13.42 12345678.tar"),
+        ("trailing spaces  ", "trailing spaces - 2025-01-30 13.42 12345678.tar"),
+        ("double  spaces  ", "double  spaces - 2025-01-30 13.42 12345678.tar"),
+    ],
+)
+def test_suggested_filename(name: str, resulting_filename: str) -> None:
+    """Test suggesting a filename."""
+    backup = AgentBackup(
+        addons=[],
+        backup_id="1234",
+        date="2025-01-30 13:42:12.345678-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name=name,
+        protected=False,
+        size=1234,
+    )
+    assert suggested_filename(backup) == resulting_filename
