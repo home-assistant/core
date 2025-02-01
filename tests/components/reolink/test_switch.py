@@ -92,7 +92,7 @@ async def test_cleanup_hub_switches(
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
 
@@ -164,7 +164,7 @@ async def test_hub_switches_repair_issue(
     # setup CH 0 and host entities/device
     with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done()
 
     assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
     assert (DOMAIN, "hub_switch_deprecated") in issue_registry.issues
@@ -185,7 +185,7 @@ async def test_switch(
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
@@ -259,7 +259,7 @@ async def test_host_switch(
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_email_on_event"
@@ -322,7 +322,7 @@ async def test_chime_switch(
     """Test host switch entity."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done(True)
+    await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SWITCH}.test_chime_led"
