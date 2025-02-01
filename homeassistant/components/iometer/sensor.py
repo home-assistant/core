@@ -69,7 +69,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         key="power_status",
         translation_key="power_status",
         device_class=SensorDeviceClass.ENUM,
-        options=["battery", "wired"],
+        options=["battery", "wired", "unknown"],
         value_fn=lambda data: data.status.device.core.power_status or STATE_UNKNOWN,
     ),
     IOmeterEntityDescription(
@@ -84,7 +84,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         key="attachment_status",
         translation_key="attachment_status",
         device_class=SensorDeviceClass.ENUM,
-        options=["attached", "detached"],
+        options=["attached", "detached", "unknown"],
         value_fn=lambda data: data.status.device.core.attachment_status
         or STATE_UNKNOWN,
     ),
@@ -92,7 +92,7 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         key="pin_status",
         translation_key="pin_status",
         device_class=SensorDeviceClass.ENUM,
-        options=["entered", "pending", "missing"],
+        options=["entered", "pending", "missing", "unknown"],
         value_fn=lambda data: data.status.device.core.pin_status or STATE_UNKNOWN,
     ),
     IOmeterEntityDescription(
