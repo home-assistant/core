@@ -1433,7 +1433,7 @@ async def test_rpc_device_virtual_number_sensor_with_device_class(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test a virtual number sensor for RPC device."""
+    """Test a virtual number sensor with device class for RPC device."""
     config = deepcopy(mock_rpc_device.config)
     config["number:203"] = {
         "name": "Current humidity",
