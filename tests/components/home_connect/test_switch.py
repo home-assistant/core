@@ -15,10 +15,7 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.event import ArrayOfEvents, EventType
-from aiohomeconnect.model.program import (
-    ArrayOfAvailablePrograms,
-    EnumerateAvailableProgram,
-)
+from aiohomeconnect.model.program import ArrayOfPrograms, EnumerateProgram
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
@@ -306,16 +303,14 @@ async def test_switch_exception_handling(
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
-    client_with_exception.get_available_programs.side_effect = None
-    client_with_exception.get_available_programs.return_value = (
-        ArrayOfAvailablePrograms(
-            [
-                EnumerateAvailableProgram(
-                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
-                )
-            ]
-        )
+    client_with_exception.get_all_programs.side_effect = None
+    client_with_exception.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+            )
+        ]
     )
     client_with_exception.get_settings.side_effect = None
     client_with_exception.get_settings.return_value = ArrayOfSettings(

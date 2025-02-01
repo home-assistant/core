@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_delete_backup[found_backups0-True-1]
+# name: test_delete_backup[found_backups0-abc123-1-unlink_path0]
   dict({
     'id': 1,
     'result': dict({
@@ -10,7 +10,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_backup[found_backups1-False-0]
+# name: test_delete_backup[found_backups1-def456-1-unlink_path1]
   dict({
     'id': 1,
     'result': dict({
@@ -21,7 +21,7 @@
     'type': 'result',
   })
 # ---
-# name: test_delete_backup[found_backups2-True-0]
+# name: test_delete_backup[found_backups2-abc123-0-None]
   dict({
     'id': 1,
     'result': dict({
@@ -32,7 +32,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[None]
+# name: test_load_backups[mock_read_backup]
   dict({
     'id': 1,
     'result': dict({
@@ -47,7 +47,7 @@
     'type': 'result',
   })
 # ---
-# name: test_load_backups[None].1
+# name: test_load_backups[mock_read_backup].1
   dict({
     'id': 2,
     'result': dict({
@@ -81,6 +81,29 @@
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
           'with_automatic_settings': True,
+        }),
+        dict({
+          'addons': list([
+          ]),
+          'agents': dict({
+            'backup.local': dict({
+              'protected': False,
+              'size': 1,
+            }),
+          }),
+          'backup_id': 'def456',
+          'database_included': False,
+          'date': '1980-01-01T00:00:00.000Z',
+          'failed_agent_ids': list([
+          ]),
+          'folders': list([
+            'media',
+            'share',
+          ]),
+          'homeassistant_included': True,
+          'homeassistant_version': '2024.12.0',
+          'name': 'Test 2',
+          'with_automatic_settings': None,
         }),
       ]),
       'last_attempted_automatic_backup': None,

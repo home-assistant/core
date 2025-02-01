@@ -5,7 +5,7 @@ from typing import Any, cast
 
 from aiohomeconnect.model import EventKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
-from aiohomeconnect.model.program import EnumerateAvailableProgram
+from aiohomeconnect.model.program import EnumerateProgram
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
@@ -184,7 +184,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         self,
         coordinator: HomeConnectCoordinator,
         appliance: HomeConnectApplianceData,
-        program: EnumerateAvailableProgram,
+        program: EnumerateProgram,
     ) -> None:
         """Initialize the entity."""
         desc = " ".join(["Program", program.key.split(".")[-1]])

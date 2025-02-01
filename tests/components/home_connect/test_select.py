@@ -4,8 +4,8 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 from aiohomeconnect.model import (
-    ArrayOfAvailablePrograms,
     ArrayOfEvents,
+    ArrayOfPrograms,
     Event,
     EventKey,
     EventMessage,
@@ -13,7 +13,11 @@ from aiohomeconnect.model import (
     ProgramKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
-from aiohomeconnect.model.program import EnumerateAvailableProgram
+from aiohomeconnect.model.program import (
+    EnumerateProgram,
+    EnumerateProgramConstraints,
+    Execution,
+)
 import pytest
 
 from homeassistant.components.select import (
@@ -106,24 +110,41 @@ async def test_select_entity_availabilty(
         assert state.state != STATE_UNAVAILABLE
 
 
-async def test_filter_unknown_programs(
+async def test_filter_programs(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
     client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test select that only known programs are shown."""
-    client.get_available_programs.side_effect = None
-    client.get_available_programs.return_value = ArrayOfAvailablePrograms(
+    """Test select that only right programs are shown."""
+    client.get_all_programs.side_effect = None
+    client.get_all_programs.return_value = ArrayOfPrograms(
         [
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
                 raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+                constraints=EnumerateProgramConstraints(
+                    execution=Execution.SELECT_ONLY,
+                ),
             ),
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.UNKNOWN,
                 raw_key="an unknown program",
+            ),
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_QUICK_45,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_QUICK_45.value,
+                constraints=EnumerateProgramConstraints(
+                    execution=Execution.START_ONLY,
+                ),
+            ),
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1.value,
+                constraints=EnumerateProgramConstraints(
+                    execution=Execution.SELECT_AND_START,
+                ),
             ),
         ]
     )
@@ -135,7 +156,18 @@ async def test_filter_unknown_programs(
     entity = entity_registry.async_get("select.dishwasher_selected_program")
     assert entity
     assert entity.capabilities
-    assert entity.capabilities[ATTR_OPTIONS] == ["dishcare_dishwasher_program_eco_50"]
+    assert entity.capabilities[ATTR_OPTIONS] == [
+        "dishcare_dishwasher_program_eco_50",
+        "dishcare_dishwasher_program_auto_1",
+    ]
+
+    entity = entity_registry.async_get("select.dishwasher_active_program")
+    assert entity
+    assert entity.capabilities
+    assert entity.capabilities[ATTR_OPTIONS] == [
+        "dishcare_dishwasher_program_quick_45",
+        "dishcare_dishwasher_program_auto_1",
+    ]
 
 
 @pytest.mark.parametrize(
@@ -255,16 +287,14 @@ async def test_select_exception_handling(
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
-    client_with_exception.get_available_programs.side_effect = None
-    client_with_exception.get_available_programs.return_value = (
-        ArrayOfAvailablePrograms(
-            [
-                EnumerateAvailableProgram(
-                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
-                )
-            ]
-        )
+    client_with_exception.get_all_programs.side_effect = None
+    client_with_exception.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+            )
+        ]
     )
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED

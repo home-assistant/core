@@ -1,0 +1,48 @@
+{
+  "id": 3,
+  "name": "Test Cover",
+  "profile": 2002,
+  "image": "default",
+  "favorite": 0,
+  "order": 4,
+  "protocol": 23,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1687175681,
+  "added": 1672086680,
+  "history": 1,
+  "cube_type": 14,
+  "note": "TestCoverDevice",
+  "services": 7,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 3,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 4,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 4.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 135,
+      "state": 1,
+      "last_changed": 1687175680,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "can_observe": [300],
+        "observes": [75],
+        "automations": ["toggle"]
+      }
+    }
+  ]
+}

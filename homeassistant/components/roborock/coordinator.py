@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -116,10 +117,14 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 # Right now this should never be called if the cloud api is the primary api,
                 # but in the future if it is, a new else should be added.
 
-    async def release(self) -> None:
-        """Disconnect from API."""
-        await self.api.async_release()
-        await self.cloud_api.async_release()
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator."""
+        await super().async_shutdown()
+        await asyncio.gather(
+            self.map_storage.flush(),
+            self.api.async_release(),
+            self.cloud_api.async_release(),
+        )
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""
@@ -226,8 +231,9 @@ class RoborockDataUpdateCoordinatorA01(
     ) -> dict[RoborockDyadDataProtocol | RoborockZeoProtocol, StateType]:
         return await self.api.update_values(self.request_protocols)
 
-    async def release(self) -> None:
-        """Disconnect from API."""
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator on config entry unload."""
+        await super().async_shutdown()
         await self.api.async_release()
 
     @cached_property

@@ -25,9 +25,22 @@ from homeassistant.components.assist_satellite.entity import AssistSatelliteStat
 from homeassistant.components.media_source import PlayMedia
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
+
+
+@pytest.fixture(autouse=True)
+async def set_pipeline_tts(hass: HomeAssistant, init_components: ConfigEntry) -> None:
+    """Set up a pipeline with a TTS engine."""
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        tts_engine="tts.mock_entity",
+        tts_language="en",
+        tts_voice="test-voice",
+    )
 
 
 async def test_entity_state(
@@ -64,7 +77,7 @@ async def test_entity_state(
     assert kwargs["stt_stream"] is audio_stream
     assert kwargs["pipeline_id"] is None
     assert kwargs["device_id"] is entity.device_entry.id
-    assert kwargs["tts_audio_output"] is None
+    assert kwargs["tts_audio_output"] == {"test-option": "test-value"}
     assert kwargs["wake_word_phrase"] is None
     assert kwargs["audio_settings"] == AudioSettings(
         silence_seconds=vad.VadSensitivity.to_seconds(vad.VadSensitivity.DEFAULT)
@@ -200,24 +213,12 @@ async def test_announce(
     expected_params: tuple[str, str],
 ) -> None:
     """Test announcing on a device."""
-    await async_update_pipeline(
-        hass,
-        async_get_pipeline(hass),
-        tts_engine="tts.mock_entity",
-        tts_language="en",
-        tts_voice="test-voice",
-    )
-
-    entity._attr_tts_options = {"test-option": "test-value"}
-
     original_announce = entity.async_announce
-    announce_started = asyncio.Event()
 
     async def async_announce(announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
         await original_announce(announcement)
-        announce_started.set()
 
     def tts_generate_media_source_id(
         hass: HomeAssistant,
@@ -475,3 +476,104 @@ async def test_vad_sensitivity_entity_not_found(
 
     with pytest.raises(RuntimeError):
         await entity.async_accept_pipeline_from_satellite(audio_stream)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_params"),
+    [
+        (
+            {
+                "start_message": "Hello",
+                "extra_system_prompt": "Better system prompt",
+            },
+            (
+                "Better system prompt",
+                AssistSatelliteAnnouncement(
+                    message="Hello",
+                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    original_media_id="media-source://generated",
+                    media_id_source="tts",
+                ),
+            ),
+        ),
+        (
+            {
+                "start_message": "Hello",
+                "start_media_id": "media-source://given",
+            },
+            (
+                "Hello",
+                AssistSatelliteAnnouncement(
+                    message="Hello",
+                    media_id="https://www.home-assistant.io/resolved.mp3",
+                    original_media_id="media-source://given",
+                    media_id_source="media_id",
+                ),
+            ),
+        ),
+        (
+            {"start_media_id": "http://example.com/given.mp3"},
+            (
+                None,
+                AssistSatelliteAnnouncement(
+                    message="",
+                    media_id="http://example.com/given.mp3",
+                    original_media_id="http://example.com/given.mp3",
+                    media_id_source="url",
+                ),
+            ),
+        ),
+    ],
+)
+async def test_start_conversation(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    service_data: dict,
+    expected_params: tuple[str, str],
+) -> None:
+    """Test starting a conversation on a device."""
+    await async_update_pipeline(
+        hass,
+        async_get_pipeline(hass),
+        conversation_engine="conversation.some_llm",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.assist_satellite.entity.tts_generate_media_source_id",
+            return_value="media-source://generated",
+        ),
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=PlayMedia(
+                url="https://www.home-assistant.io/resolved.mp3",
+                mime_type="audio/mp3",
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            "assist_satellite",
+            "start_conversation",
+            service_data,
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
+
+    assert entity.start_conversations[0] == expected_params
+
+
+async def test_start_conversation_reject_builtin_agent(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+) -> None:
+    """Test starting a conversation on a device."""
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "assist_satellite",
+            "start_conversation",
+            {"start_message": "Hey!"},
+            target={"entity_id": "assist_satellite.test_entity"},
+            blocking=True,
+        )
