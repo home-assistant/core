@@ -10,6 +10,7 @@ from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
 from linkplay.controller import LinkPlayController, LinkPlayMultiroom
 from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
+import yarl
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -34,7 +35,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry, LinkPlayData
-from .const import CONTROLLER_KEY, DOMAIN
+from .const import CONTROLLER_KEY, DOMAIN, CONF_USE_IP_URL
 from .entity import LinkPlayBaseEntity, exception_wrap
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,6 +134,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up a media player from a config entry."""
 
+    config = hass.data[DOMAIN][entry.entry_id]
+    use_ip_url = entry.options.get(CONF_USE_IP_URL, False)
+
     # register services
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -140,7 +144,7 @@ async def async_setup_entry(
     )
 
     # add entities
-    async_add_entities([LinkPlayMediaPlayerEntity(entry.runtime_data.bridge)])
+    async_add_entities([LinkPlayMediaPlayerEntity(config=entry.runtime_data, use_ip_url=use_ip_url)])
 
 
 class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
@@ -151,14 +155,16 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     _attr_name = None
 
-    def __init__(self, bridge: LinkPlayBridge) -> None:
+    def __init__(self, config: LinkPlayData, use_ip_url: bool = False) -> None:
         """Initialize the LinkPlay media player."""
 
-        super().__init__(bridge)
-        self._attr_unique_id = bridge.device.uuid
+        super().__init__(config.bridge)
+        self._attr_unique_id = config.bridge.device.uuid
+
+        self._use_ip_url = use_ip_url
 
         self._attr_source_list = [
-            SOURCE_MAP[playing_mode] for playing_mode in bridge.device.playmode_support
+            SOURCE_MAP[playing_mode] for playing_mode in config.bridge.device.playmode_support
         ]
 
     @exception_wrap
@@ -252,6 +258,14 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             media_id = play_item.url
 
         url = async_process_play_media_url(self.hass, media_id)
+
+        # Modify the the url if required to use IP address instead of hostname.
+        # This is required for compatibility with some devices.
+        if self._use_ip_url:
+            parsed_url = yarl.URL(url)
+            # Update the parsed URL with the local ip
+            url = parsed_url.with_host(self.hass.config.api.local_ip)
+
         await self._bridge.player.play(url)
 
     @exception_wrap

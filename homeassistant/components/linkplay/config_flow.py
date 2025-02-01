@@ -9,14 +9,42 @@ from linkplay.discovery import linkplay_factory_httpapi_bridge
 from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow, FlowResult, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.core import callback
 
-from .const import DOMAIN
+from .const import DOMAIN, CONF_USE_IP_URL
 from .utils import async_get_client_session
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA=vol.Schema(
+    {
+        vol.Required(CONF_USE_IP_URL, default=False): bool,
+    }
+)
+
+class LinkPlayOptionsFlow(OptionsFlow):
+    """LinkPlay options flow."""
+    
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """LinkPlay options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
+                
+            ),
+        )
 
 
 class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -25,6 +53,14 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the LinkPlay config flow."""
         self.data: dict[str, Any] = {}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> LinkPlayOptionsFlow:
+        """Create the options flow."""
+        return LinkPlayOptionsFlow(config_entry)
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

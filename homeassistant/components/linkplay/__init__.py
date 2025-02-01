@@ -26,12 +26,23 @@ class LinkPlayData:
 
 type LinkPlayConfigEntry = ConfigEntry[LinkPlayData]
 
+async def options_update_listener(hass: HomeAssistant, entry: LinkPlayConfigEntry):
+    """Handle options update."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: LinkPlayConfigEntry) -> bool:
     """Async setup hass config entry. Called when an entry has been setup."""
 
     session: ClientSession = await async_get_client_session(hass)
     bridge: LinkPlayBridge | None = None
+
+    # Register update listener to update config entry when options are updated.
+    hass_data = dict(entry.data)
+    unsub_options_update_listener = entry.add_update_listener(options_update_listener)
+    # Store a reference to the unsubscribe function to cleanup if an entry is unloaded.
+    hass_data["unsub_options_update_listener"] = unsub_options_update_listener
+    hass.data[DOMAIN][entry.entry_id] = hass_data
 
     # try create a bridge
     try:
