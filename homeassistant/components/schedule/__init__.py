@@ -25,6 +25,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
     CollectionEntity,
     DictStorageCollection,
@@ -34,7 +35,6 @@ from homeassistant.helpers.collection import (
     YamlCollection,
     sync_entity_lifecycle,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import async_register_admin_service

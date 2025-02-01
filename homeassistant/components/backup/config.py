@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 import datetime as dt
 from datetime import datetime, timedelta
@@ -40,6 +38,7 @@ BACKUP_START_TIME_JITTER = 60 * 60
 class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
+    agents: dict[str, StoredAgentConfig]
     create_backup: StoredCreateBackupConfig
     last_attempted_automatic_backup: str | None
     last_completed_automatic_backup: str | None
@@ -51,6 +50,7 @@ class StoredBackupConfig(TypedDict):
 class BackupConfigData:
     """Represent loaded backup config data."""
 
+    agents: dict[str, AgentConfig]
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
     last_completed_automatic_backup: datetime | None = None
@@ -84,6 +84,10 @@ class BackupConfigData:
         days = [Day(day) for day in data["schedule"]["days"]]
 
         return cls(
+            agents={
+                agent_id: AgentConfig(protected=agent_data["protected"])
+                for agent_id, agent_data in data["agents"].items()
+            },
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
                 include_addons=data["create_backup"]["include_addons"],
@@ -120,6 +124,9 @@ class BackupConfigData:
             last_completed = None
 
         return StoredBackupConfig(
+            agents={
+                agent_id: agent.to_dict() for agent_id, agent in self.agents.items()
+            },
             create_backup=self.create_backup.to_dict(),
             last_attempted_automatic_backup=last_attempted,
             last_completed_automatic_backup=last_completed,
@@ -134,6 +141,7 @@ class BackupConfig:
     def __init__(self, hass: HomeAssistant, manager: BackupManager) -> None:
         """Initialize backup config."""
         self.data = BackupConfigData(
+            agents={},
             create_backup=CreateBackupConfig(),
             retention=RetentionConfig(),
             schedule=BackupSchedule(),
@@ -149,11 +157,20 @@ class BackupConfig:
     async def update(
         self,
         *,
+        agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         retention: RetentionParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
     ) -> None:
         """Update config."""
+        if agents is not UNDEFINED:
+            for agent_id, agent_config in agents.items():
+                if agent_id not in self.data.agents:
+                    self.data.agents[agent_id] = AgentConfig(**agent_config)
+                else:
+                    self.data.agents[agent_id] = replace(
+                        self.data.agents[agent_id], **agent_config
+                    )
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:
@@ -168,6 +185,31 @@ class BackupConfig:
                 self.data.schedule.apply(self._manager)
 
         self._manager.store.save()
+
+
+@dataclass(kw_only=True)
+class AgentConfig:
+    """Represent the config for an agent."""
+
+    protected: bool
+
+    def to_dict(self) -> StoredAgentConfig:
+        """Convert agent config to a dict."""
+        return {
+            "protected": self.protected,
+        }
+
+
+class StoredAgentConfig(TypedDict):
+    """Represent the stored config for an agent."""
+
+    protected: bool
+
+
+class AgentParametersDict(TypedDict, total=False):
+    """Represent the parameters for an agent."""
+
+    protected: bool
 
 
 @dataclass(kw_only=True)
@@ -208,7 +250,7 @@ class RetentionConfig:
             """Delete backups older than days."""
             self._schedule_next(manager)
 
-            def _backups_filter(
+            def _delete_filter(
                 backups: dict[str, ManagerBackup],
             ) -> dict[str, ManagerBackup]:
                 """Return backups older than days to delete."""
@@ -225,7 +267,9 @@ class RetentionConfig:
                     < now
                 }
 
-            await _delete_filtered_backups(manager, _backups_filter)
+            await manager.async_delete_filtered_backups(
+                include_filter=_automatic_backups_filter, delete_filter=_delete_filter
+            )
 
         manager.remove_next_delete_event = async_call_later(
             manager.hass, timedelta(days=1), _delete_backups
@@ -390,22 +434,11 @@ class BackupSchedule:
         async def _create_backup(now: datetime) -> None:
             """Create backup."""
             manager.remove_next_backup_event = None
-            config_data = manager.config.data
             self._schedule_next(cron_pattern, manager)
 
             # create the backup
             try:
-                await manager.async_create_backup(
-                    agent_ids=config_data.create_backup.agent_ids,
-                    include_addons=config_data.create_backup.include_addons,
-                    include_all_addons=config_data.create_backup.include_all_addons,
-                    include_database=config_data.create_backup.include_database,
-                    include_folders=config_data.create_backup.include_folders,
-                    include_homeassistant=True,  # always include HA
-                    name=config_data.create_backup.name,
-                    password=config_data.create_backup.password,
-                    with_automatic_settings=True,
-                )
+                await manager.async_create_automatic_backup()
             except BackupManagerError as err:
                 LOGGER.error("Error creating backup: %s", err)
             except Exception:  # noqa: BLE001
@@ -488,74 +521,21 @@ class CreateBackupParametersDict(TypedDict, total=False):
     password: str | None
 
 
-async def _delete_filtered_backups(
-    manager: BackupManager,
-    backup_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
-) -> None:
-    """Delete backups parsed with a filter.
-
-    :param manager: The backup manager.
-    :param backup_filter: A filter that should return the backups to delete.
-    """
-    backups, get_agent_errors = await manager.async_get_backups()
-    if get_agent_errors:
-        LOGGER.debug(
-            "Error getting backups; continuing anyway: %s",
-            get_agent_errors,
-        )
-
-    # only delete backups that are created with the saved automatic settings
-    backups = {
+def _automatic_backups_filter(
+    backups: dict[str, ManagerBackup],
+) -> dict[str, ManagerBackup]:
+    """Return automatic backups."""
+    return {
         backup_id: backup
         for backup_id, backup in backups.items()
         if backup.with_automatic_settings
     }
 
-    LOGGER.debug("Total automatic backups: %s", backups)
-
-    filtered_backups = backup_filter(backups)
-
-    if not filtered_backups:
-        return
-
-    # always delete oldest backup first
-    filtered_backups = dict(
-        sorted(
-            filtered_backups.items(),
-            key=lambda backup_item: backup_item[1].date,
-        )
-    )
-
-    if len(filtered_backups) >= len(backups):
-        # Never delete the last backup.
-        last_backup = filtered_backups.popitem()
-        LOGGER.debug("Keeping the last backup: %s", last_backup)
-
-    LOGGER.debug("Backups to delete: %s", filtered_backups)
-
-    if not filtered_backups:
-        return
-
-    backup_ids = list(filtered_backups)
-    delete_results = await asyncio.gather(
-        *(manager.async_delete_backup(backup_id) for backup_id in filtered_backups)
-    )
-    agent_errors = {
-        backup_id: error
-        for backup_id, error in zip(backup_ids, delete_results, strict=True)
-        if error
-    }
-    if agent_errors:
-        LOGGER.error(
-            "Error deleting old copies: %s",
-            agent_errors,
-        )
-
 
 async def delete_backups_exceeding_configured_count(manager: BackupManager) -> None:
     """Delete backups exceeding the configured retention count."""
 
-    def _backups_filter(
+    def _delete_filter(
         backups: dict[str, ManagerBackup],
     ) -> dict[str, ManagerBackup]:
         """Return oldest backups more numerous than copies to delete."""
@@ -570,4 +550,6 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
             )[: max(len(backups) - manager.config.data.retention.copies, 0)]
         )
 
-    await _delete_filtered_backups(manager, _backups_filter)
+    await manager.async_delete_filtered_backups(
+        include_filter=_automatic_backups_filter, delete_filter=_delete_filter
+    )

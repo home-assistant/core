@@ -1,4 +1,4 @@
-"""Test the WebOS Tv config flow."""
+"""Test the LG webOS TV config flow."""
 
 from aiowebostv import WebOsTvPairError
 import pytest
@@ -103,16 +103,25 @@ async def test_options_flow_live_tv_in_apps(
     assert result["data"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
 
 
-async def test_options_flow_cannot_retrieve(hass: HomeAssistant, client) -> None:
-    """Test options config flow cannot retrieve sources."""
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (WebOsTvPairError, "error_pairing"),
+        (ConnectionResetError, "cannot_connect"),
+    ],
+)
+async def test_options_flow_errors(
+    hass: HomeAssistant, client, side_effect, error
+) -> None:
+    """Test options config flow errors."""
     entry = await setup_webostv(hass)
 
-    client.connect.side_effect = ConnectionResetError
+    client.connect.side_effect = side_effect
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_retrieve"}
+    assert result["errors"] == {"base": error}
 
     # recover
     client.connect.side_effect = None

@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -29,6 +28,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from . import InComfortConfigEntry
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
 from .coordinator import async_connect_gateway
 
@@ -103,7 +103,7 @@ class InComfortConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: InComfortConfigEntry,
     ) -> InComfortOptionsFlowHandler:
         """Get the options flow for this handler."""
         return InComfortOptionsFlowHandler()
