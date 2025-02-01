@@ -33,7 +33,7 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class HomeConnectSensorEntityDescription(
+class HomeConnectProgramSelectEntityDescription(
     SelectEntityDescription,
 ):
     """Entity Description class for sensors."""
@@ -42,12 +42,12 @@ class HomeConnectSensorEntityDescription(
 
 
 PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
-    HomeConnectSensorEntityDescription(
+    HomeConnectProgramSelectEntityDescription(
         key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         translation_key="active_program",
         allowed_executions=(Execution.SELECT_AND_START, Execution.START_ONLY),
     ),
-    HomeConnectSensorEntityDescription(
+    HomeConnectProgramSelectEntityDescription(
         key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         translation_key="selected_program",
         allowed_executions=(Execution.SELECT_AND_START, Execution.SELECT_ONLY),
@@ -73,13 +73,13 @@ async def async_setup_entry(
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     """Select class for Home Connect programs."""
 
-    entity_description: HomeConnectSensorEntityDescription
+    entity_description: HomeConnectProgramSelectEntityDescription
 
     def __init__(
         self,
         coordinator: HomeConnectCoordinator,
         appliance: HomeConnectApplianceData,
-        desc: HomeConnectSensorEntityDescription,
+        desc: HomeConnectProgramSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
@@ -93,9 +93,8 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             for program in appliance.programs
             if program.key != ProgramKey.UNKNOWN
             and (
-                program.constraints.execution in desc.allowed_executions
-                if program.constraints is not None
-                else True
+                program.constraints is None
+                or program.constraints.execution in desc.allowed_executions
             )
         ]
         self._attr_current_option = None
