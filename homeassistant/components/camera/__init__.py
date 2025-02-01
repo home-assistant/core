@@ -1183,7 +1183,9 @@ async def async_handle_snapshot_service(
                 else await camera.async_camera_image()
             )
     except TimeoutError as err:
-        raise HomeAssistantError("Unable to get snapshot") from err
+        raise HomeAssistantError(
+            f"Unable to get snapshot: Timed out after {CAMERA_IMAGE_TIMEOUT} seconds"
+        ) from err
 
     if image is None:
         return
@@ -1197,7 +1199,7 @@ async def async_handle_snapshot_service(
     try:
         await hass.async_add_executor_job(_write_image, snapshot_file, image)
     except OSError as err:
-        raise HomeAssistantError("Can't write image to file") from err
+        raise HomeAssistantError(f"Can't write image to file: {err}") from err
 
 
 async def async_handle_play_stream_service(
