@@ -117,7 +117,10 @@ class HomeConnectCoordinator(
         update_callback: CALLBACK_TYPE,
         context: tuple[EventKey, ...],
     ) -> Callable[[], None]:
-        """Listen for special data updates. These listeners will not be called on refresh."""
+        """Listen for special data updates.
+
+        These listeners will not be called on refresh.
+        """
 
         @callback
         def remove_listener() -> None:

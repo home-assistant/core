@@ -75,8 +75,8 @@ async def test_paired_depaired_devices_flow(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
     assert device
-    entities = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entities
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert entity_entries
 
     await client.add_events(
         [
@@ -91,8 +91,8 @@ async def test_paired_depaired_devices_flow(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
     assert not device
-    for entity in entities:
-        assert not entity_registry.async_get(entity.entity_id)
+    for entity_entry in entity_entries:
+        assert not entity_registry.async_get(entity_entry.entity_id)
 
     # Now that all everything related to the device is removed, pair it again
     await client.add_events(
@@ -107,8 +107,8 @@ async def test_paired_depaired_devices_flow(
     await hass.async_block_till_done()
 
     assert device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
-    for entity in entities:
-        assert entity_registry.async_get(entity.entity_id)
+    for entity_entry in entity_entries:
+        assert entity_registry.async_get(entity_entry.entity_id)
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
@@ -172,8 +172,8 @@ async def test_connected_devices(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
     assert device
-    entities = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entities
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert entity_entries
 
 
 @pytest.mark.parametrize(
