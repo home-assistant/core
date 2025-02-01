@@ -316,22 +316,31 @@ class AssistAPI(API):
 
         return APIInstance(
             api=self,
-            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
+            api_prompt=self._async_get_prompt(llm_context, exposed_entities),
             llm_context=llm_context,
             tools=self._async_get_tools(llm_context, exposed_entities),
             custom_serializer=_selector_serializer,
         )
 
     @callback
-    def _async_get_api_prompt(
+    def _async_get_prompt(
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
-        """Return the prompt for the API."""
         if not exposed_entities:
             return (
                 "Only if the user wants to control a device, tell them to expose entities "
                 "to their voice assistant in Home Assistant."
             )
+        return "\n".join(
+            [
+                *self._async_get_api_prompt(llm_context),
+                *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
+            ]
+        )
+
+    @callback
+    def _async_get_api_prompt(self, llm_context: LLMContext) -> list[str]:
+        """Return the prompt for the API."""
 
         prompt = [
             (
@@ -371,13 +380,22 @@ class AssistAPI(API):
         ):
             prompt.append("This device is not able to start timers.")
 
+        return prompt
+
+    @callback
+    def _async_get_exposed_entities_prompt(
+        self, llm_context: LLMContext, exposed_entities: dict | None
+    ) -> list[str]:
+        """Return the prompt for the API for exposed entities."""
+        prompt = []
+
         if exposed_entities:
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities.values())))
 
-        return "\n".join(prompt)
+        return prompt
 
     @callback
     def _async_get_tools(
