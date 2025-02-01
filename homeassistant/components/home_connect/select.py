@@ -38,7 +38,7 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
 class HomeConnectProgramSelectEntityDescription(
     SelectEntityDescription,
 ):
-    """Entity Description class for sensors."""
+    """Entity Description class for select entities for programs."""
 
     allowed_executions: tuple[Execution, ...]
     set_program_fn: Callable[
