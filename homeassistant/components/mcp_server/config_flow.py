@@ -10,9 +10,13 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.helpers import llm
-from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+)
 
-from .const import DOMAIN, LLM_API
+from .const import DOMAIN, LLM_API, LLM_API_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,12 +32,17 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        # llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
+        llm_apis = {api.id: api.name for api in llm.async_get_apis(self.hass)}
+        if LLM_API not in llm_apis:
+            # MCP server component is not loaded yet, so make the LLM API a choice.
+            llm_apis = {
+                LLM_API: LLM_API_NAME,
+                **llm_apis,
+            }
 
         if user_input is not None:
             return self.async_create_entry(
-                # title=llm_apis[user_input[CONF_LLM_HASS_API]], data=user_input
-                title=user_input[CONF_LLM_HASS_API],
+                title=llm_apis[user_input[CONF_LLM_HASS_API]],
                 data=user_input,
             )
 
@@ -46,14 +55,13 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                         default=llm.LLM_API_ASSIST,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=[LLM_API],
-                            # options=[
-                            #     SelectOptionDict(
-                            #         value=llm_api_id,
-                            #     )
-                            #     for llm_api_id in [LLM_API]
-                            # ],
-                            translation_key="llm_api",
+                            options=[
+                                SelectOptionDict(
+                                    label=name,
+                                    value=llm_api_id,
+                                )
+                                for llm_api_id, name in llm_apis.items()
+                            ],
                         )
                     ),
                 }

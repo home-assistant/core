@@ -14,12 +14,5 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
-  },
-  "selector": {
-    "llm_api": {
-      "options": {
-        "stateless_assist": "Stateless Assist"
-      }
-    }
   }
 }

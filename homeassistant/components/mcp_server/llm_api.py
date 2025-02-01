@@ -1,8 +1,10 @@
 """LLM API for MCP Server."""
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import llm
 from homeassistant.util import yaml as yaml_util
+
+from .const import LLM_API, LLM_API_NAME
 
 EXPOSED_ENTITY_FIELDS = {"name", "domain", "description", "areas", "names"}
 
@@ -13,20 +15,18 @@ def async_register_api(hass: HomeAssistant) -> None:
 
 
 class StatelessAssistAPI(llm.AssistAPI):
-    """LLM API for MCP Server that provides the Assist API without state information in the prompt."""
+    """LLM API for MCP Server that provides the Assist API without state information in the prompt.
+
+    Syncing the state information is possible, but may put unnecessary load on
+    the system so we are instead providing the prompt without entity state. Since
+    actions don't care about the current state, there is little quality loss.
+    """
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the StatelessAssistAPI."""
         super().__init__(hass)
-        self.id = "stateless_assist"
-        self.name = "Stateless Assist"
-
-    # Expose INTENT_GET_STATE
-    IGNORE_INTENTS = {
-        intent_name
-        for intent_name in llm.AssistAPI.IGNORE_INTENTS
-        if intent_name not in {intent.INTENT_GET_STATE}
-    }
+        self.id = LLM_API
+        self.name = LLM_API_NAME
 
     @callback
     def _async_get_exposed_entities_prompt(
