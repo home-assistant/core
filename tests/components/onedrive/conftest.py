@@ -125,7 +125,10 @@ def mock_graph_client(mock_adapter: MagicMock) -> Generator[MagicMock]:
         drive_items.children.get = AsyncMock(
             return_value=DriveItemCollectionResponse(
                 value=[
-                    DriveItem(description=escape(dumps(BACKUP_METADATA))),
+                    DriveItem(
+                        id=BACKUP_METADATA["backup_id"],
+                        description=escape(dumps(BACKUP_METADATA)),
+                    ),
                     DriveItem(),
                 ]
             )
@@ -175,4 +178,11 @@ def mock_instance_id() -> Generator[AsyncMock]:
         "homeassistant.components.onedrive.async_get_instance_id",
         return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_asyncio_sleep() -> Generator[AsyncMock]:
+    """Mock asyncio.sleep."""
+    with patch("homeassistant.components.onedrive.backup.asyncio.sleep", AsyncMock()):
         yield
