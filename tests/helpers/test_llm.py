@@ -832,13 +832,13 @@ async def test_script_tool(
     }
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": (
-            "This is a test script. Aliases: ['script name', 'script alias']",
-            vol.Schema(schema),
-        ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
-    }
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] == (
+        "This is a test script. Aliases: ['script name', 'script alias']",
+        vol.Schema(schema),
+    )
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][
+        ("script", "script_with_no_fields")
+    ] == ("This is another test script", vol.Schema({}))
 
     # Test script with response
     tool_input = llm.ToolInput(
@@ -929,7 +929,7 @@ async def test_script_tool(
     ):
         await hass.services.async_call("script", "reload", blocking=True)
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {}
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE] == {}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -945,13 +945,26 @@ async def test_script_tool(
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
-        "test_script": (
-            "This is a new test script. Aliases: ['script name', 'script alias']",
-            vol.Schema(schema),
-        ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
-    }
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] == (
+        "This is a new test script. Aliases: ['script name', 'script alias']",
+        vol.Schema(schema),
+    )
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE][
+        ("script", "script_with_no_fields")
+    ] == ("This is another test script", vol.Schema({}))
+
+    # Modify the cache to make sure the cached value is used
+    hass.data[llm.ACTION_PARAMETERS_CACHE][("script", "test_script")] = (
+        "This is a modified test script",
+        vol.Schema({}),
+    )
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    tool = tools[0]
+    assert tool.name == "test_script"
+    assert tool.description == "This is a modified test script"
+    assert tool.parameters.schema == {}
 
 
 async def test_script_tool_name(hass: HomeAssistant) -> None:
@@ -992,6 +1005,15 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
 
     tool = tools[0]
     assert tool.name == "_123456"
+
+
+async def test_action_tool(hass: HomeAssistant) -> None:
+    """Test ActionTool can be created for each action (service) without exceptions."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    for domain, actions in hass.services.async_services().items():
+        for action in actions:
+            tool = llm.ActionTool(hass, domain, action)
+            assert tool.name == f"{domain}_{action}"
 
 
 async def test_selector_serializer(
