@@ -596,10 +596,10 @@ async def test_abort_discovered_existing_entries(
 
 
 @pytest.mark.parametrize(
-    ("my_enabled", "expected_redirect_uri"),
+    ("additional_components", "expected_redirect_uri"),
     [
-        (False, "https://example.com/auth/external/callback"),
-        (True, "https://my.home-assistant.io/redirect/oauth"),
+        ([], "https://example.com/auth/external/callback"),
+        (["my"], "https://my.home-assistant.io/redirect/oauth"),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host")
@@ -609,12 +609,12 @@ async def test_full_flow(
     local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    my_enabled: bool,
+    additional_components: list[str],
     expected_redirect_uri: str,
 ) -> None:
     """Check full flow."""
-    if my_enabled:
-        assert await setup.async_setup_component(hass, "my", {})
+    for component in additional_components:
+        assert await setup.async_setup_component(hass, component, {})
     flow_handler.async_register_implementation(hass, local_impl)
     config_entry_oauth2_flow.async_register_implementation(
         hass, TEST_DOMAIN, MockOAuth2Implementation()
