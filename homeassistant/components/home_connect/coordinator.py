@@ -250,7 +250,7 @@ class HomeConnectCoordinator(
                 ):
                     try:
                         program = await method(appliance.ha_id)
-                    except HomeConnectApiError as error:
+                    except HomeConnectError as error:
                         _LOGGER.debug(
                             "Error fetching %s program for %s: %s",
                             method.__name__,
