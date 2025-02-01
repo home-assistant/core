@@ -207,7 +207,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
-        self.id = int(key.split(":")[-1])
+        self.event_id = int(key.split(":")[-1])
         self._attr_device_info = DeviceInfo(
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
@@ -226,7 +226,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
-        if event["id"] == self.id:
+        if event["id"] == self.event_id:
             self._trigger_event(event["event"])
             self.async_write_ha_state()
 
@@ -256,7 +256,7 @@ class ShellyRpcScriptEvent(ShellyRpcEvent):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle script event."""
-        if event["id"] == self.id:
+        if event["id"] == self.event_id:
             event_type = event["event"]
             if event_type not in self.event_types:
                 # This can happen if we didn't find this event type in the script
