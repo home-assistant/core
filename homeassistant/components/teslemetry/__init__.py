@@ -18,9 +18,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -128,6 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 {"vin": vin},
             )
             firmware = vehicle_metadata[vin].get("firmware", "Unknown")
+            stream_vehicle = stream.get_vehicle(vin)
 
             vehicles.append(
                 TeslemetryVehicleData(
@@ -135,6 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     config_entry=entry,
                     coordinator=coordinator,
                     stream=stream,
+                    stream_vehicle=stream_vehicle,
                     vin=vin,
                     firmware=firmware,
                     device=device,
@@ -285,8 +286,9 @@ async def async_setup_stream(
 ):
     """Set up the stream for a vehicle."""
 
-    vehicle_stream = vehicle.stream.get_vehicle(vehicle.vin)
-    await vehicle_stream.get_config()
+    await vehicle.stream_vehicle.get_config()
     entry.async_create_background_task(
-        hass, vehicle_stream.prefer_typed(True), f"Prefer typed for {vehicle.vin}"
+        hass,
+        vehicle.stream_vehicle.prefer_typed(True),
+        f"Prefer typed for {vehicle.vin}",
     )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
+from typing import Any, cast
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
@@ -16,14 +16,13 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ComelitSerialBridge
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 
 
 class HumidifierComelitMode(StrEnum):
@@ -55,12 +54,12 @@ MODE_TO_ACTION: dict[str, HumidifierComelitCommand] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ComelitConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Comelit humidifiers."""
 
-    coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
     entities: list[ComelitHumidifierEntity] = []
     for device in coordinator.data[CLIMATE].values():

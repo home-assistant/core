@@ -55,7 +55,11 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
             measures = await self.client.get_current_measures()
             config = await self.client.get_config()
         except AirGradientError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
         if measures.firmware_version != self._current_version:
             device_registry = dr.async_get(self.hass)
             device_entry = device_registry.async_get_device(

@@ -11,7 +11,7 @@ from typing import Any
 import evohomeasync2 as evo
 
 from homeassistant.const import CONF_SCAN_INTERVAL
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 

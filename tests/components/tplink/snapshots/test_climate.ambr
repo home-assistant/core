@@ -91,6 +91,6 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.0.0',
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---

@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from homewizard_energy.errors import DisabledError
+from homewizard_energy.errors import DisabledError, UnauthorizedError
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -14,12 +14,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_load_unload(
+async def test_load_unload_v1(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_homewizardenergy: MagicMock,
 ) -> None:
-    """Test loading and unloading of integration."""
+    """Test loading and unloading of integration with v1 config."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -31,6 +31,25 @@ async def test_load_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_load_unload_v2(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test loading and unloading of integration with v2 config."""
+    mock_config_entry_v2.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_v2.state is ConfigEntryState.LOADED
+    assert len(mock_homewizardenergy_v2.combined.mock_calls) == 1
+
+    await hass.config_entries.async_unload(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_v2.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_load_failed_host_unavailable(
@@ -64,12 +83,37 @@ async def test_load_detect_api_disabled(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
 
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
     assert flow["context"].get("entry_id") == mock_config_entry.entry_id
+
+
+async def test_load_detect_invalid_token(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test setup detects invalid token."""
+    mock_homewizardenergy_v2.combined.side_effect = UnauthorizedError()
+    mock_config_entry_v2.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_v2.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm_update_token"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == mock_config_entry_v2.entry_id
 
 
 @pytest.mark.usefixtures("mock_homewizardenergy")
@@ -128,5 +172,5 @@ async def test_disablederror_reloads_integration(
     assert len(flows) == 1
 
     flow = flows[0]
-    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN

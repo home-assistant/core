@@ -13,7 +13,7 @@ import sys
 from types import FrameType
 from typing import Any, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, async_get_hass_or_none
 from homeassistant.exceptions import HomeAssistantError

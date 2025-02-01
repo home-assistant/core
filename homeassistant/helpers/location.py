@@ -7,7 +7,7 @@ import logging
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.util import location as loc_util
+from homeassistant.util import location as location_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ def closest(latitude: float, longitude: float, states: Iterable[State]) -> State
 
     return min(
         with_location,
-        key=lambda state: loc_util.distance(
+        key=lambda state: location_util.distance(
             state.attributes.get(ATTR_LATITUDE),
             state.attributes.get(ATTR_LONGITUDE),
             latitude,

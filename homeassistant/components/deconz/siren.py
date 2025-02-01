@@ -13,21 +13,20 @@ from homeassistant.components.siren import (
     SirenEntity,
     SirenEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
-from .hub import DeconzHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DeconzConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sirens for deCONZ component."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[SIREN_DOMAIN] = set()
 
     @callback

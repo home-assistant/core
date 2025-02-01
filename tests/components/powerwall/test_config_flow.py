@@ -11,13 +11,13 @@ from tesla_powerwall import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.powerwall.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.util import dt as dt_util
 
 from .mocks import (
     MOCK_GATEWAY_DIN,
@@ -161,7 +161,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="1.1.1.1",
             macaddress="aabbcceeddff",
             hostname="any",
@@ -188,7 +188,7 @@ async def test_already_configured_with_ignored(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname="00GGX",
@@ -230,7 +230,7 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname="any",
@@ -272,7 +272,7 @@ async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname="00GGX",
@@ -316,7 +316,7 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname="00GGX",
@@ -394,7 +394,7 @@ async def test_dhcp_discovery_update_ip_address(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
@@ -431,7 +431,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_fails(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
@@ -468,7 +468,7 @@ async def test_dhcp_discovery_does_not_update_ip_when_auth_successful(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
@@ -503,7 +503,7 @@ async def test_dhcp_discovery_updates_unique_id(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.4",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
@@ -542,7 +542,7 @@ async def test_dhcp_discovery_updates_unique_id_when_entry_is_failed(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.4",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
@@ -581,7 +581,7 @@ async def test_discovered_wifi_does_not_update_ip_if_is_still_online(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),
@@ -630,7 +630,7 @@ async def test_discovered_wifi_does_not_update_ip_online_but_access_denied(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.2.3.5",
                 macaddress="aabbcceeddff",
                 hostname=MOCK_GATEWAY_DIN.lower(),

@@ -9,7 +9,8 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
-from homeassistant.helpers import config_validation as cv, singleton
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent, singleton
 
 from .const import (
     DATA_COMPONENT,
@@ -109,7 +110,19 @@ async def async_converse(
                 dataclasses.asdict(conversation_input),
             )
         )
-        result = await method(conversation_input)
+        try:
+            result = await method(conversation_input)
+        except HomeAssistantError as err:
+            intent_response = intent.IntentResponse(language=language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                str(err),
+            )
+            result = ConversationResult(
+                response=intent_response,
+                conversation_id=conversation_id,
+            )
+
         trace.set_result(**result.as_dict())
         return result
 

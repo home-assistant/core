@@ -10,7 +10,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from .const import DOMAIN
 from .coordinator import EheimDigitalUpdateCoordinator
 
-PLATFORMS = [Platform.LIGHT]
+PLATFORMS = [Platform.CLIMATE, Platform.LIGHT]
 
 type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
 

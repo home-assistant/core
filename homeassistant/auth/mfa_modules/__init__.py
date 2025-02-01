@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import types
-from typing import Any, Generic, TypeVar
+from typing import Any
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -33,12 +33,6 @@ MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
 DATA_REQS: HassKey[set[str]] = HassKey("mfa_auth_module_reqs_processed")
 
 _LOGGER = logging.getLogger(__name__)
-
-_MultiFactorAuthModuleT = TypeVar(
-    "_MultiFactorAuthModuleT",
-    bound="MultiFactorAuthModule",
-    default="MultiFactorAuthModule",
-)
 
 
 class MultiFactorAuthModule:
@@ -101,7 +95,9 @@ class MultiFactorAuthModule:
         raise NotImplementedError
 
 
-class SetupFlow(data_entry_flow.FlowHandler, Generic[_MultiFactorAuthModuleT]):
+class SetupFlow[_MultiFactorAuthModuleT: MultiFactorAuthModule = MultiFactorAuthModule](
+    data_entry_flow.FlowHandler
+):
     """Handler for the setup flow."""
 
     def __init__(

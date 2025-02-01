@@ -73,6 +73,8 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             manufacturer="Intergas",
             name=f"Thermostat {room.room_no}",
         )
+        if coordinator.unique_id:
+            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -106,7 +108,7 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature for this zone."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
+        temperature: float = kwargs[ATTR_TEMPERATURE]
         await self._room.set_override(temperature)
         await self.coordinator.async_refresh()
 

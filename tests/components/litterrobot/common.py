@@ -90,6 +90,14 @@ ROBOT_4_DATA = {
     "isUSBPowerOn": True,
     "USBFaultStatus": "CLEAR",
     "isDFIPartialFull": True,
+    "isLaserDirty": False,
+    "surfaceType": "TILE",
+    "hopperStatus": None,
+    "scoopsSavedCount": 3769,
+    "isHopperRemoved": None,
+    "optimalLitterLevel": 450,
+    "litterLevelPercentage": 0.7,
+    "litterLevelState": "OPTIMAL",
 }
 FEEDER_ROBOT_DATA = {
     "id": 1,
@@ -141,6 +149,16 @@ FEEDER_ROBOT_DATA = {
             "meal_total_portions": 1,
         },
     ],
+}
+PET_DATA = {
+    "petId": "PET-123",
+    "userId": "1234567",
+    "createdAt": "2023-04-27T23:26:49.813Z",
+    "name": "Kitty",
+    "type": "CAT",
+    "gender": "FEMALE",
+    "lastWeightReading": 9.1,
+    "breeds": ["sphynx"],
 }
 
 VACUUM_ENTITY_ID = "vacuum.test_litter_box"

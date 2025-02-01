@@ -1,7 +1,7 @@
 # serializer version: 1
 # name: test_unknown_hass_api
   dict({
-    'conversation_id': None,
+    'conversation_id': 'my-conversation-id',
     'response': IntentResponse(
       card=dict({
       }),

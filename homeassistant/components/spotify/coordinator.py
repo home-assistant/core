@@ -18,7 +18,7 @@ from spotifyaio import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -29,6 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 type SpotifyConfigEntry = ConfigEntry[SpotifyData]
+
+
+UPDATE_INTERVAL = timedelta(seconds=30)
 
 
 @dataclass
@@ -59,7 +62,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=30),
+            update_interval=UPDATE_INTERVAL,
         )
         self.client = client
         self._playlist: Playlist | None = None
@@ -73,6 +76,7 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
             raise UpdateFailed("Error communicating with Spotify API") from err
 
     async def _async_update_data(self) -> SpotifyCoordinatorData:
+        self.update_interval = UPDATE_INTERVAL
         try:
             current = await self.client.get_playback()
         except SpotifyConnectionError as err:
@@ -120,6 +124,13 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
                         )
                         self._playlist = None
                         self._checked_playlist_id = None
+        if current.is_playing and current.progress_ms is not None:
+            assert current.item is not None
+            time_left = timedelta(
+                milliseconds=current.item.duration_ms - current.progress_ms
+            )
+            if time_left < UPDATE_INTERVAL:
+                self.update_interval = time_left + timedelta(seconds=1)
         return SpotifyCoordinatorData(
             current_playback=current,
             position_updated_at=position_updated_at,

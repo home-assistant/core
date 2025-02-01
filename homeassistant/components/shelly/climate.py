@@ -36,6 +36,7 @@ from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .const import (
     BLU_TRV_TEMPERATURE_SETTINGS,
+    BLU_TRV_TIMEOUT,
     DOMAIN,
     LOGGER,
     NOT_CALIBRATED_ISSUE_ID,
@@ -604,4 +605,5 @@ class RpcBluTrvClimate(ShellyRpcEntity, ClimateEntity):
                 "method": "Trv.SetTarget",
                 "params": {"id": 0, "target_C": target_temp},
             },
+            timeout=BLU_TRV_TIMEOUT,
         )

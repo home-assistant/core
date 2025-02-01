@@ -3,21 +3,22 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
+from pysmlight import Info
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 
-from homeassistant.components import zeroconf
 from homeassistant.components.smlight.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="slzb-06.local.",
@@ -27,7 +28,7 @@ DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     type="mock_type",
 )
 
-DISCOVERY_INFO_LEGACY = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO_LEGACY = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="slzb-06.local.",
@@ -97,7 +98,7 @@ async def test_zeroconf_flow(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 1
+    assert len(mock_smlight_client.get_info.mock_calls) == 2
 
 
 async def test_zeroconf_flow_auth(
@@ -151,12 +152,99 @@ async def test_zeroconf_flow_auth(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 1
+    assert len(mock_smlight_client.get_info.mock_calls) == 3
+
+
+async def test_zeroconf_unsupported_abort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we abort zeroconf flow if device unsupported."""
+    mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
+    )
+
+    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unsupported_device"
+
+
+async def test_user_unsupported_abort(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we abort user flow if unsupported device."""
+    mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unsupported_device"
+
+
+async def test_user_unsupported_abort_auth(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test we abort user flow if unsupported device (with auth)."""
+    mock_smlight_client.check_auth_needed.return_value = True
+    mock_smlight_client.authenticate.side_effect = SmlightAuthError
+    mock_smlight_client.get_info.side_effect = SmlightAuthError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unsupported_device"
 
 
 @pytest.mark.usefixtures("mock_smlight_client")
 async def test_user_device_exists_abort(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we abort user flow if device already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -239,7 +327,7 @@ async def test_user_invalid_auth(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 1
+    assert len(mock_smlight_client.get_info.mock_calls) == 4
 
 
 async def test_user_cannot_connect(
@@ -276,7 +364,7 @@ async def test_user_cannot_connect(
     assert result2["title"] == "SLZB-06p7"
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 1
+    assert len(mock_smlight_client.get_info.mock_calls) == 3
 
 
 async def test_auth_cannot_connect(
@@ -378,7 +466,7 @@ async def test_zeroconf_legacy_mac(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 2
+    assert len(mock_smlight_client.get_info.mock_calls) == 3
 
 
 async def test_reauth_flow(

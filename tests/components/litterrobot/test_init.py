@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 from pylitterbot.exceptions import LitterRobotException, LitterRobotLoginException
 import pytest
 
-from homeassistant.components import litterrobot
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_START,
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import CONFIG, VACUUM_ENTITY_ID
+from .common import CONFIG, DOMAIN, VACUUM_ENTITY_ID
 from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
@@ -57,13 +56,13 @@ async def test_entry_not_setup(
 ) -> None:
     """Test being able to handle config entry not setup."""
     entry = MockConfigEntry(
-        domain=litterrobot.DOMAIN,
-        data=CONFIG[litterrobot.DOMAIN],
+        domain=DOMAIN,
+        data=CONFIG[DOMAIN],
     )
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.litterrobot.hub.Account.connect",
+        "homeassistant.components.litterrobot.coordinator.Account.connect",
         side_effect=side_effect,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -91,7 +90,7 @@ async def test_device_remove_devices(
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(litterrobot.DOMAIN, "test-serial", "remove-serial")},
+        identifiers={(DOMAIN, "test-serial", "remove-serial")},
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]

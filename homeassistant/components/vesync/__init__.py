@@ -21,6 +21,7 @@ from .const import (
 from .coordinator import VeSyncDataCoordinator
 
 PLATFORMS = [
+    Platform.BINARY_SENSOR,
     Platform.FAN,
     Platform.HUMIDIFIER,
     Platform.LIGHT,

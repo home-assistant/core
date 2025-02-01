@@ -19,7 +19,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry
 from .const import DOMAIN
 from .coordinator import AirGradientCoordinator
-from .entity import AirGradientEntity
+from .entity import AirGradientEntity, exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -121,6 +123,7 @@ class AirGradientNumber(AirGradientEntity, NumberEntity):
         """Return the state of the number."""
         return self.entity_description.value_fn(self.coordinator.data.config)
 
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
         await self.entity_description.set_value_fn(self.coordinator.client, int(value))

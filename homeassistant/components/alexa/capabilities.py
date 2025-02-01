@@ -50,8 +50,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
-import homeassistant.util.color as color_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import color as color_util, dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,

@@ -6,7 +6,7 @@ from abc import abstractmethod
 from dataclasses import asdict
 from datetime import date, datetime, timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 from uuid import UUID
 
 from dateutil.rrule import rrule
@@ -25,6 +25,8 @@ from . import HabiticaConfigEntry
 from .coordinator import HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
 from .util import build_rrule, get_recurrence_rule
+
+PARALLEL_UPDATES = 1
 
 
 class HabiticaCalendar(StrEnum):
@@ -93,9 +95,11 @@ class HabiticaCalendarEntity(HabiticaBase, CalendarEntity):
     ) -> list[datetime]:
         """Calculate recurrence dates based on start_date and end_date."""
         if end_date:
-            return recurrences.between(
+            recurrence_dates = recurrences.between(
                 start_date, end_date - timedelta(days=1), inc=True
             )
+
+            return cast(list[datetime], recurrence_dates)
         # if no end_date is given, return only the next recurrence
         return [recurrences.after(start_date, inc=True)]
 

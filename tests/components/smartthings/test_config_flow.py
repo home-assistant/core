@@ -14,6 +14,7 @@ from homeassistant.components.smartthings.const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
+    CONF_REFRESH_TOKEN,
     DOMAIN,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
@@ -757,3 +758,56 @@ async def test_no_available_locations_aborts(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_available_locations"
+
+
+async def test_reauth(
+    hass: HomeAssistant, app, app_oauth_client, location, smartthings_mock
+) -> None:
+    """Test reauth flow."""
+    token = str(uuid4())
+    installed_app_id = str(uuid4())
+    refresh_token = str(uuid4())
+    smartthings_mock.apps.return_value = []
+    smartthings_mock.create_app.return_value = (app, app_oauth_client)
+    smartthings_mock.locations.return_value = [location]
+    request = Mock()
+    request.installed_app_id = installed_app_id
+    request.auth_token = token
+    request.location_id = location.location_id
+    request.refresh_token = refresh_token
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_APP_ID: app.app_id,
+            CONF_CLIENT_ID: app_oauth_client.client_id,
+            CONF_CLIENT_SECRET: app_oauth_client.client_secret,
+            CONF_LOCATION_ID: location.location_id,
+            CONF_INSTALLED_APP_ID: installed_app_id,
+            CONF_ACCESS_TOKEN: token,
+            CONF_REFRESH_TOKEN: "abc",
+        },
+        unique_id=smartapp.format_unique_id(app.app_id, location.location_id),
+    )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "authorize"
+    assert result["url"] == format_install_url(app.app_id, location.location_id)
+
+    await smartapp.smartapp_update(hass, request, None, app)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "update_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert entry.data[CONF_REFRESH_TOKEN] == refresh_token

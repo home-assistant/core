@@ -591,7 +591,7 @@ async def test_update_with_no_template(hass: HomeAssistant) -> None:
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
     state = hass.states.get("sensor.foo")
-    assert state.state == '{"key": "some_json_value"}'
+    assert state.state == '{"key":"some_json_value"}'
 
 
 @respx.mock

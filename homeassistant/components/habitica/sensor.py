@@ -52,6 +52,9 @@ SVG_CLASS = {
 }
 
 
+PARALLEL_UPDATES = 1
+
+
 @dataclass(kw_only=True, frozen=True)
 class HabiticaSensorEntityDescription(SensorEntityDescription):
     """Habitica Sensor Description."""

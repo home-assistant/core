@@ -1,0 +1,48 @@
+{
+  "protocol_version": 50,
+  "meter_model": "ISKRA  2M550T-101",
+  "unique_id": "4E6576657220476F6E6E61204C657420596F7520446F776E",
+  "timestamp": "2024-06-28T14:12:34",
+  "tariff": 2,
+  "energy_import_kwh": 13779.338,
+  "energy_import_t1_kwh": 10830.511,
+  "energy_import_t2_kwh": 2948.827,
+  "energy_export_kwh": 1234.567,
+  "energy_export_t1_kwh": 234.567,
+  "energy_export_t2_kwh": 1000,
+  "power_w": -543,
+  "power_l1_w": -676,
+  "power_l2_w": 133,
+  "power_l3_w": 0,
+  "current_a": 6,
+  "current_l1_a": -4,
+  "current_l2_a": 2,
+  "current_l3_a": 0,
+  "voltage_sag_l1_count": 1,
+  "voltage_sag_l2_count": 1,
+  "voltage_sag_l3_count": 0,
+  "voltage_swell_l1_count": 0,
+  "voltage_swell_l2_count": 0,
+  "voltage_swell_l3_count": 0,
+  "any_power_fail_count": 4,
+  "long_power_fail_count": 5,
+  "average_power_15m_w": 123.0,
+  "monthly_power_peak_w": 1111.0,
+  "monthly_power_peak_timestamp": "2024-06-04T10:11:22",
+  "external": [
+    {
+      "unique_id": "4E6576657220676F6E6E612072756E2061726F756E64",
+      "type": "gas_meter",
+      "timestamp": "2024-06-28T14:00:00",
+      "value": 2569.646,
+      "unit": "m3"
+    },
+    {
+      "unique_id": "616E642064657365727420796F75",
+      "type": "water_meter",
+      "timestamp": "2024-06-28T14:05:00",
+      "value": 123.456,
+      "unit": "m3"
+    }
+  ]
+}

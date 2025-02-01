@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from .const import (
     CONF_KEEP_ALIVE,
@@ -141,7 +141,7 @@ class OllamaConversationEntity(
         settings = {**self.entry.data, **self.entry.options}
 
         client = self.hass.data[DOMAIN][self.entry.entry_id]
-        conversation_id = user_input.conversation_id or ulid.ulid_now()
+        conversation_id = user_input.conversation_id or ulid_util.ulid_now()
         model = settings[CONF_MODEL]
         intent_response = intent.IntentResponse(language=user_input.language)
         llm_api: llm.APIInstance | None = None

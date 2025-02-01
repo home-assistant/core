@@ -102,14 +102,6 @@ class MatterCover(MatterEntity, CoverEntity):
             clusters.WindowCovering.Commands.GoToTiltPercentage((100 - position) * 100)
         )
 
-    async def send_device_command(self, command: Any) -> None:
-        """Send device command."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
-
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""

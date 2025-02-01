@@ -1,0 +1,13 @@
+{
+  "domain": "onedrive",
+  "name": "OneDrive",
+  "codeowners": ["@zweckj"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/onedrive",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["msgraph", "msgraph-core", "kiota"],
+  "quality_scale": "bronze",
+  "requirements": ["msgraph-sdk==1.16.0"]
+}

@@ -208,6 +208,7 @@ async def test_function_call(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
+        mock_part.text = ""
         mock_part.function_call = FunctionCall(
             name="test_tool",
             args={
@@ -284,8 +285,12 @@ async def test_function_call(
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
-    assert "Answer in plain text" in detail_event["data"]["prompt"]
-    assert [t.name for t in detail_event["data"]["tools"]] == ["test_tool"]
+    assert "Answer in plain text" in detail_event["data"]["messages"][0]["content"]
+    assert [
+        p.function_response.name
+        for p in detail_event["data"]["messages"][2]["content"].parts
+        if p.function_response
+    ] == ["test_tool"]
 
 
 @patch(
@@ -315,6 +320,7 @@ async def test_function_call_without_parameters(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
+        mock_part.text = ""
         mock_part.function_call = FunctionCall(name="test_tool", args={})
 
         def tool_call(
@@ -403,6 +409,7 @@ async def test_function_exception(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
+        mock_part.text = ""
         mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
         def tool_call(
@@ -543,7 +550,7 @@ async def test_invalid_llm_api(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Error preparing LLM API: API invalid_llm_api not found"
+        "Error preparing LLM API"
     )
 
 

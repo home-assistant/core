@@ -20,7 +20,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ..db_schema import StateAttributes, States
 from ..filters import Filters

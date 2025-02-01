@@ -6,11 +6,11 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.onkyo import InputSource
 from homeassistant.components.onkyo.config_flow import OnkyoConfigFlow
 from homeassistant.components.onkyo.const import (
     DOMAIN,
+    OPTION_INPUT_SOURCES,
     OPTION_MAX_VOLUME,
     OPTION_VOLUME_RESOLUTION,
 )
@@ -18,6 +18,10 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
 from . import (
     create_config_entry_from_info,
@@ -82,35 +86,6 @@ async def test_manual_invalid_host(hass: HomeAssistant, stub_mock_discovery) -> 
 
     assert host_result["step_id"] == "manual"
     assert host_result["errors"]["base"] == "cannot_connect"
-
-
-async def test_ssdp_discovery_already_configured(
-    hass: HomeAssistant, default_mock_discovery
-) -> None:
-    """Test SSDP discovery with already configured device."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100"},
-        unique_id="id1",
-    )
-    config_entry.add_to_hass(hass)
-
-    discovery_info = ssdp.SsdpServiceInfo(
-        ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
-        ssdp_usn="uuid:mock_usn",
-        ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
-        ssdp_st="mock_st",
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_SSDP},
-        data=discovery_info,
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
 
 
 async def test_manual_valid_host_unexpected_error(
@@ -232,9 +207,9 @@ async def test_ssdp_discovery_success(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
     """Test SSDP discovery with valid host."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
         ssdp_st="mock_st",
@@ -259,11 +234,40 @@ async def test_ssdp_discovery_success(
     assert select_result["result"].unique_id == "id1"
 
 
+async def test_ssdp_discovery_already_configured(
+    hass: HomeAssistant, default_mock_discovery
+) -> None:
+    """Test SSDP discovery with already configured device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        unique_id="id1",
+    )
+    config_entry.add_to_hass(hass)
+
+    discovery_info = SsdpServiceInfo(
+        ssdp_location="http://192.168.1.100:8080",
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        ssdp_usn="uuid:mock_usn",
+        ssdp_udn="uuid:00000000-0000-0000-0000-000000000000",
+        ssdp_st="mock_st",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_ssdp_discovery_host_info_error(hass: HomeAssistant) -> None:
     """Test SSDP discovery with host info error."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -286,9 +290,9 @@ async def test_ssdp_discovery_host_none_info(
     hass: HomeAssistant, stub_mock_discovery
 ) -> None:
     """Test SSDP discovery with host info error."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://192.168.1.100:8080",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -307,9 +311,9 @@ async def test_ssdp_discovery_no_location(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
     """Test SSDP discovery with no location."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location=None,
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -328,9 +332,9 @@ async def test_ssdp_discovery_no_host(
     hass: HomeAssistant, default_mock_discovery
 ) -> None:
     """Test SSDP discovery with no host."""
-    discovery_info = ssdp.SsdpServiceInfo(
+    discovery_info = SsdpServiceInfo(
         ssdp_location="http://",
-        upnp={ssdp.ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
+        upnp={ATTR_UPNP_FRIENDLY_NAME: "Onkyo Receiver"},
         ssdp_usn="uuid:mock_usn",
         ssdp_st="mock_st",
     )
@@ -463,7 +467,7 @@ async def test_reconfigure(hass: HomeAssistant, default_mock_discovery) -> None:
     await setup_integration(hass, config_entry, receiver_info)
 
     old_host = config_entry.data[CONF_HOST]
-    old_max_volume = config_entry.options[OPTION_MAX_VOLUME]
+    old_options = config_entry.options
 
     result = await config_entry.start_reconfigure_flow(hass)
 
@@ -480,7 +484,7 @@ async def test_reconfigure(hass: HomeAssistant, default_mock_discovery) -> None:
 
     result3 = await hass.config_entries.flow.async_configure(
         result2["flow_id"],
-        user_input={"volume_resolution": 200, "input_sources": ["TUNER"]},
+        user_input={OPTION_VOLUME_RESOLUTION: 200},
     )
 
     assert result3["type"] is FlowResultType.ABORT
@@ -488,7 +492,10 @@ async def test_reconfigure(hass: HomeAssistant, default_mock_discovery) -> None:
 
     assert config_entry.data[CONF_HOST] == old_host
     assert config_entry.options[OPTION_VOLUME_RESOLUTION] == 200
-    assert config_entry.options[OPTION_MAX_VOLUME] == old_max_volume
+    for option, option_value in old_options.items():
+        if option == OPTION_VOLUME_RESOLUTION:
+            continue
+        assert config_entry.options[option] == option_value
 
 
 async def test_reconfigure_new_device(hass: HomeAssistant) -> None:
@@ -607,8 +614,8 @@ async def test_import_success(
     "ignore_translations",
     [
         [  # The schema is dynamically created from input sources
-            "component.onkyo.options.step.init.data.TV",
-            "component.onkyo.options.step.init.data_description.TV",
+            "component.onkyo.options.step.names.sections.input_sources.data.TV",
+            "component.onkyo.options.step.names.sections.input_sources.data_description.TV",
         ]
     ],
 )
@@ -619,23 +626,43 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
     config_entry = create_empty_config_entry()
     await setup_integration(hass, config_entry, receiver_info)
 
+    old_volume_resolution = config_entry.options[OPTION_VOLUME_RESOLUTION]
+
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            "max_volume": 42,
-            "TV": "television",
+            OPTION_MAX_VOLUME: 42,
+            OPTION_INPUT_SOURCES: [],
         },
     )
-    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {OPTION_INPUT_SOURCES: "empty_input_source_list"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_MAX_VOLUME: 42,
+            OPTION_INPUT_SOURCES: ["TV"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "names"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_INPUT_SOURCES: {"TV": "television"},
+        },
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "volume_resolution": 80,
-        "max_volume": 42.0,
-        "input_sources": {
-            "12": "television",
-        },
+        OPTION_VOLUME_RESOLUTION: old_volume_resolution,
+        OPTION_MAX_VOLUME: 42.0,
+        OPTION_INPUT_SOURCES: {"12": "television"},
     }

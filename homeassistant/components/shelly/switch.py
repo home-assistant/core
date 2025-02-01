@@ -120,9 +120,8 @@ def async_setup_block_entry(
     relay_blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
-        if (
-            block.type != "relay"
-            or block.channel is not None
+        if block.type != "relay" or (
+            block.channel is not None
             and is_block_channel_type_light(
                 coordinator.device.settings, int(block.channel)
             )

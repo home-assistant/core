@@ -49,12 +49,12 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import async_get_hass, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 from homeassistant.util.json import json_loads_object
 from homeassistant.util.yaml import dump as yaml_dump
 

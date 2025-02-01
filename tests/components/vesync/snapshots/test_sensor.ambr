@@ -664,7 +664,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '200s-humidifier',
+          '200s-humidifier4321',
         ),
       }),
       'is_new': False,
@@ -715,7 +715,7 @@
       'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': '200s-humidifier-humidity',
+      'unique_id': '200s-humidifier4321-humidity',
       'unit_of_measurement': '%',
     }),
   ])
@@ -1154,6 +1154,44 @@
     'last_updated': <ANY>,
     'state': '0',
   })
+# ---
+# name: test_sensor_state[SmartTowerFan][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'smarttowerfan',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LTF-F422S-KEU',
+      'model_id': None,
+      'name': 'SmartTowerFan',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[SmartTowerFan][entities]
+  list([
+  ])
 # ---
 # name: test_sensor_state[Temperature Light][devices]
   list([

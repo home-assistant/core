@@ -141,7 +141,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_hvac_mode(hvac_mode)
         elif target_temp is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, target_temp
+                self.data.set_target_temperature, target_temp, True
             )
         else:
             return

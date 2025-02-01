@@ -25,7 +25,7 @@ from sqlalchemy.orm.session import Session
 from homeassistant.const import COMPRESSED_STATE_LAST_UPDATED, COMPRESSED_STATE_STATE
 from homeassistant.core import HomeAssistant, State, split_entity_id
 from homeassistant.helpers.recorder import get_instance
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ..const import LAST_REPORTED_SCHEMA_VERSION
 from ..db_schema import (

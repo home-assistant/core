@@ -25,7 +25,7 @@ SETUP_FAILED_ANTICIPATED = (
 SETUP_FAILED_UNEXPECTED = (
     "homeassistant.setup",
     logging.ERROR,
-    "Error during setup of component evohome",
+    "Error during setup of component evohome: ",
 )
 AUTHENTICATION_FAILED = (
     "homeassistant.components.evohome.helpers",

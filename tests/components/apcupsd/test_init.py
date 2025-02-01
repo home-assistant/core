@@ -31,6 +31,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         # Does not contain either "SERIALNO" field.
         # We should _not_ create devices for the entities and their IDs will not have prefixes.
         MOCK_MINIMAL_STATUS,
+        # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
     ],
 )
 async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> None:
@@ -41,7 +43,7 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
     await async_init_integration(hass, status=status)
 
     prefix = ""
-    if "SERIALNO" in status:
+    if "SERIALNO" in status and status["SERIALNO"] != "Blank":
         prefix = slugify(status.get("UPSNAME", "APC UPS")) + "_"
 
     # Verify successful setup by querying the status sensor.
@@ -56,6 +58,8 @@ async def test_async_setup_entry(hass: HomeAssistant, status: OrderedDict) -> No
     [
         # We should not create device entries if SERIALNO is not reported.
         MOCK_MINIMAL_STATUS,
+        # Some models report "Blank" as SERIALNO, but we should treat it as not reported.
+        MOCK_MINIMAL_STATUS | {"SERIALNO": "Blank"},
         # We should set the device name to be the friendly UPSNAME field if available.
         MOCK_MINIMAL_STATUS | {"SERIALNO": "XXXX", "UPSNAME": "MyUPS"},
         # Otherwise, we should fall back to default device name --- "APC UPS".
@@ -71,7 +75,7 @@ async def test_device_entry(
     await async_init_integration(hass, status=status)
 
     # Verify device info is properly set up.
-    if "SERIALNO" not in status:
+    if "SERIALNO" not in status or status["SERIALNO"] == "Blank":
         assert len(device_registry.devices) == 0
         return
 

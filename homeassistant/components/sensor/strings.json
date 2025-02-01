@@ -17,6 +17,7 @@
       "is_distance": "Current {entity_name} distance",
       "is_duration": "Current {entity_name} duration",
       "is_energy": "Current {entity_name} energy",
+      "is_energy_distance": "Current {entity_name} energy per distance",
       "is_frequency": "Current {entity_name} frequency",
       "is_gas": "Current {entity_name} gas",
       "is_humidity": "Current {entity_name} humidity",
@@ -69,6 +70,7 @@
       "distance": "{entity_name} distance changes",
       "duration": "{entity_name} duration changes",
       "energy": "{entity_name} energy changes",
+      "energy_distance": "{entity_name} energy per distance changes",
       "frequency": "{entity_name} frequency changes",
       "gas": "{entity_name} gas changes",
       "humidity": "{entity_name} humidity changes",
@@ -182,6 +184,9 @@
     },
     "energy": {
       "name": "Energy"
+    },
+    "energy_distance": {
+      "name": "Energy per distance"
     },
     "energy_storage": {
       "name": "Stored energy"

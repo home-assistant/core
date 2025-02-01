@@ -9,12 +9,10 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions:
-    status: todo
-    comment: add description for parameters
+  docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -24,10 +22,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: todo
@@ -40,13 +38,13 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: The integration connects to a single device.
@@ -60,7 +58,7 @@ rules:
   entity-translations:
     status: exempt
     comment: There are no entities to translate.
-  exception-translations: todo
+  exception-translations: done
   icon-translations:
     status: exempt
     comment: The only entity can use the device class.
@@ -74,9 +72,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: need to check if it is needed for websockets or migrate to aiohttp
-  strict-typing:
-    status: todo
-    comment: aiowebostv is not fully typed
+  inject-websession: done
+  strict-typing: done

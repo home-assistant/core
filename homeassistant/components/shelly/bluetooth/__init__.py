@@ -21,6 +21,7 @@ async def async_connect_scanner(
     hass: HomeAssistant,
     coordinator: ShellyRpcCoordinator,
     scanner_mode: BLEScannerMode,
+    device_id: str,
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
@@ -34,6 +35,7 @@ async def async_connect_scanner(
             source_domain=entry.domain,
             source_model=coordinator.model,
             source_config_entry_id=entry.entry_id,
+            source_device_id=device_id,
         ),
         scanner.async_setup(),
         coordinator.async_subscribe_events(scanner.async_on_event),

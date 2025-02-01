@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from .common import async_recorder_block_till_done, async_wait_recording_done
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
@@ -34,7 +34,7 @@ SCHEMA_MODULE_CURRENT = "homeassistant.components.recorder.db_schema"
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -175,7 +175,7 @@ def _create_engine_test(
     ],
 )
 async def test_data_migrator_logic(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     initial_version: int,
     expected_migrator_calls: dict[str, tuple[int, int]],
     expected_created_indices: list[str],
@@ -274,7 +274,7 @@ async def test_data_migrator_logic(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migration_changes_prevent_trying_to_migrate_again(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Test that we do not try to migrate when migration_changes indicate its already migrated.
 

@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from collections.abc import Callable
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
@@ -19,7 +18,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-type AsyncSetupDeviceEntitiesCallback = Callable[[str], Coroutine[Any, Any, None]]
+type AsyncSetupDeviceEntitiesCallback = Callable[
+    [str | dict[str, EheimDigitalDevice]], None
+]
 
 
 class EheimDigitalUpdateCoordinator(
@@ -61,7 +62,7 @@ class EheimDigitalUpdateCoordinator(
 
         if device_address not in self.known_devices:
             for platform_callback in self.platform_callbacks:
-                await platform_callback(device_address)
+                platform_callback(device_address)
 
     async def _async_receive_callback(self) -> None:
         self.async_set_updated_data(self.hub.devices)

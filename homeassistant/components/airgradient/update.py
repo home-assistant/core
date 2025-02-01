@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components.update import UpdateDeviceClass, UpdateEntity
 from homeassistant.core import HomeAssistant
@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import AirGradientConfigEntry, AirGradientCoordinator
 from .entity import AirGradientEntity
 
+PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(hours=1)
 
 

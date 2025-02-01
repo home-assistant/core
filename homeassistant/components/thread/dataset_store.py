@@ -8,7 +8,7 @@ from datetime import datetime
 import logging
 from typing import Any, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 

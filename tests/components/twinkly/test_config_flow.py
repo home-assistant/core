@@ -4,12 +4,12 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components import dhcp
 from homeassistant.components.twinkly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_MAC, TEST_MODEL, TEST_NAME
 
@@ -95,7 +95,7 @@ async def test_dhcp_full_flow(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="Twinkly_XYZ",
             ip="1.2.3.4",
             macaddress="002d133baabb",
@@ -127,7 +127,7 @@ async def test_dhcp_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="Twinkly_XYZ",
             ip="1.2.3.4",
             macaddress="002d133baabb",
@@ -146,7 +146,7 @@ async def test_user_flow_works_discovery(hass: HomeAssistant) -> None:
     await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="Twinkly_XYZ",
             ip="1.2.3.4",
             macaddress="002d133baabb",

@@ -2,17 +2,17 @@
   "services": {
     "start_charge": {
       "name": "Start charge",
-      "description": "Starts the vehicle charging. It must be plugged in first!\n.",
+      "description": "Starts the vehicle charging. It must be plugged in first!",
       "fields": {
         "vin": {
           "name": "VIN",
-          "description": "The vehicle identification number (VIN) of the vehicle, 17 characters\n."
+          "description": "The vehicle identification number (VIN) of the vehicle, 17 characters."
         }
       }
     },
     "update": {
       "name": "Update",
-      "description": "Fetches the last state of the vehicle of all your accounts, requesting an update from of the state from the car if possible.\n.",
+      "description": "Fetches the last state of the vehicle of all your accounts, requesting an update from of the state from the car if possible.",
       "fields": {
         "vin": {
           "name": "[%key:component::nissan_leaf::services::start_charge::fields::vin::name%]",

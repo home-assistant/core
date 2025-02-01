@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -444,7 +443,7 @@ async def test_wall_display_relay_mode(
 )
 async def test_rpc_device_virtual_switch(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     name: str | None,
@@ -517,7 +516,7 @@ async def test_rpc_device_virtual_binary_sensor(
 
 async def test_rpc_remove_virtual_switch_when_mode_label(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -551,7 +550,7 @@ async def test_rpc_remove_virtual_switch_when_mode_label(
 
 async def test_rpc_remove_virtual_switch_when_orphaned(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
@@ -577,7 +576,7 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_rpc_device_script_switch(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

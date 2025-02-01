@@ -16,6 +16,7 @@ TO_REDACT = {
     "gas_unique_id",
     "id",
     "serial",
+    "token",
     "unique_id",
     "unique_meter_id",
     "wifi_ssid",

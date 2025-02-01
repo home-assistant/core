@@ -12,7 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NextcloudConfigEntry
+from .coordinator import NextcloudConfigEntry
 from .entity import NextcloudEntity
 
 BINARY_SENSORS: Final[list[BinarySensorEntityDescription]] = [

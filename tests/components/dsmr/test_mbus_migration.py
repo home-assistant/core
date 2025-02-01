@@ -86,7 +86,7 @@ async def test_migrate_gas_to_mbus(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -197,7 +197,7 @@ async def test_migrate_hourly_gas_to_mbus(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1722749707)},
-                {"value": Decimal(778.963), "unit": "m3"},
+                {"value": Decimal("778.963"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -308,7 +308,7 @@ async def test_migrate_gas_with_devid_to_mbus(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -433,7 +433,7 @@ async def test_migrate_gas_to_mbus_exists(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",

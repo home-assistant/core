@@ -8,7 +8,6 @@ import pytest
 from voluptuous_serialize import convert
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, usb
 from homeassistant.components.insteon.config_flow import (
     STEP_HUB_V1,
     STEP_HUB_V2,
@@ -20,6 +19,8 @@ from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
     MOCK_DEVICE,
@@ -209,7 +210,7 @@ async def test_form_select_hub_v2(hass: HomeAssistant) -> None:
 
 async def test_form_discovery_dhcp(hass: HomeAssistant) -> None:
     """Test the discovery of the Hub via DHCP."""
-    discovery_info = dhcp.DhcpServiceInfo("1.2.3.4", "", "aabbccddeeff")
+    discovery_info = DhcpServiceInfo("1.2.3.4", "", "aabbccddeeff")
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=discovery_info
     )
@@ -270,7 +271,7 @@ async def test_failed_connection_hub(hass: HomeAssistant) -> None:
 
 async def test_discovery_via_usb(hass: HomeAssistant) -> None:
     """Test usb flow."""
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyINSTEON",
         pid="AAAA",
         vid="AAAA",
@@ -302,7 +303,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE: "/dev/ttyUSB1"}}
     ).add_to_hass(hass)
 
-    discovery_info = usb.UsbServiceInfo(
+    discovery_info = UsbServiceInfo(
         device="/dev/ttyINSTEON",
         pid="AAAA",
         vid="AAAA",

@@ -50,6 +50,21 @@
         "name": "Approve charge"
       }
     },
+    "number": {
+      "target_percentage": {
+        "name": "Target percentage"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "smart_charge": "Smart charge",
+          "max_charge": "Max charge",
+          "paused": "Paused"
+        }
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",
@@ -77,6 +92,11 @@
       },
       "sleep_when_inactive": {
         "name": "Sleep when inactive"
+      }
+    },
+    "time": {
+      "target_time": {
+        "name": "Target time"
       }
     }
   },

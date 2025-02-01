@@ -44,7 +44,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -135,7 +135,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -226,7 +226,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -341,7 +341,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -446,7 +446,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -497,7 +497,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),
@@ -548,7 +548,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
-          'conversation_id': None,
+          'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
             }),

@@ -291,9 +291,8 @@ class WasherDryerTimeClass(RestoreSensor):
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-            if (
-                self._attr_native_value is None
-                or isinstance(self._attr_native_value, datetime)
+            if self._attr_native_value is None or (
+                isinstance(self._attr_native_value, datetime)
                 and abs(new_timestamp - self._attr_native_value) > timedelta(seconds=60)
             ):
                 self._attr_native_value = new_timestamp

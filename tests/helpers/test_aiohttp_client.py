@@ -21,7 +21,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.aiohttp_client as client
+from homeassistant.helpers import aiohttp_client as client
 from homeassistant.util.color import RGBColor
 from homeassistant.util.ssl import SSLCipherList
 
