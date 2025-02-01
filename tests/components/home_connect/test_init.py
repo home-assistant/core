@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
-from aiohomeconnect.model import SettingKey, StatusKey
+from aiohomeconnect.model import OptionKey, ProgramKey, SettingKey, StatusKey
 from aiohomeconnect.model.error import HomeConnectError
 import pytest
 import requests_mock
@@ -41,9 +41,9 @@ SERVICE_KV_CALL_PARAMS = [
         "service": "set_option_active",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
-            "unit": "",
+            "key": OptionKey.BSH_COMMON_FINISH_IN_RELATIVE.value,
+            "value": 43200,
+            "unit": "seconds",
         },
         "blocking": True,
     },
@@ -52,8 +52,8 @@ SERVICE_KV_CALL_PARAMS = [
         "service": "set_option_selected",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
+            "key": OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
+            "value": "LaundryCare.Washer.EnumType.Temperature.GC40",
         },
         "blocking": True,
     },
@@ -62,8 +62,8 @@ SERVICE_KV_CALL_PARAMS = [
         "service": "change_setting",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
+            "key": SettingKey.BSH_COMMON_CHILD_LOCK.value,
+            "value": True,
         },
         "blocking": True,
     },
@@ -95,9 +95,9 @@ SERVICE_PROGRAM_CALL_PARAMS = [
         "service": "select_program",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
+            "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
+            "key": OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
+            "value": "LaundryCare.Washer.EnumType.Temperature.GC40",
         },
         "blocking": True,
     },
@@ -106,10 +106,10 @@ SERVICE_PROGRAM_CALL_PARAMS = [
         "service": "start_program",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
-            "unit": "C",
+            "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
+            "key": OptionKey.BSH_COMMON_FINISH_IN_RELATIVE.value,
+            "value": 43200,
+            "unit": "seconds",
         },
         "blocking": True,
     },
