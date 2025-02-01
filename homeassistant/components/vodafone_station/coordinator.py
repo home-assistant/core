@@ -9,7 +9,6 @@ from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, except
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
@@ -72,11 +71,12 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             device_reg, self.config_entry.entry_id
         )
 
-        mac_list: list[str] = []
-        for x in device_list:
-            mac_list.extend(y[1].upper() for y in x.connections if y[0] == CONF_MAC)
-
-        self.previous_devices: set[str] = set(mac_list)
+        self.previous_devices = {
+            connection[1].upper()
+            for device in device_list
+            for connection in device.connections
+            if connection[0] == dr.CONNECTION_NETWORK_MAC
+        }
 
     def _calculate_update_time_and_consider_home(
         self, device: VodafoneStationDevice, utc_point_in_time: datetime
