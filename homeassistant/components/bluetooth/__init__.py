@@ -80,6 +80,7 @@ from .const import (
     CONF_DETAILS,
     CONF_PASSIVE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
@@ -297,7 +298,12 @@ async def async_discover_adapters(
 
 
 async def async_update_device(
-    hass: HomeAssistant, entry: ConfigEntry, adapter: str, details: AdapterDetails
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    adapter: str,
+    details: AdapterDetails,
+    via_device_domain: str | None = None,
+    via_device_id: str | None = None,
 ) -> None:
     """Update device registry entry.
 
@@ -306,7 +312,16 @@ async def async_update_device(
     update the device with the new location so they can
     figure out where the adapter is.
     """
-    dr.async_get(hass).async_get_or_create(
+    device_registry = dr.async_get(hass)
+    via_device: tuple[str, str] | None = None
+    if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
+        if domain_ids := [
+            (domain, id_)
+            for domain, id_ in via_device_entry.identifiers
+            if domain == via_device_domain
+        ]:
+            via_device = domain_ids[0]
+    device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         name=adapter_human_name(adapter, details[ADAPTER_ADDRESS]),
         connections={(dr.CONNECTION_BLUETOOTH, details[ADAPTER_ADDRESS])},
@@ -314,6 +329,7 @@ async def async_update_device(
         model=adapter_model(details),
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
+        via_device=via_device,
     )
 
 
@@ -349,6 +365,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             source_entry.title,
             details,
+            source_domain,
+            entry.data.get(CONF_SOURCE_DEVICE_ID),
         )
         return True
     manager = _get_manager(hass)
