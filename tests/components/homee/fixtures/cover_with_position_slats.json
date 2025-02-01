@@ -96,6 +96,34 @@
       "options": {
         "automations": ["step"]
       }
+    },
+    {
+      "id": 4,
+      "node_id": 3,
+      "instance": 0,
+      "minimum": -50,
+      "maximum": 125,
+      "current_value": 20.3,
+      "target_value": 20.3,
+      "last_value": 20.3,
+      "unit": "°C",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 5,
+      "state": 1,
+      "last_changed": 1709982925,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
     }
   ]
 }
