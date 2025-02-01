@@ -155,7 +155,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Set the mode of the device."""
         if mode not in self.available_modes:
             raise HomeAssistantError(
-                "{mode} is not one of the valid available modes: {self.available_modes}"
+                f"{mode} is not one of the valid available modes: {self.available_modes}"
             )
         if not self.device.set_humidity_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
