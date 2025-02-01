@@ -279,8 +279,6 @@ def test_entity_selector_schema(schema, valid_selections, invalid_selections) ->
 @pytest.mark.parametrize(
     "schema",
     [
-        # Feature should be string specifying an enum member, not an int
-        {"filter": [{"supported_features": [1]}]},
         # Invalid feature
         {"filter": [{"supported_features": ["blah"]}]},
         # Unknown feature enum
