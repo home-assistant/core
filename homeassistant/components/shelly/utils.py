@@ -606,8 +606,3 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
-
-
-def get_rpc_model_name(info: dict[str, Any]) -> str:
-    """Return the device model name."""
-    return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
