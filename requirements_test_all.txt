@@ -258,7 +258,7 @@ aiohttp_sse==2.2.0
 aiohue==4.7.3
 
 # homeassistant.components.imap
-aioimaplib==2.0.0
+aioimaplib==2.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
