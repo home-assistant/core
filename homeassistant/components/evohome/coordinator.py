@@ -25,10 +25,9 @@ from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_LOCATION_IDX, DOMAIN
+from .const import CONF_LOCATION_IDX
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -239,6 +238,5 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         if await self._update_v2_api_state():
             if self.client_v1:
                 await self._update_v1_api_temps()
-            async_dispatcher_send(self.hass, DOMAIN)
 
         return self.loc.status
