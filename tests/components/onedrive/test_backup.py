@@ -8,8 +8,10 @@ from io import StringIO
 from json import dumps
 from unittest.mock import Mock, patch
 
+from httpx import TimeoutException
 from kiota_abstractions.api_error import APIError
 from msgraph.generated.models.drive_item import DriveItem
+from msgraph_core.models import LargeFileUploadSession
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -156,6 +158,28 @@ async def test_agents_delete(
     mock_drive_items.delete.assert_called_once()
 
 
+async def test_agents_delete_not_found_does_not_throw(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_drive_items: MagicMock,
+) -> None:
+    """Test agent delete backup."""
+    mock_drive_items.children.get = AsyncMock(return_value=[])
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": BACKUP_METADATA["backup_id"],
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    assert mock_drive_items.delete.call_count == 0
+
+
 async def test_agents_upload(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -233,6 +257,140 @@ async def test_broken_upload_session(
     assert "Failed to start backup upload" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        APIError(response_status_code=500),
+        TimeoutException("Timeout"),
+    ],
+)
+async def test_agents_upload_errors_retried(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_adapter: MagicMock,
+    side_effect: Exception,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    mock_adapter.send_async.side_effect = [
+        side_effect,
+        LargeFileUploadSession(next_expected_ranges=["2-"]),
+        LargeFileUploadSession(next_expected_ranges=["2-"]),
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.onedrive.backup.UPLOAD_CHUNK_SIZE", 3),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert mock_adapter.send_async.call_count == 3
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    mock_drive_items.patch.assert_called_once()
+
+
+async def test_agents_upload_4xx_errors_not_retried(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_adapter: MagicMock,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    mock_adapter.send_async.side_effect = APIError(response_status_code=404)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.onedrive.backup.UPLOAD_CHUNK_SIZE", 3),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert mock_adapter.send_async.call_count == 1
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    assert mock_drive_items.patch.call_count == 0
+    assert "Backup operation failed" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (APIError(response_status_code=500), "Backup operation failed"),
+        (TimeoutException("Timeout"), "Backup operation timed out"),
+    ],
+)
+async def test_agents_upload_fails_after_max_retries(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_drive_items: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_adapter: MagicMock,
+    side_effect: Exception,
+    error: str,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    mock_adapter.send_async.side_effect = side_effect
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.onedrive.backup.UPLOAD_CHUNK_SIZE", 3),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert mock_adapter.send_async.call_count == 6
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    assert mock_drive_items.patch.call_count == 0
+    assert error in caplog.text
+
+
 async def test_agents_download(
     hass_client: ClientSessionGenerator,
     mock_drive_items: MagicMock,
@@ -257,10 +415,10 @@ async def test_agents_download(
     ("side_effect", "error"),
     [
         (
-            APIError(response_status_code=404, message="File not found."),
+            APIError(response_status_code=500),
             "Backup operation failed",
         ),
-        (TimeoutError(), "Backup operation timed out"),
+        (TimeoutException("Timeout"), "Backup operation timed out"),
     ],
 )
 async def test_delete_error(
@@ -290,22 +448,14 @@ async def test_delete_error(
     }
 
 
-@pytest.mark.parametrize(
-    "problem",
-    [
-        AsyncMock(return_value=None),
-        AsyncMock(side_effect=APIError(response_status_code=404)),
-    ],
-)
 async def test_agents_backup_not_found(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_drive_items: MagicMock,
-    problem: AsyncMock,
 ) -> None:
     """Test backup not found."""
 
-    mock_drive_items.get = problem
+    mock_drive_items.children.get = AsyncMock(return_value=[])
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -313,26 +463,6 @@ async def test_agents_backup_not_found(
 
     assert response["success"]
     assert response["result"]["backup"] is None
-
-
-async def test_agents_backup_error(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_drive_items: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test backup not found."""
-
-    mock_drive_items.get = AsyncMock(side_effect=APIError(response_status_code=500))
-    backup_id = BACKUP_METADATA["backup_id"]
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
-    response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {
-        f"{DOMAIN}.{mock_config_entry.unique_id}": "Backup operation failed"
-    }
 
 
 async def test_reauth_on_403(
@@ -343,7 +473,9 @@ async def test_reauth_on_403(
 ) -> None:
     """Test we re-authenticate on 403."""
 
-    mock_drive_items.get = AsyncMock(side_effect=APIError(response_status_code=403))
+    mock_drive_items.children.get = AsyncMock(
+        side_effect=APIError(response_status_code=403)
+    )
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})

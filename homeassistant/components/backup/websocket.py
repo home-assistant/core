@@ -60,8 +60,10 @@ async def handle_info(
             "backups": [backup.as_frontend_json() for backup in backups.values()],
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "last_non_idle_event": manager.last_non_idle_event,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
             "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
+            "state": manager.state,
         },
     )
 
@@ -197,7 +199,7 @@ async def handle_can_decrypt_on_download(
         vol.Optional("include_database", default=True): bool,
         vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
-        vol.Optional("name"): str,
+        vol.Optional("name"): vol.Any(str, None),
         vol.Optional("password"): vol.Any(str, None),
     }
 )

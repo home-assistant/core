@@ -19,7 +19,11 @@ from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
 import aiohttp
 from securetar import SecureTarFile, atomic_contents_add
 
-from homeassistant.backup_restore import RESTORE_BACKUP_FILE, password_to_key
+from homeassistant.backup_restore import (
+    RESTORE_BACKUP_FILE,
+    RESTORE_BACKUP_RESULT_FILE,
+    password_to_key,
+)
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -28,7 +32,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.json import json_bytes
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, json as json_util
 
 from . import util as backup_util
 from .agent import (
@@ -261,6 +265,14 @@ class BackupReaderWriter(abc.ABC):
     ) -> None:
         """Restore a backup."""
 
+    @abc.abstractmethod
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Get restore events after core restart."""
+
 
 class BackupReaderWriterError(BackupError):
     """Backup reader/writer error."""
@@ -317,6 +329,10 @@ class BackupManager:
         if stored:
             self.config.load(stored["config"])
             self.known_backups.load(stored["backups"])
+
+        await self._reader_writer.async_resume_restore_progress_after_restart(
+            on_progress=self.async_on_backup_event
+        )
 
         await self.load_platforms()
 
@@ -669,6 +685,70 @@ class BackupManager:
 
         return agent_errors
 
+    async def async_delete_filtered_backups(
+        self,
+        *,
+        include_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
+        delete_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
+    ) -> None:
+        """Delete backups parsed with a filter.
+
+        :param include_filter: A filter that should return the backups to consider for
+        deletion. Note: The newest of the backups returned by include_filter will
+        unconditionally be kept, even if delete_filter returns all backups.
+        :param delete_filter: A filter that should return the backups to delete.
+        """
+        backups, get_agent_errors = await self.async_get_backups()
+        if get_agent_errors:
+            LOGGER.debug(
+                "Error getting backups; continuing anyway: %s",
+                get_agent_errors,
+            )
+
+        # Run the include filter first to ensure we only consider backups that
+        # should be included in the deletion process.
+        backups = include_filter(backups)
+
+        LOGGER.debug("Total automatic backups: %s", backups)
+
+        backups_to_delete = delete_filter(backups)
+
+        if not backups_to_delete:
+            return
+
+        # always delete oldest backup first
+        backups_to_delete = dict(
+            sorted(
+                backups_to_delete.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )
+        )
+
+        if len(backups_to_delete) >= len(backups):
+            # Never delete the last backup.
+            last_backup = backups_to_delete.popitem()
+            LOGGER.debug("Keeping the last backup: %s", last_backup)
+
+        LOGGER.debug("Backups to delete: %s", backups_to_delete)
+
+        if not backups_to_delete:
+            return
+
+        backup_ids = list(backups_to_delete)
+        delete_results = await asyncio.gather(
+            *(self.async_delete_backup(backup_id) for backup_id in backups_to_delete)
+        )
+        agent_errors = {
+            backup_id: error
+            for backup_id, error in zip(backup_ids, delete_results, strict=True)
+            if error
+        }
+        if agent_errors:
+            LOGGER.error(
+                "Error deleting old copies: %s",
+                agent_errors,
+            )
+
     async def async_receive_backup(
         self,
         *,
@@ -882,7 +962,7 @@ class BackupManager:
             )
 
         backup_name = (
-            name
+            (name if name is None else name.strip())
             or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
         extra_metadata = extra_metadata or {}
@@ -1150,7 +1230,11 @@ class BackupManager:
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={"failed_agents": ", ".join(agent_errors)},
+            translation_placeholders={
+                "failed_agents": ", ".join(
+                    self.backup_agents[agent_id].name for agent_id in agent_errors
+                )
+            },
         )
 
     async def async_can_decrypt_on_download(
@@ -1330,10 +1414,24 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         if agent_config and not agent_config.protected:
             password = None
 
+        backup = AgentBackup(
+            addons=[],
+            backup_id=backup_id,
+            database_included=include_database,
+            date=date_str,
+            extra_metadata=extra_metadata,
+            folders=[],
+            homeassistant_included=True,
+            homeassistant_version=HAVERSION,
+            name=backup_name,
+            protected=password is not None,
+            size=0,
+        )
+
         local_agent_tar_file_path = None
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            local_agent_tar_file_path = local_agent.get_backup_path(backup_id)
+            local_agent_tar_file_path = local_agent.get_new_backup_path(backup)
 
         on_progress(
             CreateBackupEvent(
@@ -1375,19 +1473,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             # ValueError from json_bytes
             raise BackupReaderWriterError(str(err)) from err
         else:
-            backup = AgentBackup(
-                addons=[],
-                backup_id=backup_id,
-                database_included=include_database,
-                date=date_str,
-                extra_metadata=extra_metadata,
-                folders=[],
-                homeassistant_included=True,
-                homeassistant_version=HAVERSION,
-                name=backup_name,
-                protected=password is not None,
-                size=size_in_bytes,
-            )
+            backup = replace(backup, size=size_in_bytes)
 
             async_add_executor_job = self._hass.async_add_executor_job
 
@@ -1501,7 +1587,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         manager = self._hass.data[DATA_MANAGER]
         if self._local_agent_id in agent_ids:
             local_agent = manager.local_backup_agents[self._local_agent_id]
-            tar_file_path = local_agent.get_backup_path(backup.backup_id)
+            tar_file_path = local_agent.get_new_backup_path(backup)
             await async_add_executor_job(make_backup_dir, tar_file_path.parent)
             await async_add_executor_job(shutil.move, temp_file, tar_file_path)
         else:
@@ -1604,6 +1690,54 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         )
         await self._hass.services.async_call("homeassistant", "restart", blocking=True)
+
+    async def async_resume_restore_progress_after_restart(
+        self,
+        *,
+        on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
+    ) -> None:
+        """Check restore status after core restart."""
+
+        def _read_restore_file() -> json_util.JsonObjectType | None:
+            """Read the restore file."""
+            result_path = Path(self._hass.config.path(RESTORE_BACKUP_RESULT_FILE))
+
+            try:
+                restore_result = json_util.json_loads_object(result_path.read_bytes())
+            except FileNotFoundError:
+                return None
+            finally:
+                try:
+                    result_path.unlink(missing_ok=True)
+                except OSError as err:
+                    LOGGER.warning(
+                        "Unexpected error deleting backup restore result file: %s %s",
+                        type(err),
+                        err,
+                    )
+
+            return restore_result
+
+        restore_result = await self._hass.async_add_executor_job(_read_restore_file)
+        if not restore_result:
+            return
+
+        success = restore_result["success"]
+        if not success:
+            LOGGER.warning(
+                "Backup restore failed with %s: %s",
+                restore_result["error_type"],
+                restore_result["error"],
+            )
+        state = RestoreBackupState.COMPLETED if success else RestoreBackupState.FAILED
+        on_progress(
+            RestoreBackupEvent(
+                reason=cast(str, restore_result["error"]),
+                stage=None,
+                state=state,
+            )
+        )
+        on_progress(IdleEvent())
 
 
 def _generate_backup_id(date: str, name: str) -> str:
