@@ -46,7 +46,7 @@ async def test_full_flow(
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "IOmeter-1ISK0000000000"
+    assert result["title"] == "IOmeter 1ISK0000000000"
     assert result["data"] == {
         CONF_HOST: "10.0.0.2",
     }
@@ -74,7 +74,7 @@ async def test_zeroconf_flow(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "IOmeter-1ISK0000000000"
+    assert result["title"] == "IOmeter 1ISK0000000000"
     assert result["data"] == {
         CONF_HOST: "10.0.0.2",
     }
