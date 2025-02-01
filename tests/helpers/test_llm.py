@@ -1010,6 +1010,7 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
 async def test_action_tool(hass: HomeAssistant) -> None:
     """Test ActionTool can be created for each action (service) without exceptions."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "demo", {})
     for domain, actions in hass.services.async_services().items():
         for action in actions:
             tool = llm.ActionTool(hass, domain, action)
