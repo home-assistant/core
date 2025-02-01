@@ -60,4 +60,6 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.appliance.info.connected is True and self._attr_available
+        return (
+            self.appliance.info.connected and self._attr_available and super().available
+        )
