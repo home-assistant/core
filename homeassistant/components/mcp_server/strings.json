@@ -18,7 +18,7 @@
   "selector": {
     "llm_api": {
       "options": {
-        "stateless_assist": "Stateless Assist API"
+        "stateless_assist": "Stateless Assist"
       }
     }
   }

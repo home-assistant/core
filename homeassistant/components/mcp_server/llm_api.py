@@ -19,7 +19,7 @@ class StatelessAssistAPI(llm.AssistAPI):
         """Initialize the StatelessAssistAPI."""
         super().__init__(hass)
         self.id = "stateless_assist"
-        self.name = "Stateless Assist API"
+        self.name = "Stateless Assist"
 
     # Expose INTENT_GET_STATE
     IGNORE_INTENTS = {
