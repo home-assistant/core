@@ -24,7 +24,5 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for Electric Kiwi."""
-        existing_entry = await self.async_set_unique_id(DOMAIN)
-        if existing_entry:
-            return self.async_update_reload_and_abort(existing_entry, data=data)
+        await self.async_set_unique_id(DOMAIN)
         return await super().async_oauth_create_entry(data)
