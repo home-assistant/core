@@ -171,14 +171,11 @@ class OneDriveBackupAgent(BackupAgent):
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        backups: list[AgentBackup] = []
-        items = await self._client.list_drive_items(self._folder_id)
-        backups.extend(
+        return [
             self._backup_from_description(item.description)
-            for item in items
-            if item.description
-        )
-        return backups
+            for item in await self._client.list_drive_items(self._folder_id)
+            if item.description and "homeassistant_version" in item.description
+        ]
 
     @handle_backup_errors
     async def async_get_backup(
@@ -186,9 +183,11 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> AgentBackup | None:
         """Return a backup."""
         item = await self._find_item_by_backup_id(backup_id)
-        if item is None or not item.description:
-            return None
-        return self._backup_from_description(item.description)
+        return (
+            self._backup_from_description(item.description)
+            if item and item.description
+            else None
+        )
 
     def _backup_from_description(self, description: str) -> AgentBackup:
         """Create a backup object from a description."""
