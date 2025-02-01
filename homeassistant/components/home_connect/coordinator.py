@@ -257,14 +257,9 @@ class HomeConnectCoordinator(
                 appliance_data = appliances_data[appliance.ha_id]
             else:
                 appliances_data[appliance.ha_id] = appliance_data
-            if (
-                appliance.type in APPLIANCES_WITH_PROGRAMS
-                and not appliance_data.programs
-            ):
+            if appliance.type in APPLIANCES_WITH_PROGRAMS:
                 try:
-                    appliance_data.programs.extend(
-                        (await self.client.get_all_programs(appliance.ha_id)).programs
-                    )
+                    all_programs = await self.client.get_all_programs(appliance.ha_id)
                 except HomeConnectError as error:
                     _LOGGER.debug(
                         "Error fetching programs for %s: %s",
@@ -273,4 +268,30 @@ class HomeConnectCoordinator(
                         if isinstance(error, HomeConnectApiError)
                         else type(error).__name__,
                     )
+                else:
+                    appliance_data.programs.extend(all_programs.programs)
+                    for program, event_key in (
+                        (
+                            all_programs.active,
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                        ),
+                        (
+                            all_programs.selected,
+                            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                        ),
+                    ):
+                        if program and program.key:
+                            appliance_data.events.update(
+                                {
+                                    event_key: Event(
+                                        event_key,
+                                        event_key.value,
+                                        0,
+                                        "",
+                                        "",
+                                        program.key,
+                                    )
+                                }
+                            )
+
         return appliances_data
