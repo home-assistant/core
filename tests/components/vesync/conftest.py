@@ -168,7 +168,9 @@ async def switch_old_id_config_entry(
     )
     entry.add_to_hass(hass)
 
-    device_name = "Wall Switch"
-    mock_multiple_device_responses(requests_mock, [device_name])
+    wall_switch = "Wall Switch"
+    humidifer = "Humidifier 200s"
+
+    mock_multiple_device_responses(requests_mock, [wall_switch, humidifer])
 
     return entry

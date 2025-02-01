@@ -136,7 +136,7 @@ async def test_migrate_config_entry(
     """Test migration of config entry. Only migrates switches to a new unique_id."""
     entity_registry = er.async_get(hass)
 
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+    switch: er.RegistryEntry = entity_registry.async_get_or_create(
         domain="switch",
         platform="vesync",
         unique_id="switch",
@@ -144,15 +144,39 @@ async def test_migrate_config_entry(
         suggested_object_id="switch",
     )
 
-    assert entity.unique_id == "switch"
+    humidifer: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain="humidifer",
+        platform="vesync",
+        unique_id="humidifer",
+        config_entry=switch_old_id_config_entry,
+        suggested_object_id="humidifer",
+    )
+
+    assert switch.unique_id == "switch"
     assert switch_old_id_config_entry.version == 1
+    assert humidifer.unique_id == "humidifer"
 
     await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert switch_old_id_config_entry.version == 2
 
-    migrated_entity = entity_registry.async_get(entity.entity_id)
-    assert migrated_entity is not None
-    assert migrated_entity.entity_id.startswith("switch")
-    assert migrated_entity.unique_id == "switch-device_status"
+    migrated_switch = entity_registry.async_get(switch.entity_id)
+    assert migrated_switch is not None
+    assert migrated_switch.entity_id.startswith("switch")
+    assert migrated_switch.unique_id == "switch-device_status"
+    # Confirm humidifer was not impacted
+    migrated_humidifer = entity_registry.async_get(humidifer.entity_id)
+    assert migrated_humidifer is not None
+    assert migrated_humidifer.unique_id == "humidifer"
+
+    # Assert that only one entity exists in the switch domain
+    switch_entities = [
+        e for e in entity_registry.entities.values() if e.domain == "switch"
+    ]
+    assert len(switch_entities) == 1
+
+    humidifer_entities = [
+        e for e in entity_registry.entities.values() if e.domain == "humidifer"
+    ]
+    assert len(humidifer_entities) == 1
