@@ -6,11 +6,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import Mock, patch
 
-from onedrive_personal_sdk.exceptions import (
-    AuthenticationError,
-    NotFoundError,
-    OneDriveException,
-)
+from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -248,7 +244,7 @@ async def test_agents_delete_not_found_does_not_throw(
     mock_onedrive_client: MagicMock,
 ) -> None:
     """Test agent delete backup."""
-    mock_onedrive_client.delete_drive_item.side_effect = NotFoundError(404, "Not found")
+    mock_onedrive_client.list_drive_items.return_value = []
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -261,7 +257,6 @@ async def test_agents_delete_not_found_does_not_throw(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_onedrive_client.delete_drive_item.assert_called_once()
 
 
 async def test_agents_backup_not_found(
@@ -271,7 +266,7 @@ async def test_agents_backup_not_found(
 ) -> None:
     """Test backup not found."""
 
-    mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
+    mock_onedrive_client.list_drive_items.return_value = []
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -289,7 +284,7 @@ async def test_reauth_on_403(
 ) -> None:
     """Test we re-authenticate on 403."""
 
-    mock_onedrive_client.get_drive_item.side_effect = AuthenticationError(
+    mock_onedrive_client.list_drive_items.side_effect = AuthenticationError(
         403, "Auth failed"
     )
     backup_id = BACKUP_METADATA["backup_id"]

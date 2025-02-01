@@ -11,15 +11,16 @@ from typing import Any, Concatenate
 
 from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
-from onedrive_personal_sdk.exceptions import (
-    AuthenticationError,
-    NotFoundError,
-    OneDriveException,
-)
-from onedrive_personal_sdk.models.items import ItemUpdate
+from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
+from onedrive_personal_sdk.models.items import File, Folder, ItemUpdate
 from onedrive_personal_sdk.models.upload import FileInfo
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    suggested_filename,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -28,6 +29,7 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
+TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
 
 
 async def async_get_backup_agents(
@@ -114,11 +116,11 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
+        item = await self._find_item_by_backup_id(backup_id)
+        if item is None:
+            raise BackupAgentError("Backup not found")
 
-        stream = await self._client.download_drive_item(
-            self._get_backup_path(backup_id),
-            timeout=ClientTimeout(connect=10, total=43200),  # 12 hours
-        )
+        stream = await self._client.download_drive_item(item.id, timeout=TIMEOUT)
         return stream.iter_chunked(1024)
 
     @handle_backup_errors
@@ -131,8 +133,10 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup."""
 
+        filename = suggested_filename(backup)
+
         file = FileInfo(
-            f"{backup.backup_id}.tar",
+            filename,
             backup.size,
             self._folder_id,
             await open_stream(),
@@ -148,7 +152,7 @@ class OneDriveBackupAgent(BackupAgent):
         _LOGGER.debug("Creating metadata: %s", description)
 
         await self._client.update_drive_item(
-            path_or_id=self._get_backup_path(backup.backup_id),
+            path_or_id=f"{self._folder_id}:/{filename}:",
             data=ItemUpdate(description=description),
         )
 
@@ -159,10 +163,10 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        try:
-            await self._client.delete_drive_item(self._get_backup_path(backup_id))
-        except NotFoundError:
+        item = await self._find_item_by_backup_id(backup_id)
+        if item is None:
             return
+        await self._client.delete_drive_item(item.id)
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -181,9 +185,8 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AgentBackup | None:
         """Return a backup."""
-        try:
-            item = await self._client.get_drive_item(self._get_backup_path(backup_id))
-        except NotFoundError:
+        item = await self._find_item_by_backup_id(backup_id)
+        if item is None:
             return None
 
         return (
@@ -199,5 +202,9 @@ class OneDriveBackupAgent(BackupAgent):
         )  # OneDrive encodes the description on save automatically
         return AgentBackup.from_dict(json.loads(description))
 
-    def _get_backup_path(self, backup_id: str) -> str:
-        return f"{self._folder_id}:/{backup_id}.tar:"
+    async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:
+        """Find an item by backup ID."""
+        for item in await self._client.list_drive_items(self._folder_id):
+            if item.description and backup_id in item.description:
+                return item
+        return None
