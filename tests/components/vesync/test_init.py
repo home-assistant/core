@@ -48,6 +48,7 @@ async def test_async_setup_entry__no_devices(
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
+            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
@@ -78,6 +79,7 @@ async def test_async_setup_entry__loads_fans(
         assert setups_mock.call_count == 1
         assert setups_mock.call_args.args[0] == config_entry
         assert setups_mock.call_args.args[1] == [
+            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.HUMIDIFIER,
             Platform.LIGHT,
@@ -90,23 +92,36 @@ async def test_async_setup_entry__loads_fans(
     assert hass.data[DOMAIN][VS_DEVICES] == [fan]
 
 
-async def test_async_new_device_discovery__loads_fans(
-    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan
+async def test_async_new_device_discovery(
+    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan, humidifier
 ) -> None:
-    """Test setup connects to vesync and loads fan as an update call."""
+    """Test new device discovery."""
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     # Assert platforms loaded
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
     assert not hass.data[DOMAIN][VS_DEVICES]
-    fans = [fan]
-    manager.fans = fans
-    manager._dev_list = {
-        "fans": fans,
-    }
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
 
-    assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert hass.data[DOMAIN][VS_DEVICES] == [fan]
+    # Mock discovery of new fan which would get added to VS_DEVICES.
+    with patch(
+        "homeassistant.components.vesync.async_generate_device_list",
+        return_value=[fan],
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+
+        assert manager.login.call_count == 1
+        assert hass.data[DOMAIN][VS_MANAGER] == manager
+        assert hass.data[DOMAIN][VS_DEVICES] == [fan]
+
+    # Mock discovery of new humidifier which would invoke discovery in all platforms.
+    # The mocked humidifier needs to have all properties populated for correct processing.
+    with patch(
+        "homeassistant.components.vesync.async_generate_device_list",
+        return_value=[humidifier],
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
+
+        assert manager.login.call_count == 1
+        assert hass.data[DOMAIN][VS_MANAGER] == manager
+        assert hass.data[DOMAIN][VS_DEVICES] == [fan, humidifier]

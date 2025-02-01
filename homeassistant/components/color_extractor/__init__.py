@@ -17,8 +17,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON

@@ -25,7 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ABSOLUTE_MOVE,

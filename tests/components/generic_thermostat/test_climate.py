@@ -7,7 +7,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
@@ -35,7 +35,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfTemperature,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
