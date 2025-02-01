@@ -167,7 +167,6 @@ async def test_connected_devices(
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
     assert device
     entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entity_entries
 
     await client.add_events(
         [

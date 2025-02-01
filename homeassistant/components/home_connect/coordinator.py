@@ -87,6 +87,7 @@ class HomeConnectCoordinator(
         self._special_listeners: dict[
             CALLBACK_TYPE, tuple[CALLBACK_TYPE, tuple[EventKey, ...]]
         ] = {}
+        self.device_registry = dr.async_get(self.hass)
 
     @cached_property
     def context_listeners(self) -> dict[tuple[str, EventKey], list[CALLBACK_TYPE]]:
@@ -209,12 +210,11 @@ class HomeConnectCoordinator(
                                     listener()
 
                         case EventType.DEPAIRED:
-                            device_registry = dr.async_get(self.hass)
-                            device = device_registry.async_get_device(
+                            device = self.device_registry.async_get_device(
                                 identifiers={(DOMAIN, event_message.ha_id)}
                             )
                             if device:
-                                device_registry.async_update_device(
+                                self.device_registry.async_update_device(
                                     device_id=device.id,
                                     remove_config_entry_id=self.config_entry.entry_id,
                                 )
@@ -275,6 +275,13 @@ class HomeConnectCoordinator(
         appliance_data_to_update: HomeConnectApplianceData | None = None,
     ) -> HomeConnectApplianceData:
         """Get appliance data."""
+        self.device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, appliance.ha_id)},
+            manufacturer=appliance.brand,
+            name=appliance.name,
+            model=appliance.vib,
+        )
         try:
             settings = {
                 setting.key: setting

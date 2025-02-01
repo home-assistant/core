@@ -154,10 +154,9 @@ async def test_connected_devices(
     client.get_settings = get_settings_original_mock
     client.get_available_programs = get_available_programs_mock
 
-    # Because this platform doesn't have entities that are always created,
-    # the device will not be created (and of course, the entities won't be created either)
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
-    assert not device
+    assert device
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
 
     await client.add_events(
         [
@@ -172,8 +171,8 @@ async def test_connected_devices(
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
     assert device
-    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert entity_entries
+    new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert len(new_entity_entries) > len(entity_entries)
 
 
 @pytest.mark.parametrize(
