@@ -2,7 +2,9 @@
 
 from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
+from websockets.exceptions import ConnectionClosed
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -137,7 +139,13 @@ class HomeeNodeEntity(Entity):
     async def async_set_value(self, attribute: HomeeAttribute, value: float) -> None:
         """Set an attribute value on the homee node."""
         homee = self._entry.runtime_data
-        await homee.set_value(attribute.node_id, attribute.id, value)
+        try:
+            await homee.set_value(attribute.node_id, attribute.id, value)
+        except ConnectionClosed as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_closed",
+            ) from exception
 
     def _on_node_updated(self, node: HomeeNode) -> None:
         self.schedule_update_ha_state()
