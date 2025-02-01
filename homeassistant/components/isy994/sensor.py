@@ -198,13 +198,12 @@ class ISYSensorEntity(ISYNodeEntity, SensorEntity):
 
         # Handle ISY precision and rounding
         value = convert_isy_value_to_hass(value, uom, self.target.prec)
+        if value is None:
+            return None
 
         # Convert temperatures to Home Assistant's unit
         if uom in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT):
             value = self.hass.config.units.temperature(value, uom)
-
-        if value is None:
-            return None
 
         assert isinstance(value, (int, float))
         return value
