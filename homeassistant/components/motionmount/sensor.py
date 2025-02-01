@@ -3,19 +3,20 @@
 import motionmount
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import MotionMountConfigEntry
 from .entity import MotionMountEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MotionMountConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Vogel's MotionMount from a config entry."""
-    mm = hass.data[DOMAIN][entry.entry_id]
+    mm = entry.runtime_data
 
     async_add_entities((MotionMountErrorStatusSensor(mm, entry),))
 
@@ -27,7 +28,9 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
     _attr_options = ["none", "motor", "internal"]
     _attr_translation_key = "motionmount_error_status"
 
-    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
+    ) -> None:
         """Initialize sensor entiry."""
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-error-status"

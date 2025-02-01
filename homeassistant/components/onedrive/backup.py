@@ -34,7 +34,12 @@ from msgraph.generated.models.drive_item_uploadable_properties import (
 )
 from msgraph_core.models import LargeFileUploadSession
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    suggested_filename,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -130,6 +135,10 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
         # this forces the query to return a raw httpx response, but breaks typing
+        backup = await self._find_item_by_backup_id(backup_id)
+        if backup is None or backup.id is None:
+            raise BackupAgentError("Backup not found")
+
         request_config = (
             ContentRequestBuilder.ContentRequestBuilderGetRequestConfiguration(
                 options=[ResponseHandlerOption(NativeResponseHandler())],
@@ -137,7 +146,7 @@ class OneDriveBackupAgent(BackupAgent):
         )
         response = cast(
             Response,
-            await self._get_backup_file_item(backup_id).content.get(
+            await self._items.by_drive_item_id(backup.id).content.get(
                 request_configuration=request_config
             ),
         )
@@ -162,9 +171,10 @@ class OneDriveBackupAgent(BackupAgent):
                 },
             )
         )
-        upload_session = await self._get_backup_file_item(
-            backup.backup_id
-        ).create_upload_session.post(upload_session_request_body)
+        file_item = self._get_backup_file_item(suggested_filename(backup))
+        upload_session = await file_item.create_upload_session.post(
+            upload_session_request_body
+        )
 
         if upload_session is None or upload_session.upload_url is None:
             raise BackupAgentError(
@@ -181,9 +191,7 @@ class OneDriveBackupAgent(BackupAgent):
         description = json.dumps(backup_dict)
         _LOGGER.debug("Creating metadata: %s", description)
 
-        await self._get_backup_file_item(backup.backup_id).patch(
-            DriveItem(description=description)
-        )
+        await file_item.patch(DriveItem(description=description))
 
     @handle_backup_errors
     async def async_delete_backup(
@@ -192,13 +200,10 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-
-        try:
-            await self._get_backup_file_item(backup_id).delete()
-        except APIError as err:
-            if err.response_status_code == 404:
-                return
-            raise
+        backup = await self._find_item_by_backup_id(backup_id)
+        if backup is None or backup.id is None:
+            return
+        await self._items.by_drive_item_id(backup.id).delete()
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -218,18 +223,12 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AgentBackup | None:
         """Return a backup."""
-        try:
-            drive_item = await self._get_backup_file_item(backup_id).get()
-        except APIError as err:
-            if err.response_status_code == 404:
-                return None
-            raise
-        if (
-            drive_item is not None
-            and (description := drive_item.description) is not None
-        ):
-            return self._backup_from_description(description)
-        return None
+        backup = await self._find_item_by_backup_id(backup_id)
+        if backup is None:
+            return None
+
+        assert backup.description  # already checked in _find_item_by_backup_id
+        return self._backup_from_description(backup.description)
 
     def _backup_from_description(self, description: str) -> AgentBackup:
         """Create a backup object from a description."""
@@ -238,8 +237,20 @@ class OneDriveBackupAgent(BackupAgent):
         )  # OneDrive encodes the description on save automatically
         return AgentBackup.from_dict(json.loads(description))
 
+    async def _find_item_by_backup_id(self, backup_id: str) -> DriveItem | None:
+        """Find a backup item by its backup ID."""
+
+        items = await self._items.by_drive_item_id(f"{self._folder_id}").children.get()
+        if items and (values := items.value):
+            for item in values:
+                if (description := item.description) is None:
+                    continue
+                if backup_id in description:
+                    return item
+        return None
+
     def _get_backup_file_item(self, backup_id: str) -> DriveItemItemRequestBuilder:
-        return self._items.by_drive_item_id(f"{self._folder_id}:/{backup_id}.tar:")
+        return self._items.by_drive_item_id(f"{self._folder_id}:/{backup_id}:")
 
     async def _upload_file(
         self, upload_url: str, stream: AsyncIterator[bytes], total_size: int

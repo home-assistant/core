@@ -121,9 +121,10 @@ class HomeConnectCoordinator(
         while True:
             try:
                 async for event_message in self.client.stream_all_events():
+                    event_message_ha_id = event_message.ha_id
                     match event_message.type:
                         case EventType.STATUS:
-                            statuses = self.data[event_message.ha_id].status
+                            statuses = self.data[event_message_ha_id].status
                             for event in event_message.data.items:
                                 status_key = StatusKey(event.key)
                                 if status_key in statuses:
@@ -134,10 +135,11 @@ class HomeConnectCoordinator(
                                         raw_key=status_key.value,
                                         value=event.value,
                                     )
+                            self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
-                            settings = self.data[event_message.ha_id].settings
-                            events = self.data[event_message.ha_id].events
+                            settings = self.data[event_message_ha_id].settings
+                            events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
                                 if event.key in SettingKey:
                                     setting_key = SettingKey(event.key)
@@ -151,13 +153,25 @@ class HomeConnectCoordinator(
                                         )
                                 else:
                                     events[event.key] = event
+                            self._call_event_listener(event_message)
 
                         case EventType.EVENT:
-                            events = self.data[event_message.ha_id].events
+                            events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
                                 events[event.key] = event
+                            self._call_event_listener(event_message)
 
-                    self._call_event_listener(event_message)
+                        case EventType.CONNECTED:
+                            self.data[event_message_ha_id].info.connected = True
+                            self._call_all_event_listeners_for_appliance(
+                                event_message_ha_id
+                            )
+
+                        case EventType.DISCONNECTED:
+                            self.data[event_message_ha_id].info.connected = False
+                            self._call_all_event_listeners_for_appliance(
+                                event_message_ha_id
+                            )
 
             except (EventStreamInterruptedError, HomeConnectRequestError) as error:
                 _LOGGER.debug(
@@ -184,6 +198,12 @@ class HomeConnectCoordinator(
             for listener in self.context_listeners.get(
                 (event_message.ha_id, event.key), []
             ):
+                listener()
+
+    @callback
+    def _call_all_event_listeners_for_appliance(self, ha_id: str):
+        for listener, context in self._listeners.values():
+            if isinstance(context, tuple) and context[0] == ha_id:
                 listener()
 
     async def _async_update_data(self) -> dict[str, HomeConnectApplianceData]:

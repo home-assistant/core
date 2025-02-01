@@ -18,7 +18,13 @@ from homeassistant.components.home_connect.const import (
 )
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -42,6 +48,59 @@ async def test_binary_sensors(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_binary_sensors_entity_availabilty(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test if binary sensor entities availability are based on the appliance connection state."""
+    entity_ids = [
+        "binary_sensor.washer_door",
+        "binary_sensor.washer_remote_control",
+    ]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DISCONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
