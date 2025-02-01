@@ -27,6 +27,7 @@ from aiohomeconnect.model.error import (
     NoProgramActiveError,
     NoProgramSelectedError,
 )
+from aiohomeconnect.model.program import EnumerateProgram
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -233,27 +234,24 @@ async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
     if appliance_type not in MOCK_PROGRAMS:
         raise HomeConnectApiError("error.key", "error description")
 
-    return ArrayOfPrograms.from_dict(MOCK_PROGRAMS[appliance_type]["data"])
+    return ArrayOfPrograms(
+        [
+            EnumerateProgram.from_dict(program)
+            for program in MOCK_PROGRAMS[appliance_type]["data"]["programs"]
+        ],
+        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+    )
 
 
 async def _get_active_program(ha_id: str) -> Program:
     """Get active program."""
-    try:
-        return Program.from_dict(
-            (await _get_all_programs_side_effect(ha_id)).programs[0].to_dict()
-        )
-    except KeyError as err:
-        raise NoProgramActiveError("error.key", "error description") from err
+    return _get_all_programs_side_effect(ha_id).active_program
 
 
 async def _get_selected_program(ha_id: str) -> Program:
     """Get selected program."""
-    try:
-        return Program.from_dict(
-            (await _get_all_programs_side_effect(ha_id)).programs[0].to_dict()
-        )
-    except KeyError as err:
-        raise NoProgramSelectedError("error.key", "error description") from err
+    return _get_all_programs_side_effect(ha_id).selected_program
 
 
 async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:

@@ -238,51 +238,40 @@ class HomeConnectCoordinator(
             else:
                 appliances_data[appliance.ha_id] = appliance_data
             if appliance.type in APPLIANCES_WITH_PROGRAMS:
-                for method, event_key in (
-                    (
-                        self.client.get_active_program,
-                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                    ),
-                    (
-                        self.client.get_selected_program,
-                        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-                    ),
-                ):
-                    try:
-                        program = await method(appliance.ha_id)
-                    except HomeConnectError as error:
-                        _LOGGER.debug(
-                            "Error fetching %s program for %s: %s",
-                            method.__name__,
-                            appliance.ha_id,
-                            error,
-                        )
-                    else:
-                        appliance_data.events.update(
-                            {
-                                event_key: Event(
-                                    event_key,
-                                    event_key.value,
-                                    0,
-                                    "",
-                                    "",
-                                    program.key,
-                                )
-                            }
-                        )
-                if not appliance_data.programs:
-                    try:
-                        appliance_data.programs.extend(
-                            (
-                                await self.client.get_all_programs(appliance.ha_id)
-                            ).programs
-                        )
-                    except HomeConnectError as error:
-                        _LOGGER.debug(
-                            "Error fetching programs for %s: %s",
-                            appliance.ha_id,
-                            error
-                            if isinstance(error, HomeConnectApiError)
-                            else type(error).__name__,
-                        )
+                try:
+                    all_programs = await self.client.get_all_programs(appliance.ha_id)
+                except HomeConnectError as error:
+                    _LOGGER.debug(
+                        "Error fetching programs for %s: %s",
+                        appliance.ha_id,
+                        error
+                        if isinstance(error, HomeConnectApiError)
+                        else type(error).__name__,
+                    )
+                else:
+                    appliance_data.programs.extend(all_programs.programs)
+                    for program, event_key in (
+                        (
+                            all_programs.active,
+                            EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                        ),
+                        (
+                            all_programs.selected,
+                            EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                        ),
+                    ):
+                        if program:
+                            appliance_data.events.update(
+                                {
+                                    event_key: Event(
+                                        event_key,
+                                        event_key.value,
+                                        0,
+                                        "",
+                                        "",
+                                        program.key,
+                                    )
+                                }
+                            )
+
         return appliances_data
