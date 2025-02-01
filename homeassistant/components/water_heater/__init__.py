@@ -73,6 +73,7 @@ ATTR_OPERATION_LIST = "operation_list"
 ATTR_TARGET_TEMP_HIGH = "target_temp_high"
 ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
+ATTR_BOOST_DURATION = "boost_duration"
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
 
@@ -87,6 +88,7 @@ SET_TEMPERATURE_SCHEMA: VolDictType = {
 }
 SET_OPERATION_MODE_SCHEMA: VolDictType = {
     vol.Required(ATTR_OPERATION_MODE): cv.string,
+    vol.Optional(ATTR_BOOST_DURATION): cv.positive_int,
 }
 
 # mypy: disallow-any-generics
@@ -150,6 +152,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "target_temperature_high",
     "target_temperature_low",
     "is_away_mode_on",
+    "boost_duration",
 }
 
 
@@ -161,6 +164,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     entity_description: WaterHeaterEntityDescription
+    _attr_boost_duration: int | None = None
     _attr_current_operation: str | None = None
     _attr_current_temperature: float | None = None
     _attr_is_away_mode_on: bool | None = None
@@ -204,6 +208,7 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if WaterHeaterEntityFeature.OPERATION_MODE in self.supported_features:
             data[ATTR_OPERATION_LIST] = self.operation_list
+            data[ATTR_BOOST_DURATION] = self.boost_duration
 
         return data
 
@@ -265,6 +270,11 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_operation_list
 
     @cached_property
+    def boost_duration(self) -> int | None:
+        """Return the boot duration."""
+        return self._attr_boost_duration
+
+    @cached_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._attr_current_temperature
@@ -297,6 +307,16 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Set new target temperature."""
         await self.hass.async_add_executor_job(
             ft.partial(self.set_temperature, **kwargs)
+        )
+
+    def set_boost_duration(self, **kwargs: Any) -> None:
+        """Set new boost duration."""
+        raise NotImplementedError
+
+    async def async_set_boost_duration(self, **kwargs: Any) -> None:
+        """Set new boost duration."""
+        await self.hass.async_add_executor_job(
+            ft.partial(self.set_boost_duration, **kwargs)
         )
 
     def turn_on(self, **kwargs: Any) -> None:
