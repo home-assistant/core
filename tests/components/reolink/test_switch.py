@@ -265,7 +265,14 @@ async def test_host_switch(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_email_on_event"
+    test = False
+    while hass.states.get(entity_id) is None:
+        await hass.async_block_till_done()
+        test = True
+    
     assert hass.states.get(entity_id).state == STATE_ON
+
+    assert not test
 
     reolink_connect.email_enabled.return_value = False
     freezer.tick(DEVICE_UPDATE_INTERVAL)
