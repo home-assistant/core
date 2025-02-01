@@ -2636,7 +2636,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         ):
             return
 
-        if include_ignore and entry.source == SOURCE_IGNORE:
+        if include_ignore is False and entry.source == SOURCE_IGNORE:
             return
 
         should_reload = False
