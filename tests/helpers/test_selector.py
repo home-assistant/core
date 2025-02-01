@@ -73,9 +73,10 @@ def _test_selector(
 
     # Serialize selector
     selector_instance = selector.selector({selector_type: schema})
-    assert selector_instance.serialize() == {
-        "selector": {selector_type: selector_instance.config}
-    }
+    assert (
+        selector.selector(selector_instance.serialize()["selector"]).config
+        == selector_instance.config
+    )
     # Test serialized selector can be dumped to YAML
     yaml_util.dump(selector_instance.serialize())
 
@@ -264,6 +265,15 @@ def test_device_selector_schema(schema, valid_selections, invalid_selections) ->
                             "light.LightEntityFeature.TRANSITION",
                         ]
                     },
+                ]
+            },
+            ("light.abc123", "blah.blah", FAKE_UUID),
+            (None,),
+        ),
+        (
+            {
+                "filter": [
+                    {"supported_features": [8]},
                 ]
             },
             ("light.abc123", "blah.blah", FAKE_UUID),
