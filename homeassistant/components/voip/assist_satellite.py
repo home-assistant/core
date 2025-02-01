@@ -30,7 +30,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CHANNELS, CONF_SIP_PORT, DOMAIN, RATE, RTP_AUDIO_SETTINGS, WIDTH
+from .const import (
+    CHANNELS,
+    CONF_SIP_PORT,
+    CONF_SIP_USER,
+    DOMAIN,
+    RATE,
+    RTP_AUDIO_SETTINGS,
+    WIDTH,
+)
 from .devices import VoIPDevice
 from .entity import VoIPEntity
 
@@ -199,7 +207,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         # HA SIP server
         source_ip = await async_get_source_ip(self.hass)
         sip_port = self.config_entry.options.get(CONF_SIP_PORT, SIP_PORT)
-        source_endpoint = get_sip_endpoint(host=source_ip, port=sip_port)
+        sip_user = self.config_entry.options.get(CONF_SIP_USER)
+        source_endpoint = get_sip_endpoint(
+            host=source_ip, port=sip_port, username=sip_user
+        )
 
         try:
             # VoIP ID is SIP header
