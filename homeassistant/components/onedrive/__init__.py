@@ -97,6 +97,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         backup_folder_id=backup_folder_id,
     )
 
+    _async_notify_backup_listeners_soon(hass)
+
     return True
 
 

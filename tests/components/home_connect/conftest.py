@@ -148,7 +148,7 @@ async def mock_integration_setup(
 
 def _get_specific_appliance_side_effect(ha_id: str) -> HomeAppliance:
     """Get specific appliance side effect."""
-    for appliance in MOCK_APPLIANCES.homeappliances:
+    for appliance in copy.deepcopy(MOCK_APPLIANCES).homeappliances:
         if appliance.ha_id == ha_id:
             return appliance
     raise HomeConnectApiError("error.key", "error description")
@@ -294,7 +294,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
+    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
     mock.get_specific_appliance = AsyncMock(
         side_effect=_get_specific_appliance_side_effect
     )
@@ -347,7 +347,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
+    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
     mock.stream_all_events = stream_all_events
 
     mock.start_program = AsyncMock(side_effect=exception)

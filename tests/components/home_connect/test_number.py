@@ -25,7 +25,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -155,6 +155,64 @@ async def test_connected_devices(
     assert device
     new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
     assert len(new_entity_entries) > len(entity_entries)
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)
+async def test_number_entity_availabilty(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test if number entities availability are based on the appliance connection state."""
+    entity_ids = [
+        f"{NUMBER_DOMAIN.lower()}.fridgefreezer_refrigerator_temperature",
+    ]
+
+    client.get_setting.side_effect = None
+    # Setting constrains are not needed for this test
+    # so we rise an error to easily test the availability
+    client.get_setting = AsyncMock(side_effect=HomeConnectError())
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DISCONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)

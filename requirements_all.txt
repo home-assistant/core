@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.36
+SQLAlchemy==2.0.37
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -276,7 +276,7 @@ aiohttp_sse==2.2.0
 aiohue==4.7.3
 
 # homeassistant.components.imap
-aioimaplib==2.0.0
+aioimaplib==2.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -597,7 +597,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.2.0
+bleak-esphome==2.6.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.8.0
@@ -668,7 +668,7 @@ brunt==1.2.0
 bt-proximity==0.2.1
 
 # homeassistant.components.bthome
-bthome-ble==3.9.1
+bthome-ble==3.12.3
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -750,7 +750,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==11.1.0b1
+deebot-client==11.1.0b2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1103,7 +1103,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.14.0
+habluetooth==3.17.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1146,7 +1146,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250130.0
+home-assistant-frontend==20250131.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -1247,7 +1247,7 @@ israel-rail-api==0.1.2
 jaraco.abode==6.2.1
 
 # homeassistant.components.jellyfin
-jellyfin-apiclient-python==1.9.2
+jellyfin-apiclient-python==1.10.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
@@ -1305,7 +1305,7 @@ led-ble==1.1.4
 lektricowifi==0.0.43
 
 # homeassistant.components.letpot
-letpot==0.3.0
+letpot==0.4.0
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2
@@ -1592,7 +1592,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.8
+opower==0.8.9
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2310,7 +2310,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.0
+pysmlight==0.2.1
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2346,7 +2346,7 @@ pytautulli==23.1.1
 pythinkingcleaner==0.0.3
 
 # homeassistant.components.motionmount
-python-MotionMount==2.2.0
+python-MotionMount==2.3.0
 
 # homeassistant.components.awair
 python-awair==0.2.4
@@ -2391,7 +2391,7 @@ python-google-drive-api==0.0.2
 python-homeassistant-analytics==0.8.1
 
 # homeassistant.components.homewizard
-python-homewizard-energy==v8.3.0
+python-homewizard-energy==v8.3.2
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2902,7 +2902,7 @@ tololib==1.1.0
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2024.12
+total-connect-client==2025.1.4
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -3125,7 +3125,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.142.0
+zeroconf==0.143.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

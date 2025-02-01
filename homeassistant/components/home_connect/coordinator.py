@@ -210,6 +210,12 @@ class HomeConnectCoordinator(
                                 ):
                                     listener()
 
+                        case EventType.DISCONNECTED:
+                            self.data[event_message_ha_id].info.connected = False
+                            self._call_all_event_listeners_for_appliance(
+                                event_message_ha_id
+                            )
+
                         case EventType.DEPAIRED:
                             device = self.device_registry.async_get_device(
                                 identifiers={(DOMAIN, event_message_ha_id)}
@@ -250,6 +256,12 @@ class HomeConnectCoordinator(
             for listener in self.context_listeners.get(
                 (event_message.ha_id, event.key), []
             ):
+                listener()
+
+    @callback
+    def _call_all_event_listeners_for_appliance(self, ha_id: str):
+        for listener, context in self._listeners.values():
+            if isinstance(context, tuple) and context[0] == ha_id:
                 listener()
 
     async def _async_update_data(self) -> dict[str, HomeConnectApplianceData]:
