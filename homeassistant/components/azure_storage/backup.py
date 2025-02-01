@@ -10,8 +10,14 @@ import logging
 from typing import Any, Concatenate
 
 from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
+from azure.storage.blob import BlobProperties
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    suggested_filename,
+)
 from homeassistant.core import HomeAssistant, callback
 
 from . import AzureStorageConfigEntry
@@ -91,7 +97,10 @@ class AzureStorageBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        download_stream = await self._client.download_blob(f"{backup_id}.tar")
+        blob = await self._find_blob_by_backup_id(backup_id)
+        if blob is None:
+            raise BackupAgentError(f"Backup {backup_id} not found")
+        download_stream = await self._client.download_blob(blob.name)
         return download_stream.chunks()
 
     @handle_backup_errors
@@ -118,7 +127,7 @@ class AzureStorageBackupAgent(BackupAgent):
         metadata = {str(k): str(v) for k, v in metadata.items()}
 
         await self._client.upload_blob(
-            name=f"{backup.backup_id}.tar",
+            name=suggested_filename(backup),
             metadata=metadata,
             data=await open_stream(),
             length=backup.size,
@@ -131,7 +140,10 @@ class AzureStorageBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        await self._client.delete_blob(f"{backup_id}.tar")
+        blob = await self._find_blob_by_backup_id(backup_id)
+        if blob is None:
+            return
+        await self._client.delete_blob(blob.name)
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
@@ -152,7 +164,10 @@ class AzureStorageBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup | None:
         """Return a backup."""
-        blob_client = self._client.get_blob_client(f"{backup_id}.tar")
+        blob = await self._find_blob_by_backup_id(backup_id)
+        if blob is None:
+            return None
+        blob_client = self._client.get_blob_client(blob.name)
         try:
             blob_properties = await blob_client.get_blob_properties()
         except ResourceNotFoundError:
@@ -181,3 +196,10 @@ class AzureStorageBackupAgent(BackupAgent):
         )
         agent_backup["size"] = int(metadata.get("size", 0))
         return AgentBackup.from_dict(agent_backup)
+
+    async def _find_blob_by_backup_id(self, backup_id: str) -> BlobProperties | None:
+        """Find a blob by backup id."""
+        async for blob in self._client.list_blobs(include="metadata"):
+            if backup_id in blob.metadata.get("backup_id", ""):
+                return blob
+        return None

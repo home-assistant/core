@@ -66,6 +66,8 @@ async def async_setup_entry(
 
     entry.runtime_data = container_client
 
+    _async_notify_backup_listeners_soon(hass)
+
     return True
 
 

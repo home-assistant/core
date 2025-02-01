@@ -50,6 +50,7 @@ def mock_client(mock_blob_client: Mock) -> Generator[MagicMock]:
 
         async def async_list_blobs():
             yield BlobProperties(metadata=BACKUP_METADATA)
+            yield BlobProperties(metadata=BACKUP_METADATA)
 
         client.list_blobs.return_value = async_list_blobs()
 

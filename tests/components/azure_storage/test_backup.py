@@ -130,12 +130,12 @@ async def test_agents_get_backup(
     }
 
 
-async def test_agents_get_backup_not_found(
+async def test_agents_get_backup_not_found_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     mock_blob_client: MagicMock,
 ) -> None:
-    """Test agent get backup not found."""
+    """Test agent get backup not found with error."""
 
     mock_blob_client.get_blob_properties.side_effect = ResourceNotFoundError()
     backup_id = TEST_BACKUP.backup_id
@@ -197,7 +197,7 @@ async def test_agents_upload(
     assert resp.status == 201
     assert f"Uploading backup {TEST_BACKUP.backup_id}" in caplog.text
     mock_client.upload_blob.assert_called_once_with(
-        name=f"{TEST_BACKUP.backup_id}.tar",
+        name="Core_2024.12.0.dev0_-_2024-11-22_11.48_48727189.tar",
         metadata=BACKUP_METADATA,
         data=ANY,
         length=ANY,
