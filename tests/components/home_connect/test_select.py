@@ -174,6 +174,7 @@ async def test_filter_programs(
     (
         "appliance_ha_id",
         "entity_id",
+        "expected_initial_state",
         "mock_method",
         "program_key",
         "program_to_set",
@@ -183,6 +184,7 @@ async def test_filter_programs(
         (
             "Dishwasher",
             "select.dishwasher_selected_program",
+            "dishcare_dishwasher_program_auto_1",
             "set_selected_program",
             ProgramKey.DISHCARE_DISHWASHER_ECO_50,
             "dishcare_dishwasher_program_eco_50",
@@ -191,6 +193,7 @@ async def test_filter_programs(
         (
             "Dishwasher",
             "select.dishwasher_active_program",
+            "dishcare_dishwasher_program_auto_1",
             "start_program",
             ProgramKey.DISHCARE_DISHWASHER_ECO_50,
             "dishcare_dishwasher_program_eco_50",
@@ -202,6 +205,7 @@ async def test_filter_programs(
 async def test_select_program_functionality(
     appliance_ha_id: str,
     entity_id: str,
+    expected_initial_state: str,
     mock_method: str,
     program_key: ProgramKey,
     program_to_set: str,
@@ -217,7 +221,7 @@ async def test_select_program_functionality(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.is_state(entity_id, "unknown")
+    assert hass.states.is_state(entity_id, expected_initial_state)
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
@@ -300,6 +304,8 @@ async def test_select_exception_handling(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
     assert config_entry.state is ConfigEntryState.LOADED
+
+    assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):
