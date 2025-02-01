@@ -685,6 +685,70 @@ class BackupManager:
 
         return agent_errors
 
+    async def async_delete_filtered_backups(
+        self,
+        *,
+        include_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
+        delete_filter: Callable[[dict[str, ManagerBackup]], dict[str, ManagerBackup]],
+    ) -> None:
+        """Delete backups parsed with a filter.
+
+        :param include_filter: A filter that should return the backups to consider for
+        deletion. Note: The newest of the backups returned by include_filter will
+        unconditionally be kept, even if delete_filter returns all backups.
+        :param delete_filter: A filter that should return the backups to delete.
+        """
+        backups, get_agent_errors = await self.async_get_backups()
+        if get_agent_errors:
+            LOGGER.debug(
+                "Error getting backups; continuing anyway: %s",
+                get_agent_errors,
+            )
+
+        # Run the include filter first to ensure we only consider backups that
+        # should be included in the deletion process.
+        backups = include_filter(backups)
+
+        LOGGER.debug("Total automatic backups: %s", backups)
+
+        backups_to_delete = delete_filter(backups)
+
+        if not backups_to_delete:
+            return
+
+        # always delete oldest backup first
+        backups_to_delete = dict(
+            sorted(
+                backups_to_delete.items(),
+                key=lambda backup_item: backup_item[1].date,
+            )
+        )
+
+        if len(backups_to_delete) >= len(backups):
+            # Never delete the last backup.
+            last_backup = backups_to_delete.popitem()
+            LOGGER.debug("Keeping the last backup: %s", last_backup)
+
+        LOGGER.debug("Backups to delete: %s", backups_to_delete)
+
+        if not backups_to_delete:
+            return
+
+        backup_ids = list(backups_to_delete)
+        delete_results = await asyncio.gather(
+            *(self.async_delete_backup(backup_id) for backup_id in backups_to_delete)
+        )
+        agent_errors = {
+            backup_id: error
+            for backup_id, error in zip(backup_ids, delete_results, strict=True)
+            if error
+        }
+        if agent_errors:
+            LOGGER.error(
+                "Error deleting old copies: %s",
+                agent_errors,
+            )
+
     async def async_receive_backup(
         self,
         *,
@@ -898,7 +962,7 @@ class BackupManager:
             )
 
         backup_name = (
-            name
+            (name if name is None else name.strip())
             or f"{'Automatic' if with_automatic_settings else 'Custom'} backup {HAVERSION}"
         )
         extra_metadata = extra_metadata or {}
@@ -1166,7 +1230,11 @@ class BackupManager:
             learn_more_url="homeassistant://config/backup",
             severity=ir.IssueSeverity.WARNING,
             translation_key="automatic_backup_failed_upload_agents",
-            translation_placeholders={"failed_agents": ", ".join(agent_errors)},
+            translation_placeholders={
+                "failed_agents": ", ".join(
+                    self.backup_agents[agent_id].name for agent_id in agent_errors
+                )
+            },
         )
 
     async def async_can_decrypt_on_download(
