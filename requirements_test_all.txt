@@ -1207,7 +1207,7 @@ motioneye-client==0.3.14
 mozart-api==4.1.1.116.4
 
 # homeassistant.components.onedrive
-msgraph-sdk==1.16.0
+onedrive-personal-sdk==0.0.1a4
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
