@@ -106,13 +106,12 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect switch."""
-    known_appliance_ids: set[str] = set()
+    known_enitiy_unique_ids: dict[str, str] = {}
 
     def get_entities_for_appliance(
         appliance: HomeConnectApplianceData,
     ) -> list[SwitchEntity]:
         """Get a list of entities."""
-        known_appliance_ids.add(appliance.info.ha_id)
         entities: list[SwitchEntity] = []
         entities.extend(
             HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
@@ -133,30 +132,34 @@ async def async_setup_entry(
 
         return entities
 
-    async_add_entities(
-        entity
-        for appliance in entry.runtime_data.data.values()
-        for entity in get_entities_for_appliance(appliance)
-    )
+    for appliance in entry.runtime_data.data.values():
+        entities = get_entities_for_appliance(appliance)
+        known_enitiy_unique_ids.update(
+            {cast(str, entity.unique_id): appliance.info.ha_id for entity in entities}
+        )
+        async_add_entities(entities)
 
     def handle_paired_or_connected_appliance() -> None:
         """Handle new paired appliance or a appliance that has been connected."""
         for appliance in entry.runtime_data.data.values():
-            if appliance.info.ha_id in known_appliance_ids:
-                entity_registry = er.async_get(hass)
-                async_add_entities(
-                    entity
-                    for entity in get_entities_for_appliance(appliance)
-                    if not entity_registry.async_get(cast(str, entity.unique_id))
-                )
-            else:
-                async_add_entities(get_entities_for_appliance(appliance))
+            entities_to_add = [
+                entity
+                for entity in get_entities_for_appliance(appliance)
+                if cast(str, entity.unique_id) not in known_enitiy_unique_ids
+            ]
+            known_enitiy_unique_ids.update(
+                {
+                    cast(str, entity.unique_id): appliance.info.ha_id
+                    for entity in entities_to_add
+                }
+            )
+            async_add_entities(entities_to_add)
 
     def handle_depaired_appliance() -> None:
         """Handle removed appliance."""
-        for appliance_id in known_appliance_ids.copy():
+        for entity_unique_id, appliance_id in known_enitiy_unique_ids.copy().items():
             if appliance_id not in entry.runtime_data.data:
-                known_appliance_ids.remove(appliance_id)
+                known_enitiy_unique_ids.pop(entity_unique_id, None)
 
     entry.async_on_unload(
         entry.runtime_data.async_add_special_listener(
