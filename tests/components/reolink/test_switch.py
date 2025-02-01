@@ -269,7 +269,7 @@ async def test_host_switch(
     while hass.states.get(entity_id) is None:
         await hass.async_block_till_done()
         test = True
-    
+
     assert hass.states.get(entity_id).state == STATE_ON
 
     assert not test
