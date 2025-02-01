@@ -16,25 +16,26 @@ async def cleanup_device_tracker(
     """Cleanup stale device tracker."""
     entity_reg: er.EntityRegistry = er.async_get(hass)
 
-    ha_entity_reg_list: list[er.RegistryEntry] = er.async_entries_for_config_entry(
-        entity_reg, config_entry.entry_id
-    )
     entities_removed: bool = False
 
-    device_hosts_macs = set()
-    device_hosts_names = set()
+    device_hosts_macs: set[str] = set()
+    device_hosts_names: set[str] = set()
     for mac, device_info in devices.items():
         device_hosts_macs.add(mac)
         device_hosts_names.add(device_info.device.name)
 
-    for entry in ha_entity_reg_list:
+    for entry in er.async_entries_for_config_entry(entity_reg, config_entry.entry_id):
         if entry.domain != DEVICE_TRACKER_DOMAIN:
             continue
         entry_name = entry.name or entry.original_name
-        entry_host = entry_name.split(" ")[0] if entry_name else None
-        entry_mac = entry.unique_id.split("_")[0]
+        entry_host = entry_name.partition(" ")[0] if entry_name else None
+        entry_mac = entry.unique_id.partition("_")[0]
 
-        if entry_mac in device_hosts_macs and entry_host in device_hosts_names:
+        if (
+            entry_host
+            and entry_host in device_hosts_names
+            and entry_mac in device_hosts_macs
+        ):
             _LOGGER.debug(
                 "Skipping entity %s [mac=%s, host=%s]",
                 entry_name,
