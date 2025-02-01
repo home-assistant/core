@@ -221,7 +221,7 @@ async def test_select_program_functionality(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    hass.states.is_state(entity_id, expected_initial_state)
+    assert hass.states.is_state(entity_id, expected_initial_state)
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
