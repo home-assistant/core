@@ -181,10 +181,16 @@ def async_register_scanner(
     source_domain: str | None = None,
     source_model: str | None = None,
     source_config_entry_id: str | None = None,
+    source_device_id: str | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
     return _get_manager(hass).async_register_hass_scanner(
-        scanner, connection_slots, source_domain, source_model, source_config_entry_id
+        scanner,
+        connection_slots,
+        source_domain,
+        source_model,
+        source_config_entry_id,
+        source_device_id,
     )
 
 
