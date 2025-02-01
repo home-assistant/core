@@ -2,6 +2,7 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -14,9 +15,16 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @property
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
+
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
+        """Create an entry for Electric Kiwi."""
+        existing_entry = await self.async_set_unique_id(DOMAIN)
+        if existing_entry:
+            return self.async_update_reload_and_abort(existing_entry, data=data)
+        return await super().async_oauth_create_entry(data)

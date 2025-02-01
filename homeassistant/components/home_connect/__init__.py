@@ -378,5 +378,8 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
+    if entry.version == 1 and entry.minor_version == 2:
+        hass.config_entries.async_update_entry(entry, minor_version=3, unique_id=DOMAIN)
+
     _LOGGER.debug("Migration to version %s successful", entry.version)
     return True

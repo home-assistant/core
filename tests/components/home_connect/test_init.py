@@ -406,7 +406,29 @@ async def test_entity_migration(
         assert entity_registry.async_get_entity_id(
             domain, DOMAIN, f"{appliance_ha_id}-{expected_unique_id_suffix}"
         )
-    assert config_entry_v1_1.minor_version == 2
+    assert config_entry_v1_1.minor_version == 3
+    assert config_entry_v1_1.unique_id == DOMAIN
+
+
+async def test_entry_migration(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    config_entry_v1_2: MockConfigEntry,
+    appliance_ha_id: str,
+    platforms: list[Platform],
+) -> None:
+    """Test entity migration."""
+
+    config_entry_v1_2.add_to_hass(hass)
+    assert config_entry_v1_2.unique_id != DOMAIN
+
+    with patch("homeassistant.components.home_connect.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(config_entry_v1_2.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry_v1_2.minor_version == 3
+    assert config_entry_v1_2.unique_id == DOMAIN
 
 
 async def test_bsh_key_transformations() -> None:
