@@ -425,7 +425,9 @@ class ESPHomeManager:
 
         if device_info.bluetooth_proxy_feature_flags_compat(api_version):
             entry_data.disconnect_callbacks.add(
-                async_connect_scanner(hass, entry_data, cli, device_info)
+                async_connect_scanner(
+                    hass, entry_data, cli, device_info, self.device_id
+                )
             )
         else:
             bluetooth.async_remove_scanner(hass, device_info.mac_address)
