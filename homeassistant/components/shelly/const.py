@@ -116,8 +116,6 @@ BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [
 # Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
 
-# Script events for RPC devices
-EVENT_SHELLY_SCRIPT: Final = "shelly.script_event"
 SHELLY_EMIT_EVENT_PATTERN: Final = re.compile(
     r"(?:Shelly\s*\.\s*emitEvent\s*\(\s*[\"'`])(\w*)"
 )
@@ -129,9 +127,6 @@ ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
 ATTR_BETA: Final = "beta"
 CONF_OTA_BETA_CHANNEL: Final = "ota_beta_channel"
-ATTR_COMPONENT: Final = "component"
-ATTR_EVENT: Final = "event"
-ATTR_DATA: Final = "data"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 

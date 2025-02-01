@@ -485,7 +485,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
-        self._script_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -551,19 +550,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return _unsubscribe
 
     @callback
-    def async_subscribe_script_event(
-        self, script_event_callback: Callable[[dict[str, Any]], None]
-    ) -> CALLBACK_TYPE:
-        """Subscript to script events."""
-
-        def _unsubscribe() -> None:
-            self._script_event_listeners.remove(script_event_callback)
-
-        self._script_event_listeners.append(script_event_callback)
-
-        return _unsubscribe
-
-    @callback
     def async_subscribe_events(
         self, event_callback: Callable[[dict[str, Any]], None]
     ) -> CALLBACK_TYPE:
@@ -596,12 +582,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
 
             for event_callback in self._event_listeners:
                 event_callback(event)
-
-            # Events published by scripts on the device will be published on the event bus
-            component = event.get("component")
-            if type(component) is str and component.startswith("script"):
-                for event_callback in self._script_event_listeners:
-                    event_callback(event)
 
             if event_type in ("component_added", "component_removed", "config_changed"):
                 self.update_sleep_period()

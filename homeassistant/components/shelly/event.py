@@ -243,6 +243,7 @@ class ShellyRpcScriptEvent(ShellyRpcEvent):
         """Initialize Shelly script event entity."""
         super().__init__(coordinator, key, SCRIPT_EVENT)
 
+        self.component = key
         self._attr_event_types = event_types
 
     async def async_added_to_hass(self) -> None:
@@ -250,14 +251,14 @@ class ShellyRpcScriptEvent(ShellyRpcEvent):
         await super(CoordinatorEntity, self).async_added_to_hass()
 
         self.async_on_remove(
-            self.coordinator.async_subscribe_script_event(self._async_handle_event)
+            self.coordinator.async_subscribe_events(self._async_handle_event)
         )
 
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle script event."""
-        if event["id"] == self.event_id:
-            event_type = event["event"]
+        if event.get("component") == self.component:
+            event_type = event.get("event")
             if event_type not in self.event_types:
                 # This can happen if we didn't find this event type in the script
                 return
