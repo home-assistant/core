@@ -26,7 +26,7 @@ async def test_coordinator_device_cleanup(
 
     await setup_integration(hass, mock_config_entry)
 
-    device_tracker = f"device_tracker.vodafone_station_{DEVICE_1_MAC.replace(":", "_")}"
+    device_tracker = f"device_tracker.vodafone_station_{DEVICE_1_MAC.replace(':', '_')}"
 
     state = hass.states.get(device_tracker)
     assert state is not None
