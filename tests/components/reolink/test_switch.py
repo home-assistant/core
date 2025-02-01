@@ -256,6 +256,8 @@ async def test_host_switch(
     """Test host switch entity."""
     reolink_connect.camera_name.return_value = TEST_CAM_NAME
     reolink_connect.email_enabled.return_value = True
+    reolink_connect.is_hub = False
+    reolink_connect.supported.return_value = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
