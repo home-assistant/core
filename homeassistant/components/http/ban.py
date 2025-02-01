@@ -9,6 +9,7 @@ from datetime import datetime
 from http import HTTPStatus
 from ipaddress import IPv4Address, IPv6Address, ip_address
 import logging
+from pathlib import Path
 from socket import gethostbyaddr, herror
 from typing import Any, Concatenate, Final
 
@@ -24,13 +25,13 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.hassio import get_supervisor_ip, is_hassio
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
-from .const import KEY_HASS
+from .const import DOMAIN, KEY_HASS
 from .view import HomeAssistantView
 
 _LOGGER: Final = logging.getLogger(__name__)
@@ -51,6 +52,8 @@ SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
     {vol.Optional("banned_at"): vol.Any(None, cv.datetime)}
 )
 
+SERVICE_UNBAN_ALL_ADDRESSES: Final = "unban_all_addresses"
+
 
 @callback
 def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
@@ -65,6 +68,18 @@ def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> N
         await app[KEY_BAN_MANAGER].async_load()
 
     app.on_startup.append(ban_startup)
+
+    async def async_handle_unban_all_addresses_service(
+        service: ServiceCall,
+    ) -> None:
+        """Handle calls to http.unban_all_addresses."""
+        await app[KEY_BAN_MANAGER].async_clear_bans()
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UNBAN_ALL_ADDRESSES,
+        async_handle_unban_all_addresses_service,
+    )
 
 
 @middleware
@@ -236,6 +251,10 @@ class IpBanManager:
 
         self.ip_bans_lookup = ip_bans_lookup
 
+    def __len__(self) -> int:
+        """Return number of banned IP addresses."""
+        return len(self.ip_bans_lookup)
+
     def _add_ban(self, ip_ban: IpBan) -> None:
         """Update config file with new banned IP address."""
         with open(self.path, "a", encoding="utf8") as out:
@@ -245,8 +264,19 @@ class IpBanManager:
             # Write in a single write call to avoid interleaved writes
             out.write("\n" + yaml_util.dump(ip_))
 
+    def _clear_bans(self) -> None:
+        """Remove all IP addresses from the banned list."""
+        self.ip_bans_lookup.clear()
+        with suppress(FileNotFoundError):
+            Path(self.path).unlink()
+        _LOGGER.debug("Cleared banned IP addresses")
+
     async def async_add_ban(self, remote_addr: IPv4Address | IPv6Address) -> None:
         """Add a new IP address to the banned list."""
         if remote_addr not in self.ip_bans_lookup:
             new_ban = self.ip_bans_lookup[remote_addr] = IpBan(remote_addr)
             await self.hass.async_add_executor_job(self._add_ban, new_ban)
+
+    async def async_clear_bans(self) -> None:
+        """Remove all banned IP addresses from the banned list."""
+        await self.hass.async_add_executor_job(self._clear_bans)

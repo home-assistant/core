@@ -75,6 +75,14 @@ async def test_access_from_banned_ip(
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
 
+    await app[KEY_BAN_MANAGER].async_clear_bans()
+    assert len(app[KEY_BAN_MANAGER]) == 0
+
+    for remote_addr in BANNED_IPS:
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status != HTTPStatus.FORBIDDEN
+
 
 async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     hass: HomeAssistant,
