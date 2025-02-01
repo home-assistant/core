@@ -141,7 +141,6 @@ async def async_setup_entry(
 class IOmeterSensor(IOmeterEntity, SensorEntity):
     """Defines a IOmeter sensor."""
 
-    _attr_has_entity_name = True
     entity_description: IOmeterEntityDescription
 
     def __init__(
