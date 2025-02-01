@@ -13,7 +13,7 @@ from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 
-def handle_paired_or_connected_appliance(
+def _handle_paired_or_connected_appliance(
     entry: HomeConnectConfigEntry,
     known_entity_unique_ids: dict[str, str],
     get_entities_for_appliance: Callable[
@@ -21,7 +21,13 @@ def handle_paired_or_connected_appliance(
     ],
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Handle new paired appliance or an appliance that has been connected."""
+    """Handle new paired appliance or an appliance that has been connected.
+
+    This function is used to handle connected events also because some appliances
+    don't report any data while they are off because they disconnect themselves
+    when they are turned off, so we need to check if the entities have been added
+    already or it is the first time we see them when the appliance is connected.
+    """
     for appliance in entry.runtime_data.data.values():
         entities_to_add = [
             entity
@@ -37,7 +43,7 @@ def handle_paired_or_connected_appliance(
         async_add_entities(entities_to_add)
 
 
-def handle_depaired_appliance(
+def _handle_depaired_appliance(
     entry: HomeConnectConfigEntry,
     known_entity_unique_ids: dict[str, str],
 ) -> None:
@@ -68,7 +74,7 @@ def setup_home_connect_entry(
     entry.async_on_unload(
         entry.runtime_data.async_add_special_listener(
             partial(
-                handle_paired_or_connected_appliance,
+                _handle_paired_or_connected_appliance,
                 entry,
                 known_entity_unique_ids,
                 get_entities_for_appliance,
@@ -82,7 +88,7 @@ def setup_home_connect_entry(
     )
     entry.async_on_unload(
         entry.runtime_data.async_add_special_listener(
-            partial(handle_depaired_appliance, entry, known_entity_unique_ids),
+            partial(_handle_depaired_appliance, entry, known_entity_unique_ids),
             (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
         )
     )
