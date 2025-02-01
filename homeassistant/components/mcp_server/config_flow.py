@@ -42,8 +42,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=llm_apis[user_input[CONF_LLM_HASS_API]],
-                data=user_input,
+                title=llm_apis[user_input[CONF_LLM_HASS_API]], data=user_input
             )
 
         return self.async_show_form(
