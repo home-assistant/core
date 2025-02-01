@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import ABC
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from functools import cache
 from typing import (
     Any,
@@ -1012,9 +1013,6 @@ class WeatherSchema(KNXPlatformSchema):
     )
 
 
-# NEW
-
-
 @runtime_checkable
 class VolValidator(Protocol):
     """Protocol for a Voluptuous-compatible validator.
@@ -1158,18 +1156,12 @@ class ConfigGroupSchema(SerializableSchema):
 class GroupAddressSchema(SerializableSchema):
     """Voluptuous-compatible validator for a KNX group address."""
 
-    def __init__(
-        self, allow_none: bool = False, allow_internal_address: bool = True
-    ) -> None:
+    def __init__(self, allow_internal_address: bool = True) -> None:
         """Initialize."""
-        self.allow_none = allow_none
         self.allow_internal_address = allow_internal_address
 
     def __call__(self, value: str | int | None) -> str | int | None:
         """Validate that the value is parsable as GroupAddress or InternalGroupAddress."""
-        if self.allow_none and value is None:
-            return value
-
         if not isinstance(value, (str, int)):
             raise vol.Invalid(
                 f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
@@ -1199,7 +1191,6 @@ class GroupAddressSchema(SerializableSchema):
         """Convert GroupAddress schema into a dictionary representation."""
         return {
             "type": "group_address",
-            "allow_none": value.allow_none,
             "allow_internal_address": value.allow_internal_address,
         }
 
@@ -1331,45 +1322,63 @@ class DptUtils:
         )
 
 
-class GroupAddressConfigSchema(SerializableSchema):
+@dataclass
+class GroupAddressConfigSchema:
     """Voluptuous-compatible validator for the group address config."""
 
-    schema: vol.Schema
+    allowed_dpts: tuple[type[DPTBase], ...]
+    write: bool = True
+    state: bool = True
+    passive: bool = True
+    write_required: bool = False
+    state_required: bool = False
+    schema: vol.Schema = field(init=False)
 
-    def __init__(
-        self,
-        write: bool = True,
-        state: bool = True,
-        passive: bool = True,
-        write_required: bool = False,
-        state_required: bool = False,
-        allowed_dpts: tuple[type[DPTBase], ...] | None = None,
-    ) -> None:
+    def __post_init__(self) -> None:
         """Initialize the group address selector."""
-        self.write = write
-        self.state = state
-        self.passive = passive
-        self.write_required = write_required
-        self.state_required = state_required
-        self.allowed_dpts = allowed_dpts
-
+        self._validate_config()
         self.schema = self.build_schema()
+
+    def _validate_config(self) -> None:
+        """Validate the configuration parameters."""
+        if len(self.allowed_dpts) == 0:
+            raise ValueError("At least one allowed DPT must be provided.")
+        if not self.write and not self.state:
+            raise ValueError("At least one of 'write' or 'state' must be enabled.")
+        if not self.write and self.write_required:
+            raise ValueError("Write is required but not enabled.")
+        if not self.state and self.state_required:
+            raise ValueError("State is required but not enabled.")
+        if not self.state and self.passive:
+            raise ValueError(
+                "Passive group addresses are only allowed for state addresses."
+            )
 
     def __call__(self, data: Any) -> Any:
         """Validate the passed data."""
+
+        # Ensure that at least one of 'write', 'state', or 'passive' is provided
+        # when a DPT is specified. This constraint is not enforced in the schema
+        # to work around compatibility issues with vol.All and the vol serializer.
+        if CONF_DPT in data and not any(
+            key in data for key in (CONF_GA_WRITE, CONF_GA_STATE, CONF_GA_PASSIVE)
+        ):
+            raise vol.Invalid(
+                "At least one of 'write', 'state', or 'passive' must be provided when a DPT is specified."
+            )
         return self.schema(data)
 
     def build_schema(self) -> vol.Schema:
         """Create the schema based on configuration."""
-        schema: dict[vol.Marker, Any] = {}  # will be modified in-place
+        schema: dict[vol.Marker, Any] = {}
         self._add_group_addresses(schema)
         self._add_passive(schema)
         self._add_dpt(schema)
+
         return vol.Schema(schema)
 
     def _add_group_addresses(self, schema: dict[vol.Marker, Any]) -> None:
         """Add basic group address items to the schema."""
-
         items = [
             (CONF_GA_WRITE, self.write, self.write_required),
             (CONF_GA_STATE, self.state, self.state_required),
@@ -1381,38 +1390,25 @@ class GroupAddressConfigSchema(SerializableSchema):
             elif required:
                 schema[vol.Required(key)] = GroupAddressSchema()
             else:
-                schema[
-                    vol.Optional(
-                        key,
-                        default=None,
-                    )
-                ] = GroupAddressSchema(allow_none=True)
+                schema[vol.Optional(key, default=None)] = vol.Maybe(
+                    GroupAddressSchema()
+                )
 
     def _add_passive(self, schema: dict[vol.Marker, Any]) -> None:
         """Add passive group addresses validator to the schema."""
         if self.passive:
-            schema[
-                vol.Optional(
-                    CONF_GA_PASSIVE,
-                    default=list,
-                )
-            ] = GroupAddressListSchema()
+            schema[vol.Optional(CONF_GA_PASSIVE, default=list)] = (
+                GroupAddressListSchema()
+            )
         else:
-            schema[vol.Remove(CONF_GA_PASSIVE)] = object
+            schema[vol.Remove(CONF_GA_PASSIVE)] = None
 
     def _add_dpt(self, schema: dict[vol.Marker, Any]) -> None:
         """Add DPT validator to the schema."""
-        if self.allowed_dpts is None:
-            schema[vol.Remove(CONF_DPT)] = object
-        else:
-            schema[
-                vol.Required(
-                    CONF_DPT,
-                )
-            ] = vol.All(
-                str,
-                vol.In([DptUtils.format_dpt(dpt) for dpt in self.allowed_dpts]),
-            )
+        schema[vol.Required(CONF_DPT)] = vol.All(
+            str,
+            vol.In([DptUtils.format_dpt(dpt) for dpt in self.allowed_dpts]),
+        )
 
     def get_schema(self) -> VolSchemaType:
         """Return the Voluptuous schema definition for the class."""
@@ -1425,10 +1421,9 @@ class GroupAddressConfigSchema(SerializableSchema):
         convert: Callable[[Any], Any],
     ) -> dict[str, Any]:
         """Convert GroupAddressConfig schema into a dictionary representation."""
-
         return {
             "type": "group_address_config",
-            "properties": convert(value.build_schema()),
+            "properties": convert(value.schema),
         }
 
 
