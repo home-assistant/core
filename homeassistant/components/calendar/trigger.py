@@ -1,4 +1,5 @@
 """Offer calendar automation rules."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
@@ -22,7 +23,8 @@ from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import DOMAIN, CalendarEntity, CalendarEvent
+from . import CalendarEntity, CalendarEvent
+from .const import DATA_COMPONENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,15 +89,28 @@ class Timespan:
         return f"[{self.start}, {self.end})"
 
 
-EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
-QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
+type EventFetcher = Callable[[Timespan], Awaitable[list[CalendarEvent]]]
+type QueuedEventFetcher = Callable[[Timespan], Awaitable[list[QueuedCalendarEvent]]]
 
 
-def event_fetcher(hass: HomeAssistant, entity: CalendarEntity) -> EventFetcher:
+def get_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
+    """Get the calendar entity for the provided entity_id."""
+    component: EntityComponent[CalendarEntity] = hass.data[DATA_COMPONENT]
+    if not (entity := component.get_entity(entity_id)) or not isinstance(
+        entity, CalendarEntity
+    ):
+        raise HomeAssistantError(
+            f"Entity does not exist {entity_id} or is not a calendar entity"
+        )
+    return entity
+
+
+def event_fetcher(hass: HomeAssistant, entity_id: str) -> EventFetcher:
     """Build an async_get_events wrapper to fetch events during a time span."""
 
     async def async_get_events(timespan: Timespan) -> list[CalendarEvent]:
         """Return events active in the specified time span."""
+        entity = get_entity(hass, entity_id)
         # Expand by one second to make the end time exclusive
         end_time = timespan.end + datetime.timedelta(seconds=1)
         return await entity.async_get_events(hass, timespan.start, end_time)
@@ -123,7 +138,7 @@ def queued_event_fetcher(
         # time span, but need to be triggered later when the end happens.
         results = []
         for trigger_time, event in zip(
-            map(get_trigger_time, active_events), active_events
+            map(get_trigger_time, active_events), active_events, strict=False
         ):
             if trigger_time not in offset_timespan:
                 continue
@@ -237,7 +252,10 @@ class CalendarEventListener:
         self._dispatch_events(now)
         self._clear_event_listener()
         self._timespan = self._timespan.next_upcoming(now, UPDATE_INTERVAL)
-        self._events.extend(await self._fetcher(self._timespan))
+        try:
+            self._events.extend(await self._fetcher(self._timespan))
+        except HomeAssistantError as ex:
+            _LOGGER.error("Calendar trigger failed to fetch events: %s", ex)
         self._listen_next_calendar_event()
 
 
@@ -252,13 +270,8 @@ async def async_attach_trigger(
     event_type = config[CONF_EVENT]
     offset = config[CONF_OFFSET]
 
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(entity_id)) or not isinstance(
-        entity, CalendarEntity
-    ):
-        raise HomeAssistantError(
-            f"Entity does not exist {entity_id} or is not a calendar entity"
-        )
+    # Validate the entity id is valid
+    get_entity(hass, entity_id)
 
     trigger_data = {
         **trigger_info["trigger_data"],
@@ -270,7 +283,7 @@ async def async_attach_trigger(
         hass,
         HassJob(action),
         trigger_data,
-        queued_event_fetcher(event_fetcher(hass, entity), event_type, offset),
+        queued_event_fetcher(event_fetcher(hass, entity_id), event_type, offset),
     )
     await listener.async_attach()
     return listener.async_detach

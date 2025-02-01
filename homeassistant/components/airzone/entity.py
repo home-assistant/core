@@ -1,4 +1,5 @@
 """Entity classes for the Airzone integration."""
+
 from __future__ import annotations
 
 import logging
@@ -30,6 +31,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AirzoneConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import AirzoneUpdateCoordinator
 
@@ -43,7 +45,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator]):
 
     def get_airzone_value(self, key: str) -> Any:
         """Return Airzone entity value by key."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
 
 class AirzoneSystemEntity(AirzoneEntity):
@@ -52,7 +54,7 @@ class AirzoneSystemEntity(AirzoneEntity):
     def __init__(
         self,
         coordinator: AirzoneUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: AirzoneConfigEntry,
         system_data: dict[str, Any],
     ) -> None:
         """Initialize."""
@@ -66,8 +68,9 @@ class AirzoneSystemEntity(AirzoneEntity):
             model=self.get_airzone_value(AZD_MODEL),
             name=f"System {self.system_id}",
             sw_version=self.get_airzone_value(AZD_FIRMWARE),
-            via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
+        if AZD_WEBSERVER in self.coordinator.data:
+            self._attr_device_info["via_device"] = (DOMAIN, f"{entry.entry_id}_ws")
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
     @property
@@ -100,8 +103,9 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             manufacturer=MANUFACTURER,
             model="DHW",
             name=self.get_airzone_value(AZD_NAME),
-            via_device=(DOMAIN, f"{entry.entry_id}_ws"),
         )
+        if AZD_WEBSERVER in self.coordinator.data:
+            self._attr_device_info["via_device"] = (DOMAIN, f"{entry.entry_id}_ws")
         self._attr_unique_id = entry.unique_id or entry.entry_id
 
     def get_airzone_value(self, key: str) -> Any:

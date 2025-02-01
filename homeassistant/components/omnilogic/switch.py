@@ -1,4 +1,5 @@
 """Platform for Omnilogic switch integration."""
+
 import time
 from typing import Any
 
@@ -11,8 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import OmniLogicEntity, OmniLogicUpdateCoordinator, check_guard
+from .common import check_guard
 from .const import COORDINATOR, DOMAIN, PUMP_TYPES
+from .coordinator import OmniLogicUpdateCoordinator
+from .entity import OmniLogicEntity
 
 SERVICE_SET_SPEED = "set_pump_speed"
 OMNILOGIC_SWITCH_OFF = 7

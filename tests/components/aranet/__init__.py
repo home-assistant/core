@@ -31,6 +31,7 @@ def fake_service_info(name, service_uuid, manufacturer_data):
             tx_power=-127,
             platform_data=(),
         ),
+        tx_power=-127,
     )
 
 
@@ -58,10 +59,34 @@ VALID_DATA_SERVICE_INFO = fake_service_info(
     },
 )
 
+VALID_DATA_SERVICE_INFO_WITH_NO_NAME = fake_service_info(
+    None,
+    "0000fce0-0000-1000-8000-00805f9b34fb",
+    {
+        1794: b'\x21\x00\x02\x01\x00\x00\x00\x01\x8a\x02\xa5\x01\xb1&"Y\x01,\x01\xe8\x00\x88'
+    },
+)
+
 VALID_ARANET2_DATA_SERVICE_INFO = fake_service_info(
     "Aranet2 12345",
     "0000fce0-0000-1000-8000-00805f9b34fb",
     {
         1794: b"\x01!\x04\x04\x01\x00\x00\x00\x00\x00\xf0\x01\x00\x00\x0c\x02\x00O\x00<\x00\x01\x00\x80"
+    },
+)
+
+VALID_ARANET_RADIATION_DATA_SERVICE_INFO = fake_service_info(
+    "Aranet\u2622 12345",
+    "0000fce0-0000-1000-8000-00805f9b34fb",
+    {
+        1794: b"\x02!&\x04\x01\x00`-\x00\x00\x08\x98\x05\x00n\x00\x00d\x00,\x01\xfd\x00\xc7"
+    },
+)
+
+VALID_ARANET_RADON_DATA_SERVICE_INFO = fake_service_info(
+    "AranetRn+ 12345",
+    "0000fce0-0000-1000-8000-00805f9b34fb",
+    {
+        1794: b"\x03!\x04\x06\x01\x00\x00\x00\x07\x00\xfe\x01\xc9'\xce\x01\x00d\x01X\x02\xf6\x01\x08"
     },
 )

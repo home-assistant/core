@@ -1,10 +1,13 @@
 """Config flow for HLK-SW16."""
+
 import asyncio
+from typing import Any
 
 from hlk_sw16 import create_hlk_sw16_connection
+from hlk_sw16.protocol import SW16Client
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -25,7 +28,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-async def connect_client(hass, user_input):
+async def connect_client(hass: HomeAssistant, user_input: dict[str, Any]) -> SW16Client:
     """Connect the HLK-SW16 client."""
     client_aw = create_hlk_sw16_connection(
         host=user_input[CONF_HOST],
@@ -39,11 +42,11 @@ async def connect_client(hass, user_input):
         return await client_aw
 
 
-async def validate_input(hass: HomeAssistant, user_input):
+async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
     """Validate the user input allows us to connect."""
     try:
         client = await connect_client(hass, user_input)
-    except asyncio.TimeoutError as err:
+    except TimeoutError as err:
         raise CannotConnect from err
 
     try:
@@ -63,16 +66,18 @@ async def validate_input(hass: HomeAssistant, user_input):
     client.stop()
 
 
-class SW16FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SW16FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a HLK-SW16 config flow."""
 
     VERSION = 1
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:

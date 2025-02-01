@@ -1,9 +1,11 @@
 """Support for displaying persistent notifications."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from datetime import datetime
 from enum import StrEnum
+from functools import partial
 import logging
 from typing import Any, Final, TypedDict
 
@@ -18,7 +20,8 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.signal_type import SignalType
 from homeassistant.util.uuid import random_uuid_hex
 
 DOMAIN = "persistent_notification"
@@ -48,7 +51,9 @@ class UpdateType(StrEnum):
     UPDATED = "updated"
 
 
-SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = "persistent_notifications_updated"
+SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED = SignalType[
+    UpdateType, dict[str, Notification]
+]("persistent_notifications_updated")
 
 SCHEMA_SERVICE_NOTIFICATION = vol.Schema(
     {vol.Required(ATTR_NOTIFICATION_ID): cv.string}
@@ -179,8 +184,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         create_service,
         vol.Schema(
             {
-                vol.Required(ATTR_MESSAGE): vol.Any(cv.dynamic_template, cv.string),
-                vol.Optional(ATTR_TITLE): vol.Any(cv.dynamic_template, cv.string),
+                vol.Required(ATTR_MESSAGE): cv.string,
+                vol.Optional(ATTR_TITLE): cv.string,
                 vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
             }
         ),
@@ -214,6 +219,21 @@ def websocket_get_notifications(
 
 
 @callback
+def _async_send_notification_update(
+    connection: websocket_api.ActiveConnection,
+    msg_id: int,
+    update_type: UpdateType,
+    notifications: dict[str, Notification],
+) -> None:
+    """Send persistent_notification update."""
+    connection.send_message(
+        websocket_api.event_message(
+            msg_id, {"type": update_type, "notifications": notifications}
+        )
+    )
+
+
+@callback
 @websocket_api.websocket_command(
     {vol.Required("type"): "persistent_notification/subscribe"}
 )
@@ -225,19 +245,9 @@ def websocket_subscribe_notifications(
     """Return a list of persistent_notifications."""
     notifications = _async_get_or_create_notifications(hass)
     msg_id = msg["id"]
-
-    @callback
-    def _async_send_notification_update(
-        update_type: UpdateType, notifications: dict[str, Notification]
-    ) -> None:
-        connection.send_message(
-            websocket_api.event_message(
-                msg["id"], {"type": update_type, "notifications": notifications}
-            )
-        )
-
+    notify_func = partial(_async_send_notification_update, connection, msg_id)
     connection.subscriptions[msg_id] = async_dispatcher_connect(
-        hass, SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED, _async_send_notification_update
+        hass, SIGNAL_PERSISTENT_NOTIFICATIONS_UPDATED, notify_func
     )
     connection.send_result(msg_id)
-    _async_send_notification_update(UpdateType.CURRENT, notifications)
+    notify_func(UpdateType.CURRENT, notifications)

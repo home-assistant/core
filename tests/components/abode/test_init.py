@@ -1,4 +1,5 @@
 """Tests for the Abode module."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -7,13 +8,7 @@ from jaraco.abode.exceptions import (
     Exception as AbodeException,
 )
 
-from homeassistant import data_entry_flow
-from homeassistant.components.abode import (
-    DOMAIN as ABODE_DOMAIN,
-    SERVICE_CAPTURE_IMAGE,
-    SERVICE_SETTINGS,
-    SERVICE_TRIGGER_AUTOMATION,
-)
+from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN, SERVICE_SETTINGS
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_USERNAME
@@ -56,16 +51,13 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the Abode entry."""
     mock_entry = await setup_platform(hass, ALARM_DOMAIN)
 
-    with patch("jaraco.abode.client.Client.logout") as mock_logout, patch(
-        "jaraco.abode.event_controller.EventController.stop"
-    ) as mock_events_stop:
+    with (
+        patch("jaraco.abode.client.Client.logout") as mock_logout,
+        patch("jaraco.abode.event_controller.EventController.stop") as mock_events_stop,
+    ):
         assert await hass.config_entries.async_unload(mock_entry.entry_id)
-        mock_logout.assert_called_once()
-        mock_events_stop.assert_called_once()
-
-        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_SETTINGS)
-        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_CAPTURE_IMAGE)
-        assert not hass.services.has_service(ABODE_DOMAIN, SERVICE_TRIGGER_AUTOMATION)
+    mock_logout.assert_called_once()
+    mock_events_stop.assert_called_once()
 
 
 async def test_invalid_credentials(hass: HomeAssistant) -> None:
@@ -75,16 +67,18 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
         side_effect=AbodeAuthenticationException(
             (HTTPStatus.BAD_REQUEST, "auth error")
         ),
-    ), patch(
-        "homeassistant.components.abode.config_flow.AbodeFlowHandler.async_step_reauth",
-        return_value={
-            "type": data_entry_flow.FlowResultType.FORM,
-            "step_id": "reauth_confirm",
-        },
-    ) as mock_async_step_reauth:
-        await setup_platform(hass, ALARM_DOMAIN)
+    ):
+        config_entry = await setup_platform(hass, ALARM_DOMAIN)
+        await hass.async_block_till_done()
 
-        mock_async_step_reauth.assert_called_once()
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    hass.config_entries.flow.async_abort(flows[0]["flow_id"])
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_raise_config_entry_not_ready_when_offline(hass: HomeAssistant) -> None:

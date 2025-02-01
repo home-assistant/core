@@ -1,4 +1,5 @@
 """Tests for the devolo Home Network update."""
+
 from devolo_plc_api.device_api import UPDATE_NOT_AVAILABLE, UpdateFirmwareCheck
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
 from freezegun.api import FrozenDateTimeFactory
@@ -140,7 +141,7 @@ async def test_device_failure_update(
 
 
 async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None:
-    """Test updating unautherized triggers the reauth flow."""
+    """Test updating unauthorized triggers the reauth flow."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     state_key = f"{PLATFORM}.{device_name}_firmware"

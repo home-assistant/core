@@ -1,4 +1,5 @@
 """Kaleidescape Media Player."""
+
 from __future__ import annotations
 
 import logging

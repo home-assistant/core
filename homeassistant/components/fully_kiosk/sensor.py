@@ -1,4 +1,5 @@
 """Fully Kiosk Browser sensor."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -11,13 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import FullyKioskConfigEntry
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
@@ -40,7 +40,7 @@ def truncate_url(value: StateType) -> tuple[StateType, dict[str, Any]]:
     return (url, extra_state_attributes)
 
 
-@dataclass
+@dataclass(frozen=True)
 class FullySensorEntityDescription(SensorEntityDescription):
     """Fully Kiosk Browser sensor description."""
 
@@ -113,13 +113,11 @@ SENSORS: tuple[FullySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FullyKioskConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser sensor."""
-    coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     async_add_entities(
         FullySensor(coordinator, description)
         for description in SENSORS

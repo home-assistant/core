@@ -1,4 +1,5 @@
 """Support for Modern Forms Fan Fans."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -12,16 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
-    int_states_in_range,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
+from homeassistant.util.scaling import int_states_in_range
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
@@ -31,6 +28,8 @@ from .const import (
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
+from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
@@ -58,7 +57,7 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_CLEAR_FAN_SLEEP_TIMER,
-        {},
+        None,
         "async_clear_fan_sleep_timer",
     )
 
@@ -72,7 +71,12 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
 
     SPEED_RANGE = (1, 6)  # off is not included
 
-    _attr_supported_features = FanEntityFeature.DIRECTION | FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.DIRECTION
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_translation_key = "fan"
 
     def __init__(

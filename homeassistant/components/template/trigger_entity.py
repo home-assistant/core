@@ -1,14 +1,18 @@
 """Trigger entity."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.template import TemplateStateFromEntityId
 from homeassistant.helpers.trigger_template_entity import TriggerBaseEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 
 
-class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]):
+class TriggerEntity(  # pylint: disable=hass-enforce-class-module
+    TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinator]
+):
     """Template entity based on trigger data."""
 
     def __init__(
@@ -38,11 +42,11 @@ class TriggerEntity(TriggerBaseEntity, CoordinatorEntity[TriggerUpdateCoordinato
     def _process_data(self) -> None:
         """Process new data."""
 
-        this = None
-        if state := self.hass.states.get(self.entity_id):
-            this = state.as_dict()
         run_variables = self.coordinator.data["run_variables"]
-        variables = {"this": this, **(run_variables or {})}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **(run_variables or {}),
+        }
 
         self._render_templates(variables)
 

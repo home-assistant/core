@@ -1,0 +1,101 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'booted_at': '2019-11-11T09:10:02+00:00',
+      'info': dict({
+        'command_set': 'ESCPL2,BDC,D4,D4PX,ESCPR7,END4,GENEP,URF',
+        'location': None,
+        'manufacturer': 'TEST',
+        'model': 'HA-1000 Series',
+        'more_info': 'http://192.168.1.31:80/PRESENTATION/BONJOUR',
+        'name': 'Test HA-1000 Series',
+        'printer_info': 'Test HA-1000 Series',
+        'printer_name': 'Test Printer',
+        'printer_uri_supported': list([
+          'ipps://192.168.1.31:631/ipp/print',
+          'ipp://192.168.1.31:631/ipp/print',
+        ]),
+        'serial': '555534593035345555',
+        'uptime': 30,
+        'uuid': 'cfe92100-67c4-11d4-a45f-f8d027761251',
+        'version': '20.23.06HA',
+      }),
+      'markers': list([
+        dict({
+          'color': '#000000',
+          'high_level': 100,
+          'level': 58,
+          'low_level': 10,
+          'marker_id': 0,
+          'marker_type': 'ink-cartridge',
+          'name': 'Black ink',
+        }),
+        dict({
+          'color': '#00FFFF',
+          'high_level': 100,
+          'level': 91,
+          'low_level': 10,
+          'marker_id': 2,
+          'marker_type': 'ink-cartridge',
+          'name': 'Cyan ink',
+        }),
+        dict({
+          'color': '#FF00FF',
+          'high_level': 100,
+          'level': 73,
+          'low_level': 10,
+          'marker_id': 4,
+          'marker_type': 'ink-cartridge',
+          'name': 'Magenta ink',
+        }),
+        dict({
+          'color': '#000000',
+          'high_level': 100,
+          'level': 98,
+          'low_level': 10,
+          'marker_id': 1,
+          'marker_type': 'ink-cartridge',
+          'name': 'Photo black ink',
+        }),
+        dict({
+          'color': '#FFFF00',
+          'high_level': 100,
+          'level': 95,
+          'low_level': 10,
+          'marker_id': 3,
+          'marker_type': 'ink-cartridge',
+          'name': 'Yellow ink',
+        }),
+      ]),
+      'state': dict({
+        'message': None,
+        'printer_state': 'idle',
+        'reasons': None,
+      }),
+      'uris': list([
+        dict({
+          'authentication': None,
+          'security': 'tls',
+          'uri': 'ipps://192.168.1.31:631/ipp/print',
+        }),
+        dict({
+          'authentication': None,
+          'security': None,
+          'uri': 'ipp://192.168.1.31:631/ipp/print',
+        }),
+      ]),
+    }),
+    'entry': dict({
+      'data': dict({
+        'base_path': '/ipp/print',
+        'host': '192.168.1.31',
+        'port': 631,
+        'ssl': False,
+        'uuid': 'cfe92100-67c4-11d4-a45f-f8d027761251',
+        'verify_ssl': True,
+      }),
+      'unique_id': 'cfe92100-67c4-11d4-a45f-f8d027761251',
+    }),
+  })
+# ---

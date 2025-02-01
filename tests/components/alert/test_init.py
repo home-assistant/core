@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import pytest
 
-import homeassistant.components.alert as alert
+from homeassistant.components import alert, notify
 from homeassistant.components.alert.const import (
     CONF_ALERT_MESSAGE,
     CONF_DATA,
@@ -14,7 +14,6 @@ from homeassistant.components.alert.const import (
     CONF_TITLE,
     DOMAIN,
 )
-import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
@@ -31,7 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
+from tests.common import MockEntityPlatform, async_mock_service
 
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
@@ -338,10 +337,11 @@ async def test_skipfirst(hass: HomeAssistant, mock_notifier: list[ServiceCall]) 
 
 async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -> None:
     """Test that the done message is reset when canceled."""
-    entity = alert.Alert(hass, *TEST_NOACK)
+    entity = alert.AlertEntity(hass, *TEST_NOACK)
+    entity.platform = MockEntityPlatform(hass)
     entity._cancel = lambda *args: None
     assert entity._send_done_message is False
     entity._send_done_message = True
-    hass.async_add_job(entity.end_alerting)
+    await entity.end_alerting()
     await hass.async_block_till_done()
     assert entity._send_done_message is False

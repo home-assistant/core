@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "sensor": {
+      "wifi_strength": {
+        "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "camera_motion": {
+        "default": "mdi:motion-sensor"
+      }
+    }
+  },
+  "services": {
+    "record": {
+      "service": "mdi:video-box"
+    },
+    "trigger_camera": {
+      "service": "mdi:image-refresh"
+    },
+    "save_video": {
+      "service": "mdi:file-video"
+    },
+    "save_recent_clips": {
+      "service": "mdi:file-video"
+    },
+    "send_pin": {
+      "service": "mdi:two-factor-authentication"
+    }
+  }
+}

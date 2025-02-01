@@ -1,4 +1,5 @@
 """GoodWe PV inverter selection settings entities."""
+
 import logging
 
 from goodwe import Inverter, InverterError, OperationMode
@@ -31,7 +32,6 @@ _OPTION_TO_MODE: dict[str, OperationMode] = {
 
 OPERATION_MODE = SelectEntityDescription(
     key="operation_mode",
-    icon="mdi:solar-power",
     entity_category=EntityCategory.CONFIG,
     translation_key="operation_mode",
 )
@@ -88,6 +88,11 @@ class InverterOperationModeEntity(SelectEntity):
         self._attr_options = supported_options
         self._attr_current_option = current_mode
         self._inverter: Inverter = inverter
+
+    async def async_update(self) -> None:
+        """Get the current value from inverter."""
+        value = await self._inverter.get_operation_mode()
+        self._attr_current_option = _MODE_TO_OPTION[value]
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""

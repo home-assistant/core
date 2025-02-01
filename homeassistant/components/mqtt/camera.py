@@ -1,4 +1,5 @@
 """Camera that loads a picture from an MQTT topic."""
+
 from __future__ import annotations
 
 from base64 import b64decode
@@ -18,17 +19,15 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_QOS, CONF_TOPIC
-from .debug_info import log_messages
-from .mixins import (
-    MQTT_ENTITY_COMMON_SCHEMA,
-    MqttEntity,
-    async_setup_entity_entry_helper,
-)
+from .const import CONF_TOPIC
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
+from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_IMAGE_ENCODING = "image_encoding"
 
@@ -64,7 +63,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up MQTT camera through YAML and through MQTT discovery."""
-    await async_setup_entity_entry_helper(
+    async_setup_entity_entry_helper(
         hass,
         config_entry,
         MqttCamera,
@@ -99,36 +98,27 @@ class MqttCamera(MqttEntity, Camera):
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @callback
+    def _image_received(self, msg: ReceiveMessage) -> None:
+        """Handle new MQTT messages."""
+        if CONF_IMAGE_ENCODING in self._config:
+            self._last_image = b64decode(msg.payload)
+        else:
+            if TYPE_CHECKING:
+                assert isinstance(msg.payload, bytes)
+            self._last_image = msg.payload
+
+    @callback
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
-        @callback
-        @log_messages(self.hass, self.entity_id)
-        def message_received(msg: ReceiveMessage) -> None:
-            """Handle new MQTT messages."""
-            if CONF_IMAGE_ENCODING in self._config:
-                self._last_image = b64decode(msg.payload)
-            else:
-                if TYPE_CHECKING:
-                    assert isinstance(msg.payload, bytes)
-                self._last_image = msg.payload
-
-        self._sub_state = subscription.async_prepare_subscribe_topics(
-            self.hass,
-            self._sub_state,
-            {
-                "state_topic": {
-                    "topic": self._config[CONF_TOPIC],
-                    "msg_callback": message_received,
-                    "qos": self._config[CONF_QOS],
-                    "encoding": None,
-                }
-            },
+        self.add_subscription(
+            CONF_TOPIC, self._image_received, None, disable_encoding=True
         )
 
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
-        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+        subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

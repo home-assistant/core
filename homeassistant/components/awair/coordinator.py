@@ -1,4 +1,5 @@
 """DataUpdateCoordinators for awair integration."""
+
 from __future__ import annotations
 
 from asyncio import gather, timeout
@@ -24,6 +25,8 @@ from .const import (
     UPDATE_INTERVAL_CLOUD,
     UPDATE_INTERVAL_LOCAL,
 )
+
+type AwairConfigEntry = ConfigEntry[AwairDataUpdateCoordinator]
 
 
 @dataclass
@@ -110,7 +113,7 @@ class AwairLocalDataUpdateCoordinator(AwairDataUpdateCoordinator):
                     devices = await self._awair.devices()
                     self._device = devices[0]
                 result = await self._fetch_air_data(self._device)
-                return {result.device.uuid: result}
             except AwairError as err:
                 LOGGER.error("Unexpected API error: %s", err)
                 raise UpdateFailed(err) from err
+            return {result.device.uuid: result}

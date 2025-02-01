@@ -1,4 +1,5 @@
 """Support for ONVIF Cameras with FFmpeg as decoder."""
+
 from __future__ import annotations
 
 import asyncio
@@ -23,7 +24,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base import ONVIFBaseEntity
 from .const import (
     ABSOLUTE_MOVE,
     ATTR_CONTINUOUS_DURATION,
@@ -50,6 +50,7 @@ from .const import (
     ZOOM_OUT,
 )
 from .device import ONVIFDevice
+from .entity import ONVIFBaseEntity
 from .models import Profile
 
 
@@ -104,9 +105,9 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self.stream_options[CONF_RTSP_TRANSPORT] = device.config_entry.options.get(
             CONF_RTSP_TRANSPORT, next(iter(RTSP_TRANSPORTS))
         )
-        self.stream_options[
-            CONF_USE_WALLCLOCK_AS_TIMESTAMPS
-        ] = device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = (
+            device.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False)
+        )
         self._basic_auth = (
             device.config_entry.data.get(CONF_SNAPSHOT_AUTH)
             == HTTP_BASIC_AUTHENTICATION
@@ -197,7 +198,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._stream_uri_future = loop.create_future()
         try:
             uri_no_auth = await self.device.async_get_stream_uri(self.profile)
-        except (asyncio.TimeoutError, Exception) as err:
+        except (TimeoutError, Exception) as err:
             LOGGER.error("Failed to get stream uri: %s", err)
             if self._stream_uri_future:
                 self._stream_uri_future.set_exception(err)

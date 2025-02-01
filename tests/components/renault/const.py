@@ -1,4 +1,5 @@
 """Constants for the Renault integration tests."""
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.renault.const import (
     CONF_KAMEREON_ACCOUNT_ID,
@@ -18,9 +19,9 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_STATE,
-    ATTR_SW_VERSION,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -73,7 +74,7 @@ MOCK_VEHICLES = {
             ATTR_MANUFACTURER: "Renault",
             ATTR_MODEL: "Zoe",
             ATTR_NAME: "REG-NUMBER",
-            ATTR_SW_VERSION: "X101VE",
+            ATTR_MODEL_ID: "X101VE",
         },
         "endpoints": {
             "battery_status": "battery_status_charging.json",
@@ -126,7 +127,12 @@ MOCK_VEHICLES = {
             {
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
-                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+                ATTR_OPTIONS: [
+                    "always",
+                    "always_charging",
+                    "schedule_mode",
+                    "scheduled",
+                ],
                 ATTR_STATE: "always",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_mode",
             },
@@ -240,7 +246,13 @@ MOCK_VEHICLES = {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug",
-                ATTR_OPTIONS: ["unplugged", "plugged", "plug_error", "plug_unknown"],
+                ATTR_OPTIONS: [
+                    "unplugged",
+                    "plugged",
+                    "plugged_waiting_for_charge",
+                    "plug_error",
+                    "plug_unknown",
+                ],
                 ATTR_STATE: "plugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
@@ -263,7 +275,7 @@ MOCK_VEHICLES = {
             ATTR_MANUFACTURER: "Renault",
             ATTR_MODEL: "Zoe",
             ATTR_NAME: "REG-NUMBER",
-            ATTR_SW_VERSION: "X102VE",
+            ATTR_MODEL_ID: "X102VE",
         },
         "endpoints": {
             "battery_status": "battery_status_not_charging.json",
@@ -362,7 +374,12 @@ MOCK_VEHICLES = {
             {
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-clock",
-                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+                ATTR_OPTIONS: [
+                    "always",
+                    "always_charging",
+                    "schedule_mode",
+                    "scheduled",
+                ],
                 ATTR_STATE: "schedule_mode",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_charge_mode",
             },
@@ -476,7 +493,13 @@ MOCK_VEHICLES = {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug-off",
-                ATTR_OPTIONS: ["unplugged", "plugged", "plug_error", "plug_unknown"],
+                ATTR_OPTIONS: [
+                    "unplugged",
+                    "plugged",
+                    "plugged_waiting_for_charge",
+                    "plug_error",
+                    "plug_unknown",
+                ],
                 ATTR_STATE: "unplugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777999_plug_state",
             },
@@ -506,7 +529,7 @@ MOCK_VEHICLES = {
             ATTR_MANUFACTURER: "Renault",
             ATTR_MODEL: "Captur ii",
             ATTR_NAME: "REG-NUMBER",
-            ATTR_SW_VERSION: "XJB1SU",
+            ATTR_MODEL_ID: "XJB1SU",
         },
         "endpoints": {
             "battery_status": "battery_status_charging.json",
@@ -598,7 +621,12 @@ MOCK_VEHICLES = {
             {
                 ATTR_ENTITY_ID: "select.reg_number_charge_mode",
                 ATTR_ICON: "mdi:calendar-remove",
-                ATTR_OPTIONS: ["always", "always_charging", "schedule_mode"],
+                ATTR_OPTIONS: [
+                    "always",
+                    "always_charging",
+                    "schedule_mode",
+                    "scheduled",
+                ],
                 ATTR_STATE: "always",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_charge_mode",
             },
@@ -709,7 +737,13 @@ MOCK_VEHICLES = {
                 ATTR_DEVICE_CLASS: SensorDeviceClass.ENUM,
                 ATTR_ENTITY_ID: "sensor.reg_number_plug_state",
                 ATTR_ICON: "mdi:power-plug",
-                ATTR_OPTIONS: ["unplugged", "plugged", "plug_error", "plug_unknown"],
+                ATTR_OPTIONS: [
+                    "unplugged",
+                    "plugged",
+                    "plugged_waiting_for_charge",
+                    "plug_error",
+                    "plug_unknown",
+                ],
                 ATTR_STATE: "plugged",
                 ATTR_UNIQUE_ID: "vf1aaaaa555777123_plug_state",
             },
@@ -739,7 +773,7 @@ MOCK_VEHICLES = {
             ATTR_MANUFACTURER: "Renault",
             ATTR_MODEL: "Captur ii",
             ATTR_NAME: "REG-NUMBER",
-            ATTR_SW_VERSION: "XJB1SU",
+            ATTR_MODEL_ID: "XJB1SU",
         },
         "endpoints": {
             "cockpit": "cockpit_fuel.json",

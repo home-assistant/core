@@ -1,4 +1,5 @@
 """Test the Whirlpool Sixth Sense climate domain."""
+
 from unittest.mock import MagicMock
 
 from attr import dataclass
@@ -43,6 +44,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
@@ -72,6 +74,7 @@ async def test_no_appliances(
 
 async def test_static_attributes(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_aircon1_api: MagicMock,
     mock_aircon_api_instances: MagicMock,
 ) -> None:
@@ -79,7 +82,7 @@ async def test_static_attributes(
     await init_integration(hass)
 
     for entity_id in ("climate.said1", "climate.said2"):
-        entry = er.async_get(hass).async_get(entity_id)
+        entry = entity_registry.async_get(entity_id)
         assert entry
         assert entry.unique_id == entity_id.split(".")[1]
 
@@ -96,6 +99,8 @@ async def test_static_attributes(
             == ClimateEntityFeature.TARGET_TEMPERATURE
             | ClimateEntityFeature.FAN_MODE
             | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         assert attributes[ATTR_HVAC_MODES] == [
             HVACMode.COOL,
@@ -259,10 +264,10 @@ async def test_service_calls(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
-            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 15},
+            {ATTR_ENTITY_ID: entity_id, ATTR_TEMPERATURE: 16},
             blocking=True,
         )
-        mock_instance.set_temp.assert_called_once_with(15)
+        mock_instance.set_temp.assert_called_once_with(16)
 
         mock_instance.set_mode.reset_mock()
         await hass.services.async_call(
@@ -337,7 +342,7 @@ async def test_service_calls(
 
         mock_instance.set_fanspeed.reset_mock()
         # FAN_MIDDLE is not supported
-        with pytest.raises(ValueError):
+        with pytest.raises(ServiceValidationError):
             await hass.services.async_call(
                 CLIMATE_DOMAIN,
                 SERVICE_SET_FAN_MODE,

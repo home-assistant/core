@@ -1,4 +1,5 @@
 """Handle Hue Service calls."""
+
 from __future__ import annotations
 
 import asyncio
@@ -8,7 +9,7 @@ from aiohue import HueBridgeV1, HueBridgeV2
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import verify_domain_control
 
 from .bridge import HueBridge

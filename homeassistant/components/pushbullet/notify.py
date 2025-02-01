@@ -1,4 +1,5 @@
 """Pushbullet platform for notify component."""
+
 from __future__ import annotations
 
 import logging
@@ -21,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .api import PushBulletNotificationProvider
 from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,8 +36,10 @@ async def async_get_service(
     """Get the Pushbullet notification service."""
     if TYPE_CHECKING:
         assert discovery_info is not None
-    pushbullet: PushBullet = hass.data[DOMAIN][discovery_info["entry_id"]].pushbullet
-    return PushBulletNotificationService(hass, pushbullet)
+    pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN][
+        discovery_info["entry_id"]
+    ]
+    return PushBulletNotificationService(hass, pb_provider.pushbullet)
 
 
 class PushBulletNotificationService(BaseNotificationService):
@@ -88,7 +92,7 @@ class PushBulletNotificationService(BaseNotificationService):
             # This also seems to work to send to all devices in own account.
             if ttype == "email":
                 self._push_data(message, title, data, self.pushbullet, email=tname)
-                _LOGGER.info("Sent notification to email %s", tname)
+                _LOGGER.debug("Sent notification to email %s", tname)
                 continue
 
             # Target is sms, send directly, don't use a target object.
@@ -96,7 +100,7 @@ class PushBulletNotificationService(BaseNotificationService):
                 self._push_data(
                     message, title, data, self.pushbullet, phonenumber=tname
                 )
-                _LOGGER.info("Sent sms notification to %s", tname)
+                _LOGGER.debug("Sent sms notification to %s", tname)
                 continue
 
             if ttype not in self.pbtargets:
@@ -120,7 +124,7 @@ class PushBulletNotificationService(BaseNotificationService):
         pusher: PushBullet,
         email: str | None = None,
         phonenumber: str | None = None,
-    ):
+    ) -> None:
         """Create the message content."""
         kwargs = {"body": message, "title": title}
         if email:

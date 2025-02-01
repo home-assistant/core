@@ -1,4 +1,5 @@
 """The HERE Travel Time integration."""
+
 from __future__ import annotations
 
 from datetime import datetime, time, timedelta
@@ -26,7 +27,7 @@ import voluptuous as vol
 
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util

@@ -1,4 +1,5 @@
 """Fully Kiosk Browser media player."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,22 +12,23 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import AUDIOMANAGER_STREAM_MUSIC, DOMAIN, MEDIA_SUPPORT_FULLYKIOSK
+from . import FullyKioskConfigEntry
+from .const import AUDIOMANAGER_STREAM_MUSIC, MEDIA_SUPPORT_FULLYKIOSK
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FullyKioskConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser media player entity."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities([FullyMediaPlayer(coordinator)])
 
 
@@ -53,13 +55,33 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
             )
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
-        await self.coordinator.fully.playSound(media_id, AUDIOMANAGER_STREAM_MUSIC)
+        if media_type.startswith("audio/"):
+            media_type = MediaType.MUSIC
+        elif media_type.startswith("video/"):
+            media_type = MediaType.VIDEO
+        if media_type == MediaType.MUSIC:
+            self._attr_media_content_type = MediaType.MUSIC
+            await self.coordinator.fully.playSound(media_id, AUDIOMANAGER_STREAM_MUSIC)
+        elif media_type == MediaType.VIDEO:
+            self._attr_media_content_type = MediaType.VIDEO
+            await self.coordinator.fully.sendCommand(
+                "playVideo",
+                url=media_id,
+                stream=AUDIOMANAGER_STREAM_MUSIC,
+                showControls=1,
+                exitOnCompletion=1,
+            )
+        else:
+            raise HomeAssistantError(f"Unsupported media type {media_type}")
         self._attr_state = MediaPlayerState.PLAYING
         self.async_write_ha_state()
 
     async def async_media_stop(self) -> None:
         """Stop playing media."""
-        await self.coordinator.fully.stopSound()
+        if self._attr_media_content_type == MediaType.VIDEO:
+            await self.coordinator.fully.sendCommand("stopVideo")
+        else:
+            await self.coordinator.fully.stopSound()
         self._attr_state = MediaPlayerState.IDLE
         self.async_write_ha_state()
 
@@ -80,5 +102,16 @@ class FullyMediaPlayer(FullyKioskEntity, MediaPlayerEntity):
         return await media_source.async_browse_media(
             self.hass,
             media_content_id,
-            content_filter=lambda item: item.media_content_type.startswith("audio/"),
+            content_filter=lambda item: item.media_content_type.startswith("audio/")
+            or item.media_content_type.startswith("video/"),
         )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_state = (
+            MediaPlayerState.PLAYING
+            if "soundUrlPlaying" in self.coordinator.data
+            else MediaPlayerState.IDLE
+        )
+        self.async_write_ha_state()

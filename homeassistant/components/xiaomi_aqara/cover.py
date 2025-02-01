@@ -1,4 +1,5 @@
 """Support for Xiaomi curtain."""
+
 from typing import Any
 
 from homeassistant.components.cover import ATTR_POSITION, CoverEntity
@@ -6,8 +7,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 ATTR_CURTAIN_LEVEL = "curtain_level"
 

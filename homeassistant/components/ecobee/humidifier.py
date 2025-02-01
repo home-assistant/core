@@ -1,4 +1,5 @@
 """Support for using humidifier with ecobee thermostats."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,11 +12,11 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import EcobeeConfigEntry
 from .const import DOMAIN, ECOBEE_MODEL_TO_NAME, MANUFACTURER
 
 SCAN_INTERVAL = timedelta(minutes=3)
@@ -26,11 +27,11 @@ MODE_OFF = "off"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: EcobeeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat humidifier entity."""
-    data = hass.data[DOMAIN]
+    data = config_entry.runtime_data
     entities = []
     for index in range(len(data.ecobee.thermostats)):
         thermostat = data.ecobee.get_thermostat(index)
@@ -108,6 +109,14 @@ class EcobeeHumidifier(HumidifierEntity):
     def target_humidity(self) -> int:
         """Return the desired humidity set point."""
         return int(self.thermostat["runtime"]["desiredHumidity"])
+
+    @property
+    def current_humidity(self) -> int | None:
+        """Return the current humidity."""
+        try:
+            return int(self.thermostat["runtime"]["actualHumidity"])
+        except KeyError:
+            return None
 
     def set_mode(self, mode):
         """Set humidifier mode (auto, off, manual)."""

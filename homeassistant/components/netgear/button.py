@@ -1,4 +1,5 @@
 """Support for Netgear Button."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -19,18 +20,11 @@ from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
 
-@dataclass
-class NetgearButtonEntityDescriptionRequired:
-    """Required attributes of NetgearButtonEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class NetgearButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Netgear button entities."""
 
     action: Callable[[NetgearRouter], Callable[[], Coroutine[Any, Any, None]]]
-
-
-@dataclass
-class NetgearButtonEntityDescription(
-    ButtonEntityDescription, NetgearButtonEntityDescriptionRequired
-):
-    """Class describing Netgear button entities."""
 
 
 BUTTONS = [

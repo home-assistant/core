@@ -26,20 +26,22 @@ The following cases will never be passed to your function:
 - if either state is unknown/unavailable
 - state adding/removing
 """
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Protocol
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.util.hass_dict import HassKey
 
 from .integration_platform import async_process_integration_platforms
 
 PLATFORM = "significant_change"
-DATA_FUNCTIONS = "significant_change"
-CheckTypeFunc = Callable[
+DATA_FUNCTIONS: HassKey[dict[str, CheckTypeFunc]] = HassKey("significant_change")
+type CheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
@@ -50,7 +52,7 @@ CheckTypeFunc = Callable[
     bool | None,
 ]
 
-ExtraCheckTypeFunc = Callable[
+type ExtraCheckTypeFunc = Callable[
     [
         HomeAssistant,
         str,
@@ -62,6 +64,20 @@ ExtraCheckTypeFunc = Callable[
     ],
     bool | None,
 ]
+
+
+class SignificantChangeProtocol(Protocol):
+    """Define the format of significant_change platforms."""
+
+    def async_check_significant_change(
+        self,
+        hass: HomeAssistant,
+        old_state: str,
+        old_attrs: Mapping[str, Any],
+        new_state: str,
+        new_attrs: Mapping[str, Any],
+    ) -> bool | None:
+        """Test if state significantly changed."""
 
 
 async def create_checker(
@@ -82,8 +98,11 @@ async def _initialize(hass: HomeAssistant) -> None:
 
     functions = hass.data[DATA_FUNCTIONS] = {}
 
-    async def process_platform(
-        hass: HomeAssistant, component_name: str, platform: Any
+    @callback
+    def process_platform(
+        hass: HomeAssistant,
+        component_name: str,
+        platform: SignificantChangeProtocol,
     ) -> None:
         """Process a significant change platform."""
         functions[component_name] = platform.async_check_significant_change
@@ -97,9 +116,9 @@ def either_one_none(val1: Any | None, val2: Any | None) -> bool:
 
 
 def _check_numeric_change(
-    old_state: int | float | None,
-    new_state: int | float | None,
-    change: int | float,
+    old_state: float | None,
+    new_state: float | None,
+    change: float,
     metric: Callable[[int | float, int | float], int | float],
 ) -> bool:
     """Check if two numeric values have changed."""
@@ -119,9 +138,9 @@ def _check_numeric_change(
 
 
 def check_absolute_change(
-    val1: int | float | None,
-    val2: int | float | None,
-    change: int | float,
+    val1: float | None,
+    val2: float | None,
+    change: float,
 ) -> bool:
     """Check if two numeric values have changed."""
     return _check_numeric_change(
@@ -130,13 +149,13 @@ def check_absolute_change(
 
 
 def check_percentage_change(
-    old_state: int | float | None,
-    new_state: int | float | None,
-    change: int | float,
+    old_state: float | None,
+    new_state: float | None,
+    change: float,
 ) -> bool:
     """Check if two numeric values have changed."""
 
-    def percentage_change(old_state: int | float, new_state: int | float) -> float:
+    def percentage_change(old_state: float, new_state: float) -> float:
         if old_state == new_state:
             return 0
         try:
@@ -145,6 +164,15 @@ def check_percentage_change(
             return float("inf")
 
     return _check_numeric_change(old_state, new_state, change, percentage_change)
+
+
+def check_valid_float(value: str | float) -> bool:
+    """Check if given value is a valid float."""
+    try:
+        float(value)
+    except ValueError:
+        return False
+    return True
 
 
 class SignificantlyChangedChecker:
@@ -195,7 +223,7 @@ class SignificantlyChangedChecker:
             self.last_approved_entities[new_state.entity_id] = (new_state, extra_arg)
             return True
 
-        functions: dict[str, CheckTypeFunc] | None = self.hass.data.get(DATA_FUNCTIONS)
+        functions = self.hass.data.get(DATA_FUNCTIONS)
 
         if functions is None:
             raise RuntimeError("Significant Change not initialized")

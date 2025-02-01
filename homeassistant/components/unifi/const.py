@@ -2,6 +2,8 @@
 
 import logging
 
+from aiounifi.models.device import DeviceState
+
 from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
@@ -46,3 +48,18 @@ ATTR_MANUFACTURER = "Ubiquiti Networks"
 BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"
 OUTLET_SWITCH = "outlet"
+
+DEVICE_STATES = {
+    DeviceState.DISCONNECTED: "disconnected",
+    DeviceState.CONNECTED: "connected",
+    DeviceState.PENDING: "pending",
+    DeviceState.FIRMWARE_MISMATCH: "firmware_mismatch",
+    DeviceState.UPGRADING: "upgrading",
+    DeviceState.PROVISIONING: "provisioning",
+    DeviceState.HEARTBEAT_MISSED: "heartbeat_missed",
+    DeviceState.ADOPTING: "adopting",
+    DeviceState.DELETING: "deleting",
+    DeviceState.INFORM_ERROR: "inform_error",
+    DeviceState.ADOPTION_FALIED: "adoption_failed",
+    DeviceState.ISOLATED: "isolated",
+}

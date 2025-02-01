@@ -1,4 +1,8 @@
 """Test homekit_controller stateless triggers."""
+
+from collections.abc import Callable
+
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -9,7 +13,7 @@ from homeassistant.helpers import entity_registry as er
 from .common import setup_test_component
 
 
-def create_remote(accessory):
+def create_remote(accessory: Accessory) -> None:
     """Define characteristics for a button (that is inn a group)."""
     service_label = accessory.add_service(ServicesTypes.SERVICE_LABEL)
 
@@ -34,7 +38,7 @@ def create_remote(accessory):
     battery.add_char(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-def create_button(accessory):
+def create_button(accessory: Accessory) -> None:
     """Define a button (that is not in a group)."""
     button = accessory.add_service(ServicesTypes.STATELESS_PROGRAMMABLE_SWITCH)
 
@@ -49,7 +53,7 @@ def create_button(accessory):
     battery.add_char(CharacteristicsTypes.BATTERY_LEVEL)
 
 
-def create_doorbell(accessory):
+def create_doorbell(accessory: Accessory) -> None:
     """Define a button (that is not in a group)."""
     button = accessory.add_service(ServicesTypes.DOORBELL)
 
@@ -65,10 +69,12 @@ def create_doorbell(accessory):
 
 
 async def test_remote(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that remote is supported."""
-    helper = await setup_test_component(hass, create_remote)
+    helper = await setup_test_component(hass, get_next_aid(), create_remote)
 
     entities = [
         ("event.testdevice_button_1", "Button 1"),
@@ -110,10 +116,12 @@ async def test_remote(
 
 
 async def test_button(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that a button is correctly enumerated."""
-    helper = await setup_test_component(hass, create_button)
+    helper = await setup_test_component(hass, get_next_aid(), create_button)
     entity_id = "event.testdevice_button_1"
 
     button = entity_registry.async_get(entity_id)
@@ -148,10 +156,12 @@ async def test_button(
 
 
 async def test_doorbell(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, utcnow
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    get_next_aid: Callable[[], int],
 ) -> None:
     """Test that doorbell service is handled."""
-    helper = await setup_test_component(hass, create_doorbell)
+    helper = await setup_test_component(hass, get_next_aid(), create_doorbell)
     entity_id = "event.testdevice_doorbell"
 
     doorbell = entity_registry.async_get(entity_id)

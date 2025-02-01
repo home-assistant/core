@@ -1,4 +1,5 @@
 """Support for interface with a Gree climate systems."""
+
 from __future__ import annotations
 
 import logging
@@ -38,21 +39,19 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .bridge import DeviceDataUpdateCoordinator
 from .const import (
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
-    DISPATCHERS,
     DOMAIN,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
     TARGET_TEMPERATURE_STEP,
 )
+from .coordinator import DeviceDataUpdateCoordinator
+from .entity import GreeEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,7 +87,7 @@ SWING_MODES = [SWING_OFF, SWING_VERTICAL, SWING_HORIZONTAL, SWING_BOTH]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Gree HVAC device from a config entry."""
@@ -101,12 +100,12 @@ async def async_setup_entry(
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)
 
-    hass.data[DOMAIN][DISPATCHERS].append(
+    entry.async_on_unload(
         async_dispatcher_connect(hass, DISPATCH_DEVICE_DISCOVERED, init_device)
     )
 
 
-class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateEntity):
+class GreeClimateEntity(GreeEntity, ClimateEntity):
     """Representation of a Gree HVAC device."""
 
     _attr_precision = PRECISION_WHOLE
@@ -115,34 +114,23 @@ class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = TARGET_TEMPERATURE_STEP
     _attr_hvac_modes = [*HVAC_MODES_REVERSE, HVACMode.OFF]
     _attr_preset_modes = PRESET_MODES
     _attr_fan_modes = [*FAN_MODES_REVERSE]
     _attr_swing_modes = SWING_MODES
+    _attr_name = None
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_min_temp = TEMP_MIN
+    _attr_max_temp = TEMP_MAX
 
     def __init__(self, coordinator: DeviceDataUpdateCoordinator) -> None:
         """Initialize the Gree device."""
         super().__init__(coordinator)
-        self._attr_name = coordinator.device.device_info.name
-        mac = coordinator.device.device_info.mac
-        self._attr_unique_id = mac
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, mac)},
-            identifiers={(DOMAIN, mac)},
-            manufacturer="Gree",
-            name=self._attr_name,
-        )
-        units = self.coordinator.device.temperature_units
-        if units == TemperatureUnits.C:
-            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-            self._attr_min_temp = TEMP_MIN
-            self._attr_max_temp = TEMP_MAX
-        else:
-            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-            self._attr_min_temp = TEMP_MIN_F
-            self._attr_max_temp = TEMP_MAX_F
+        self._attr_unique_id = coordinator.device.device_info.mac
 
     @property
     def current_temperature(self) -> float:
@@ -169,7 +157,7 @@ class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateE
             self._attr_name,
         )
 
-        self.coordinator.device.target_temperature = round(temperature)
+        self.coordinator.device.target_temperature = temperature
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
 
@@ -311,3 +299,25 @@ class GreeClimateEntity(CoordinatorEntity[DeviceDataUpdateCoordinator], ClimateE
 
         await self.coordinator.push_state_update()
         self.async_write_ha_state()
+
+    def _handle_coordinator_update(self) -> None:
+        """Update the state of the entity."""
+        units = self.coordinator.device.temperature_units
+        if (
+            units == TemperatureUnits.C
+            and self._attr_temperature_unit != UnitOfTemperature.CELSIUS
+        ):
+            _LOGGER.debug("Setting temperature unit to Celsius")
+            self._attr_temperature_unit = UnitOfTemperature.CELSIUS
+            self._attr_min_temp = TEMP_MIN
+            self._attr_max_temp = TEMP_MAX
+        elif (
+            units == TemperatureUnits.F
+            and self._attr_temperature_unit != UnitOfTemperature.FAHRENHEIT
+        ):
+            _LOGGER.debug("Setting temperature unit to Fahrenheit")
+            self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+            self._attr_min_temp = TEMP_MIN_F
+            self._attr_max_temp = TEMP_MAX_F
+
+        super()._handle_coordinator_update()

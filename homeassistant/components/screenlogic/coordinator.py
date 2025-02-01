@@ -1,9 +1,16 @@
 """ScreenlogicDataUpdateCoordinator definition."""
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from screenlogicpy import ScreenLogicError, ScreenLogicGateway
-from screenlogicpy.const.common import SL_GATEWAY_IP, SL_GATEWAY_NAME, SL_GATEWAY_PORT
+from screenlogicpy import ScreenLogicGateway
+from screenlogicpy.const.common import (
+    SL_GATEWAY_IP,
+    SL_GATEWAY_NAME,
+    SL_GATEWAY_PORT,
+    ScreenLogicCommunicationError,
+)
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,11 +34,13 @@ async def async_get_connect_info(
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
-    discovered_gateways = await async_discover_gateways_by_unique_id(hass)
+    discovered_gateways = await async_discover_gateways_by_unique_id()
     if mac in discovered_gateways:
         return discovered_gateways[mac]
 
     _LOGGER.debug("Gateway rediscovery failed for %s", entry.title)
+    if TYPE_CHECKING:
+        assert mac is not None
     # Static connection defined or fallback from discovery
     return {
         SL_GATEWAY_NAME: name_for_mac(mac),
@@ -91,7 +100,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 await self.gateway.async_connect(**connect_info)
 
             await self._async_update_configured_data()
-        except ScreenLogicError as ex:
+        except ScreenLogicCommunicationError as sle:
             if self.gateway.is_connected:
                 await self.gateway.async_disconnect()
-            raise UpdateFailed(ex.msg) from ex
+            raise UpdateFailed(sle.msg) from sle

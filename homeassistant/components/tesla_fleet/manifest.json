@@ -1,0 +1,11 @@
+{
+  "domain": "tesla_fleet",
+  "name": "Tesla Fleet",
+  "codeowners": ["@Bre77"],
+  "config_flow": true,
+  "dependencies": ["application_credentials", "http"],
+  "documentation": "https://www.home-assistant.io/integrations/tesla_fleet",
+  "iot_class": "cloud_polling",
+  "loggers": ["tesla-fleet-api"],
+  "requirements": ["tesla-fleet-api==0.9.2"]
+}

@@ -1,4 +1,5 @@
 """Support for Google travel time sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -6,8 +7,13 @@ import logging
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
+from googlemaps.exceptions import ApiError, Timeout, TransportError
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
@@ -19,7 +25,7 @@ from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
@@ -71,6 +77,8 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, config_entry, name, api_key, origin, destination, client):
         """Initialize the sensor."""
@@ -93,7 +101,7 @@ class GoogleTravelTimeSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
-        if self.hass.state != CoreState.running:
+        if self.hass.state is not CoreState.running:
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STARTED, self.first_update
             )
@@ -165,9 +173,13 @@ class GoogleTravelTimeSensor(SensorEntity):
             self._resolved_destination,
         )
         if self._resolved_destination is not None and self._resolved_origin is not None:
-            self._matrix = distance_matrix(
-                self._client,
-                self._resolved_origin,
-                self._resolved_destination,
-                **options_copy,
-            )
+            try:
+                self._matrix = distance_matrix(
+                    self._client,
+                    self._resolved_origin,
+                    self._resolved_destination,
+                    **options_copy,
+                )
+            except (ApiError, TransportError, Timeout) as ex:
+                _LOGGER.error("Error getting travel time: %s", ex)
+                self._matrix = None

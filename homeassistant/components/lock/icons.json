@@ -1,0 +1,26 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:lock",
+      "state": {
+        "jammed": "mdi:lock-alert",
+        "locking": "mdi:lock-clock",
+        "open": "mdi:lock-open-variant",
+        "opening": "mdi:lock-clock",
+        "unlocked": "mdi:lock-open-variant",
+        "unlocking": "mdi:lock-clock"
+      }
+    }
+  },
+  "services": {
+    "lock": {
+      "service": "mdi:lock"
+    },
+    "open": {
+      "service": "mdi:door-open"
+    },
+    "unlock": {
+      "service": "mdi:lock-open-variant"
+    }
+  }
+}

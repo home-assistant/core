@@ -3,10 +3,9 @@
   "name": "Minut Point",
   "codeowners": ["@fredrike"],
   "config_flow": true,
-  "dependencies": ["webhook", "http"],
+  "dependencies": ["application_credentials", "http", "webhook"],
   "documentation": "https://www.home-assistant.io/integrations/point",
   "iot_class": "cloud_polling",
   "loggers": ["pypoint"],
-  "quality_scale": "gold",
-  "requirements": ["pypoint==2.3.2"]
+  "requirements": ["pypoint==3.0.0"]
 }

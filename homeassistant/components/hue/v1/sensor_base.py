@@ -1,4 +1,5 @@
 """Support for the Philips Hue sensors as a platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -164,7 +165,7 @@ class SensorManager:
             self._component_add_entities[platform](value)
 
 
-class GenericHueSensor(GenericHueDevice, entity.Entity):
+class GenericHueSensor(GenericHueDevice, entity.Entity):  # pylint: disable=hass-enforce-class-module
     """Representation of a Hue sensor."""
 
     should_poll = False

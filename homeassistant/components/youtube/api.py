@@ -1,4 +1,5 @@
 """API for YouTube bound to Home Assistant OAuth."""
+
 from youtubeaio.types import AuthScope
 from youtubeaio.youtube import YouTube
 
@@ -25,7 +26,7 @@ class AsyncConfigEntryAuth:
     @property
     def access_token(self) -> str:
         """Return the access token."""
-        return self.oauth_session.token[CONF_ACCESS_TOKEN]
+        return self.oauth_session.token[CONF_ACCESS_TOKEN]  # type: ignore[no-any-return]
 
     async def check_and_refresh_token(self) -> str:
         """Check the token."""

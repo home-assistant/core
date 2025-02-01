@@ -7,11 +7,12 @@ from collections.abc import Mapping
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import ConnectivityTrait, InfoTrait
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import CONNECTIVITY_TRAIT_OFFLINE, DATA_DEVICE_MANAGER, DOMAIN
+from .const import CONNECTIVITY_TRAIT_OFFLINE, DOMAIN
 
 DEVICE_TYPE_MAP: dict[str, str] = {
     "sdm.devices.types.CAMERA": "Camera",
@@ -73,7 +74,7 @@ class NestDeviceInfo:
         """Return device suggested area based on the Google Home room."""
         if parent_relations := self._device.parent_relations:
             items = sorted(parent_relations.items())
-            names = [name for id, name in items]
+            names = [name for _, name in items]
             return " ".join(names)
         return None
 
@@ -81,14 +82,12 @@ class NestDeviceInfo:
 @callback
 def async_nest_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of all nest devices for all config entries."""
-    devices = {}
-    for entry_id in hass.data[DOMAIN]:
-        if not (device_manager := hass.data[DOMAIN][entry_id].get(DATA_DEVICE_MANAGER)):
-            continue
-        devices.update(
-            {device.name: device for device in device_manager.devices.values()}
-        )
-    return devices
+    return {
+        device.name: device
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if config_entry.state == ConfigEntryState.LOADED
+        for device in config_entry.runtime_data.device_manager.devices.values()
+    }
 
 
 @callback

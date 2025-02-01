@@ -13,9 +13,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
@@ -114,8 +113,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             if match := re.match(
                 rf"(?:{old_unique_id})-(?P<id>\d+)", entity_entry.unique_id
             ):
-                entity_new_unique_id = f'{new_unique_id}-{match.group("id")}'
-                _LOGGER.info(
+                entity_new_unique_id = f"{new_unique_id}-{match.group('id')}"
+                _LOGGER.debug(
                     "Migrating entity %s from %s to new id %s",
                     entity_entry.entity_id,
                     entity_entry.unique_id,
@@ -141,7 +140,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                                 f"{match.group('id')}-{new_unique_id}",
                             )
                         }
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             "Migrating device %s identifiers from %s to %s",
                             device_entry.name,
                             device_entry.identifiers,
@@ -156,8 +155,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 hass, config_entry.entry_id, update_unique_id
             )
 
-            config_entry.version = 2
+            hass.config_entries.async_update_entry(config_entry, version=2)
 
-        _LOGGER.info("Migration to version %s successful", config_entry.version)
+        _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True

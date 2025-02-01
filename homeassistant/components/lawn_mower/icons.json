@@ -1,0 +1,18 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:robot-mower"
+    }
+  },
+  "services": {
+    "dock": {
+      "service": "mdi:home-import-outline"
+    },
+    "pause": {
+      "service": "mdi:pause"
+    },
+    "start_mowing": {
+      "service": "mdi:play"
+    }
+  }
+}

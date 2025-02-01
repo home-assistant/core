@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "pump_pressure": {
+        "default": "mdi:water-pump"
+      },
+      "reservoir_temperature": {
+        "default": "mdi:coolant-temperature"
+      },
+      "reservoir_content": {
+        "default": "mdi:car-coolant-level"
+      },
+      "water_saved": {
+        "default": "mdi:water-opacity"
+      },
+      "water_used": {
+        "default": "mdi:chart-donut"
+      },
+      "reservoir_capacity": {
+        "default": "mdi:waves"
+      },
+      "pump_type": {
+        "default": "mdi:pump"
+      }
+    }
+  }
+}

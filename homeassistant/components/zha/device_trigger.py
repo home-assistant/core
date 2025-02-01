@@ -1,9 +1,10 @@
 """Provides device automations for ZHA devices that emit events."""
 
 import voluptuous as vol
+from zha.application.const import ZHA_EVENT
 
-from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DEVICE_TRIGGER_BASE_SCHEMA,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
@@ -13,9 +14,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN as ZHA_DOMAIN
-from .core.const import ZHA_EVENT
-from .core.helpers import async_get_zha_device, get_zha_data
+from .const import DOMAIN as ZHA_DOMAIN
+from .helpers import async_get_zha_device_proxy, get_zha_data
 
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
@@ -31,7 +31,7 @@ def _get_device_trigger_data(hass: HomeAssistant, device_id: str) -> tuple[str, 
 
     # First, try checking to see if the device itself is accessible
     try:
-        zha_device = async_get_zha_device(hass, device_id)
+        zha_device = async_get_zha_device_proxy(hass, device_id).device
     except ValueError:
         pass
     else:

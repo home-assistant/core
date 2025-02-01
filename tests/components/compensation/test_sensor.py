@@ -1,4 +1,5 @@
 """The tests for the integration sensor platform."""
+
 import pytest
 
 from homeassistant.components.compensation.const import CONF_PRECISION, DOMAIN

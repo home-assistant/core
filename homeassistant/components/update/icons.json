@@ -1,0 +1,21 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:package-up",
+      "state": {
+        "off": "mdi:package"
+      }
+    }
+  },
+  "services": {
+    "clear_skipped": {
+      "service": "mdi:package"
+    },
+    "install": {
+      "service": "mdi:package-down"
+    },
+    "skip": {
+      "service": "mdi:package-check"
+    }
+  }
+}

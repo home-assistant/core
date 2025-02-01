@@ -35,7 +35,16 @@
         "name": "Glucose value"
       },
       "glucose_trend": {
-        "name": "Glucose trend"
+        "name": "Glucose trend",
+        "state": {
+          "rising_quickly": "Rising quickly",
+          "rising": "Rising",
+          "rising_slightly": "Rising slightly",
+          "steady": "Steady",
+          "falling_slightly": "Falling slightly",
+          "falling": "Falling",
+          "falling_quickly": "Falling quickly"
+        }
       }
     }
   }

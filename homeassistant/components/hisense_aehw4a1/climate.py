@@ -1,4 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
+
 from __future__ import annotations
 
 import logging
@@ -144,6 +145,8 @@ class ClimateAehW4a1(ClimateEntity):
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_fan_modes = FAN_MODES
     _attr_swing_modes = SWING_MODES
@@ -192,7 +195,7 @@ class ClimateAehW4a1(ClimateEntity):
             fan_mode = status["wind_status"]
             self._attr_fan_mode = AC_TO_HA_FAN_MODES[fan_mode]
 
-            swing_mode = f'{status["up_down"]}{status["left_right"]}'
+            swing_mode = f"{status['up_down']}{status['left_right']}"
             self._attr_swing_mode = AC_TO_HA_SWING[swing_mode]
 
             if self._attr_hvac_mode in (HVACMode.COOL, HVACMode.HEAT):

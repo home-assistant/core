@@ -1,8 +1,9 @@
 """Base class for multi level switches in devolo Home Control."""
+
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
-from .devolo_device import DevoloDeviceEntity
+from .entity import DevoloDeviceEntity
 
 
 class DevoloMultiLevelSwitchDeviceEntity(DevoloDeviceEntity):

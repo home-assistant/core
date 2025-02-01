@@ -6,6 +6,7 @@ core: &core
   - homeassistant/helpers/**
   - homeassistant/package_constraints.txt
   - homeassistant/util/**
+  - mypy.ini
   - pyproject.toml
   - requirements.txt
   - setup.cfg
@@ -14,6 +15,7 @@ core: &core
 base_platforms: &base_platforms
   - homeassistant/components/air_quality/**
   - homeassistant/components/alarm_control_panel/**
+  - homeassistant/components/assist_satellite/**
   - homeassistant/components/binary_sensor/**
   - homeassistant/components/button/**
   - homeassistant/components/calendar/**
@@ -49,6 +51,7 @@ base_platforms: &base_platforms
   - homeassistant/components/tts/**
   - homeassistant/components/update/**
   - homeassistant/components/vacuum/**
+  - homeassistant/components/valve/**
   - homeassistant/components/water_heater/**
   - homeassistant/components/weather/**
 
@@ -60,6 +63,7 @@ components: &components
   - homeassistant/components/auth/**
   - homeassistant/components/automation/**
   - homeassistant/components/backup/**
+  - homeassistant/components/blueprint/**
   - homeassistant/components/bluetooth/**
   - homeassistant/components/cloud/**
   - homeassistant/components/config/**
@@ -76,6 +80,7 @@ components: &components
   - homeassistant/components/group/**
   - homeassistant/components/hassio/**
   - homeassistant/components/homeassistant/**
+  - homeassistant/components/homeassistant_hardware/**
   - homeassistant/components/http/**
   - homeassistant/components/image/**
   - homeassistant/components/input_boolean/**
@@ -108,6 +113,7 @@ components: &components
   - homeassistant/components/tag/**
   - homeassistant/components/template/**
   - homeassistant/components/timer/**
+  - homeassistant/components/trace/**
   - homeassistant/components/usb/**
   - homeassistant/components/webhook/**
   - homeassistant/components/websocket_api/**
@@ -120,21 +126,22 @@ tests: &tests
   - pylint/**
   - requirements_test_pre_commit.txt
   - requirements_test.txt
+  - tests/*.py
   - tests/auth/**
   - tests/backports/**
-  - tests/common.py
+  - tests/components/conftest.py
+  - tests/components/diagnostics/**
   - tests/components/history/**
+  - tests/components/light/common.py
   - tests/components/logbook/**
   - tests/components/recorder/**
+  - tests/components/repairs/**
   - tests/components/sensor/**
-  - tests/conftest.py
   - tests/hassfest/**
   - tests/helpers/**
-  - tests/ignore_uncaught_exceptions.py
   - tests/mock/**
   - tests/pylint/**
   - tests/scripts/**
-  - tests/syrupy.py
   - tests/test_util/**
   - tests/testing_config/**
   - tests/util/**
@@ -148,6 +155,7 @@ requirements: &requirements
   - homeassistant/package_constraints.txt
   - requirements*.txt
   - pyproject.toml
+  - script/licenses.py
 
 any:
   - *base_platforms

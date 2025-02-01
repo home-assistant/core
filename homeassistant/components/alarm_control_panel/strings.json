@@ -17,6 +17,10 @@
       "is_armed_night": "{entity_name} is armed night",
       "is_armed_vacation": "{entity_name} is armed vacation"
     },
+    "extra_fields": {
+      "code": "Code",
+      "for": "[%key:common::device_automation::extra_fields::for%]"
+    },
     "trigger_type": {
       "triggered": "{entity_name} triggered",
       "disarmed": "{entity_name} disarmed",
@@ -126,13 +130,18 @@
     },
     "alarm_trigger": {
       "name": "Trigger",
-      "description": "Enables an external alarm trigger.",
+      "description": "Trigger the alarm manually.",
       "fields": {
         "code": {
           "name": "[%key:component::alarm_control_panel::services::alarm_disarm::fields::code::name%]",
           "description": "[%key:component::alarm_control_panel::services::alarm_arm_custom_bypass::fields::code::description%]"
         }
       }
+    }
+  },
+  "exceptions": {
+    "code_arm_required": {
+      "message": "Arming requires a code but none was given for {entity_id}."
     }
   }
 }

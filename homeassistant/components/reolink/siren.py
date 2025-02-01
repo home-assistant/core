@@ -1,11 +1,9 @@
 """Component providing support for Reolink siren entities."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
-
-from reolink_aio.api import Host
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
@@ -14,27 +12,26 @@ from homeassistant.components.siren import (
     SirenEntityDescription,
     SirenEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ReolinkData
-from .const import DOMAIN
-from .entity import ReolinkChannelCoordinatorEntity
+from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
+
+PARALLEL_UPDATES = 0
 
 
-@dataclass
-class ReolinkSirenEntityDescription(SirenEntityDescription):
+@dataclass(frozen=True)
+class ReolinkSirenEntityDescription(
+    SirenEntityDescription, ReolinkChannelEntityDescription
+):
     """A class that describes siren entities."""
-
-    supported: Callable[[Host, int], bool] = lambda api, ch: True
 
 
 SIREN_ENTITIES = (
     ReolinkSirenEntityDescription(
         key="siren",
         translation_key="siren",
-        icon="mdi:alarm-light",
         supported=lambda api, ch: api.supported(ch, "siren_play"),
     ),
 )
@@ -42,11 +39,11 @@ SIREN_ENTITIES = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ReolinkConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Reolink siren entities."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
 
     async_add_entities(
         ReolinkSirenEntity(reolink_data, channel, entity_description)
@@ -74,13 +71,10 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         entity_description: ReolinkSirenEntityDescription,
     ) -> None:
         """Initialize Reolink siren entity."""
-        super().__init__(reolink_data, channel)
         self.entity_description = entity_description
+        super().__init__(reolink_data, channel)
 
-        self._attr_unique_id = (
-            f"{self._host.unique_id}_{channel}_{entity_description.key}"
-        )
-
+    @raise_translated_error
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
@@ -88,6 +82,7 @@ class ReolinkSirenEntity(ReolinkChannelCoordinatorEntity, SirenEntity):
         duration = kwargs.get(ATTR_DURATION)
         await self._host.api.set_siren(self._channel, True, duration)
 
+    @raise_translated_error
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the siren."""
         await self._host.api.set_siren(self._channel, False, None)

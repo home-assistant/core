@@ -1,4 +1,5 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+
 from __future__ import annotations
 
 import logging
@@ -7,13 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import RainbirdUpdateCoordinator
+from .types import RainbirdConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,17 +21,16 @@ _LOGGER = logging.getLogger(__name__)
 RAIN_SENSOR_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
     key="rainsensor",
     translation_key="rainsensor",
-    icon="mdi:water",
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RainbirdConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry for a Rain Bird binary_sensor."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id].coordinator
+    coordinator = config_entry.runtime_data.coordinator
     async_add_entities([RainBirdSensor(coordinator, RAIN_SENSOR_ENTITY_DESCRIPTION)])
 
 

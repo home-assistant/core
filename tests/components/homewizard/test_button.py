@@ -1,4 +1,5 @@
 """Test the identify button for HomeWizard."""
+
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
@@ -17,7 +18,7 @@ pytestmark = [
 ]
 
 
-@pytest.mark.parametrize("device_fixture", ["HWE-WTR", "SDM230"])
+@pytest.mark.parametrize("device_fixture", ["SDM230", "SDM630", "HWE-KWH1", "HWE-KWH3"])
 async def test_identify_button_entity_not_loaded_when_not_available(
     hass: HomeAssistant,
 ) -> None:
@@ -58,7 +59,10 @@ async def test_identify_button(
     # Raise RequestError when identify is called
     mock_homewizardenergy.identify.side_effect = RequestError()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^An error occurred while communicating with HomeWizard device$",
+    ):
         await hass.services.async_call(
             button.DOMAIN,
             button.SERVICE_PRESS,
@@ -73,7 +77,10 @@ async def test_identify_button(
     # Raise RequestError when identify is called
     mock_homewizardenergy.identify.side_effect = DisabledError()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"^The local API is disabled$",
+    ):
         await hass.services.async_call(
             button.DOMAIN,
             button.SERVICE_PRESS,

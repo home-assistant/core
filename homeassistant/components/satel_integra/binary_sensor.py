@@ -1,4 +1,5 @@
 """Support for Satel Integra zone states- represented as binary sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -40,7 +41,7 @@ async def async_setup_platform(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED
+            controller, zone_num, zone_name, zone_type, CONF_ZONES, SIGNAL_ZONES_UPDATED
         )
         devices.append(device)
 
@@ -50,7 +51,12 @@ async def async_setup_platform(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED
+            controller,
+            zone_num,
+            zone_name,
+            zone_type,
+            CONF_OUTPUTS,
+            SIGNAL_OUTPUTS_UPDATED,
         )
         devices.append(device)
 
@@ -63,10 +69,17 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
     _attr_should_poll = False
 
     def __init__(
-        self, controller, device_number, device_name, zone_type, react_to_signal
+        self,
+        controller,
+        device_number,
+        device_name,
+        zone_type,
+        sensor_type,
+        react_to_signal,
     ):
         """Initialize the binary_sensor."""
         self._device_number = device_number
+        self._attr_unique_id = f"satel_{sensor_type}_{device_number}"
         self._name = device_name
         self._zone_type = zone_type
         self._state = 0
@@ -96,10 +109,11 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Icon for device by its type."""
         if self._zone_type is BinarySensorDeviceClass.SMOKE:
             return "mdi:fire"
+        return None
 
     @property
     def is_on(self):

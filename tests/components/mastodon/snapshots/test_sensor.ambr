@@ -1,0 +1,151 @@
+# serializer version: 1
+# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_followers-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_followers',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Followers',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'followers',
+    'unique_id': 'trwnh_mastodon_social_followers',
+    'unit_of_measurement': 'accounts',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_followers-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Followers',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'accounts',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_followers',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '821',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_following',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Following',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'following',
+    'unique_id': 'trwnh_mastodon_social_following',
+    'unit_of_measurement': 'accounts',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Following',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'accounts',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_following',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '178',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_posts',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Posts',
+    'platform': 'mastodon',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'posts',
+    'unique_id': 'trwnh_mastodon_social_posts',
+    'unit_of_measurement': 'posts',
+  })
+# ---
+# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mastodon @trwnh@mastodon.social Posts',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'posts',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_posts',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '33120',
+  })
+# ---

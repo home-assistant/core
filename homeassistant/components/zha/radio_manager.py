@@ -1,7 +1,9 @@
 """Config flow for ZHA."""
+
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
 import contextlib
 from contextlib import suppress
 import copy
@@ -12,6 +14,7 @@ from typing import Any, Self
 
 from bellows.config import CONF_USE_THREAD
 import voluptuous as vol
+from zha.application.const import RadioType
 from zigpy.application import ControllerApplication
 import zigpy.backups
 from zigpy.config import (
@@ -19,22 +22,23 @@ from zigpy.config import (
     CONF_DEVICE,
     CONF_DEVICE_PATH,
     CONF_NWK_BACKUP_ENABLED,
+    SCHEMA_DEVICE,
 )
 from zigpy.exceptions import NetworkNotFormed
 
 from homeassistant import config_entries
 from homeassistant.components import usb
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import repairs
-from .core.const import (
+from .const import (
     CONF_RADIO_TYPE,
     CONF_ZIGPY,
     DEFAULT_DATABASE_NAME,
     EZSP_OVERWRITE_EUI64,
-    RadioType,
 )
-from .core.helpers import get_zha_data
+from .helpers import get_zha_data
 
 # Only the common radio types will be autoprobed, ordered by new device popularity.
 # XBee takes too long to probe since it scans through all possible bauds and likely has
@@ -58,10 +62,21 @@ RETRY_DELAY_S = 1.0
 BACKUP_RETRIES = 5
 MIGRATION_RETRIES = 100
 
+
+DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("path"): str,
+        vol.Optional("baudrate", default=115200): int,
+        vol.Optional("flow_control", default=None): vol.In(
+            ["hardware", "software", None]
+        ),
+    }
+)
+
 HARDWARE_DISCOVERY_SCHEMA = vol.Schema(
     {
         vol.Required("name"): str,
-        vol.Required("port"): dict,
+        vol.Required("port"): DEVICE_SCHEMA,
         vol.Required("radio_type"): str,
     }
 )
@@ -72,7 +87,7 @@ HARDWARE_MIGRATION_SCHEMA = vol.Schema(
         vol.Required("old_discovery_info"): vol.Schema(
             {
                 vol.Exclusive("hw", "discovery"): HARDWARE_DISCOVERY_SCHEMA,
-                vol.Exclusive("usb", "discovery"): usb.UsbServiceInfo,
+                vol.Exclusive("usb", "discovery"): UsbServiceInfo,
             }
         ),
     }
@@ -144,7 +159,7 @@ class ZhaRadioManager:
         return mgr
 
     @contextlib.asynccontextmanager
-    async def connect_zigpy_app(self) -> ControllerApplication:
+    async def connect_zigpy_app(self) -> AsyncIterator[ControllerApplication]:
         """Connect to the radio with the current config and then clean up."""
         assert self.radio_type is not None
 
@@ -164,7 +179,6 @@ class ZhaRadioManager:
         app_config[CONF_DEVICE] = self.device_settings
         app_config[CONF_NWK_BACKUP_ENABLED] = False
         app_config[CONF_USE_THREAD] = False
-        app_config = self.radio_type.controller.SCHEMA(app_config)
 
         app = await self.radio_type.controller.new(
             app_config, auto_form=False, start_radio=False
@@ -204,9 +218,7 @@ class ZhaRadioManager:
         for radio in AUTOPROBE_RADIOS:
             _LOGGER.debug("Attempting to probe radio type %s", radio)
 
-            dev_config = radio.controller.SCHEMA_DEVICE(
-                {CONF_DEVICE_PATH: self.device_path}
-            )
+            dev_config = SCHEMA_DEVICE({CONF_DEVICE_PATH: self.device_path})
             probe_result = await radio.controller.probe(dev_config)
 
             if not probe_result:
@@ -357,7 +369,7 @@ class ZhaMultiPANMigrationHelper:
             migration_data["new_discovery_info"]["radio_type"]
         )
 
-        new_device_settings = new_radio_type.controller.SCHEMA_DEVICE(
+        new_device_settings = SCHEMA_DEVICE(
             migration_data["new_discovery_info"]["port"]
         )
 

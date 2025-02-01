@@ -1,7 +1,9 @@
 """The tests for the Modbus light component."""
+
 from pymodbus.exceptions import ModbusException
 import pytest
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.components.modbus.const import (
     CALL_TYPE_COIL,
@@ -10,7 +12,6 @@ from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_INPUT,
     CONF_DEVICE_ADDRESS,
     CONF_INPUT_TYPE,
-    CONF_LAZY_ERROR,
     CONF_STATE_OFF,
     CONF_STATE_ON,
     CONF_VERIFY,
@@ -18,18 +19,22 @@ from homeassistant.components.modbus.const import (
     MODBUS_DOMAIN,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
     CONF_LIGHTS,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_ENTITY_NAME, ReadResult
@@ -55,7 +60,6 @@ ENTITY_ID2 = f"{ENTITY_ID}_2"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 1234,
                     CONF_WRITE_TYPE: CALL_TYPE_COIL,
-                    CONF_LAZY_ERROR: 10,
                 }
             ]
         },
@@ -263,7 +267,6 @@ async def test_light_service_turn(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_modbus,
-    mock_pymodbus_return,
 ) -> None:
     """Run test for service turn_on/turn_off."""
 
@@ -271,12 +274,12 @@ async def test_light_service_turn(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": ENTITY_ID}
+        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_ON
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": ENTITY_ID}
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
@@ -284,29 +287,23 @@ async def test_light_service_turn(
     mock_modbus.read_holding_registers.return_value = ReadResult([0x01])
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": ENTITY_ID2}
+        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_ON
     mock_modbus.read_holding_registers.return_value = ReadResult([0x00])
     await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": ENTITY_ID2}
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_OFF
 
     mock_modbus.write_register.side_effect = ModbusException("fail write_")
     await hass.services.async_call(
-        "light", "turn_on", service_data={"entity_id": ENTITY_ID2}
+        LIGHT_DOMAIN, SERVICE_TURN_ON, service_data={ATTR_ENTITY_ID: ENTITY_ID2}
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID2).state == STATE_UNAVAILABLE
-    mock_modbus.write_coil.side_effect = ModbusException("fail write_")
-    await hass.services.async_call(
-        "light", "turn_off", service_data={"entity_id": ENTITY_ID}
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -324,15 +321,21 @@ async def test_light_service_turn(
         },
     ],
 )
-async def test_service_light_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_light_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
-    mock_modbus.read_coils.return_value = ReadResult([0x01])
+    mock_modbus_ha.read_coils.return_value = ReadResult([0x01])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
@@ -345,7 +348,7 @@ async def test_no_discovery_info_light(
     assert await async_setup_component(
         hass,
         LIGHT_DOMAIN,
-        {LIGHT_DOMAIN: {"platform": MODBUS_DOMAIN}},
+        {LIGHT_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
     )
     await hass.async_block_till_done()
     assert LIGHT_DOMAIN in hass.config.components

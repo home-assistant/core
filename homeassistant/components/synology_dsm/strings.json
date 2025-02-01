@@ -10,12 +10,26 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Synology NAS."
         }
       },
       "2sa": {
         "title": "Synology DSM: two-step authentication",
         "data": {
           "otp_code": "Code"
+        }
+      },
+      "backup_share": {
+        "title": "Synology DSM: Backup location",
+        "data": {
+          "backup_share": "Shared folder",
+          "backup_path": "Path"
+        },
+        "data_description": {
+          "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored.",
+          "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist)."
         }
       },
       "link": {
@@ -56,7 +70,13 @@
         "data": {
           "scan_interval": "Minutes between scans",
           "timeout": "Timeout (seconds)",
-          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
+          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]"
+        },
+        "data_description": {
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]"
         }
       }
     }
@@ -170,7 +190,7 @@
   "services": {
     "reboot": {
       "name": "Reboot",
-      "description": "Reboots the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Reboots the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
           "name": "Serial",
@@ -180,7 +200,7 @@
     },
     "shutdown": {
       "name": "Shutdown",
-      "description": "Shutdowns the NAS. This service is deprecated and will be removed in future release. Please use the corresponding button entity.",
+      "description": "Shutdowns the NAS. This action is deprecated and will be removed in future release. Please use the corresponding button entity.",
       "fields": {
         "serial": {
           "name": "[%key:component::synology_dsm::services::reboot::fields::serial::name%]",

@@ -1,4 +1,5 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -113,7 +114,10 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
         self._attr_unique_id = self.init_data.mac
         self._attr_fan_modes = CT30_FAN_OPERATION_LIST
         self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if not isinstance(self.device, radiotherm.thermostat.CT80):
             return

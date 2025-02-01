@@ -1,14 +1,18 @@
 """Tests for the Amber Electric Data Coordinator."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
+from datetime import date
 from unittest.mock import Mock, patch
 
 from amberelectric import ApiException
-from amberelectric.model.channel import Channel, ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.interval import Descriptor, SpikeStatus
-from amberelectric.model.site import Site
+from amberelectric.models.channel import Channel, ChannelType
+from amberelectric.models.interval import Interval
+from amberelectric.models.price_descriptor import PriceDescriptor
+from amberelectric.models.site import Site
+from amberelectric.models.site_status import SiteStatus
+from amberelectric.models.spike_status import SpikeStatus
 from dateutil import parser
 import pytest
 
@@ -36,25 +40,40 @@ def mock_api_current_price() -> Generator:
     instance = Mock()
 
     general_site = Site(
-        GENERAL_ONLY_SITE_ID,
-        "11111111111",
-        [Channel(identifier="E1", type=ChannelType.GENERAL)],
+        id=GENERAL_ONLY_SITE_ID,
+        nmi="11111111111",
+        channels=[Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100")],
+        network="Jemena",
+        status=SiteStatus("active"),
+        activeFrom=date(2021, 1, 1),
+        closedOn=None,
+        interval_length=30,
     )
     general_and_controlled_load = Site(
-        GENERAL_AND_CONTROLLED_SITE_ID,
-        "11111111112",
-        [
-            Channel(identifier="E1", type=ChannelType.GENERAL),
-            Channel(identifier="E2", type=ChannelType.CONTROLLED_LOAD),
+        id=GENERAL_AND_CONTROLLED_SITE_ID,
+        nmi="11111111112",
+        channels=[
+            Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100"),
+            Channel(identifier="E2", type=ChannelType.CONTROLLEDLOAD, tariff="A180"),
         ],
+        network="Jemena",
+        status=SiteStatus("active"),
+        activeFrom=date(2021, 1, 1),
+        closedOn=None,
+        interval_length=30,
     )
     general_and_feed_in = Site(
-        GENERAL_AND_FEED_IN_SITE_ID,
-        "11111111113",
-        [
-            Channel(identifier="E1", type=ChannelType.GENERAL),
-            Channel(identifier="E2", type=ChannelType.FEED_IN),
+        id=GENERAL_AND_FEED_IN_SITE_ID,
+        nmi="11111111113",
+        channels=[
+            Channel(identifier="E1", type=ChannelType.GENERAL, tariff="A100"),
+            Channel(identifier="E2", type=ChannelType.FEEDIN, tariff="A100"),
         ],
+        network="Jemena",
+        status=SiteStatus("active"),
+        activeFrom=date(2021, 1, 1),
+        closedOn=None,
+        interval_length=30,
     )
     instance.get_sites.return_value = [
         general_site,
@@ -62,44 +81,46 @@ def mock_api_current_price() -> Generator:
         general_and_feed_in,
     ]
 
-    with patch("amberelectric.api.AmberApi.create", return_value=instance):
+    with patch("amberelectric.AmberApi", return_value=instance):
         yield instance
 
 
 def test_normalize_descriptor() -> None:
     """Test normalizing descriptors works correctly."""
     assert normalize_descriptor(None) is None
-    assert normalize_descriptor(Descriptor.NEGATIVE) == "negative"
-    assert normalize_descriptor(Descriptor.EXTREMELY_LOW) == "extremely_low"
-    assert normalize_descriptor(Descriptor.VERY_LOW) == "very_low"
-    assert normalize_descriptor(Descriptor.LOW) == "low"
-    assert normalize_descriptor(Descriptor.NEUTRAL) == "neutral"
-    assert normalize_descriptor(Descriptor.HIGH) == "high"
-    assert normalize_descriptor(Descriptor.SPIKE) == "spike"
+    assert normalize_descriptor(PriceDescriptor.NEGATIVE) == "negative"
+    assert normalize_descriptor(PriceDescriptor.EXTREMELYLOW) == "extremely_low"
+    assert normalize_descriptor(PriceDescriptor.VERYLOW) == "very_low"
+    assert normalize_descriptor(PriceDescriptor.LOW) == "low"
+    assert normalize_descriptor(PriceDescriptor.NEUTRAL) == "neutral"
+    assert normalize_descriptor(PriceDescriptor.HIGH) == "high"
+    assert normalize_descriptor(PriceDescriptor.SPIKE) == "spike"
 
 
 async def test_fetch_general_site(hass: HomeAssistant, current_price_api: Mock) -> None:
     """Test fetching a site with only a general channel."""
 
-    current_price_api.get_current_price.return_value = GENERAL_CHANNEL
+    current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     result = await data_service._async_update_data()
 
-    current_price_api.get_current_price.assert_called_with(
+    current_price_api.get_current_prices.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
+    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
     assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
-        GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[1].actual_instance,
+        GENERAL_CHANNEL[2].actual_instance,
+        GENERAL_CHANNEL[3].actual_instance,
     ]
     assert result["current"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(
+        GENERAL_CHANNEL[0].actual_instance.renewables
+    )
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -108,12 +129,12 @@ async def test_fetch_no_general_site(
 ) -> None:
     """Test fetching a site with no general channel."""
 
-    current_price_api.get_current_price.return_value = CONTROLLED_LOAD_CHANNEL
+    current_price_api.get_current_prices.return_value = CONTROLLED_LOAD_CHANNEL
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
 
-    current_price_api.get_current_price.assert_called_with(
+    current_price_api.get_current_prices.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
     )
 
@@ -121,41 +142,45 @@ async def test_fetch_no_general_site(
 async def test_fetch_api_error(hass: HomeAssistant, current_price_api: Mock) -> None:
     """Test that the old values are maintained if a second call fails."""
 
-    current_price_api.get_current_price.return_value = GENERAL_CHANNEL
+    current_price_api.get_current_prices.return_value = GENERAL_CHANNEL
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     result = await data_service._async_update_data()
 
-    current_price_api.get_current_price.assert_called_with(
+    current_price_api.get_current_prices.assert_called_with(
         GENERAL_ONLY_SITE_ID, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
+    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
     assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
-        GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[1].actual_instance,
+        GENERAL_CHANNEL[2].actual_instance,
+        GENERAL_CHANNEL[3].actual_instance,
     ]
     assert result["current"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(
+        GENERAL_CHANNEL[0].actual_instance.renewables
+    )
 
-    current_price_api.get_current_price.side_effect = ApiException(status=403)
+    current_price_api.get_current_prices.side_effect = ApiException(status=403)
     with pytest.raises(UpdateFailed):
         await data_service._async_update_data()
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
+    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
     assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
-        GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[1].actual_instance,
+        GENERAL_CHANNEL[2].actual_instance,
+        GENERAL_CHANNEL[3].actual_instance,
     ]
     assert result["current"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(
+        GENERAL_CHANNEL[0].actual_instance.renewables
+    )
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -164,7 +189,7 @@ async def test_fetch_general_and_controlled_load_site(
 ) -> None:
     """Test fetching a site with a general and controlled load channel."""
 
-    current_price_api.get_current_price.return_value = (
+    current_price_api.get_current_prices.return_value = (
         GENERAL_CHANNEL + CONTROLLED_LOAD_CHANNEL
     )
     data_service = AmberUpdateCoordinator(
@@ -172,25 +197,30 @@ async def test_fetch_general_and_controlled_load_site(
     )
     result = await data_service._async_update_data()
 
-    current_price_api.get_current_price.assert_called_with(
+    current_price_api.get_current_prices.assert_called_with(
         GENERAL_AND_CONTROLLED_SITE_ID, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
+    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
     assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
-        GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[1].actual_instance,
+        GENERAL_CHANNEL[2].actual_instance,
+        GENERAL_CHANNEL[3].actual_instance,
     ]
-    assert result["current"].get("controlled_load") is CONTROLLED_LOAD_CHANNEL[0]
+    assert (
+        result["current"].get("controlled_load")
+        is CONTROLLED_LOAD_CHANNEL[0].actual_instance
+    )
     assert result["forecasts"].get("controlled_load") == [
-        CONTROLLED_LOAD_CHANNEL[1],
-        CONTROLLED_LOAD_CHANNEL[2],
-        CONTROLLED_LOAD_CHANNEL[3],
+        CONTROLLED_LOAD_CHANNEL[1].actual_instance,
+        CONTROLLED_LOAD_CHANNEL[2].actual_instance,
+        CONTROLLED_LOAD_CHANNEL[3].actual_instance,
     ]
     assert result["current"].get("feed_in") is None
     assert result["forecasts"].get("feed_in") is None
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(
+        GENERAL_CHANNEL[0].actual_instance.renewables
+    )
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -199,31 +229,35 @@ async def test_fetch_general_and_feed_in_site(
 ) -> None:
     """Test fetching a site with a general and feed_in channel."""
 
-    current_price_api.get_current_price.return_value = GENERAL_CHANNEL + FEED_IN_CHANNEL
+    current_price_api.get_current_prices.return_value = (
+        GENERAL_CHANNEL + FEED_IN_CHANNEL
+    )
     data_service = AmberUpdateCoordinator(
         hass, current_price_api, GENERAL_AND_FEED_IN_SITE_ID
     )
     result = await data_service._async_update_data()
 
-    current_price_api.get_current_price.assert_called_with(
+    current_price_api.get_current_prices.assert_called_with(
         GENERAL_AND_FEED_IN_SITE_ID, next=48
     )
 
-    assert result["current"].get("general") == GENERAL_CHANNEL[0]
+    assert result["current"].get("general") == GENERAL_CHANNEL[0].actual_instance
     assert result["forecasts"].get("general") == [
-        GENERAL_CHANNEL[1],
-        GENERAL_CHANNEL[2],
-        GENERAL_CHANNEL[3],
+        GENERAL_CHANNEL[1].actual_instance,
+        GENERAL_CHANNEL[2].actual_instance,
+        GENERAL_CHANNEL[3].actual_instance,
     ]
     assert result["current"].get("controlled_load") is None
     assert result["forecasts"].get("controlled_load") is None
-    assert result["current"].get("feed_in") is FEED_IN_CHANNEL[0]
+    assert result["current"].get("feed_in") is FEED_IN_CHANNEL[0].actual_instance
     assert result["forecasts"].get("feed_in") == [
-        FEED_IN_CHANNEL[1],
-        FEED_IN_CHANNEL[2],
-        FEED_IN_CHANNEL[3],
+        FEED_IN_CHANNEL[1].actual_instance,
+        FEED_IN_CHANNEL[2].actual_instance,
+        FEED_IN_CHANNEL[3].actual_instance,
     ]
-    assert result["grid"]["renewables"] == round(GENERAL_CHANNEL[0].renewables)
+    assert result["grid"]["renewables"] == round(
+        GENERAL_CHANNEL[0].actual_instance.renewables
+    )
     assert result["grid"]["price_spike"] == "none"
 
 
@@ -232,13 +266,13 @@ async def test_fetch_potential_spike(
 ) -> None:
     """Test fetching a site with only a general channel."""
 
-    general_channel: list[CurrentInterval] = [
+    general_channel: list[Interval] = [
         generate_current_interval(
             ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
-        ),
+        )
     ]
-    general_channel[0].spike_status = SpikeStatus.POTENTIAL
-    current_price_api.get_current_price.return_value = general_channel
+    general_channel[0].actual_instance.spike_status = SpikeStatus.POTENTIAL
+    current_price_api.get_current_prices.return_value = general_channel
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     result = await data_service._async_update_data()
     assert result["grid"]["price_spike"] == "potential"
@@ -247,13 +281,13 @@ async def test_fetch_potential_spike(
 async def test_fetch_spike(hass: HomeAssistant, current_price_api: Mock) -> None:
     """Test fetching a site with only a general channel."""
 
-    general_channel: list[CurrentInterval] = [
+    general_channel: list[Interval] = [
         generate_current_interval(
             ChannelType.GENERAL, parser.parse("2021-09-21T08:30:00+10:00")
-        ),
+        )
     ]
-    general_channel[0].spike_status = SpikeStatus.SPIKE
-    current_price_api.get_current_price.return_value = general_channel
+    general_channel[0].actual_instance.spike_status = SpikeStatus.SPIKE
+    current_price_api.get_current_prices.return_value = general_channel
     data_service = AmberUpdateCoordinator(hass, current_price_api, GENERAL_ONLY_SITE_ID)
     result = await data_service._async_update_data()
     assert result["grid"]["price_spike"] == "spike"

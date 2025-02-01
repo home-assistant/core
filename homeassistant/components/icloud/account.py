@@ -1,4 +1,5 @@
 """iCloud account."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -116,7 +117,7 @@ class IcloudAccount:
 
             if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException
+                raise PyiCloudFailedLoginException  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
             self.api = None
@@ -149,9 +150,9 @@ class IcloudAccount:
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
             for prs_id, member in user_info["membersInfo"].items():
-                self._family_members_fullname[
-                    prs_id
-                ] = f"{member['firstName']} {member['lastName']}"
+                self._family_members_fullname[prs_id] = (
+                    f"{member['firstName']} {member['lastName']}"
+                )
 
         self._devices = {}
         self.update_devices()
@@ -160,6 +161,7 @@ class IcloudAccount:
         """Update iCloud devices."""
         if self.api is None:
             return
+        _LOGGER.debug("Updating devices")
 
         if self.api.requires_2fa:
             self._require_reauth()
@@ -168,15 +170,11 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
-            track_point_in_utc_time(
-                self.hass,
-                self.keep_alive,
-                utcnow() + timedelta(minutes=self._fetch_interval),
-            )
+            self._schedule_next_fetch()
             return
 
         # Gets devices infos
@@ -222,11 +220,7 @@ class IcloudAccount:
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
 
-        track_point_in_utc_time(
-            self.hass,
-            self.keep_alive,
-            utcnow() + timedelta(minutes=self._fetch_interval),
-        )
+        self._schedule_next_fetch()
 
     def _require_reauth(self):
         """Require the user to log in again."""
@@ -305,6 +299,14 @@ class IcloudAccount:
             self._max_interval,
         )
 
+    def _schedule_next_fetch(self) -> None:
+        if not self._config_entry.pref_disable_polling:
+            track_point_in_utc_time(
+                self.hass,
+                self.keep_alive,
+                utcnow() + timedelta(minutes=self._fetch_interval),
+            )
+
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
         if self.api is None:
@@ -318,11 +320,12 @@ class IcloudAccount:
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
-        result = []
         name_slug = slugify(name.replace(" ", "", 99))
-        for device in self.devices.values():
-            if slugify(device.name.replace(" ", "", 99)) == name_slug:
-                result.append(device)
+        result = [
+            device
+            for device in self.devices.values()
+            if slugify(device.name.replace(" ", "", 99)) == name_slug
+        ]
         if not result:
             raise ValueError(f"No device with name {name}")
         return result

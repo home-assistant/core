@@ -1,11 +1,14 @@
 """Config flow for JuiceNet integration."""
+
 import logging
+from typing import Any
 
 import aiohttp
 from pyjuicenet import Api, TokenError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import core, exceptions
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -37,12 +40,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": "JuiceNet"}
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class JuiceNetConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for JuiceNet."""
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -56,7 +61,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -64,9 +69,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
 
 class CannotConnect(exceptions.HomeAssistantError):

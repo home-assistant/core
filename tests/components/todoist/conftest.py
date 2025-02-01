@@ -1,4 +1,5 @@
 """Common fixtures for the todoist tests."""
+
 from collections.abc import Generator
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
@@ -6,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from requests.exceptions import HTTPError
 from requests.models import Response
-from todoist_api_python.models import Collaborator, Due, Label, Project, Task
+from todoist_api_python.models import Collaborator, Due, Label, Project, Section, Task
 
 from homeassistant.components.todoist import DOMAIN
 from homeassistant.const import CONF_TOKEN, Platform
@@ -17,13 +18,14 @@ from homeassistant.util import dt as dt_util
 from tests.common import MockConfigEntry
 
 PROJECT_ID = "project-id-1"
+SECTION_ID = "section-id-1"
 SUMMARY = "A task"
 TOKEN = "some-token"
 TODAY = dt_util.now().strftime("%Y-%m-%d")
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.todoist.async_setup_entry", return_value=True
@@ -45,6 +47,8 @@ def make_api_task(
     is_completed: bool = False,
     due: Due | None = None,
     project_id: str | None = None,
+    description: str | None = None,
+    parent_id: str | None = None,
 ) -> Task:
     """Mock a todoist Task instance."""
     return Task(
@@ -55,12 +59,12 @@ def make_api_task(
         content=content or SUMMARY,
         created_at="2021-10-01T00:00:00",
         creator_id="1",
-        description="A task",
-        due=due or Due(is_recurring=False, date=TODAY, string="today"),
+        description=description,
+        due=due,
         id=id or "1",
         labels=["Label1"],
         order=1,
-        parent_id=None,
+        parent_id=parent_id,
         priority=1,
         project_id=project_id or PROJECT_ID,
         section_id=None,
@@ -93,6 +97,14 @@ def mock_api(tasks: list[Task]) -> AsyncMock:
             order=1,
             parent_id=None,
             view_style="list",
+        )
+    ]
+    api.get_sections.return_value = [
+        Section(
+            id=SECTION_ID,
+            project_id=PROJECT_ID,
+            name="Section Name",
+            order=1,
         )
     ]
     api.get_labels.return_value = [
@@ -150,9 +162,10 @@ async def mock_setup_integration(
     """Mock setup of the todoist integration."""
     if todoist_config_entry is not None:
         todoist_config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.todoist.TodoistAPIAsync", return_value=api
-    ), patch("homeassistant.components.todoist.PLATFORMS", platforms):
+    with (
+        patch("homeassistant.components.todoist.TodoistAPIAsync", return_value=api),
+        patch("homeassistant.components.todoist.PLATFORMS", platforms),
+    ):
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         yield

@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -8,7 +9,7 @@ from pyrituals import Diffuser
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import AREA_SQUARE_METERS, EntityCategory
+from homeassistant.const import EntityCategory, UnitOfArea
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -17,27 +18,19 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RitualsSelectEntityDescription(SelectEntityDescription):
+    """Class describing Rituals select entities."""
 
     current_fn: Callable[[Diffuser], str]
     select_fn: Callable[[Diffuser, str], Awaitable[None]]
-
-
-@dataclass
-class RitualsSelectEntityDescription(
-    SelectEntityDescription, RitualsEntityDescriptionMixin
-):
-    """Class describing Rituals select entities."""
 
 
 ENTITY_DESCRIPTIONS = (
     RitualsSelectEntityDescription(
         key="room_size_square_meter",
         translation_key="room_size_square_meter",
-        icon="mdi:ruler-square",
-        unit_of_measurement=AREA_SQUARE_METERS,
+        unit_of_measurement=UnitOfArea.SQUARE_METERS,
         entity_category=EntityCategory.CONFIG,
         options=["15", "30", "60", "100"],
         current_fn=lambda diffuser: str(diffuser.room_size_square_meter),

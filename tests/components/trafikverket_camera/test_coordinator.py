@@ -1,20 +1,20 @@
 """The test for the Trafikverket Camera coordinator."""
+
 from __future__ import annotations
 
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.exceptions import (
+from pytrafikverket import (
+    CameraInfoModel,
     InvalidAuthentication,
     MultipleCamerasFound,
     NoCameraFound,
     UnknownError,
 )
 
-from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera.const import DOMAIN
-from homeassistant.components.trafikverket_camera.coordinator import CameraData
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -28,7 +28,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 async def test_coordinator(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraData,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera coordinator."""
     aioclient_mock.get(
@@ -40,9 +40,9 @@ async def test_coordinator(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
-        title="Test location",
+        title="Test Camera",
     )
     entry.add_to_hass(hass)
 
@@ -54,7 +54,7 @@ async def test_coordinator(
         await hass.async_block_till_done()
 
         mock_data.assert_called_once()
-        state1 = hass.states.get("camera.test_location")
+        state1 = hass.states.get("camera.test_camera")
         assert state1.state == "idle"
 
 
@@ -64,29 +64,29 @@ async def test_coordinator(
         (
             InvalidAuthentication,
             ConfigEntryAuthFailed,
-            config_entries.ConfigEntryState.SETUP_ERROR,
+            ConfigEntryState.SETUP_ERROR,
         ),
         (
             NoCameraFound,
             UpdateFailed,
-            config_entries.ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             MultipleCamerasFound,
             UpdateFailed,
-            config_entries.ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_RETRY,
         ),
         (
             UnknownError,
             UpdateFailed,
-            config_entries.ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_RETRY,
         ),
     ],
 )
 async def test_coordinator_failed_update(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraData,
+    get_camera: CameraInfoModel,
     sideeffect: str,
     p_error: Exception,
     entry_state: str,
@@ -101,9 +101,9 @@ async def test_coordinator_failed_update(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
-        title="Test location",
+        title="Test Camera",
     )
     entry.add_to_hass(hass)
 
@@ -115,7 +115,7 @@ async def test_coordinator_failed_update(
         await hass.async_block_till_done()
 
     mock_data.assert_called_once()
-    state = hass.states.get("camera.test_location")
+    state = hass.states.get("camera.test_camera")
     assert state is None
     assert entry.state == entry_state
 
@@ -123,7 +123,7 @@ async def test_coordinator_failed_update(
 async def test_coordinator_failed_get_image(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraData,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera coordinator."""
     aioclient_mock.get(
@@ -135,7 +135,7 @@ async def test_coordinator_failed_get_image(
         source=SOURCE_USER,
         data=ENTRY_CONFIG,
         entry_id="1",
-        version=2,
+        version=3,
         unique_id="trafikverket_camera-1234",
         title="Test location",
     )
@@ -149,6 +149,6 @@ async def test_coordinator_failed_get_image(
         await hass.async_block_till_done()
 
     mock_data.assert_called_once()
-    state = hass.states.get("camera.test_location")
+    state = hass.states.get("camera.test_camera")
     assert state is None
-    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY

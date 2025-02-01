@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "sensor": {
+      "aqi": {
+        "default": "mdi:air-filter"
+      },
+      "c6h6": {
+        "default": "mdi:molecule"
+      },
+      "co": {
+        "default": "mdi:molecule"
+      },
+      "no2_index": {
+        "default": "mdi:molecule"
+      },
+      "o3_index": {
+        "default": "mdi:molecule"
+      },
+      "pm10_index": {
+        "default": "mdi:molecule"
+      },
+      "pm25_index": {
+        "default": "mdi:molecule"
+      },
+      "so2_index": {
+        "default": "mdi:molecule"
+      }
+    }
+  }
+}

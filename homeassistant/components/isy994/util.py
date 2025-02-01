@@ -1,8 +1,9 @@
 """ISY utils."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .const import _LOGGER, DOMAIN
 

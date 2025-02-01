@@ -1,0 +1,64 @@
+{
+  "entity": {
+    "sensor": {
+      "cart_items_count": {
+        "default": "mdi:format-list-numbered"
+      },
+      "cart_total_price": {
+        "default": "mdi:currency-eur"
+      },
+      "selected_slot_end": {
+        "default": "mdi:calendar-end"
+      },
+      "selected_slot_max_order_time": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "selected_slot_min_order_value": {
+        "default": "mdi:currency-eur"
+      },
+      "last_order_slot_start": {
+        "default": "mdi:calendar-start"
+      },
+      "last_order_slot_end": {
+        "default": "mdi:calendar-end"
+      },
+      "last_order_status": {
+        "default": "mdi:list-status"
+      },
+      "last_order_max_order_time": {
+        "default": "mdi:clock-alert-outline"
+      },
+      "last_order_delivery_time": {
+        "default": "mdi:timeline-clock"
+      },
+      "last_order_total_price": {
+        "default": "mdi:cash-marker"
+      },
+      "next_delivery_eta_start": {
+        "default": "mdi:clock-start"
+      },
+      "next_delivery_eta_end": {
+        "default": "mdi:clock-end"
+      },
+      "next_delivery_slot_start": {
+        "default": "mdi:calendar-start"
+      },
+      "next_delivery_slot_end": {
+        "default": "mdi:calendar-end"
+      },
+      "selected_slot_start": {
+        "default": "mdi:calendar-start"
+      }
+    },
+    "todo": {
+      "shopping_cart": {
+        "default": "mdi:cart"
+      }
+    }
+  },
+  "services": {
+    "add_product": {
+      "service": "mdi:cart-plus"
+    }
+  }
+}

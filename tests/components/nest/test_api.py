@@ -3,13 +3,15 @@
 There are two interesting cases to exercise that have different strategies
 for token refresh and for testing:
 - API based requests, tested using aioclient_mock
-- Pub/sub subcriber initialization, intercepted with patch()
+- Pub/sub subscriber initialization, intercepted with patch()
 
 The tests below exercise both cases during integration setup.
 """
-import time
-from unittest.mock import patch
 
+import time
+from unittest.mock import AsyncMock, Mock, patch
+
+from google.oauth2.credentials import Credentials
 import pytest
 
 from homeassistant.components.nest.const import API_URL, OAUTH2_TOKEN, SDM_SCOPES
@@ -25,7 +27,7 @@ FAKE_UPDATED_TOKEN = "fake-updated-token"
 
 
 @pytest.fixture
-def subscriber() -> None:
+def subscriber() -> Mock | None:
     """Disable default subscriber since tests use their own patch."""
     return None
 
@@ -52,16 +54,16 @@ async def test_auth(
     # Prepare to capture credentials for Subscriber
     captured_creds = None
 
-    async def async_new_subscriber(
-        creds, subscription_name, event_loop, async_callback
-    ):
+    def async_new_subscriber(
+        credentials: Credentials,
+    ) -> Mock:
         """Capture credentials for tests."""
         nonlocal captured_creds
-        captured_creds = creds
-        return None  # GoogleNestSubscriber
+        captured_creds = credentials
+        return AsyncMock()
 
     with patch(
-        "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
+        "google_nest_sdm.subscriber_client.pubsub_v1.SubscriberAsyncClient",
         side_effect=async_new_subscriber,
     ) as new_subscriber_mock:
         await setup_platform()
@@ -74,7 +76,7 @@ async def test_auth(
     (method, url, data, headers) = calls[1]
     assert headers == {"Authorization": f"Bearer {FAKE_TOKEN}"}
 
-    # Verify the susbcriber was created with the correct credentials
+    # Verify the subscriber was created with the correct credentials
     assert len(new_subscriber_mock.mock_calls) == 1
     assert captured_creds
     creds = captured_creds
@@ -120,16 +122,16 @@ async def test_auth_expired_token(
     # Prepare to capture credentials for Subscriber
     captured_creds = None
 
-    async def async_new_subscriber(
-        creds, subscription_name, event_loop, async_callback
-    ):
+    def async_new_subscriber(
+        credentials: Credentials,
+    ) -> Mock:
         """Capture credentials for tests."""
         nonlocal captured_creds
-        captured_creds = creds
-        return None  # GoogleNestSubscriber
+        captured_creds = credentials
+        return AsyncMock()
 
     with patch(
-        "google_nest_sdm.google_nest_subscriber.DefaultSubscriberFactory.async_new_subscriber",
+        "google_nest_sdm.subscriber_client.pubsub_v1.SubscriberAsyncClient",
         side_effect=async_new_subscriber,
     ) as new_subscriber_mock:
         await setup_platform()

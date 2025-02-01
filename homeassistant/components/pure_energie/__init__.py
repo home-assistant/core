@@ -1,23 +1,20 @@
 """The Pure Energie integration."""
+
 from __future__ import annotations
 
-from typing import NamedTuple
-
-from gridnet import Device, GridNet, SmartBridge
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .coordinator import PureEnergieDataUpdateCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+type PureEnergieConfigEntry = ConfigEntry[PureEnergieDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: PureEnergieConfigEntry) -> bool:
     """Set up Pure Energie from a config entry."""
 
     coordinator = PureEnergieDataUpdateCoordinator(hass)
@@ -27,50 +24,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await coordinator.gridnet.close()
         raise
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: PureEnergieConfigEntry
+) -> bool:
     """Unload Pure Energie config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN][entry.entry_id]
-    return unload_ok
-
-
-class PureEnergieData(NamedTuple):
-    """Class for defining data in dict."""
-
-    device: Device
-    smartbridge: SmartBridge
-
-
-class PureEnergieDataUpdateCoordinator(DataUpdateCoordinator[PureEnergieData]):
-    """Class to manage fetching Pure Energie data from single eindpoint."""
-
-    config_entry: ConfigEntry
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-    ) -> None:
-        """Initialize global Pure Energie data updater."""
-        super().__init__(
-            hass,
-            LOGGER,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
-        )
-
-        self.gridnet = GridNet(
-            self.config_entry.data[CONF_HOST], session=async_get_clientsession(hass)
-        )
-
-    async def _async_update_data(self) -> PureEnergieData:
-        """Fetch data from SmartBridge."""
-        return PureEnergieData(
-            device=await self.gridnet.device(),
-            smartbridge=await self.gridnet.smartbridge(),
-        )
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

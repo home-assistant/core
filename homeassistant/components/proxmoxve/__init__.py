@@ -1,4 +1,5 @@
 """Support for Proxmox VE."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -19,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -199,8 +200,7 @@ def create_coordinator_container_vm(
 
         def poll_api() -> dict[str, Any] | None:
             """Call the api."""
-            vm_status = call_api_container_vm(proxmox, node_name, vm_id, vm_type)
-            return vm_status
+            return call_api_container_vm(proxmox, node_name, vm_id, vm_type)
 
         vm_status = await hass.async_add_executor_job(poll_api)
 

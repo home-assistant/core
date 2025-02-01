@@ -18,10 +18,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': None,
       'model': 'NB6VAC-FXC-r0',
+      'model_id': 'NB6VAC-FXC-r0',
       'name': 'SFR Box',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',
@@ -47,6 +51,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -76,6 +82,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -101,6 +109,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.sfr_box_wan_status',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -112,6 +121,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.sfr_box_dsl_status',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -136,10 +146,14 @@
         ),
       }),
       'is_new': False,
+      'labels': set({
+      }),
       'manufacturer': None,
       'model': 'NB6VAC-FXC-r0',
+      'model_id': 'NB6VAC-FXC-r0',
       'name': 'SFR Box',
       'name_by_user': None,
+      'primary_config_entry': <ANY>,
       'serial_number': None,
       'suggested_area': None,
       'sw_version': 'NB6VAC-MAIN-R4.0.44k',
@@ -165,6 +179,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -194,6 +210,8 @@
       'hidden_by': None,
       'icon': None,
       'id': <ANY>,
+      'labels': set({
+      }),
       'name': None,
       'options': dict({
       }),
@@ -219,6 +237,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.sfr_box_wan_status',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'on',
     }),
@@ -230,6 +249,7 @@
       'context': <ANY>,
       'entity_id': 'binary_sensor.sfr_box_ftth_status',
       'last_changed': <ANY>,
+      'last_reported': <ANY>,
       'last_updated': <ANY>,
       'state': 'off',
     }),

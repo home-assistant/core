@@ -1,9 +1,10 @@
 """Fixtures for DLNA DMS tests."""
+
 from __future__ import annotations
 
-from collections.abc import AsyncIterable, Iterable
+from collections.abc import AsyncGenerator, Generator
 from typing import Final, cast
-from unittest.mock import Mock, create_autospec, patch, seal
+from unittest.mock import AsyncMock, MagicMock, Mock, create_autospec, patch, seal
 
 from async_upnp_client.client import UpnpDevice, UpnpService
 from async_upnp_client.utils import absolute_url
@@ -37,13 +38,13 @@ NEW_DEVICE_LOCATION: Final = "http://192.88.99.7" + "/dmr_description.xml"
 
 
 @pytest.fixture
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
 
 @pytest.fixture
-def upnp_factory_mock() -> Iterable[Mock]:
+def upnp_factory_mock() -> Generator[Mock]:
     """Mock the UpnpFactory class to construct DMS-style UPnP devices."""
     with patch(
         "homeassistant.components.dlna_dms.dms.UpnpFactory",
@@ -81,18 +82,20 @@ def upnp_factory_mock() -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True, scope="module")
-def aiohttp_session_requester_mock() -> Iterable[Mock]:
+def aiohttp_session_requester_mock() -> Generator[Mock]:
     """Mock the AiohttpSessionRequester to prevent network use."""
     with patch(
         "homeassistant.components.dlna_dms.dms.AiohttpSessionRequester", autospec=True
     ) as requester_mock:
+        requester_mock.return_value = mock = AsyncMock()
+        mock.async_http_request.return_value.body = MagicMock()
         yield requester_mock
 
 
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
-    mock_entry = MockConfigEntry(
+    return MockConfigEntry(
         unique_id=MOCK_DEVICE_USN,
         domain=DOMAIN,
         version=CONFIG_VERSION,
@@ -103,11 +106,10 @@ def config_entry_mock() -> MockConfigEntry:
         },
         title=MOCK_DEVICE_NAME,
     )
-    return mock_entry
 
 
 @pytest.fixture
-def dms_device_mock(upnp_factory_mock: Mock) -> Iterable[Mock]:
+def dms_device_mock(upnp_factory_mock: Mock) -> Generator[Mock]:
     """Mock the async_upnp_client DMS device, initially connected."""
     with patch(
         "homeassistant.components.dlna_dms.dms.DmsDevice", autospec=True
@@ -128,7 +130,7 @@ def dms_device_mock(upnp_factory_mock: Mock) -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True)
-def ssdp_scanner_mock() -> Iterable[Mock]:
+def ssdp_scanner_mock() -> Generator[Mock]:
     """Mock the SSDP Scanner."""
     with patch("homeassistant.components.ssdp.Scanner", autospec=True) as mock_scanner:
         reg_callback = mock_scanner.return_value.async_register_callback
@@ -137,7 +139,7 @@ def ssdp_scanner_mock() -> Iterable[Mock]:
 
 
 @pytest.fixture(autouse=True)
-def ssdp_server_mock() -> Iterable[Mock]:
+def ssdp_server_mock() -> Generator[None]:
     """Mock the SSDP Server."""
     with patch("homeassistant.components.ssdp.Server", autospec=True):
         yield
@@ -149,7 +151,7 @@ async def device_source_mock(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dms_device_mock: Mock,
-) -> AsyncIterable[None]:
+) -> AsyncGenerator[None]:
     """Fixture to set up a DmsDeviceSource in a connected state and cleanup at completion."""
     config_entry_mock.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_mock.entry_id)

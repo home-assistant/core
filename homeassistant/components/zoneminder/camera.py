@@ -1,4 +1,5 @@
 """Support for ZoneMinder camera streaming."""
+
 from __future__ import annotations
 
 import logging
@@ -8,6 +9,7 @@ from zoneminder.zm import ZoneMinder
 
 from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -28,11 +30,12 @@ def setup_platform(
     zm_client: ZoneMinder
     for zm_client in hass.data[ZONEMINDER_DOMAIN].values():
         if not (monitors := zm_client.get_monitors()):
-            _LOGGER.warning("Could not fetch monitors from ZoneMinder host: %s")
-            return
+            raise PlatformNotReady(
+                "Camera could not fetch any monitors from ZoneMinder"
+            )
 
         for monitor in monitors:
-            _LOGGER.info("Initializing camera %s", monitor.id)
+            _LOGGER.debug("Initializing camera %s", monitor.id)
             cameras.append(ZoneMinderCamera(monitor, zm_client.verify_ssl))
     add_entities(cameras)
 

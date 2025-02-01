@@ -1,13 +1,43 @@
 {
   "thermostatList": [
     {
-      "identifier": 8675309,
+      "identifier": "8675309",
       "name": "ecobee",
       "modelNumber": "athenaSmart",
+      "utcTime": "2022-01-01 10:00:00",
+      "thermostatTime": "2022-01-01 6:00:00",
+      "location": {
+        "timeZone": "America/Toronto"
+      },
       "program": {
         "climates": [
-          { "name": "Climate1", "climateRef": "c1" },
-          { "name": "Climate2", "climateRef": "c2" }
+          {
+            "name": "Home",
+            "climateRef": "home",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
+          },
+          {
+            "name": "Climate1",
+            "climateRef": "c1",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
+          },
+          {
+            "name": "Climate2",
+            "climateRef": "c2",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
+          }
         ],
         "currentClimateRef": "c1"
       },
@@ -30,9 +60,11 @@
         "ventilatorType": "hrv",
         "ventilatorMinOnTimeHome": 20,
         "ventilatorMinOnTimeAway": 10,
+        "ventilatorOffDateTime": "2022-01-01 6:00:00",
         "isVentilatorTimerOn": false,
         "hasHumidifier": true,
         "humidifierMode": "manual",
+        "hasHeatPump": false,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
@@ -42,11 +74,31 @@
           "running": true,
           "type": "hold",
           "holdClimateRef": "away",
-          "endDate": "2022-01-01 10:00:00",
-          "startDate": "2022-02-02 11:00:00"
+          "startDate": "2022-02-02",
+          "startTime": "11:00:00",
+          "endDate": "2022-01-01",
+          "endTime": "10:00:00"
         }
       ],
       "remoteSensors": [
+        {
+          "id": "ei:0",
+          "name": "ecobee",
+          "type": "thermostat",
+          "inUse": true,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "humidity",
+              "value": "54"
+            }
+          ]
+        },
         {
           "id": "rs:100",
           "name": "Remote Sensor 1",
@@ -74,8 +126,14 @@
       "modelNumber": "athenaSmart",
       "program": {
         "climates": [
-          { "name": "Climate1", "climateRef": "c1" },
-          { "name": "Climate2", "climateRef": "c2" }
+          {
+            "name": "Climate1",
+            "climateRef": "c1"
+          },
+          {
+            "name": "Climate2",
+            "climateRef": "c2"
+          }
         ],
         "currentClimateRef": "c1"
       },
@@ -101,6 +159,8 @@
         "isVentilatorTimerOn": false,
         "hasHumidifier": true,
         "humidifierMode": "manual",
+        "hasHeatPump": true,
+        "compressorProtectionMinTemp": 100,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
@@ -110,8 +170,105 @@
           "running": true,
           "type": "hold",
           "holdClimateRef": "away",
-          "endDate": "2022-01-01 10:00:00",
-          "startDate": "2022-02-02 11:00:00"
+          "startDate": "2022-02-02",
+          "startTime": "11:00:00",
+          "endDate": "2022-01-01",
+          "endTime": "10:00:00"
+        }
+      ],
+      "remoteSensors": [
+        {
+          "id": "rs:100",
+          "name": "Remote Sensor 1",
+          "type": "ecobee3_remote_sensor",
+          "code": "WKRP",
+          "inUse": false,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "occupancy",
+              "value": "false"
+            }
+          ]
+        },
+        {
+          "id": "rs:101",
+          "name": "Remote Sensor 2",
+          "type": "ecobee3_remote_sensor",
+          "code": "VTRK",
+          "inUse": false,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "occupancy",
+              "value": "false"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": 8675307,
+      "name": "unknownEcobeeName",
+      "modelNumber": "unknownEcobeeModel",
+      "program": {
+        "climates": [
+          {
+            "name": "Climate1",
+            "climateRef": "c1"
+          },
+          {
+            "name": "Climate2",
+            "climateRef": "c2"
+          }
+        ],
+        "currentClimateRef": "c1"
+      },
+      "runtime": {
+        "connected": true,
+        "actualTemperature": 300,
+        "desiredHeat": 400,
+        "desiredCool": 200,
+        "desiredFanMode": "on",
+        "desiredHumidity": 40
+      },
+      "settings": {
+        "hvacMode": "auto",
+        "heatStages": 1,
+        "coolStages": 1,
+        "fanMinOnTime": 10,
+        "heatCoolMinDelta": 50,
+        "holdAction": "nextTransition",
+        "ventilatorType": "none",
+        "ventilatorMinOnTimeHome": 20,
+        "ventilatorMinOnTimeAway": 10,
+        "isVentilatorTimerOn": false,
+        "hasHumidifier": true,
+        "humidifierMode": "manual",
+        "hasHeatPump": false,
+        "humidity": "30"
+      },
+      "equipmentStatus": "fan",
+      "events": [
+        {
+          "name": "Event1",
+          "running": true,
+          "type": "hold",
+          "holdClimateRef": "away",
+          "startDate": "2022-02-02",
+          "startTime": "11:00:00",
+          "endDate": "2022-01-01",
+          "endTime": "10:00:00"
         }
       ],
       "remoteSensors": [

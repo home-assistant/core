@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,11 +11,10 @@
       "invalid_station": "Could not find a station with the specified name",
       "more_stations": "Found multiple stations with the specified name",
       "no_trains": "No train found",
-      "multiple_trains": "Multiple trains found",
       "incorrect_api_key": "Invalid API key for selected account"
     },
     "step": {
-      "user": {
+      "initial": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
           "to": "To station",
@@ -28,6 +28,13 @@
           "filter_product": "To filter by product description add the phrase here to match"
         }
       },
+      "select_stations": {
+        "description": "More than one station was found with the provided name, select the correct ones from the provided lists",
+        "data": {
+          "to": "To station",
+          "from": "From station"
+        }
+      },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
@@ -39,10 +46,10 @@
     "step": {
       "init": {
         "data": {
-          "filter_product": "[%key:component::trafikverket_train::config::step::user::data::filter_product%]"
+          "filter_product": "[%key:component::trafikverket_train::config::step::initial::data::filter_product%]"
         },
         "data_description": {
-          "filter_product": "[%key:component::trafikverket_train::config::step::user::data_description::filter_product%]"
+          "filter_product": "[%key:component::trafikverket_train::config::step::initial::data_description::filter_product%]"
         }
       }
     }
@@ -67,6 +74,22 @@
         "state_attributes": {
           "product_filter": {
             "name": "Train filtering"
+          }
+        }
+      },
+      "departure_time_next": {
+        "name": "Departure time next",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
+      "departure_time_next_next": {
+        "name": "Departure time next after",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
           }
         }
       },

@@ -5,10 +5,9 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import datetime
-from functools import cached_property
 import logging
-from typing import TypeVar
 
+import aiohttp
 from pyrainbird.async_client import (
     AsyncRainbirdController,
     RainbirdApiException,
@@ -16,21 +15,27 @@ from pyrainbird.async_client import (
 )
 from pyrainbird.data import ModelAndVersion, Schedule
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
+from .types import RainbirdConfigEntry
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
 # changes, so we refresh it less often.
 CALENDAR_UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
-_LOGGER = logging.getLogger(__name__)
+# The valves state are not immediately reflected after issuing a command. We add
+# small delay to give additional time to reflect the new state.
+DEBOUNCER_COOLDOWN = 5
 
-_T = TypeVar("_T")
+# Rainbird devices can only accept a single request at a time
+CONECTION_LIMIT = 1
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -41,6 +46,13 @@ class RainbirdDeviceState:
     active_zones: set[int]
     rain: bool
     rain_delay: int
+
+
+def async_create_clientsession() -> aiohttp.ClientSession:
+    """Create a rainbird async_create_clientsession with a connection limit."""
+    return aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(limit=CONECTION_LIMIT),
+    )
 
 
 class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
@@ -60,6 +72,9 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
             _LOGGER,
             name=name,
             update_interval=UPDATE_INTERVAL,
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=DEBOUNCER_COOLDOWN, immediate=False
+            ),
         )
         self._controller = controller
         self._unique_id = unique_id
@@ -125,7 +140,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
 class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
     """Coordinator for rainbird irrigation schedule calls."""
 
-    config_entry: ConfigEntry
+    config_entry: RainbirdConfigEntry
 
     def __init__(
         self,
@@ -150,36 +165,3 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
                 return await self._controller.get_schedule()
         except RainbirdApiException as err:
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
-
-
-@dataclass
-class RainbirdData:
-    """Holder for shared integration data.
-
-    The coordinators are lazy since they may only be used by some platforms when needed.
-    """
-
-    hass: HomeAssistant
-    entry: ConfigEntry
-    controller: AsyncRainbirdController
-    model_info: ModelAndVersion
-
-    @cached_property
-    def coordinator(self) -> RainbirdUpdateCoordinator:
-        """Return RainbirdUpdateCoordinator."""
-        return RainbirdUpdateCoordinator(
-            self.hass,
-            name=self.entry.title,
-            controller=self.controller,
-            unique_id=self.entry.unique_id,
-            model_info=self.model_info,
-        )
-
-    @cached_property
-    def schedule_coordinator(self) -> RainbirdScheduleUpdateCoordinator:
-        """Return RainbirdScheduleUpdateCoordinator."""
-        return RainbirdScheduleUpdateCoordinator(
-            self.hass,
-            name=f"{self.entry.title} Schedule",
-            controller=self.controller,
-        )

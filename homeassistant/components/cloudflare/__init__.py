@@ -1,11 +1,12 @@
 """Update the IP addresses of your Cloudflare DNS records."""
+
 from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
 import logging
+import socket
 
-from aiohttp import ClientSession
 import pycfdns
 
 from homeassistant.config_entries import ConfigEntry
@@ -17,7 +18,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.network import is_ipv4_address
@@ -25,8 +25,6 @@ from homeassistant.util.network import is_ipv4_address
 from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -51,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set up recurring update."""
         try:
             await _async_update_cloudflare(
-                session, client, dns_zone, entry.data[CONF_RECORDS]
+                hass, client, dns_zone, entry.data[CONF_RECORDS]
             )
         except (
             pycfdns.AuthenticationException,
@@ -63,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set up service for manual trigger."""
         try:
             await _async_update_cloudflare(
-                session, client, dns_zone, entry.data[CONF_RECORDS]
+                hass, client, dns_zone, entry.data[CONF_RECORDS]
             )
         except (
             pycfdns.AuthenticationException,
@@ -76,9 +74,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_track_time_interval(hass, update_records, update_interval)
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
     return True
@@ -86,13 +81,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Cloudflare config entry."""
-    hass.data[DOMAIN].pop(entry.entry_id)
 
     return True
 
 
 async def _async_update_cloudflare(
-    session: ClientSession,
+    hass: HomeAssistant,
     client: pycfdns.Client,
     dns_zone: pycfdns.ZoneModel,
     target_records: list[str],
@@ -102,6 +96,7 @@ async def _async_update_cloudflare(
     records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
     _LOGGER.debug("Records: %s", records)
 
+    session = async_get_clientsession(hass, family=socket.AF_INET)
     location_info = await async_detect_location_info(session)
 
     if not location_info or not is_ipv4_address(location_info.ip):

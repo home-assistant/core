@@ -1,4 +1,5 @@
 """Tests for the Voice Assistant integration."""
+
 MANY_LANGUAGES = [
     "ar",
     "bg",
@@ -44,7 +45,7 @@ MANY_LANGUAGES = [
     "sr",
     "sv",
     "sw",
-    "te",
+    "te",  # codespell:ignore te
     "tr",
     "uk",
     "ur",

@@ -1,8 +1,9 @@
 """Support for the Netatmo camera lights."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from pyatmo import modules as NaModules
 
@@ -23,7 +24,7 @@ from .const import (
     WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,34 +62,28 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCameraLight(NetatmoBase, LightEntity):
+class NetatmoCameraLight(NetatmoModuleEntity, LightEntity):
     """Representation of a Netatmo Presence camera light."""
 
+    device: NaModules.NOC
+    _attr_is_on = False
+    _attr_name = None
+    _attr_configuration_url = CONF_URL_SECURITY
+    _attr_color_mode = ColorMode.ONOFF
     _attr_has_entity_name = True
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(
-        self,
-        netatmo_device: NetatmoDevice,
-    ) -> None:
+    def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo Presence camera light."""
-        LightEntity.__init__(self)
-        super().__init__(netatmo_device.data_handler)
+        super().__init__(netatmo_device)
+        self._attr_unique_id = f"{self.device.entity_id}-light"
 
-        self._camera = cast(NaModules.NOC, netatmo_device.device)
-        self._id = self._camera.entity_id
-        self._home_id = self._camera.home.entity_id
-        self._device_name = self._camera.name
-        self._model = self._camera.device_type
-        self._config_url = CONF_URL_SECURITY
-        self._is_on = False
-        self._attr_unique_id = f"{self._id}-light"
-
-        self._signal_name = f"{HOME}-{self._home_id}"
+        self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": self._camera.home.entity_id,
+                    "home_id": self.home.entity_id,
                     SIGNAL_NAME: self._signal_name,
                 },
             ]
@@ -115,11 +110,11 @@ class NetatmoCameraLight(NetatmoBase, LightEntity):
             return
 
         if (
-            data["home_id"] == self._home_id
-            and data["camera_id"] == self._id
+            data["home_id"] == self.home.entity_id
+            and data["camera_id"] == self.device.entity_id
             and data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE
         ):
-            self._is_on = bool(data["sub_type"] == "on")
+            self._attr_is_on = bool(data["sub_type"] == "on")
 
             self.async_write_ha_state()
             return
@@ -129,90 +124,78 @@ class NetatmoCameraLight(NetatmoBase, LightEntity):
         """If the webhook is not established, mark as unavailable."""
         return bool(self.data_handler.webhook)
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._is_on
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn camera floodlight on."""
         _LOGGER.debug("Turn camera '%s' on", self.name)
-        await self._camera.async_floodlight_on()
+        await self.device.async_floodlight_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn camera floodlight into auto mode."""
         _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
-        await self._camera.async_floodlight_auto()
+        await self.device.async_floodlight_auto()
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._is_on = bool(self._camera.floodlight == "on")
+        self._attr_is_on = bool(self.device.floodlight == "on")
 
 
-class NetatmoLight(NetatmoBase, LightEntity):
+class NetatmoLight(NetatmoModuleEntity, LightEntity):
     """Representation of a dimmable light by Legrand/BTicino."""
 
-    def __init__(
-        self,
-        netatmo_device: NetatmoDevice,
-    ) -> None:
+    _attr_name = None
+    _attr_configuration_url = CONF_URL_CONTROL
+    _attr_brightness: int | None = 0
+    device: NaModules.NLFN
+
+    def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize a Netatmo light."""
-        super().__init__(netatmo_device.data_handler)
+        super().__init__(netatmo_device)
+        self._attr_unique_id = f"{self.device.entity_id}-light"
 
-        self._dimmer = cast(NaModules.NLFN, netatmo_device.device)
-        self._id = self._dimmer.entity_id
-        self._home_id = self._dimmer.home.entity_id
-        self._device_name = self._dimmer.name
-        self._attr_name = f"{self._device_name}"
-        self._model = self._dimmer.device_type
-        self._config_url = CONF_URL_CONTROL
-        self._attr_brightness = 0
-        self._attr_unique_id = f"{self._id}-light"
+        if self.device.brightness is not None:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
 
-        self._attr_supported_color_modes: set[str] = set()
-
-        if not self._attr_supported_color_modes and self._dimmer.brightness is not None:
-            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
-
-        self._signal_name = f"{HOME}-{self._home_id}"
+        self._signal_name = f"{HOME}-{self.home.entity_id}"
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": self._dimmer.home.entity_id,
+                    "home_id": self.home.entity_id,
                     SIGNAL_NAME: self._signal_name,
                 },
             ]
         )
 
-    @property
-    def is_on(self) -> bool:
-        """Return true if light is on."""
-        return self._dimmer.on is True
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._dimmer.async_set_brightness(kwargs[ATTR_BRIGHTNESS])
+            await self.device.async_set_brightness(
+                round(kwargs[ATTR_BRIGHTNESS] / 2.55)
+            )
 
         else:
-            await self._dimmer.async_on()
+            await self.device.async_on()
 
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
-        await self._dimmer.async_off()
+        await self.device.async_off()
         self._attr_is_on = False
         self.async_write_ha_state()
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        if self._dimmer.brightness is not None:
+        self._attr_is_on = self.device.on is True
+
+        if (brightness := self.device.brightness) is not None:
             # Netatmo uses a range of [0, 100] to control brightness
-            self._attr_brightness = round((self._dimmer.brightness / 100) * 255)
+            self._attr_brightness = round(brightness * 2.55)
         else:
             self._attr_brightness = None

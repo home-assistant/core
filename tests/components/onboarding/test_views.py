@@ -1,13 +1,17 @@
 """Test the onboarding views."""
+
 import asyncio
+from collections.abc import AsyncGenerator
 from http import HTTPStatus
+from io import StringIO
 import os
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components import onboarding
+from homeassistant.components import backup, onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar
@@ -26,7 +30,7 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture(autouse=True)
-def auth_active(hass):
+def auth_active(hass: HomeAssistant) -> None:
     """Ensure auth is always active."""
     hass.loop.run_until_complete(
         register_auth_provider(hass, {"type": "homeassistant"})
@@ -34,7 +38,9 @@ def auth_active(hass):
 
 
 @pytest.fixture(name="rpi")
-async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -48,7 +54,9 @@ async def rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="no_rpi")
-async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
+async def no_rpi_fixture(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, mock_supervisor
+) -> None:
     """Mock core info with rpi."""
     aioclient_mock.get(
         "http://127.0.0.1/core/info",
@@ -62,46 +70,51 @@ async def no_rpi_fixture(hass, aioclient_mock, mock_supervisor):
 
 
 @pytest.fixture(name="mock_supervisor")
-async def mock_supervisor_fixture(hass, aioclient_mock):
+async def mock_supervisor_fixture(
+    aioclient_mock: AiohttpClientMocker,
+    store_info: AsyncMock,
+    supervisor_is_connected: AsyncMock,
+    resolution_info: AsyncMock,
+) -> AsyncGenerator[None]:
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
+        "http://127.0.0.1/network/info",
         json={
             "result": "ok",
             "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
+                "host_internet": True,
+                "supervisor_internet": True,
             },
         },
     )
-    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
-        "homeassistant.components.hassio.HassIO.is_connected",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_host_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_store",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_supervisor_info",
-        return_value={"diagnostics": True},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_os_info",
-        return_value={},
-    ), patch(
-        "homeassistant.components.hassio.HassIO.get_ingress_panels",
-        return_value={"panels": {}},
-    ), patch.dict(
-        os.environ, {"SUPERVISOR_TOKEN": "123456"}
+    with (
+        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_host_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_supervisor_info",
+            return_value={"diagnostics": True},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_os_info",
+            return_value={},
+        ),
+        patch(
+            "homeassistant.components.hassio.HassIO.get_ingress_panels",
+            return_value={"panels": {}},
+        ),
+        patch.dict(
+            os.environ,
+            {"SUPERVISOR_TOKEN": "123456"},
+        ),
     ):
         yield
 
@@ -109,16 +122,18 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
 @pytest.fixture
 def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch(
-        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
-    ), patch(
-        "homeassistant.components.met.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
-    ), patch(
-        "homeassistant.components.shopping_list.async_setup_entry", return_value=True
+    with (
+        patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
+        patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"),
+        patch("homeassistant.components.met.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.radio_browser.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.shopping_list.async_setup_entry",
+            return_value=True,
+        ),
     ):
         yield
 
@@ -178,10 +193,9 @@ async def test_onboarding_user(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client_no_auth: ClientSessionGenerator,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test creating a new user."""
-    area_registry = ar.async_get(hass)
-
     # Create an existing area to mimic an integration creating an area
     # before onboarding is done.
     area_registry.async_create("Living Room")
@@ -231,9 +245,7 @@ async def test_onboarding_user(
     assert resp.status == 200
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Validate created areas
     assert len(area_registry.areas) == 3
@@ -346,9 +358,7 @@ async def test_onboarding_integration(
     assert const.STEP_INTEGRATION in hass_storage[const.DOMAIN]["data"]["done"]
     tokens = await resp.json()
 
-    assert (
-        await hass.auth.async_validate_access_token(tokens["access_token"]) is not None
-    )
+    assert hass.auth.async_validate_access_token(tokens["access_token"]) is not None
 
     # Onboarding refresh token and new refresh token
     user = await hass.auth.async_get_user(hass_admin_user.id)
@@ -367,7 +377,7 @@ async def test_onboarding_integration_missing_credential(
     assert await async_setup_component(hass, "onboarding", {})
     await hass.async_block_till_done()
 
-    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    refresh_token = hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.credential = None
 
     client = await hass_client()
@@ -570,6 +580,28 @@ async def test_onboarding_core_no_rpi_power(
     assert not rpi_power_state
 
 
+async def test_onboarding_core_ensures_analytics_loaded(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    mock_default_integrations,
+) -> None:
+    """Test finishing the core step ensures analytics is ready."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+    assert "analytics" not in hass.config.components
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert "analytics" in hass.config.components
+
+
 async def test_onboarding_analytics(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -619,12 +651,28 @@ async def test_onboarding_installation_type(
         assert resp_content["installation_type"] == "Home Assistant Core"
 
 
-async def test_onboarding_installation_type_after_done(
+@pytest.mark.parametrize(
+    ("method", "view", "kwargs"),
+    [
+        ("get", "installation_type", {}),
+        ("get", "backup/info", {}),
+        (
+            "post",
+            "backup/restore",
+            {"json": {"backup_id": "abc123", "agent_id": "test"}},
+        ),
+        ("post", "backup/upload", {}),
+    ],
+)
+async def test_onboarding_view_after_done(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
+    method: str,
+    view: str,
+    kwargs: dict[str, Any],
 ) -> None:
-    """Test raising for installation type after onboarding."""
+    """Test raising after onboarding."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -632,6 +680,350 @@ async def test_onboarding_installation_type_after_done(
 
     client = await hass_client()
 
-    resp = await client.get("/api/onboarding/installation_type")
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
 
     assert resp.status == 401
+
+
+async def test_complete_onboarding(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test completing onboarding calls listeners."""
+    listener_1 = Mock()
+    onboarding.async_add_listener(hass, listener_1)
+    listener_1.assert_not_called()
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    listener_2 = Mock()
+    onboarding.async_add_listener(hass, listener_2)
+    listener_2.assert_not_called()
+
+    client = await hass_client()
+
+    assert not onboarding.async_is_onboarded(hass)
+
+    # Complete the user step
+    resp = await client.post(
+        "/api/onboarding/users",
+        json={
+            "client_id": CLIENT_ID,
+            "name": "Test Name",
+            "username": "test-user",
+            "password": "test-pass",
+            "language": "en",
+        },
+    )
+    assert resp.status == 200
+    assert not onboarding.async_is_onboarded(hass)
+    listener_2.assert_not_called()
+
+    # Complete the core config step
+    resp = await client.post("/api/onboarding/core_config")
+    assert resp.status == 200
+    assert not onboarding.async_is_onboarded(hass)
+    listener_2.assert_not_called()
+
+    # Complete the integration step
+    resp = await client.post(
+        "/api/onboarding/integration",
+        json={"client_id": CLIENT_ID, "redirect_uri": CLIENT_REDIRECT_URI},
+    )
+    assert resp.status == 200
+    assert not onboarding.async_is_onboarded(hass)
+    listener_2.assert_not_called()
+
+    # Complete the analytics step
+    resp = await client.post("/api/onboarding/analytics")
+    assert resp.status == 200
+    assert onboarding.async_is_onboarded(hass)
+    listener_1.assert_not_called()  # Registered before the integration was setup
+    listener_2.assert_called_once_with()
+
+    listener_3 = Mock()
+    onboarding.async_add_listener(hass, listener_3)
+    listener_3.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    ("method", "view", "kwargs"),
+    [
+        ("get", "backup/info", {}),
+        (
+            "post",
+            "backup/restore",
+            {"json": {"backup_id": "abc123", "agent_id": "test"}},
+        ),
+        ("post", "backup/upload", {}),
+    ],
+)
+async def test_onboarding_backup_view_without_backup(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    method: str,
+    view: str,
+    kwargs: dict[str, Any],
+) -> None:
+    """Test interacting with backup wievs when backup integration is missing."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
+
+    assert resp.status == 500
+    assert await resp.json() == {"error": "backup_disabled"}
+
+
+async def test_onboarding_backup_info(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    backups = {
+        "abc123": backup.ManagerBackup(
+            addons=[backup.AddonInfo(name="Test", slug="test", version="1.0.0")],
+            agents={
+                "backup.local": backup.manager.AgentBackupStatus(protected=True, size=0)
+            },
+            backup_id="abc123",
+            date="1970-01-01T00:00:00.000Z",
+            database_included=True,
+            extra_metadata={"instance_id": "abc123", "with_automatic_settings": True},
+            folders=[backup.Folder.MEDIA, backup.Folder.SHARE],
+            homeassistant_included=True,
+            homeassistant_version="2024.12.0",
+            name="Test",
+            failed_agent_ids=[],
+            with_automatic_settings=True,
+        ),
+        "def456": backup.ManagerBackup(
+            addons=[],
+            agents={
+                "test.remote": backup.manager.AgentBackupStatus(protected=True, size=0)
+            },
+            backup_id="def456",
+            date="1980-01-01T00:00:00.000Z",
+            database_included=False,
+            extra_metadata={
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
+            folders=[backup.Folder.MEDIA, backup.Folder.SHARE],
+            homeassistant_included=True,
+            homeassistant_version="2024.12.0",
+            name="Test 2",
+            failed_agent_ids=[],
+            with_automatic_settings=None,
+        ),
+    }
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_get_backups",
+        return_value=(backups, {}),
+    ):
+        resp = await client.get("/api/onboarding/backup/info")
+
+        assert resp.status == 200
+        assert await resp.json() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("params", "expected_kwargs"),
+    [
+        (
+            {"backup_id": "abc123", "agent_id": "backup.local"},
+            {
+                "agent_id": "backup.local",
+                "password": None,
+                "restore_addons": None,
+                "restore_database": True,
+                "restore_folders": None,
+                "restore_homeassistant": True,
+            },
+        ),
+        (
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "password": "hunter2",
+                "restore_addons": ["addon_1"],
+                "restore_database": True,
+                "restore_folders": ["media"],
+            },
+            {
+                "agent_id": "backup.local",
+                "password": "hunter2",
+                "restore_addons": ["addon_1"],
+                "restore_database": True,
+                "restore_folders": [backup.Folder.MEDIA],
+                "restore_homeassistant": True,
+            },
+        ),
+        (
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "password": "hunter2",
+                "restore_addons": ["addon_1", "addon_2"],
+                "restore_database": False,
+                "restore_folders": ["media", "share"],
+            },
+            {
+                "agent_id": "backup.local",
+                "password": "hunter2",
+                "restore_addons": ["addon_1", "addon_2"],
+                "restore_database": False,
+                "restore_folders": [backup.Folder.MEDIA, backup.Folder.SHARE],
+                "restore_homeassistant": True,
+            },
+        ),
+    ],
+)
+async def test_onboarding_backup_restore(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    params: dict[str, Any],
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
+    ) as mock_restore:
+        resp = await client.post("/api/onboarding/backup/restore", json=params)
+    assert resp.status == 200
+    mock_restore.assert_called_once_with("abc123", **expected_kwargs)
+
+
+@pytest.mark.parametrize(
+    ("params", "restore_error", "expected_status", "expected_message", "restore_calls"),
+    [
+        # Missing agent_id
+        (
+            {"backup_id": "abc123"},
+            None,
+            400,
+            "Message format incorrect: required key not provided @ data['agent_id']",
+            0,
+        ),
+        # Missing backup_id
+        (
+            {"agent_id": "backup.local"},
+            None,
+            400,
+            "Message format incorrect: required key not provided @ data['backup_id']",
+            0,
+        ),
+        # Invalid restore_database
+        (
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "restore_database": "yes_please",
+            },
+            None,
+            400,
+            "Message format incorrect: expected bool for dictionary value @ data['restore_database']",
+            0,
+        ),
+        # Invalid folder
+        (
+            {
+                "backup_id": "abc123",
+                "agent_id": "backup.local",
+                "restore_folders": ["invalid"],
+            },
+            None,
+            400,
+            "Message format incorrect: expected Folder or one of 'share', 'addons/local', 'ssl', 'media' @ data['restore_folders'][0]",
+            0,
+        ),
+        # Wrong password
+        (
+            {"backup_id": "abc123", "agent_id": "backup.local"},
+            backup.IncorrectPasswordError,
+            400,
+            "incorrect_password",
+            1,
+        ),
+    ],
+)
+async def test_onboarding_backup_restore_error(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    params: dict[str, Any],
+    restore_error: Exception | None,
+    expected_status: int,
+    expected_message: str,
+    restore_calls: int,
+) -> None:
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
+        side_effect=restore_error,
+    ) as mock_restore:
+        resp = await client.post("/api/onboarding/backup/restore", json=params)
+
+    assert resp.status == expected_status
+    assert await resp.json() == {"message": expected_message}
+    assert len(mock_restore.mock_calls) == restore_calls
+
+
+async def test_onboarding_backup_upload(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_receive_backup",
+        return_value="abc123",
+    ) as mock_receive:
+        resp = await client.post(
+            "/api/onboarding/backup/upload?agent_id=backup.local",
+            data={"file": StringIO("test")},
+        )
+    assert resp.status == 201
+    assert await resp.json() == {"backup_id": "abc123"}
+    mock_receive.assert_called_once_with(agent_ids=["backup.local"], contents=ANY)

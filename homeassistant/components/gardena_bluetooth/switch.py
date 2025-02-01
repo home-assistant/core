@@ -1,4 +1,5 @@
 """Support for switch entities."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,20 +7,22 @@ from typing import Any
 from gardena_bluetooth.const import Valve
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import Coordinator, GardenaBluetoothEntity
+from . import GardenaBluetoothConfigEntry
+from .coordinator import GardenaBluetoothCoordinator
+from .entity import GardenaBluetoothEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GardenaBluetoothConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up switch based on a config entry."""
-    coordinator: Coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = []
     if GardenaBluetoothValveSwitch.characteristics.issubset(
         coordinator.characteristics
@@ -40,7 +43,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: GardenaBluetoothCoordinator,
     ) -> None:
         """Initialize the switch."""
         super().__init__(
@@ -49,6 +52,7 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
         self._attr_unique_id = f"{coordinator.address}-{Valve.state.uuid}"
         self._attr_translation_key = "state"
         self._attr_is_on = None
+        self._attr_entity_registry_enabled_default = False
 
     def _handle_coordinator_update(self) -> None:
         self._attr_is_on = self.coordinator.get_cached(Valve.state)

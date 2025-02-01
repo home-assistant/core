@@ -1,4 +1,5 @@
 """Provides the constants needed for component."""
+
 from enum import IntFlag, StrEnum
 
 MODE_NORMAL = "normal"
@@ -33,21 +34,11 @@ DEFAULT_MAX_HUMIDITY = 100
 
 DOMAIN = "humidifier"
 
-# DEVICE_CLASS_* below are deprecated as of 2021.12
-# use the HumidifierDeviceClass enum instead.
-DEVICE_CLASS_HUMIDIFIER = "humidifier"
-DEVICE_CLASS_DEHUMIDIFIER = "dehumidifier"
-
 SERVICE_SET_MODE = "set_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
 
 
 class HumidifierEntityFeature(IntFlag):
-    """Supported features of the alarm control panel entity."""
+    """Supported features of the humidifier entity."""
 
     MODES = 1
-
-
-# The SUPPORT_MODES constant is deprecated as of Home Assistant 2022.5.
-# Please use the HumidifierEntityFeature enum instead.
-SUPPORT_MODES = 1

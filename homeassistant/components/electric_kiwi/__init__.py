@@ -1,24 +1,30 @@
 """The Electric Kiwi integration."""
+
 from __future__ import annotations
 
 import aiohttp
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
-from .const import DOMAIN
-from .coordinator import ElectricKiwiHOPDataCoordinator
+from .coordinator import (
+    ElectricKiwiAccountDataCoordinator,
+    ElectricKiwiConfigEntry,
+    ElectricKiwiHOPDataCoordinator,
+    ElectricKiwiRuntimeData,
+)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SELECT]
+PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ElectricKiwiConfigEntry
+) -> bool:
     """Set up Electric Kiwi from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -40,24 +46,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ek_api = ElectricKiwiApi(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
-    hop_coordinator = ElectricKiwiHOPDataCoordinator(hass, ek_api)
+    hop_coordinator = ElectricKiwiHOPDataCoordinator(hass, entry, ek_api)
+    account_coordinator = ElectricKiwiAccountDataCoordinator(hass, entry, ek_api)
 
     try:
         await ek_api.set_active_session()
         await hop_coordinator.async_config_entry_first_refresh()
+        await account_coordinator.async_config_entry_first_refresh()
     except ApiException as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hop_coordinator
+    entry.runtime_data = ElectricKiwiRuntimeData(
+        hop=hop_coordinator, account=account_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ElectricKiwiConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

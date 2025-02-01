@@ -4,7 +4,10 @@
     "step": {
       "user": {
         "data": {
-          "address": "Bluetooth address"
+          "address": "Device"
+        },
+        "data_description": {
+          "address": "The bluetooth device for the desk."
         }
       }
     },
@@ -18,6 +21,21 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "No unconfigured devices found. Make sure that the desk is in Bluetooth pairing mode. Enter pairing mode by pressing the small button with the Bluetooth logo on the controller for about 3 seconds, until it starts blinking."
+    }
+  },
+  "entity": {
+    "button": {
+      "connect": {
+        "name": "Connect"
+      },
+      "disconnect": {
+        "name": "Disconnect"
+      }
+    },
+    "sensor": {
+      "height": {
+        "name": "Height"
+      }
     }
   }
 }

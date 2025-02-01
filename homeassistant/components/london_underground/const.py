@@ -1,4 +1,5 @@
 """Constants for the London underground integration."""
+
 from datetime import timedelta
 
 DOMAIN = "london_underground"
@@ -23,4 +24,10 @@ TUBE_LINES = [
     "Piccadilly",
     "Victoria",
     "Waterloo & City",
+    "Liberty",
+    "Lioness",
+    "Mildmay",
+    "Suffragette",
+    "Weaver",
+    "Windrush",
 ]

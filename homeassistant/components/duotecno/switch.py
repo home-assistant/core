@@ -1,26 +1,26 @@
 """Support for Duotecno switches."""
+
 from typing import Any
 
 from duotecno.unit import SwitchUnit
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DuotecnoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoSwitch(channel) for channel in cntrl.get_units("SwitchUnit")
+        DuotecnoSwitch(channel)
+        for channel in entry.runtime_data.get_units("SwitchUnit")
     )
 
 

@@ -4,6 +4,7 @@
   "codeowners": ["@echoromeo", "@oyvindwe"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nobo_hub",
+  "integration_type": "hub",
   "iot_class": "local_push",
-  "requirements": ["pynobo==1.6.0"]
+  "requirements": ["pynobo==1.8.1"]
 }

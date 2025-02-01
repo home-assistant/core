@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, call
 
@@ -73,18 +74,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
 
-async def test_async_browse_media_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful browse media."""
 
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -295,13 +297,14 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
+async def test_async_browse_media_images_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful browse media of images."""
 
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -346,14 +349,15 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     }
 
 
-async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_success(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test successful resolve media."""
 
     client = create_mock_motioneye_client()
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -380,14 +384,15 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
     assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
 
 
-async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
+async def test_async_resolve_media_failure(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
     """Test failed resolve media calls."""
 
     client = create_mock_motioneye_client()
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},

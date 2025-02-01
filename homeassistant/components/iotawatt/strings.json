@@ -4,6 +4,9 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your IoTaWatt device."
         }
       },
       "auth": {
@@ -11,7 +14,7 @@
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
-        "description": "The IoTawatt device requires authentication. Please enter the username and password and click the Submit button."
+        "description": "The IoTawatt device requires authentication. Please enter the username and password and select the Submit button."
       }
     },
     "error": {

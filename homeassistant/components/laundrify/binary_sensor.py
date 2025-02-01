@@ -1,7 +1,10 @@
 """Platform for binary sensor integration."""
+
 from __future__ import annotations
 
 import logging
+
+from laundrify_aio import LaundrifyDevice
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,9 +16,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANUFACTURER, MODEL
+from .const import DOMAIN, MANUFACTURER, MODELS
 from .coordinator import LaundrifyUpdateCoordinator
-from .model import LaundrifyDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,10 +42,9 @@ class LaundrifyPowerPlug(
     """Representation of a laundrify Power Plug."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
-    _attr_icon = "mdi:washing-machine"
     _attr_unique_id: str
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_translation_key = "wash_cycle"
 
     def __init__(
         self, coordinator: LaundrifyUpdateCoordinator, device: LaundrifyDevice
@@ -51,14 +52,15 @@ class LaundrifyPowerPlug(
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._device = device
-        unique_id = device["_id"]
+        unique_id = device.id
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
-            name=device["name"],
+            name=device.name,
             manufacturer=MANUFACTURER,
-            model=MODEL,
-            sw_version=device["firmwareVersion"],
+            model=MODELS[device.model],
+            sw_version=device.firmwareVersion,
+            configuration_url=f"http://{device.internalIP}",
         )
 
     @property
@@ -72,7 +74,7 @@ class LaundrifyPowerPlug(
     @property
     def is_on(self) -> bool:
         """Return entity state."""
-        return self._device["status"] == "ON"
+        return bool(self._device.status == "ON")
 
     @callback
     def _handle_coordinator_update(self) -> None:

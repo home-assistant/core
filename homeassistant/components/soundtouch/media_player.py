@@ -1,4 +1,5 @@
 """Support for interface with a Bose SoundTouch."""
+
 from __future__ import annotations
 
 from functools import partial
@@ -288,7 +289,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         if not slaves:
             _LOGGER.warning("Unable to create zone without slaves")
         else:
-            _LOGGER.info("Creating zone with master %s", self._device.config.name)
+            _LOGGER.debug("Creating zone with master %s", self._device.config.name)
             self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
@@ -304,7 +305,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to remove")
         else:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Removing slaves from zone with master %s", self._device.config.name
             )
             # SoundTouch API seems to have a bug and won't remove slaves if there are
@@ -326,7 +327,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         if not slaves:
             _LOGGER.warning("Unable to find slaves to add")
         else:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Adding slaves to zone with master %s", self._device.config.name
             )
             self._device.add_zone_slave([slave.device for slave in slaves])
@@ -408,10 +409,8 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             if slave_instance and slave_instance.entity_id != master:
                 slaves.append(slave_instance.entity_id)
 
-        attributes = {
+        return {
             "master": master,
             "is_master": master == self.entity_id,
             "slaves": slaves,
         }
-
-        return attributes

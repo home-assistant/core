@@ -1,3 +1,70 @@
 {
-  "title": "Proximity"
+  "title": "Proximity",
+  "config": {
+    "flow_title": "Proximity",
+    "step": {
+      "user": {
+        "data": {
+          "zone": "Zone to track distance to",
+          "ignored_zones": "Zones to ignore",
+          "tracked_entities": "Devices or Persons to track",
+          "tolerance": "Tolerance distance"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "success": "Changes saved"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "zone": "Zone to track distance to",
+          "ignored_zones": "Zones to ignore",
+          "tracked_entities": "Devices or Persons to track",
+          "tolerance": "Tolerance distance"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "dir_of_travel": {
+        "name": "{tracked_entity} Direction of travel",
+        "state": {
+          "arrived": "Arrived",
+          "away_from": "Away from",
+          "stationary": "Stationary",
+          "towards": "Towards"
+        }
+      },
+      "dist_to_zone": { "name": "{tracked_entity} Distance" },
+      "nearest": { "name": "Nearest device" },
+      "nearest_dir_of_travel": {
+        "name": "Nearest direction of travel",
+        "state": {
+          "arrived": "Arrived",
+          "away_from": "Away from",
+          "stationary": "Stationary",
+          "towards": "Towards"
+        }
+      },
+      "nearest_dist_to_zone": { "name": "Nearest distance" }
+    }
+  },
+  "issues": {
+    "tracked_entity_removed": {
+      "title": "Tracked entity has been removed",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::proximity::issues::tracked_entity_removed::title%]",
+            "description": "The entity `{entity_id}` has been removed from HA, but is used in proximity {name}. Please remove `{entity_id}` from the list of tracked entities. Related proximity sensor entites were set to unavailable and can be removed."
+          }
+        }
+      }
+    }
+  }
 }

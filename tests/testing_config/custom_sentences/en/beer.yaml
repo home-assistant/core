@@ -3,9 +3,15 @@ intents:
   OrderBeer:
     data:
       - sentences:
-          - "I'd like to order a {beer_style} [please]"
+          - "[I'd like to ]order a {beer_style} [please]"
+  OrderFood:
+    data:
+      - sentences:
+          - "[I'd like to ]order {food_name:name} [please]"
 lists:
   beer_style:
     values:
       - "stout"
       - "lager"
+  food_name:
+    wildcard: true

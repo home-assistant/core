@@ -1,4 +1,5 @@
 """Config flow for kraken integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -7,17 +8,21 @@ import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_TRACKED_ASSET_PAIRS, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .utils import get_tradable_asset_pairs
 
 
-class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for kraken."""
 
     VERSION = 1
@@ -25,14 +30,14 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return KrakenOptionsFlowHandler(config_entry)
+        return KrakenOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
@@ -45,16 +50,12 @@ class KrakenConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
+class KrakenOptionsFlowHandler(OptionsFlow):
     """Handle Kraken client options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize Kraken options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the Kraken options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -64,6 +65,19 @@ class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
             get_tradable_asset_pairs, api
         )
         tradable_asset_pairs_for_multi_select = {v: v for v in tradable_asset_pairs}
+
+        # Ensure that a previously selected tracked asset pair is still available in multiselect
+        # even if it is not tradable anymore
+        tracked_asset_pairs = self.config_entry.options.get(
+            CONF_TRACKED_ASSET_PAIRS, []
+        )
+        tradable_asset_pairs_for_multi_select.update(
+            {
+                tracked_asset_pair: tracked_asset_pair
+                for tracked_asset_pair in tracked_asset_pairs
+            }
+        )
+
         options = {
             vol.Optional(
                 CONF_SCAN_INTERVAL,
@@ -73,7 +87,7 @@ class KrakenOptionsFlowHandler(config_entries.OptionsFlow):
             ): int,
             vol.Optional(
                 CONF_TRACKED_ASSET_PAIRS,
-                default=self.config_entry.options.get(CONF_TRACKED_ASSET_PAIRS, []),
+                default=tracked_asset_pairs,
             ): cv.multi_select(tradable_asset_pairs_for_multi_select),
         }
 

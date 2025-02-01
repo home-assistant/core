@@ -1,0 +1,47 @@
+{
+  "entity": {
+    "sensor": {
+      "cpu_percent": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "memory_percent": {
+        "default": "mdi:memory"
+      }
+    }
+  },
+  "services": {
+    "addon_start": {
+      "service": "mdi:play"
+    },
+    "addon_restart": {
+      "service": "mdi:restart"
+    },
+    "addon_stdin": {
+      "service": "mdi:console"
+    },
+    "addon_stop": {
+      "service": "mdi:stop"
+    },
+    "addon_update": {
+      "service": "mdi:update"
+    },
+    "host_reboot": {
+      "service": "mdi:restart"
+    },
+    "host_shutdown": {
+      "service": "mdi:power"
+    },
+    "backup_full": {
+      "service": "mdi:content-save"
+    },
+    "backup_partial": {
+      "service": "mdi:content-save"
+    },
+    "restore_full": {
+      "service": "mdi:backup-restore"
+    },
+    "restore_partial": {
+      "service": "mdi:backup-restore"
+    }
+  }
+}

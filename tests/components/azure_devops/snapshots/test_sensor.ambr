@@ -1,0 +1,621 @@
+# serializer version: 1
+# name: test_sensors[sensor.testproject_ci_latest_build-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'latest_build',
+    'unique_id': 'testorg_1234_9876_latest_build',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'definition_id': 9876,
+      'definition_name': 'CI',
+      'finish_time': '2021-01-01T00:00:00Z',
+      'friendly_name': 'testproject CI latest build',
+      'id': 5678,
+      'queue_time': '2021-01-01T00:00:00Z',
+      'reason': 'manual',
+      'result': 'succeeded',
+      'source_branch': 'main',
+      'source_version': '123',
+      'start_time': '2021-01-01T00:00:00Z',
+      'status': 'completed',
+      'url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_finish_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_finish_time',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'CI latest build finish time',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'finish_time',
+    'unique_id': 'testorg_1234_9876_finish_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_finish_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'testproject CI latest build finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_id-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_id',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build id',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'build_id',
+    'unique_id': 'testorg_1234_9876_build_id',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_id-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build id',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5678',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_queue_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_queue_time',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'CI latest build queue time',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'queue_time',
+    'unique_id': 'testorg_1234_9876_queue_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_queue_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'testproject CI latest build queue time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_queue_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_reason',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build reason',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'reason',
+    'unique_id': 'testorg_1234_9876_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build reason',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'manual',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_result-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_result',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build result',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'result',
+    'unique_id': 'testorg_1234_9876_result',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_result-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build result',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_result',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'succeeded',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_source_branch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_source_branch',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build source branch',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'source_branch',
+    'unique_id': 'testorg_1234_9876_source_branch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_source_branch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build source branch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_source_branch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'main',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_source_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_source_version',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build source version',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'source_version',
+    'unique_id': 'testorg_1234_9876_source_version',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_source_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build source version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_source_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '123',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_start_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_start_time',
+    'has_entity_name': True,
+    'hidden_by': <RegistryEntryHider.INTEGRATION: 'integration'>,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'CI latest build start time',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'start_time',
+    'unique_id': 'testorg_1234_9876_start_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_start_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'testproject CI latest build start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2021-01-01T00:00:00+00:00',
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_url-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testproject_ci_latest_build_url',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'CI latest build url',
+    'platform': 'azure_devops',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'url',
+    'unique_id': 'testorg_1234_9876_url',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testproject_ci_latest_build_url-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build url',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_url',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'definition_id': 9876,
+      'definition_name': 'CI',
+      'finish_time': None,
+      'friendly_name': 'testproject CI latest build',
+      'id': 6789,
+      'queue_time': None,
+      'reason': None,
+      'result': None,
+      'source_branch': None,
+      'source_version': None,
+      'start_time': None,
+      'status': None,
+      'url': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_finish_time-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'testproject CI latest build finish time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_finish_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_id-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build id',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_id',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6789',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_queue_time-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'testproject CI latest build queue time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_queue_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_reason-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build reason',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_result-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build result',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_result',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_source_branch-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build source branch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_source_branch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_source_version-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build source version',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_source_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_start_time-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'testproject CI latest build start time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_start_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors_missing_data[sensor.testproject_ci_latest_build_url-state-missing-data]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testproject CI latest build url',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testproject_ci_latest_build_url',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

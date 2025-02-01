@@ -1,4 +1,5 @@
 """Sensor entities for Tami4Edge."""
+
 import logging
 
 from Tami4EdgeAPI import Tami4EdgeAPI
@@ -16,50 +17,33 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import API, COORDINATOR, DOMAIN
-from .coordinator import Tami4EdgeWaterQualityCoordinator
+from .coordinator import Tami4EdgeCoordinator
 from .entity import Tami4EdgeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 ENTITY_DESCRIPTIONS = [
     SensorEntityDescription(
-        key="uv_last_replacement",
-        translation_key="uv_last_replacement",
-        icon="mdi:calendar",
-        device_class=SensorDeviceClass.DATE,
-    ),
-    SensorEntityDescription(
         key="uv_upcoming_replacement",
         translation_key="uv_upcoming_replacement",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
-        key="uv_status",
-        translation_key="uv_status",
-        icon="mdi:clipboard-check-multiple",
-    ),
-    SensorEntityDescription(
-        key="filter_last_replacement",
-        translation_key="filter_last_replacement",
-        icon="mdi:calendar",
-        device_class=SensorDeviceClass.DATE,
+        key="uv_installed",
+        translation_key="uv_installed",
     ),
     SensorEntityDescription(
         key="filter_upcoming_replacement",
         translation_key="filter_upcoming_replacement",
-        icon="mdi:calendar",
         device_class=SensorDeviceClass.DATE,
     ),
     SensorEntityDescription(
-        key="filter_status",
-        translation_key="filter_status",
-        icon="mdi:clipboard-check-multiple",
+        key="filter_installed",
+        translation_key="filter_installed",
     ),
     SensorEntityDescription(
         key="filter_litters_passed",
         translation_key="filter_litters_passed",
-        icon="mdi:water",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.LITERS,
@@ -73,31 +57,28 @@ async def async_setup_entry(
     """Perform the setup for Tami4Edge."""
     data = hass.data[DOMAIN][entry.entry_id]
     api: Tami4EdgeAPI = data[API]
-    coordinator: Tami4EdgeWaterQualityCoordinator = data[COORDINATOR]
+    coordinator: Tami4EdgeCoordinator = data[COORDINATOR]
 
-    entities = []
-    for entity_description in ENTITY_DESCRIPTIONS:
-        entities.append(
-            Tami4EdgeSensorEntity(
-                coordinator=coordinator,
-                api=api,
-                entity_description=entity_description,
-            )
+    async_add_entities(
+        Tami4EdgeSensorEntity(
+            coordinator=coordinator,
+            api=api,
+            entity_description=entity_description,
         )
-
-    async_add_entities(entities)
+        for entity_description in ENTITY_DESCRIPTIONS
+    )
 
 
 class Tami4EdgeSensorEntity(
     Tami4EdgeBaseEntity,
-    CoordinatorEntity[Tami4EdgeWaterQualityCoordinator],
+    CoordinatorEntity[Tami4EdgeCoordinator],
     SensorEntity,
 ):
     """Representation of the entity."""
 
     def __init__(
         self,
-        coordinator: Tami4EdgeWaterQualityCoordinator,
+        coordinator: Tami4EdgeCoordinator,
         api: Tami4EdgeAPI,
         entity_description: SensorEntityDescription,
     ) -> None:

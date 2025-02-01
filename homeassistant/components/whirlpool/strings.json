@@ -1,17 +1,40 @@
 {
+  "common": {
+    "account_locked_error": "The account is locked. Please follow the instructions in the manufacturer's app to unlock it"
+  },
   "config": {
     "step": {
       "user": {
+        "title": "Configure your Whirlpool account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "For 'brand', please choose the brand of the mobile app you use, or the brand of the appliances in your account",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "brand": "Brand"
+        },
+        "data_description": {
+          "brand": "Please choose the brand of the mobile app you use, or the brand of the appliances in your account"
         }
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "account_locked": "[%key:component::whirlpool::common::account_locked_error%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -65,6 +88,11 @@
       "end_time": {
         "name": "End time"
       }
+    }
+  },
+  "exceptions": {
+    "account_locked": {
+      "message": "[%key:component::whirlpool::common::account_locked_error%]"
     }
   }
 }

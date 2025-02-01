@@ -1,4 +1,5 @@
 """Tests for the HomeKit IID manager."""
+
 from typing import Any
 from uuid import UUID
 

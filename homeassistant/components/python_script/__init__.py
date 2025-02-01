@@ -1,9 +1,15 @@
 """Component to allow running Python scripts."""
+
+from collections.abc import Callable, Mapping, Sequence
 import datetime
 import glob
 import logging
+from numbers import Number
+import operator
 import os
 import time
+import types
+from typing import Any
 
 from RestrictedPython import (
     compile_restricted_exec,
@@ -20,14 +26,18 @@ from RestrictedPython.Guards import (
 import voluptuous as vol
 
 from homeassistant.const import CONF_DESCRIPTION, CONF_NAME, SERVICE_RELOAD
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+)
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
-from homeassistant.util import raise_if_invalid_filename
-import homeassistant.util.dt as dt_util
-from homeassistant.util.yaml.loader import load_yaml
+from homeassistant.util import dt as dt_util, raise_if_invalid_filename
+from homeassistant.util.yaml.loader import load_yaml_dict
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,17 +109,17 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def discover_scripts(hass):
+def discover_scripts(hass: HomeAssistant) -> None:
     """Discover python scripts in folder."""
     path = hass.config.path(FOLDER)
 
     if not os.path.isdir(path):
         _LOGGER.warning("Folder %s not found in configuration folder", FOLDER)
-        return False
+        return
 
-    def python_script_service_handler(call: ServiceCall) -> None:
+    def python_script_service_handler(call: ServiceCall) -> ServiceResponse:
         """Handle python script service calls."""
-        execute_script(hass, call.service, call.data)
+        return execute_script(hass, call.service, call.data, call.return_response)
 
     existing = hass.services.services.get(DOMAIN, {}).keys()
     for existing_service in existing:
@@ -120,13 +130,18 @@ def discover_scripts(hass):
     # Load user-provided service descriptions from python_scripts/services.yaml
     services_yaml = os.path.join(path, "services.yaml")
     if os.path.exists(services_yaml):
-        services_dict = load_yaml(services_yaml)
+        services_dict = load_yaml_dict(services_yaml)
     else:
         services_dict = {}
 
     for fil in glob.iglob(os.path.join(path, "*.py")):
         name = os.path.splitext(os.path.basename(fil))[0]
-        hass.services.register(DOMAIN, name, python_script_service_handler)
+        hass.services.register(
+            DOMAIN,
+            name,
+            python_script_service_handler,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
 
         service_desc = {
             CONF_NAME: services_dict.get(name, {}).get("name", name),
@@ -136,18 +151,73 @@ def discover_scripts(hass):
         async_set_service_schema(hass, DOMAIN, name, service_desc)
 
 
+IOPERATOR_TO_OPERATOR = {
+    "%=": operator.mod,
+    "&=": operator.and_,
+    "**=": operator.pow,
+    "*=": operator.mul,
+    "+=": operator.add,
+    "-=": operator.sub,
+    "//=": operator.floordiv,
+    "/=": operator.truediv,
+    "<<=": operator.lshift,
+    ">>=": operator.rshift,
+    "@=": operator.matmul,
+    "^=": operator.xor,
+    "|=": operator.or_,
+}
+
+
+def guarded_import(
+    name: str,
+    globals: Mapping[str, object] | None = None,
+    locals: Mapping[str, object] | None = None,
+    fromlist: Sequence[str] = (),
+    level: int = 0,
+) -> types.ModuleType:
+    """Guard imports."""
+    # Allow import of _strptime needed by datetime.datetime.strptime
+    if name == "_strptime":
+        return __import__(name, globals, locals, fromlist, level)
+    raise ImportError(f"Not allowed to import {name}")
+
+
+def guarded_inplacevar(op: str, target: Any, operand: Any) -> Any:
+    """Implement augmented-assign (+=, -=, etc.) operators for restricted code.
+
+    See RestrictedPython's `visit_AugAssign` for details.
+    """
+    if not isinstance(target, (list, Number, str)):
+        raise ScriptError(f"The {op!r} operation is not allowed on a {type(target)}")
+    op_fun = IOPERATOR_TO_OPERATOR.get(op)
+    if not op_fun:
+        raise ScriptError(f"The {op!r} operation is not allowed")
+    return op_fun(target, operand)
+
+
 @bind_hass
-def execute_script(hass, name, data=None):
+def execute_script(
+    hass: HomeAssistant,
+    name: str,
+    data: dict[str, Any] | None = None,
+    return_response: bool = False,
+) -> dict | None:
     """Execute a script."""
     filename = f"{name}.py"
     raise_if_invalid_filename(filename)
     with open(hass.config.path(FOLDER, filename), encoding="utf8") as fil:
         source = fil.read()
-    execute(hass, filename, source, data)
+    return execute(hass, filename, source, data, return_response=return_response)
 
 
 @bind_hass
-def execute(hass, filename, source, data=None):
+def execute(
+    hass: HomeAssistant,
+    filename: str,
+    source: Any,
+    data: dict[str, Any] | None = None,
+    return_response: bool = False,
+) -> dict | None:
     """Execute Python source."""
 
     compiled = compile_restricted_exec(source, filename=filename)
@@ -156,38 +226,32 @@ def execute(hass, filename, source, data=None):
         _LOGGER.error(
             "Error loading script %s: %s", filename, ", ".join(compiled.errors)
         )
-        return
+        return None
 
     if compiled.warnings:
         _LOGGER.warning(
             "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
         )
 
-    def protected_getattr(obj, name, default=None):
+    def protected_getattr(obj: object, name: str, default: Any = None) -> Any:
         """Restricted method to get attributes."""
         if name.startswith("async_"):
             raise ScriptError("Not allowed to access async methods")
         if (
-            obj is hass
-            and name not in ALLOWED_HASS
-            or obj is hass.bus
-            and name not in ALLOWED_EVENTBUS
-            or obj is hass.states
-            and name not in ALLOWED_STATEMACHINE
-            or obj is hass.services
-            and name not in ALLOWED_SERVICEREGISTRY
-            or obj is dt_util
-            and name not in ALLOWED_DT_UTIL
-            or obj is datetime
-            and name not in ALLOWED_DATETIME
-            or isinstance(obj, TimeWrapper)
-            and name not in ALLOWED_TIME
+            (obj is hass and name not in ALLOWED_HASS)
+            or (obj is hass.bus and name not in ALLOWED_EVENTBUS)
+            or (obj is hass.states and name not in ALLOWED_STATEMACHINE)
+            or (obj is hass.services and name not in ALLOWED_SERVICEREGISTRY)
+            or (obj is dt_util and name not in ALLOWED_DT_UTIL)
+            or (obj is datetime and name not in ALLOWED_DATETIME)
+            or (isinstance(obj, TimeWrapper) and name not in ALLOWED_TIME)
         ):
             raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
 
     extra_builtins = {
+        "__import__": guarded_import,
         "datetime": datetime,
         "sorted": sorted,
         "time": TimeWrapper(),
@@ -213,28 +277,52 @@ def execute(hass, filename, source, data=None):
         "_getitem_": default_guarded_getitem,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_unpack_sequence_": guarded_unpack_sequence,
+        "_inplacevar_": guarded_inplacevar,
         "hass": hass,
         "data": data or {},
         "logger": logger,
+        "output": {},
     }
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
         # pylint: disable-next=exec-used
         exec(compiled.code, restricted_globals)  # noqa: S102
+        _LOGGER.debug(
+            "Output of python_script: `%s`:\n%s",
+            filename,
+            restricted_globals["output"],
+        )
+        # Ensure that we're always returning a dictionary
+        if not isinstance(restricted_globals["output"], dict):
+            output_type = type(restricted_globals["output"])
+            restricted_globals["output"] = {}
+            raise ScriptError(  # noqa: TRY301
+                f"Expected `output` to be a dictionary, was {output_type}"
+            )
     except ScriptError as err:
+        if return_response:
+            raise ServiceValidationError(f"Error executing script: {err}") from err
         logger.error("Error executing script: %s", err)
-    except Exception as err:  # pylint: disable=broad-except
-        logger.exception("Error executing script: %s", err)
+        return None
+    except Exception as err:
+        if return_response:
+            raise HomeAssistantError(
+                f"Error executing script ({type(err).__name__}): {err}"
+            ) from err
+        logger.exception("Error executing script")
+        return None
+
+    return restricted_globals["output"]
 
 
 class StubPrinter:
     """Class to handle printing inside scripts."""
 
-    def __init__(self, _getattr_):
+    def __init__(self, _getattr_: Callable) -> None:
         """Initialize our printer."""
 
-    def _call_print(self, *objects, **kwargs):
+    def _call_print(self, *objects: object, **kwargs: Any) -> None:
         """Print text."""
         _LOGGER.warning("Don't use print() inside scripts. Use logger.info() instead")
 
@@ -245,7 +333,7 @@ class TimeWrapper:
     # Class variable, only going to warn once per Home Assistant run
     warned = False
 
-    def sleep(self, *args, **kwargs):
+    def sleep(self, *args: Any, **kwargs: Any) -> None:
         """Sleep method that warns once."""
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
@@ -255,12 +343,12 @@ class TimeWrapper:
 
         time.sleep(*args, **kwargs)
 
-    def __getattr__(self, attr):
+    def __getattr__(self, attr: str) -> Any:
         """Fetch an attribute from Time module."""
         attribute = getattr(time, attr)
         if callable(attribute):
 
-            def wrapper(*args, **kw):
+            def wrapper(*args: Any, **kw: Any) -> Any:
                 """Wrap to return callable method if callable."""
                 return attribute(*args, **kw)
 

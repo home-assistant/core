@@ -1,4 +1,5 @@
 """Switcher integration Sensor platform."""
+
 from __future__ import annotations
 
 from aioswitcher.device import DeviceCategory
@@ -12,15 +13,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SwitcherDataUpdateCoordinator
 from .const import SIGNAL_DEVICE_ADD
+from .coordinator import SwitcherDataUpdateCoordinator
+from .entity import SwitcherEntity
 
 POWER_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -40,18 +39,23 @@ TIME_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="remaining_time",
         translation_key="remaining_time",
-        icon="mdi:av-timer",
     ),
     SensorEntityDescription(
         key="auto_off_set",
         translation_key="auto_shutdown",
-        icon="mdi:progress-clock",
         entity_registry_enabled_default=False,
+    ),
+]
+TEMPERATURE_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
     ),
 ]
 
 POWER_PLUG_SENSORS = POWER_SENSORS
 WATER_HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
+THERMOSTAT_SENSORS = TEMPERATURE_SENSORS
 
 
 async def async_setup_entry(
@@ -74,18 +78,19 @@ async def async_setup_entry(
                 SwitcherSensorEntity(coordinator, description)
                 for description in WATER_HEATER_SENSORS
             )
+        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+            async_add_entities(
+                SwitcherSensorEntity(coordinator, description)
+                for description in THERMOSTAT_SENSORS
+            )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SIGNAL_DEVICE_ADD, async_add_sensors)
     )
 
 
-class SwitcherSensorEntity(
-    CoordinatorEntity[SwitcherDataUpdateCoordinator], SensorEntity
-):
+class SwitcherSensorEntity(SwitcherEntity, SensorEntity):
     """Representation of a Switcher sensor entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -98,9 +103,6 @@ class SwitcherSensorEntity(
 
         self._attr_unique_id = (
             f"{coordinator.device_id}-{coordinator.mac_address}-{description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)}
         )
 
     @property

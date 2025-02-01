@@ -1,10 +1,12 @@
 """Viessmann ViCare button device."""
+
 from __future__ import annotations
 
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
 
+from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 from PyViCare.PyViCareUtils import (
     PyViCareInvalidDataError,
@@ -14,22 +16,18 @@ from PyViCare.PyViCareUtils import (
 import requests
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ViCareRequiredKeysMixinWithSet
-from .const import DOMAIN, VICARE_API, VICARE_DEVICE_CONFIG
 from .entity import ViCareEntity
-from .utils import is_supported
+from .types import ViCareConfigEntry, ViCareDevice, ViCareRequiredKeysMixinWithSet
+from .utils import get_device_serial, is_supported
 
 _LOGGER = logging.getLogger(__name__)
 
-BUTTON_DHW_ACTIVATE_ONETIME_CHARGE = "activate_onetimecharge"
 
-
-@dataclass
+@dataclass(frozen=True)
 class ViCareButtonEntityDescription(
     ButtonEntityDescription, ViCareRequiredKeysMixinWithSet
 ):
@@ -38,9 +36,8 @@ class ViCareButtonEntityDescription(
 
 BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
     ViCareButtonEntityDescription(
-        key=BUTTON_DHW_ACTIVATE_ONETIME_CHARGE,
-        name="Activate one-time charge",
-        icon="mdi:shower-head",
+        key="activate_onetimecharge",
+        translation_key="activate_onetimecharge",
         entity_category=EntityCategory.CONFIG,
         value_getter=lambda api: api.getOneTimeCharge(),
         value_setter=lambda api: api.activateOneTimeCharge(),
@@ -48,46 +45,36 @@ BUTTON_DESCRIPTIONS: tuple[ViCareButtonEntityDescription, ...] = (
 )
 
 
-def _build_entity(
-    name: str,
-    vicare_api,
-    device_config: PyViCareDeviceConfig,
-    entity_description: ViCareButtonEntityDescription,
-):
-    """Create a ViCare button entity."""
-    _LOGGER.debug("Found device %s", name)
-    if is_supported(name, entity_description, vicare_api):
-        return ViCareButton(
-            name,
-            vicare_api,
-            device_config,
-            entity_description,
+def _build_entities(
+    device_list: list[ViCareDevice],
+) -> list[ViCareButton]:
+    """Create ViCare button entities for a device."""
+
+    return [
+        ViCareButton(
+            description,
+            get_device_serial(device.api),
+            device.config,
+            device.api,
         )
-    return None
+        for device in device_list
+        for description in BUTTON_DESCRIPTIONS
+        if is_supported(description.key, description.value_getter, device.api)
+    ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ViCareConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Create the ViCare button entities."""
-    api = hass.data[DOMAIN][config_entry.entry_id][VICARE_API]
-
-    entities = []
-
-    for description in BUTTON_DESCRIPTIONS:
-        entity = await hass.async_add_executor_job(
-            _build_entity,
-            description.name,
-            api,
-            hass.data[DOMAIN][config_entry.entry_id][VICARE_DEVICE_CONFIG],
-            description,
+    async_add_entities(
+        await hass.async_add_executor_job(
+            _build_entities,
+            config_entry.runtime_data.devices,
         )
-        if entity is not None:
-            entities.append(entity)
-
-    async_add_entities(entities)
+    )
 
 
 class ViCareButton(ViCareEntity, ButtonEntity):
@@ -96,13 +83,15 @@ class ViCareButton(ViCareEntity, ButtonEntity):
     entity_description: ViCareButtonEntityDescription
 
     def __init__(
-        self, name, api, device_config, description: ViCareButtonEntityDescription
+        self,
+        description: ViCareButtonEntityDescription,
+        device_serial: str | None,
+        device_config: PyViCareDeviceConfig,
+        device: PyViCareDevice,
     ) -> None:
         """Initialize the button."""
-        super().__init__(device_config)
+        super().__init__(description.key, device_serial, device_config, device)
         self.entity_description = description
-        self._device_config = device_config
-        self._api = api
 
     def press(self) -> None:
         """Handle the button press."""
@@ -117,13 +106,3 @@ class ViCareButton(ViCareEntity, ButtonEntity):
             _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
         except PyViCareInvalidDataError as invalid_data_exception:
             _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
-
-    @property
-    def unique_id(self) -> str:
-        """Return unique ID for this device."""
-        tmp_id = (
-            f"{self._device_config.getConfig().serial}-{self.entity_description.key}"
-        )
-        if hasattr(self._api, "id"):
-            return f"{tmp_id}-{self._api.id}"
-        return tmp_id

@@ -1,9 +1,8 @@
 """Support for lights."""
+
 from __future__ import annotations
 
 from typing import Any
-
-from fjaraskupan import COMMAND_LIGHT_ON_OFF
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,14 +52,14 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
         async with self.coordinator.async_connect_and_update() as device:
             if ATTR_BRIGHTNESS in kwargs:
                 await device.send_dim(int(kwargs[ATTR_BRIGHTNESS] * (100.0 / 255.0)))
-            elif not self.is_on:
-                await device.send_command(COMMAND_LIGHT_ON_OFF)
+            else:
+                await device.send_dim(100)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.is_on:
             async with self.coordinator.async_connect_and_update() as device:
-                await device.send_command(COMMAND_LIGHT_ON_OFF)
+                await device.send_dim(0)
 
     @property
     def is_on(self) -> bool:

@@ -1,4 +1,5 @@
 """Provides device automations for Cover."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -11,10 +12,6 @@ from homeassistant.const import (
     CONF_DOMAIN,
     CONF_ENTITY_ID,
     CONF_TYPE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
@@ -26,13 +23,7 @@ from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
-from . import (
-    DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-)
+from . import DOMAIN, CoverEntityFeature, CoverState
 
 # mypy: disallow-any-generics
 
@@ -78,7 +69,9 @@ async def async_get_conditions(
             continue
 
         supported_features = get_supported_features(hass, entry.entity_id)
-        supports_open_close = supported_features & (SUPPORT_OPEN | SUPPORT_CLOSE)
+        supports_open_close = supported_features & (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
 
         # Add conditions for each entity that belongs to this integration
         base_condition = {
@@ -92,9 +85,9 @@ async def async_get_conditions(
             conditions += [
                 {**base_condition, CONF_TYPE: cond} for cond in STATE_CONDITION_TYPES
             ]
-        if supported_features & SUPPORT_SET_POSITION:
+        if supported_features & CoverEntityFeature.SET_POSITION:
             conditions.append({**base_condition, CONF_TYPE: "is_position"})
-        if supported_features & SUPPORT_SET_TILT_POSITION:
+        if supported_features & CoverEntityFeature.SET_TILT_POSITION:
             conditions.append({**base_condition, CONF_TYPE: "is_tilt_position"})
 
     return conditions
@@ -131,13 +124,13 @@ def async_condition_from_config(
 
     if config[CONF_TYPE] in STATE_CONDITION_TYPES:
         if config[CONF_TYPE] == "is_open":
-            state = STATE_OPEN
+            state = CoverState.OPEN
         elif config[CONF_TYPE] == "is_closed":
-            state = STATE_CLOSED
+            state = CoverState.CLOSED
         elif config[CONF_TYPE] == "is_opening":
-            state = STATE_OPENING
+            state = CoverState.OPENING
         elif config[CONF_TYPE] == "is_closing":
-            state = STATE_CLOSING
+            state = CoverState.CLOSING
 
         def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
             """Test if an entity is a certain state."""

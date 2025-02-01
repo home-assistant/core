@@ -1,4 +1,5 @@
 """Config flow for Volvo On Call integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,17 +9,15 @@ from typing import Any
 import voluptuous as vol
 from volvooncall import Connection
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_REGION,
     CONF_UNIT_SYSTEM,
     CONF_USERNAME,
 )
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import VolvoData
 from .const import (
     CONF_MUTABLE,
     DOMAIN,
@@ -27,19 +26,19 @@ from .const import (
     UNIT_SYSTEM_SCANDINAVIAN_MILES,
 )
 from .errors import InvalidAuth
+from .models import VolvoData
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
     """VolvoOnCall config flow."""
 
     VERSION = 1
-    _reauth_entry: config_entries.ConfigEntry | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle user step."""
         errors = {}
         defaults = {
@@ -53,32 +52,29 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_USERNAME])
 
-            if not self._reauth_entry:
+            if self.source != SOURCE_REAUTH:
                 self._abort_if_unique_id_configured()
 
             try:
                 await self.is_valid(user_input)
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unhandled exception in user step")
                 errors["base"] = "unknown"
             if not errors:
-                if self._reauth_entry:
-                    self.hass.config_entries.async_update_entry(
-                        self._reauth_entry, data=self._reauth_entry.data | user_input
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data_updates=user_input
                     )
-                    await self.hass.config_entries.async_reload(
-                        self._reauth_entry.entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=user_input[CONF_USERNAME], data=user_input
                 )
-        elif self._reauth_entry:
+        elif self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
             for key in defaults:
-                defaults[key] = self._reauth_entry.data.get(key)
+                defaults[key] = reauth_entry.data.get(key)
 
         user_schema = vol.Schema(
             {
@@ -106,11 +102,10 @@ class VolvoOnCallConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_schema, errors=errors
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_user()
 
     async def is_valid(self, user_input):

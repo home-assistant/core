@@ -1,7 +1,9 @@
 """The met_eireann component."""
+
 from datetime import timedelta
 import logging
-from typing import Self
+from types import MappingProxyType
+from typing import Any, Self
 
 import meteireann
 
@@ -10,7 +12,7 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, P
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -32,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         altitude=config_entry.data[CONF_ELEVATION],
     )
 
-    weather_data = MetEireannWeatherData(hass, config_entry.data, raw_weather_data)
+    weather_data = MetEireannWeatherData(config_entry.data, raw_weather_data)
 
     async def _async_update_data() -> MetEireannWeatherData:
         """Fetch data from Met Éireann."""
@@ -44,6 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=config_entry,
         name=DOMAIN,
         update_method=_async_update_data,
         update_interval=UPDATE_INTERVAL,
@@ -70,20 +73,21 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class MetEireannWeatherData:
     """Keep data for Met Éireann weather entities."""
 
-    def __init__(self, hass, config, weather_data):
+    def __init__(
+        self, config: MappingProxyType[str, Any], weather_data: meteireann.WeatherData
+    ) -> None:
         """Initialise the weather entity data."""
-        self.hass = hass
         self._config = config
         self._weather_data = weather_data
-        self.current_weather_data = {}
-        self.daily_forecast = None
-        self.hourly_forecast = None
+        self.current_weather_data: dict[str, Any] = {}
+        self.daily_forecast: list[dict[str, Any]] = []
+        self.hourly_forecast: list[dict[str, Any]] = []
 
     async def fetch_data(self) -> Self:
         """Fetch data from API - (current weather and forecast)."""
         await self._weather_data.fetching_data()
         self.current_weather_data = self._weather_data.get_current_weather()
-        time_zone = dt_util.DEFAULT_TIME_ZONE
+        time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False)
         self.hourly_forecast = self._weather_data.get_forecast(time_zone, True)
         return self

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "radiation_total": {
+        "default": "mdi:radioactive"
+      },
+      "radiation_rate": {
+        "default": "mdi:radioactive"
+      },
+      "radon_concentration": {
+        "default": "mdi:radioactive"
+      }
+    }
+  }
+}

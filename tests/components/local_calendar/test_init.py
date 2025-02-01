@@ -17,7 +17,7 @@ async def test_load_unload(
 ) -> None:
     """Test loading and unloading a config entry."""
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -26,7 +26,7 @@ async def test_load_unload(
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "unavailable"
@@ -54,7 +54,7 @@ async def test_load_failure(
 ) -> None:
     """Test failures loading the store."""
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     state = hass.states.get(TEST_ENTITY)
     assert not state

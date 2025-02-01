@@ -1,4 +1,5 @@
 """The errors of Epson integration."""
+
 from homeassistant import exceptions
 
 

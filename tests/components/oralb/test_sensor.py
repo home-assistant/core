@@ -2,7 +2,8 @@
 
 from datetime import timedelta
 import time
-from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
@@ -24,12 +25,12 @@ from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     inject_bluetooth_service_info_bleak,
     patch_all_discovered_devices,
+    patch_bluetooth_time,
 )
 
 
-async def test_sensors(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
     start_monotonic = time.monotonic()
     entry = MockConfigEntry(
@@ -46,15 +47,10 @@ async def test_sensors(
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 9
 
-    toothbrush_sensor = hass.states.get(
-        "sensor.smart_series_7000_48be_toothbrush_state"
-    )
+    toothbrush_sensor = hass.states.get("sensor.smart_series_7000_48be")
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor.state == "running"
-    assert (
-        toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME]
-        == "Smart Series 7000 48BE Toothbrush State"
-    )
+    assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "Smart Series 7000 48BE"
     assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
     assert await hass.config_entries.async_unload(entry.entry_id)
@@ -63,10 +59,12 @@ async def test_sensors(
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -78,16 +76,12 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     # All of these devices are sleepy so we should still be available
-    toothbrush_sensor = hass.states.get(
-        "sensor.smart_series_7000_48be_toothbrush_state"
-    )
-    toothbrush_sensor_attrs = toothbrush_sensor.attributes
+    toothbrush_sensor = hass.states.get("sensor.smart_series_7000_48be")
     assert toothbrush_sensor.state == "running"
 
 
-async def test_sensors_io_series_4(
-    hass: HomeAssistant, entity_registry_enabled_by_default: None
-) -> None:
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_io_series_4(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors with an io series 4."""
     start_monotonic = time.monotonic()
 
@@ -105,19 +99,23 @@ async def test_sensors_io_series_4(
     await hass.async_block_till_done()
     assert len(hass.states.async_all("sensor")) == 9
 
-    toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_mode")
+    toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_brushing_mode")
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor.state == "gum care"
-    assert toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "IO Series 4 48BE Mode"
+    assert (
+        toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "IO Series 4 48BE Brushing mode"
+    )
     assert ATTR_ASSUMED_STATE not in toothbrush_sensor_attrs
 
     # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
 
-    with patch(
-        "homeassistant.components.bluetooth.manager.MONOTONIC_TIME",
-        return_value=monotonic_now,
-    ), patch_all_discovered_devices([]):
+    with (
+        patch_bluetooth_time(
+            monotonic_now,
+        ),
+        patch_all_discovered_devices([]),
+    ):
         async_fire_time_changed(
             hass,
             dt_util.utcnow()
@@ -133,7 +131,7 @@ async def test_sensors_io_series_4(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_mode")
+    toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_brushing_mode")
     # Sleepy devices should keep their state over time
     assert toothbrush_sensor.state == "gum care"
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
@@ -159,6 +157,7 @@ async def test_sensors_battery(hass: HomeAssistant) -> None:
 
     bat_sensor = hass.states.get("sensor.io_series_6_7_1dcf_battery")
     assert bat_sensor.state == "49"
+    assert bat_sensor.name == "IO Series 6/7 1DCF Battery"
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

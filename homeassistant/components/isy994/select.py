@@ -1,4 +1,5 @@
 """Support for ISY select entities."""
+
 from __future__ import annotations
 
 from typing import cast
@@ -44,7 +45,7 @@ from .models import IsyData
 def time_string(i: int) -> str:
     """Return a formatted ramp rate time string."""
     if i >= 60:
-        return f"{(float(i)/60):.1f} {UnitOfTime.MINUTES}"
+        return f"{(float(i) / 60):.1f} {UnitOfTime.MINUTES}"
     return f"{i} {UnitOfTime.SECONDS}"
 
 

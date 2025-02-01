@@ -1,4 +1,5 @@
 """Tests for the venstar integration."""
+
 from requests import RequestException
 
 
@@ -14,7 +15,7 @@ class VenstarColorTouchMock:
         pin=None,
         proto="http",
         SSLCert=False,
-    ):
+    ) -> None:
         """Initialize the Venstar library."""
         self.status = {}
         self.model = "COLORTOUCH"

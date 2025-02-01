@@ -1,7 +1,7 @@
 """Monitors home energy use for the ELIQ Online service."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -9,15 +9,15 @@ import eliqonline
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, UnitOfPower
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -29,7 +29,7 @@ DEFAULT_NAME = "ELIQ Online"
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ACCESS_TOKEN): cv.string,
         vol.Required(CONF_CHANNEL_ID): cv.positive_int,
@@ -83,5 +83,5 @@ class EliqSensor(SensorEntity):
             _LOGGER.debug("Updated power from server %d W", self.native_value)
         except KeyError:
             _LOGGER.warning("Invalid response from ELIQ Online API")
-        except (OSError, asyncio.TimeoutError) as error:
+        except (OSError, TimeoutError) as error:
             _LOGGER.warning("Could not connect to the ELIQ Online API: %s", error)

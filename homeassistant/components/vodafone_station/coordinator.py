@@ -1,6 +1,8 @@
 """Support for Vodafone Station."""
+
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from json.decoder import JSONDecodeError
 from typing import Any
 
 from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
@@ -12,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
@@ -57,7 +59,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
     def _calculate_update_time_and_consider_home(
@@ -97,14 +99,18 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         try:
             try:
                 await self.api.login()
+                raw_data_devices = await self.api.get_devices_data()
+                data_sensors = await self.api.get_sensor_data()
+                await self.api.logout()
             except exceptions.CannotAuthenticate as err:
                 raise ConfigEntryAuthFailed from err
             except (
                 exceptions.CannotConnect,
                 exceptions.AlreadyLogged,
                 exceptions.GenericLoginError,
+                JSONDecodeError,
             ) as err:
-                raise UpdateFailed(f"Error fetching data: {repr(err)}") from err
+                raise UpdateFailed(f"Error fetching data: {err!r}") from err
         except (ConfigEntryAuthFailed, UpdateFailed):
             await self.api.close()
             raise
@@ -117,10 +123,8 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     dev_info, utc_point_in_time
                 ),
             )
-            for dev_info in (await self.api.get_devices_data()).values()
+            for dev_info in (raw_data_devices).values()
         }
-        data_sensors = await self.api.get_sensor_data()
-        await self.api.logout()
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
     @property

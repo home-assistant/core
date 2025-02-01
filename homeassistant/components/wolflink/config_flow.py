@@ -1,12 +1,14 @@
 """Config flow for Wolf SmartSet Service integration."""
+
 import logging
 
 from httpcore import ConnectError
 import voluptuous as vol
-from wolf_smartset.token_auth import InvalidAuth
-from wolf_smartset.wolf_client import WolfClient
+from wolf_comm.models import Device
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import WolfClient
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEVICE_GATEWAY, DEVICE_ID, DEVICE_NAME, DOMAIN
@@ -18,18 +20,22 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Wolf SmartSet Service."""
 
     VERSION = 1
+    MINOR_VERSION = 2
+
+    fetched_systems: list[Device]
 
     def __init__(self) -> None:
         """Initialize with empty username and password."""
-        self.username = None
-        self.password = None
-        self.fetched_systems = None
+        self.username: str | None = None
+        self.password: str | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step to get connection parameters."""
         errors = {}
         if user_input is not None:
@@ -42,7 +48,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -53,16 +59,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
-    async def async_step_device(self, user_input=None):
+    async def async_step_device(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Allow user to select device from devices connected to specified account."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             device_name = user_input[DEVICE_NAME]
             system = [
                 device for device in self.fetched_systems if device.name == device_name
             ]
             device_id = system[0].id
-            await self.async_set_unique_id(device_id)
+            await self.async_set_unique_id(str(device_id))
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
                 title=user_input[DEVICE_NAME],

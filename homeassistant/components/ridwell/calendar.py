@@ -1,4 +1,5 @@
 """Support for Ridwell calendars."""
+
 from __future__ import annotations
 
 import datetime
@@ -49,8 +50,8 @@ async def async_setup_entry(
 class RidwellCalendar(RidwellEntity, CalendarEntity):
     """Define a Ridwell calendar."""
 
-    _attr_icon = "mdi:delete-empty"
     _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(
         self, coordinator: RidwellDataUpdateCoordinator, account: RidwellAccount

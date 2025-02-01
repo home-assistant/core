@@ -1,4 +1,5 @@
 """Homematic base entity."""
+
 from __future__ import annotations
 
 from abc import abstractmethod
@@ -9,7 +10,7 @@ from pyhomematic import HMConnection
 from pyhomematic.devicetypes.generic import HMGeneric
 
 from homeassistant.const import ATTR_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.event import track_time_interval
 
@@ -115,7 +116,7 @@ class HMDevice(Entity):
 
             # Link events from pyhomematic
             self._available = not self._hmdevice.UNREACH
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             self._connected = False
             _LOGGER.error("Exception while linking %s: %s", self._address, str(err))
 

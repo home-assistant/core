@@ -1,6 +1,11 @@
 # Describes the format for available Blink services
 
-blink_update:
+record:
+  target:
+    entity:
+      integration: blink
+      domain: camera
+
 trigger_camera:
   target:
     entity:
@@ -8,12 +13,11 @@ trigger_camera:
       domain: camera
 
 save_video:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
-    name:
-      required: true
-      example: "Living Room"
-      selector:
-        text:
     filename:
       required: true
       example: "/tmp/video.mp4"
@@ -21,12 +25,11 @@ save_video:
         text:
 
 save_recent_clips:
+  target:
+    entity:
+      integration: blink
+      domain: camera
   fields:
-    name:
-      required: true
-      example: "Living Room"
-      selector:
-        text:
     file_path:
       required: true
       example: "/tmp"
@@ -35,6 +38,11 @@ save_recent_clips:
 
 send_pin:
   fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: blink
     pin:
       example: "abc123"
       selector:

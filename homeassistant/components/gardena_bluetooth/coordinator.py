@@ -1,9 +1,9 @@
 """Provides the DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.exceptions import (
@@ -12,16 +12,10 @@ from gardena_bluetooth.exceptions import (
 )
 from gardena_bluetooth.parse import Characteristic, CharacteristicType
 
-from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 SCAN_INTERVAL = timedelta(seconds=60)
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +25,7 @@ class DeviceUnavailable(HomeAssistantError):
     """Raised if device can't be found."""
 
 
-class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
+class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
     """Class to manage fetching data."""
 
     def __init__(
@@ -102,40 +96,3 @@ class Coordinator(DataUpdateCoordinator[dict[str, bytes]]):
 
         self.data[char.uuid] = char.encode(value)
         await self.async_refresh()
-
-
-class GardenaBluetoothEntity(CoordinatorEntity[Coordinator]):
-    """Coordinator entity for Gardena Bluetooth."""
-
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator: Coordinator, context: Any = None) -> None:
-        """Initialize coordinator entity."""
-        super().__init__(coordinator, context)
-        self._attr_device_info = coordinator.device_info
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return (
-            self.coordinator.last_update_success
-            and bluetooth.async_address_present(
-                self.hass, self.coordinator.address, True
-            )
-            and self._attr_available
-        )
-
-
-class GardenaBluetoothDescriptorEntity(GardenaBluetoothEntity):
-    """Coordinator entity for entities with entity description."""
-
-    def __init__(
-        self,
-        coordinator: Coordinator,
-        description: EntityDescription,
-        context: set[str],
-    ) -> None:
-        """Initialize description entity."""
-        super().__init__(coordinator, context)
-        self._attr_unique_id = f"{coordinator.address}-{description.key}"
-        self.entity_description = description

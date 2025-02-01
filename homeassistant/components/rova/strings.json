@@ -1,0 +1,46 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Provide your address details",
+        "data": {
+          "zip_code": "Your zip code",
+          "house_number": "Your house number",
+          "house_number_suffix": "A suffix for your house number"
+        }
+      }
+    },
+    "error": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "invalid_rova_area": "Rova does not collect at this address",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Could not connect to the Rova API",
+      "invalid_rova_area": "Rova does not collect at this address"
+    }
+  },
+  "issues": {
+    "no_rova_area": {
+      "title": "Rova does not collect at this address anymore",
+      "description": "Rova does not collect at {zip_code} anymore.\n\nPlease remove the integration."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "bio": {
+        "name": "Bio"
+      },
+      "paper": {
+        "name": "Paper"
+      },
+      "plastic": {
+        "name": "Plastic"
+      },
+      "residual": {
+        "name": "Residual"
+      }
+    }
+  }
+}

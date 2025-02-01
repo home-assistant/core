@@ -18,7 +18,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     payload: dict[str, Any] = {
         "now": dt_util.now().isoformat(),
-        "timezone": str(dt_util.DEFAULT_TIME_ZONE),
+        "timezone": str(dt_util.get_default_time_zone()),
         "system_timezone": str(datetime.datetime.now().astimezone().tzinfo),
     }
     store = hass.data[DOMAIN][config_entry.entry_id]

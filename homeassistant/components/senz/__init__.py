@@ -1,4 +1,5 @@
 """The nVent RAYCHEM SENZ integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -29,7 +30,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [Platform.CLIMATE]
 
-SENZDataUpdateCoordinator = DataUpdateCoordinator[dict[str, Thermostat]]
+type SENZDataUpdateCoordinator = DataUpdateCoordinator[dict[str, Thermostat]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -56,9 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except RequestError as err:
         raise ConfigEntryNotReady from err
 
-    coordinator = SENZDataUpdateCoordinator(
+    coordinator: SENZDataUpdateCoordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=account.username,
         update_interval=UPDATE_INTERVAL,
         update_method=update_thermostats,

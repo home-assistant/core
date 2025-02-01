@@ -1,4 +1,5 @@
 """Interfaces with Egardia/Woonveilig alarm control panel."""
+
 import logging
 
 from pythonegardia import egardiadevice, egardiaserver
@@ -15,8 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -112,7 +112,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 server = egardiaserver.EgardiaServer("", rs_port)
                 bound = server.bind()
                 if not bound:
-                    raise OSError(
+                    raise OSError(  # noqa: TRY301
                         "Binding error occurred while starting EgardiaServer."
                     )
                 hass.data[EGARDIA_SERVER] = server

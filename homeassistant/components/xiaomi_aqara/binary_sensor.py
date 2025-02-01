@@ -1,4 +1,5 @@
 """Support for Xiaomi aqara binary sensors."""
+
 import logging
 
 from homeassistant.components.binary_sensor import (
@@ -11,8 +12,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import XiaomiDevice
 from .const import DOMAIN, GATEWAYS_KEY
+from .entity import XiaomiDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -201,6 +202,8 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
                 return True
             return False
 
+        return False
+
 
 class XiaomiMotionSensor(XiaomiBinarySensor):
     """Representation of a XiaomiMotionSensor."""
@@ -267,7 +270,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 "bug (https://github.com/home-assistant/core/pull/"
                 "11631#issuecomment-357507744)"
             )
-            return
+            return None
 
         if NO_MOTION in data:
             self._no_motion_since = data[NO_MOTION]
@@ -296,6 +299,8 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
+
+        return False
 
 
 class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
@@ -356,6 +361,8 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
                 return True
             return False
 
+        return False
+
 
 class XiaomiWaterLeakSensor(XiaomiBinarySensor):
     """Representation of a XiaomiWaterLeakSensor."""
@@ -400,6 +407,8 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
                 return True
             return False
 
+        return False
+
 
 class XiaomiSmokeSensor(XiaomiBinarySensor):
     """Representation of a XiaomiSmokeSensor."""
@@ -441,6 +450,8 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
                 self._state = False
                 return True
             return False
+
+        return False
 
 
 class XiaomiVibration(XiaomiBinarySensor):

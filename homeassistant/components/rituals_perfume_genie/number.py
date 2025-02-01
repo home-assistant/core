@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -17,26 +18,18 @@ from .coordinator import RitualsDataUpdateCoordinator
 from .entity import DiffuserEntity
 
 
-@dataclass
-class RitualsNumberEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RitualsNumberEntityDescription(NumberEntityDescription):
+    """Class describing Rituals number entities."""
 
     value_fn: Callable[[Diffuser], int]
     set_value_fn: Callable[[Diffuser, int], Awaitable[Any]]
-
-
-@dataclass
-class RitualsNumberEntityDescription(
-    NumberEntityDescription, RitualsNumberEntityDescriptionMixin
-):
-    """Class describing Rituals number entities."""
 
 
 ENTITY_DESCRIPTIONS = (
     RitualsNumberEntityDescription(
         key="perfume_amount",
         translation_key="perfume_amount",
-        icon="mdi:gauge",
         native_min_value=1,
         native_max_value=3,
         value_fn=lambda diffuser: diffuser.perfume_amount,

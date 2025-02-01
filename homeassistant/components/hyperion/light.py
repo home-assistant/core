@@ -1,4 +1,5 @@
 """Support for Hyperion-NG remotes."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping, Sequence
@@ -25,7 +26,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from . import (
     get_hyperion_device_id,

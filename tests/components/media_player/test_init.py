@@ -1,22 +1,31 @@
 """Test the base functions of the media player."""
-import asyncio
+
+from enum import Enum
 from http import HTTPStatus
+from types import ModuleType
 from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import media_player
 from homeassistant.components.media_player import (
     BrowseMedia,
     MediaClass,
     MediaPlayerEnqueue,
+    MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
-from homeassistant.components.websocket_api.const import TYPE_RESULT
+from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import (
+    MockEntityPlatform,
+    help_test_all,
+    import_and_test_deprecated_constant_enum,
+)
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -25,6 +34,119 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 async def setup_homeassistant(hass: HomeAssistant):
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
+
+
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
+    return [
+        (enum_field, constant_prefix)
+        for enum_field in enum
+        if enum_field
+        not in [
+            MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
+            MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+        ]
+    ]
+
+
+@pytest.mark.parametrize(
+    "module",
+    [media_player, media_player.const],
+)
+def test_all(module: ModuleType) -> None:
+    """Test module.__all__ is correctly set."""
+    help_test_all(module)
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(media_player.MediaPlayerEntityFeature, "SUPPORT_")
+    + _create_tuples(media_player.MediaPlayerDeviceClass, "DEVICE_CLASS_"),
+)
+@pytest.mark.parametrize(
+    "module",
+    [media_player],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.10"
+    )
+
+
+@pytest.mark.parametrize(
+    ("enum", "constant_prefix"),
+    _create_tuples(media_player.MediaClass, "MEDIA_CLASS_")
+    + _create_tuples(media_player.MediaPlayerEntityFeature, "SUPPORT_")
+    + _create_tuples(media_player.MediaType, "MEDIA_TYPE_")
+    + _create_tuples(media_player.RepeatMode, "REPEAT_MODE_"),
+)
+@pytest.mark.parametrize(
+    "module",
+    [media_player.const],
+)
+def test_deprecated_constants_const(
+    caplog: pytest.LogCaptureFixture,
+    enum: Enum,
+    constant_prefix: str,
+    module: ModuleType,
+) -> None:
+    """Test deprecated constants."""
+    import_and_test_deprecated_constant_enum(
+        caplog, module, enum, constant_prefix, "2025.10"
+    )
+
+
+@pytest.mark.parametrize(
+    "property_suffix",
+    [
+        "play",
+        "pause",
+        "stop",
+        "seek",
+        "volume_set",
+        "volume_mute",
+        "previous_track",
+        "next_track",
+        "play_media",
+        "select_source",
+        "select_sound_mode",
+        "clear_playlist",
+        "shuffle_set",
+        "grouping",
+    ],
+)
+def test_support_properties(hass: HomeAssistant, property_suffix: str) -> None:
+    """Test support_*** properties explicitly."""
+
+    all_features = media_player.MediaPlayerEntityFeature(653887)
+    feature = media_player.MediaPlayerEntityFeature[property_suffix.upper()]
+
+    entity1 = MediaPlayerEntity()
+    entity1.hass = hass
+    entity1.platform = MockEntityPlatform(hass)
+    entity1._attr_supported_features = media_player.MediaPlayerEntityFeature(0)
+    entity2 = MediaPlayerEntity()
+    entity2.hass = hass
+    entity2.platform = MockEntityPlatform(hass)
+    entity2._attr_supported_features = all_features
+    entity3 = MediaPlayerEntity()
+    entity3.hass = hass
+    entity3.platform = MockEntityPlatform(hass)
+    entity3._attr_supported_features = feature
+    entity4 = MediaPlayerEntity()
+    entity4.hass = hass
+    entity4.platform = MockEntityPlatform(hass)
+    entity4._attr_supported_features = all_features - feature
+
+    assert getattr(entity1, f"support_{property_suffix}") is False
+    assert getattr(entity2, f"support_{property_suffix}") is True
+    assert getattr(entity3, f"support_{property_suffix}") is True
+    assert getattr(entity4, f"support_{property_suffix}") is False
 
 
 async def test_get_image_http(
@@ -42,8 +164,7 @@ async def test_get_image_http(
     client = await hass_client_no_auth()
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity."
-        "async_get_media_image",
+        "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
         return_value=(b"image", "image/jpeg"),
     ):
         resp = await client.get(state.attributes["entity_picture"])
@@ -102,7 +223,7 @@ async def test_get_image_http_log_credentials_redacted(
         state = hass.states.get("media_player.bedroom")
         assert "entity_picture_local" not in state.attributes
 
-        aioclient_mock.get(url, exc=asyncio.TimeoutError())
+        aioclient_mock.get(url, exc=TimeoutError())
 
         client = await hass_client_no_auth()
 
@@ -159,9 +280,6 @@ async def test_media_browse(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value=BrowseMedia(
             media_class=MediaClass.DIRECTORY,
@@ -176,7 +294,7 @@ async def test_media_browse(
             {
                 "id": 5,
                 "type": "media_player/browse_media",
-                "entity_id": "media_player.bedroom",
+                "entity_id": "media_player.browse",
                 "media_content_type": "album",
                 "media_content_id": "abcd",
             }
@@ -202,9 +320,6 @@ async def test_media_browse(
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.BROWSE_MEDIA,
-    ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value={"bla": "yo"},
     ):
@@ -212,7 +327,7 @@ async def test_media_browse(
             {
                 "id": 6,
                 "type": "media_player/browse_media",
-                "entity_id": "media_player.bedroom",
+                "entity_id": "media_player.browse",
             }
         )
 
@@ -231,33 +346,28 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    # Fake group support for DemoYoutubePlayer
-    with patch(
-        "homeassistant.components.demo.media_player.MediaPlayerEntity.supported_features",
-        MediaPlayerEntityFeature.GROUPING | MediaPlayerEntityFeature.TURN_OFF,
-    ):
-        await hass.services.async_call(
-            "media_player",
-            "turn_off",
-            {ATTR_ENTITY_ID: "media_player.bedroom"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        "media_player",
+        "turn_off",
+        {ATTR_ENTITY_ID: "media_player.group"},
+        blocking=True,
+    )
 
-    state = hass.states.get("media_player.bedroom")
+    state = hass.states.get("media_player.group")
     assert state.state == STATE_OFF
     assert "group_members" in state.attributes
 
 
 @pytest.mark.parametrize(
     ("input", "expected"),
-    (
+    [
         (True, MediaPlayerEnqueue.ADD),
         (False, MediaPlayerEnqueue.PLAY),
         ("play", MediaPlayerEnqueue.PLAY),
         ("next", MediaPlayerEnqueue.NEXT),
         ("add", MediaPlayerEnqueue.ADD),
         ("replace", MediaPlayerEnqueue.REPLACE),
-    ),
+    ],
 )
 async def test_enqueue_rewrite(hass: HomeAssistant, input, expected) -> None:
     """Test that group_members are still available when media_player is off."""
@@ -308,10 +418,20 @@ async def test_enqueue_alert_exclusive(hass: HomeAssistant) -> None:
         )
 
 
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        "a/b c/d+e%2Fg{}",
+        "a/b c/d+e%2D",
+        "a/b c/d+e%2E",
+        "2012-06%20Pool%20party%20%2F%20BBQ",
+    ],
+)
 async def test_get_async_get_browse_image_quoting(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
+    media_content_id: str,
 ) -> None:
     """Test get browse image using media_content_id with special characters.
 
@@ -335,7 +455,30 @@ async def test_get_async_get_browse_image_quoting(
         "homeassistant.components.media_player.MediaPlayerEntity."
         "async_get_browse_image",
     ) as mock_browse_image:
-        media_content_id = "a/b c/d+e%2Fg{}"
         url = player.get_browse_image_url("album", media_content_id)
         await client.get(url)
         mock_browse_image.assert_called_with("album", media_content_id, None)
+
+
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test deprecated supported features ints."""
+
+    class MockMediaPlayerEntity(MediaPlayerEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return 1
+
+    entity = MockMediaPlayerEntity()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
+    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
+    assert "MockMediaPlayerEntity" in caplog.text
+    assert "is using deprecated supported features values" in caplog.text
+    assert "Instead it should use" in caplog.text
+    assert "MediaPlayerEntityFeature.PAUSE" in caplog.text
+    caplog.clear()
+    assert entity.supported_features_compat is MediaPlayerEntityFeature(1)
+    assert "is using deprecated supported features values" not in caplog.text

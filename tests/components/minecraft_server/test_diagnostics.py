@@ -1,4 +1,5 @@
 """Tests for Minecraft Server diagnostics."""
+
 from unittest.mock import patch
 
 from mcstatus import BedrockServer, JavaServer
@@ -42,13 +43,21 @@ async def test_config_entry_diagnostics(
     mock_config_entry = request.getfixturevalue(mock_config_entry)
     mock_config_entry.add_to_hass(hass)
 
+    if server.__name__ == "JavaServer":
+        lookup_function_name = "async_lookup"
+    else:
+        lookup_function_name = "lookup"
+
     # Setup mock entry.
-    with patch(
-        f"mcstatus.server.{server.__name__}.lookup",
-        return_value=server(host=TEST_HOST, port=TEST_PORT),
-    ), patch(
-        f"mcstatus.server.{server.__name__}.async_status",
-        return_value=status_response,
+    with (
+        patch(
+            f"mcstatus.server.{server.__name__}.{lookup_function_name}",
+            return_value=server(host=TEST_HOST, port=TEST_PORT),
+        ),
+        patch(
+            f"mcstatus.server.{server.__name__}.async_status",
+            return_value=status_response,
+        ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()

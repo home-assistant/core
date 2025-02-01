@@ -1,30 +1,85 @@
 """Electric Kiwi coordinators."""
+
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
 from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
-from electrickiwi_api.model import Hop, HopIntervals
+from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
+ACCOUNT_SCAN_INTERVAL = timedelta(hours=6)
 HOP_SCAN_INTERVAL = timedelta(minutes=20)
 
 
-class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
-    """ElectricKiwi Data object."""
+@dataclass
+class ElectricKiwiRuntimeData:
+    """ElectricKiwi runtime data."""
 
-    def __init__(self, hass: HomeAssistant, ek_api: ElectricKiwiApi) -> None:
+    hop: ElectricKiwiHOPDataCoordinator
+    account: ElectricKiwiAccountDataCoordinator
+
+
+type ElectricKiwiConfigEntry = ConfigEntry[ElectricKiwiRuntimeData]
+
+
+class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountBalance]):
+    """ElectricKiwi Account Data object."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ElectricKiwiConfigEntry,
+        ek_api: ElectricKiwiApi,
+    ) -> None:
         """Initialize ElectricKiwiAccountDataCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
+            name="Electric Kiwi Account Data",
+            update_interval=ACCOUNT_SCAN_INTERVAL,
+        )
+        self._ek_api = ek_api
+
+    async def _async_update_data(self) -> AccountBalance:
+        """Fetch data from Account balance API endpoint."""
+        try:
+            async with asyncio.timeout(60):
+                return await self._ek_api.get_account_balance()
+        except AuthException as auth_err:
+            raise ConfigEntryAuthFailed from auth_err
+        except ApiException as api_err:
+            raise UpdateFailed(
+                f"Error communicating with EK API: {api_err}"
+            ) from api_err
+
+
+class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
+    """ElectricKiwi HOP Data object."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ElectricKiwiConfigEntry,
+        ek_api: ElectricKiwiApi,
+    ) -> None:
+        """Initialize ElectricKiwiAccountDataCoordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=entry,
             # Name of the data. For logging purposes.
             name="Electric Kiwi HOP Data",
             # Polling interval. Will only be polled if there are subscribers.

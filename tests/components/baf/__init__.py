@@ -1,6 +1,5 @@
 """Tests for the Big Ass Fans integration."""
 
-
 import asyncio
 
 from aiobafi6 import Device
@@ -12,7 +11,8 @@ MOCK_NAME = "Living Room Fan"
 class MockBAFDevice(Device):
     """A simple mock for a BAF Device."""
 
-    def __init__(self, async_wait_available_side_effect=None):
+    # pylint: disable-next=super-init-not-called
+    def __init__(self, async_wait_available_side_effect=None) -> None:
         """Init simple mock."""
         self._async_wait_available_side_effect = async_wait_available_side_effect
 
@@ -30,7 +30,6 @@ class MockBAFDevice(Device):
         """Mock async_wait_available."""
         if self._async_wait_available_side_effect:
             raise self._async_wait_available_side_effect
-        return
 
     def async_run(self):
         """Mock async_run."""

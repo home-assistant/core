@@ -1,31 +1,39 @@
 """The tests the for Traccar device tracker platform."""
+
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import traccar, zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.traccar import DOMAIN, TRACKER_UPDATE
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import DATA_DISPATCHER
 from homeassistant.setup import async_setup_component
+
+from tests.typing import ClientSessionGenerator
 
 HOME_LATITUDE = 37.239622
 HOME_LONGITUDE = -115.815811
 
 
 @pytest.fixture(autouse=True)
-def mock_dev_track(mock_device_tracker_conf):
+def mock_dev_track(mock_device_tracker_conf: list[Device]) -> None:
     """Mock device tracker config loading."""
 
 
 @pytest.fixture(name="client")
-async def traccar_client(event_loop, hass, hass_client_no_auth):
+async def traccar_client(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> TestClient:
     """Mock client for Traccar (unauthenticated)."""
 
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
@@ -37,7 +45,7 @@ async def traccar_client(event_loop, hass, hass_client_no_auth):
 
 
 @pytest.fixture(autouse=True)
-async def setup_zones(event_loop, hass):
+async def setup_zones(hass: HomeAssistant) -> None:
     """Set up Zone config in HA."""
     assert await async_setup_component(
         hass,
@@ -55,7 +63,7 @@ async def setup_zones(event_loop, hass):
 
 
 @pytest.fixture(name="webhook_id")
-async def webhook_id_fixture(hass, client):
+async def webhook_id_fixture(hass: HomeAssistant, client: TestClient) -> str:
     """Initialize the Traccar component and get the webhook_id."""
     await async_process_ha_core_config(
         hass,
@@ -64,10 +72,10 @@ async def webhook_id_fixture(hass, client):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM, result
+    assert result["type"] is FlowResultType.FORM, result
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     return result["result"].data["webhook_id"]
@@ -98,7 +106,13 @@ async def test_missing_data(hass: HomeAssistant, client, webhook_id) -> None:
     assert req.status == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_enter_and_exit(hass: HomeAssistant, client, webhook_id) -> None:
+async def test_enter_and_exit(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client,
+    webhook_id,
+) -> None:
     """Test when there is a known zone."""
     url = f"/api/webhook/{webhook_id}"
     data = {"lat": str(HOME_LATITUDE), "lon": str(HOME_LONGITUDE), "id": "123"}
@@ -107,18 +121,14 @@ async def test_enter_and_exit(hass: HomeAssistant, client, webhook_id) -> None:
     req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}").state
     assert state_name == STATE_HOME
 
     # Enter Home again
     req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}").state
     assert state_name == STATE_HOME
 
     data["lon"] = 0
@@ -128,16 +138,12 @@ async def test_enter_and_exit(hass: HomeAssistant, client, webhook_id) -> None:
     req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}").state
     assert state_name == STATE_NOT_HOME
 
-    dev_reg = dr.async_get(hass)
-    assert len(dev_reg.devices) == 1
+    assert len(device_registry.devices) == 1
 
-    ent_reg = er.async_get(hass)
-    assert len(ent_reg.entities) == 1
+    assert len(entity_registry.entities) == 1
 
 
 async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None:
@@ -159,7 +165,7 @@ async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None
     req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}")
     assert state.state == STATE_NOT_HOME
     assert state.attributes["gps_accuracy"] == 10.5
     assert state.attributes["battery_level"] == 10.0
@@ -182,7 +188,7 @@ async def test_enter_with_attrs(hass: HomeAssistant, client, webhook_id) -> None
     req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}")
     assert state.state == STATE_HOME
     assert state.attributes["gps_accuracy"] == 123
     assert state.attributes["battery_level"] == 23
@@ -202,7 +208,7 @@ async def test_two_devices(hass: HomeAssistant, client, webhook_id) -> None:
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["id"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data_device_1['id']}")
     assert state.state == "not_home"
 
     # Enter Home
@@ -214,9 +220,9 @@ async def test_two_devices(hass: HomeAssistant, client, webhook_id) -> None:
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
 
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_2["id"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data_device_2['id']}")
     assert state.state == "home"
-    state = hass.states.get("{}.{}".format(DEVICE_TRACKER_DOMAIN, data_device_1["id"]))
+    state = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data_device_1['id']}")
     assert state.state == "not_home"
 
 
@@ -232,9 +238,7 @@ async def test_load_unload_entry(hass: HomeAssistant, client, webhook_id) -> Non
     req = await client.post(url, params=data)
     await hass.async_block_till_done()
     assert req.status == HTTPStatus.OK
-    state_name = hass.states.get(
-        "{}.{}".format(DEVICE_TRACKER_DOMAIN, data["id"])
-    ).state
+    state_name = hass.states.get(f"{DEVICE_TRACKER_DOMAIN}.{data['id']}").state
     assert state_name == STATE_HOME
     assert len(hass.data[DATA_DISPATCHER][TRACKER_UPDATE]) == 1
 

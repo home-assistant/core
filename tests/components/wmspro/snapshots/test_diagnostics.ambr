@@ -1,0 +1,244 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'command': 'getConfiguration',
+      'destinations': list([
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 0,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 16,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 1,
+          'id': 58717,
+          'names': list([
+            'Markise',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'actions': list([
+            dict({
+              'actionDescription': 8,
+              'actionType': 0,
+              'id': 0,
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            dict({
+              'actionDescription': 12,
+              'actionType': 6,
+              'id': 17,
+            }),
+            dict({
+              'actionDescription': 6,
+              'actionType': 4,
+              'id': 20,
+            }),
+            dict({
+              'actionDescription': 13,
+              'actionType': 8,
+              'id': 22,
+            }),
+          ]),
+          'animationType': 6,
+          'id': 97358,
+          'names': list([
+            'Licht',
+            '',
+            '',
+            '',
+          ]),
+        }),
+      ]),
+      'protocolVersion': '1.0.0',
+      'rooms': list([
+        dict({
+          'destinations': list([
+            58717,
+            97358,
+          ]),
+          'id': 19239,
+          'name': 'Terrasse',
+          'scenes': list([
+            687471,
+            765095,
+          ]),
+        }),
+      ]),
+      'scenes': list([
+        dict({
+          'id': 687471,
+          'names': list([
+            'Licht an',
+            '',
+            '',
+            '',
+          ]),
+        }),
+        dict({
+          'id': 765095,
+          'names': list([
+            'Licht aus',
+            '',
+            '',
+            '',
+          ]),
+        }),
+      ]),
+    }),
+    'dests': dict({
+      '58717': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'AwningDrive',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '16': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 16,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'Awning',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 58717,
+        'name': 'Markise',
+        'room': dict({
+          '19239': 'Terrasse',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+      '97358': dict({
+        'actions': dict({
+          '0': dict({
+            'actionDescription': 'LightDimming',
+            'actionType': 'Percentage',
+            'attrs': dict({
+              'maxValue': 100,
+              'minValue': 0,
+            }),
+            'id': 0,
+            'params': dict({
+            }),
+          }),
+          '17': dict({
+            'actionDescription': 'ManualCommand',
+            'actionType': 'Stop',
+            'attrs': dict({
+            }),
+            'id': 17,
+            'params': dict({
+            }),
+          }),
+          '20': dict({
+            'actionDescription': 'LightSwitch',
+            'actionType': 'Switch',
+            'attrs': dict({
+            }),
+            'id': 20,
+            'params': dict({
+            }),
+          }),
+          '22': dict({
+            'actionDescription': 'Identify',
+            'actionType': 'Identify',
+            'attrs': dict({
+            }),
+            'id': 22,
+            'params': dict({
+            }),
+          }),
+        }),
+        'animationType': 'Dimmer',
+        'available': True,
+        'blocking': None,
+        'drivingCause': 'Unknown',
+        'heartbeatError': None,
+        'id': 97358,
+        'name': 'Licht',
+        'room': dict({
+          '19239': 'Terrasse',
+        }),
+        'status': dict({
+        }),
+        'unknownProducts': dict({
+        }),
+      }),
+    }),
+    'host': 'webcontrol',
+    'rooms': dict({
+      '19239': dict({
+        'destinations': dict({
+          '58717': 'Markise',
+          '97358': 'Licht',
+        }),
+        'id': 19239,
+        'name': 'Terrasse',
+        'scenes': dict({
+          '687471': 'Licht an',
+          '765095': 'Licht aus',
+        }),
+      }),
+    }),
+    'scenes': dict({
+      '687471': dict({
+        'id': 687471,
+        'name': 'Licht an',
+        'room': dict({
+          '19239': 'Terrasse',
+        }),
+      }),
+      '765095': dict({
+        'id': 765095,
+        'name': 'Licht aus',
+        'room': dict({
+          '19239': 'Terrasse',
+        }),
+      }),
+    }),
+  })
+# ---

@@ -1,48 +1,32 @@
 """Test the Advantage Air Sensor Platform."""
+
 from datetime import timedelta
-from json import loads
+from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
 from homeassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import (
-    TEST_SET_RESPONSE,
-    TEST_SET_URL,
-    TEST_SYSTEM_DATA,
-    TEST_SYSTEM_URL,
-    add_mock_config,
-)
+from . import add_mock_config
 
 from tests.common import async_fire_time_changed
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_sensor_platform(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
+    mock_get: AsyncMock,
+    mock_update: AsyncMock,
 ) -> None:
     """Test sensor platform."""
 
-    aioclient_mock.get(
-        TEST_SYSTEM_URL,
-        text=TEST_SYSTEM_DATA,
-    )
-    aioclient_mock.get(
-        TEST_SET_URL,
-        text=TEST_SET_RESPONSE,
-    )
     await add_mock_config(hass)
-
-    assert len(aioclient_mock.mock_calls) == 1
 
     # Test First TimeToOn Sensor
     entity_id = "sensor.myzone_time_to_on"
@@ -55,19 +39,15 @@ async def test_sensor_platform(
     assert entry.unique_id == "uniqueid-ac1-timetoOn"
 
     value = 20
+
     await hass.services.async_call(
         ADVANTAGE_AIR_DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 3
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["countDownToOn"] == value
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     # Test First TimeToOff Sensor
     entity_id = "sensor.myzone_time_to_off"
@@ -86,13 +66,8 @@ async def test_sensor_platform(
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 5
-    assert aioclient_mock.mock_calls[-2][0] == "GET"
-    assert aioclient_mock.mock_calls[-2][1].path == "/setAircon"
-    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
-    assert data["ac1"]["info"]["countDownToOff"] == value
-    assert aioclient_mock.mock_calls[-1][0] == "GET"
-    assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+    mock_update.assert_called_once()
+    mock_update.reset_mock()
 
     # Test First Zone Vent Sensor
     entity_id = "sensor.myzone_zone_open_with_sensor_vent"
@@ -134,19 +109,28 @@ async def test_sensor_platform(
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
+
+async def test_sensor_platform_disabled_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get: AsyncMock
+) -> None:
+    """Test sensor platform disabled entity."""
+
+    await add_mock_config(hass)
+
     # Test First Zone Temp Sensor (disabled by default)
     entity_id = "sensor.myzone_zone_open_with_sensor_temperature"
 
     assert not hass.states.get(entity_id)
 
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
+    mock_get.reset_mock()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.config_entries.RELOAD_AFTER_UPDATE_DELAY", 1):
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(mock_get.mock_calls) == 1
 
     state = hass.states.get(entity_id)
     assert state

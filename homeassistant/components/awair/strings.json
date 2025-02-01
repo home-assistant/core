@@ -9,7 +9,7 @@
         }
       },
       "local": {
-        "description": "Follow [these instructions]({url}) on how to enable the Awair Local API.\n\nClick submit when done."
+        "description": "Follow [these instructions]({url}) on how to enable the Awair Local API.\n\nSelect **Submit** when done."
       },
       "local_pick": {
         "data": {
@@ -45,6 +45,7 @@
       "already_configured_device": "[%key:common::config_flow::abort::already_configured_device%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
       "unreachable": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "flow_title": "{model} ({device_id})"

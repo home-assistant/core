@@ -1,0 +1,118 @@
+# serializer version: 1
+# name: test_reauth_flow
+  ConfigEntrySnapshot({
+    'data': dict({
+      'endpoint': 'mocked_endpoint',
+      'terminal_id': 'mocked_terminal_id',
+      'token_info': dict({
+        'access_token': 'mocked_access_token',
+        'expire_time': 'mocked_expire_time',
+        'refresh_token': 'mocked_refresh_token',
+        't': 'mocked_t',
+        'uid': 'mocked_uid',
+      }),
+      'user_code': '12345',
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'tuya',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': '12345',
+    'unique_id': '12345',
+    'version': 1,
+  })
+# ---
+# name: test_reauth_flow_migration
+  ConfigEntrySnapshot({
+    'data': dict({
+      'endpoint': 'mocked_endpoint',
+      'terminal_id': 'mocked_terminal_id',
+      'token_info': dict({
+        'access_token': 'mocked_access_token',
+        'expire_time': 'mocked_expire_time',
+        'refresh_token': 'mocked_refresh_token',
+        't': 'mocked_t',
+        'uid': 'mocked_uid',
+      }),
+      'user_code': '12345',
+    }),
+    'disabled_by': None,
+    'discovery_keys': dict({
+    }),
+    'domain': 'tuya',
+    'entry_id': <ANY>,
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'pref_disable_new_entities': False,
+    'pref_disable_polling': False,
+    'source': 'user',
+    'title': 'Old Tuya configuration entry',
+    'unique_id': '12345',
+    'version': 1,
+  })
+# ---
+# name: test_user_flow
+  FlowResultSnapshot({
+    'context': dict({
+      'source': 'user',
+    }),
+    'data': dict({
+      'endpoint': 'mocked_endpoint',
+      'terminal_id': 'mocked_terminal_id',
+      'token_info': dict({
+        'access_token': 'mocked_access_token',
+        'expire_time': 'mocked_expire_time',
+        'refresh_token': 'mocked_refresh_token',
+        't': 'mocked_t',
+        'uid': 'mocked_uid',
+      }),
+      'user_code': '12345',
+    }),
+    'description': None,
+    'description_placeholders': None,
+    'flow_id': <ANY>,
+    'handler': 'tuya',
+    'minor_version': 1,
+    'options': dict({
+    }),
+    'result': ConfigEntrySnapshot({
+      'data': dict({
+        'endpoint': 'mocked_endpoint',
+        'terminal_id': 'mocked_terminal_id',
+        'token_info': dict({
+          'access_token': 'mocked_access_token',
+          'expire_time': 'mocked_expire_time',
+          'refresh_token': 'mocked_refresh_token',
+          't': 'mocked_t',
+          'uid': 'mocked_uid',
+        }),
+        'user_code': '12345',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'tuya',
+      'entry_id': <ANY>,
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'mocked_username',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'title': 'mocked_username',
+    'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
+    'version': 1,
+  })
+# ---

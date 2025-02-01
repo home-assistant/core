@@ -1,11 +1,10 @@
 """Constants used by the Withings component."""
+
 import logging
 
 LOGGER = logging.getLogger(__package__)
 
 DEFAULT_TITLE = "Withings"
-CONF_PROFILES = "profiles"
-CONF_USE_WEBHOOK = "use_webhook"
 
 DOMAIN = "withings"
 

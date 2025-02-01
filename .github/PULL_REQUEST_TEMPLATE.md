@@ -60,7 +60,7 @@
 - [ ] There is no commented out code in this PR.
 - [ ] I have followed the [development checklist][dev-checklist]
 - [ ] I have followed the [perfect PR recommendations][perfect-pr]
-- [ ] The code has been formatted using Black (`black --fast homeassistant tests`)
+- [ ] The code has been formatted using Ruff (`ruff format homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
 
 If user exposed functionality or configuration variables are added/changed:
@@ -74,7 +74,6 @@ If the code communicates with devices, web services, or third-party tools:
 - [ ] New or updated dependencies have been added to `requirements_all.txt`.  
       Updated by running `python3 -m script.gen_requirements_all`.
 - [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
-- [ ] Untested files have been added to `.coveragerc`.
 
 <!--
   This project is very active and we have a high turnover of pull requests.

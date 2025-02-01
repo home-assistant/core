@@ -1,4 +1,5 @@
 """ZHA repair for inconsistent network settings."""
+
 from __future__ import annotations
 
 import logging
@@ -12,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 from ..radio_manager import ZhaRadioManager
 
 _LOGGER = logging.getLogger(__name__)

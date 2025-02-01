@@ -1,4 +1,5 @@
 """NINA sensor platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -24,6 +25,7 @@ from .const import (
     ATTR_SENT,
     ATTR_SEVERITY,
     ATTR_START,
+    ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     DOMAIN,
@@ -43,15 +45,11 @@ async def async_setup_entry(
     regions: dict[str, str] = config_entry.data[CONF_REGIONS]
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
 
-    entities: list[NINAMessage] = []
-
-    for ent in coordinator.data:
-        for i in range(0, message_slots):
-            entities.append(
-                NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
+        for ent in coordinator.data
+        for i in range(message_slots)
+    )
 
 
 class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
@@ -106,6 +104,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
             ATTR_SEVERITY: data.severity,
             ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
             ATTR_AFFECTED_AREAS: data.affected_areas,
+            ATTR_WEB: data.web,
             ATTR_ID: data.id,
             ATTR_SENT: data.sent,
             ATTR_START: data.start,

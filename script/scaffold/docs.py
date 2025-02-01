@@ -1,4 +1,5 @@
 """Print links to relevant docs."""
+
 from .model import Info
 
 DATA = {

@@ -1,10 +1,11 @@
 """Binary sensor platform for mobile_app."""
+
 from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_WEBHOOK_ID, STATE_ON
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -68,15 +69,16 @@ async def async_setup_entry(
 
 
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
-    """Representation of an mobile app binary sensor."""
+    """Representation of a mobile app binary sensor."""
 
-    @property
-    def is_on(self):
-        """Return the state of the binary sensor."""
-        return self._config[ATTR_SENSOR_STATE]
-
-    async def async_restore_last_state(self, last_state):
+    async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
-
         await super().async_restore_last_state(last_state)
         self._config[ATTR_SENSOR_STATE] = last_state.state == STATE_ON
+        self._async_update_attr_from_config()
+
+    @callback
+    def _async_update_attr_from_config(self) -> None:
+        """Update the entity from the config."""
+        super()._async_update_attr_from_config()
+        self._attr_is_on = self._config[ATTR_SENSOR_STATE]

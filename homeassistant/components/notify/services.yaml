@@ -20,6 +20,23 @@ notify:
       selector:
         object:
 
+send_message:
+  target:
+    entity:
+      domain: notify
+  fields:
+    message:
+      required: true
+      selector:
+        text:
+    title:
+      required: false
+      selector:
+        text:
+      filter:
+        supported_features:
+          - notify.NotifyEntityFeature.TITLE
+
 persistent_notification:
   fields:
     message:

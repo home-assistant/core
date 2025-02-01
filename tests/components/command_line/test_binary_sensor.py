@@ -1,4 +1,5 @@
 """The tests for the Command line Binary sensor platform."""
+
 from __future__ import annotations
 
 import asyncio
@@ -6,6 +7,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant import setup
@@ -15,10 +17,12 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
+
+from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
 
@@ -52,6 +56,24 @@ async def test_setup_integration_yaml(
     assert entity_state.name == "Test"
 
 
+async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+    """Test setting up the platform with platform yaml."""
+    await setup.async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "command_line",
+                "command": "echo 1",
+                "payload_on": "1",
+                "payload_off": "0",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 0
+
+
 @pytest.mark.parametrize(
     "get_config",
     [
@@ -65,7 +87,7 @@ async def test_setup_integration_yaml(
                         "payload_off": "0",
                         "value_template": "{{ value | multiply(0.1) }}",
                         "icon": (
-                            '{% if this.state=="on" %} mdi:on {% else %} mdi:off {% endif %}'
+                            '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
                         ),
                     }
                 }
@@ -79,7 +101,15 @@ async def test_template(hass: HomeAssistant, load_yaml_integration: None) -> Non
     entity_state = hass.states.get("binary_sensor.test")
     assert entity_state
     assert entity_state.state == STATE_ON
-    assert entity_state.attributes.get("icon") == "mdi:on"
+    assert entity_state.attributes.get("icon") == "mdi:icon2"
+
+    async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=30))
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+    assert entity_state.attributes.get("icon") == "mdi:icon1"
 
 
 @pytest.mark.parametrize(
@@ -289,3 +319,50 @@ async def test_updating_manually(
     )
     await hass.async_block_till_done()
     assert called
+
+
+@pytest.mark.parametrize(
+    "get_config",
+    [
+        {
+            "command_line": [
+                {
+                    "binary_sensor": {
+                        "name": "Test",
+                        "command": "echo 10",
+                        "payload_on": "1.0",
+                        "payload_off": "0",
+                        "value_template": "{{ value | multiply(0.1) }}",
+                        "availability": '{{ states("sensor.input1")=="on" }}',
+                    }
+                }
+            ]
+        }
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    load_yaml_integration: None,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test availability."""
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_ON
+
+    hass.states.async_set("sensor.input1", "off")
+    await hass.async_block_till_done()
+    with mock_asyncio_subprocess_run(b"0"):
+        freezer.tick(timedelta(minutes=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
+    assert entity_state.state == STATE_UNAVAILABLE

@@ -1,4 +1,7 @@
 """Support for Duotecno climate devices."""
+
+from __future__ import annotations
+
 from typing import Any, Final
 
 from duotecno.unit import SensUnit
@@ -8,12 +11,11 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
 
 HVACMODE: Final = {
@@ -29,13 +31,13 @@ PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: DuotecnoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Duotecno climate based on config_entry."""
-    cntrl = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoClimate(channel) for channel in cntrl.get_units(["SensUnit"])
+        DuotecnoClimate(channel)
+        for channel in entry.runtime_data.get_units(["SensUnit"])
     )
 
 
@@ -44,7 +46,10 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
 
     _unit: SensUnit
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HVACMODE_REVERSE)
@@ -52,7 +57,7 @@ class DuotecnoClimate(DuotecnoEntity, ClimateEntity):
     _attr_translation_key = "duotecno"
 
     @property
-    def current_temperature(self) -> int | None:
+    def current_temperature(self) -> float | None:
         """Get the current temperature."""
         return self._unit.get_cur_temp()
 

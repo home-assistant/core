@@ -1,4 +1,5 @@
 """Support for Template fans."""
+
 from __future__ import annotations
 
 import logging
@@ -28,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -93,7 +94,7 @@ async def _async_create_entities(hass, config):
     fans = []
 
     for object_id, entity_config in config[CONF_FANS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
@@ -194,6 +195,9 @@ class TemplateFan(TemplateEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
         if self._direction_template:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
+        self._attr_supported_features |= (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
 
         self._attr_assumed_state = self._template is None
 
@@ -282,15 +286,6 @@ class TemplateFan(TemplateEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
-        if self.preset_modes and preset_mode not in self.preset_modes:
-            _LOGGER.error(
-                "Received invalid preset_mode: %s for entity %s. Expected: %s",
-                preset_mode,
-                self.entity_id,
-                self.preset_modes,
-            )
-            return
-
         self._preset_mode = preset_mode
 
         if self._set_preset_mode_script:

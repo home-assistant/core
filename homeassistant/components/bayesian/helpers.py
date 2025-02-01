@@ -1,4 +1,5 @@
 """Helpers to deal with bayesian observations."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -32,6 +33,7 @@ class Observation:
     below: float | None
     value_template: Template | None
     observed: bool | None = None
+    multi: bool = False
     id: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def to_dict(self) -> dict[str, str | float | bool | None]:

@@ -1,0 +1,10 @@
+{
+  "services": {
+    "create": {
+      "service": "mdi:cloud-upload"
+    },
+    "create_automatic": {
+      "service": "mdi:cloud-upload"
+    }
+  }
+}

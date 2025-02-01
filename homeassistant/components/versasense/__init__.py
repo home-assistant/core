@@ -1,4 +1,5 @@
 """Support for VersaSense MicroPnP devices."""
+
 import logging
 
 import pyversasense as pyv
@@ -6,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
@@ -54,7 +54,7 @@ async def _configure_entities(hass, config, consumer):
     switch_info = {}
 
     for mac, device in devices.items():
-        _LOGGER.info("Device connected: %s %s", device.name, mac)
+        _LOGGER.debug("Device connected: %s %s", device.name, mac)
         hass.data[DOMAIN][mac] = {}
 
         for peripheral_id, peripheral in device.peripherals.items():

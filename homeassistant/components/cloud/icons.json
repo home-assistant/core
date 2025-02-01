@@ -1,0 +1,10 @@
+{
+  "services": {
+    "remote_connect": {
+      "service": "mdi:cloud"
+    },
+    "remote_disconnect": {
+      "service": "mdi:cloud-off"
+    }
+  }
+}

@@ -1,0 +1,87 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'utility_meter',
+      'minor_version': 1,
+      'options': dict({
+        'cycle': 'monthly',
+        'delta_values': False,
+        'name': 'Energy Bill',
+        'net_consumption': False,
+        'offset': 0,
+        'periodically_resetting': True,
+        'source': 'sensor.input1',
+        'tariffs': list([
+          'tariff0',
+          'tariff1',
+        ]),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Energy Bill',
+      'unique_id': None,
+      'version': 2,
+    }),
+    'tariff_sensors': list([
+      dict({
+        'cron': '0 0 1 * *',
+        'entity_id': 'sensor.energy_bill_tariff0',
+        'extra_attributes': dict({
+          'last_period': '0',
+          'last_reset': '2024-04-05T00:00:00+00:00',
+          'last_valid_state': 'None',
+          'next_reset': '2024-05-01T00:00:00-07:00',
+          'status': 'collecting',
+          'tariff': 'tariff0',
+        }),
+        'last_sensor_data': dict({
+          'last_period': '0',
+          'last_reset': '2024-04-05T00:00:00+00:00',
+          'last_valid_state': 3,
+          'native_unit_of_measurement': 'kWh',
+          'native_value': dict({
+            '__type': "<class 'decimal.Decimal'>",
+            'decimal_str': '3',
+          }),
+          'status': 'collecting',
+        }),
+        'name': 'Energy Bill tariff0',
+        'period': 'monthly',
+        'source': 'sensor.input1',
+      }),
+      dict({
+        'cron': '0 0 1 * *',
+        'entity_id': 'sensor.energy_bill_tariff1',
+        'extra_attributes': dict({
+          'last_period': '0',
+          'last_reset': '2024-04-05T00:00:00+00:00',
+          'last_valid_state': 'None',
+          'next_reset': '2024-05-01T00:00:00-07:00',
+          'status': 'paused',
+          'tariff': 'tariff1',
+        }),
+        'last_sensor_data': dict({
+          'last_period': '0',
+          'last_reset': '2024-04-05T00:00:00+00:00',
+          'last_valid_state': 7,
+          'native_unit_of_measurement': 'kWh',
+          'native_value': dict({
+            '__type': "<class 'decimal.Decimal'>",
+            'decimal_str': '7',
+          }),
+          'status': 'paused',
+        }),
+        'name': 'Energy Bill tariff1',
+        'period': 'monthly',
+        'source': 'sensor.input1',
+      }),
+    ]),
+  })
+# ---

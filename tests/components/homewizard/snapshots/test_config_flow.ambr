@@ -3,7 +3,7 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'zeroconf',
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '127.0.0.1',
@@ -12,6 +12,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'homewizard',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -19,15 +20,18 @@
         'ip_address': '127.0.0.1',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'homewizard',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
       'title': 'P1 meter',
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
     'title': 'P1 meter',
@@ -43,7 +47,7 @@
       'title_placeholders': dict({
         'name': 'P1 meter',
       }),
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '127.0.0.1',
@@ -52,6 +56,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'homewizard',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -59,15 +64,18 @@
         'ip_address': '127.0.0.1',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'homewizard',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
       'title': 'P1 meter',
-      'unique_id': 'HWE-P1_aabbccddeeff',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
     'title': 'P1 meter',
@@ -81,9 +89,9 @@
       'confirm_only': True,
       'source': 'zeroconf',
       'title_placeholders': dict({
-        'name': 'Energy Socket (aabbccddeeff)',
+        'name': 'Energy Socket (5c2fafabcdef)',
       }),
-      'unique_id': 'HWE-SKT_aabbccddeeff',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '127.0.0.1',
@@ -92,6 +100,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'homewizard',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -99,15 +108,18 @@
         'ip_address': '127.0.0.1',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'homewizard',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'zeroconf',
       'title': 'Energy Socket',
-      'unique_id': 'HWE-SKT_aabbccddeeff',
+      'unique_id': 'HWE-SKT_5c2fafabcdef',
       'version': 1,
     }),
     'title': 'Energy Socket',
@@ -119,7 +131,7 @@
   FlowResultSnapshot({
     'context': dict({
       'source': 'user',
-      'unique_id': 'HWE-P1_3c39e7aabbcc',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
     }),
     'data': dict({
       'ip_address': '2.2.2.2',
@@ -128,6 +140,7 @@
     'description_placeholders': None,
     'flow_id': <ANY>,
     'handler': 'homewizard',
+    'minor_version': 1,
     'options': dict({
     }),
     'result': ConfigEntrySnapshot({
@@ -135,15 +148,18 @@
         'ip_address': '2.2.2.2',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'homewizard',
       'entry_id': <ANY>,
+      'minor_version': 1,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
       'title': 'P1 meter',
-      'unique_id': 'HWE-P1_3c39e7aabbcc',
+      'unique_id': 'HWE-P1_5c2fafabcdef',
       'version': 1,
     }),
     'title': 'P1 meter',

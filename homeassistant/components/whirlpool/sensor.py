@@ -1,4 +1,5 @@
 """The Washer/Dryer Sensor for Whirlpool Appliances."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import WhirlpoolData
+from . import WhirlpoolConfigEntry
 from .const import DOMAIN
 
 TANK_FILL = {
@@ -86,21 +86,14 @@ def washer_state(washer: WasherDryer) -> str | None:
             if func(washer):
                 return cycle_name
 
-    return MACHINE_STATE.get(machine_state, None)
+    return MACHINE_STATE.get(machine_state)
 
 
-@dataclass
-class WhirlpoolSensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class WhirlpoolSensorEntityDescription(SensorEntityDescription):
+    """Describes Whirlpool Washer sensor entity."""
 
     value_fn: Callable
-
-
-@dataclass
-class WhirlpoolSensorEntityDescription(
-    SensorEntityDescription, WhirlpoolSensorEntityDescriptionMixin
-):
-    """Describes Whirlpool Washer sensor entity."""
 
 
 SENSORS: tuple[WhirlpoolSensorEntityDescription, ...] = (
@@ -138,12 +131,12 @@ SENSOR_TIMER: tuple[SensorEntityDescription] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WhirlpoolConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Config flow entry for Whrilpool Laundry."""
     entities: list = []
-    whirlpool_data: WhirlpoolData = hass.data[DOMAIN][config_entry.entry_id]
+    whirlpool_data = config_entry.runtime_data
     for appliance in whirlpool_data.appliances_manager.washer_dryers:
         _wd = WasherDryer(
             whirlpool_data.backend_selector,
@@ -212,7 +205,7 @@ class WasherDryerClass(SensorEntity):
         self._wd.register_attr_callback(self.async_write_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Close Whrilpool Appliance sockets before removing."""
+        """Close Whirlpool Appliance sockets before removing."""
         self._wd.unregister_attr_callback(self.async_write_ha_state)
 
     @property
@@ -298,9 +291,8 @@ class WasherDryerTimeClass(RestoreSensor):
                 seconds=int(self._wd.get_attribute("Cavity_TimeStatusEstTimeRemaining"))
             )
 
-            if (
-                self._attr_native_value is None
-                or isinstance(self._attr_native_value, datetime)
+            if self._attr_native_value is None or (
+                isinstance(self._attr_native_value, datetime)
                 and abs(new_timestamp - self._attr_native_value) > timedelta(seconds=60)
             ):
                 self._attr_native_value = new_timestamp

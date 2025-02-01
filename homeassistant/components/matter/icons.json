@@ -1,0 +1,86 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "muted": {
+        "default": "mdi:bell-off"
+      }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play-pause"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "high": "mdi:fan-speed-3",
+              "auto": "mdi:fan-auto",
+              "natural_wind": "mdi:tailwind",
+              "sleep_wind": "mdi:sleep"
+            }
+          }
+        }
+      }
+    },
+    "select": {
+      "laundry_washer_spin_speed": {
+        "default": "mdi:reload"
+      },
+      "temperature_level": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "contamination_state": {
+        "default": "mdi:air-filter"
+      },
+      "current_phase": {
+        "default": "mdi:state-machine"
+      },
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "bat_replacement_description": {
+        "default": "mdi:battery-sync"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "operational_state": {
+        "default": "mdi:play-pause"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
+      },
+      "battery_replacement_description": {
+        "default": "mdi:battery-sync-outline"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-off"
+        }
+      }
+    }
+  }
+}

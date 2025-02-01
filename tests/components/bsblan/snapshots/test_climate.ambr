@@ -1,0 +1,147 @@
+# serializer version: 1
+# name: test_celsius_fahrenheit[climate.bsb_lan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 20.0,
+      'min_temp': 8.0,
+      'preset_modes': list([
+        'eco',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.bsb_lan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bsblan',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '00:80:41:19:69:90-climate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_celsius_fahrenheit[climate.bsb_lan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 18.6,
+      'friendly_name': 'BSB-LAN',
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 20.0,
+      'min_temp': 8.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'eco',
+        'none',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 18.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bsb_lan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climate_entity_properties[climate.bsb_lan-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 20.0,
+      'min_temp': 8.0,
+      'preset_modes': list([
+        'eco',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.bsb_lan',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'bsblan',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': None,
+    'unique_id': '00:80:41:19:69:90-climate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entity_properties[climate.bsb_lan-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 18.6,
+      'friendly_name': 'BSB-LAN',
+      'hvac_modes': list([
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 20.0,
+      'min_temp': 8.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'eco',
+        'none',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 18.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bsb_lan',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---

@@ -1,13 +1,11 @@
 """Constants for the samsungtv tests."""
+
 from samsungtvws.event import ED_INSTALLED_APP_EVENT
 
-from homeassistant.components import ssdp
-from homeassistant.components.samsungtv.const import CONF_SESSION_ID, METHOD_WEBSOCKET
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
+from homeassistant.components.samsungtv.const import (
+    CONF_SESSION_ID,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -19,7 +17,20 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TOKEN,
 )
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
+MOCK_CONFIG = {
+    CONF_HOST: "fake_host",
+    CONF_NAME: "fake",
+    CONF_PORT: 55000,
+    CONF_METHOD: METHOD_LEGACY,
+}
 MOCK_CONFIG_ENCRYPTED_WS = {
     CONF_HOST: "fake_host",
     CONF_NAME: "fake",
@@ -40,8 +51,17 @@ MOCK_ENTRYDATA_WS = {
     CONF_MODEL: "any",
     CONF_NAME: "any",
 }
+MOCK_ENTRY_WS_WITH_MAC = {
+    CONF_IP_ADDRESS: "test",
+    CONF_HOST: "fake_host",
+    CONF_METHOD: "websocket",
+    CONF_MAC: "aa:bb:cc:dd:ee:ff",
+    CONF_NAME: "fake",
+    CONF_PORT: 8002,
+    CONF_TOKEN: "123456789",
+}
 
-MOCK_SSDP_DATA_RENDERING_CONTROL_ST = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA_RENDERING_CONTROL_ST = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="urn:schemas-upnp-org:service:RenderingControl:1",
     ssdp_location="https://fake_host:12345/test",
@@ -52,7 +72,7 @@ MOCK_SSDP_DATA_RENDERING_CONTROL_ST = ssdp.SsdpServiceInfo(
         ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
     },
 )
-MOCK_SSDP_DATA_MAIN_TV_AGENT_ST = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA_MAIN_TV_AGENT_ST = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="urn:samsung.com:service:MainTVAgent2:1",
     ssdp_location="https://fake_host:12345/tv_agent",
@@ -68,7 +88,7 @@ SAMPLE_DEVICE_INFO_WIFI = {
     "id": "uuid:be9554b9-c9fb-41f4-8920-22da015376a4",
     "device": {
         "modelName": "82GXARRS",
-        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "wifiMac": "aa:bb:aa:aa:aa:aa",
         "name": "[TV] Living Room",
         "type": "Samsung SmartTV",
         "networkType": "wireless",
@@ -136,7 +156,7 @@ SAMPLE_DEVICE_INFO_UE48JU6400 = {
         "countryCode": "AT",
         "msfVersion": "2.0.25",
         "smartHubAgreement": "true",
-        "wifiMac": "aa:bb:ww:ii:ff:ii",
+        "wifiMac": "aa:bb:aa:aa:aa:aa",
         "developerMode": "0",
         "developerIP": "",
     },

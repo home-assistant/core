@@ -1,0 +1,7 @@
+{
+  "services": {
+    "browse_url": {
+      "service": "mdi:web"
+    }
+  }
+}

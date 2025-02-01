@@ -1,8 +1,15 @@
 {
   "domain": "bluesound",
   "name": "Bluesound",
-  "codeowners": ["@thrawnarn"],
+  "after_dependencies": ["zeroconf"],
+  "codeowners": ["@thrawnarn", "@LouisChrist"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bluesound",
   "iot_class": "local_polling",
-  "requirements": ["xmltodict==0.13.0"]
+  "requirements": ["pyblu==2.0.0"],
+  "zeroconf": [
+    {
+      "type": "_musc._tcp.local."
+    }
+  ]
 }

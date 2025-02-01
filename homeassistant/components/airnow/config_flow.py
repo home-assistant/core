@@ -1,4 +1,7 @@
 """Config flow for AirNow integration."""
+
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -6,17 +9,24 @@ from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
 import voluptuous as vol
 
-from homeassistant import config_entries, core, data_entry_flow, exceptions
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: core.HomeAssistant, data):
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
     """Validate the user input allows us to connect.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
@@ -46,12 +56,14 @@ async def validate_input(hass: core.HomeAssistant, data):
     return True
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for AirNow."""
 
     VERSION = 2
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -71,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except InvalidLocation:
                 errors["base"] = "invalid_location"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -106,31 +118,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
-    @core.callback
+    @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> AirNowOptionsFlowHandler:
         """Return the options flow."""
-        return OptionsFlowHandler(config_entry)
+        return AirNowOptionsFlowHandler()
 
 
-class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
+class AirNowOptionsFlowHandler(OptionsFlow):
     """Handle an options flow for AirNow."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
         options_schema = vol.Schema(
-            {
-                vol.Optional(CONF_RADIUS): vol.All(
-                    int,
-                    vol.Range(min=5),
-                ),
-            }
+            {vol.Optional(CONF_RADIUS): vol.All(int, vol.Range(min=5))}
         )
 
         return self.async_show_form(
@@ -141,13 +148,13 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithConfigEntry):
         )
 
 
-class CannotConnect(exceptions.HomeAssistantError):
+class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
 
 
-class InvalidAuth(exceptions.HomeAssistantError):
+class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class InvalidLocation(exceptions.HomeAssistantError):
+class InvalidLocation(HomeAssistantError):
     """Error to indicate the location is invalid."""

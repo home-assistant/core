@@ -3,5 +3,6 @@
   "name": "FFmpeg",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg",
-  "requirements": ["ha-ffmpeg==3.1.0"]
+  "integration_type": "system",
+  "requirements": ["ha-ffmpeg==3.2.2"]
 }

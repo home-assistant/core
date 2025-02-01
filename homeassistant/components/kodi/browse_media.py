@@ -1,4 +1,5 @@
 """Support for media browsing."""
+
 import asyncio
 import contextlib
 import logging

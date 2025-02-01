@@ -1,9 +1,13 @@
 {
   "config": {
+    "flow_title": "{name}",
     "step": {
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Twinkly device."
         }
       },
       "discovery_confirm": {
@@ -14,7 +18,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "device_exists": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   }
 }

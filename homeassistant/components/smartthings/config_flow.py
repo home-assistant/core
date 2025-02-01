@@ -1,13 +1,16 @@
 """Config flow to configure SmartThings."""
+
+from collections.abc import Mapping
 from http import HTTPStatus
 import logging
+from typing import Any
 
 from aiohttp import ClientResponseError
 from pysmartthings import APIResponseError, AppOAuth, SmartThings
 from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -35,28 +38,31 @@ from .smartapp import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class SmartThingsFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle configuration of SmartThings integrations."""
 
     VERSION = 2
 
+    api: SmartThings
+    app_id: str
+    location_id: str
+
     def __init__(self) -> None:
         """Create a new instance of the flow handler."""
-        self.access_token = None
-        self.app_id = None
-        self.api = None
+        self.access_token: str | None = None
         self.oauth_client_secret = None
         self.oauth_client_id = None
         self.installed_app_id = None
         self.refresh_token = None
-        self.location_id = None
         self.endpoints_initialized = False
 
-    async def async_step_import(self, user_input=None):
+    async def async_step_import(self, import_data: None) -> ConfigFlowResult:
         """Occurs when a previously entry setup fails and is re-initiated."""
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(import_data)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Validate and confirm webhook setup."""
         if not self.endpoints_initialized:
             self.endpoints_initialized = True
@@ -87,9 +93,11 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Show the next screen
         return await self.async_step_pat()
 
-    async def async_step_pat(self, user_input=None):
+    async def async_step_pat(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Get the Personal Access Token and validate it."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is None or CONF_ACCESS_TOKEN not in user_input:
             return self._show_step_pat(errors)
 
@@ -158,14 +166,16 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "app_setup_error"
                 _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_pat(errors)
-        except Exception:  # pylint:disable=broad-except
+        except Exception:
             errors["base"] = "app_setup_error"
             _LOGGER.exception("Unexpected error setting up the SmartApp")
             return self._show_step_pat(errors)
 
         return await self.async_step_select_location()
 
-    async def async_step_select_location(self, user_input=None):
+    async def async_step_select_location(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Ask user to select the location to setup."""
         if user_input is None or CONF_LOCATION_ID not in user_input:
             # Get available locations
@@ -192,7 +202,9 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_unique_id(self.app_id, self.location_id))
         return await self.async_step_authorize()
 
-    async def async_step_authorize(self, user_input=None):
+    async def async_step_authorize(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Wait for the user to authorize the app installation."""
         user_input = {} if user_input is None else user_input
         self.installed_app_id = user_input.get(CONF_INSTALLED_APP_ID)
@@ -202,7 +214,10 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             url = format_install_url(self.app_id, self.location_id)
             return self.async_external_step(step_id="authorize", url=url)
 
-        return self.async_external_step_done(next_step_id="install")
+        next_step_id = "install"
+        if self.source == SOURCE_REAUTH:
+            next_step_id = "update"
+        return self.async_external_step_done(next_step_id=next_step_id)
 
     def _show_step_pat(self, errors):
         if self.access_token is None:
@@ -229,7 +244,44 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_install(self, data=None):
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle re-authentication of an existing config entry."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication of an existing config entry."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        self.app_id = self._get_reauth_entry().data[CONF_APP_ID]
+        self.location_id = self._get_reauth_entry().data[CONF_LOCATION_ID]
+        self._set_confirm_only()
+        return await self.async_step_authorize()
+
+    async def async_step_update(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication of an existing config entry."""
+        return await self.async_step_update_confirm()
+
+    async def async_step_update_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-authentication of an existing config entry."""
+        if user_input is None:
+            self._set_confirm_only()
+            return self.async_show_form(step_id="update_confirm")
+        entry = self._get_reauth_entry()
+        return self.async_update_reload_and_abort(
+            entry, data_updates={CONF_REFRESH_TOKEN: self.refresh_token}
+        )
+
+    async def async_step_install(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Create a config entry at completion of a flow and authorization of the app."""
         data = {
             CONF_ACCESS_TOKEN: self.access_token,

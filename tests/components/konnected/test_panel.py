@@ -1,4 +1,5 @@
 """Test Konnected setup process."""
+
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -699,4 +700,4 @@ async def test_connect_retry(hass: HomeAssistant, mock_panel) -> None:
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=21))
     await hass.async_block_till_done()
     await async_update_entity(hass, "switch.konnected_445566_actuator_6")
-    assert hass.states.get("switch.konnected_445566_actuator_6").state == "off"
+    assert hass.states.get("switch.konnected_445566_actuator_6").state == "unknown"

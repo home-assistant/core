@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Ensure that your TV is turned on before trying to set it up.\nIf you leave the host empty, discovery will be used to find devices.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the LG Netcast TV to control."
+        }
+      },
+      "authorize": {
+        "title": "Authorize LG Netcast TV",
+        "description": "Enter the Pairing Key displayed on the TV",
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]"
+    }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "lg_netcast.turn_on": "Device is requested to turn on"
+    }
+  }
+}

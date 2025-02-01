@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to The Things Network v3",
+        "description": "Enter the API hostname, application ID and API key to use with Home Assistant.\n\n[Read the instructions](https://www.thethingsindustries.com/docs/integrations/adding-applications/) on how to register your application and create an API key.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "app_id": "Application ID",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The Things Network application could not be connected.\n\nPlease check your credentials."
+      }
+    },
+    "abort": {
+      "already_configured": "Application ID is already configured",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  }
+}
