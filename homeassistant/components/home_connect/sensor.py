@@ -249,7 +249,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect sensor."""
-    known_enitiy_unique_ids: dict[str, str] = {}
+    known_entity_unique_ids: dict[str, str] = {}
 
     def get_entities_for_appliance(
         appliance: HomeConnectApplianceData,
@@ -276,7 +276,7 @@ async def async_setup_entry(
 
     for appliance in entry.runtime_data.data.values():
         entities = get_entities_for_appliance(appliance)
-        known_enitiy_unique_ids.update(
+        known_entity_unique_ids.update(
             {cast(str, entity.unique_id): appliance.info.ha_id for entity in entities}
         )
         async_add_entities(entities)
@@ -287,9 +287,9 @@ async def async_setup_entry(
             entities_to_add = [
                 entity
                 for entity in get_entities_for_appliance(appliance)
-                if cast(str, entity.unique_id) not in known_enitiy_unique_ids
+                if cast(str, entity.unique_id) not in known_entity_unique_ids
             ]
-            known_enitiy_unique_ids.update(
+            known_entity_unique_ids.update(
                 {
                     cast(str, entity.unique_id): appliance.info.ha_id
                     for entity in entities_to_add
@@ -299,9 +299,9 @@ async def async_setup_entry(
 
     def handle_depaired_appliance() -> None:
         """Handle removed appliance."""
-        for entity_unique_id, appliance_id in known_enitiy_unique_ids.copy().items():
+        for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
             if appliance_id not in entry.runtime_data.data:
-                known_enitiy_unique_ids.pop(entity_unique_id, None)
+                known_entity_unique_ids.pop(entity_unique_id, None)
 
     entry.async_on_unload(
         entry.runtime_data.async_add_special_listener(
