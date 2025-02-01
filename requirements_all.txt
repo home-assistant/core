@@ -1036,7 +1036,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==7.1.0
+google-nest-sdm==7.1.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1146,7 +1146,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250129.0
+home-assistant-frontend==20250130.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -1272,7 +1272,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.1.28.225404
+knx-frontend==2025.1.30.194235
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2310,7 +2310,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.1.6
+pysmlight==0.2.0
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -3125,13 +3125,13 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.141.0
+zeroconf==0.142.0
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.46
+zha==0.0.47
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13

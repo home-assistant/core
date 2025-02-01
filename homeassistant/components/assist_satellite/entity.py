@@ -10,7 +10,7 @@ import logging
 import time
 from typing import Any, Final, Literal, final
 
-from homeassistant.components import media_source, stt, tts
+from homeassistant.components import conversation, media_source, stt, tts
 from homeassistant.components.assist_pipeline import (
     OPTION_PREFERRED,
     AudioSettings,
@@ -27,6 +27,7 @@ from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
 from homeassistant.core import Context, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
 from homeassistant.helpers.entity import EntityDescription
 
@@ -117,6 +118,7 @@ class AssistSatelliteEntity(entity.Entity):
 
     _run_has_tts: bool = False
     _is_announcing = False
+    _extra_system_prompt: str | None = None
     _wake_word_intercept_future: asyncio.Future[str | None] | None = None
     _attr_tts_options: dict[str, Any] | None = None
     _pipeline_task: asyncio.Task | None = None
@@ -216,6 +218,59 @@ class AssistSatelliteEntity(entity.Entity):
         """
         raise NotImplementedError
 
+    async def async_internal_start_conversation(
+        self,
+        start_message: str | None = None,
+        start_media_id: str | None = None,
+        extra_system_prompt: str | None = None,
+    ) -> None:
+        """Start a conversation from the satellite.
+
+        If start_media_id is not provided, message is synthesized to
+        audio with the selected pipeline.
+
+        If start_media_id is provided, it is played directly. It is possible
+        to omit the message and the satellite will not show any text.
+
+        Calls async_start_conversation.
+        """
+        await self._cancel_running_pipeline()
+
+        # The Home Assistant built-in agent doesn't support conversations.
+        pipeline = async_get_pipeline(self.hass, self._resolve_pipeline())
+        if pipeline.conversation_engine == conversation.HOME_ASSISTANT_AGENT:
+            raise HomeAssistantError(
+                "Built-in conversation agent does not support starting conversations"
+            )
+
+        if start_message is None:
+            start_message = ""
+
+        announcement = await self._resolve_announcement_media_id(
+            start_message, start_media_id
+        )
+
+        if self._is_announcing:
+            raise SatelliteBusyError
+
+        self._is_announcing = True
+        # Provide our start info to the LLM so it understands context of incoming message
+        if extra_system_prompt is not None:
+            self._extra_system_prompt = extra_system_prompt
+        else:
+            self._extra_system_prompt = start_message or None
+
+        try:
+            await self.async_start_conversation(announcement)
+        finally:
+            self._is_announcing = False
+
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
+        raise NotImplementedError
+
     async def async_accept_pipeline_from_satellite(
         self,
         audio_stream: AsyncIterable[bytes],
@@ -225,6 +280,10 @@ class AssistSatelliteEntity(entity.Entity):
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
+
+        # Consume system prompt in first pipeline
+        extra_system_prompt = self._extra_system_prompt
+        self._extra_system_prompt = None
 
         if self._wake_word_intercept_future and start_stage in (
             PipelineStage.WAKE_WORD,
@@ -302,6 +361,7 @@ class AssistSatelliteEntity(entity.Entity):
                 ),
                 start_stage=start_stage,
                 end_stage=end_stage,
+                conversation_extra_system_prompt=extra_system_prompt,
             ),
             f"{self.entity_id}_pipeline",
         )
