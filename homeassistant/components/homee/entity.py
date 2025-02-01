@@ -2,7 +2,9 @@
 
 from pyHomee.const import AttributeState, AttributeType, NodeProfile, NodeState
 from pyHomee.model import HomeeAttribute, HomeeNode
+from websockets.exceptions import ConnectionClosed
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -38,7 +40,7 @@ class HomeeEntity(Entity):
             self._attribute.add_on_changed_listener(self._on_node_updated)
         )
         self.async_on_remove(
-            await self._entry.runtime_data.add_connection_listener(
+            self._entry.runtime_data.add_connection_listener(
                 self._on_connection_changed
             )
         )
@@ -56,7 +58,7 @@ class HomeeEntity(Entity):
     def _on_node_updated(self, attribute: HomeeAttribute) -> None:
         self.schedule_update_ha_state()
 
-    async def _on_connection_changed(self, connected: bool) -> None:
+    def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
         self.schedule_update_ha_state()
 
@@ -93,7 +95,7 @@ class HomeeNodeEntity(Entity):
         """Add the homee binary sensor device to home assistant."""
         self.async_on_remove(self._node.add_on_changed_listener(self._on_node_updated))
         self.async_on_remove(
-            await self._entry.runtime_data.add_connection_listener(
+            self._entry.runtime_data.add_connection_listener(
                 self._on_connection_changed
             )
         )
@@ -137,11 +139,17 @@ class HomeeNodeEntity(Entity):
     async def async_set_value(self, attribute: HomeeAttribute, value: float) -> None:
         """Set an attribute value on the homee node."""
         homee = self._entry.runtime_data
-        await homee.set_value(attribute.node_id, attribute.id, value)
+        try:
+            await homee.set_value(attribute.node_id, attribute.id, value)
+        except ConnectionClosed as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_closed",
+            ) from exception
 
     def _on_node_updated(self, node: HomeeNode) -> None:
         self.schedule_update_ha_state()
 
-    async def _on_connection_changed(self, connected: bool) -> None:
+    def _on_connection_changed(self, connected: bool) -> None:
         self._host_connected = connected
         self.schedule_update_ha_state()

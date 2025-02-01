@@ -9,9 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -23,7 +24,9 @@ from .const import (
     ATTR_ENDPOINT,
     ATTR_METHOD,
     ATTR_SESSION_DATA_USER_ID,
+    ATTR_SLUG,
     ATTR_TIMEOUT,
+    ATTR_VERSION,
     ATTR_WS_EVENT,
     DATA_COMPONENT,
     EVENT_SUPERVISOR_EVENT,
@@ -33,6 +36,8 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
+from .coordinator import get_supervisor_info
+from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     {vol.Required(ATTR_WS_EVENT): cv.string},
@@ -58,6 +63,8 @@ def async_load_websocket_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_supervisor_event)
     websocket_api.async_register_command(hass, websocket_supervisor_api)
     websocket_api.async_register_command(hass, websocket_subscribe)
+    websocket_api.async_register_command(hass, websocket_update_addon)
+    websocket_api.async_register_command(hass, websocket_update_core)
 
 
 @callback
@@ -137,3 +144,44 @@ async def websocket_supervisor_api(
         )
     else:
         connection.send_result(msg[WS_ID], result.get(ATTR_DATA, {}))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(WS_TYPE): "hassio/update/addon",
+        vol.Required("addon"): str,
+        vol.Required("backup"): bool,
+    }
+)
+@websocket_api.async_response
+async def websocket_update_addon(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Websocket handler to update an addon."""
+    addon_name: str | None = None
+    addon_version: str | None = None
+    addons: list = (get_supervisor_info(hass) or {}).get("addons", [])
+    for addon in addons:
+        if addon[ATTR_SLUG] == msg["addon"]:
+            addon_name = addon[ATTR_NAME]
+            addon_version = addon[ATTR_VERSION]
+            break
+    await update_addon(hass, msg["addon"], msg["backup"], addon_name, addon_version)
+    connection.send_result(msg[WS_ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(WS_TYPE): "hassio/update/core",
+        vol.Required("backup"): bool,
+    }
+)
+@websocket_api.async_response
+async def websocket_update_core(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Websocket handler to update an addon."""
+    await update_core(hass, None, msg["backup"])
+    connection.send_result(msg[WS_ID])

@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Literal
 
+import voluptuous as vol
+
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -23,7 +25,9 @@ from homeassistant.helpers import intent, llm, template
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util, ulid as ulid_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonObjectType
 
+from . import trace
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
@@ -120,9 +124,9 @@ async def async_get_chat_session(
     if history:
         history = replace(history, messages=history.messages.copy())
     else:
-        history = ChatSession(hass, conversation_id)
+        history = ChatSession(hass, conversation_id, user_input.agent_id)
 
-    message: ChatMessage = ChatMessage(
+    message: Content = Content(
         role="user",
         agent_id=user_input.agent_id,
         content=user_input.text,
@@ -165,23 +169,21 @@ class ConverseError(HomeAssistantError):
 
 
 @dataclass
-class ChatMessage[_NativeT]:
-    """Base class for chat messages.
+class Content:
+    """Base class for chat messages."""
 
-    When role is native, the content is to be ignored and message
-    is only meant for storing the native object.
-    """
-
-    role: Literal["system", "assistant", "user", "native"]
+    role: Literal["system", "assistant", "user"]
     agent_id: str | None
     content: str
-    native: _NativeT | None = field(default=None)
 
-    # Validate in post-init that if role is native, there is no content and a native object exists
-    def __post_init__(self) -> None:
-        """Validate native message."""
-        if self.role == "native" and self.native is None:
-            raise ValueError("Native message must have a native object")
+
+@dataclass(frozen=True)
+class NativeContent[_NativeT]:
+    """Native content."""
+
+    role: str = field(init=False, default="native")
+    agent_id: str
+    content: _NativeT
 
 
 @dataclass
@@ -190,16 +192,17 @@ class ChatSession[_NativeT]:
 
     hass: HomeAssistant
     conversation_id: str
+    agent_id: str | None
     user_name: str | None = None
-    messages: list[ChatMessage[_NativeT]] = field(
-        default_factory=lambda: [ChatMessage(role="system", agent_id=None, content="")]
+    messages: list[Content | NativeContent[_NativeT]] = field(
+        default_factory=lambda: [Content(role="system", agent_id=None, content="")]
     )
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
     last_updated: datetime = field(default_factory=dt_util.utcnow)
 
     @callback
-    def async_add_message(self, message: ChatMessage[_NativeT]) -> None:
+    def async_add_message(self, message: Content | NativeContent[_NativeT]) -> None:
         """Process intent."""
         if message.role == "system":
             raise ValueError("Cannot add system messages to history")
@@ -209,7 +212,9 @@ class ChatSession[_NativeT]:
         self.messages.append(message)
 
     @callback
-    def async_get_messages(self, agent_id: str | None) -> list[ChatMessage[_NativeT]]:
+    def async_get_messages(
+        self, agent_id: str | None = None
+    ) -> list[Content | NativeContent[_NativeT]]:
         """Get messages for a specific agent ID.
 
         This will filter out any native message tied to other agent IDs.
@@ -321,8 +326,34 @@ class ChatSession[_NativeT]:
         self.llm_api = llm_api
         self.user_name = user_name
         self.extra_system_prompt = extra_system_prompt
-        self.messages[0] = ChatMessage(
+        self.messages[0] = Content(
             role="system",
             agent_id=user_input.agent_id,
             content=prompt,
         )
+
+        LOGGER.debug("Prompt: %s", self.messages)
+        LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
+
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                "messages": self.messages,
+                "tools": self.llm_api.tools if self.llm_api else None,
+            },
+        )
+
+    async def async_call_tool(self, tool_input: llm.ToolInput) -> JsonObjectType:
+        """Invoke LLM tool for the configured LLM API."""
+        if not self.llm_api:
+            raise ValueError("No LLM API configured")
+        LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
+
+        try:
+            tool_response = await self.llm_api.async_call_tool(tool_input)
+        except (HomeAssistantError, vol.Invalid) as e:
+            tool_response = {"error": type(e).__name__}
+            if str(e):
+                tool_response["error_text"] = str(e)
+        LOGGER.debug("Tool response: %s", tool_response)
+        return tool_response

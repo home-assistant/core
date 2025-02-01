@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import NextcloudConfigEntry
+from .coordinator import NextcloudConfigEntry
 from .entity import NextcloudEntity
 
 UNIT_OF_LOAD: Final[str] = "load"

@@ -7,12 +7,14 @@ import socket
 import motionmount
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 
 from .const import DOMAIN, EMPTY_MAC
+
+type MotionMountConfigEntry = ConfigEntry[motionmount.MotionMount]
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -22,7 +24,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MotionMountConfigEntry) -> bool:
     """Set up Vogel's MotionMount from a config entry."""
 
     host = entry.data[CONF_HOST]
@@ -48,18 +50,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             f"Unexpected device found at {host}; expected {entry.unique_id}, found {found_mac}"
         )
 
+    # Check we're properly authenticated or be able to become so
+    if not mm.is_authenticated:
+        if CONF_PIN not in entry.data:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="no_pin_provided",
+            )
+
+        pin = entry.data[CONF_PIN]
+        await mm.authenticate(pin)
+        if not mm.is_authenticated:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="incorrect_pin",
+            )
+
     # Store an API object for your platforms to access
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = mm
+    entry.runtime_data = mm
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: MotionMountConfigEntry
+) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        mm: motionmount.MotionMount = hass.data[DOMAIN].pop(entry.entry_id)
+        mm = entry.runtime_data
         await mm.disconnect()
 
     return unload_ok
