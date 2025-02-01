@@ -186,14 +186,9 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> AgentBackup | None:
         """Return a backup."""
         item = await self._find_item_by_backup_id(backup_id)
-        if item is None:
+        if item is None or not item.description:
             return None
-
-        return (
-            self._backup_from_description(item.description)
-            if item.description
-            else None
-        )
+        return self._backup_from_description(item.description)
 
     def _backup_from_description(self, description: str) -> AgentBackup:
         """Create a backup object from a description."""
@@ -204,7 +199,11 @@ class OneDriveBackupAgent(BackupAgent):
 
     async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:
         """Find an item by backup ID."""
-        for item in await self._client.list_drive_items(self._folder_id):
-            if item.description and backup_id in item.description:
-                return item
-        return None
+        return next(
+            (
+                item
+                for item in await self._client.list_drive_items(self._folder_id)
+                if item.description and backup_id in item.description
+            ),
+            None,
+        )
