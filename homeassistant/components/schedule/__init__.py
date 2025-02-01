@@ -212,7 +212,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         reload_service_handler,
     )
 
-    component = hass.data[DOMAIN] = EntityComponent[Schedule](LOGGER, DOMAIN, hass)
     component.async_register_entity_service(
         SERVICE_GET,
         {},
