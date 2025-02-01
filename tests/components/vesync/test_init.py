@@ -10,6 +10,9 @@ from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_MANAGER
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry__not_login(
@@ -123,3 +126,33 @@ async def test_async_new_device_discovery(
         assert manager.login.call_count == 1
         assert hass.data[DOMAIN][VS_MANAGER] == manager
         assert hass.data[DOMAIN][VS_DEVICES] == [fan, humidifier]
+
+
+async def test_migrate_config_entry(
+    hass: HomeAssistant,
+    switch_old_id_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration of config entry. Only migrates switches to a new unique_id."""
+    entity_registry = er.async_get(hass)
+
+    entity: er.RegistryEntry = entity_registry.async_get_or_create(
+        domain="switch",
+        platform="vesync",
+        unique_id="switch",
+        config_entry=switch_old_id_config_entry,
+        suggested_object_id="switch",
+    )
+
+    assert entity.unique_id == "switch"
+    assert switch_old_id_config_entry.version == 1
+
+    await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert switch_old_id_config_entry.version == 2
+
+    migrated_entity = entity_registry.async_get(entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.entity_id.startswith("switch")
+    assert migrated_entity.unique_id == "switch-device_status"
