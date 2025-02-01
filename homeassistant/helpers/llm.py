@@ -316,14 +316,14 @@ class AssistAPI(API):
 
         return APIInstance(
             api=self,
-            api_prompt=self._async_get_prompt(llm_context, exposed_entities),
+            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
             llm_context=llm_context,
             tools=self._async_get_tools(llm_context, exposed_entities),
             custom_serializer=_selector_serializer,
         )
 
     @callback
-    def _async_get_prompt(
+    def _async_get_api_prompt(
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
         if not exposed_entities:
@@ -333,13 +333,13 @@ class AssistAPI(API):
             )
         return "\n".join(
             [
-                *self._async_get_api_prompt(llm_context),
+                *self._async_get_preable(llm_context),
                 *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
             ]
         )
 
     @callback
-    def _async_get_api_prompt(self, llm_context: LLMContext) -> list[str]:
+    def _async_get_preable(self, llm_context: LLMContext) -> list[str]:
         """Return the prompt for the API."""
 
         prompt = [
