@@ -11,7 +11,11 @@ from typing import Any, Concatenate
 
 from aiohttp import ClientTimeout
 from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
-from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
+from onedrive_personal_sdk.exceptions import (
+    AuthenticationError,
+    HashMismatchError,
+    OneDriveException,
+)
 from onedrive_personal_sdk.models.items import File, Folder, ItemUpdate
 from onedrive_personal_sdk.models.upload import FileInfo
 
@@ -141,9 +145,14 @@ class OneDriveBackupAgent(BackupAgent):
             self._folder_id,
             await open_stream(),
         )
-        await LargeFileUploadClient.upload(
-            self._token_provider, file, session=async_get_clientsession(self._hass)
-        )
+        try:
+            await LargeFileUploadClient.upload(
+                self._token_provider, file, session=async_get_clientsession(self._hass)
+            )
+        except HashMismatchError as err:
+            raise BackupAgentError(
+                "Hash validation failed, backup file might be corrupt"
+            ) from err
 
         # store metadata in description
         backup_dict = backup.as_dict()

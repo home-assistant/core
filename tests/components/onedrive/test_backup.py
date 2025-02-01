@@ -6,7 +6,11 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import Mock, patch
 
-from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
+from onedrive_personal_sdk.exceptions import (
+    AuthenticationError,
+    HashMismatchError,
+    OneDriveException,
+)
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -181,6 +185,42 @@ async def test_agents_upload(
     assert f"Uploading backup {test_backup.backup_id}" in caplog.text
     mock_large_file_upload_client.assert_called_once()
     mock_onedrive_client.update_drive_item.assert_called_once()
+
+
+async def test_agents_upload_corrupt_upload(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_onedrive_client: MagicMock,
+    mock_large_file_upload_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test hash validation fails."""
+    mock_large_file_upload_client.side_effect = HashMismatchError("test")
+    client = await hass_client()
+    test_backup = AgentBackup.from_dict(BACKUP_METADATA)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.unique_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert f"Uploading backup {test_backup.backup_id}" in caplog.text
+    mock_large_file_upload_client.assert_called_once()
+    assert mock_onedrive_client.update_drive_item.call_count == 0
+    assert "Hash validation failed, backup file might be corrupt" in caplog.text
 
 
 async def test_agents_download(
