@@ -58,7 +58,7 @@ async def test_general_data(
     assert entity_registry.async_get(cover.entity_id).unique_id == f"{HOMEE_ID}-3-1"
 
     # For a NodeSensor.
-    node_state = entity_registry.async_get("sensor.test_cover_none")
+    node_state = entity_registry.async_get("sensor.test_cover_node_state")
     assert node_state.disabled
     assert node_state.unique_id == f"{HOMEE_ID}-3-state"
 
