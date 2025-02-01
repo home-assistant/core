@@ -217,6 +217,7 @@ homeassistant.components.goalzero.*
 homeassistant.components.google.*
 homeassistant.components.google_assistant_sdk.*
 homeassistant.components.google_cloud.*
+homeassistant.components.google_drive.*
 homeassistant.components.google_photos.*
 homeassistant.components.google_sheets.*
 homeassistant.components.govee_ble.*
@@ -224,8 +225,10 @@ homeassistant.components.gpsd.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
+homeassistant.components.habitica.*
 homeassistant.components.hardkernel.*
 homeassistant.components.hardware.*
+homeassistant.components.heos.*
 homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.history_stats.*
@@ -236,6 +239,7 @@ homeassistant.components.homeassistant_green.*
 homeassistant.components.homeassistant_hardware.*
 homeassistant.components.homeassistant_sky_connect.*
 homeassistant.components.homeassistant_yellow.*
+homeassistant.components.homee.*
 homeassistant.components.homekit.*
 homeassistant.components.homekit_controller
 homeassistant.components.homekit_controller.alarm_control_panel
@@ -261,6 +265,7 @@ homeassistant.components.image_processing.*
 homeassistant.components.image_upload.*
 homeassistant.components.imap.*
 homeassistant.components.imgw_pib.*
+homeassistant.components.incomfort.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
 homeassistant.components.input_text.*
@@ -291,6 +296,7 @@ homeassistant.components.lcn.*
 homeassistant.components.ld2410_ble.*
 homeassistant.components.led_ble.*
 homeassistant.components.lektrico.*
+homeassistant.components.letpot.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
@@ -305,12 +311,15 @@ homeassistant.components.logbook.*
 homeassistant.components.logger.*
 homeassistant.components.london_underground.*
 homeassistant.components.lookin.*
+homeassistant.components.lovelace.*
 homeassistant.components.luftdaten.*
 homeassistant.components.madvr.*
 homeassistant.components.manual.*
 homeassistant.components.mastodon.*
 homeassistant.components.matrix.*
 homeassistant.components.matter.*
+homeassistant.components.mcp.*
+homeassistant.components.mcp_server.*
 homeassistant.components.mealie.*
 homeassistant.components.media_extractor.*
 homeassistant.components.media_player.*
@@ -352,6 +361,7 @@ homeassistant.components.number.*
 homeassistant.components.nut.*
 homeassistant.components.onboarding.*
 homeassistant.components.oncue.*
+homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
@@ -364,10 +374,12 @@ homeassistant.components.otbr.*
 homeassistant.components.overkiz.*
 homeassistant.components.overseerr.*
 homeassistant.components.p1_monitor.*
+homeassistant.components.pandora.*
 homeassistant.components.panel_custom.*
 homeassistant.components.peblar.*
 homeassistant.components.peco.*
 homeassistant.components.persistent_notification.*
+homeassistant.components.person.*
 homeassistant.components.pi_hole.*
 homeassistant.components.ping.*
 homeassistant.components.plugwise.*
@@ -381,6 +393,8 @@ homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
+homeassistant.components.python_script.*
+homeassistant.components.qbus.*
 homeassistant.components.qnap_qsw.*
 homeassistant.components.rabbitair.*
 homeassistant.components.radarr.*

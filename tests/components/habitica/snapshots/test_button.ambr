@@ -27,7 +27,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
     'unit_of_measurement': None,
   })
@@ -73,7 +73,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.HEAL_ALL: 'heal_all'>,
+    'translation_key': <HabiticaButtonEntity.HEAL_ALL: 'heal_all'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_heal_all',
     'unit_of_measurement': None,
   })
@@ -120,7 +120,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
     'unit_of_measurement': None,
   })
@@ -167,7 +167,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.HEAL: 'heal'>,
+    'translation_key': <HabiticaButtonEntity.HEAL: 'heal'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_heal',
     'unit_of_measurement': None,
   })
@@ -214,7 +214,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.PROTECT_AURA: 'protect_aura'>,
+    'translation_key': <HabiticaButtonEntity.PROTECT_AURA: 'protect_aura'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_protect_aura',
     'unit_of_measurement': None,
   })
@@ -261,7 +261,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.REVIVE: 'revive'>,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
     'unit_of_measurement': None,
   })
@@ -307,7 +307,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.BRIGHTNESS: 'brightness'>,
+    'translation_key': <HabiticaButtonEntity.BRIGHTNESS: 'brightness'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_brightness',
     'unit_of_measurement': None,
   })
@@ -354,7 +354,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.RUN_CRON: 'run_cron'>,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
     'unit_of_measurement': None,
   })
@@ -400,7 +400,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
     'unit_of_measurement': None,
   })
@@ -446,7 +446,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
     'unit_of_measurement': None,
   })
@@ -493,7 +493,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.REVIVE: 'revive'>,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
     'unit_of_measurement': None,
   })
@@ -539,7 +539,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.RUN_CRON: 'run_cron'>,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
     'unit_of_measurement': None,
   })
@@ -585,7 +585,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.STEALTH: 'stealth'>,
+    'translation_key': <HabiticaButtonEntity.STEALTH: 'stealth'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_stealth',
     'unit_of_measurement': None,
   })
@@ -632,7 +632,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.TOOLS_OF_TRADE: 'tools_of_trade'>,
+    'translation_key': <HabiticaButtonEntity.TOOLS_OF_TRADE: 'tools_of_trade'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_tools_of_trade',
     'unit_of_measurement': None,
   })
@@ -679,7 +679,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
     'unit_of_measurement': None,
   })
@@ -725,7 +725,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
     'unit_of_measurement': None,
   })
@@ -772,7 +772,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.DEFENSIVE_STANCE: 'defensive_stance'>,
+    'translation_key': <HabiticaButtonEntity.DEFENSIVE_STANCE: 'defensive_stance'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_defensive_stance',
     'unit_of_measurement': None,
   })
@@ -819,7 +819,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.INTIMIDATE: 'intimidate'>,
+    'translation_key': <HabiticaButtonEntity.INTIMIDATE: 'intimidate'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_intimidate',
     'unit_of_measurement': None,
   })
@@ -866,7 +866,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.REVIVE: 'revive'>,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
     'unit_of_measurement': None,
   })
@@ -912,7 +912,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.RUN_CRON: 'run_cron'>,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
     'unit_of_measurement': None,
   })
@@ -958,7 +958,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.VALOROUS_PRESENCE: 'valorous_presence'>,
+    'translation_key': <HabiticaButtonEntity.VALOROUS_PRESENCE: 'valorous_presence'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_valorous_presence',
     'unit_of_measurement': None,
   })
@@ -1005,7 +1005,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
+    'translation_key': <HabiticaButtonEntity.ALLOCATE_ALL_STAT_POINTS: 'allocate_all_stat_points'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_allocate_all_stat_points',
     'unit_of_measurement': None,
   })
@@ -1051,7 +1051,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
+    'translation_key': <HabiticaButtonEntity.BUY_HEALTH_POTION: 'buy_health_potion'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_buy_health_potion',
     'unit_of_measurement': None,
   })
@@ -1098,7 +1098,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.FROST: 'frost'>,
+    'translation_key': <HabiticaButtonEntity.FROST: 'frost'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_frost',
     'unit_of_measurement': None,
   })
@@ -1145,7 +1145,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.EARTH: 'earth'>,
+    'translation_key': <HabiticaButtonEntity.EARTH: 'earth'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_earth',
     'unit_of_measurement': None,
   })
@@ -1192,7 +1192,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.MPHEAL: 'mpheal'>,
+    'translation_key': <HabiticaButtonEntity.MPHEAL: 'mpheal'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_mpheal',
     'unit_of_measurement': None,
   })
@@ -1239,7 +1239,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.REVIVE: 'revive'>,
+    'translation_key': <HabiticaButtonEntity.REVIVE: 'revive'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_revive',
     'unit_of_measurement': None,
   })
@@ -1285,7 +1285,7 @@
     'platform': 'habitica',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': <HabitipyButtonEntity.RUN_CRON: 'run_cron'>,
+    'translation_key': <HabiticaButtonEntity.RUN_CRON: 'run_cron'>,
     'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_run_cron',
     'unit_of_measurement': None,
   })

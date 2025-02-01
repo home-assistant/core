@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import async_register_admin_service
 
@@ -436,10 +436,6 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    if sys.version_info >= (3, 13):
-        raise HomeAssistantError(
-            "Memory profiling is not supported on Python 3.13. Please use Python 3.12."
-        )
     from guppy import hpy  # pylint: disable=import-outside-toplevel
 
     start_time = int(time.time() * 1000000)

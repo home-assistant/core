@@ -47,9 +47,9 @@ class RecorderPool(SingletonThreadPool, NullPool):
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
-        assert (
-            recorder_and_worker_thread_ids is not None
-        ), "recorder_and_worker_thread_ids is required"
+        assert recorder_and_worker_thread_ids is not None, (
+            "recorder_and_worker_thread_ids is required"
+        )
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 

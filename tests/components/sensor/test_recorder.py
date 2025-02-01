@@ -40,7 +40,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockSensor
@@ -57,7 +57,7 @@ from tests.components.recorder.common import (
 )
 from tests.typing import (
     MockHAClientWebSocket,
-    RecorderInstanceGenerator,
+    RecorderInstanceContextManager,
     WebSocketGenerator,
 )
 
@@ -102,7 +102,7 @@ KW_SENSOR_ATTRIBUTES = {
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder patches."""
 
@@ -117,15 +117,6 @@ def disable_mariadb_issue() -> None:
     """Disable creating issue about outdated MariaDB version."""
     with patch(
         "homeassistant.components.recorder.util._async_create_mariadb_range_index_regression_issue"
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def disable_sqlite_issue() -> None:
-    """Disable creating issue about outdated SQLite version."""
-    with patch(
-        "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
     ):
         yield
 
