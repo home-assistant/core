@@ -32,6 +32,20 @@
     }
   },
   "entity": {
+    "switch": {
+      "alarm_sound": {
+        "name": "Alarm sound"
+      },
+      "auto_mode": {
+        "name": "Auto mode"
+      },
+      "power": {
+        "name": "Power"
+      },
+      "pump_cycling": {
+        "name": "Pump cycling"
+      }
+    },
     "time": {
       "light_schedule_end": {
         "name": "Light off"
