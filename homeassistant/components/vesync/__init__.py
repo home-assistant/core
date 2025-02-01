@@ -95,6 +95,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
+    _LOGGER.debug("Migrating VeSync config entry: %s", config_entry.version)
     if config_entry.version == 1:
         # Migrate switch/outlets entity to a new unique ID
         _LOGGER.debug("Migrating VeSync config entry from version 1 to version 2")
@@ -103,18 +104,17 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             entity_registry, config_entry.entry_id
         )
         for reg_entry in registry_entries:
-            if (
-                "--" not in reg_entry.unique_id
-                and reg_entry.platform == Platform.SWITCH
+            if "-" not in reg_entry.unique_id and reg_entry.entity_id.startswith(
+                Platform.SWITCH
             ):
                 _LOGGER.debug(
                     "Migrating switch/outlet entity from unique_id: %s to unique_id: %s",
                     reg_entry.unique_id,
-                    reg_entry.unique_id + "--device_status",
+                    reg_entry.unique_id + "-device_status",
                 )
                 entity_registry.async_update_entity(
                     reg_entry.entity_id,
-                    new_unique_id=reg_entry.unique_id + "--device_status",
+                    new_unique_id=reg_entry.unique_id + "-device_status",
                 )
             else:
                 _LOGGER.debug("Skipping entity with unique_id: %s", reg_entry.unique_id)
