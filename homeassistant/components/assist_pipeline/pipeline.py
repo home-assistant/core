@@ -1101,11 +1101,10 @@ class PipelineRun:
                         "speech", ""
                     )
                     chat_session.async_add_message(
-                        conversation.ChatMessage(
+                        conversation.Content(
                             role="assistant",
                             agent_id=agent_id,
                             content=speech,
-                            native=intent_response,
                         )
                     )
                     conversation_result = conversation.ConversationResult(
@@ -1123,6 +1122,7 @@ class PipelineRun:
                     context=user_input.context,
                     language=user_input.language,
                     agent_id=user_input.agent_id,
+                    extra_system_prompt=user_input.extra_system_prompt,
                 )
                 speech = conversation_result.response.speech.get("plain", {}).get(
                     "speech", ""
