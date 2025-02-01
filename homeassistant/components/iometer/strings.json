@@ -1,6 +1,5 @@
 {
   "config": {
-    "flow_title": "IOmeter {meter_number}",
     "step": {
       "user": {
         "description": "Setup your IOmeter device for local data",

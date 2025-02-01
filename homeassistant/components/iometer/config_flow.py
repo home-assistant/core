@@ -5,10 +5,10 @@ from typing import Any, Final
 from iometer import IOmeterClient, IOmeterConnectionError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -20,13 +20,14 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.data: dict[str, Any] = {}
+        self._host: str
+        self._meter_number: str
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        self.data[CONF_HOST] = host = discovery_info.host
+        self._host = host = discovery_info.host
         self._async_abort_entries_match({CONF_HOST: host})
 
         session = async_get_clientsession(self.hass)
@@ -36,18 +37,12 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         except IOmeterConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        self.data["meter_number"] = status.meter.number
+        self._meter_number = status.meter.number
 
         await self.async_set_unique_id(status.device.id)
         self._abort_if_unique_id_configured()
 
-        self.context.update(
-            {
-                "title_placeholders": {
-                    "meter_number": self.data["meter_number"],
-                }
-            }
-        )
+        self.context["title_placeholders"] = {"name": f"IOmeter {self._meter_number}"}
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -56,14 +51,14 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         if user_input is not None:
             return self.async_create_entry(
-                title=f"IOmeter-{self.data['meter_number']}",
-                data={CONF_HOST: self.data[CONF_HOST]},
+                title=f"IOmeter {self._meter_number}",
+                data={CONF_HOST: self._host},
             )
 
         self._set_confirm_only()
         return self.async_show_form(
             step_id="zeroconf_confirm",
-            description_placeholders={"meter_number": self.data["meter_number"]},
+            description_placeholders={"meter_number": self._meter_number},
         )
 
     async def async_step_user(
@@ -80,11 +75,11 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             except IOmeterConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                self.data["meter_number"] = status.meter.number
+                self._meter_number = status.meter.number
                 await self.async_set_unique_id(status.device.id)
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=f"IOmeter-{self.data['meter_number']}",
+                    title=f"IOmeter {self._meter_number}",
                     data={CONF_HOST: user_input[CONF_HOST]},
                 )
         return self.async_show_form(

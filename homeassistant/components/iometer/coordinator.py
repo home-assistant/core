@@ -48,6 +48,6 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
             reading = await self.client.get_current_reading()
             status = await self.client.get_current_status()
         except IOmeterConnectionError as error:
-            raise UpdateFailed(error) from error
+            raise UpdateFailed(f"Error communicating with IOmeter: {error}") from error
 
         return IOmeterData(reading=reading, status=status)
