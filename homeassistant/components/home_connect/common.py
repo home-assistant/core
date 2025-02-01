@@ -1,0 +1,88 @@
+"""Common callbacks for all Home Connect platforms."""
+
+from collections.abc import Callable
+from functools import partial
+from typing import cast
+
+from aiohomeconnect.model import EventKey
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .entity import HomeConnectEntity
+
+
+def handle_paired_or_connected_appliance(
+    entry: HomeConnectConfigEntry,
+    known_entity_unique_ids: dict[str, str],
+    get_entities_for_appliance: Callable[
+        [HomeConnectConfigEntry, HomeConnectApplianceData], list[HomeConnectEntity]
+    ],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Handle new paired appliance or an appliance that has been connected."""
+    for appliance in entry.runtime_data.data.values():
+        entities_to_add = [
+            entity
+            for entity in get_entities_for_appliance(entry, appliance)
+            if entity.unique_id not in known_entity_unique_ids
+        ]
+        known_entity_unique_ids.update(
+            {
+                cast(str, entity.unique_id): appliance.info.ha_id
+                for entity in entities_to_add
+            }
+        )
+        async_add_entities(entities_to_add)
+
+
+def handle_depaired_appliance(
+    entry: HomeConnectConfigEntry,
+    known_entity_unique_ids: dict[str, str],
+) -> None:
+    """Handle removed appliance."""
+    for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
+        if appliance_id not in entry.runtime_data.data:
+            known_entity_unique_ids.pop(entity_unique_id, None)
+
+
+def setup_home_connect_entry(
+    hass: HomeAssistant,
+    entry: HomeConnectConfigEntry,
+    get_entities_for_appliance: Callable[
+        [HomeConnectConfigEntry, HomeConnectApplianceData], list[HomeConnectEntity]
+    ],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the callbacks for paired and depaired appliances."""
+    known_entity_unique_ids: dict[str, str] = {}
+
+    for appliance in entry.runtime_data.data.values():
+        entities = get_entities_for_appliance(entry, appliance)
+        known_entity_unique_ids.update(
+            {cast(str, entity.unique_id): appliance.info.ha_id for entity in entities}
+        )
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(
+            partial(
+                handle_paired_or_connected_appliance,
+                entry,
+                known_entity_unique_ids,
+                get_entities_for_appliance,
+                async_add_entities,
+            ),
+            (
+                EventKey.BSH_COMMON_APPLIANCE_PAIRED,
+                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
+            ),
+        )
+    )
+    entry.async_on_unload(
+        entry.runtime_data.async_add_special_listener(
+            partial(handle_depaired_appliance, entry, known_entity_unique_ids),
+            (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
+        )
+    )

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import cast
 
-from aiohomeconnect.model import EventKey, StatusKey
+from aiohomeconnect.model import StatusKey
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -21,6 +21,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from .common import setup_home_connect_entry
 from .const import (
     BSH_DOOR_STATE_CLOSED,
     BSH_DOOR_STATE_LOCKED,
@@ -113,70 +114,33 @@ BINARY_SENSORS = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = []
+    entities.extend(
+        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        for description in BINARY_SENSORS
+        if description.key in appliance.status
+    )
+    if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
+        entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect binary sensor."""
-    known_entity_unique_ids: dict[str, str] = {}
-
-    def get_entities_for_appliance(
-        appliance: HomeConnectApplianceData,
-    ) -> list[BinarySensorEntity]:
-        entities: list[BinarySensorEntity] = []
-        entities.extend(
-            HomeConnectBinarySensor(entry.runtime_data, appliance, description)
-            for description in BINARY_SENSORS
-            if description.key in appliance.status
-        )
-        if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
-            entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
-        return entities
-
-    for appliance in entry.runtime_data.data.values():
-        entities = get_entities_for_appliance(appliance)
-        known_entity_unique_ids.update(
-            {cast(str, entity.unique_id): appliance.info.ha_id for entity in entities}
-        )
-        async_add_entities(entities)
-
-    def handle_paired_or_connected_appliance() -> None:
-        """Handle new paired appliance or a appliance that has been connected."""
-        for appliance in entry.runtime_data.data.values():
-            entities_to_add = [
-                entity
-                for entity in get_entities_for_appliance(appliance)
-                if cast(str, entity.unique_id) not in known_entity_unique_ids
-            ]
-            known_entity_unique_ids.update(
-                {
-                    cast(str, entity.unique_id): appliance.info.ha_id
-                    for entity in entities_to_add
-                }
-            )
-            async_add_entities(entities_to_add)
-
-    def handle_depaired_appliance() -> None:
-        """Handle removed appliance."""
-        for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
-            if appliance_id not in entry.runtime_data.data:
-                known_entity_unique_ids.pop(entity_unique_id, None)
-
-    entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(
-            handle_paired_or_connected_appliance,
-            (
-                EventKey.BSH_COMMON_APPLIANCE_PAIRED,
-                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
-            ),
-        )
-    )
-    entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(
-            handle_depaired_appliance,
-            (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
-        ),
+    setup_home_connect_entry(
+        hass,
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
     )
 
 

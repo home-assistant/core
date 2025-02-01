@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_FINISHED,
@@ -243,80 +244,42 @@ EVENT_SENSORS = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return [
+        *[
+            HomeConnectEventSensor(entry.runtime_data, appliance, description)
+            for description in EVENT_SENSORS
+            if description.appliance_types
+            and appliance.info.type in description.appliance_types
+        ],
+        *[
+            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
+            for desc in BSH_PROGRAM_SENSORS
+            if desc.appliance_types and appliance.info.type in desc.appliance_types
+        ],
+        *[
+            HomeConnectSensor(entry.runtime_data, appliance, description)
+            for description in SENSORS
+            if description.key in appliance.status
+        ],
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect sensor."""
-    known_entity_unique_ids: dict[str, str] = {}
-
-    def get_entities_for_appliance(
-        appliance: HomeConnectApplianceData,
-    ) -> list[SensorEntity]:
-        """Get a list of entities."""
-        return [
-            *[
-                HomeConnectEventSensor(entry.runtime_data, appliance, description)
-                for description in EVENT_SENSORS
-                if description.appliance_types
-                and appliance.info.type in description.appliance_types
-            ],
-            *[
-                HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
-                for desc in BSH_PROGRAM_SENSORS
-                if desc.appliance_types and appliance.info.type in desc.appliance_types
-            ],
-            *[
-                HomeConnectSensor(entry.runtime_data, appliance, description)
-                for description in SENSORS
-                if description.key in appliance.status
-            ],
-        ]
-
-    for appliance in entry.runtime_data.data.values():
-        entities = get_entities_for_appliance(appliance)
-        known_entity_unique_ids.update(
-            {cast(str, entity.unique_id): appliance.info.ha_id for entity in entities}
-        )
-        async_add_entities(entities)
-
-    def handle_paired_or_connected_appliance() -> None:
-        """Handle new paired appliance or a appliance that has been connected."""
-        for appliance in entry.runtime_data.data.values():
-            entities_to_add = [
-                entity
-                for entity in get_entities_for_appliance(appliance)
-                if cast(str, entity.unique_id) not in known_entity_unique_ids
-            ]
-            known_entity_unique_ids.update(
-                {
-                    cast(str, entity.unique_id): appliance.info.ha_id
-                    for entity in entities_to_add
-                }
-            )
-            async_add_entities(entities_to_add)
-
-    def handle_depaired_appliance() -> None:
-        """Handle removed appliance."""
-        for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
-            if appliance_id not in entry.runtime_data.data:
-                known_entity_unique_ids.pop(entity_unique_id, None)
-
-    entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(
-            handle_paired_or_connected_appliance,
-            (
-                EventKey.BSH_COMMON_APPLIANCE_PAIRED,
-                EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
-            ),
-        )
-    )
-    entry.async_on_unload(
-        entry.runtime_data.async_add_special_listener(
-            handle_depaired_appliance,
-            (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
-        ),
+    setup_home_connect_entry(
+        hass,
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
     )
 
 
