@@ -148,9 +148,10 @@ class HomeConnectCoordinator(
         while True:
             try:
                 async for event_message in self.client.stream_all_events():
+                    event_message_ha_id = event_message.ha_id
                     match event_message.type:
                         case EventType.STATUS:
-                            statuses = self.data[event_message.ha_id].status
+                            statuses = self.data[event_message_ha_id].status
                             for event in event_message.data.items:
                                 status_key = StatusKey(event.key)
                                 if status_key in statuses:
@@ -164,8 +165,8 @@ class HomeConnectCoordinator(
                             self._call_event_listener(event_message)
 
                         case EventType.NOTIFY:
-                            settings = self.data[event_message.ha_id].settings
-                            events = self.data[event_message.ha_id].events
+                            settings = self.data[event_message_ha_id].settings
+                            events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
                                 if event.key in SettingKey:
                                     setting_key = SettingKey(event.key)
@@ -182,23 +183,23 @@ class HomeConnectCoordinator(
                             self._call_event_listener(event_message)
 
                         case EventType.EVENT:
-                            events = self.data[event_message.ha_id].events
+                            events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
                                 events[event.key] = event
                             self._call_event_listener(event_message)
 
                         case EventType.CONNECTED | EventType.PAIRED:
                             appliance_info = await self.client.get_specific_appliance(
-                                event_message.ha_id
+                                event_message_ha_id
                             )
 
                             appliance_data = await self._get_appliance_data(
                                 appliance_info, self.data.get(appliance_info.ha_id)
                             )
-                            if event_message.ha_id in self.data:
-                                self.data[event_message.ha_id].update(appliance_data)
+                            if event_message_ha_id in self.data:
+                                self.data[event_message_ha_id].update(appliance_data)
                             else:
-                                self.data[event_message.ha_id] = appliance_data
+                                self.data[event_message_ha_id] = appliance_data
                             for listener, context in list(
                                 self._special_listeners.values()
                             ) + list(self._listeners.values()):
@@ -211,14 +212,14 @@ class HomeConnectCoordinator(
 
                         case EventType.DEPAIRED:
                             device = self.device_registry.async_get_device(
-                                identifiers={(DOMAIN, event_message.ha_id)}
+                                identifiers={(DOMAIN, event_message_ha_id)}
                             )
                             if device:
                                 self.device_registry.async_update_device(
                                     device_id=device.id,
                                     remove_config_entry_id=self.config_entry.entry_id,
                                 )
-                            self.data.pop(event_message.ha_id, None)
+                            self.data.pop(event_message_ha_id, None)
                             for listener, context in self._special_listeners.values():
                                 assert isinstance(context, tuple)
                                 if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
