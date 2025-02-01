@@ -263,9 +263,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             isinstance(scanner, BaseHaRemoteScanner)
             and source_domain
             and source_config_entry_id
-            and not self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, scanner.source
-            )
         ):
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
