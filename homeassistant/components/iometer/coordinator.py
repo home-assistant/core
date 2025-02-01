@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for IOmeter."""
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
 from iometer import IOmeterClient, IOmeterConnectionError, Reading, Status
@@ -9,9 +10,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 type IOmeterConfigEntry = ConfigEntry[IOMeterCoordinator]
 
