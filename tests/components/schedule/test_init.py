@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
-from datetime import time
 from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.schedule import STORAGE_VERSION, STORAGE_VERSION_MINOR
 from homeassistant.components.schedule.const import (
@@ -763,41 +763,28 @@ async def test_ws_create(
 async def test_service_get(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
 ) -> None:
     """Test getting a single schedule via service."""
     assert await schedule_setup()
+
+    entity_id = "schedule.from_storage"
 
     # Test retrieving a single schedule via service call
     service_result = await hass.services.async_call(
         DOMAIN,
         SERVICE_GET,
         {
-            CONF_ENTITY_ID: "schedule.from_storage",
+            CONF_ENTITY_ID: entity_id,
         },
         blocking=True,
         return_response=True,
     )
-    result = service_result.get("schedule.from_storage")
+    result = service_result.get(entity_id)
 
     assert set(result) == CONF_ALL_DAYS
-    assert result[CONF_FRIDAY] == [
-        {
-            CONF_FROM: time(17),
-            CONF_TO: time(23, 59, 59),
-            CONF_DATA: {"party_level": "epic"},
-        }
-    ]
-    assert result[CONF_SATURDAY] == [{CONF_FROM: time(0), CONF_TO: time(23, 59, 59)}]
-    assert result[CONF_SUNDAY] == [
-        {
-            CONF_FROM: time(0),
-            CONF_TO: time(23, 59, 59, 999999),
-            CONF_DATA: {"entry": "VIPs only"},
-        }
-    ]
-    for day in CONF_ALL_DAYS.difference({CONF_FRIDAY, CONF_SATURDAY, CONF_SUNDAY}):
-        assert result[day] == []
+    assert result == snapshot(name=f"{entity_id}-get")
 
     # Now we update the schedule via WS
     client = await hass_ws_client(hass)
@@ -805,7 +792,7 @@ async def test_service_get(
         {
             "id": 1,
             "type": f"{DOMAIN}/update",
-            f"{DOMAIN}_id": "from_storage",
+            f"{DOMAIN}_id": entity_id.rsplit(".", maxsplit=1)[-1],
             CONF_NAME: "Party pooper",
             CONF_ICON: "mdi:party-pooper",
             CONF_MONDAY: [],
@@ -825,14 +812,12 @@ async def test_service_get(
         DOMAIN,
         SERVICE_GET,
         {
-            CONF_ENTITY_ID: "schedule.from_storage",
+            CONF_ENTITY_ID: entity_id,
         },
         blocking=True,
         return_response=True,
     )
-    result = service_result.get("schedule.from_storage")
+    result = service_result.get(entity_id)
 
     assert set(result) == CONF_ALL_DAYS
-    assert result[CONF_WEDNESDAY] == [{CONF_FROM: time(17), CONF_TO: time(19)}]
-    for day in CONF_ALL_DAYS.difference({CONF_WEDNESDAY}):
-        assert result[day] == []
+    assert result == snapshot(name=f"{entity_id}-get-after-update")
