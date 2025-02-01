@@ -48,7 +48,7 @@ from .const import (
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoChild, EvoDevice
+from .entity import EvoChild, EvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,7 +136,7 @@ async def async_setup_platform(
     async_add_entities(entities, update_before_add=True)
 
 
-class EvoClimateEntity(EvoDevice, ClimateEntity):
+class EvoClimateEntity(EvoEntity, ClimateEntity):
     """Base for any evohome-compatible climate entity (controller, zone)."""
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]

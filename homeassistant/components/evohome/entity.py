@@ -15,7 +15,7 @@ from .coordinator import EvoDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class EvoDevice(CoordinatorEntity):
+class EvoEntity(CoordinatorEntity):
     """Base for any evohome-compatible entity (controller, DHW, zone).
 
     This includes the controller, (1 to 12) heating zones and (optionally) a
@@ -69,7 +69,7 @@ class EvoDevice(CoordinatorEntity):
         async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
 
 
-class EvoChild(EvoDevice):
+class EvoChild(EvoEntity):
     """Base for any evohome-compatible child entity (DHW, zone).
 
     This includes (1 to 12) heating zones and (optionally) a DHW controller.
