@@ -112,7 +112,7 @@ async def validate_input(
         return {
             "title": rpc_device.name,
             CONF_SLEEP_PERIOD: sleep_period,
-            "model": rpc_device.model,
+            "model": rpc_device.xmodinfo.get("p") or rpc_device.model,
             CONF_GEN: gen,
         }
 

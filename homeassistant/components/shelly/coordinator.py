@@ -10,7 +10,7 @@ from typing import Any, cast
 
 from aioshelly.ble import async_ensure_ble_enabled, async_stop_scanner
 from aioshelly.block_device import BlockDevice, BlockUpdateType
-from aioshelly.const import MODEL_NAMES, MODEL_VALVE
+from aioshelly.const import MODEL_VALVE
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -68,6 +68,7 @@ from .utils import (
     async_create_issue_unsupported_firmware,
     get_block_device_sleep_period,
     get_device_entry_gen,
+    get_deviceinfo_model,
     get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
@@ -157,7 +158,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=MODEL_NAMES.get(self.model),
+            model=get_deviceinfo_model(self.device),
             model_id=self.model,
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.entry)}",

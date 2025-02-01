@@ -314,6 +314,14 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def get_deviceinfo_model(device: BlockDevice | RpcDevice) -> str:
+    """Return the device model for deviceinfo."""
+    if hasattr(device, "xmodinfo") and device.xmodinfo != {}:
+        return cast(str, device.xmodinfo["n"])
+
+    return cast(str, MODEL_NAMES.get(device.model))
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")
@@ -598,3 +606,8 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
+
+
+def get_rpc_model_name(info: dict[str, Any]) -> str:
+    """Return the device model name."""
+    return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
