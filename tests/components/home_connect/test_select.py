@@ -4,8 +4,8 @@ from collections.abc import Awaitable, Callable
 from unittest.mock import MagicMock
 
 from aiohomeconnect.model import (
-    ArrayOfAvailablePrograms,
     ArrayOfEvents,
+    ArrayOfPrograms,
     Event,
     EventKey,
     EventMessage,
@@ -14,8 +14,8 @@ from aiohomeconnect.model import (
 )
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import (
-    EnumerateAvailableProgram,
-    EnumerateAvailableProgramConstraints,
+    EnumerateProgram,
+    EnumerateProgramConstraints,
     Execution,
 )
 import pytest
@@ -65,31 +65,31 @@ async def test_filter_programs(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test select that only right programs are shown."""
-    client.get_available_programs.side_effect = None
-    client.get_available_programs.return_value = ArrayOfAvailablePrograms(
+    client.get_all_programs.side_effect = None
+    client.get_all_programs.return_value = ArrayOfPrograms(
         [
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
                 raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
-                constraints=EnumerateAvailableProgramConstraints(
+                constraints=EnumerateProgramConstraints(
                     execution=Execution.SELECT_ONLY,
                 ),
             ),
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.UNKNOWN,
                 raw_key="an unknown program",
             ),
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.DISHCARE_DISHWASHER_QUICK_45,
                 raw_key=ProgramKey.DISHCARE_DISHWASHER_QUICK_45.value,
-                constraints=EnumerateAvailableProgramConstraints(
+                constraints=EnumerateProgramConstraints(
                     execution=Execution.START_ONLY,
                 ),
             ),
-            EnumerateAvailableProgram(
+            EnumerateProgram(
                 key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
                 raw_key=ProgramKey.DISHCARE_DISHWASHER_AUTO_1.value,
-                constraints=EnumerateAvailableProgramConstraints(
+                constraints=EnumerateProgramConstraints(
                     execution=Execution.SELECT_AND_START,
                 ),
             ),
@@ -234,16 +234,14 @@ async def test_select_exception_handling(
     client_with_exception: MagicMock,
 ) -> None:
     """Test exception handling."""
-    client_with_exception.get_available_programs.side_effect = None
-    client_with_exception.get_available_programs.return_value = (
-        ArrayOfAvailablePrograms(
-            [
-                EnumerateAvailableProgram(
-                    key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-                    raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
-                )
-            ]
-        )
+    client_with_exception.get_all_programs.side_effect = None
+    client_with_exception.get_all_programs.return_value = ArrayOfPrograms(
+        [
+            EnumerateProgram(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+                raw_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50.value,
+            )
+        ]
     )
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED

@@ -78,7 +78,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        drive = response.json()
+        drive: dict = response.json()
 
         await self.async_set_unique_id(drive["parentReference"]["driveId"])
 
@@ -94,7 +94,10 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        title = f"{drive['shared']['owner']['user']['displayName']}'s OneDrive"
+        user = drive.get("createdBy", {}).get("user", {}).get("displayName")
+
+        title = f"{user}'s OneDrive" if user else "OneDrive"
+
         return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(

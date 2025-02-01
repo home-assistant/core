@@ -90,7 +90,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
     _attr_name = None
-    _attr_supported_features = AssistSatelliteEntityFeature.ANNOUNCE
+    _attr_supported_features = (
+        AssistSatelliteEntityFeature.ANNOUNCE
+        | AssistSatelliteEntityFeature.START_CONVERSATION
+    )
 
     def __init__(
         self,
@@ -122,6 +125,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._check_announcement_ended_task: asyncio.Task | None = None
         self._last_chunk_time: float | None = None
         self._rtp_port: int | None = None
+        self._run_pipeline_after_announce: bool = False
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -172,7 +176,17 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         Plays announcement in a loop, blocking until the caller hangs up.
         """
+        await self._do_announce(announcement, run_pipeline_after=False)
+
+    async def _do_announce(
+        self, announcement: AssistSatelliteAnnouncement, run_pipeline_after: bool
+    ) -> None:
+        """Announce media on the satellite.
+
+        Optionally run a voice pipeline after the announcement has finished.
+        """
         self._announcement_future = asyncio.Future()
+        self._run_pipeline_after_announce = run_pipeline_after
 
         if self._rtp_port is None:
             # Choose random port for RTP
@@ -232,12 +246,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         """
         while self._announcement is not None:
             current_time = time.monotonic()
-            _LOGGER.debug(
-                "%s %s %s",
-                self._last_chunk_time,
-                current_time,
-                self._announcment_start_time,
-            )
             if (self._last_chunk_time is None) and (
                 (current_time - self._announcment_start_time)
                 > _ANNOUNCEMENT_RING_TIMEOUT
@@ -262,6 +270,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 break
 
             await asyncio.sleep(_ANNOUNCEMENT_HANGUP_SEC / 2)
+
+    async def async_start_conversation(
+        self, start_announcement: AssistSatelliteAnnouncement
+    ) -> None:
+        """Start a conversation from the satellite."""
+        await self._do_announce(start_announcement, run_pipeline_after=True)
 
     # -------------------------------------------------------------------------
     # VoIP
@@ -347,13 +361,21 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         try:
             await asyncio.sleep(_ANNOUNCEMENT_BEFORE_DELAY)
             await self._send_tts(announcement.original_media_id, wait_for_tone=False)
-            await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
+
+            if not self._run_pipeline_after_announce:
+                # Delay before looping announcement
+                await asyncio.sleep(_ANNOUNCEMENT_AFTER_DELAY)
         except Exception:
             _LOGGER.exception("Unexpected error while playing announcement")
             raise
         finally:
             self._run_pipeline_task = None
             _LOGGER.debug("Announcement finished")
+
+            if self._run_pipeline_after_announce:
+                # Clear announcement to allow pipeline to run
+                self._announcement = None
+                self._announcement_future.set_result(None)
 
     def _clear_audio_queue(self) -> None:
         """Ensure audio queue is empty."""
