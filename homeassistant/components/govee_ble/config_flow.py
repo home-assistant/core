@@ -71,7 +71,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
             await self.async_set_unique_id(address, raise_on_progress=False)
-            self._abort_if_unique_id_configured(include_ignore=False)
+            self._abort_if_unique_id_configured()
             device, service_info = self._discovered_devices[address]
             title = device.title or device.get_device_name() or service_info.name
             return self.async_create_entry(

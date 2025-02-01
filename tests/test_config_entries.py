@@ -4693,45 +4693,6 @@ async def test_unique_id_update_while_setup_in_progress(
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
 
-async def test_abort_if_unique_id_configured_can_skip_ignored(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
-) -> None:
-    """Test _abort_if_unique_id_configured can skip ignored entries."""
-    hass.config.components.add("comp")
-    mock_platform(hass, "comp.config_flow", None)
-
-    entry = MockConfigEntry(
-        domain="comp",
-        data={},
-        unique_id="mock-unique-id",
-        source=config_entries.SOURCE_IGNORE,
-        state=config_entries.ConfigEntryState.NOT_LOADED,
-    )
-    entry.add_to_hass(hass)
-
-    class TestFlow(config_entries.ConfigFlow):
-        """Test flow."""
-
-        VERSION = 1
-
-        async def async_step_user(self, user_input=None):
-            """Test user step."""
-            await self.async_set_unique_id("mock-unique-id")
-            self._abort_if_unique_id_configured(include_ignore=False)
-            return self.async_abort(reason="made_it_past_abort_if_unique_id_configured")
-
-    with (
-        mock_config_flow("comp", TestFlow),
-    ):
-        result = await manager.flow.async_init(
-            "comp", context={"source": config_entries.SOURCE_USER}
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "made_it_past_abort_if_unique_id_configured"
-
-
 async def test_disallow_entry_reload_with_setup_in_progress(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
