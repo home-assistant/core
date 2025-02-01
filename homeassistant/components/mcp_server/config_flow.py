@@ -60,7 +60,7 @@ class ModelContextServerProtocolConfigFlow(ConfigFlow, domain=DOMAIN):
                                     value=llm_api_id,
                                 )
                                 for llm_api_id, name in llm_apis.items()
-                            ],
+                            ]
                         )
                     ),
                 }
