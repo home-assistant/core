@@ -298,7 +298,7 @@
       }
     },
     "switch": {
-      "charge_state_user_charge_enable_request": {
+      "charge_state_charging_state": {
         "default": "mdi:ev-station"
       },
       "climate_state_auto_seat_climate_left": {

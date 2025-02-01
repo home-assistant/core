@@ -133,6 +133,20 @@ async def test_diagnostics(
                 }
             },
             "manager": {
+                "allocations": {
+                    "00:00:00:00:00:01": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "00:00:00:00:00:01",
+                    },
+                    "00:00:00:00:00:02": {
+                        "allocated": [],
+                        "free": 2,
+                        "slots": 2,
+                        "source": "00:00:00:00:00:02",
+                    },
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -291,6 +305,14 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
+                "allocations": {
+                    "Core Bluetooth": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "Core Bluetooth",
+                    },
+                },
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
@@ -484,6 +506,14 @@ async def test_diagnostics_remote_adapter(
             },
             "dbus": {},
             "manager": {
+                "allocations": {
+                    "00:00:00:00:00:01": {
+                        "allocated": [],
+                        "free": 5,
+                        "slots": 5,
+                        "source": "00:00:00:00:00:01",
+                    },
+                },
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",

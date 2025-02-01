@@ -35,7 +35,8 @@
       }
     },
     "abort": {
-      "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported."
+      "remote_adapters_not_supported": "Bluetooth configuration for remote adapters is not supported.",
+      "local_adapters_no_passive_support": "Local Bluetooth adapters that do not support passive scanning cannot be configured."
     }
   }
 }

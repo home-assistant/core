@@ -62,7 +62,7 @@ from .const import (
 )
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
-from .session import ChatMessage, async_get_chat_session
+from .session import Content, async_get_chat_session
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
@@ -374,11 +374,10 @@ class DefaultAgent(ConversationEntity):
 
             speech: str = response.speech.get("plain", {}).get("speech", "")
             chat_session.async_add_message(
-                ChatMessage(
+                Content(
                     role="assistant",
                     agent_id=user_input.agent_id,
                     content=speech,
-                    native=response,
                 )
             )
 

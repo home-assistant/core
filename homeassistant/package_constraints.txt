@@ -3,11 +3,12 @@
 aiodhcpwatcher==1.0.2
 aiodiscover==2.1.0
 aiodns==3.2.0
-aiohasupervisor==0.2.2b5
-aiohttp-asyncmdnsresolver==0.0.1
+aiohasupervisor==0.2.2b6
+aiohttp-asyncmdnsresolver==0.0.3
 aiohttp-fast-zlib==0.2.0
 aiohttp==3.11.11
 aiohttp_cors==0.7.0
+aiousbwatcher==1.1.1
 aiozoneinfo==0.2.1
 astral==2.2
 async-interrupt==1.2.0
@@ -32,12 +33,12 @@ dbus-fast==2.30.2
 fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.12.0
+habluetooth==3.20.1
 hass-nabucasa==0.88.1
-hassil==2.1.0
+hassil==2.2.0
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20250109.2
-home-assistant-intents==2025.1.1
+home-assistant-frontend==20250131.0
+home-assistant-intents==2025.1.28
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.5
@@ -57,11 +58,10 @@ pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
 PyTurboJPEG==1.7.5
-pyudev==0.24.1
 PyYAML==6.0.2
 requests==2.32.3
-securetar==2025.1.3
-SQLAlchemy==2.0.36
+securetar==2025.1.4
+SQLAlchemy==2.0.37
 standard-aifc==3.13.0;python_version>='3.13'
 standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
@@ -73,7 +73,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.18.3
-zeroconf==0.141.0
+zeroconf==0.143.0
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238

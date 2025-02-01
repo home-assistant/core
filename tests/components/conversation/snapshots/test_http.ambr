@@ -49,6 +49,7 @@
           'sk',
           'sl',
           'sr',
+          'sr-Latn',
           'sv',
           'sw',
           'te',
@@ -539,7 +540,7 @@
           'name': 'HassTurnOn',
         }),
         'match': True,
-        'sentence_template': '<turn> on [<all>] <light> <in> <area>',
+        'sentence_template': '<turn> on [(<all>|<the>)] <light> <in> <area>',
         'slots': dict({
           'area': 'kitchen',
           'domain': 'light',
@@ -638,7 +639,7 @@
           'brightness': dict({
             'name': 'brightness',
             'text': '100',
-            'value': 100,
+            'value': 100.0,
           }),
           'name': dict({
             'name': 'name',
@@ -690,7 +691,7 @@
         'targets': dict({
         }),
         'unmatched_slots': dict({
-          'brightness': 1001,
+          'brightness': 1001.0,
         }),
       }),
     ]),

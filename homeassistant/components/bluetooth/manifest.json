@@ -21,6 +21,6 @@
     "bluetooth-auto-recovery==1.4.2",
     "bluetooth-data-tools==1.22.0",
     "dbus-fast==2.30.2",
-    "habluetooth==3.12.0"
+    "habluetooth==3.20.1"
   ]
 }

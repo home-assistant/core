@@ -25,7 +25,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import deprecated_class
+from homeassistant.helpers.deprecation import (
+    DeprecatedConstant,
+    all_with_deprecated_constants,
+    check_if_deprecated_constant,
+    dir_with_deprecated_constants,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -134,11 +139,11 @@ class WaterHeaterEntityDescription(EntityDescription, frozen_or_thawed=True):
     """A class that describes water heater entities."""
 
 
-@deprecated_class("WaterHeaterEntityDescription", breaks_in_ha_version="2026.1")
-class WaterHeaterEntityEntityDescription(
-    WaterHeaterEntityDescription, frozen_or_thawed=True
-):
-    """A (deprecated) class that describes water heater entities."""
+_DEPRECATED_WaterHeaterEntityEntityDescription = DeprecatedConstant(
+    WaterHeaterEntityDescription,
+    "WaterHeaterEntityDescription",
+    breaks_in_ha_version="2026.1",
+)
 
 
 CACHED_PROPERTIES_WITH_ATTR_ = {
@@ -414,3 +419,11 @@ async def async_service_temperature_set(
             kwargs[value] = temp
 
     await entity.async_set_temperature(**kwargs)
+
+
+# These can be removed if no deprecated constant are in this module anymore
+__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
+__dir__ = ft.partial(
+    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
+)
+__all__ = all_with_deprecated_constants(globals())

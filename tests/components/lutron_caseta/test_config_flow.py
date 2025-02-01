@@ -10,8 +10,10 @@ from pylutron_caseta.smartbridge import Smartbridge
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lutron_caseta import DOMAIN
-import homeassistant.components.lutron_caseta.config_flow as CasetaConfigFlow
+from homeassistant.components.lutron_caseta import (
+    DOMAIN,
+    config_flow as CasetaConfigFlow,
+)
 from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
     CONF_CERTFILE,

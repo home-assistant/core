@@ -28,7 +28,7 @@ from homeassistant.const import UnitOfPressure, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 CONDITION_CLASSES: dict[str, list[str]] = {
     ATTR_CONDITION_CLOUDY: [],
