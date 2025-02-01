@@ -40,6 +40,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.entityfilter import (
