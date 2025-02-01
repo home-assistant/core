@@ -46,9 +46,7 @@ from .const import (
     ATTR_NEXT_EVENT,
     CONF_ALL_DAYS,
     CONF_DATA,
-    CONF_END,
     CONF_FROM,
-    CONF_START,
     CONF_TO,
     DOMAIN,
     LOGGER,
@@ -316,17 +314,7 @@ class Schedule(CollectionEntity):
 
     def get_schedule(self) -> ConfigType:
         """Return the schedule."""
-        return {
-            d: [
-                {
-                    CONF_START: s[CONF_FROM],
-                    CONF_END: s[CONF_TO],
-                    **{k: v for k, v in s.items() if k not in [CONF_FROM, CONF_TO]},
-                }
-                for s in self._config[d]
-            ]
-            for d in WEEKDAY_TO_CONF.values()
-        }
+        return {d: self._config[d] for d in WEEKDAY_TO_CONF.values()}
 
     @callback
     def _update(self, _: datetime | None = None) -> None:
