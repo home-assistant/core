@@ -1,8 +1,10 @@
 """Provides a select platform for Home Connect."""
 
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import cast
+from typing import Any, cast
 
+from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import EventKey, ProgramKey
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import Execution
@@ -39,6 +41,10 @@ class HomeConnectProgramSelectEntityDescription(
     """Entity Description class for sensors."""
 
     allowed_executions: tuple[Execution, ...]
+    set_program_fn: Callable[
+        [HomeConnectClient, str, ProgramKey], Coroutine[Any, Any, None]
+    ]
+    error_translation_key: str
 
 
 PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
@@ -46,11 +52,19 @@ PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
         key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         translation_key="active_program",
         allowed_executions=(Execution.SELECT_AND_START, Execution.START_ONLY),
+        set_program_fn=lambda client, ha_id, program_key: client.start_program(
+            ha_id, program_key=program_key
+        ),
+        error_translation_key="start_program",
     ),
     HomeConnectProgramSelectEntityDescription(
         key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         translation_key="selected_program",
         allowed_executions=(Execution.SELECT_AND_START, Execution.SELECT_ONLY),
+        set_program_fn=lambda client, ha_id, program_key: client.set_selected_program(
+            ha_id, program_key=program_key
+        ),
+        error_translation_key="select_program",
     ),
 )
 
@@ -87,7 +101,6 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             appliance,
             desc,
         )
-        self.start_on_select = desc.key == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
         self._attr_options = [
             PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
             for program in appliance.programs
@@ -112,22 +125,15 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Select new program."""
         program_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
         try:
-            if self.start_on_select:
-                await self.coordinator.client.start_program(
-                    self.appliance.info.ha_id, program_key=program_key
-                )
-            else:
-                await self.coordinator.client.set_selected_program(
-                    self.appliance.info.ha_id, program_key=program_key
-                )
+            await self.entity_description.set_program_fn(
+                self.coordinator.client,
+                self.appliance.info.ha_id,
+                program_key,
+            )
         except HomeConnectError as err:
-            if self.start_on_select:
-                translation_key = "start_program"
-            else:
-                translation_key = "select_program"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=translation_key,
+                translation_key=self.entity_description.error_translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program_key.value,
