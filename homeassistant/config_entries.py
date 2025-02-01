@@ -2619,6 +2619,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         reload_on_update: bool = True,
         *,
         error: str = "already_configured",
+        include_ignore: bool = True,
     ) -> None:
         """Abort if the unique ID is already configured.
 
@@ -2633,6 +2634,9 @@ class ConfigFlow(ConfigEntryBaseFlow):
                 self.handler, self.unique_id
             )
         ):
+            return
+
+        if include_ignore and entry.source == SOURCE_IGNORE:
             return
 
         should_reload = False
