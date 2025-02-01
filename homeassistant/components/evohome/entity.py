@@ -133,7 +133,7 @@ class EvoChild(EvoEntity):
         """Get the latest state data."""
 
         if not self._schedule:
-            # await self._update_schedule()
+            await self._update_schedule()
 
             if not self._schedule:
                 self._device_state_attrs = {}
