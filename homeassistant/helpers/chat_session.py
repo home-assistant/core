@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 
@@ -25,6 +26,10 @@ DATA_CHAT_SESSION: HassKey[dict[str, ChatSession]] = HassKey("chat_session")
 DATA_CHAT_SESSION_CLEANUP: HassKey[SessionCleanup] = HassKey("chat_session_cleanup")
 
 CONVERSATION_TIMEOUT = timedelta(minutes=5)
+
+current_session: ContextVar[ChatSession | None] = ContextVar(
+    "current_session", default=None
+)
 
 
 @dataclass
@@ -108,13 +113,23 @@ async def async_get_chat_session(
     conversation_id: str | None = None,
 ) -> AsyncGenerator[ChatSession]:
     """Return a chat session."""
+    if session := current_session.get():
+        # If a session is already active and it's the requested conversation ID,
+        # return that. We won't update the last updated time in this case.
+        if session.conversation_id == conversation_id:
+            yield session
+            return
+
+        # If it's not the same conversation ID, we will create a new session
+        # because it might be a conversation agent calling a tool that is talking
+        # to another LLM.
+        session = None
+
     all_sessions = hass.data.get(DATA_CHAT_SESSION)
     if all_sessions is None:
         all_sessions = {}
         hass.data[DATA_CHAT_SESSION] = all_sessions
         hass.data[DATA_CHAT_SESSION_CLEANUP] = SessionCleanup(hass)
-
-    session: ChatSession | None = None
 
     if conversation_id is None:
         conversation_id = ulid_util.ulid_now()
@@ -136,7 +151,9 @@ async def async_get_chat_session(
     if session is None:
         session = ChatSession(conversation_id)
 
+    current_session.set(session)
     yield session
+    current_session.set(None)
 
     session.last_updated = dt_util.utcnow()
     all_sessions[conversation_id] = session

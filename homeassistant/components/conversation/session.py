@@ -33,7 +33,7 @@ async def async_get_chat_log(
     session: chat_session.ChatSession,
     user_input: ConversationInput,
 ) -> AsyncGenerator[ChatLog]:
-    """Return chat session."""
+    """Return chat log for a specific chat session."""
     all_history = hass.data.get(DATA_CHAT_HISTORY)
     if all_history is None:
         all_history = {}
@@ -114,7 +114,7 @@ class NativeContent[_NativeT]:
 
 @dataclass
 class ChatLog[_NativeT]:
-    """Class holding all information for a specific conversation."""
+    """Class holding the chat history of a specific conversation."""
 
     hass: HomeAssistant
     conversation_id: str

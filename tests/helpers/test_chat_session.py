@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import chat_session
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt as dt_util, ulid as ulid_util
 
 from tests.common import async_fire_time_changed
 
@@ -39,6 +39,28 @@ async def test_conversation_id(
     """Test conversation ID generation."""
     async with chat_session.async_get_chat_session(hass, start_id) as session:
         assert session.conversation_id == given_id
+
+
+async def test_context_var(hass: HomeAssistant) -> None:
+    """Test context var."""
+    async with chat_session.async_get_chat_session(hass) as session:
+        async with chat_session.async_get_chat_session(
+            hass, session.conversation_id
+        ) as session2:
+            assert session is session2
+
+        async with chat_session.async_get_chat_session(hass, None) as session2:
+            assert session.conversation_id != session2.conversation_id
+
+        async with chat_session.async_get_chat_session(
+            hass, "something else"
+        ) as session2:
+            assert session.conversation_id != session2.conversation_id
+
+        async with chat_session.async_get_chat_session(
+            hass, ulid_util.ulid_now()
+        ) as session2:
+            assert session.conversation_id != session2.conversation_id
 
 
 async def test_cleanup(
