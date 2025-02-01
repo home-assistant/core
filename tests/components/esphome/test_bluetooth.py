@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 from homeassistant.components import bluetooth
-from homeassistant.components.esphome import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -63,7 +62,12 @@ async def test_bluetooth_device_linked_via_device(
     )
     assert entry is not None
     esp_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_bluetooth_entry_with_raw_adv.entry.entry_id)}
+        connections={
+            (
+                dr.CONNECTION_NETWORK_MAC,
+                mock_bluetooth_entry_with_raw_adv.device_info.mac_address,
+            )
+        }
     )
     assert esp_device is not None
     device = device_registry.async_get_device(

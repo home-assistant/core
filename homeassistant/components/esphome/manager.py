@@ -601,7 +601,6 @@ def _async_setup_device_registry(
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         configuration_url=configuration_url,
-        identifiers={(DOMAIN, entry.entry_id)},  # required for via_device
         connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)},
         name=entry_data.friendly_name,
         manufacturer=manufacturer,
