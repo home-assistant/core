@@ -7166,6 +7166,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "xai_conversation": {
+      "name": "xAI Conversation",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "xeoma": {
       "name": "Xeoma",
       "integration_type": "hub",

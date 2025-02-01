@@ -1,0 +1,11 @@
+{
+  "domain": "xai_conversation",
+  "name": "xAI Conversation",
+  "after_dependencies": ["assist_pipeline", "intent"],
+  "codeowners": ["@dwardu89"],
+  "config_flow": true,
+  "dependencies": ["conversation"],
+  "documentation": "https://www.home-assistant.io/integrations/xai_conversation",
+  "iot_class": "cloud_polling",
+  "requirements": ["openai==1.59.9"]
+}

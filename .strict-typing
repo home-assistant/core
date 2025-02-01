@@ -540,6 +540,7 @@ homeassistant.components.wiz.*
 homeassistant.components.wled.*
 homeassistant.components.workday.*
 homeassistant.components.worldclock.*
+homeassistant.components.xai_conversation.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*

@@ -705,6 +705,7 @@ FLOWS = {
         "worldclock",
         "ws66i",
         "wyoming",
+        "xai_conversation",
         "xbox",
         "xiaomi_aqara",
         "xiaomi_ble",
