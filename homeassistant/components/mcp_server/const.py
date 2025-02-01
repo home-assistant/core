@@ -2,3 +2,4 @@
 
 DOMAIN = "mcp_server"
 TITLE = "Model Context Protocol Server"
+LLM_API = "stateless_assist"

@@ -4,7 +4,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import intent, llm
 from homeassistant.util import yaml as yaml_util
 
-EXPOSED_ENTITY_FIELDS = {"name", "domain", "description", "area"}
+EXPOSED_ENTITY_FIELDS = {"name", "domain", "description", "area", "names"}
 
 
 def async_register_api(hass: HomeAssistant) -> None:
