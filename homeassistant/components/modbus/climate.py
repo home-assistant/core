@@ -43,7 +43,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
+    CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
@@ -70,6 +72,7 @@ from .const import (
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_OFF_VALUE,
     CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -254,6 +257,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_register = None
 
+        if CONF_HVAC_ONOFF_COIL in config:
+            self._hvac_onoff_coil = config[CONF_HVAC_ONOFF_COIL]
+            if HVACMode.OFF not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(HVACMode.OFF)
+        else:
+            self._hvac_onoff_coil = None
+
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -286,6 +296,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     else self._hvac_on_value,
                     CALL_TYPE_WRITE_REGISTER,
                 )
+
+        if self._hvac_onoff_coil is not None:
+            # Turn HVAC Off by writing 0 to the On/Off coil, or 1 otherwise.
+            await self._hub.async_pb_call(
+                self._slave,
+                self._hvac_onoff_coil,
+                0 if hvac_mode == HVACMode.OFF else 1,
+                CALL_TYPE_WRITE_COIL,
+            )
 
         if self._hvac_mode_register is not None:
             # Write a value to the mode register for the desired mode.
@@ -484,6 +503,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if onoff == self._hvac_off_value:
                 self._attr_hvac_mode = HVACMode.OFF
 
+        if self._hvac_onoff_coil is not None:
+            onoff = await self._async_read_coil(self._hvac_onoff_coil)
+            if onoff == 0:
+                self._attr_hvac_mode = HVACMode.OFF
+
     async def _async_read_register(
         self, register_type: str, register: int, raw: bool | None = False
     ) -> float | None:
@@ -508,3 +532,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return None
         self._attr_available = True
         return float(self._value)
+
+    async def _async_read_coil(self, address: int) -> int | None:
+        result = await self._hub.async_pb_call(self._slave, address, 1, CALL_TYPE_COIL)
+        if result is not None and result.bits is not None:
+            self._attr_available = True
+            return int(result.bits[0])
+        self._attr_available = False
+        return None
