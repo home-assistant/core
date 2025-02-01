@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import ExtendedJSONEncoder
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType

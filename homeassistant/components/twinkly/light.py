@@ -99,9 +99,9 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         ):
             await self.client.interview()
             if LightEntityFeature.EFFECT & self.supported_features:
-                # Static color only supports rgb
                 await self.client.set_static_colour(
                     (
+                        kwargs[ATTR_RGBW_COLOR][3],
                         kwargs[ATTR_RGBW_COLOR][0],
                         kwargs[ATTR_RGBW_COLOR][1],
                         kwargs[ATTR_RGBW_COLOR][2],

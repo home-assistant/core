@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TPLinkConfigEntry
-from .deprecate import DeprecatedInfo, async_cleanup_deprecated
+from .deprecate import DeprecatedInfo
 from .entity import CoordinatedTPLinkFeatureEntity, TPLinkFeatureEntityDescription
 
 
@@ -70,6 +70,23 @@ BUTTON_DESCRIPTIONS: Final = [
         key="tilt_down",
         available_fn=lambda dev: dev.is_on,
     ),
+    TPLinkButtonEntityDescription(key="pair"),
+    TPLinkButtonEntityDescription(key="unpair"),
+    TPLinkButtonEntityDescription(
+        key="main_brush_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="side_brush_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="sensor_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="filter_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="charging_contacts_reset",
+    ),
 ]
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
@@ -95,10 +112,10 @@ async def async_setup_entry(
             feature_type=Feature.Type.Action,
             entity_class=TPLinkButtonEntity,
             descriptions=BUTTON_DESCRIPTIONS_MAP,
+            platform_domain=BUTTON_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )
-        async_cleanup_deprecated(hass, BUTTON_DOMAIN, config_entry.entry_id, entities)
         async_add_entities(entities)
 
     _check_device()

@@ -5,7 +5,7 @@ from datetime import timedelta
 from homeassistant.components import configurator
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
