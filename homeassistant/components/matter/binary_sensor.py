@@ -52,10 +52,9 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
         value: bool | uint | int | Nullable | None
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
         if value in (None, NullValue):
-            value = None
+            self._attr_is_on = None
         elif value_convert := self.entity_description.measurement_to_ha:
-            value = value_convert(value)
-        self._attr_is_on = value
+            self._attr_is_on = value_convert(value)
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
