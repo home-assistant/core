@@ -10,7 +10,7 @@ from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
@@ -36,10 +36,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMLIGHT Zigbee."""
 
     host: str
-
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.client: Api2
+    client: Api2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -199,7 +196,10 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         info = await self.client.get_info()
-        await self.async_set_unique_id(format_mac(info.MAC))
+
+        await self.async_set_unique_id(
+            format_mac(info.MAC), raise_on_progress=self.source != SOURCE_USER
+        )
         self._abort_if_unique_id_configured()
 
         if user_input.get(CONF_HOST) is None:
