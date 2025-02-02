@@ -31,12 +31,14 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
 )
@@ -95,14 +97,23 @@ def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessagePar
 def _chat_message_convert(
     message: conversation.Content
     | conversation.NativeContent[ChatCompletionMessageParam],
+    model: str,
 ) -> ChatCompletionMessageParam:
     """Convert any native chat message for this agent to the native format."""
-    if message.role == "native":
+    role = message.role
+    if role == "native":
         # mypy doesn't understand that checking role ensures content type
         return message.content  # type: ignore[return-value]
+    if role == "system":
+        # Early reasoning models don't support system messages
+        if model.startswith(("o1-mini", "o1-preview")):
+            role = "user"
+        # Other reasoning models have the system role renamed to developer
+        elif model.startswith("o"):
+            role = "developer"
     return cast(
         ChatCompletionMessageParam,
-        {"role": message.role, "content": message.content},
+        {"role": role, "content": message.content},
     )
 
 
@@ -171,6 +182,7 @@ class OpenAIConversationEntity(
         """Call the API."""
         assert user_input.agent_id
         options = self.entry.options
+        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
 
         try:
             await session.async_update_llm_data(
@@ -190,7 +202,8 @@ class OpenAIConversationEntity(
             ]
 
         messages = [
-            _chat_message_convert(message) for message in session.async_get_messages()
+            _chat_message_convert(message, model)
+            for message in session.async_get_messages()
         ]
 
         client = self.entry.runtime_data
@@ -198,15 +211,52 @@ class OpenAIConversationEntity(
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                result = await client.chat.completions.create(
-                    model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-                    messages=messages,
-                    tools=tools or NOT_GIVEN,
-                    max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                    top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                    temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-                    user=session.conversation_id,
-                )
+                if model.startswith(("o1-mini", "o1-preview")):
+                    # These models don't support tools and reasoning effort
+                    result = await client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        tools=tools or NOT_GIVEN,
+                        max_completion_tokens=options.get(
+                            CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                        ),
+                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                        temperature=options.get(
+                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                        ),
+                        user=session.conversation_id,
+                    )
+                elif model.startswith("o"):
+                    # These models support reasoning effort
+                    # and use max_completion_tokens parameter instead of max_tokens
+                    result = await client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        tools=tools or NOT_GIVEN,
+                        max_completion_tokens=options.get(
+                            CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                        ),
+                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                        temperature=options.get(
+                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                        ),
+                        reasoning_effort=options.get(
+                            CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                        ),
+                        user=session.conversation_id,
+                    )
+                else:
+                    result = await client.chat.completions.create(
+                        model=model,
+                        messages=messages,
+                        tools=tools or NOT_GIVEN,
+                        max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                        temperature=options.get(
+                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+                        ),
+                        user=session.conversation_id,
+                    )
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
