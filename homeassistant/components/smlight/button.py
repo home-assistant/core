@@ -6,8 +6,6 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from pysmlight.web import CmdWrapper
-
 from homeassistant.components.button import (
     DOMAIN as BUTTON_DOMAIN,
     ButtonDeviceClass,
@@ -19,6 +17,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pysmlight.web import CmdWrapper
 
 from .const import DOMAIN
 from .coordinator import SmDataUpdateCoordinator

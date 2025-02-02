@@ -7,8 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from itertools import chain
 
-from pysmlight import Info, Sensors
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -20,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
+from pysmlight import Info, Sensors
 
 from . import SmConfigEntry
 from .const import UPTIME_DEVIATION

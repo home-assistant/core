@@ -7,9 +7,6 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pysmlight import Sensors, SettingsEvent
-from pysmlight.const import Settings
-
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
@@ -18,6 +15,8 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pysmlight import Sensors, SettingsEvent
+from pysmlight.const import Settings
 
 from . import SmConfigEntry
 from .coordinator import SmDataUpdateCoordinator

@@ -5,10 +5,6 @@ from __future__ import annotations
 from _collections_abc import Callable
 from dataclasses import dataclass
 
-from pysmlight import Sensors
-from pysmlight.const import Events as SmEvents
-from pysmlight.sse import MessageEvent
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -18,6 +14,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pysmlight import Sensors
+from pysmlight.const import Events as SmEvents
+from pysmlight.sse import MessageEvent
 
 from .const import SCAN_INTERNET_INTERVAL
 from .coordinator import SmDataUpdateCoordinator

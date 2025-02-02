@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from pysmlight.const import Actions
-
 from homeassistant.core import HomeAssistant
+from pysmlight.const import Actions
 
 from . import SmConfigEntry
 

@@ -7,10 +7,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, Final
 
-from pysmlight.const import Events as SmEvents
-from pysmlight.models import Firmware, Info
-from pysmlight.sse import MessageEvent
-
 from homeassistant.components.update import (
     UpdateDeviceClass,
     UpdateEntity,
@@ -21,6 +17,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pysmlight.const import Events as SmEvents
+from pysmlight.models import Firmware, Info
+from pysmlight.sse import MessageEvent
 
 from . import SmConfigEntry
 from .const import LOGGER
