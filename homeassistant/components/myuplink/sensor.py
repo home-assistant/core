@@ -325,10 +325,10 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         }
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return self.options_map[str(int(device_point.value))]  # type: ignore[no-any-return]
+        return self.options_map.get(str(int(device_point.value)))
 
 
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):

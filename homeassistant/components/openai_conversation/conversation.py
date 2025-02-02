@@ -16,16 +16,14 @@ from openai.types.chat import (
 )
 from openai.types.chat.chat_completion_message_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition
-import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
-from homeassistant.components.conversation import trace
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, intent, llm
+from homeassistant.helpers import chat_session, device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenAIConfigEntry
@@ -94,6 +92,20 @@ def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessagePar
     return param
 
 
+def _chat_message_convert(
+    message: conversation.Content
+    | conversation.NativeContent[ChatCompletionMessageParam],
+) -> ChatCompletionMessageParam:
+    """Convert any native chat message for this agent to the native format."""
+    if message.role == "native":
+        # mypy doesn't understand that checking role ensures content type
+        return message.content  # type: ignore[return-value]
+    return cast(
+        ChatCompletionMessageParam,
+        {"role": message.role, "content": message.content},
+    )
+
+
 class OpenAIConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -143,17 +155,21 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        async with conversation.async_get_chat_session(
-            self.hass, user_input
-        ) as session:
-            return await self._async_call_api(user_input, session)
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id
+            ) as session,
+            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
+        ):
+            return await self._async_handle_message(user_input, chat_log)
 
-    async def _async_call_api(
+    async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
-        session: conversation.ChatSession[ChatCompletionMessageParam],
+        session: conversation.ChatLog[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
+        assert user_input.agent_id
         options = self.entry.options
 
         try:
@@ -173,27 +189,9 @@ class OpenAIConversationEntity(
                 for tool in session.llm_api.tools
             ]
 
-        messages: list[ChatCompletionMessageParam] = []
-        for message in session.async_get_messages(user_input.agent_id):
-            if message.native is not None and message.agent_id == user_input.agent_id:
-                messages.append(message.native)
-            else:
-                messages.append(
-                    cast(
-                        ChatCompletionMessageParam,
-                        {"role": message.role, "content": message.content},
-                    )
-                )
-
-        LOGGER.debug("Prompt: %s", messages)
-        LOGGER.debug("Tools: %s", tools)
-        trace.async_conversation_trace_append(
-            trace.ConversationTraceEventType.AGENT_DETAIL,
-            {
-                "messages": session.messages,
-                "tools": session.llm_api.tools if session.llm_api else None,
-            },
-        )
+        messages = [
+            _chat_message_convert(message) for message in session.async_get_messages()
+        ]
 
         client = self.entry.runtime_data
 
@@ -211,25 +209,17 @@ class OpenAIConversationEntity(
                 )
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)
-                intent_response = intent.IntentResponse(language=user_input.language)
-                intent_response.async_set_error(
-                    intent.IntentResponseErrorCode.UNKNOWN,
-                    "Sorry, I had a problem talking to OpenAI",
-                )
-                return conversation.ConversationResult(
-                    response=intent_response, conversation_id=session.conversation_id
-                )
+                raise HomeAssistantError("Error talking to OpenAI") from err
 
             LOGGER.debug("Response %s", result)
             response = result.choices[0].message
             messages.append(_message_convert(response))
 
             session.async_add_message(
-                conversation.ChatMessage(
+                conversation.Content(
                     role=response.role,
                     agent_id=user_input.agent_id,
                     content=response.content or "",
-                    native=messages[-1],
                 ),
             )
 
@@ -241,18 +231,7 @@ class OpenAIConversationEntity(
                     tool_name=tool_call.function.name,
                     tool_args=json.loads(tool_call.function.arguments),
                 )
-                LOGGER.debug(
-                    "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
-                )
-
-                try:
-                    tool_response = await session.llm_api.async_call_tool(tool_input)
-                except (HomeAssistantError, vol.Invalid) as e:
-                    tool_response = {"error": type(e).__name__}
-                    if str(e):
-                        tool_response["error_text"] = str(e)
-
-                LOGGER.debug("Tool response: %s", tool_response)
+                tool_response = await session.async_call_tool(tool_input)
                 messages.append(
                     ChatCompletionToolMessageParam(
                         role="tool",
@@ -261,11 +240,9 @@ class OpenAIConversationEntity(
                     )
                 )
                 session.async_add_message(
-                    conversation.ChatMessage(
-                        role="native",
+                    conversation.NativeContent(
                         agent_id=user_input.agent_id,
-                        content="",
-                        native=messages[-1],
+                        content=messages[-1],
                     )
                 )
 
