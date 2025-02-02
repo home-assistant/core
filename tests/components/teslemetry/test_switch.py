@@ -144,7 +144,7 @@ async def test_switch_streaming(
                 Signal.AUTO_SEAT_CLIMATE_LEFT: True,
                 Signal.AUTO_SEAT_CLIMATE_RIGHT: False,
                 Signal.HVAC_STEERING_WHEEL_HEAT_AUTO: True,
-                Signal.DEFROST_MODE: False,
+                Signal.DEFROST_MODE: "DefrostModeStateOff",
                 Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
