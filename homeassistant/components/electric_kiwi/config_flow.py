@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from electrickiwi_api import ElectricKiwiApi
+from electrickiwi_api.exceptions import ApiException
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_NAME
@@ -58,16 +59,18 @@ class ElectricKiwiOauth2FlowHandler(
             api.ConfigFlowElectricKiwiAuth(self.hass, data["token"]["access_token"])
         )
 
-        session = await ek_api.get_active_session()
+        try:
+            session = await ek_api.get_active_session()
+            unique_id = str(session.data.customer_number)
 
-        unique_id = str(session.data.customer_number)
+            await self.async_set_unique_id(unique_id)
+            if self.source == SOURCE_REAUTH:
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data=data
+                )
 
-        await self.async_set_unique_id(unique_id)
-        if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
-            )
-
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=unique_id, data=data)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title=unique_id, data=data)
+        except ApiException:
+            return self.async_abort(reason="connection_error")
