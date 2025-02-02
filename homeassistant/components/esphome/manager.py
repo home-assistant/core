@@ -573,7 +573,9 @@ def _async_setup_device_registry(
 
     configuration_url = None
     if device_info.webserver_port > 0:
-        configuration_url = f"http://{entry.data['host']}:{device_info.webserver_port}"
+        entry_host = entry.data["host"]
+        host = f"[{entry_host}]" if ":" in entry_host else entry_host
+        configuration_url = f"http://{host}:{device_info.webserver_port}"
     elif (
         (dashboard := async_get_dashboard(hass))
         and dashboard.data
