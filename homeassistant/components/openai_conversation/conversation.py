@@ -210,53 +210,27 @@ class OpenAIConversationEntity(
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            model_args = {
+                "model": model,
+                "messages": messages,
+                "tools": tools or NOT_GIVEN,
+                "max_completion_tokens": options.get(
+                    CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
+                ),
+                "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+                "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+                "user": session.conversation_id,
+            }
+
+            if model.startswith("o") and not model.startswith(
+                ("o1-mini", "o1-preview")
+            ):
+                model_args["reasoning_effort"] = options.get(
+                    CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
+                )
+
             try:
-                if model.startswith(("o1-mini", "o1-preview")):
-                    # These models don't support tools and reasoning effort
-                    result = await client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        tools=tools or NOT_GIVEN,
-                        max_completion_tokens=options.get(
-                            CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-                        ),
-                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                        temperature=options.get(
-                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-                        ),
-                        user=session.conversation_id,
-                    )
-                elif model.startswith("o"):
-                    # These models support reasoning effort
-                    # and use max_completion_tokens parameter instead of max_tokens
-                    result = await client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        tools=tools or NOT_GIVEN,
-                        max_completion_tokens=options.get(
-                            CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
-                        ),
-                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                        temperature=options.get(
-                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-                        ),
-                        reasoning_effort=options.get(
-                            CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                        ),
-                        user=session.conversation_id,
-                    )
-                else:
-                    result = await client.chat.completions.create(
-                        model=model,
-                        messages=messages,
-                        tools=tools or NOT_GIVEN,
-                        max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-                        top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-                        temperature=options.get(
-                            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
-                        ),
-                        user=session.conversation_id,
-                    )
+                result = await client.chat.completions.create(**model_args)
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err

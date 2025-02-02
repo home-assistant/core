@@ -133,15 +133,12 @@ class OpenAIOptionsFlow(OptionsFlow):
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
-                if (
-                    user_input.get(CONF_LLM_HASS_API)
-                    and user_input.get(CONF_CHAT_MODEL)
-                    and user_input[CONF_CHAT_MODEL].startswith(
-                        ("o1-mini", "o1-preview")
-                    )
-                ):
+                elif user_input.get(CONF_CHAT_MODEL) and user_input[
+                    CONF_CHAT_MODEL
+                ].startswith(("o1-mini", "o1-preview")):
                     errors[CONF_LLM_HASS_API] = "model_does_not_support_tools"
-                else:
+
+                if not errors:
                     return self.async_create_entry(title="", data=user_input)
             else:
                 # Re-render the options again, now with the recommended options shown/hidden
