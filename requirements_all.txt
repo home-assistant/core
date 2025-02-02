@@ -264,7 +264,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.2.2b6
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.12.1
+aiohomeconnect==0.12.3
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -750,7 +750,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==11.1.0b2
+deebot-client==12.0.0b0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1103,7 +1103,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.20.1
+habluetooth==3.21.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1568,7 +1568,7 @@ open-garage==0.2.0
 open-meteo==0.3.2
 
 # homeassistant.components.openai_conversation
-openai==1.59.9
+openai==1.61.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
