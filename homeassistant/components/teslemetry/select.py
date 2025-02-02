@@ -117,7 +117,7 @@ async def async_setup_entry(
                 if description.supported_fn(vehicle.coordinator.data)
             ),
             (
-                TeslemetrPollingWheelHeaterSelectEntity(
+                TeslemetryPollingWheelHeaterSelectEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
@@ -285,7 +285,7 @@ class TeslemetryPollingWheelHeaterSelectEntity(TeslemetryVehicleEntity, SelectEn
 class TeslemetryStreamingWheelHeaterSelectEntity(
     TeslemetryVehicleStreamEntity, SelectEntity, RestoreEntity
 ):
-    """Select entity for vehicle steering wheel heater."""
+    """Select entity for streaming vehicle steering wheel heater."""
 
     _attr_options = [
         OFF,
