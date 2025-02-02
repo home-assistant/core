@@ -14,13 +14,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_DEVICE_NAME, MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
-    ip_address=ip_address("127.0.0.1"),
-    ip_addresses=[ip_address("127.0.0.1")],
+    ip_address=ip_address("192.168.1.161"),
+    ip_addresses=[ip_address("192.168.1.161")],
     hostname="slzb-06.local.",
     name="mock_name",
     port=6638,
@@ -29,8 +29,8 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 )
 
 DISCOVERY_INFO_LEGACY = ZeroconfServiceInfo(
-    ip_address=ip_address("127.0.0.1"),
-    ip_addresses=[ip_address("127.0.0.1")],
+    ip_address=ip_address("192.168.1.161"),
+    ip_addresses=[ip_address("192.168.1.161")],
     hostname="slzb-06.local.",
     name="mock_name",
     port=6638,
@@ -52,7 +52,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: MOCK_HOST,
+            CONF_HOST: "slzb-06p7.local",
         },
     )
 
@@ -76,7 +76,7 @@ async def test_zeroconf_flow(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -113,7 +113,7 @@ async def test_zeroconf_flow_auth(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -167,7 +167,7 @@ async def test_zeroconf_unsupported_abort(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -489,7 +489,7 @@ async def test_zeroconf_legacy_mac(
         data=DISCOVERY_INFO_LEGACY,
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
