@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pysmlight import Api2
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pysmlight import Api2
 
 from .coordinator import SmDataUpdateCoordinator, SmFirmwareUpdateCoordinator
 

@@ -5,6 +5,9 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+from pysmlight import Api2
+from pysmlight.const import Devices
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
@@ -12,9 +15,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNA
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-from pysmlight import Api2
-from pysmlight.const import Devices
-from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 
 from .const import DOMAIN
 

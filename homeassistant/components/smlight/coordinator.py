@@ -6,6 +6,11 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from pysmlight import Api2, Info, Sensors
+from pysmlight.const import Settings, SettingsProp
+from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
+from pysmlight.web import Firmware
+
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -13,10 +18,6 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from pysmlight import Api2, Info, Sensors
-from pysmlight.const import Settings, SettingsProp
-from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.web import Firmware
 
 from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
 
