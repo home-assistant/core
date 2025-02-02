@@ -84,6 +84,15 @@ def ek_api(electrickiwi_api: Mock) -> YieldFixture:
         yield
 
 
+async def init_integration(hass: HomeAssistant, entry: MockConfigEntry):
+    """Fixture for setting up the integration with args."""
+    hass.http = Mock()
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.fixture
 def component_setup(
     hass: HomeAssistant, config_entry: MockConfigEntry, ek_api: AsyncMock
@@ -126,6 +135,29 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             },
         },
         unique_id=DOMAIN,
+        version=1,
+        minor_version=1,
+    )
+
+
+@pytest.fixture(name="config_entry2")
+def mock_config_entry2(hass: HomeAssistant) -> MockConfigEntry:
+    """Create mocked config entry."""
+    return MockConfigEntry(
+        title="Electric Kiwi",
+        domain=DOMAIN,
+        data={
+            "id": "123457",
+            "auth_implementation": DOMAIN,
+            "token": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "expires_at": time() + 60,
+            },
+        },
+        unique_id="1234567",
         version=1,
         minor_version=1,
     )

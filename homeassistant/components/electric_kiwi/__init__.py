@@ -26,7 +26,6 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ElectricKiwiConfigEntry
 ) -> bool:
     """Set up Electric Kiwi from a config entry."""
-
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry

@@ -24,8 +24,6 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
-
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
 async def test_full_flow(
