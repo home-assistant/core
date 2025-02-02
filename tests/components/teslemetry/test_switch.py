@@ -131,7 +131,7 @@ async def test_switch_streaming(
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
-    """Tests that the binary sensor entities with streaming are correct."""
+    """Tests that the switch entities with streaming are correct."""
 
     entry = await setup_platform(hass, [Platform.SWITCH])
 
