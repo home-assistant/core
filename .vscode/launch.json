@@ -43,6 +43,14 @@
       ],
     },
     {
+      "name": "Home Assistant: Debug Current Test File",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "args": ["-vv", "${file}"]
+    },
+    {
       // Debug by attaching to local Home Assistant server using Remote Python Debugger.
       // See https://www.home-assistant.io/integrations/debugpy/
       "name": "Home Assistant: Attach Local",
