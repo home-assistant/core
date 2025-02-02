@@ -1,0 +1,33 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '02.09',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tile',
+        '19264d2dffdbca32',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Tile Inc.',
+    'model': None,
+    'model_id': None,
+    'name': 'Wallet',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '01.12.14.0',
+    'via_device_id': None,
+  })
+# ---

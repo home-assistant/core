@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
 
@@ -34,7 +35,9 @@ class AqualinkFlowHandler(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             try:
-                async with AqualinkClient(username, password):
+                async with AqualinkClient(
+                    username, password, httpx_client=get_async_client(self.hass)
+                ):
                     pass
             except AqualinkServiceUnauthorizedException:
                 errors["base"] = "invalid_auth"

@@ -12,7 +12,7 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -46,7 +46,6 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
     def __init__(self, coordinator: IdasenDeskCoordinator) -> None:
         """Initialize an Idasen Desk cover."""
         super().__init__(coordinator.address, coordinator)
-        self._attr_current_cover_position = self._desk.height_percent
 
     @property
     def is_closed(self) -> bool:
@@ -83,8 +82,7 @@ class IdasenDeskCover(IdasenDeskEntity, CoverEntity):
                 "Failed to move to specified position: Bluetooth error"
             ) from err
 
-    @callback
-    def _handle_coordinator_update(self, *args: Any) -> None:
-        """Handle data update."""
-        self._attr_current_cover_position = self._desk.height_percent
-        self.async_write_ha_state()
+    @property
+    def current_cover_position(self) -> int | None:
+        """Return the current cover position."""
+        return self._desk.height_percent

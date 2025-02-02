@@ -109,11 +109,17 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
-    reolink_connect.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None

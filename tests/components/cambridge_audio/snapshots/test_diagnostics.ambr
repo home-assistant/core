@@ -78,7 +78,7 @@
           'name': 'Unknown Preset Type',
           'preset_class': 'stream.unknown',
           'preset_id': 3,
-          'state': 'OK',
+          'state': 'UNAVAILABLE',
           'type': 'Unknown',
         }),
       ]),

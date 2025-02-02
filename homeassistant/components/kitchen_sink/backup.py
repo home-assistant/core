@@ -51,13 +51,14 @@ class KitchenSinkBackupAgent(BackupAgent):
     def __init__(self, name: str) -> None:
         """Initialize the kitchen sink backup sync agent."""
         super().__init__()
-        self.name = name
+        self.name = self.unique_id = name
         self._uploads = [
             AgentBackup(
                 addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
                 backup_id="abc123",
                 database_included=False,
                 date="1970-01-01T00:00:00Z",
+                extra_metadata={},
                 folders=[Folder.MEDIA, Folder.SHARE],
                 homeassistant_included=True,
                 homeassistant_version="2024.12.0",

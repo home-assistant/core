@@ -17,7 +17,7 @@ import pytest
 from homeassistant.components import recorder
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.util import session_scope
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     CREATE_ENGINE_TARGET,
@@ -27,7 +27,7 @@ from .common import (
 )
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 SCHEMA_VERSION_POSTFIX = "23_with_newer_columns"
 SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
@@ -37,7 +37,8 @@ SCHEMA_MODULE = get_schema_module_path(SCHEMA_VERSION_POSTFIX)
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 async def test_delete_duplicates(
-    async_test_recorder: RecorderInstanceGenerator, caplog: pytest.LogCaptureFixture
+    async_test_recorder: RecorderInstanceContextManager,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics.
 
@@ -224,7 +225,8 @@ async def test_delete_duplicates(
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 async def test_delete_duplicates_many(
-    async_test_recorder: RecorderInstanceGenerator, caplog: pytest.LogCaptureFixture
+    async_test_recorder: RecorderInstanceContextManager,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test removal of duplicated statistics.
 
@@ -418,7 +420,7 @@ async def test_delete_duplicates_many(
 @pytest.mark.usefixtures("skip_by_db_engine")
 @pytest.mark.parametrize("persistent_database", [True])
 async def test_delete_duplicates_non_identical(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
 ) -> None:
@@ -613,7 +615,7 @@ async def test_delete_duplicates_non_identical(
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_delete_duplicates_short_term(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     tmp_path: Path,
 ) -> None:

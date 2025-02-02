@@ -50,7 +50,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -92,7 +92,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except AuthFailedError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:

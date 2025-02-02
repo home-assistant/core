@@ -1,0 +1,323 @@
+# serializer version: 1
+# name: test_switch_platform[switch.pinecil_animation_loop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_animation_loop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Animation loop',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.ANIMATION_LOOP: 'animation_loop'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_animation_loop',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_animation_loop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Animation loop',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_animation_loop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_calibrate_cjc-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_calibrate_cjc',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Calibrate CJC',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.CALIBRATE_CJC: 'calibrate_cjc'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_calibrate_cjc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_calibrate_cjc-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Calibrate CJC',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_calibrate_cjc',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_cool_down_screen_flashing-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_cool_down_screen_flashing',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cool down screen flashing',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.COOLING_TEMP_BLINK: 'cooling_temp_blink'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_cooling_temp_blink',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_cool_down_screen_flashing-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Cool down screen flashing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_cool_down_screen_flashing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_detailed_idle_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_detailed_idle_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Detailed idle screen',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.IDLE_SCREEN_DETAILS: 'idle_screen_details'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_idle_screen_details',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_detailed_idle_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Detailed idle screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_detailed_idle_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_detailed_solder_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_detailed_solder_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Detailed solder screen',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.SOLDER_SCREEN_DETAILS: 'solder_screen_details'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_solder_screen_details',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_detailed_solder_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Detailed solder screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_detailed_solder_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_invert_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_invert_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Invert screen',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.DISPLAY_INVERT: 'display_invert'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_display_invert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_invert_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Invert screen',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_invert_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_swap_buttons-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.pinecil_swap_buttons',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Swap +/- buttons',
+    'platform': 'iron_os',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': <IronOSSwitch.INVERT_BUTTONS: 'invert_buttons'>,
+    'unique_id': 'c0:ff:ee:c0:ff:ee_invert_buttons',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_platform[switch.pinecil_swap_buttons-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pinecil Swap +/- buttons',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.pinecil_swap_buttons',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

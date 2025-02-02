@@ -1,42 +1,84 @@
 """Provides a select platform for Home Connect."""
 
-import contextlib
-import logging
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import Any, cast
 
-from homeconnect.api import HomeConnectError
+from aiohomeconnect.client import Client as HomeConnectClient
+from aiohomeconnect.model import EventKey, ProgramKey
+from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.program import Execution
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeConnectConfigEntry, get_dict_from_home_connect_error
-from .api import HomeConnectDevice
+from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
-    ATTR_VALUE,
-    BSH_ACTIVE_PROGRAM,
-    BSH_SELECTED_PROGRAM,
     DOMAIN,
     PROGRAMS_TRANSLATION_KEYS_MAP,
     SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
     TRANSLATION_KEYS_PROGRAMS_MAP,
 )
+from .coordinator import (
+    HomeConnectApplianceData,
+    HomeConnectConfigEntry,
+    HomeConnectCoordinator,
+)
 from .entity import HomeConnectEntity
+from .utils import get_dict_from_home_connect_error
 
-_LOGGER = logging.getLogger(__name__)
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectProgramSelectEntityDescription(
+    SelectEntityDescription,
+):
+    """Entity Description class for select entities for programs."""
+
+    allowed_executions: tuple[Execution, ...]
+    set_program_fn: Callable[
+        [HomeConnectClient, str, ProgramKey], Coroutine[Any, Any, None]
+    ]
+    error_translation_key: str
 
 
 PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
-    SelectEntityDescription(
-        key=BSH_ACTIVE_PROGRAM,
+    HomeConnectProgramSelectEntityDescription(
+        key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         translation_key="active_program",
+        allowed_executions=(Execution.SELECT_AND_START, Execution.START_ONLY),
+        set_program_fn=lambda client, ha_id, program_key: client.start_program(
+            ha_id, program_key=program_key
+        ),
+        error_translation_key="start_program",
     ),
-    SelectEntityDescription(
-        key=BSH_SELECTED_PROGRAM,
+    HomeConnectProgramSelectEntityDescription(
+        key=EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         translation_key="selected_program",
+        allowed_executions=(Execution.SELECT_AND_START, Execution.SELECT_ONLY),
+        set_program_fn=lambda client, ha_id, program_key: client.set_selected_program(
+            ha_id, program_key=program_key
+        ),
+        error_translation_key="select_program",
     ),
 )
+
+
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return (
+        [
+            HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
+            for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
+        ]
+        if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+        else []
+    )
 
 
 async def async_setup_entry(
@@ -45,92 +87,64 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect select entities."""
-
-    def get_entities() -> list[HomeConnectProgramSelectEntity]:
-        """Get a list of entities."""
-        entities: list[HomeConnectProgramSelectEntity] = []
-        programs_not_found = set()
-        for device in entry.runtime_data.devices:
-            if device.appliance.type in APPLIANCES_WITH_PROGRAMS:
-                with contextlib.suppress(HomeConnectError):
-                    programs = device.appliance.get_programs_available()
-                    if programs:
-                        for program in programs:
-                            if program not in PROGRAMS_TRANSLATION_KEYS_MAP:
-                                programs.remove(program)
-                                if program not in programs_not_found:
-                                    _LOGGER.info(
-                                        'The program "%s" is not part of the official Home Connect API specification',
-                                        program,
-                                    )
-                                    programs_not_found.add(program)
-                        entities.extend(
-                            HomeConnectProgramSelectEntity(device, programs, desc)
-                            for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
-                        )
-        return entities
-
-    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     """Select class for Home Connect programs."""
 
+    entity_description: HomeConnectProgramSelectEntityDescription
+
     def __init__(
         self,
-        device: HomeConnectDevice,
-        programs: list[str],
-        desc: SelectEntityDescription,
+        coordinator: HomeConnectCoordinator,
+        appliance: HomeConnectApplianceData,
+        desc: HomeConnectProgramSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
         super().__init__(
-            device,
+            coordinator,
+            appliance,
             desc,
         )
         self._attr_options = [
-            PROGRAMS_TRANSLATION_KEYS_MAP[program] for program in programs
-        ]
-        self.start_on_select = desc.key == BSH_ACTIVE_PROGRAM
-
-    async def async_update(self) -> None:
-        """Update the program selection status."""
-        program = self.device.appliance.status.get(self.bsh_key, {}).get(ATTR_VALUE)
-        if not program:
-            program_translation_key = None
-        elif not (
-            program_translation_key := PROGRAMS_TRANSLATION_KEYS_MAP.get(program)
-        ):
-            _LOGGER.debug(
-                'The program "%s" is not part of the official Home Connect API specification',
-                program,
+            PROGRAMS_TRANSLATION_KEYS_MAP[program.key]
+            for program in appliance.programs
+            if program.key != ProgramKey.UNKNOWN
+            and (
+                program.constraints is None
+                or program.constraints.execution in desc.allowed_executions
             )
-        self._attr_current_option = program_translation_key
-        _LOGGER.debug("Updated, new program: %s", self._attr_current_option)
+        ]
+
+    def update_native_value(self) -> None:
+        """Set the program value."""
+        event = self.appliance.events.get(cast(EventKey, self.bsh_key))
+        self._attr_current_option = (
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(cast(ProgramKey, event.value))
+            if event
+            else None
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
-        bsh_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
-        _LOGGER.debug(
-            "Starting program: %s" if self.start_on_select else "Selecting program: %s",
-            bsh_key,
-        )
-        if self.start_on_select:
-            target = self.device.appliance.start_program
-        else:
-            target = self.device.appliance.select_program
+        program_key = TRANSLATION_KEYS_PROGRAMS_MAP[option]
         try:
-            await self.hass.async_add_executor_job(target, bsh_key)
+            await self.entity_description.set_program_fn(
+                self.coordinator.client,
+                self.appliance.info.ha_id,
+                program_key,
+            )
         except HomeConnectError as err:
-            if self.start_on_select:
-                translation_key = "start_program"
-            else:
-                translation_key = "select_program"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key=translation_key,
+                translation_key=self.entity_description.error_translation_key,
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
-                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: bsh_key,
+                    SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program_key.value,
                 },
             ) from err
-        self.async_entity_update()

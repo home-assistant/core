@@ -29,8 +29,11 @@ from zwave_js_server.util.node import (
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 
@@ -488,10 +491,7 @@ class ZWaveServices:
             )
         if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
             _LOGGER.warning(
-                (
-                    "The following nodes do not have endpoint %x and will be "
-                    "skipped: %s"
-                ),
+                "The following nodes do not have endpoint %x and will be skipped: %s",
                 endpoint,
                 nodes_without_endpoints,
             )

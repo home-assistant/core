@@ -17,7 +17,7 @@ on:
       - "script/gen_requirements_all.py"
 
 env:
-  DEFAULT_PYTHON: "3.12"
+  DEFAULT_PYTHON: "3.13"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
@@ -36,7 +36,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -76,18 +76,37 @@ jobs:
 
             # Use C-Extension for SQLAlchemy
             echo "REQUIRE_SQLALCHEMY_CEXT=1"
+
+            # Add additional pip wheel build constraints
+            echo "PIP_CONSTRAINT=build_constraints.txt"
           ) > .env_file
 
+      - name: Write pip wheel build constraints
+        run: |
+          (
+            # ninja 1.11.1.2 + 1.11.1.3 seem to be broken on at least armhf
+            # this caused the numpy builds to fail
+            # https://github.com/scikit-build/ninja-python-distributions/issues/274
+            echo "ninja==1.11.1.1"
+          ) > build_constraints.txt
+
       - name: Upload env_file
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: env_file
           path: ./.env_file
           include-hidden-files: true
           overwrite: true
 
+      - name: Upload build_constraints
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: build_constraints
+          path: ./build_constraints.txt
+          overwrite: true
+
       - name: Upload requirements_diff
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: requirements_diff
           path: ./requirements_diff.txt
@@ -99,7 +118,7 @@ jobs:
           python -m script.gen_requirements_all ci
 
       - name: Upload requirements_all_wheels
-        uses: actions/upload-artifact@v4.5.0
+        uses: actions/upload-artifact@v4.6.0
         with:
           name: requirements_all_wheels
           path: ./requirements_all_wheels_*.txt
@@ -112,7 +131,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312", "cp313"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
@@ -122,6 +141,11 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: env_file
+
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: build_constraints
 
       - name: Download requirements_diff
         uses: actions/download-artifact@v4.1.8
@@ -142,7 +166,7 @@ jobs:
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-dev"
+          apk: "libffi-dev;openssl-dev;yaml-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;multidict;propcache;yarl;SQLAlchemy
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
@@ -156,7 +180,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312", "cp313"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
@@ -166,6 +190,11 @@ jobs:
         uses: actions/download-artifact@v4.1.8
         with:
           name: env_file
+
+      - name: Download build_constraints
+        uses: actions/download-artifact@v4.1.8
+        with:
+          name: build_constraints
 
       - name: Download requirements_diff
         uses: actions/download-artifact@v4.1.8
@@ -205,7 +234,7 @@ jobs:
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-dev"
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
@@ -219,7 +248,7 @@ jobs:
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-dev"
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
@@ -233,7 +262,7 @@ jobs:
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-dev"
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran;blas-dev;eigen-dev;freetype-dev;glew-dev;harfbuzz-dev;hdf5-dev;libdc1394-dev;libtbb-dev;mesa-dev;openexr-dev;openjpeg-dev;uchardet-dev;nasm;zlib-ng-dev"
           skip-binary: aiohttp;charset-normalizer;grpcio;multidict;SQLAlchemy;propcache;protobuf;pymicro-vad;yarl
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncIterator, Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine, Iterable
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -29,6 +29,7 @@ TEST_BACKUP_ABC123 = AgentBackup(
     backup_id="abc123",
     database_included=True,
     date="1970-01-01T00:00:00.000Z",
+    extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
@@ -43,6 +44,7 @@ TEST_BACKUP_DEF456 = AgentBackup(
     backup_id="def456",
     database_included=False,
     date="1980-01-01T00:00:00.000Z",
+    extra_metadata={"instance_id": "unknown_uuid", "with_automatic_settings": True},
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
@@ -50,8 +52,15 @@ TEST_BACKUP_DEF456 = AgentBackup(
     protected=False,
     size=1,
 )
+TEST_BACKUP_PATH_DEF456 = Path("custom_def456.tar")
 
 TEST_DOMAIN = "test"
+
+
+async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
+    """Convert an iterable to an async iterator."""
+    for i in iterable:
+        yield i
 
 
 class BackupAgentTest(BackupAgent):
@@ -62,6 +71,7 @@ class BackupAgentTest(BackupAgent):
     def __init__(self, name: str, backups: list[AgentBackup] | None = None) -> None:
         """Initialize the backup agent."""
         self.name = name
+        self.unique_id = name
         if backups is None:
             backups = [
                 AgentBackup(
@@ -69,6 +79,7 @@ class BackupAgentTest(BackupAgent):
                     backup_id="abc123",
                     database_included=True,
                     date="1970-01-01T00:00:00Z",
+                    extra_metadata={},
                     folders=[Folder.MEDIA, Folder.SHARE],
                     homeassistant_included=True,
                     homeassistant_version="2024.12.0",
@@ -158,8 +169,26 @@ async def setup_backup_integration(
             if with_hassio and agent_id == LOCAL_AGENT_ID:
                 continue
             agent = hass.data[DATA_MANAGER].backup_agents[agent_id]
-            agent._backups = {backups.backup_id: backups for backups in agent_backups}
+
+            async def open_stream() -> AsyncIterator[bytes]:
+                """Open a stream."""
+                return aiter_from_iter((b"backup data",))
+
+            for backup in agent_backups:
+                await agent.async_upload_backup(open_stream=open_stream, backup=backup)
             if agent_id == LOCAL_AGENT_ID:
                 agent._loaded_backups = True
 
         return result
+
+
+async def setup_backup_platform(
+    hass: HomeAssistant,
+    *,
+    domain: str,
+    platform: Any,
+) -> None:
+    """Set up a mock domain."""
+    mock_platform(hass, f"{domain}.backup", platform)
+    assert await async_setup_component(hass, domain, {})
+    await hass.async_block_till_done()

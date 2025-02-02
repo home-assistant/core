@@ -9,19 +9,26 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from roborock import HomeDataRoom, RoborockException, RoborockInvalidCredentials
+from roborock import (
+    HomeDataRoom,
+    RoborockException,
+    RoborockInvalidCredentials,
+    RoborockInvalidUserAgreement,
+    RoborockNoUserAgreement,
+)
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, UserData
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockMqttClientA01
 from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .roborock_storage import async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -60,12 +67,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
+    except RoborockInvalidUserAgreement as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="invalid_user_agreement",
+        ) from err
+    except RoborockNoUserAgreement as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="no_user_agreement",
+        ) from err
     except RoborockException as err:
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
             translation_domain=DOMAIN,
             translation_key="home_data_fail",
         ) from err
+
     _LOGGER.debug("Got home data %s", home_data)
     all_devices: list[HomeDataDevice] = home_data.devices + home_data.received_devices
     device_map: dict[str, HomeDataDevice] = {
@@ -100,13 +118,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
     valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
 
-    async def on_unload() -> None:
-        release_tasks = set()
-        for coordinator in valid_coordinators.values():
-            release_tasks.add(coordinator.release())
-        await asyncio.gather(*release_tasks)
+    async def on_stop(_: Any) -> None:
+        _LOGGER.debug("Shutting down roborock")
+        await asyncio.gather(
+            *(
+                coordinator.async_shutdown()
+                for coordinator in valid_coordinators.values()
+            )
+        )
 
-    entry.async_on_unload(on_unload)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            on_stop,
+        )
+    )
     entry.runtime_data = valid_coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -188,18 +214,10 @@ async def setup_device_v1(
     coordinator = RoborockDataUpdateCoordinator(
         hass, device, networking, product_info, mqtt_client, home_data_rooms
     )
-    # Verify we can communicate locally - if we can't, switch to cloud api
-    await coordinator.verify_api()
-    coordinator.api.is_available = True
-    try:
-        await coordinator.get_maps()
-    except RoborockException as err:
-        _LOGGER.warning("Failed to get map data")
-        _LOGGER.debug(err)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:
-        await coordinator.release()
+        await coordinator.async_shutdown()
         if isinstance(coordinator.api, RoborockMqttClientV1):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "
@@ -250,3 +268,8 @@ async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> No
     """Handle options update."""
     # Reload entry to update data
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
+    """Handle removal of an entry."""
+    await async_remove_map_storage(hass, entry.entry_id)

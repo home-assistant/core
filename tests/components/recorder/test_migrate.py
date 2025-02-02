@@ -31,18 +31,18 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import async_wait_recording_done, create_engine_test
 from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager, RecorderInstanceGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -600,7 +600,7 @@ async def test_schema_migrate(
             start=self.recorder_runs_manager.recording_start, created=dt_util.utcnow()
         )
 
-    def _sometimes_failing_create_index(*args):
+    def _sometimes_failing_create_index(*args, **kwargs):
         """Make the first index create raise a retryable error to ensure we retry."""
         if recorder_db_url.startswith("mysql://"):
             nonlocal create_calls
@@ -609,7 +609,7 @@ async def test_schema_migrate(
                 mysql_exception = OperationalError("statement", {}, [])
                 mysql_exception.orig = Exception(1205, "retryable")
                 raise mysql_exception
-        real_create_index(*args)
+        real_create_index(*args, **kwargs)
 
     with (
         patch(
@@ -712,7 +712,7 @@ def test_forgiving_add_index(recorder_db_url: str) -> None:
         instance = Mock()
         instance.get_session = Mock(return_value=session)
         migration._create_index(
-            instance.get_session, "states", "ix_states_context_id_bin"
+            instance, instance.get_session, "states", "ix_states_context_id_bin"
         )
     engine.dispose()
 
@@ -788,7 +788,7 @@ def test_forgiving_add_index_with_other_db_types(
     with patch(
         "homeassistant.components.recorder.migration.Table", return_value=mocked_table
     ):
-        migration._create_index(Mock(), "states", "ix_states_context_id")
+        migration._create_index(Mock(), Mock(), "states", "ix_states_context_id")
 
     assert "already exists on states" in caplog.text
     assert "continuing" in caplog.text

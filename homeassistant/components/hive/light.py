@@ -15,7 +15,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from . import refresh_system
 from .const import ATTR_MODE, DOMAIN
@@ -114,6 +114,7 @@ class HiveDeviceLight(HiveEntity, LightEntity):
                     self._attr_hs_color = color_util.color_RGB_to_hs(*rgb)
                     self._attr_color_mode = ColorMode.HS
                 else:
+                    color_temp = self.device["status"].get("color_temp")
                     self._attr_color_temp_kelvin = (
                         None
                         if color_temp is None
