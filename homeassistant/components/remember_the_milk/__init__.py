@@ -4,8 +4,8 @@ import json
 import logging
 import os
 
-from rtmapi import Rtm
 import voluptuous as vol
+from rtmapi import Rtm
 
 from homeassistant.components import configurator
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_TOKEN
@@ -13,7 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-
+from .const import CONF_ID_MAP
+from .const import CONF_LIST_ID
+from .const import CONF_SHARED_SECRET
+from .const import CONF_TASK_ID
+from .const import CONF_TIMESERIES_ID
 from .entity import RememberTheMilkEntity
 
 # httplib2 is a transitive dependency from RtmAPI. If this dependency is not
@@ -22,12 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "remember_the_milk"
 DEFAULT_NAME = DOMAIN
-
-CONF_SHARED_SECRET = "shared_secret"
-CONF_ID_MAP = "id_map"
-CONF_LIST_ID = "list_id"
-CONF_TIMESERIES_ID = "timeseries_id"
-CONF_TASK_ID = "task_id"
 
 RTM_SCHEMA = vol.Schema(
     {
@@ -46,7 +44,11 @@ SERVICE_CREATE_TASK = "create_task"
 SERVICE_COMPLETE_TASK = "complete_task"
 
 SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
-    {vol.Required(CONF_NAME): cv.string, vol.Optional(CONF_ID): cv.string}
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ID): cv.string,
+        vol.Optional(CONF_LIST_ID): cv.string,
+    }
 )
 
 SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})

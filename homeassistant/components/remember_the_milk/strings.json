@@ -8,6 +8,10 @@
           "name": "[%key:common::config_flow::data::name%]",
           "description": "Name of the new task, you can use the smart syntax here."
         },
+        "list_id": {
+          "name": "[%key:common::config_flow::data::list_id%]",
+          "description": "Id of the list where you want the task to appear."
+        },
         "id": {
           "name": "ID",
           "description": "Identifier for the task you're creating, can be used to update or complete the task later on."
