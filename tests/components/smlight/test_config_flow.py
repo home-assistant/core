@@ -8,10 +8,11 @@ from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 
 from homeassistant.components.smlight.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import MOCK_DEVICE_NAME, MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
@@ -505,6 +506,54 @@ async def test_zeroconf_legacy_mac(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smlight_client.get_info.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_dhcp_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery updates host ip."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = DhcpServiceInfo(
+        ip="192.168.1.164",
+        hostname="slzb-06",
+        macaddress="aabbccddeeff",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.164"
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_dhcp_discovery_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery updates host ip."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = DhcpServiceInfo(
+        ip="192.168.1.161",
+        hostname="slzb-06",
+        macaddress="000000000000",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.161"
 
 
 async def test_reauth_flow(
