@@ -3,7 +3,7 @@
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -47,7 +47,7 @@ EVENT_STREAM_RECONNECT_DELAY = 30
 class HomeConnectApplianceData:
     """Class to hold Home Connect appliance data."""
 
-    events: dict[EventKey, Event] = field(default_factory=dict)
+    events: dict[EventKey, Event]
     info: HomeAppliance
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
@@ -327,13 +327,10 @@ class HomeConnectCoordinator(
             status = {}
 
         programs = []
-        if appliance.type in APPLIANCES_WITH_PROGRAMS and not (
-            appliance_data_to_update and appliance_data_to_update.programs
-        ):
+        events = {}
+        if appliance.type in APPLIANCES_WITH_PROGRAMS:
             try:
-                programs = (
-                    await self.client.get_all_programs(appliance.ha_id)
-                ).programs
+                all_programs = await self.client.get_all_programs(appliance.ha_id)
             except HomeConnectError as error:
                 _LOGGER.debug(
                     "Error fetching programs for %s: %s",
@@ -342,9 +339,34 @@ class HomeConnectCoordinator(
                     if isinstance(error, HomeConnectApiError)
                     else type(error).__name__,
                 )
+            else:
+                programs.extend(all_programs.programs)
+                for program, event_key in (
+                    (
+                        all_programs.active,
+                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                    ),
+                    (
+                        all_programs.selected,
+                        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                    ),
+                ):
+                    if program and program.key:
+                        events[event_key] = Event(
+                            event_key,
+                            event_key.value,
+                            0,
+                            "",
+                            "",
+                            program.key,
+                        )
 
         appliance_data = HomeConnectApplianceData(
-            info=appliance, programs=programs, settings=settings, status=status
+            events=events,
+            info=appliance,
+            programs=programs,
+            settings=settings,
+            status=status,
         )
         if appliance_data_to_update:
             appliance_data_to_update.update(appliance_data)

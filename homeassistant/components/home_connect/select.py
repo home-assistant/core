@@ -124,7 +124,6 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 or program.constraints.execution in desc.allowed_executions
             )
         ]
-        self._attr_current_option = None
 
     def update_native_value(self) -> None:
         """Set the program value."""
