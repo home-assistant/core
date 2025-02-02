@@ -104,10 +104,10 @@ def mock_make_request(install: str) -> Callable:
 
         # assume a valid GET, and return the JSON for that web API
         if url == "accountInfo":  # /v0/accountInfo
-            return {}
+            return {}  # will throw a KeyError -> BadApiResponseError
 
         if url.startswith("locations/"):  # /v0/locations?userId={id}&allData=True
-            return {}
+            return []  # user has no locations
 
         if url == "userAccount":  # /v2/userAccount
             return user_account_config_fixture(install)
