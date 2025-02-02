@@ -33,7 +33,7 @@
       }
     },
     "error": {
-      "model_does_not_support_tools": "This model does not support controlling Home Assistant"
+      "model_not_supported": "This model is not supported, please select a different model"
     }
   },
   "selector": {

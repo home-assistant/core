@@ -97,7 +97,6 @@ def _message_convert(message: ChatCompletionMessage) -> ChatCompletionMessagePar
 def _chat_message_convert(
     message: conversation.Content
     | conversation.NativeContent[ChatCompletionMessageParam],
-    model: str,
 ) -> ChatCompletionMessageParam:
     """Convert any native chat message for this agent to the native format."""
     role = message.role
@@ -105,12 +104,7 @@ def _chat_message_convert(
         # mypy doesn't understand that checking role ensures content type
         return message.content  # type: ignore[return-value]
     if role == "system":
-        # Early reasoning models don't support system messages
-        if model.startswith(("o1-mini", "o1-preview")):
-            role = "user"
-        # Other reasoning models have the system role renamed to developer
-        elif model.startswith("o"):
-            role = "developer"
+        role = "developer"
     return cast(
         ChatCompletionMessageParam,
         {"role": role, "content": message.content},
@@ -182,7 +176,6 @@ class OpenAIConversationEntity(
         """Call the API."""
         assert user_input.agent_id
         options = self.entry.options
-        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
 
         try:
             await session.async_update_llm_data(
@@ -201,9 +194,10 @@ class OpenAIConversationEntity(
                 for tool in session.llm_api.tools
             ]
 
+        model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+
         messages = [
-            _chat_message_convert(message, model)
-            for message in session.async_get_messages()
+            _chat_message_convert(message) for message in session.async_get_messages()
         ]
 
         client = self.entry.runtime_data
@@ -222,9 +216,7 @@ class OpenAIConversationEntity(
                 "user": session.conversation_id,
             }
 
-            if model.startswith("o") and not model.startswith(
-                ("o1-mini", "o1-preview")
-            ):
+            if model.startswith("o"):
                 model_args["reasoning_effort"] = options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )

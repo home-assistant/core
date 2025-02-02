@@ -90,10 +90,10 @@ async def test_options(
     assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL
 
 
-async def test_options_no_tool_support(
+async def test_options_unsupported_model(
     hass: HomeAssistant, mock_config_entry, mock_init_component
 ) -> None:
-    """Test the options form giving error about models not supporting llm tools."""
+    """Test the options form giving error about models not supported."""
     options_flow = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
     )
@@ -108,7 +108,7 @@ async def test_options_no_tool_support(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"llm_hass_api": "model_does_not_support_tools"}
+    assert result["errors"] == {"chat_model": "model_not_supported"}
 
 
 @pytest.mark.parametrize(
