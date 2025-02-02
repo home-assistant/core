@@ -179,8 +179,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.logger.warning(
                 (
                     "Unable to obtain high-precision temperatures. "
-                    "The high-precision feature will be disabled until next restart."
-                    "Message is: %r"
+                    "The feature will be disabled until next restart: %r"
                 ),
                 err,
             )
@@ -190,8 +189,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.logger.warning(
                 (
                     "Unable to obtain the latest high-precision temperatures. "
-                    "Proceeding without high-precision temperatures for now. "
-                    "Message is: %r"
+                    "They will be ignored this refresh cycle: %r"
                 ),
                 err,
             )
