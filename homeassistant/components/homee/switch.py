@@ -1,10 +1,10 @@
 """The homee switch platform."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
-from pyHomee.const import AttributeType
+from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute
 
 from homeassistant.components.switch import (
@@ -20,31 +20,30 @@ from . import HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
 
-_LOGGER = logging.getLogger(__name__)
 
-DESCRIPTIVE_ATTRIBUTES = [
-    AttributeType.AUTOMATIC_MODE_IMPULSE,
-    AttributeType.BRIEFLY_OPEN_IMPULSE,
-    AttributeType.EXTERNAL_BINARY_INPUT,
-    AttributeType.IDENTIFICATION_MODE,
-    AttributeType.LIGHT_IMPULSE,
-    AttributeType.MANUAL_OPERATION,
-    AttributeType.MOTOR_ROTATION,
-    AttributeType.OPEN_PARTIAL_IMPULSE,
-    AttributeType.PERMANENTLY_OPEN_IMPULSE,
-    AttributeType.RESET_METER,
-    AttributeType.RESTORE_LAST_KNOWN_STATE,
-    AttributeType.SWITCH_TYPE,
-    AttributeType.VENTILATE_IMPULSE,
-    AttributeType.WATCHDOG_ON_OFF,
-]
+def get_device_class(
+    attribute: HomeeAttribute, config_entry: HomeeConfigEntry
+) -> SwitchDeviceClass:
+    """Check device class of Switch according to node profile."""
+    node = config_entry.runtime_data.get_node_by_id(attribute.node_id)
+    if node.profile in [
+        NodeProfile.ON_OFF_PLUG,
+        NodeProfile.METERING_PLUG,
+        NodeProfile.DOUBLE_ON_OFF_PLUG,
+        NodeProfile.IMPULSE_PLUG,
+    ]:
+        return SwitchDeviceClass.OUTLET
+
+    return SwitchDeviceClass.SWITCH
 
 
 @dataclass(frozen=True, kw_only=True)
 class HomeeSwitchEntityDescription(SwitchEntityDescription):
     """A class that describes Homee switch entity."""
 
-    device_class: SwitchDeviceClass = SwitchDeviceClass.SWITCH
+    device_class_fn: Callable[[HomeeAttribute, HomeeConfigEntry], SwitchDeviceClass] = (
+        lambda attribute, entry: SwitchDeviceClass.SWITCH
+    )
 
 
 SWITCH_DESCRIPTIONS: dict[AttributeType, HomeeSwitchEntityDescription] = {
@@ -71,7 +70,9 @@ SWITCH_DESCRIPTIONS: dict[AttributeType, HomeeSwitchEntityDescription] = {
     AttributeType.OPEN_PARTIAL_IMPULSE: HomeeSwitchEntityDescription(
         key="open_partial_impulse"
     ),
-    AttributeType.ON_OFF: HomeeSwitchEntityDescription(key="on_off"),
+    AttributeType.ON_OFF: HomeeSwitchEntityDescription(
+        key="on_off", device_class_fn=get_device_class
+    ),
     AttributeType.PERMANENTLY_OPEN_IMPULSE: HomeeSwitchEntityDescription(
         key="permanently_open_impulse"
     ),
@@ -122,6 +123,8 @@ async def async_setup_entry(
 class HomeeSwitch(HomeeEntity, SwitchEntity):
     """Representation of a homee switch."""
 
+    entity_description: HomeeSwitchEntityDescription
+
     def __init__(
         self,
         attribute: HomeeAttribute,
@@ -138,14 +141,9 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
     @property
-    def icon(self) -> str | None:
-        """Return icon if different from main feature."""
-        if self._attribute.type == AttributeType.WATCHDOG_ON_OFF:
-            return "mdi:dog"
-        if self._attribute.type == AttributeType.MANUAL_OPERATION:
-            return "mdi:hand-back-left"
-
-        return None
+    def device_class(self) -> SwitchDeviceClass:
+        """Return the device class of the switch."""
+        return self.entity_description.device_class_fn(self._attribute, self._entry)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
