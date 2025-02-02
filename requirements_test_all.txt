@@ -204,7 +204,7 @@ aiobotocore==2.13.1
 aiocomelit==0.10.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.0.2
+aiodhcpwatcher==1.0.3
 
 # homeassistant.components.dhcp
 aiodiscover==2.1.0
