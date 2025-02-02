@@ -103,7 +103,7 @@ PyXiaomiGateway==0.14.3
 RachioPy==1.1.0
 
 # homeassistant.components.python_script
-RestrictedPython==7.4
+RestrictedPython==8.0
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
@@ -249,7 +249,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.2.2b6
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.12.1
+aiohomeconnect==0.12.3
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -261,7 +261,7 @@ aiohttp_sse==2.2.0
 aiohue==4.7.3
 
 # homeassistant.components.imap
-aioimaplib==2.0.0
+aioimaplib==2.0.1
 
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
@@ -944,7 +944,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.3
 
 # homeassistant.components.bluetooth
-habluetooth==3.17.0
+habluetooth==3.21.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.88.1
@@ -1083,7 +1083,7 @@ konnected==1.2.0
 krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.0.3
+lacrosse-view==1.0.4
 
 # homeassistant.components.laundrify
 laundrify-aio==1.2.2
@@ -1882,7 +1882,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.0
+pysmlight==0.2.1
 
 # homeassistant.components.snmp
 pysnmp==6.2.6

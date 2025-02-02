@@ -36,6 +36,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -63,6 +64,61 @@ async def test_switches(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)
+async def test_switch_entity_availabilty(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test if switch entities availability are based on the appliance connection state."""
+    entity_ids = [
+        "switch.dishwasher_power",
+        "switch.dishwasher_child_lock",
+        "switch.dishwasher_program_eco50",
+    ]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DISCONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -122,11 +178,18 @@ async def test_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "program_key", "appliance_ha_id"),
+    ("entity_id", "program_key", "initial_state", "appliance_ha_id"),
     [
         (
             "switch.dryer_program_mix",
             ProgramKey.LAUNDRY_CARE_DRYER_MIX,
+            STATE_OFF,
+            "Dryer",
+        ),
+        (
+            "switch.dryer_program_cotton",
+            ProgramKey.LAUNDRY_CARE_DRYER_COTTON,
+            STATE_ON,
             "Dryer",
         ),
     ],
@@ -135,6 +198,7 @@ async def test_switch_functionality(
 async def test_program_switch_functionality(
     entity_id: str,
     program_key: ProgramKey,
+    initial_state: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -171,6 +235,7 @@ async def test_program_switch_functionality(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, initial_state)
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}
