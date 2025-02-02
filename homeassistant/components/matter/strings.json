@@ -76,6 +76,9 @@
       },
       "muted": {
         "name": "Muted"
+      },
+      "evse_supply_charging_state": {
+        "name": "Supply charging state"
       }
     },
     "button": {
@@ -286,6 +289,9 @@
       },
       "child_lock": {
         "name": "Child lock"
+      },
+      "evse_charging_switch": {
+        "name": "EVSE Charging"
       }
     },
     "vacuum": {
