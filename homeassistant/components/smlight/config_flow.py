@@ -217,9 +217,5 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input[CONF_HOST] = self._host
 
         assert info.model is not None
-        title = (
-            self.context.get("title_placeholders", {}).get(CONF_NAME)
-            or self._device_name
-            or info.model
-        )
+        title = self._device_name or info.model
         return self.async_create_entry(title=title, data=user_input)
