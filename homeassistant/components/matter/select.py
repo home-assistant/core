@@ -161,6 +161,8 @@ class MatterModeSelectEntity(MatterAttributeSelectEntity):
         # handle optional Description attribute as descriptive name for the mode
         if desc := getattr(cluster, "description", None):
             self._attr_name = desc
+        else:
+            self._attr_name = cluster.__class__.__name__
 
 
 class MatterListSelectEntity(MatterEntity, SelectEntity):
