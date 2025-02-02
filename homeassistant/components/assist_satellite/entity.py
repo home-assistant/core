@@ -329,7 +329,7 @@ class AssistSatelliteEntity(entity.Entity):
 
         assert self.platform.config_entry is not None
 
-        async with chat_session.async_get_chat_session(
+        with chat_session.async_get_chat_session(
             self.hass, self._conversation_id
         ) as session:
             # Store the conversation ID. If it is no longer valid, get_chat_session will reset it
