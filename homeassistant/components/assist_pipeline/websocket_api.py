@@ -236,7 +236,7 @@ async def websocket_run(
         audio_settings=audio_settings or AudioSettings(),
     )
 
-    async with chat_session.async_get_chat_session(
+    with chat_session.async_get_chat_session(
         hass, msg.get("conversation_id")
     ) as session:
         input_args["conversation_id"] = session.conversation_id

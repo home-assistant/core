@@ -38,8 +38,8 @@ from tests.typing import WebSocketGenerator
 
 @pytest.fixture(autouse=True)
 def mock_ulid() -> Generator[Mock]:
-    """Mock the ulid library."""
-    with patch("homeassistant.util.ulid.ulid_now") as mock_ulid_now:
+    """Mock the ulid of chat sessions."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
         mock_ulid_now.return_value = "mock-ulid"
         yield mock_ulid_now
 

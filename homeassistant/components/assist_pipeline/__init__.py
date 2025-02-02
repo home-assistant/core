@@ -115,7 +115,7 @@ async def async_pipeline_from_audio_stream(
 
     Raises PipelineNotFound if no pipeline is found.
     """
-    async with chat_session.async_get_chat_session(hass, conversation_id) as session:
+    with chat_session.async_get_chat_session(hass, conversation_id) as session:
         pipeline_input = PipelineInput(
             conversation_id=session.conversation_id,
             device_id=device_id,
