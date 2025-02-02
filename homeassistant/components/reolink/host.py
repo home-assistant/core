@@ -158,10 +158,10 @@ class ReolinkHost:
         store: Store[str] | None = None
         if self._config_entry_id is not None:
             store = get_store(self._hass, self._config_entry_id)
-            if self._config.get(CONF_SUPPORTS_PRIVACY_MODE):
-                data = await store.async_load()
-                if data:
-                    self._api.set_raw_host_data(data)
+            if self._config.get(CONF_SUPPORTS_PRIVACY_MODE) and (
+                data := await store.async_load()
+            ):
+                self._api.set_raw_host_data(data)
 
         await self._api.get_host_data()
 

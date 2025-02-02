@@ -21,6 +21,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 
+from .common import setup_home_connect_entry
 from .const import (
     BSH_DOOR_STATE_CLOSED,
     BSH_DOOR_STATE_LOCKED,
@@ -113,24 +114,33 @@ BINARY_SENSORS = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = []
+    entities.extend(
+        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        for description in BINARY_SENSORS
+        if description.key in appliance.status
+    )
+    if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
+        entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect binary sensor."""
-
-    entities: list[BinarySensorEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectBinarySensor(entry.runtime_data, appliance, description)
-            for description in BINARY_SENSORS
-            if description.key in appliance.status
-        )
-        if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
-            entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
-
-    async_add_entities(entities)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
