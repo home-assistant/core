@@ -460,10 +460,10 @@ async def test_call_service_child_not_found(
         "domain_test.test_service which was not found."
     )
     assert msg["error"]["translation_placeholders"] == {
-        "domain": "non",
-        "service": "existing",
-        "child_domain": "domain_test",
-        "child_service": "test_service",
+        "domain": "domain_test",
+        "service": "test_service",
+        "child_domain": "non",
+        "child_service": "existing",
     }
     assert msg["error"]["translation_key"] == "child_service_not_found"
     assert msg["error"]["translation_domain"] == "websocket_api"

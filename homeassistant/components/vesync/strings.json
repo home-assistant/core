@@ -43,6 +43,14 @@
         "name": "Current voltage"
       }
     },
+    "binary_sensor": {
+      "water_lacks": {
+        "name": "Low water"
+      },
+      "water_tank_lifted": {
+        "name": "Water tank lifted"
+      }
+    },
     "number": {
       "mist_level": {
         "name": "Mist level"
@@ -55,6 +63,7 @@
             "state": {
               "auto": "Auto",
               "sleep": "Sleep",
+              "advanced_sleep": "Advanced sleep",
               "pet": "Pet",
               "turbo": "Turbo"
             }

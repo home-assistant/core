@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock, mock_open, patch
 
-import homeassistant.components.remember_the_milk as rtm
+from homeassistant.components import remember_the_milk as rtm
 from homeassistant.core import HomeAssistant
 
 from .const import JSON_STRING, PROFILE, TOKEN

@@ -282,14 +282,6 @@ class MatterLight(MatterEntity, LightEntity):
 
         return ha_color_mode
 
-    async def send_device_command(self, command: Any) -> None:
-        """Send device command."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
 
