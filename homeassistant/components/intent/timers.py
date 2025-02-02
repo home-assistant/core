@@ -887,6 +887,36 @@ class CancelTimerIntentHandler(intent.IntentHandler):
         return intent_obj.create_response()
 
 
+class CancelAllTimersIntentHandler(intent.IntentHandler):
+    """Intent handler for cancelling all timers."""
+
+    intent_type = intent.INTENT_CANCEL_ALL_TIMERS
+    description = "Cancels all timers"
+    slot_schema = {
+        vol.Optional("area"): cv.string,
+    }
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+        timer_manager: TimerManager = hass.data[TIMER_DATA]
+        slots = self.async_validate_slots(intent_obj.slots)
+        canceled = 0
+
+        for timer in _find_timers(hass, intent_obj.device_id, slots):
+            timer_manager.cancel_timer(timer.id)
+            canceled += 1
+
+        response = intent_obj.create_response()
+        speech_slots = {"canceled": canceled}
+        if "area" in slots:
+            speech_slots["area"] = slots["area"]["value"]
+
+        response.async_set_speech_slots(speech_slots)
+
+        return response
+
+
 class IncreaseTimerIntentHandler(intent.IntentHandler):
     """Intent handler for increasing the time of a timer."""
 

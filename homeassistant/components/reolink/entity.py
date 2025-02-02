@@ -179,7 +179,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         """Return True if entity is available."""
         return super().available and self._host.api.camera_online(self._channel)
 
-    def register_callback(self, unique_id: str, cmd_id) -> None:
+    def register_callback(self, unique_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
         self._host.api.baichuan.register_callback(
             unique_id, self._push_callback, cmd_id, self._channel

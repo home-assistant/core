@@ -1,13 +1,12 @@
 """Tests for the Habitica switch platform."""
 
 from collections.abc import Generator
-from http import HTTPStatus
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.habitica.const import DEFAULT_URL
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TOGGLE,
@@ -17,13 +16,12 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import mock_called_with
+from .conftest import ERROR_BAD_REQUEST, ERROR_TOO_MANY_REQUESTS
 
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -36,7 +34,7 @@ def switch_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_habitica")
+@pytest.mark.usefixtures("habitica")
 async def test_switch(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -66,14 +64,10 @@ async def test_turn_on_off_toggle(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     service_call: str,
-    mock_habitica: AiohttpClientMocker,
+    habitica: AsyncMock,
 ) -> None:
     """Test switch turn on/off, toggle method."""
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/user/sleep",
-        json={"success": True, "data": False},
-    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -87,7 +81,7 @@ async def test_turn_on_off_toggle(
         blocking=True,
     )
 
-    assert mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/user/sleep")
+    habitica.toggle_sleep.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
@@ -99,19 +93,20 @@ async def test_turn_on_off_toggle(
     ],
 )
 @pytest.mark.parametrize(
-    ("status_code", "exception"),
+    ("raise_exception", "expected_exception"),
     [
-        (HTTPStatus.TOO_MANY_REQUESTS, ServiceValidationError),
-        (HTTPStatus.BAD_REQUEST, HomeAssistantError),
+        (ERROR_TOO_MANY_REQUESTS, HomeAssistantError),
+        (ERROR_BAD_REQUEST, HomeAssistantError),
+        (ClientError, HomeAssistantError),
     ],
 )
 async def test_turn_on_off_toggle_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     service_call: str,
-    mock_habitica: AiohttpClientMocker,
-    status_code: HTTPStatus,
-    exception: Exception,
+    habitica: AsyncMock,
+    raise_exception: Exception,
+    expected_exception: Exception,
 ) -> None:
     """Test switch turn on/off, toggle method."""
 
@@ -121,18 +116,12 @@ async def test_turn_on_off_toggle_exceptions(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    mock_habitica.post(
-        f"{DEFAULT_URL}/api/v3/user/sleep",
-        status=status_code,
-        json={"success": True, "data": False},
-    )
+    habitica.toggle_sleep.side_effect = raise_exception
 
-    with pytest.raises(expected_exception=exception):
+    with pytest.raises(expected_exception=expected_exception):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             service_call,
             {ATTR_ENTITY_ID: "switch.test_user_rest_in_the_inn"},
             blocking=True,
         )
-
-    assert mock_called_with(mock_habitica, "post", f"{DEFAULT_URL}/api/v3/user/sleep")

@@ -49,6 +49,7 @@ INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
 INTENT_START_TIMER = "HassStartTimer"
 INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_CANCEL_ALL_TIMERS = "HassCancelAllTimers"
 INTENT_INCREASE_TIMER = "HassIncreaseTimer"
 INTENT_DECREASE_TIMER = "HassDecreaseTimer"
 INTENT_PAUSE_TIMER = "HassPauseTimer"
@@ -57,6 +58,7 @@ INTENT_TIMER_STATUS = "HassTimerStatus"
 INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 INTENT_RESPOND = "HassRespond"
+INTENT_BROADCAST = "HassBroadcast"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -1200,17 +1202,17 @@ class Intent:
     """Hold the intent."""
 
     __slots__ = [
+        "assistant",
+        "category",
+        "context",
+        "conversation_agent_id",
+        "device_id",
         "hass",
-        "platform",
         "intent_type",
+        "language",
+        "platform",
         "slots",
         "text_input",
-        "context",
-        "language",
-        "category",
-        "assistant",
-        "device_id",
-        "conversation_agent_id",
     ]
 
     def __init__(

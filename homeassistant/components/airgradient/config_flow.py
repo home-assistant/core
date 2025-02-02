@@ -11,10 +11,10 @@ from airgradient import (
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -37,7 +37,7 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         self.data[CONF_HOST] = host = discovery_info.host

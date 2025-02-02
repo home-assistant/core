@@ -41,7 +41,7 @@ from homeassistant.components.flux_led.light import (
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
@@ -517,7 +517,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 0)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     await hass.services.async_call(
@@ -534,7 +534,7 @@ async def test_rgbw_light_auto_on(hass: HomeAssistant) -> None:
     # enough resolution to determine which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 56)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 56)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -652,7 +652,7 @@ async def test_rgbww_light_auto_on(hass: HomeAssistant) -> None:
     # which color to display
     bulb.async_turn_on.assert_not_called()
     bulb.async_set_brightness.assert_not_called()
-    bulb.async_set_levels.assert_called_with(2, 0, 0, 0, 0)
+    bulb.async_set_levels.assert_called_with(3, 0, 0, 0, 0)
     bulb.async_set_levels.reset_mock()
 
     bulb.brightness = 128
@@ -777,12 +777,12 @@ async def test_rgb_cct_light(hass: HomeAssistant) -> None:
     assert attributes[ATTR_BRIGHTNESS] == 128
     assert attributes[ATTR_COLOR_MODE] == "color_temp"
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == ["color_temp", "rgb"]
-    assert attributes[ATTR_COLOR_TEMP] == 200
+    assert attributes[ATTR_COLOR_TEMP_KELVIN] == 5000
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 370},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 2702},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(2702, 128)
@@ -1003,7 +1003,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 154},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6493},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(6493, 255)
@@ -1012,7 +1012,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 154, ATTR_BRIGHTNESS: 255},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6493, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(6493, 255)
@@ -1021,7 +1021,7 @@ async def test_rgbw_light_warm_white(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 290},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 3448},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(3448, 255)
@@ -1241,7 +1241,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 154},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6493},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(6493, 255)
@@ -1250,7 +1250,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 154, ATTR_BRIGHTNESS: 255},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 6493, ATTR_BRIGHTNESS: 255},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(6493, 255)
@@ -1259,7 +1259,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 290},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 3448},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(3448, 255)
@@ -1316,7 +1316,7 @@ async def test_rgbcw_light(hass: HomeAssistant) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 170},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 5882},
         blocking=True,
     )
     bulb.async_set_white_temp.assert_called_with(5882, MIN_CCT_BRIGHTNESS)

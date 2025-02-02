@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from aioswitcher.api import SwitcherBaseResponse, SwitcherType2Api
 from aioswitcher.api.remotes import SwitcherBreezeRemote
 from aioswitcher.device import (
     DeviceCategory,
@@ -37,6 +36,8 @@ from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
 from .utils import get_breeze_remote_manager
+
+API_CONTROL_BREEZE_DEVICE = "control_breeze_device"
 
 DEVICE_MODE_TO_HA = {
     ThermostatMode.COOL: HVACMode.COOL,
@@ -83,7 +84,6 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
     """Representation of a Switcher climate entity."""
 
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self, coordinator: SwitcherDataUpdateCoordinator, remote: SwitcherBreezeRemote
@@ -156,27 +156,7 @@ class SwitcherClimateEntity(SwitcherEntity, ClimateEntity):
 
     async def _async_control_breeze_device(self, **kwargs: Any) -> None:
         """Call Switcher Control Breeze API."""
-        response: SwitcherBaseResponse | None = None
-        error = None
-
-        try:
-            async with SwitcherType2Api(
-                self.coordinator.data.device_type,
-                self.coordinator.data.ip_address,
-                self.coordinator.data.device_id,
-                self.coordinator.data.device_key,
-            ) as swapi:
-                response = await swapi.control_breeze_device(self._remote, **kwargs)
-        except (TimeoutError, OSError, RuntimeError) as err:
-            error = repr(err)
-
-        if error or not response or not response.successful:
-            self.coordinator.last_update_success = False
-            self.async_write_ha_state()
-            raise HomeAssistantError(
-                f"Call Breeze control for {self.name} failed, "
-                f"response/error: {response or error}"
-            )
+        await self._async_call_api(API_CONTROL_BREEZE_DEVICE, self._remote, **kwargs)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

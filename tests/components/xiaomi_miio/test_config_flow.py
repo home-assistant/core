@@ -9,11 +9,11 @@ from miio import DeviceException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_miio import const
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_MODEL, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import TEST_MAC
 
@@ -434,7 +434,7 @@ async def test_zeroconf_gateway_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(TEST_HOST),
             ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
@@ -477,7 +477,7 @@ async def test_zeroconf_unknown_device(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(TEST_HOST),
             ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
@@ -497,7 +497,7 @@ async def test_zeroconf_no_data(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=None,
             ip_addresses=[],
             hostname="mock_hostname",
@@ -517,7 +517,7 @@ async def test_zeroconf_missing_data(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(TEST_HOST),
             ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",
@@ -801,7 +801,7 @@ async def zeroconf_device_success(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address(TEST_HOST),
             ip_addresses=[ip_address(TEST_HOST)],
             hostname="mock_hostname",

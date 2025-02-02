@@ -353,7 +353,6 @@ class Thermostat(ClimateEntity):
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _attr_name = None
     _attr_has_entity_name = True
-    _enable_turn_on_off_backwards_compatibility = False
     _attr_translation_key = "ecobee"
 
     def __init__(
@@ -604,7 +603,7 @@ class Thermostat(ClimateEntity):
         """Return the remote sensor device name_by_user or name for the thermostat."""
         return sorted(
             [
-                f'{item["name_by_user"]} ({item["id"]})'
+                f"{item['name_by_user']} ({item['id']})"
                 for item in self.remote_sensor_ids_names
             ]
         )
@@ -874,7 +873,7 @@ class Thermostat(ClimateEntity):
                 translation_placeholders={
                     "options": ", ".join(
                         [
-                            f'{item["name_by_user"]} ({item["id"]})'
+                            f"{item['name_by_user']} ({item['id']})"
                             for item in self.remote_sensor_ids_names
                         ]
                     )

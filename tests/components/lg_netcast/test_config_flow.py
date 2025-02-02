@@ -3,8 +3,6 @@
 from datetime import timedelta
 from unittest.mock import DEFAULT, patch
 
-import pytest
-
 from homeassistant import data_entry_flow
 from homeassistant.components.lg_netcast.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -114,10 +112,6 @@ async def test_manual_host_unsuccessful_details_response(hass: HomeAssistant) ->
         assert result["reason"] == "cannot_connect"
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.lg_netcast.config.abort.invalid_host"],
-)
 async def test_manual_host_no_unique_id_response(hass: HomeAssistant) -> None:
     """Test manual host configuration."""
     with _patch_lg_netcast(no_unique_id=True):

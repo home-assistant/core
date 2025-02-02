@@ -56,7 +56,7 @@ async def test_converation_trace(
         "intent_name": "HassListAddItem",
         "slots": {
             "name": "Shopping List",
-            "item": "apples ",
+            "item": "apples",
         },
     }
 

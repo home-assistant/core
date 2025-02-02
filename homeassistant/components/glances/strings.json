@@ -123,11 +123,5 @@
         "name": "{sensor_label} TX"
       }
     }
-  },
-  "issues": {
-    "deprecated_version": {
-      "title": "Glances servers with version 2 is deprecated",
-      "description": "Glances servers with version 2 is deprecated and will not be supported in future versions of HA. It is recommended to update your server to Glances version 3 then reload the integration."
-    }
   }
 }

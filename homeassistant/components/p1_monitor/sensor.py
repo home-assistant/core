@@ -239,11 +239,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up P1 Monitor Sensors based on a config entry."""
-    coordinator: P1MonitorDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     entities: list[P1MonitorSensorEntity] = []
     entities.extend(
         P1MonitorSensorEntity(
-            coordinator=coordinator,
+            entry=entry,
             description=description,
             name="SmartMeter",
             service=SERVICE_SMARTMETER,
@@ -252,7 +251,7 @@ async def async_setup_entry(
     )
     entities.extend(
         P1MonitorSensorEntity(
-            coordinator=coordinator,
+            entry=entry,
             description=description,
             name="Phases",
             service=SERVICE_PHASES,
@@ -261,17 +260,17 @@ async def async_setup_entry(
     )
     entities.extend(
         P1MonitorSensorEntity(
-            coordinator=coordinator,
+            entry=entry,
             description=description,
             name="Settings",
             service=SERVICE_SETTINGS,
         )
         for description in SENSORS_SETTINGS
     )
-    if coordinator.has_water_meter:
+    if entry.runtime_data.has_water_meter:
         entities.extend(
             P1MonitorSensorEntity(
-                coordinator=coordinator,
+                entry=entry,
                 description=description,
                 name="WaterMeter",
                 service=SERVICE_WATERMETER,
@@ -291,24 +290,26 @@ class P1MonitorSensorEntity(
     def __init__(
         self,
         *,
-        coordinator: P1MonitorDataUpdateCoordinator,
+        entry: ConfigEntry,
         description: SensorEntityDescription,
         name: str,
         service: Literal["smartmeter", "watermeter", "phases", "settings"],
     ) -> None:
         """Initialize P1 Monitor sensor."""
-        super().__init__(coordinator=coordinator)
+        super().__init__(coordinator=entry.runtime_data)
         self._service_key = service
 
         self.entity_description = description
         self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}_{service}_{description.key}"
+            f"{entry.runtime_data.config_entry.entry_id}_{service}_{description.key}"
         )
 
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{service}")},
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            identifiers={
+                (DOMAIN, f"{entry.runtime_data.config_entry.entry_id}_{service}")
+            },
+            configuration_url=f"http://{entry.runtime_data.config_entry.data[CONF_HOST]}",
             manufacturer="P1 Monitor",
             name=name,
         )

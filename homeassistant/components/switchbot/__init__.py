@@ -24,6 +24,7 @@ from .const import (
     CONF_RETRY_COUNT,
     CONNECTABLE_SUPPORTED_MODEL_TYPES,
     DEFAULT_RETRY_COUNT,
+    ENCRYPTED_MODELS,
     HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL,
     SupportedModels,
 )
@@ -61,6 +62,9 @@ PLATFORMS_BY_TYPE = {
         Platform.SENSOR,
     ],
     SupportedModels.HUB2.value: [Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_1PM.value: [Platform.SWITCH, Platform.SENSOR],
+    SupportedModels.RELAY_SWITCH_1.value: [Platform.SWITCH],
+    SupportedModels.LEAK.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -73,6 +77,8 @@ CLASS_BY_DEVICE = {
     SupportedModels.LOCK.value: switchbot.SwitchbotLock,
     SupportedModels.LOCK_PRO.value: switchbot.SwitchbotLock,
     SupportedModels.BLIND_TILT.value: switchbot.SwitchbotBlindTilt,
+    SupportedModels.RELAY_SWITCH_1PM.value: switchbot.SwitchbotRelaySwitch,
+    SupportedModels.RELAY_SWITCH_1.value: switchbot.SwitchbotRelaySwitch,
 }
 
 
@@ -116,9 +122,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
         )
 
     cls = CLASS_BY_DEVICE.get(sensor_type, switchbot.SwitchbotDevice)
-    if cls is switchbot.SwitchbotLock:
+    if switchbot_model in ENCRYPTED_MODELS:
         try:
-            device = switchbot.SwitchbotLock(
+            device = cls(
                 device=ble_device,
                 key_id=entry.data.get(CONF_KEY_ID),
                 encryption_key=entry.data.get(CONF_ENCRYPTION_KEY),

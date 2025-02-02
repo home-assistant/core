@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["python_homeassistant_analytics"],
-  "requirements": ["python-homeassistant-analytics==0.8.0"],
+  "requirements": ["python-homeassistant-analytics==0.8.1"],
   "single_config_entry": true
 }
