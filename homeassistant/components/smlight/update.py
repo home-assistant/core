@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import SmConfigEntry, get_radio, get_radio_attr
+from . import SmConfigEntry, get_radio_attr
 from .const import LOGGER
 from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
@@ -34,6 +34,7 @@ class SmUpdateEntityDescription(UpdateEntityDescription):
     """Describes SMLIGHT SLZB-06 update entity."""
 
     installed_version: Callable[[Info, int], StateType]
+    latest_version: Callable[[list[Firmware], int | None], Firmware | None]
     fw_list: Callable[[SmFwData], list[Firmware] | None]
 
 
@@ -41,6 +42,7 @@ CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="core_update",
     translation_key="core_update",
     installed_version=lambda x, idx: x.sw_version,
+    latest_version=lambda fw_list, fw_type: next((f for f in fw_list), None),
     fw_list=lambda x: x.esp_firmware,
 )
 
@@ -49,12 +51,18 @@ ZB_UPDATE_ENTITIES: list[SmUpdateEntityDescription] = [
         key="zigbee_update",
         translation_key="zigbee_update",
         installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
+        latest_version=lambda fw_list, fw_type: next(
+            (f for f in fw_list if f.type == fw_type), None
+        ),
         fw_list=lambda x: x.zb_firmware,
     ),
     SmUpdateEntityDescription(
         key="zigbee_update2",
         translation_key="zigbee_update2",
         installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
+        latest_version=lambda fw_list, fw_type: next(
+            (f for f in fw_list if f.type == fw_type), None
+        ),
         fw_list=lambda x: x.zb_firmware2,
     ),
 ]
@@ -106,11 +114,6 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._firmware: Firmware | None = None
         self._unload: list[Callable] = []
         self.idx = idx
-        self._radio = (
-            get_radio(coordinator.data.info, idx)
-            if "zigbee" in description.key
-            else None
-        )
 
     @property
     def installed_version(self) -> str | None:
@@ -124,21 +127,19 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         data = self.coordinator.data
+        fw: Firmware | None = None
+
         if self.coordinator.legacy_api == 2:
             return None
 
-        fw = self.entity_description.fw_list(data)
-
-        if fw and "zigbee_update" in self.entity_description.key:
-            fw = [
-                f
-                for f in fw
-                if self._radio is not None and f.type == self._radio.zb_type
-            ]
+        fw_list = self.entity_description.fw_list(data)
+        if fw_list:
+            zb_type = data.info.radios[self.idx].zb_type  # type: ignore[index]
+            fw = self.entity_description.latest_version(fw_list, zb_type)
 
         if fw:
-            self._firmware = fw[0]
-            return self._firmware.ver
+            self._firmware = fw
+            return fw.ver
 
         return None
 
