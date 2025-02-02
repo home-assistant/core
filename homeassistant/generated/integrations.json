@@ -5801,6 +5801,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "smart_rollos": {
+      "name": "Smart Rollos",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "smarther": {
       "name": "Smarther",
       "integration_type": "virtual",
