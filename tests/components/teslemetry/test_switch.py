@@ -140,7 +140,7 @@ async def test_switch_streaming(
         {
             "vin": VEHICLE_DATA_ALT["response"]["vin"],
             "data": {
-                Signal.SENTRY_MODE: "SentryModeIdle",
+                Signal.SENTRY_MODE: "SentryModeStateIdle",
                 Signal.AUTO_SEAT_CLIMATE_LEFT: True,
                 Signal.AUTO_SEAT_CLIMATE_RIGHT: False,
                 Signal.HVAC_STEERING_WHEEL_HEAT_AUTO: True,
