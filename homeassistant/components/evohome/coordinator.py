@@ -180,7 +180,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 (
                     "Unable to obtain high-precision temperatures. "
                     "The high-precision feature will be disabled until next restart."
-                    "Message is: %s"
+                    "Message is: %r"
                 ),
                 err,
             )
@@ -191,15 +191,11 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 (
                     "Unable to obtain the latest high-precision temperatures. "
                     "Proceeding without high-precision temperatures for now. "
-                    "Message is: %s"
+                    "Message is: %r"
                 ),
                 err,
             )
             self.temps = {}  # high-precision temps now considered stale
-
-        except Exception:
-            self.temps = {}  # high-precision temps now considered stale
-            raise
 
         else:
             self.temps = await self.client_v1.location_by_id[
