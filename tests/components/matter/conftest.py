@@ -85,6 +85,7 @@ async def integration_fixture(
         "eve_energy_plug_patched",
         "eve_thermo",
         "eve_weather_sensor",
+        "evse_not_charging",
         "extended_color_light",
         "fan",
         "flow_sensor",
