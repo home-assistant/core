@@ -22,6 +22,7 @@ from homeassistant.helpers import (
     intent,
     llm,
     selector,
+    service,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -1011,6 +1012,7 @@ async def test_action_tool(hass: HomeAssistant) -> None:
     """Test ActionTool can be created for each action (service) without exceptions."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "demo", {})
+    await service.async_get_all_descriptions(hass)
     for domain, actions in hass.services.async_services().items():
         for action in actions:
             tool = llm.ActionTool(hass, domain, action)
