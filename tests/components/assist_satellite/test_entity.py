@@ -487,6 +487,7 @@ async def test_vad_sensitivity_entity_not_found(
                 "extra_system_prompt": "Better system prompt",
             },
             (
+                None,
                 "Better system prompt",
                 AssistSatelliteAnnouncement(
                     message="Hello",
@@ -502,6 +503,7 @@ async def test_vad_sensitivity_entity_not_found(
                 "start_media_id": "media-source://given",
             },
             (
+                None,
                 "Hello",
                 AssistSatelliteAnnouncement(
                     message="Hello",
@@ -514,6 +516,7 @@ async def test_vad_sensitivity_entity_not_found(
         (
             {"start_media_id": "http://example.com/given.mp3"},
             (
+                None,
                 None,
                 AssistSatelliteAnnouncement(
                     message="",
