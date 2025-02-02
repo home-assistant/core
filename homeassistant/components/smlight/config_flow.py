@@ -35,7 +35,8 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
 class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMLIGHT Zigbee."""
 
-    host: str
+    _host: str
+    _device_name: str
     client: Api2
 
     async def async_step_user(
@@ -45,11 +46,13 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.host = user_input[CONF_HOST]
-            self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+            self._host = user_input[CONF_HOST]
+            self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
             try:
                 info = await self.client.get_info()
+                self._host = str(info.device_ip)
+                self._device_name = str(info.hostname)
 
                 if info.model not in Devices:
                     return self.async_abort(reason="unsupported_device")
@@ -93,15 +96,14 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Lan coordinator."""
-        local_name = discovery_info.hostname[:-1]
-        node_name = local_name.removesuffix(".local")
+        mac: str | None = discovery_info.properties.get("mac")
+        self._device_name = discovery_info.hostname.removesuffix(".local.")
+        self._host = discovery_info.host
 
-        self.host = local_name
-        self.context["title_placeholders"] = {CONF_NAME: node_name}
-        self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+        self.context["title_placeholders"] = {CONF_NAME: self._device_name}
+        self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
-        mac = discovery_info.properties.get("mac")
-        # fallback for legacy firmware
+        # fallback for legacy firmware older than v2.3.x
         if mac is None:
             try:
                 info = await self.client.get_info()
@@ -111,7 +113,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             mac = info.MAC
 
         await self.async_set_unique_id(format_mac(mac))
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         return await self.async_step_confirm_discovery()
 
@@ -122,7 +124,6 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_HOST] = self.host
             try:
                 info = await self.client.get_info()
 
@@ -142,7 +143,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="confirm_discovery",
-            description_placeholders={"host": self.host},
+            description_placeholders={"host": self._device_name},
             errors=errors,
         )
 
@@ -151,8 +152,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauth when API Authentication failed."""
 
-        self.host = entry_data[CONF_HOST]
-        self.client = Api2(self.host, session=async_get_clientsession(self.hass))
+        self._host = entry_data[CONF_HOST]
+        self.client = Api2(self._host, session=async_get_clientsession(self.hass))
 
         return await self.async_step_reauth_confirm()
 
@@ -200,11 +201,14 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             format_mac(info.MAC), raise_on_progress=self.source != SOURCE_USER
         )
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
-        if user_input.get(CONF_HOST) is None:
-            user_input[CONF_HOST] = self.host
+        user_input[CONF_HOST] = self._host
 
         assert info.model is not None
-        title = self.context.get("title_placeholders", {}).get(CONF_NAME) or info.model
+        title = (
+            self.context.get("title_placeholders", {}).get(CONF_NAME)
+            or self._device_name
+            or info.model
+        )
         return self.async_create_entry(title=title, data=user_input)
