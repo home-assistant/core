@@ -5,18 +5,16 @@ import logging
 from types import MappingProxyType
 from typing import Any, cast
 
-import aiohttp
 from opower import (
     Account,
     AggregateType,
-    CannotConnect,
     CostRead,
     Forecast,
-    InvalidAuth,
     MeterType,
     Opower,
     ReadResolution,
 )
+from opower.exceptions import ApiException, CannotConnect, InvalidAuth
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -89,7 +87,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             raise UpdateFailed(f"Error during login: {err}") from err
         try:
             forecasts: list[Forecast] = await self.api.async_get_forecast()
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting forecasts: %s", err)
             raise
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
@@ -102,7 +100,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         """Insert Opower statistics."""
         try:
             accounts = await self.api.async_get_accounts()
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting accounts: %s", err)
             raise
         for account in accounts:
@@ -271,7 +269,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             cost_reads = await self.api.async_get_cost_reads(
                 account, AggregateType.BILL, start, end
             )
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting monthly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
@@ -290,7 +288,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             daily_cost_reads = await self.api.async_get_cost_reads(
                 account, AggregateType.DAY, start, end
             )
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting daily cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
@@ -308,7 +306,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             hourly_cost_reads = await self.api.async_get_cost_reads(
                 account, AggregateType.HOUR, start, end
             )
-        except aiohttp.ClientError as err:
+        except ApiException as err:
             _LOGGER.error("Error getting hourly cost reads: %s", err)
             raise
         _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))

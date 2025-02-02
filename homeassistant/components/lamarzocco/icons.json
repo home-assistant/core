@@ -95,6 +95,9 @@
       "drink_stats_flushing": {
         "default": "mdi:chart-line"
       },
+      "drink_stats_coffee_key": {
+        "default": "mdi:chart-scatter-plot"
+      },
       "shot_timer": {
         "default": "mdi:timer"
       },

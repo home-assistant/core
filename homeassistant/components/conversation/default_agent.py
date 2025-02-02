@@ -42,6 +42,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
+    chat_session,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -62,7 +63,7 @@ from .const import (
 )
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
-from .session import Content, async_get_chat_session
+from .session import Content, async_get_chat_log
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
@@ -348,7 +349,12 @@ class DefaultAgent(ConversationEntity):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         response: intent.IntentResponse | None = None
-        async with async_get_chat_session(self.hass, user_input) as chat_session:
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id
+            ) as session,
+            async_get_chat_log(self.hass, session, user_input) as chat_log,
+        ):
             # Check if a trigger matched
             if trigger_result := await self.async_recognize_sentence_trigger(
                 user_input
@@ -373,7 +379,7 @@ class DefaultAgent(ConversationEntity):
                 )
 
             speech: str = response.speech.get("plain", {}).get("speech", "")
-            chat_session.async_add_message(
+            chat_log.async_add_message(
                 Content(
                     role="assistant",
                     agent_id=user_input.agent_id,
@@ -382,7 +388,7 @@ class DefaultAgent(ConversationEntity):
             )
 
             return ConversationResult(
-                response=response, conversation_id=chat_session.conversation_id
+                response=response, conversation_id=session.conversation_id
             )
 
     async def _async_process_intent_result(
