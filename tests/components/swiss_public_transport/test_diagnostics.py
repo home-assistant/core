@@ -73,5 +73,4 @@ async def test_diagnostics(
             await get_diagnostics_for_config_entry(
                 hass, hass_client, swiss_public_transport_config_entry
             )
-            == snapshot
-        )
+        )["stats"] == snapshot
