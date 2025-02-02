@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from teslemetry_stream import Signal
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -14,7 +15,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, assert_entities_alt, setup_platform
+from . import assert_entities, assert_entities_alt, reload_platform, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
 
 
@@ -22,6 +23,7 @@ async def test_switch(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the switch entities are correct."""
 
@@ -34,6 +36,7 @@ async def test_switch_alt(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the switch entities are correct."""
 
@@ -119,3 +122,47 @@ async def test_switch_services(
         state = hass.states.get(entity_id)
         assert state.state == STATE_OFF
         call.assert_called_once()
+
+
+async def test_switch_streaming(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests that the binary sensor entities with streaming are correct."""
+
+    entry = await setup_platform(hass, [Platform.SWITCH])
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.SENTRY_MODE: "SentryModeIdle",
+                Signal.AUTO_SEAT_CLIMATE_LEFT: True,
+                Signal.AUTO_SEAT_CLIMATE_RIGHT: False,
+                Signal.HVAC_STEERING_WHEEL_HEAT_AUTO: True,
+                Signal.DEFROST_MODE: False,
+                Signal.DETAILED_CHARGE_STATE: "DetailedChargeStateCharging",
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Reload the entry
+    await reload_platform(hass, entry, [Platform.SWITCH])
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "switch.test_sentry_mode",
+        "switch.test_auto_seat_climate_left",
+        "switch.test_auto_seat_climate_right",
+        "switch.test_auto_steering_wheel_heater",
+        "switch.test_defrost",
+        "switch.test_charge",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=entity_id)

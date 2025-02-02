@@ -93,6 +93,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     TeslemetrySwitchEntityDescription(
         key="climate_state_defrost_mode",
         streaming_listener=lambda x, y: x.listen_DefrostMode(y),
+        streaming_value_fn=lambda x: x != "Off",
         on_func=lambda api: api.set_preconditioning_max(on=True, manual_override=False),
         off_func=lambda api: api.set_preconditioning_max(
             on=False, manual_override=False
