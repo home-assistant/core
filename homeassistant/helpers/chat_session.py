@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from collections.abc import Generator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -17,8 +17,9 @@ from homeassistant.core import (
     HomeAssistant,
     callback,
 )
-from homeassistant.util import dt as dt_util, ulid as ulid_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.ulid import ulid_now, ulid_to_bytes
 
 from .event import async_call_later
 
@@ -107,11 +108,11 @@ class SessionCleanup:
             self.schedule()
 
 
-@asynccontextmanager
-async def async_get_chat_session(
+@contextmanager
+def async_get_chat_session(
     hass: HomeAssistant,
     conversation_id: str | None = None,
-) -> AsyncGenerator[ChatSession]:
+) -> Generator[ChatSession]:
     """Return a chat session."""
     if session := current_session.get():
         # If a session is already active and it's the requested conversation ID,
@@ -132,7 +133,7 @@ async def async_get_chat_session(
         hass.data[DATA_CHAT_SESSION_CLEANUP] = SessionCleanup(hass)
 
     if conversation_id is None:
-        conversation_id = ulid_util.ulid_now()
+        conversation_id = ulid_now()
 
     elif conversation_id in all_sessions:
         session = all_sessions[conversation_id]
@@ -143,8 +144,8 @@ async def async_get_chat_session(
         # a new conversation was started. If the user picks their own, they
         # want to track a conversation and we respect it.
         try:
-            ulid_util.ulid_to_bytes(conversation_id)
-            conversation_id = ulid_util.ulid_now()
+            ulid_to_bytes(conversation_id)
+            conversation_id = ulid_now()
         except ValueError:
             pass
 

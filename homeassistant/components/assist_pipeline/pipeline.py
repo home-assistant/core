@@ -1094,7 +1094,7 @@ class PipelineRun:
 
             # It was already handled, create response and add to chat history
             if intent_response is not None:
-                async with (
+                with (
                     chat_session.async_get_chat_session(
                         self.hass, user_input.conversation_id
                     ) as session,

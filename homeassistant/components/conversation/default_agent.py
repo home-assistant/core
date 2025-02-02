@@ -349,7 +349,7 @@ class DefaultAgent(ConversationEntity):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         response: intent.IntentResponse | None = None
-        async with (
+        with (
             chat_session.async_get_chat_session(
                 self.hass, user_input.conversation_id
             ) as session,

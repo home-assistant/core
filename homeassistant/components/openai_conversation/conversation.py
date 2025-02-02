@@ -155,7 +155,7 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        async with (
+        with (
             chat_session.async_get_chat_session(
                 self.hass, user_input.conversation_id
             ) as session,
