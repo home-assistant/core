@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from chip.clusters import Objects as clusters
-from chip.clusters.Objects import NullValue
+from chip.clusters.Objects import ClusterCommand, NullValue
 from matter_server.client.models import device_types
 
 from homeassistant.components.switch import (
@@ -98,6 +98,21 @@ class MatterGenericCommandSwitch(MatterEntity, SwitchEntity):
         if value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
         self._attr_is_on = value
+
+    async def send_device_command(
+        self,
+        command: ClusterCommand,
+        command_timeout: int | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send device command with timeout."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=command,
+            timed_request_timeout_ms=command_timeout,
+            **kwargs,
+        )
 
 
 @dataclass(frozen=True)

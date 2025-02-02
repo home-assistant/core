@@ -247,7 +247,6 @@ class MatterEntity(Entity):
     async def send_device_command(
         self,
         command: ClusterCommand,
-        command_timeout: int | None = None,
         **kwargs: Any,
     ) -> None:
         """Send device command on the primary attribute's endpoint."""
@@ -255,7 +254,6 @@ class MatterEntity(Entity):
             node_id=self._endpoint.node.node_id,
             endpoint_id=self._endpoint.endpoint_id,
             command=command,
-            timed_request_timeout_ms=command_timeout,
             **kwargs,
         )
 
