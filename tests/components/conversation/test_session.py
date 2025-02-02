@@ -50,7 +50,7 @@ async def test_cleanup(
     mock_conversation_input: ConversationInput,
 ) -> None:
     """Test cleanup of the chat log."""
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -83,7 +83,7 @@ async def test_add_message(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test filtering of messages."""
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -115,7 +115,7 @@ async def test_message_filtering(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test filtering of messages."""
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -183,7 +183,7 @@ async def test_llm_api(
     mock_conversation_input: ConversationInput,
 ) -> None:
     """Test when we reference an LLM API."""
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -204,17 +204,17 @@ async def test_unknown_llm_api(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test when we reference an LLM API that does not exists."""
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(ConverseError) as exc_info,
     ):
-        with pytest.raises(ConverseError) as exc_info:
-            await chat_log.async_update_llm_data(
-                conversing_domain="test",
-                user_input=mock_conversation_input,
-                user_llm_hass_api="unknown-api",
-                user_llm_prompt=None,
-            )
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api="unknown-api",
+            user_llm_prompt=None,
+        )
 
     assert str(exc_info.value) == "Error getting LLM API unknown-api"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
@@ -226,17 +226,17 @@ async def test_template_error(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that template error handling works."""
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        pytest.raises(ConverseError) as exc_info,
     ):
-        with pytest.raises(ConverseError) as exc_info:
-            await chat_log.async_update_llm_data(
-                conversing_domain="test",
-                user_input=mock_conversation_input,
-                user_llm_hass_api=None,
-                user_llm_prompt="{{ invalid_syntax",
-            )
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api=None,
+            user_llm_prompt="{{ invalid_syntax",
+        )
 
     assert str(exc_info.value) == "Error rendering prompt"
     assert exc_info.value.as_conversation_result().as_dict() == snapshot
@@ -251,24 +251,22 @@ async def test_template_variables(
     mock_user.name = "Test User"
     mock_conversation_input.context = Context(user_id=mock_user.id)
 
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
-        with patch(
-            "homeassistant.auth.AuthManager.async_get_user", return_value=mock_user
-        ):
-            await chat_log.async_update_llm_data(
-                conversing_domain="test",
-                user_input=mock_conversation_input,
-                user_llm_hass_api=None,
-                user_llm_prompt=(
-                    "The instance name is {{ ha_name }}. "
-                    "The user name is {{ user_name }}. "
-                    "The user id is {{ llm_context.context.user_id }}."
-                    "The calling platform is {{ llm_context.platform }}."
-                ),
-            )
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api=None,
+            user_llm_prompt=(
+                "The instance name is {{ ha_name }}. "
+                "The user name is {{ user_name }}. "
+                "The user id is {{ llm_context.context.user_id }}."
+                "The calling platform is {{ llm_context.platform }}."
+            ),
+        )
 
     assert chat_log.user_name == "Test User"
 
@@ -288,7 +286,7 @@ async def test_extra_systen_prompt(
     )
     mock_conversation_input.extra_system_prompt = extra_system_prompt
 
-    async with (
+    with (
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -313,7 +311,7 @@ async def test_extra_systen_prompt(
     conversation_id = chat_log.conversation_id
     mock_conversation_input.extra_system_prompt = None
 
-    async with (
+    with (
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -330,7 +328,7 @@ async def test_extra_systen_prompt(
     # Verify that we take new system prompts
     mock_conversation_input.extra_system_prompt = extra_system_prompt2
 
-    async with (
+    with (
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -355,7 +353,7 @@ async def test_extra_systen_prompt(
     # Verify that follow-up conversations with no system prompt take previous one
     mock_conversation_input.extra_system_prompt = None
 
-    async with (
+    with (
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
@@ -390,7 +388,7 @@ async def test_tool_call(
     ) as mock_get_tools:
         mock_get_tools.return_value = [mock_tool]
 
-        async with (
+        with (
             chat_session.async_get_chat_session(hass) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
@@ -430,7 +428,7 @@ async def test_tool_call_exception(
     ) as mock_get_tools:
         mock_get_tools.return_value = [mock_tool]
 
-        async with (
+        with (
             chat_session.async_get_chat_session(hass) as session,
             async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
         ):
