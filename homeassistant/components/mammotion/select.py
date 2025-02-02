@@ -1,11 +1,6 @@
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Callable
 
-from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
 from pymammotion.data.model.mowing_modes import (
     BorderPatrolMode,
     BypassStrategy,
@@ -13,8 +8,15 @@ from pymammotion.data.model.mowing_modes import (
     MowOrder,
     ObstacleLapsMode,
     PathAngleSetting,
+    TraversalMode,
 )
 from pymammotion.utility.device_type import DeviceType
+
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
 from .coordinator import MammotionDataUpdateCoordinator
@@ -27,7 +29,27 @@ class MammotionConfigSelectEntityDescription(SelectEntityDescription):
 
     key: str
     options: list[str]
+    set_fn: Callable[[MammotionDataUpdateCoordinator, str], Awaitable[None]]
+
+
+@dataclass(frozen=True, kw_only=True)
+class MammotionAsyncConfigSelectEntityDescription(MammotionBaseEntity, SelectEntity):
+    """Describes Mammotion select entity with async functionality."""
+
+    key: str
+    options: list[str]
     set_fn: Callable[[MammotionDataUpdateCoordinator, str], None]
+
+
+ASYNC_SELECT_ENTITIES: tuple[MammotionAsyncConfigSelectEntityDescription, ...] = (
+    MammotionAsyncConfigSelectEntityDescription(
+        key="traversal_mode",
+        options=[mode.name for mode in TraversalMode],
+        set_fn=lambda coordinator, value: coordinator.set_traversal_mode(
+            TraversalMode[value]
+        ),
+    ),
+)
 
 
 SELECT_ENTITIES: tuple[MammotionConfigSelectEntityDescription, ...] = (
@@ -117,6 +139,11 @@ async def async_setup_entry(
     for entity_description in SELECT_ENTITIES:
         entities.append(MammotionConfigSelectEntity(coordinator, entity_description))
 
+    for entity_description in ASYNC_SELECT_ENTITIES:
+        entities.append(
+            MammotionAsyncConfigSelectEntity(coordinator, entity_description)
+        )
+
     if DeviceType.is_luba1(coordinator.device_name):
         for entity_description in LUBA1_SELECT_ENTITIES:
             entities.append(
@@ -155,4 +182,33 @@ class MammotionConfigSelectEntity(MammotionBaseEntity, SelectEntity, RestoreEnti
     async def async_select_option(self, option: str) -> None:
         self._attr_current_option = option
         self.entity_description.set_fn(self.coordinator, option)
+        self.async_write_ha_state()
+
+
+# Define the select entity class with entity_category: config
+class MammotionAsyncConfigSelectEntity(
+    MammotionBaseEntity, SelectEntity, RestoreEntity
+):
+    """Representation of a Mammotion select entities."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+
+    entity_description: MammotionConfigSelectEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: MammotionDataUpdateCoordinator,
+        entity_description: MammotionConfigSelectEntityDescription,
+    ) -> None:
+        super().__init__(coordinator, entity_description.key)
+        self.coordinator = coordinator
+        self.entity_description = entity_description
+        self._attr_translation_key = entity_description.key
+        self._attr_options = entity_description.options
+        self._attr_current_option = entity_description.options[0]
+
+    async def async_select_option(self, option: str) -> None:
+        self._attr_current_option = option
+        await self.entity_description.set_fn(self.coordinator, option)
         self.async_write_ha_state()

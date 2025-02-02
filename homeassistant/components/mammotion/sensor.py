@@ -15,7 +15,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfLength,
     UnitOfSpeed,
-    UnitOfTime,
+    UnitOfTime, UnitOfArea,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -25,6 +25,7 @@ from pymammotion.data.model.device import MowingDevice
 from pymammotion.data.model.enums import RTKStatus
 from pymammotion.utility.constant.device_constant import (
     PosType,
+    camera_brightness,
     device_connection,
     device_mode,
 )
@@ -51,6 +52,17 @@ LUBA_SENSOR_ONLY_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         value_fn=lambda mower_data: mower_data.report_data.work.knife_height,
+    ),
+)
+
+LUBA_2_YUKA_ONLY_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
+    MammotionSensorEntityDescription(
+        key="camera_brightness",
+        state_class=None,
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda mower_data: camera_brightness(
+            mower_data.report_data.vision_info.brightness
+        ),
     ),
 )
 
@@ -116,7 +128,7 @@ SENSOR_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         key="area",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=None,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         value_fn=lambda mower_data: mower_data.report_data.work.area & 65535,
     ),
     MammotionSensorEntityDescription(
@@ -171,6 +183,13 @@ SENSOR_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         value_fn=lambda mower_data: (mower_data.report_data.rtk.co_view_stars >> 8)
         & 255,
     ),
+    # MammotionSensorEntityDescription(
+    #     key="vlsam_status",
+    #     state_class=SensorStateClass.MEASUREMENT,
+    #     device_class=None,
+    #     native_unit_of_measurement=None,
+    #     value_fn=lambda mower_data: (mower_data.report_data.dev.vslam_status & 65280) >> 8,
+    # ),
     MammotionSensorEntityDescription(
         key="activity_mode",
         state_class=None,
@@ -184,7 +203,7 @@ SENSOR_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         native_unit_of_measurement=None,
         value_fn=lambda mower_data: str(
             RTKStatus.from_value(mower_data.report_data.rtk.status)
-        ),  # Note: This will not work for Luba2 & Yuka. Only for Luba1
+        ),
     ),
     MammotionSensorEntityDescription(
         key="position_type",
@@ -193,7 +212,7 @@ SENSOR_TYPES: tuple[MammotionSensorEntityDescription, ...] = (
         native_unit_of_measurement=None,
         value_fn=lambda mower_data: str(
             PosType(mower_data.location.position_type).name
-        ),  # Note: This will not work for Luba2 & Yuka. Only for Luba1
+        ),
     ),
     MammotionSensorEntityDescription(
         key="work_area",
@@ -229,13 +248,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    coordinator = entry.runtime_data
+    mowers = entry.runtime_data
 
-    if not DeviceType.is_yuka(coordinator.device_name):
-        async_add_entities(
-            MammotionSensorEntity(coordinator, description)
-            for description in LUBA_SENSOR_ONLY_TYPES
-        )
+    for mower in mowers:
+
+        if not DeviceType.is_yuka(mower.device_name):
+            async_add_entities(
+                MammotionSensorEntity(coordinator, description)
+                for description in LUBA_SENSOR_ONLY_TYPES
+            )
+
+        if not DeviceType.is_luba1(coordinator.device_name):
+            async_add_entities(
+                MammotionSensorEntity(coordinator, description)
+                for description in LUBA_2_YUKA_ONLY_TYPES
+            )
 
     async_add_entities(
         MammotionSensorEntity(coordinator, description) for description in SENSOR_TYPES
@@ -261,5 +288,4 @@ class MammotionSensorEntity(MammotionBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        current_value = self.entity_description.value_fn(self.coordinator.data)
-        return current_value
+        return self.entity_description.value_fn(self.coordinator.data)
