@@ -93,20 +93,3 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
             )
         except (ApiException, ClientError) as err:
             raise HomeAssistantError from err
-
-    async def async_update(self) -> None:
-        """Update the bridge linked to this lock."""
-        try:
-            devices = await self.api.get_devices()
-            linked_bridge_id = get_linked_bridge(
-                self.api_device_info.deviceId, devices.payload
-            )
-            if linked_bridge_id is None:
-                self._attr_available = False
-            else:
-                self._attr_available = True
-                self.bridge_id = linked_bridge_id
-        except (ApiException, ClientError):
-            self._attr_available = False
-        else:
-            self._attr_available = True

@@ -13,7 +13,7 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensors(
+async def test_locks_created(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
