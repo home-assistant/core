@@ -32,7 +32,7 @@ class MammotionTracker(MammotionBaseEntity, TrackerEntity, RestoreEntity):
 
     _attr_force_update = False
     _attr_translation_key = "device_tracker"
-    _attr_icon = "mdi:robot-mower"
+    _attr_source_type = SourceType.GPS
 
     def __init__(self, coordinator: MammotionDataUpdateCoordinator) -> None:
         """Initialize the Tracker."""
@@ -67,8 +67,3 @@ class MammotionTracker(MammotionBaseEntity, TrackerEntity, RestoreEntity):
     def battery_level(self) -> int | None:
         """Return the battery level of the device."""
         return self.coordinator.data.report_data.dev.battery_val
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type, e.g., GPS or router, of the device."""
-        return SourceType.GPS
