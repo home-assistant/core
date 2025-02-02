@@ -195,6 +195,7 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="call_AbCdEfGhIjKlMnOpQrStUvWx",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
@@ -359,6 +360,7 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="call_AbCdEfGhIjKlMnOpQrStUvWx",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),

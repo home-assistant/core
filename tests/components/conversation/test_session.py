@@ -9,10 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.conversation import (
-    Content,
+    AssistantContent,
     ConversationInput,
     ConverseError,
-    NativeContent,
+    ToolResultContent,
     async_get_chat_log,
 )
 from homeassistant.components.conversation.session import DATA_CHAT_HISTORY
@@ -56,13 +56,13 @@ async def test_cleanup(
     ):
         conversation_id = session.conversation_id
         # Add message so it persists
-        chat_log.async_add_message(
-            Content(
-                role="assistant",
-                agent_id=mock_conversation_input.agent_id,
-                content="",
+        async for _tool_result in chat_log.async_add_assistant_content(
+            AssistantContent(
+                agent_id="mock-agent-id",
+                content="Hey!",
             )
-        )
+        ):
+            pytest.fail("should not reach here")
 
     assert conversation_id in hass.data[DATA_CHAT_HISTORY]
 
@@ -79,7 +79,7 @@ async def test_cleanup(
     assert conversation_id not in hass.data[DATA_CHAT_HISTORY]
 
 
-async def test_add_message(
+async def test_default_content(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test filtering of messages."""
@@ -87,95 +87,11 @@ async def test_add_message(
         chat_session.async_get_chat_session(hass) as session,
         async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
     ):
-        assert len(chat_log.messages) == 2
-
-        with pytest.raises(ValueError):
-            chat_log.async_add_message(
-                Content(role="system", agent_id=None, content="")
-            )
-
-        # No 2 user messages in a row
-        assert chat_log.messages[1].role == "user"
-
-        with pytest.raises(ValueError):
-            chat_log.async_add_message(Content(role="user", agent_id=None, content=""))
-
-        # No 2 assistant messages in a row
-        chat_log.async_add_message(Content(role="assistant", agent_id=None, content=""))
-        assert len(chat_log.messages) == 3
-        assert chat_log.messages[-1].role == "assistant"
-
-        with pytest.raises(ValueError):
-            chat_log.async_add_message(
-                Content(role="assistant", agent_id=None, content="")
-            )
-
-
-async def test_message_filtering(
-    hass: HomeAssistant, mock_conversation_input: ConversationInput
-) -> None:
-    """Test filtering of messages."""
-    with (
-        chat_session.async_get_chat_session(hass) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-    ):
-        messages = chat_log.async_get_messages(agent_id=None)
-        assert len(messages) == 2
-        assert messages[0] == Content(
-            role="system",
-            agent_id=None,
-            content="",
-        )
-        assert messages[1] == Content(
-            role="user",
-            agent_id="mock-agent-id",
-            content=mock_conversation_input.text,
-        )
-        # Cannot add a second user message in a row
-        with pytest.raises(ValueError):
-            chat_log.async_add_message(
-                Content(
-                    role="user",
-                    agent_id="mock-agent-id",
-                    content="Hey!",
-                )
-            )
-
-        chat_log.async_add_message(
-            Content(
-                role="assistant",
-                agent_id="mock-agent-id",
-                content="Hey!",
-            )
-        )
-        # Different agent, native messages will be filtered out.
-        chat_log.async_add_message(
-            NativeContent(agent_id="another-mock-agent-id", content=1)
-        )
-        chat_log.async_add_message(NativeContent(agent_id="mock-agent-id", content=1))
-        # A non-native message from another agent is not filtered out.
-        chat_log.async_add_message(
-            Content(
-                role="assistant",
-                agent_id="another-mock-agent-id",
-                content="Hi!",
-            )
-        )
-
-    assert len(chat_log.messages) == 6
-
-    messages = chat_log.async_get_messages(agent_id="mock-agent-id")
-    assert len(messages) == 5
-
-    assert messages[2] == Content(
-        role="assistant",
-        agent_id="mock-agent-id",
-        content="Hey!",
-    )
-    assert messages[3] == NativeContent(agent_id="mock-agent-id", content=1)
-    assert messages[4] == Content(
-        role="assistant", agent_id="another-mock-agent-id", content="Hi!"
-    )
+        assert len(chat_log.content) == 2
+        assert chat_log.content[0].role == "system"
+        assert chat_log.content[0].content == ""
+        assert chat_log.content[1].role == "user"
+        assert chat_log.content[1].content == mock_conversation_input.text
 
 
 async def test_llm_api(
@@ -268,12 +184,10 @@ async def test_template_variables(
             ),
         )
 
-    assert chat_log.user_name == "Test User"
-
-    assert "The instance name is test home." in chat_log.messages[0].content
-    assert "The user name is Test User." in chat_log.messages[0].content
-    assert "The user id is 12345." in chat_log.messages[0].content
-    assert "The calling platform is test." in chat_log.messages[0].content
+    assert "The instance name is test home." in chat_log.content[0].content
+    assert "The user name is Test User." in chat_log.content[0].content
+    assert "The user id is 12345." in chat_log.content[0].content
+    assert "The calling platform is test." in chat_log.content[0].content
 
 
 async def test_extra_systen_prompt(
@@ -296,16 +210,16 @@ async def test_extra_systen_prompt(
             user_llm_hass_api=None,
             user_llm_prompt=None,
         )
-        chat_log.async_add_message(
-            Content(
-                role="assistant",
+        async for _tool_result in chat_log.async_add_assistant_content(
+            AssistantContent(
                 agent_id="mock-agent-id",
                 content="Hey!",
             )
-        )
+        ):
+            pytest.fail("should not reach here")
 
     assert chat_log.extra_system_prompt == extra_system_prompt
-    assert chat_log.messages[0].content.endswith(extra_system_prompt)
+    assert chat_log.content[0].content.endswith(extra_system_prompt)
 
     # Verify that follow-up conversations with no system prompt take previous one
     conversation_id = chat_log.conversation_id
@@ -323,7 +237,7 @@ async def test_extra_systen_prompt(
         )
 
     assert chat_log.extra_system_prompt == extra_system_prompt
-    assert chat_log.messages[0].content.endswith(extra_system_prompt)
+    assert chat_log.content[0].content.endswith(extra_system_prompt)
 
     # Verify that we take new system prompts
     mock_conversation_input.extra_system_prompt = extra_system_prompt2
@@ -338,17 +252,17 @@ async def test_extra_systen_prompt(
             user_llm_hass_api=None,
             user_llm_prompt=None,
         )
-        chat_log.async_add_message(
-            Content(
-                role="assistant",
+        async for _tool_result in chat_log.async_add_assistant_content(
+            AssistantContent(
                 agent_id="mock-agent-id",
                 content="Hey!",
             )
-        )
+        ):
+            pytest.fail("should not reach here")
 
     assert chat_log.extra_system_prompt == extra_system_prompt2
-    assert chat_log.messages[0].content.endswith(extra_system_prompt2)
-    assert extra_system_prompt not in chat_log.messages[0].content
+    assert chat_log.content[0].content.endswith(extra_system_prompt2)
+    assert extra_system_prompt not in chat_log.content[0].content
 
     # Verify that follow-up conversations with no system prompt take previous one
     mock_conversation_input.extra_system_prompt = None
@@ -365,7 +279,7 @@ async def test_extra_systen_prompt(
         )
 
     assert chat_log.extra_system_prompt == extra_system_prompt2
-    assert chat_log.messages[0].content.endswith(extra_system_prompt2)
+    assert chat_log.content[0].content.endswith(extra_system_prompt2)
 
 
 async def test_tool_call(
@@ -398,14 +312,29 @@ async def test_tool_call(
                 user_llm_hass_api="assist",
                 user_llm_prompt=None,
             )
-            result = await chat_log.async_call_tool(
-                llm.ToolInput(
-                    tool_name="test_tool",
-                    tool_args={"param1": "Test Param"},
+            result = None
+            async for tool_result_content in chat_log.async_add_assistant_content(
+                AssistantContent(
+                    agent_id=mock_conversation_input.agent_id,
+                    content="",
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="mock-tool-call-id",
+                            tool_name="test_tool",
+                            tool_args={"param1": "Test Param"},
+                        )
+                    ],
                 )
-            )
+            ):
+                assert result is None
+                result = tool_result_content
 
-    assert result == "Test response"
+    assert result == ToolResultContent(
+        agent_id=mock_conversation_input.agent_id,
+        tool_call_id="mock-tool-call-id",
+        tool_result="Test response",
+        tool_name="test_tool",
+    )
 
 
 async def test_tool_call_exception(
@@ -438,11 +367,26 @@ async def test_tool_call_exception(
                 user_llm_hass_api="assist",
                 user_llm_prompt=None,
             )
-            result = await chat_log.async_call_tool(
-                llm.ToolInput(
-                    tool_name="test_tool",
-                    tool_args={"param1": "Test Param"},
+            result = None
+            async for tool_result_content in chat_log.async_add_assistant_content(
+                AssistantContent(
+                    agent_id=mock_conversation_input.agent_id,
+                    content="",
+                    tool_calls=[
+                        llm.ToolInput(
+                            id="mock-tool-call-id",
+                            tool_name="test_tool",
+                            tool_args={"param1": "Test Param"},
+                        )
+                    ],
                 )
-            )
+            ):
+                assert result is None
+                result = tool_result_content
 
-    assert result == {"error": "HomeAssistantError", "error_text": "Test error"}
+    assert result == ToolResultContent(
+        agent_id=mock_conversation_input.agent_id,
+        tool_call_id="mock-tool-call-id",
+        tool_result={"error": "HomeAssistantError", "error_text": "Test error"},
+        tool_name="test_tool",
+    )

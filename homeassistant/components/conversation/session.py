@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
-from datetime import datetime
 import logging
-from typing import Literal
 
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import chat_session, intent, llm, template
-from homeassistant.util import dt as dt_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
 
@@ -31,7 +28,7 @@ LOGGER = logging.getLogger(__name__)
 def async_get_chat_log(
     hass: HomeAssistant,
     session: chat_session.ChatSession,
-    user_input: ConversationInput,
+    user_input: ConversationInput | None = None,
 ) -> Generator[ChatLog]:
     """Return chat log for a specific chat session."""
     all_history = hass.data.get(DATA_CHAT_HISTORY)
@@ -42,9 +39,9 @@ def async_get_chat_log(
     history = all_history.get(session.conversation_id)
 
     if history:
-        history = replace(history, messages=history.messages.copy())
+        history = replace(history, content=history.content.copy())
     else:
-        history = ChatLog(hass, session.conversation_id, user_input.agent_id)
+        history = ChatLog(hass, session.conversation_id)
 
         @callback
         def do_cleanup() -> None:
@@ -53,22 +50,19 @@ def async_get_chat_log(
 
         session.async_on_cleanup(do_cleanup)
 
-    message: Content = Content(
-        role="user",
-        agent_id=user_input.agent_id,
-        content=user_input.text,
-    )
-    history.async_add_message(message)
+    if user_input is not None:
+        history.async_add_user_content(UserContent(content=user_input.text))
+
+    last_message = history.content[-1]
 
     yield history
 
-    if history.messages[-1] is message:
+    if history.content[-1] is last_message:
         LOGGER.debug(
             "History opened but no assistant message was added, ignoring update"
         )
         return
 
-    history.last_updated = dt_util.utcnow()
     all_history[session.conversation_id] = history
 
 
@@ -94,63 +88,94 @@ class ConverseError(HomeAssistantError):
         )
 
 
-@dataclass
-class Content:
+@dataclass(frozen=True)
+class SystemContent:
     """Base class for chat messages."""
 
-    role: Literal["system", "assistant", "user"]
-    agent_id: str | None
+    role: str = field(init=False, default="system")
     content: str
 
 
 @dataclass(frozen=True)
-class NativeContent[_NativeT]:
-    """Native content."""
+class UserContent:
+    """Assistant content."""
 
-    role: str = field(init=False, default="native")
+    role: str = field(init=False, default="user")
+    content: str
+
+
+@dataclass(frozen=True)
+class AssistantContent:
+    """Assistant content."""
+
+    role: str = field(init=False, default="assistant")
     agent_id: str
-    content: _NativeT
+    content: str
+    tool_calls: list[llm.ToolInput] | None = None
+
+
+@dataclass(frozen=True)
+class ToolResultContent:
+    """Tool result content."""
+
+    role: str = field(init=False, default="tool_result")
+    agent_id: str
+    tool_call_id: str
+    tool_name: str
+    tool_result: JsonObjectType
+
+
+Content = SystemContent | UserContent | AssistantContent | ToolResultContent
 
 
 @dataclass
-class ChatLog[_NativeT]:
+class ChatLog:
     """Class holding the chat history of a specific conversation."""
 
     hass: HomeAssistant
     conversation_id: str
-    agent_id: str | None
-    user_name: str | None = None
-    messages: list[Content | NativeContent[_NativeT]] = field(
-        default_factory=lambda: [Content(role="system", agent_id=None, content="")]
-    )
+    content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
-    last_updated: datetime = field(default_factory=dt_util.utcnow)
 
     @callback
-    def async_add_message(self, message: Content | NativeContent[_NativeT]) -> None:
-        """Process intent."""
-        if message.role == "system":
-            raise ValueError("Cannot add system messages to history")
-        if message.role != "native" and self.messages[-1].role == message.role:
-            raise ValueError("Cannot add two assistant or user messages in a row")
+    def async_add_user_content(self, content: UserContent) -> None:
+        """Add user content to the log."""
+        self.content.append(content)
 
-        self.messages.append(message)
+    async def async_add_assistant_content(
+        self, content: AssistantContent
+    ) -> AsyncGenerator[ToolResultContent]:
+        """Add assistant content."""
+        self.content.append(content)
 
-    @callback
-    def async_get_messages(
-        self, agent_id: str | None = None
-    ) -> list[Content | NativeContent[_NativeT]]:
-        """Get messages for a specific agent ID.
+        if content.tool_calls is None:
+            return
 
-        This will filter out any native message tied to other agent IDs.
-        It can still include assistant/user messages generated by other agents.
-        """
-        return [
-            message
-            for message in self.messages
-            if message.role != "native" or message.agent_id == agent_id
-        ]
+        if self.llm_api is None:
+            raise ValueError("No LLM API configured")
+
+        for tool_input in content.tool_calls:
+            LOGGER.debug(
+                "Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args
+            )
+
+            try:
+                tool_result = await self.llm_api.async_call_tool(tool_input)
+            except (HomeAssistantError, vol.Invalid) as e:
+                tool_result = {"error": type(e).__name__}
+                if str(e):
+                    tool_result["error_text"] = str(e)
+            LOGGER.debug("Tool response: %s", tool_result)
+
+            response_content = ToolResultContent(
+                agent_id=content.agent_id,
+                tool_call_id=tool_input.id,
+                tool_name=tool_input.tool_name,
+                tool_result=tool_result,
+            )
+            self.content.append(response_content)
+            yield response_content
 
     async def async_update_llm_data(
         self,
@@ -250,36 +275,16 @@ class ChatLog[_NativeT]:
         prompt = "\n".join(prompt_parts)
 
         self.llm_api = llm_api
-        self.user_name = user_name
         self.extra_system_prompt = extra_system_prompt
-        self.messages[0] = Content(
-            role="system",
-            agent_id=user_input.agent_id,
-            content=prompt,
-        )
+        self.content[0] = SystemContent(content=prompt)
 
-        LOGGER.debug("Prompt: %s", self.messages)
+        LOGGER.debug("Prompt: %s", self.content)
         LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
 
         trace.async_conversation_trace_append(
             trace.ConversationTraceEventType.AGENT_DETAIL,
             {
-                "messages": self.messages,
+                "messages": self.content,
                 "tools": self.llm_api.tools if self.llm_api else None,
             },
         )
-
-    async def async_call_tool(self, tool_input: llm.ToolInput) -> JsonObjectType:
-        """Invoke LLM tool for the configured LLM API."""
-        if not self.llm_api:
-            raise ValueError("No LLM API configured")
-        LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
-
-        try:
-            tool_response = await self.llm_api.async_call_tool(tool_input)
-        except (HomeAssistantError, vol.Invalid) as e:
-            tool_response = {"error": type(e).__name__}
-            if str(e):
-                tool_response["error_text"] = str(e)
-        LOGGER.debug("Tool response: %s", tool_response)
-        return tool_response
