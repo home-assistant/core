@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, intent, llm
+from homeassistant.helpers import chat_session, device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import OpenAIConfigEntry
@@ -155,15 +155,18 @@ class OpenAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        async with conversation.async_get_chat_session(
-            self.hass, user_input
-        ) as session:
-            return await self._async_handle_message(user_input, session)
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id
+            ) as session,
+            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
+        ):
+            return await self._async_handle_message(user_input, chat_log)
 
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
-        session: conversation.ChatSession[ChatCompletionMessageParam],
+        session: conversation.ChatLog[ChatCompletionMessageParam],
     ) -> conversation.ConversationResult:
         """Call the API."""
         assert user_input.agent_id

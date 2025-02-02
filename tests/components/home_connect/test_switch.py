@@ -13,7 +13,7 @@ from aiohomeconnect.model import (
     ProgramKey,
     SettingKey,
 )
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
 from aiohomeconnect.model.event import ArrayOfEvents, EventType
 from aiohomeconnect.model.program import ArrayOfPrograms, EnumerateProgram
 from aiohomeconnect.model.setting import SettingConstraints
@@ -41,7 +41,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -64,6 +68,122 @@ async def test_switches(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_paired_depaired_devices_flow(
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that removed devices are correctly removed from and added to hass on API events."""
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert entity_entries
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DEPAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert not device
+    for entity_entry in entity_entries:
+        assert not entity_registry.async_get(entity_entry.entity_id)
+
+    # Now that all everything related to the device is removed, pair it again
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.PAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    for entity_entry in entity_entries:
+        assert entity_registry.async_get(entity_entry.entity_id)
+
+
+async def test_connected_devices(
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that devices reconnected.
+
+    Specifically those devices whose settings, status, etc. could
+    not be obtained while disconnected and once connected, the entities are added.
+    """
+    get_settings_original_mock = client.get_settings
+    get_available_programs_mock = client.get_available_programs
+
+    async def get_settings_side_effect(ha_id: str):
+        if ha_id == appliance_ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return await get_settings_original_mock.side_effect(ha_id)
+
+    async def get_available_programs_side_effect(ha_id: str):
+        if ha_id == appliance_ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return await get_available_programs_mock.side_effect(ha_id)
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_available_programs = AsyncMock(
+        side_effect=get_available_programs_side_effect
+    )
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    client.get_settings = get_settings_original_mock
+    client.get_available_programs = get_available_programs_mock
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device
+    new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert len(new_entity_entries) > len(entity_entries)
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)
@@ -178,11 +298,18 @@ async def test_switch_functionality(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "program_key", "appliance_ha_id"),
+    ("entity_id", "program_key", "initial_state", "appliance_ha_id"),
     [
         (
             "switch.dryer_program_mix",
             ProgramKey.LAUNDRY_CARE_DRYER_MIX,
+            STATE_OFF,
+            "Dryer",
+        ),
+        (
+            "switch.dryer_program_cotton",
+            ProgramKey.LAUNDRY_CARE_DRYER_COTTON,
+            STATE_ON,
             "Dryer",
         ),
     ],
@@ -191,6 +318,7 @@ async def test_switch_functionality(
 async def test_program_switch_functionality(
     entity_id: str,
     program_key: ProgramKey,
+    initial_state: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -227,6 +355,7 @@ async def test_program_switch_functionality(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, initial_state)
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}
