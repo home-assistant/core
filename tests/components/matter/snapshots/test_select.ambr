@@ -1803,7 +1803,7 @@
     'state': 'Celsius',
   })
 # ---
-# name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-entry]
+# name: test_selects[vacuum_cleaner][select.mock_vacuum_rvccleanmode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1823,7 +1823,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.mock_vacuum_clean_mode',
+    'entity_id': 'select.mock_vacuum_rvccleanmode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1835,7 +1835,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Clean mode',
+    'original_name': 'RvcCleanMode',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1844,10 +1844,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[vacuum_cleaner][select.mock_vacuum_clean_mode-state]
+# name: test_selects[vacuum_cleaner][select.mock_vacuum_rvccleanmode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Vacuum Clean mode',
+      'friendly_name': 'Mock Vacuum RvcCleanMode',
       'options': list([
         'Quick',
         'Auto',
@@ -1857,7 +1857,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.mock_vacuum_clean_mode',
+    'entity_id': 'select.mock_vacuum_rvccleanmode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
