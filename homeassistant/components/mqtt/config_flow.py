@@ -5,14 +5,21 @@ from __future__ import annotations
 import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping
+from enum import IntEnum
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any
 
-from cryptography.hazmat.primitives.serialization import load_pem_private_key
-from cryptography.x509 import load_pem_x509_certificate
+from cryptography.hazmat.primitives.serialization import (
+    Encoding,
+    NoEncryption,
+    PrivateFormat,
+    load_der_private_key,
+    load_pem_private_key,
+)
+from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
 import voluptuous as vol
 
 from homeassistant.components.file_upload import process_uploaded_file
@@ -105,6 +112,8 @@ _LOGGER = logging.getLogger(__name__)
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
 
+CONF_CLIENT_KEY_PASSWORD = "client_key_password"
+
 MQTT_TIMEOUT = 5
 
 ADVANCED_OPTIONS = "advanced_options"
@@ -165,12 +174,14 @@ BROKER_VERIFICATION_SELECTOR = SelectSelector(
 
 # mime configuration from https://pki-tutorial.readthedocs.io/en/latest/mime.html
 CA_CERT_UPLOAD_SELECTOR = FileSelector(
-    FileSelectorConfig(accept=".crt,application/x-x509-ca-cert")
+    FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-ca-cert")
 )
 CERT_UPLOAD_SELECTOR = FileSelector(
-    FileSelectorConfig(accept=".crt,application/x-x509-user-cert")
+    FileSelectorConfig(accept=".pem,.crt,.cer,.der,application/x-x509-user-cert")
 )
-KEY_UPLOAD_SELECTOR = FileSelector(FileSelectorConfig(accept=".key,application/pkcs8"))
+KEY_UPLOAD_SELECTOR = FileSelector(
+    FileSelectorConfig(accept=".pem,.key,.der,.pk8,application/pkcs8")
+)
 
 REAUTH_SCHEMA = vol.Schema(
     {
@@ -710,17 +721,88 @@ class MQTTOptionsFlowHandler(OptionsFlow):
         )
 
 
-async def _get_uploaded_file(hass: HomeAssistant, id: str) -> str:
-    """Get file content from uploaded file."""
+@callback
+def async_is_pem_data(data: bytes) -> bool:
+    """Return True if data is in PEM format."""
+    return (
+        b"-----BEGIN CERTIFICATE-----" in data
+        or b"-----BEGIN PRIVATE KEY-----" in data
+        or b"-----BEGIN RSA PRIVATE KEY-----" in data
+        or b"-----BEGIN ENCRYPTED PRIVATE KEY-----" in data
+    )
 
-    def _proces_uploaded_file() -> str:
+
+class PEMType(IntEnum):
+    """Type of PEM data."""
+
+    CERTIFICATE = 1
+    PRIVATE_KEY = 2
+
+
+@callback
+def async_convert_to_pem(
+    data: bytes, pem_type: PEMType, password: str | None = None
+) -> str | None:
+    """Convert data to PEM format."""
+    try:
+        if async_is_pem_data(data):
+            if not password:
+                # Assume unencrypted PEM encoded private key
+                return data.decode(DEFAULT_ENCODING)
+            # Return decrypted PEM encoded private key
+            return (
+                load_pem_private_key(data, password=password.encode(DEFAULT_ENCODING))
+                .private_bytes(
+                    encoding=Encoding.PEM,
+                    format=PrivateFormat.TraditionalOpenSSL,
+                    encryption_algorithm=NoEncryption(),
+                )
+                .decode(DEFAULT_ENCODING)
+            )
+        # Convert from DER encoding to PEM
+        if pem_type == PEMType.CERTIFICATE:
+            return (
+                load_der_x509_certificate(data)
+                .public_bytes(
+                    encoding=Encoding.PEM,
+                )
+                .decode(DEFAULT_ENCODING)
+            )
+        # Assume DER encoded private key
+        pem_key_data: bytes = load_der_private_key(
+            data, password.encode(DEFAULT_ENCODING) if password else None
+        ).private_bytes(
+            encoding=Encoding.PEM,
+            format=PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=NoEncryption(),
+        )
+        return pem_key_data.decode("utf-8")
+    except (TypeError, ValueError, SSLError):
+        _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
+        return None
+
+
+async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
+    """Get file content from uploaded certificate or key file."""
+
+    def _proces_uploaded_file() -> bytes:
         with process_uploaded_file(hass, id) as file_path:
-            return file_path.read_text(encoding=DEFAULT_ENCODING)
+            return file_path.read_bytes()
 
     return await hass.async_add_executor_job(_proces_uploaded_file)
 
 
-async def async_get_broker_settings(
+def _validate_pki_file(
+    file_id: str | None, pem_data: str | None, errors: dict[str, str], error: str
+) -> bool:
+    """Return False if uploaded file could not be converted to PEM format."""
+    if file_id and not pem_data:
+        errors["base"] = error
+        return False
+    return True
+
+
+async def async_get_broker_settings(  # noqa: C901
     flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
@@ -768,6 +850,10 @@ async def async_get_broker_settings(
         validated_user_input.update(user_input)
         client_certificate_id: str | None = user_input.get(CONF_CLIENT_CERT)
         client_key_id: str | None = user_input.get(CONF_CLIENT_KEY)
+        # We do not store the private key password in the entry data
+        client_key_password: str | None = validated_user_input.pop(
+            CONF_CLIENT_KEY_PASSWORD, None
+        )
         if (client_certificate_id and not client_key_id) or (
             not client_certificate_id and client_key_id
         ):
@@ -775,7 +861,14 @@ async def async_get_broker_settings(
             return False
         certificate_id: str | None = user_input.get(CONF_CERTIFICATE)
         if certificate_id:
-            certificate = await _get_uploaded_file(hass, certificate_id)
+            certificate_data_raw = await _get_uploaded_file(hass, certificate_id)
+            certificate = async_convert_to_pem(
+                certificate_data_raw, PEMType.CERTIFICATE
+            )
+        if not _validate_pki_file(
+            certificate_id, certificate, errors, "bad_certificate"
+        ):
+            return False
 
         # Return to form for file upload CA cert or client cert and key
         if (
@@ -797,9 +890,26 @@ async def async_get_broker_settings(
             return False
 
         if client_certificate_id:
-            client_certificate = await _get_uploaded_file(hass, client_certificate_id)
+            client_certificate_data = await _get_uploaded_file(
+                hass, client_certificate_id
+            )
+            client_certificate = async_convert_to_pem(
+                client_certificate_data, PEMType.CERTIFICATE
+            )
+        if not _validate_pki_file(
+            client_certificate_id, client_certificate, errors, "bad_client_cert"
+        ):
+            return False
+
         if client_key_id:
-            client_key = await _get_uploaded_file(hass, client_key_id)
+            client_key_data = await _get_uploaded_file(hass, client_key_id)
+            client_key = async_convert_to_pem(
+                client_key_data, PEMType.PRIVATE_KEY, password=client_key_password
+            )
+        if not _validate_pki_file(
+            client_key_id, client_key, errors, "client_key_error"
+        ):
+            return False
 
         certificate_data: dict[str, Any] = {}
         if certificate:
@@ -956,6 +1066,14 @@ async def async_get_broker_settings(
                 description={"suggested_value": user_input_basic.get(CONF_CLIENT_KEY)},
             )
         ] = KEY_UPLOAD_SELECTOR
+        fields[
+            vol.Optional(
+                CONF_CLIENT_KEY_PASSWORD,
+                description={
+                    "suggested_value": user_input_basic.get(CONF_CLIENT_KEY_PASSWORD)
+                },
+            )
+        ] = PASSWORD_SELECTOR
     verification_mode = current_config.get(SET_CA_CERT) or (
         "off"
         if current_ca_certificate is None
@@ -1060,7 +1178,7 @@ def check_certicate_chain() -> str | None:
             with open(private_key, "rb") as client_key_file:
                 load_pem_private_key(client_key_file.read(), password=None)
         except (TypeError, ValueError):
-            return "bad_client_key"
+            return "client_key_error"
     # Check the certificate chain
     context = SSLContext(PROTOCOL_TLS_CLIENT)
     if client_certificate and private_key:

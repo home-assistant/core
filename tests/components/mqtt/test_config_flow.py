@@ -40,8 +40,19 @@ ADD_ON_DISCOVERY_INFO = {
     "protocol": "3.1.1",
     "ssl": False,
 }
-MOCK_CLIENT_CERT = b"## mock client certificate file ##"
-MOCK_CLIENT_KEY = b"## mock key file ##"
+MOCK_CA_CERT = (
+    b"-----BEGIN CERTIFICATE-----\n"
+    b"## mock CA certificate file ##"
+    b"\n-----END CERTIFICATE-----\n"
+)
+MOCK_CLIENT_CERT = (
+    b"-----BEGIN CERTIFICATE-----\n"
+    b"## mock client certificate file ##"
+    b"\n-----END CERTIFICATE-----\n"
+)
+MOCK_CLIENT_KEY = (
+    b"-----BEGIN PRIVATE KEY-----\n## mock client key file ##\n-----END PRIVATE KEY"
+)
 
 MOCK_ENTRY_DATA = {
     mqtt.CONF_BROKER: "test-broker",
@@ -195,15 +206,15 @@ def mock_process_uploaded_file(
     ) -> Iterator[Path | None]:
         if file_id == file_id_ca:
             with open(tmp_path / "ca.crt", "wb") as cafile:
-                cafile.write(b"## mock CA certificate file ##")
+                cafile.write(MOCK_CLIENT_CERT)
             yield tmp_path / "ca.crt"
         elif file_id == file_id_cert:
             with open(tmp_path / "client.crt", "wb") as certfile:
-                certfile.write(b"## mock client certificate file ##")
+                certfile.write(MOCK_CLIENT_CERT)
             yield tmp_path / "client.crt"
         elif file_id == file_id_key:
             with open(tmp_path / "client.key", "wb") as keyfile:
-                keyfile.write(b"## mock key file ##")
+                keyfile.write(MOCK_CLIENT_KEY)
             yield tmp_path / "client.key"
         else:
             pytest.fail(f"Unexpected file_id: {file_id}")
@@ -1029,7 +1040,7 @@ async def test_option_flow(
     [
         "bad_certificate",
         "bad_client_cert",
-        "bad_client_key",
+        "client_key_error",
         "bad_client_cert_key",
         "invalid_inclusion",
         None,
@@ -1064,7 +1075,7 @@ async def test_bad_certificate(
     elif test_error == "bad_client_cert":
         # Client certificate is invalid
         mock_ssl_context["load_pem_x509_certificate"].side_effect = ValueError
-    elif test_error == "bad_client_key":
+    elif test_error == "client_key_error":
         # Client key file is invalid
         mock_ssl_context["load_pem_private_key"].side_effect = ValueError
     elif test_error == "bad_client_cert_key":
@@ -2078,8 +2089,8 @@ async def test_setup_with_advanced_settings(
         CONF_USERNAME: "user",
         CONF_PASSWORD: "secret",
         mqtt.CONF_KEEPALIVE: 30,
-        mqtt.CONF_CLIENT_CERT: "## mock client certificate file ##",
-        mqtt.CONF_CLIENT_KEY: "## mock key file ##",
+        mqtt.CONF_CLIENT_CERT: MOCK_CLIENT_CERT.decode(encoding="utf-8"),
+        mqtt.CONF_CLIENT_KEY: MOCK_CLIENT_KEY.decode(encoding="utf-8"),
         "tls_insecure": True,
         mqtt.CONF_TRANSPORT: "websockets",
         mqtt.CONF_WS_PATH: "/custom_path/",
