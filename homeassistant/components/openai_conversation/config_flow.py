@@ -43,6 +43,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    UNSUPPORTED_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,9 +135,7 @@ class OpenAIOptionsFlow(OptionsFlow):
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
 
-                if user_input.get(CONF_CHAT_MODEL) and user_input[
-                    CONF_CHAT_MODEL
-                ].startswith(("o1-mini", "o1-preview")):
+                if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
                     errors[CONF_CHAT_MODEL] = "model_not_supported"
                 else:
                     return self.async_create_entry(title="", data=user_input)
