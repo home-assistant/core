@@ -78,7 +78,7 @@ async def test_ctl_set_hvac_mode(
 
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
+        assert mock_fcn.await_args.args[0] in ("HeatingOff", "Off")
         assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
@@ -97,7 +97,7 @@ async def test_ctl_set_hvac_mode(
 
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args != ()  # 'Auto' or 'Heat'
+        assert mock_fcn.await_args.args[0] in ("Auto", "Heat")
         assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
@@ -148,7 +148,7 @@ async def test_ctl_turn_off(
 
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args != ()  # 'HeatingOff' or 'Off'
+        assert mock_fcn.await_args.args[0] in ("HeatingOff", "Off")
         assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
@@ -179,7 +179,7 @@ async def test_ctl_turn_on(
 
         assert mock_fcn.await_count == 1
         assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args != ()  # 'Auto' or 'Heat'
+        assert mock_fcn.await_args.args[0] in ("Auto", "Heat")
         assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
