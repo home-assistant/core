@@ -32,20 +32,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up lock entities."""
     async_add_entities(
-        (
-            IgloohomeLockEntity(
-                api_device_info=device,
-                api=entry.runtime_data.api,
-                bridgeId=str(
-                    get_linked_bridge(device.deviceId, entry.runtime_data.devices)
-                ),
-            )
-            for device in entry.runtime_data.devices
-            if device.type == DEVICE_TYPE_LOCK
-            and get_linked_bridge(device.deviceId, entry.runtime_data.devices)
-            is not None
-        ),
-        update_before_add=True,
+        IgloohomeLockEntity(
+            api_device_info=device,
+            api=entry.runtime_data.api,
+            bridge_id=str(
+                get_linked_bridge(device.deviceId, entry.runtime_data.devices)
+            ),
+        )
+        for device in entry.runtime_data.devices
+        if device.type == DEVICE_TYPE_LOCK
+        and get_linked_bridge(device.deviceId, entry.runtime_data.devices) is not None
     )
 
 
@@ -57,7 +53,7 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
     _attr_supported_features = LockEntityFeature.OPEN
 
     def __init__(
-        self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi, bridgeId: str
+        self, api_device_info: GetDeviceInfoResponse, api: IgloohomeApi, bridge_id: str
     ) -> None:
         """Initialize the class."""
         super().__init__(
@@ -65,7 +61,7 @@ class IgloohomeLockEntity(IgloohomeBaseEntity, LockEntity):
             api=api,
             unique_key="lock",
         )
-        self.bridge_id = bridgeId
+        self.bridge_id = bridge_id
 
     async def async_lock(self, **kwargs):
         """Lock this lock."""
