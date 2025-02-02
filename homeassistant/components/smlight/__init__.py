@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import StateType
 
 from .coordinator import SmDataUpdateCoordinator, SmFirmwareUpdateCoordinator
 
@@ -64,17 +63,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def get_radio(info: Info, idx: int) -> Radio | None:
+def get_radio(info: Info, idx: int) -> Radio:
     """Get the radio object from the info."""
-    if info.radios is not None and len(info.radios) > idx:
-        return info.radios[idx]
-    return None
-
-
-def get_radio_attr(info: Info, idx: int, attr: str | None = None) -> StateType:
-    """Get the radio attribute from the info object."""
-    _radio = get_radio(info, idx)
-    if _radio is not None and attr is not None:
-        value: StateType = getattr(_radio, attr)
-        return value
-    return None
+    assert info.radios is not None
+    return info.radios[idx]

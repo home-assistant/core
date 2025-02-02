@@ -175,8 +175,9 @@ async def test_update_zigbee2_firmware(
     event_function = get_mock_event_function(mock_smlight_client, SmEvents.FW_UPD_done)
 
     event_function(MOCK_FIRMWARE_DONE)
-
-    with patch("homeassistant.components.smlight.get_radio", return_value=MOCK_RADIO):
+    with patch(
+        "homeassistant.components.smlight.update.get_radio", return_value=MOCK_RADIO
+    ):
         freezer.tick(timedelta(seconds=5))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()

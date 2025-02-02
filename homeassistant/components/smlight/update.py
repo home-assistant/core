@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import SmConfigEntry, get_radio_attr
+from . import SmConfigEntry, get_radio
 from .const import LOGGER
 from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
@@ -49,7 +49,7 @@ CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
 ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="zigbee_update",
     translation_key="zigbee_update",
-    installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
+    installed_version=lambda x, idx: get_radio(x, idx).zb_version,
     latest_version=lambda fw_list, fw_type: next(
         (f for f in fw_list if f.type == fw_type), None
     ),
