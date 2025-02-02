@@ -137,16 +137,14 @@ class OneDriveBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup."""
 
-        filename = suggested_filename(backup)
-
         file = FileInfo(
-            filename,
+            suggested_filename(backup),
             backup.size,
             self._folder_id,
             await open_stream(),
         )
         try:
-            await LargeFileUploadClient.upload(
+            item = await LargeFileUploadClient.upload(
                 self._token_provider, file, session=async_get_clientsession(self._hass)
             )
         except HashMismatchError as err:
@@ -161,7 +159,7 @@ class OneDriveBackupAgent(BackupAgent):
         _LOGGER.debug("Creating metadata: %s", description)
 
         await self._client.update_drive_item(
-            path_or_id=f"{self._folder_id}:/{filename}:",
+            path_or_id=item.id,
             data=ItemUpdate(description=description),
         )
 
