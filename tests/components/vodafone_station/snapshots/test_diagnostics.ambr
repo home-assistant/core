@@ -10,7 +10,7 @@
           'type': 'laptop',
         }),
         dict({
-          'connected': True,
+          'connected': False,
           'connection_type': 'lan',
           'hostname': 'LanDevice1',
           'type': 'desktop',

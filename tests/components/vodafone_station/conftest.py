@@ -54,7 +54,7 @@ def mock_vodafone_station_router() -> Generator[AsyncMock]:
                 wifi="2.4G",
             ),
             DEVICE_2_MAC: VodafoneStationDevice(
-                connected=True,
+                connected=False,
                 connection_type="lan",
                 ip_address="192.168.1.11",
                 name="LanDevice1",
