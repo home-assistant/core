@@ -12,7 +12,7 @@
         "data_description": {
           "host": "The hostname or IP address of your Enphase Envoy gateway.",
           "username": "Installer or Enphase Cloud username",
-          "password": "blank or Enphase Cloud password"
+          "password": "Blank or Enphase Cloud password"
         }
       },
       "reconfigure": {
@@ -400,6 +400,9 @@
     },
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
+    },
+    "action_error": {
+      "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     }
   }
 }

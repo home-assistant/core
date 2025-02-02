@@ -7,7 +7,7 @@ import functools as ft
 import logging
 from typing import Any, Literal, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -69,6 +69,7 @@ from .const import (  # noqa: F401
     FAN_TOP,
     HVAC_MODES,
     INTENT_GET_TEMPERATURE,
+    INTENT_SET_TEMPERATURE,
     PRESET_ACTIVITY,
     PRESET_AWAY,
     PRESET_BOOST,

@@ -119,7 +119,8 @@
             'managerNotes': None,
             'taskId': None,
           }),
-          'history': None,
+          'history': list([
+          ]),
           'id': 'e6e06dc6-c887-4b86-b175-b99cc2e20fdf',
           'isDue': None,
           'nextDue': list([
@@ -190,7 +191,8 @@
             'managerNotes': None,
             'taskId': None,
           }),
-          'history': None,
+          'history': list([
+          ]),
           'id': '2fbf11a5-ab1e-4fb7-97f0-dfb5c45c96a9',
           'isDue': None,
           'nextDue': list([

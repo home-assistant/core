@@ -2,127 +2,58 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from collections.abc import Generator
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import Literal
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Event,
-    HassJob,
-    HassJobType,
-    HomeAssistant,
-    callback,
-)
-from homeassistant.exceptions import HomeAssistantError, TemplateError
-from homeassistant.helpers import intent, llm, template
-from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util, ulid
-from homeassistant.util.hass_dict import HassKey
+import voluptuous as vol
 
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError, TemplateError
+from homeassistant.helpers import chat_session, intent, llm, template
+from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.json import JsonObjectType
+
+from . import trace
 from .const import DOMAIN
 from .models import ConversationInput, ConversationResult
 
-DATA_CHAT_HISTORY: HassKey[dict[str, ChatSession]] = HassKey(
-    "conversation_chat_session"
-)
-DATA_CHAT_HISTORY_CLEANUP: HassKey[SessionCleanup] = HassKey(
-    "conversation_chat_session_cleanup"
-)
+DATA_CHAT_HISTORY: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_log")
 
 LOGGER = logging.getLogger(__name__)
-CONVERSATION_TIMEOUT = timedelta(minutes=5)
 
 
-class SessionCleanup:
-    """Helper to clean up the history."""
-
-    unsub: CALLBACK_TYPE | None = None
-
-    def __init__(self, hass: HomeAssistant) -> None:
-        """Initialize the history cleanup."""
-        self.hass = hass
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._on_hass_stop)
-        self.cleanup_job = HassJob(
-            self._cleanup, "conversation_history_cleanup", job_type=HassJobType.Callback
-        )
-
-    @callback
-    def schedule(self) -> None:
-        """Schedule the cleanup."""
-        if self.unsub:
-            return
-        self.unsub = async_call_later(
-            self.hass,
-            CONVERSATION_TIMEOUT.total_seconds() + 1,
-            self.cleanup_job,
-        )
-
-    @callback
-    def _on_hass_stop(self, event: Event) -> None:
-        """Cancel the cleanup on shutdown."""
-        if self.unsub:
-            self.unsub()
-        self.unsub = None
-
-    @callback
-    def _cleanup(self, now: datetime) -> None:
-        """Clean up the history and schedule follow-up if necessary."""
-        self.unsub = None
-        all_history = self.hass.data[DATA_CHAT_HISTORY]
-
-        # We mutate original object because current commands could be
-        # yielding history based on it.
-        for conversation_id, history in list(all_history.items()):
-            if history.last_updated + CONVERSATION_TIMEOUT < now:
-                del all_history[conversation_id]
-
-        # Still conversations left, check again in timeout time.
-        if all_history:
-            self.schedule()
-
-
-@asynccontextmanager
-async def async_get_chat_session(
+@contextmanager
+def async_get_chat_log(
     hass: HomeAssistant,
+    session: chat_session.ChatSession,
     user_input: ConversationInput,
-) -> AsyncGenerator[ChatSession]:
-    """Return chat session."""
+) -> Generator[ChatLog]:
+    """Return chat log for a specific chat session."""
     all_history = hass.data.get(DATA_CHAT_HISTORY)
     if all_history is None:
         all_history = {}
         hass.data[DATA_CHAT_HISTORY] = all_history
-        hass.data[DATA_CHAT_HISTORY_CLEANUP] = SessionCleanup(hass)
 
-    history: ChatSession | None = None
-
-    if user_input.conversation_id is None:
-        conversation_id = ulid.ulid_now()
-
-    elif history := all_history.get(user_input.conversation_id):
-        conversation_id = user_input.conversation_id
-
-    else:
-        # Conversation IDs are ULIDs. We generate a new one if not provided.
-        # If an old OLID is passed in, we will generate a new one to indicate
-        # a new conversation was started. If the user picks their own, they
-        # want to track a conversation and we respect it.
-        try:
-            ulid.ulid_to_bytes(user_input.conversation_id)
-            conversation_id = ulid.ulid_now()
-        except ValueError:
-            conversation_id = user_input.conversation_id
+    history = all_history.get(session.conversation_id)
 
     if history:
         history = replace(history, messages=history.messages.copy())
     else:
-        history = ChatSession(hass, conversation_id)
+        history = ChatLog(hass, session.conversation_id, user_input.agent_id)
 
-    message: ChatMessage = ChatMessage(
+        @callback
+        def do_cleanup() -> None:
+            """Handle cleanup."""
+            all_history.pop(session.conversation_id)
+
+        session.async_on_cleanup(do_cleanup)
+
+    message: Content = Content(
         role="user",
         agent_id=user_input.agent_id,
         content=user_input.text,
@@ -138,8 +69,7 @@ async def async_get_chat_session(
         return
 
     history.last_updated = dt_util.utcnow()
-    all_history[conversation_id] = history
-    hass.data[DATA_CHAT_HISTORY_CLEANUP].schedule()
+    all_history[session.conversation_id] = history
 
 
 class ConverseError(HomeAssistantError):
@@ -165,41 +95,40 @@ class ConverseError(HomeAssistantError):
 
 
 @dataclass
-class ChatMessage[_NativeT]:
-    """Base class for chat messages.
+class Content:
+    """Base class for chat messages."""
 
-    When role is native, the content is to be ignored and message
-    is only meant for storing the native object.
-    """
-
-    role: Literal["system", "assistant", "user", "native"]
+    role: Literal["system", "assistant", "user"]
     agent_id: str | None
     content: str
-    native: _NativeT | None = field(default=None)
 
-    # Validate in post-init that if role is native, there is no content and a native object exists
-    def __post_init__(self) -> None:
-        """Validate native message."""
-        if self.role == "native" and self.native is None:
-            raise ValueError("Native message must have a native object")
+
+@dataclass(frozen=True)
+class NativeContent[_NativeT]:
+    """Native content."""
+
+    role: str = field(init=False, default="native")
+    agent_id: str
+    content: _NativeT
 
 
 @dataclass
-class ChatSession[_NativeT]:
-    """Class holding all information for a specific conversation."""
+class ChatLog[_NativeT]:
+    """Class holding the chat history of a specific conversation."""
 
     hass: HomeAssistant
     conversation_id: str
+    agent_id: str | None
     user_name: str | None = None
-    messages: list[ChatMessage[_NativeT]] = field(
-        default_factory=lambda: [ChatMessage(role="system", agent_id=None, content="")]
+    messages: list[Content | NativeContent[_NativeT]] = field(
+        default_factory=lambda: [Content(role="system", agent_id=None, content="")]
     )
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
     last_updated: datetime = field(default_factory=dt_util.utcnow)
 
     @callback
-    def async_add_message(self, message: ChatMessage[_NativeT]) -> None:
+    def async_add_message(self, message: Content | NativeContent[_NativeT]) -> None:
         """Process intent."""
         if message.role == "system":
             raise ValueError("Cannot add system messages to history")
@@ -209,7 +138,9 @@ class ChatSession[_NativeT]:
         self.messages.append(message)
 
     @callback
-    def async_get_messages(self, agent_id: str | None) -> list[ChatMessage[_NativeT]]:
+    def async_get_messages(
+        self, agent_id: str | None = None
+    ) -> list[Content | NativeContent[_NativeT]]:
         """Get messages for a specific agent ID.
 
         This will filter out any native message tied to other agent IDs.
@@ -321,8 +252,34 @@ class ChatSession[_NativeT]:
         self.llm_api = llm_api
         self.user_name = user_name
         self.extra_system_prompt = extra_system_prompt
-        self.messages[0] = ChatMessage(
+        self.messages[0] = Content(
             role="system",
             agent_id=user_input.agent_id,
             content=prompt,
         )
+
+        LOGGER.debug("Prompt: %s", self.messages)
+        LOGGER.debug("Tools: %s", self.llm_api.tools if self.llm_api else None)
+
+        trace.async_conversation_trace_append(
+            trace.ConversationTraceEventType.AGENT_DETAIL,
+            {
+                "messages": self.messages,
+                "tools": self.llm_api.tools if self.llm_api else None,
+            },
+        )
+
+    async def async_call_tool(self, tool_input: llm.ToolInput) -> JsonObjectType:
+        """Invoke LLM tool for the configured LLM API."""
+        if not self.llm_api:
+            raise ValueError("No LLM API configured")
+        LOGGER.debug("Tool call: %s(%s)", tool_input.tool_name, tool_input.tool_args)
+
+        try:
+            tool_response = await self.llm_api.async_call_tool(tool_input)
+        except (HomeAssistantError, vol.Invalid) as e:
+            tool_response = {"error": type(e).__name__}
+            if str(e):
+                tool_response["error_text"] = str(e)
+        LOGGER.debug("Tool response: %s", tool_response)
+        return tool_response

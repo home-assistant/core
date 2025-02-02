@@ -112,6 +112,11 @@ with contextlib.suppress(ImportError):
     # Ensure anyio backend is imported to avoid it being imported in the event loop
     from anyio._backends import _asyncio  # noqa: F401
 
+with contextlib.suppress(ImportError):
+    # httpx will import trio if it is installed which does
+    # blocking I/O in the event loop. We want to avoid that.
+    import trio  # noqa: F401
+
 
 if TYPE_CHECKING:
     from .runner import RuntimeConfig
@@ -156,6 +161,16 @@ FRONTEND_INTEGRATIONS = {
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
+    # Hassio is an after dependency of backup, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here. Hassio needs to be setup before backup, otherwise
+    # the backup integration will think we are a container/core install
+    # when using HAOS or Supervised install.
+    "hassio",
+    # Backup is an after dependency of frontend, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here.
+    "backup",
 }
 RECORDER_INTEGRATIONS = {
     # Setup after frontend
