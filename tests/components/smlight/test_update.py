@@ -157,7 +157,7 @@ async def test_update_zigbee2_firmware(
         load_json_object_fixture("info-MR1.json", DOMAIN)
     )
     await setup_integration(hass, mock_config_entry)
-    entity_id = "update.mock_title_zigbee_2_firmware"
+    entity_id = "update.mock_title_zigbee_firmware_2"
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "20240314"
