@@ -18,6 +18,7 @@ import pytest
 
 from homeassistant.components.shelly.const import (
     EVENT_SHELLY_CLICK,
+    EVENT_SHELLY_TEST,
     REST_SENSORS_UPDATE_INTERVAL,
 )
 from homeassistant.core import HomeAssistant
@@ -412,9 +413,15 @@ def mock_ws_server():
 
 
 @pytest.fixture
-def events(hass: HomeAssistant):
-    """Yield caught shelly_click events."""
+def events(hass: HomeAssistant) -> None:
+    """Yield caught shelly.click events."""
     return async_capture_events(hass, EVENT_SHELLY_CLICK)
+
+
+@pytest.fixture
+def test_events(hass: HomeAssistant) -> None:
+    """Yield caught shelly.test events."""
+    return async_capture_events(hass, EVENT_SHELLY_TEST)
 
 
 @pytest.fixture

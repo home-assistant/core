@@ -11,10 +11,13 @@ from homeassistant.core import Event, HomeAssistant, callback
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    ATTR_COMPONENT,
     ATTR_DEVICE,
+    ATTR_TEST_TYPE,
     BLOCK_INPUTS_EVENTS_TYPES,
     DOMAIN,
     EVENT_SHELLY_CLICK,
+    EVENT_SHELLY_TEST,
     RPC_INPUTS_EVENTS_TYPES,
 )
 from .coordinator import (
@@ -33,7 +36,7 @@ def async_describe_events(
 
     @callback
     def async_describe_shelly_click_event(event: Event) -> dict[str, str]:
-        """Describe shelly.click logbook event (block device)."""
+        """Describe shelly.click logbook event."""
         device_id = event.data[ATTR_DEVICE_ID]
         click_type = event.data[ATTR_CLICK_TYPE]
         channel = event.data[ATTR_CHANNEL]
@@ -57,4 +60,16 @@ def async_describe_events(
             ),
         }
 
+    @callback
+    def async_describe_shelly_test_event(event: Event) -> dict[str, str]:
+        """Describe shelly.test logbook event."""
+        alarm_type = event.data[ATTR_TEST_TYPE]
+        component = event.data[ATTR_COMPONENT]
+
+        return {
+            LOGBOOK_ENTRY_NAME: "Shelly",
+            LOGBOOK_ENTRY_MESSAGE: f"'{alarm_type}' test event for component {component} was fired",
+        }
+
     async_describe_event(DOMAIN, EVENT_SHELLY_CLICK, async_describe_shelly_click_event)
+    async_describe_event(DOMAIN, EVENT_SHELLY_TEST, async_describe_shelly_test_event)
