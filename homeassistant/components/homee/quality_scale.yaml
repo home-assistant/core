@@ -28,7 +28,10 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration does not provide any additional actions.
   config-entry-unloading: done
   docs-configuration-parameters: todo
   docs-installation-parameters: todo
@@ -37,7 +40,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices: done
