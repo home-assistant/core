@@ -265,8 +265,8 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
-            key="EnergyEvseBatteryStateSensor",
-            translation_key="evse_battery_state",
+            key="EnergyEvseChargingStatusSensor",
+            translation_key="evse_charging_status",
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
             measurement_to_ha={
                 clusters.EnergyEvse.Enums.StateEnum.kNotPluggedIn: False,
@@ -306,7 +306,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="EnergyEvseSupplyStateSensor",
-            translation_key="evse_charging_state",
+            translation_key="evse_supply_charging_state",
             device_class=BinarySensorDeviceClass.RUNNING,
             measurement_to_ha={
                 clusters.EnergyEvse.Enums.SupplyStateEnum.kDisabled: False,
