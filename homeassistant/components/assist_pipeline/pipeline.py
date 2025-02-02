@@ -33,7 +33,7 @@ from homeassistant.components.tts import (
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent
+from homeassistant.helpers import chat_session, intent
 from homeassistant.helpers.collection import (
     CHANGE_UPDATED,
     CollectionError,
@@ -1094,13 +1094,18 @@ class PipelineRun:
 
             # It was already handled, create response and add to chat history
             if intent_response is not None:
-                async with conversation.async_get_chat_session(
-                    self.hass, user_input
-                ) as chat_session:
+                with (
+                    chat_session.async_get_chat_session(
+                        self.hass, user_input.conversation_id
+                    ) as session,
+                    conversation.async_get_chat_log(
+                        self.hass, session, user_input
+                    ) as chat_log,
+                ):
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    chat_session.async_add_message(
+                    chat_log.async_add_message(
                         conversation.Content(
                             role="assistant",
                             agent_id=agent_id,
@@ -1109,7 +1114,7 @@ class PipelineRun:
                     )
                     conversation_result = conversation.ConversationResult(
                         response=intent_response,
-                        conversation_id=chat_session.conversation_id,
+                        conversation_id=session.conversation_id,
                     )
 
             else:

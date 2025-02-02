@@ -704,8 +704,11 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             # BLE enable required a reboot, don't bother connecting
             # the scanner since it will be disconnected anyway
             return
+        assert self.device_id is not None
         self._disconnected_callbacks.append(
-            await async_connect_scanner(self.hass, self, ble_scanner_mode)
+            await async_connect_scanner(
+                self.hass, self, ble_scanner_mode, self.device_id
+            )
         )
 
     @callback
