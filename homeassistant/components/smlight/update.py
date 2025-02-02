@@ -35,7 +35,7 @@ class SmUpdateEntityDescription(UpdateEntityDescription):
 
     installed_version: Callable[[Info, int], StateType]
     latest_version: Callable[[list[Firmware], int | None], Firmware | None]
-    fw_list: Callable[[SmFwData], list[Firmware] | None]
+    fw_list: Callable[[SmFwData, int], list[Firmware] | None]
 
 
 CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
@@ -43,29 +43,18 @@ CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
     translation_key="core_update",
     installed_version=lambda x, idx: x.sw_version,
     latest_version=lambda fw_list, fw_type: next((f for f in fw_list), None),
-    fw_list=lambda x: x.esp_firmware,
+    fw_list=lambda x, idx: x.esp_firmware,
 )
 
-ZB_UPDATE_ENTITIES: list[SmUpdateEntityDescription] = [
-    SmUpdateEntityDescription(
-        key="zigbee_update",
-        translation_key="zigbee_update",
-        installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
-        latest_version=lambda fw_list, fw_type: next(
-            (f for f in fw_list if f.type == fw_type), None
-        ),
-        fw_list=lambda x: x.zb_firmware,
+ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
+    key="zigbee_update",
+    translation_key="zigbee_update",
+    installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
+    latest_version=lambda fw_list, fw_type: next(
+        (f for f in fw_list if f.type == fw_type), None
     ),
-    SmUpdateEntityDescription(
-        key="zigbee_update2",
-        translation_key="zigbee_update2",
-        installed_version=lambda x, idx: get_radio_attr(x, idx, "zb_version"),
-        latest_version=lambda fw_list, fw_type: next(
-            (f for f in fw_list if f.type == fw_type), None
-        ),
-        fw_list=lambda x: x.zb_firmware2,
-    ),
-]
+    fw_list=lambda x, idx: x.zb_firmware2 if idx else x.zb_firmware,
+)
 
 
 async def async_setup_entry(
@@ -78,7 +67,7 @@ async def async_setup_entry(
     assert radios is not None
 
     entities.extend(
-        SmUpdateEntity(coordinator, ZB_UPDATE_ENTITIES[idx], idx)
+        SmUpdateEntity(coordinator, ZB_UPDATE_ENTITY, idx)
         for idx, _ in enumerate(radios)
     )
 
@@ -108,7 +97,8 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_id}-{description.key}"
+        device = description.key + (f"_{idx}" if idx else "")
+        self._attr_unique_id = f"{coordinator.unique_id}-{device}"
 
         self._finished_event = asyncio.Event()
         self._firmware: Firmware | None = None
@@ -132,7 +122,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         if self.coordinator.legacy_api == 2:
             return None
 
-        fw_list = self.entity_description.fw_list(data)
+        fw_list = self.entity_description.fw_list(data, self.idx)
         if fw_list:
             zb_type = data.info.radios[self.idx].zb_type  # type: ignore[index]
             fw = self.entity_description.latest_version(fw_list, zb_type)
