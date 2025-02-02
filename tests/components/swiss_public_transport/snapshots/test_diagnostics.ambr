@@ -1,0 +1,237 @@
+# serializer version: 1
+# name: test_diagnostics[previous_stats0-None]
+  dict({
+    'data': list([
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:03:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': 'T10',
+        'platform': 0,
+        'remaining_time': '-394 days, 21:29:27.898573',
+        'start': 'Zürich',
+        'train_number': 0,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:04:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 1,
+        'remaining_time': '-394 days, 21:30:27.898573',
+        'start': 'Zürich',
+        'train_number': 1,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:05:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 2,
+        'remaining_time': '-394 days, 21:31:27.898573',
+        'start': 'Zürich',
+        'train_number': 2,
+        'transfers': 0,
+      }),
+    ]),
+    'entry_data': dict({
+      'from': 'Zürich',
+      'to': 'Bern',
+    }),
+    'stats': dict({
+      '2025-01-09': dict({
+        'count': 1,
+        'errors': 0,
+        'timestamps_error': list([
+        ]),
+        'timestamps_success': list([
+          '00:00:00',
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics[previous_stats1-None]
+  dict({
+    'data': list([
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:03:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': 'T10',
+        'platform': 0,
+        'remaining_time': '-394 days, 21:29:27.350680',
+        'start': 'Zürich',
+        'train_number': 0,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:04:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 1,
+        'remaining_time': '-394 days, 21:30:27.350680',
+        'start': 'Zürich',
+        'train_number': 1,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:05:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 2,
+        'remaining_time': '-394 days, 21:31:27.350680',
+        'start': 'Zürich',
+        'train_number': 2,
+        'transfers': 0,
+      }),
+    ]),
+    'entry_data': dict({
+      'from': 'Zürich',
+      'to': 'Bern',
+    }),
+    'stats': dict({
+      '2025-01-03': dict({
+        'count': 0,
+        'errors': 0,
+        'timestamps_error': list([
+        ]),
+        'timestamps_success': list([
+        ]),
+      }),
+      '2025-01-09': dict({
+        'count': 1,
+        'errors': 0,
+        'timestamps_error': list([
+        ]),
+        'timestamps_success': list([
+          '00:00:00',
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics[previous_stats2-OpendataTransportConnectionError]
+  dict({
+    'data': list([
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:03:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': 'T10',
+        'platform': 0,
+        'remaining_time': '-394 days, 21:30:57.882715',
+        'start': 'Zürich',
+        'train_number': 0,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:04:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 1,
+        'remaining_time': '-394 days, 21:31:57.882715',
+        'start': 'Zürich',
+        'train_number': 1,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:05:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 2,
+        'remaining_time': '-394 days, 21:32:57.882715',
+        'start': 'Zürich',
+        'train_number': 2,
+        'transfers': 0,
+      }),
+    ]),
+    'entry_data': dict({
+      'from': 'Zürich',
+      'to': 'Bern',
+    }),
+    'stats': dict({
+      '2025-01-09': dict({
+        'count': 1,
+        'errors': 1,
+        'timestamps_error': list([
+          '00:00:00',
+        ]),
+        'timestamps_success': list([
+        ]),
+      }),
+    }),
+  })
+# ---
+# name: test_diagnostics[previous_stats3-OpendataTransportError]
+  dict({
+    'data': list([
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:03:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': 'T10',
+        'platform': 0,
+        'remaining_time': '-394 days, 21:30:57.340659',
+        'start': 'Zürich',
+        'train_number': 0,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:04:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 1,
+        'remaining_time': '-394 days, 21:31:57.340659',
+        'start': 'Zürich',
+        'train_number': 1,
+        'transfers': 0,
+      }),
+      dict({
+        'delay': 0,
+        'departure': '2024-01-06T18:05:00+01:00',
+        'destination': 'Bern',
+        'duration': 10,
+        'line': None,
+        'platform': 2,
+        'remaining_time': '-394 days, 21:32:57.340659',
+        'start': 'Zürich',
+        'train_number': 2,
+        'transfers': 0,
+      }),
+    ]),
+    'entry_data': dict({
+      'from': 'Zürich',
+      'to': 'Bern',
+    }),
+    'stats': dict({
+      '2025-01-09': dict({
+        'count': 1,
+        'errors': 1,
+        'timestamps_error': list([
+          '00:00:00',
+        ]),
+        'timestamps_success': list([
+        ]),
+      }),
+    }),
+  })
+# ---
