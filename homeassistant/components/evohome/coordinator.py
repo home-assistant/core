@@ -8,7 +8,6 @@ from http import HTTPStatus
 import logging
 from typing import Any
 
-import aiohttp
 import evohomeasync as ec1
 import evohomeasync2 as ec2
 from evohomeasync2.const import (
@@ -25,9 +24,7 @@ from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .const import CONF_LOCATION_IDX
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -67,13 +64,14 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.temps: dict[str, float | None] = {}
 
     async def async_first_refresh(self) -> None:
-        """Refresh data for the first time when a config entry is setup.
+        """Refresh data for the first time when integration is setup.
 
         This integration does not yet have config flow, so it is inappropriate to
         invoke `async_config_entry_first_refresh()`.
         """
 
-        if not await self.__wrap_async_setup():
+        # can't replicate `if not await self.__wrap_async_setup():` (is mangled), so...
+        if not await self._DataUpdateCoordinator__wrap_async_setup():  # type: ignore[attr-defined]
             return
 
         await self._async_refresh(
@@ -86,45 +84,29 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self._unsub_shutdown()
             self._unsub_shutdown = None
 
-    async def __wrap_async_setup(self) -> bool:
-        """Error handling for _async_setup."""
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Fetch the user information, and the configuration of their locations.
+        """
 
         try:
-            await self._async_setup()
-
-        except (TimeoutError, aiohttp.ClientError) as err:
-            self.last_exception = err
-
+            await self.client.update(
+                dont_update_status=True
+            )  # only need config for now
         except ec2.EvohomeError as err:
-            self.last_exception = err
-
-        except Exception as err:  # pylint: disable=broad-except
-            self.last_exception = err
-            self.logger.exception("Unexpected error fetching %s data", self.name)
-
-        else:
-            return True
-
-        self.last_update_success = False
-        return False
-
-    async def _async_setup(self) -> None:
-        """Set up the coordinator (fetch the configuration of a TCC Location)."""
-
-        await self.client.update(dont_update_status=True)  # only need config for now
+            raise UpdateFailed(err) from err
 
         try:
             self.loc = self.client.locations[self.loc_idx]
-        except IndexError:
-            self.logger.error(
-                (
-                    "Config error: '%s' = %s, but the valid range is 0-%s. "
-                    "Unable to continue. Fix any configuration errors and restart HA"
-                ),
-                CONF_LOCATION_IDX,
-                self.loc_idx,
-                len(self.client.locations) - 1,
-            )
+        except IndexError as err:
+            raise UpdateFailed(
+                f"""
+                    Config error: 'location_idx' = {self.loc_idx},
+                    but the valid range is 0-{len(self.client.locations) - 1}.
+                    Unable to continue. Fix any configuration errors and restart HA
+                """
+            ) from err
 
         self.tcs = self.loc.gateways[0].systems[0]
 
