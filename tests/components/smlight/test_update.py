@@ -67,7 +67,7 @@ MOCK_FIRMWARE_FAIL = MessageEvent(
 
 MOCK_FIRMWARE_NOTES = [
     Firmware(
-        ver="v2.3.6",
+        ver="v2.7.2",
         mode="ESP",
         notes=None,
     )
@@ -110,7 +110,7 @@ async def test_update_firmware(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
         PLATFORM,
@@ -133,7 +133,7 @@ async def test_update_firmware(
     event_function(MOCK_FIRMWARE_DONE)
 
     mock_smlight_client.get_info.return_value = Info(
-        sw_version="v2.5.2",
+        sw_version="v2.7.5",
     )
 
     freezer.tick(timedelta(seconds=5))
@@ -142,8 +142,8 @@ async def test_update_firmware(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.5.2"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
 
 async def test_update_zigbee2_firmware(
@@ -204,7 +204,7 @@ async def test_update_legacy_firmware_v2(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.0.18"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
         PLATFORM,
@@ -220,7 +220,7 @@ async def test_update_legacy_firmware_v2(
     event_function(MOCK_FIRMWARE_DONE)
 
     mock_smlight_client.get_info.return_value = Info(
-        sw_version="v2.5.2",
+        sw_version="v2.7.5",
     )
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
@@ -229,8 +229,8 @@ async def test_update_legacy_firmware_v2(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.5.2"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.7.5"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
 
 async def test_update_firmware_failed(
@@ -244,7 +244,7 @@ async def test_update_firmware_failed(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     await hass.services.async_call(
         PLATFORM,
@@ -281,7 +281,7 @@ async def test_update_reboot_timeout(
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
     assert state.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
-    assert state.attributes[ATTR_LATEST_VERSION] == "v2.5.2"
+    assert state.attributes[ATTR_LATEST_VERSION] == "v2.7.5"
 
     with (
         patch(
@@ -315,18 +315,29 @@ async def test_update_reboot_timeout(
         mock_warning.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "update.mock_title_core_firmware",
+        "update.mock_title_zigbee_firmware",
+        "update.mock_title_zigbee_firmware_2",
+    ],
+)
 async def test_update_release_notes(
     hass: HomeAssistant,
+    entity_id: str,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test firmware release notes."""
+    mock_smlight_client.get_info.return_value = Info.from_dict(
+        load_json_object_fixture("info-MR1.json", DOMAIN)
+    )
     await setup_integration(hass, mock_config_entry)
     ws_client = await hass_ws_client(hass)
     await hass.async_block_till_done()
-    entity_id = "update.mock_title_core_firmware"
 
     state = hass.states.get(entity_id)
     assert state
@@ -342,16 +353,30 @@ async def test_update_release_notes(
     result = await ws_client.receive_json()
     assert result["result"] is not None
 
+
+async def test_update_blank_release_notes(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test firmware missing release notes."""
+
+    entity_id = "update.mock_title_core_firmware"
     mock_smlight_client.get_firmware_version.side_effect = None
     mock_smlight_client.get_firmware_version.return_value = MOCK_FIRMWARE_NOTES
 
-    freezer.tick(SCAN_FIRMWARE_INTERVAL)
-    async_fire_time_changed(hass)
+    await setup_integration(hass, mock_config_entry)
+    ws_client = await hass_ws_client(hass)
     await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
 
     await ws_client.send_json(
         {
-            "id": 2,
+            "id": 1,
             "type": "update/release_notes",
             "entity_id": entity_id,
         }
