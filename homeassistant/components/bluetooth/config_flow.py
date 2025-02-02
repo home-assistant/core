@@ -37,6 +37,7 @@ from .const import (
     CONF_PASSIVE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
@@ -194,6 +195,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SOURCE_MODEL: user_input[CONF_SOURCE_MODEL],
             CONF_SOURCE_DOMAIN: user_input[CONF_SOURCE_DOMAIN],
             CONF_SOURCE_CONFIG_ENTRY_ID: user_input[CONF_SOURCE_CONFIG_ENTRY_ID],
+            CONF_SOURCE_DEVICE_ID: user_input[CONF_SOURCE_DEVICE_ID],
         }
         self._abort_if_unique_id_configured(updates=data)
         manager = get_manager()

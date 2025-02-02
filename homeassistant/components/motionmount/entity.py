@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING
 
 import motionmount
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_PIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 
+from . import MotionMountConfigEntry
 from .const import DOMAIN, EMPTY_MAC
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,9 @@ class MotionMountEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
+    ) -> None:
         """Initialize general MotionMount entity."""
         self.mm = mm
         self.config_entry = config_entry

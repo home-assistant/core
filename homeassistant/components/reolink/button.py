@@ -138,6 +138,7 @@ BUTTON_ENTITIES = (
 HOST_BUTTON_ENTITIES = (
     ReolinkHostButtonEntityDescription(
         key="reboot",
+        always_available=True,
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -218,7 +219,7 @@ class ReolinkButtonEntity(ReolinkChannelCoordinatorEntity, ButtonEntity):
 
 
 class ReolinkHostButtonEntity(ReolinkHostCoordinatorEntity, ButtonEntity):
-    """Base button entity class for Reolink IP cameras."""
+    """Base button entity class for Reolink hosts."""
 
     entity_description: ReolinkHostButtonEntityDescription
 
