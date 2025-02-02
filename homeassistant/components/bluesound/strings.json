@@ -52,7 +52,7 @@
     },
     "set_sleep_timer": {
       "name": "Set sleep timer",
-      "description": "Sets a Bluesound timer. It will increase timer in steps: 15, 30, 45, 60, 90, 0.",
+      "description": "Sets a Bluesound timer that will turn off the speaker. It will increase in steps: 15, 30, 45, 60, 90, 0.",
       "fields": {
         "entity_id": {
           "name": "Entity",
