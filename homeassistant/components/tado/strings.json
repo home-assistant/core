@@ -102,11 +102,11 @@
         },
         "time_period": {
           "name": "Time period",
-          "description": "Choose this or Overlay. Set the time period for the change if you want to be specific. Alternatively use Overlay."
+          "description": "Choose this or 'Overlay'. Set the time period for the change if you want to be specific."
         },
         "requested_overlay": {
           "name": "Overlay",
-          "description": "Choose this or Time Period. Allows you to choose an overlay. MANUAL:=Overlay until user removes; NEXT_TIME_BLOCK:=Overlay until next timeblock; TADO_DEFAULT:=Overlay based on Tado app setting."
+          "description": "Choose this or 'Time period'. Allows you to choose an overlay. MANUAL:=Overlay until user removes; NEXT_TIME_BLOCK:=Overlay until next timeblock; TADO_DEFAULT:=Overlay based on Tado app setting."
         }
       }
     },
