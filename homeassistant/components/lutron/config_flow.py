@@ -85,7 +85,7 @@ class LutronConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class OptionsFlowHandler(OptionsFlow):
-    """Handle a option flow for esphome."""
+    """Handle option flow for lutron."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
