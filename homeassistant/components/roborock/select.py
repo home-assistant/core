@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from roborock import RoborockDockDustCollectionModeCode
+from roborock.code_mappings import RoborockDockDustCollectionModeCode
 from roborock.roborock_message import RoborockDataProtocol
 from roborock.roborock_typing import DeviceProp, RoborockCommand
 
