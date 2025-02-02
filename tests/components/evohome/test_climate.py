@@ -76,12 +76,12 @@ async def test_ctl_set_hvac_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args[0] in ("HeatingOff", "Off")
-        assert mock_fcn.await_args.kwargs == {"until": None}
+        try:
+            mock_fcn.assert_awaited_once_with("HeatingOff", until=None)
+        except AssertionError:
+            mock_fcn.assert_awaited_once_with("Off", until=None)
 
-        results.append(mock_fcn.await_args.args)
+        results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     # SERVICE_SET_HVAC_MODE: HVACMode.HEAT
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
@@ -95,12 +95,12 @@ async def test_ctl_set_hvac_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args[0] in ("Auto", "Heat")
-        assert mock_fcn.await_args.kwargs == {"until": None}
+        try:
+            mock_fcn.assert_awaited_once_with("Auto", until=None)
+        except AssertionError:
+            mock_fcn.assert_awaited_once_with("Heat", until=None)
 
-        results.append(mock_fcn.await_args.args)
+        results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     assert results == snapshot
 
@@ -146,12 +146,12 @@ async def test_ctl_turn_off(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args[0] in ("HeatingOff", "Off")
-        assert mock_fcn.await_args.kwargs == {"until": None}
+        try:
+            mock_fcn.assert_awaited_once_with("HeatingOff", until=None)
+        except AssertionError:
+            mock_fcn.assert_awaited_once_with("Off", until=None)
 
-        results.append(mock_fcn.await_args.args)
+        results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     assert results == snapshot
 
@@ -177,12 +177,12 @@ async def test_ctl_turn_on(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args[0] in ("Auto", "Heat")
-        assert mock_fcn.await_args.kwargs == {"until": None}
+        try:
+            mock_fcn.assert_awaited_once_with("Auto", until=None)
+        except AssertionError:
+            mock_fcn.assert_awaited_once_with("Heat", until=None)
 
-        results.append(mock_fcn.await_args.args)
+        results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
     assert results == snapshot
 
@@ -209,10 +209,7 @@ async def test_zone_set_hvac_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
     # SERVICE_SET_HVAC_MODE: HVACMode.OFF
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
@@ -226,7 +223,8 @@ async def test_zone_set_hvac_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # minimum target temp
         assert mock_fcn.await_args.kwargs == {"until": None}
@@ -260,10 +258,7 @@ async def test_zone_set_preset_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
     # SERVICE_SET_PRESET_MODE: permanent
     with patch("evohomeasync2.zone.Zone.set_temperature") as mock_fcn:
@@ -277,7 +272,8 @@ async def test_zone_set_preset_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # current target temp
         assert mock_fcn.await_args.kwargs == {"until": None}
@@ -296,7 +292,8 @@ async def test_zone_set_preset_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # current target temp
         assert mock_fcn.await_args.kwargs != {}  # next setpoint dtm
@@ -329,7 +326,8 @@ async def test_zone_set_temperature(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == (19.1,)
         assert mock_fcn.await_args.kwargs != {}  # next setpoint dtm
@@ -360,7 +358,8 @@ async def test_zone_turn_off(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # minimum target temp
         assert mock_fcn.await_args.kwargs == {"until": None}
@@ -388,7 +387,4 @@ async def test_zone_turn_on(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()

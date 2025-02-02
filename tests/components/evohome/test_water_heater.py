@@ -78,10 +78,7 @@ async def test_set_operation_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
     # SERVICE_SET_OPERATION_MODE: off (until next scheduled setpoint)
     with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
@@ -95,7 +92,8 @@ async def test_set_operation_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs != {}
@@ -114,7 +112,8 @@ async def test_set_operation_mode(
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
+        mock_fcn.assert_awaited_once()
+
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args == ()
         assert mock_fcn.await_args.kwargs != {}
@@ -140,10 +139,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
     # set_away_mode: on
     with patch("evohomeasync2.hotwater.HotWater.off") as mock_fcn:
@@ -157,10 +153,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
             blocking=True,
         )
 
-        assert mock_fcn.await_count == 1
-        assert mock_fcn.await_args is not None  # mypy hint
-        assert mock_fcn.await_args.args == ()
-        assert mock_fcn.await_args.kwargs == {}
+        mock_fcn.assert_awaited_once_with()
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
