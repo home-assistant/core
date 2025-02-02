@@ -61,16 +61,16 @@ class ElectricKiwiOauth2FlowHandler(
 
         try:
             session = await ek_api.get_active_session()
-            unique_id = str(session.data.customer_number)
-
-            await self.async_set_unique_id(unique_id)
-            if self.source == SOURCE_REAUTH:
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(), data=data
-                )
-
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=unique_id, data=data)
         except ApiException:
             return self.async_abort(reason="connection_error")
+
+        unique_id = str(session.data.customer_number)
+        await self.async_set_unique_id(unique_id)
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(), data=data
+            )
+
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title=unique_id, data=data)
