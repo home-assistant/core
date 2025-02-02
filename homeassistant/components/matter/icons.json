@@ -89,6 +89,9 @@
           "on": "mdi:lock",
           "off": "mdi:lock-off"
         }
+      },
+      "evse_charging_switch": {
+        "default": "mdi:ev-station"
       }
     }
   }
