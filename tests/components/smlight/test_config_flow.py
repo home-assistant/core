@@ -509,6 +509,28 @@ async def test_zeroconf_legacy_mac(
 
 
 @pytest.mark.usefixtures("mock_smlight_client")
+async def test_zeroconf_updates_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test zeroconf discovery updates host ip."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = DISCOVERY_INFO
+    service_info.ip_address = ip_address("192.168.1.164")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.164"
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
 async def test_dhcp_discovery_updates_host(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
