@@ -1,7 +1,7 @@
 """Tests for the Backup integration."""
 
 import asyncio
-from collections.abc import AsyncIterator, Iterable
+from collections.abc import AsyncIterator
 from io import BytesIO, StringIO
 import json
 import tarfile
@@ -15,7 +15,12 @@ from homeassistant.components.backup import AddonInfo, AgentBackup, Folder
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP_ABC123, BackupAgentTest, setup_backup_integration
+from .common import (
+    TEST_BACKUP_ABC123,
+    BackupAgentTest,
+    aiter_from_iter,
+    setup_backup_integration,
+)
 
 from tests.common import MockUser, get_fixture_path
 from tests.typing import ClientSessionGenerator
@@ -34,6 +39,9 @@ async def test_downloading_local_backup(
         patch(
             "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
             return_value=TEST_BACKUP_ABC123,
+        ),
+        patch(
+            "homeassistant.components.backup.backup.CoreLocalBackupAgent.get_backup_path",
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch(
@@ -73,9 +81,14 @@ async def test_downloading_local_encrypted_backup_file_not_found(
     await setup_backup_integration(hass)
     client = await hass_client()
 
-    with patch(
-        "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
-        return_value=TEST_BACKUP_ABC123,
+    with (
+        patch(
+            "homeassistant.components.backup.backup.CoreLocalBackupAgent.async_get_backup",
+            return_value=TEST_BACKUP_ABC123,
+        ),
+        patch(
+            "homeassistant.components.backup.backup.CoreLocalBackupAgent.get_backup_path",
+        ),
     ):
         resp = await client.get(
             "/api/backup/download/abc123?agent_id=backup.local&password=blah"
@@ -91,12 +104,6 @@ async def test_downloading_local_encrypted_backup(
     """Test downloading a local backup file."""
     await setup_backup_integration(hass)
     await _test_downloading_encrypted_backup(hass_client, "backup.local")
-
-
-async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
-    """Convert an iterable to an async iterator."""
-    for i in iterable:
-        yield i
 
 
 @patch.object(BackupAgentTest, "async_download_backup")
@@ -233,12 +240,14 @@ async def test_uploading_a_backup_file(
 
     with patch(
         "homeassistant.components.backup.manager.BackupManager.async_receive_backup",
+        return_value=TEST_BACKUP_ABC123.backup_id,
     ) as async_receive_backup_mock:
         resp = await client.post(
             "/api/backup/upload?agent_id=backup.local",
             data={"file": StringIO("test")},
         )
         assert resp.status == 201
+        assert await resp.json() == {"backup_id": TEST_BACKUP_ABC123.backup_id}
         assert async_receive_backup_mock.called
 
 

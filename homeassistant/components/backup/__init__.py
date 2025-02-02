@@ -26,10 +26,12 @@ from .manager import (
     BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupState,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
@@ -47,12 +49,15 @@ __all__ = [
     "BackupReaderWriterError",
     "CreateBackupEvent",
     "Folder",
+    "IdleEvent",
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
     "RestoreBackupEvent",
+    "RestoreBackupState",
     "WrittenBackup",
+    "async_get_manager",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

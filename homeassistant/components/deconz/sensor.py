@@ -52,7 +52,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import DeconzConfigEntry
 from .const import ATTR_DARK, ATTR_ON
