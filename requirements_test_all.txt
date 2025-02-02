@@ -2303,7 +2303,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.6.8
+teslemetry-stream==0.6.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
