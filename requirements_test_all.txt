@@ -1318,6 +1318,9 @@ open-meteo==0.3.2
 # homeassistant.components.openai_conversation
 openai==1.59.9
 
+# homeassistant.components.xai_conversation
+openai==1.59.9
+
 # homeassistant.components.openerz
 openerz-api==0.3.0
 
