@@ -159,9 +159,14 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
 
     def release_notes(self) -> str | None:
         """Return release notes for firmware."""
+        if "zigbee" in self.entity_description.key:
+            notes = f"### {'ZNP' if self.idx else 'EZSP'} Firmware\n\n"
+        else:
+            notes = "### Core Firmware\n\n"
 
         if self._firmware and self._firmware.notes:
-            return self._firmware.notes
+            notes += self._firmware.notes
+            return notes
 
         return None
 
