@@ -5,10 +5,11 @@ from homeassistant.const import Platform
 from .const import DOMAIN, API_URL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import aiohttp
+from redgtech_api import RedgtechAPI
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.LIGHT]
+PLATFORMS: list[Platform] = [Platform.SWITCH]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Redgtech from a config entry."""
@@ -36,8 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                     "id": item.get('endpointId', ''),
                     "name": item.get("name", f"Entity {item.get('endpointId', '')}"),
                     "state": "on" if item.get("value", False) else "off",
-                    "brightness": item.get("bright", 0),
-                    "type": 'light' if 'dim' in item.get('endpointId', '').lower() else 'switch'
+                    "type": 'switch'
                 }
                 for item in data.get("boards", [])
             ]

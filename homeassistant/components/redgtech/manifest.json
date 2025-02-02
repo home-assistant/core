@@ -1,7 +1,6 @@
 {
     "domain": "redgtech",
     "name": "Redgtech",
-    "version": "1.0.0",
     "codeowners": [],
     "documentation": "https://www.home-assistant.io/integrations/redgtech",
     "iot_class": "cloud_polling",
@@ -9,5 +8,5 @@
     "integration_type": "service",
     "config_flow": true,
     "quality_scale": "bronze",
-    "requirements": []
+    "requirements": ["redgtech-api==0.1.0"]
 }

@@ -266,6 +266,9 @@ aiohasupervisor==0.2.2b5
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
 
+# homeassistant.components.redgtech
+aiohttp==3.8.1
+
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
 
@@ -2583,6 +2586,9 @@ rapt-ble==0.1.2
 
 # homeassistant.components.raspyrfm
 raspyrfm-client==1.2.8
+
+# homeassistant.components.redgtech
+redgtech-api==0.1.0
 
 # homeassistant.components.refoss
 refoss-ha==1.2.5
