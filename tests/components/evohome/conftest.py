@@ -103,19 +103,25 @@ def mock_make_request(install: str) -> Callable:
         await self._headers()
 
         # assume a valid GET, and return the JSON for that web API
-        if url == "userAccount":  # /userAccount
+        if url == "accountInfo":  # /v0/accountInfo
+            return {}
+
+        if url.startswith("locations/"):  # /v0/locations?userId={id}&allData=True
+            return {}
+
+        if url == "userAccount":  # /v2/userAccount
             return user_account_config_fixture(install)
 
         if url.startswith("location/"):
-            if "installationInfo" in url:  # /location/installationInfo?userId={id}
+            if "installationInfo" in url:  # /v2/location/installationInfo?userId={id}
                 return user_locations_config_fixture(install)
-            if "status" in url:  # /location/{id}/status
+            if "status" in url:  # /v2/location/{id}/status
                 return location_status_fixture(install)
 
         elif "schedule" in url:
-            if url.startswith("domesticHotWater"):  # /domesticHotWater/{id}/schedule
+            if url.startswith("domesticHotWater"):  # /v2/domesticHotWater/{id}/schedule
                 return dhw_schedule_fixture(install)
-            if url.startswith("temperatureZone"):  # /temperatureZone/{id}/schedule
+            if url.startswith("temperatureZone"):  # /v2/temperatureZone/{id}/schedule
                 return zone_schedule_fixture(install)
 
         pytest.fail(f"Unexpected request: {HTTPMethod.GET} {url}")
@@ -162,7 +168,7 @@ async def setup_evohome(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
             mock_post_request(install),
         ),
-        patch("evohomeasync2.auth.Auth._make_request", mock_make_request(install)),
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
     ):
         evo: EvohomeClient | None = None
 
