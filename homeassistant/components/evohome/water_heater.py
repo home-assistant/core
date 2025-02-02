@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
-from evohomeasync2.const import SZ_ACTIVE_FAULTS, SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS
+from evohomeasync2.const import SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS
 from evohomeasync2.schemas.const import DhwState as EvoDhwState, ZoneMode as EvoZoneMode
 
 from homeassistant.components.water_heater import (
@@ -35,8 +35,6 @@ STATE_AUTO = "auto"
 
 HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: EvoDhwState.ON, STATE_OFF: EvoDhwState.OFF}
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
-
-STATE_ATTRS_DHW = ["id", SZ_ACTIVE_FAULTS, SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS]
 
 
 async def async_setup_platform(
@@ -73,7 +71,9 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     _attr_operation_list = list(HA_STATE_TO_EVO)
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    _evo_device: evo.HotWater  # mypy hint
+    _evo_device: evo.HotWater
+    _evo_id_attr = "dhw_id"
+    _evo_state_attr_names = (SZ_STATE_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
         self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.HotWater
@@ -146,5 +146,5 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         """Get the latest state data for a DHW controller."""
         await super().async_update()
 
-        for attr in STATE_ATTRS_DHW:
-            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+        for attr in self._evo_state_attr_names:
+            self._attr_extra_state_attributes[attr] = getattr(self._evo_device, attr)

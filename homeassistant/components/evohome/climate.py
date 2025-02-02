@@ -8,7 +8,6 @@ from typing import Any
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
-    SZ_ACTIVE_FAULTS,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
@@ -71,14 +70,6 @@ EVO_PRESET_TO_HA = {
     EvoZoneMode.PERMANENT_OVERRIDE: "permanent",
 }
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
-
-STATE_ATTRS_TCS = ["id", SZ_ACTIVE_FAULTS, SZ_SYSTEM_MODE_STATUS]
-STATE_ATTRS_ZONES = [
-    "id",
-    SZ_ACTIVE_FAULTS,
-    SZ_SETPOINT_STATUS,
-    SZ_TEMPERATURE_STATUS,
-]
 
 
 async def async_setup_platform(
@@ -148,7 +139,9 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
     _attr_preset_modes = list(HA_PRESET_TO_EVO)
 
-    _evo_device: evo.Zone  # mypy hint
+    _evo_device: evo.Zone
+    _evo_id_attr = "zone_id"
+    _evo_state_attr_names = (SZ_SETPOINT_STATUS, SZ_TEMPERATURE_STATUS)
 
     def __init__(
         self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.Zone
@@ -317,8 +310,8 @@ class EvoZone(EvoChild, EvoClimateEntity):
         """Get the latest state data for a Zone."""
         await super().async_update()
 
-        for attr in STATE_ATTRS_ZONES:
-            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+        for attr in self._evo_state_attr_names:
+            self._attr_extra_state_attributes[attr] = getattr(self._evo_device, attr)
 
 
 class EvoController(EvoClimateEntity):
@@ -334,7 +327,9 @@ class EvoController(EvoClimateEntity):
     _attr_icon = "mdi:thermostat"
     _attr_precision = PRECISION_TENTHS
 
-    _evo_device: evo.ControlSystem  # mypy hint
+    _evo_device: evo.ControlSystem
+    _evo_id_attr = "system_id"
+    _evo_state_attr_names = (SZ_SYSTEM_MODE_STATUS,)
 
     def __init__(
         self, coordinator: EvoDataUpdateCoordinator, evo_device: evo.ControlSystem
@@ -445,11 +440,11 @@ class EvoController(EvoClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest state data for a Controller."""
-        self._device_state_attrs = {}
+        await super().async_update()
 
-        attrs = self._device_state_attrs
-        for attr in STATE_ATTRS_TCS:
-            if attr == SZ_ACTIVE_FAULTS:
-                attrs["activeSystemFaults"] = getattr(self._evo_device, attr)
-            else:
-                attrs[attr] = getattr(self._evo_device, attr)
+        self._attr_extra_state_attributes["active_system_faults"] = (
+            self._evo_device.active_faults
+        )
+
+        for attr in self._evo_state_attr_names:
+            self._attr_extra_state_attributes[attr] = getattr(self._evo_device, attr)

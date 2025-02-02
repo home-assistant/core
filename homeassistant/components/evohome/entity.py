@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
+from evohomeasync2.const import SZ_ACTIVE_FAULTS
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,6 +25,9 @@ class EvoEntity(CoordinatorEntity):
 
     coordinator: EvoDataUpdateCoordinator
 
+    _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
+    _evo_id_attr: str
+
     def __init__(
         self,
         coordinator: EvoDataUpdateCoordinator,
@@ -33,7 +37,7 @@ class EvoEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._evo_device = evo_device
 
-        self._device_state_attrs: dict[str, Any] = {}
+        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     async def process_signal(self, payload: dict | None = None) -> None:
         """Process any signals."""
@@ -58,15 +62,17 @@ class EvoEntity(CoordinatorEntity):
         """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the evohome-specific state attributes."""
-        return {"status": self._device_state_attrs}
-
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
+
         async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
+
+    async def async_update(self) -> None:
+        """Get the latest state data."""
+        await super().async_update()
+
+        self._attr_extra_state_attributes = {self._evo_id_attr: self._evo_device.id}
 
 
 class EvoChild(EvoEntity):
@@ -131,12 +137,17 @@ class EvoChild(EvoEntity):
 
     async def async_update(self) -> None:
         """Get the latest state data."""
+        await super().async_update()
+
+        self._attr_extra_state_attributes[SZ_ACTIVE_FAULTS] = (
+            self._evo_device.active_faults
+        )
 
         if not self._schedule:
             await self._update_schedule()
 
-            if not self._schedule:
-                self._device_state_attrs = {}
+            if not self._schedule:  # some systems have no schedule
+                self._attr_extra_state_attributes["setpoints"] = {}
                 return
 
         elif self._evo_device.next_switchpoint[0] < datetime.now(tz=UTC):
@@ -154,4 +165,4 @@ class EvoChild(EvoEntity):
             f"next_sp_{key}": next_sp_val,
         }
 
-        self._device_state_attrs = {"setpoints": self.setpoints}
+        self._attr_extra_state_attributes["setpoints"] = self.setpoints
