@@ -570,10 +570,6 @@
         "laundry_care_washer_option_vario_perfect": {
           "name": "Vario perfect",
           "description": "Defines if a cycle saves energy (Eco Perfect) or time (Speed Perfect)."
-        },
-        "custom_options": {
-          "name": "Custom options",
-          "description": "List of options for a program that might not be listed above, You should use a `key`, a `value` and optionally a `unit` for each option."
         }
       },
       "sections": {
@@ -754,10 +750,6 @@
         "laundry_care_washer_option_vario_perfect": {
           "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::name%]",
           "description": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::description%]"
-        },
-        "custom_options": {
-          "name": "[%key:component::home_connect::services::start_program::fields::custom_options::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::custom_options::description%]"
         }
       },
       "sections": {
@@ -954,10 +946,6 @@
         "laundry_care_washer_option_vario_perfect": {
           "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::name%]",
           "description": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::description%]"
-        },
-        "custom_options": {
-          "name": "[%key:component::home_connect::services::start_program::fields::custom_options::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::custom_options::description%]"
         }
       },
       "sections": {
@@ -1134,10 +1122,6 @@
         "laundry_care_washer_option_vario_perfect": {
           "name": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::name%]",
           "description": "[%key:component::home_connect::services::start_program::fields::laundry_care_washer_option_vario_perfect::description%]"
-        },
-        "custom_options": {
-          "name": "[%key:component::home_connect::services::start_program::fields::custom_options::name%]",
-          "description": "[%key:component::home_connect::services::start_program::fields::custom_options::description%]"
         }
       },
       "sections": {

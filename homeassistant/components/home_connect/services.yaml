@@ -515,16 +515,6 @@ start_program:
                 - laundry_care_common_enum_type_vario_perfect_off
                 - laundry_care_common_enum_type_vario_perfect_eco_perfect
                 - laundry_care_common_enum_type_vario_perfect_speed_perfect
-    custom_options:
-      example: >-
-        - key: "BSH.Common.Option.StartInRelative"
-          value: 1800
-          unit: "seconds"
-        - key: "Cooking.Common.Option.Hood.VentingLevel"
-          value: "Cooking.Hood.EnumType.Stage.FanOff"
-      required: false
-      selector:
-        object:
 select_program:
   fields:
     device_id:
@@ -1042,16 +1032,6 @@ select_program:
                 - laundry_care_common_enum_type_vario_perfect_off
                 - laundry_care_common_enum_type_vario_perfect_eco_perfect
                 - laundry_care_common_enum_type_vario_perfect_speed_perfect
-    custom_options:
-      example: >-
-        - key: "BSH.Common.Option.StartInRelative"
-          value: 1800
-          unit: "seconds"
-        - key: "Cooking.Common.Option.Hood.VentingLevel"
-          value: "Cooking.Hood.EnumType.Stage.FanOff"
-      required: false
-      selector:
-        object:
 pause_program:
   fields:
     device_id:
@@ -1420,16 +1400,6 @@ set_option_active:
                 - laundry_care_common_enum_type_vario_perfect_off
                 - laundry_care_common_enum_type_vario_perfect_eco_perfect
                 - laundry_care_common_enum_type_vario_perfect_speed_perfect
-    custom_options:
-      example: >-
-        - key: "BSH.Common.Option.StartInRelative"
-          value: 1800
-          unit: "seconds"
-        - key: "Cooking.Common.Option.Hood.VentingLevel"
-          value: "Cooking.Hood.EnumType.Stage.FanOff"
-      required: false
-      selector:
-        object:
 set_option_selected:
   fields:
     device_id:
@@ -1784,16 +1754,6 @@ set_option_selected:
                 - laundry_care_common_enum_type_vario_perfect_off
                 - laundry_care_common_enum_type_vario_perfect_eco_perfect
                 - laundry_care_common_enum_type_vario_perfect_speed_perfect
-    custom_options:
-      example: >-
-        - key: "BSH.Common.Option.StartInRelative"
-          value: 1800
-          unit: "seconds"
-        - key: "Cooking.Common.Option.Hood.VentingLevel"
-          value: "Cooking.Hood.EnumType.Stage.FanOff"
-      required: false
-      selector:
-        object:
 change_setting:
   fields:
     device_id:
