@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from collections.abc import Generator
+from contextlib import contextmanager
 from dataclasses import dataclass, field, replace
 from datetime import datetime
 import logging
@@ -27,12 +27,12 @@ DATA_CHAT_HISTORY: HassKey[dict[str, ChatLog]] = HassKey("conversation_chat_log"
 LOGGER = logging.getLogger(__name__)
 
 
-@asynccontextmanager
-async def async_get_chat_log(
+@contextmanager
+def async_get_chat_log(
     hass: HomeAssistant,
     session: chat_session.ChatSession,
     user_input: ConversationInput,
-) -> AsyncGenerator[ChatLog]:
+) -> Generator[ChatLog]:
     """Return chat log for a specific chat session."""
     all_history = hass.data.get(DATA_CHAT_HISTORY)
     if all_history is None:
