@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[lock.front_door_none-entry]
+# name: test_lock[lock.front_door_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -32,7 +32,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[lock.front_door_none-state]
+# name: test_lock[lock.front_door_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assumed_state': True,

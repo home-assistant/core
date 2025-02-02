@@ -13,13 +13,13 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_locks_created(
+async def test_lock(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the igloohome sensors."""
+    """Test lock entity created."""
     with patch("homeassistant.components.igloohome.PLATFORMS", [Platform.LOCK]):
         await setup_integration(hass, mock_config_entry)
 
