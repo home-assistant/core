@@ -8,11 +8,11 @@ import pytest
 from serial.tools.list_ports_linux import SysFS
 
 from homeassistant.components.smart_meter_b_route.const import DOMAIN, ENTRY_TITLE
-from homeassistant.components.usb import UsbServiceInfo
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from . import user_input
 

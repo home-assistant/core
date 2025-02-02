@@ -8,14 +8,11 @@ from serial.tools.list_ports import comports
 from serial.tools.list_ports_common import ListPortInfo
 import voluptuous as vol
 
-from homeassistant.components.usb import (
-    UsbServiceInfo,
-    get_serial_by_id,
-    human_readable_device_name,
-)
+from homeassistant.components.usb import get_serial_by_id, human_readable_device_name
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import callback
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DOMAIN, ENTRY_TITLE
 
@@ -34,8 +31,8 @@ def _human_readable_device_name(port: UsbServiceInfo | ListPortInfo) -> str:
         port.serial_number,
         port.manufacturer,
         port.description,
-        port.vid,
-        port.pid,
+        str(port.vid) if port.vid else None,
+        str(port.pid) if port.pid else None,
     )
 
 
