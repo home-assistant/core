@@ -131,9 +131,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     assert coordinator.tcs is not None  # mypy
 
-    # without a listener, the coordinator will not periodically refresh
-    coordinator.async_add_listener(lambda: None)
-
     hass.data[EVOHOME_KEY] = EvoData(
         coordinator=coordinator,
         loc_idx=coordinator.loc_idx,
