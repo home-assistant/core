@@ -1,5 +1,39 @@
 {
   "entity": {
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:map-marker-radius"
+      }
+    },
+    "button": {
+      "start_map_sync": {
+        "default": "mdi:map-clock"
+      },
+      "resync_rtk_dock": {
+        "default": "mdi:sync"
+      },
+      "release_from_dock": {
+        "default": "mdi:ray-start-arrow"
+      },
+      "emergency_nudge_forward": {
+        "default": "mdi:arrow-up"
+      },
+      "emergency_nudge_left": {
+        "default": "mdi:arrow-left"
+      },
+      "emergency_nudge_right": {
+        "default": "mdi:arrow-right"
+      },
+      "emergency_nudge_back": {
+        "default": "mdi:arrow-down"
+      },
+      "cancel_task": {
+        "default": "mdi:cancel"
+      },
+      "clear_all_mapdata": {
+        "default": "mdi:map-marker-remove"
+      }
+    },
     "sensor": {
       "gps_stars": {
         "default": "mdi:satellite-uplink"
@@ -21,6 +55,110 @@
       },
       "position_mode": {
         "default": "mdi:map-marker"
+      }
+    },
+    "select": {
+      "channel_mode": {
+        "default": "mdi:map-marker-path",
+        "state": {
+          "single_grid": "mdi:sawtooth-wave",
+          "double_grid": "mdi:checkerboard",
+          "segment_grid": "mdi:square-wave",
+          "no_grid": "mdi:dots-square"
+        }
+      },
+      "mowing_laps": {
+        "default": "mdi:go-kart-track",
+        "state": {
+          "none": "mdi:numeric-0",
+          "one": "mdi:numeric-1",
+          "two": "mdi:numeric-2",
+          "three": "mdi:numeric-3",
+          "four": "mdi:numeric-4"
+        }
+      },
+      "obstacle_laps": {
+        "default": "mdi:go-kart-track",
+        "state": {
+          "none": "mdi:numeric-0",
+          "one": "mdi:numeric-1",
+          "two": "mdi:numeric-2",
+          "three": "mdi:numeric-3",
+          "four": "mdi:numeric-4"
+        }
+      },
+      "border_mode": {
+        "default": "mdi:checkerboard",
+        "state": {
+          "border_first": "mdi:dots-circle",
+          "grid_first": "mdi:checkerboard"
+        }
+      },
+      "bypass_mode": {
+        "default": "mdi:arrow-collapse-right"
+      },
+      "cutting_angle_mode": {
+        "default": "mdi:angle-acute"
+      }
+    },
+    "number": {
+      "start_progress": {
+        "default": "mdi:progress-helper"
+      },
+      "blade_height": {
+        "default": "mdi:altimeter"
+      },
+      "working_speed": {
+        "default": "mdi:speedometer"
+      },
+      "cutting_angle": {
+        "default": "mdi:angle-acute"
+      },
+      "path_spacing": {
+        "default": "mdi:keyboard-space"
+      },
+      "dumping_interval": {
+        "default": "mdi:dump-truck"
+      },
+      "toward_included_angle": {
+        "default": "mdi:angle-right"
+      }
+    },
+    "switch": {
+      "area": {
+        "default": "mdi:texture-box"
+      },
+      "blade_status": {
+        "default": "mdi:saw-blade"
+      },
+      "is_mow": {
+        "default": "mdi:mower",
+        "state": {
+          "off": "mdi:mower",
+          "on": "mdi:mower-on"
+        }
+      },
+      "is_dump": {
+        "default": "mdi:dump-truck"
+      },
+      "is_edge": {
+        "default": "mdi:border-outside"
+      },
+      "rain_tactics": {
+        "default": "mdi:weather-rainy"
+      },
+      "side_led": {
+        "default": "mdi:led-off",
+        "state": {
+          "off": "mdi:led-off",
+          "on": "mdi:led-on"
+        }
+      },
+      "perimeter_first_on_off": {
+        "default": "mdi:dots-square"
+      },
+      "schedule_updates": {
+        "default": "mdi:update"
       }
     }
   }

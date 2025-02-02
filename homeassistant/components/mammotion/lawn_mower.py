@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from pymammotion.data.model.device_config import OperationSettings
+from pymammotion.data.model.report_info import ReportData
+from pymammotion.proto import has_field
+from pymammotion.proto.luba_msg import RptDevStatus
+from pymammotion.utility.constant.device_constant import WorkMode
+from pymammotion.utility.device_type import DeviceType
 import voluptuous as vol
+
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
@@ -12,15 +19,8 @@ from homeassistant.components.lawn_mower import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pymammotion.data.model.device_config import OperationSettings
-from pymammotion.data.model.report_info import ReportData
-from pymammotion.proto import has_field
-from pymammotion.proto.luba_msg import RptDevStatus
-from pymammotion.utility.constant.device_constant import WorkMode
-from pymammotion.utility.device_type import DeviceType
 
 from . import MammotionConfigEntry
 from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
@@ -80,9 +80,8 @@ def get_entity_attribute(
     if entity and attribute_name in entity.attributes:
         # Return the specific attribute
         return entity.attributes.get(attribute_name, None)
-    else:
-        # Return None if the entity or attribute does not exist
-        return None
+    # Return None if the entity or attribute does not exist
+    return None
 
 
 async def async_setup_entry(
@@ -207,6 +206,9 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
                         await self.coordinator.async_send_command("resume_execute_task")
                 if mode == WorkMode.MODE_READY:
                     trans_key = "start_failed"
+                    if self.report_data.work.area >> 16 != 0:
+                        await self.coordinator.async_send_command("resume_execute_task")
+                        return
                     if await self.coordinator.async_plan_route(operational_settings):
                         await self.coordinator.async_send_command("start_job")
 
