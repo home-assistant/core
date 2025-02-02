@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import setup_home_connect_entry
 from .const import (
     DOMAIN,
     SVE_TRANSLATION_KEY_SET_SETTING,
@@ -22,7 +23,7 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
 )
-from .coordinator import HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -78,19 +79,28 @@ NUMBERS = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return [
+        HomeConnectNumberEntity(entry.runtime_data, appliance, description)
+        for description in NUMBERS
+        if description.key in appliance.settings
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect number."""
-    async_add_entities(
-        [
-            HomeConnectNumberEntity(entry.runtime_data, appliance, description)
-            for description in NUMBERS
-            for appliance in entry.runtime_data.data.values()
-            if description.key in appliance.settings
-        ],
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
     )
 
 
