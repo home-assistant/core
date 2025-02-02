@@ -511,5 +511,5 @@
   'off'
 # ---
 # name: test_switch_streaming[switch.test_sentry_mode]
-  'unknown'
+  'on'
 # ---
