@@ -2521,6 +2521,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "heicko": {
+      "name": "Heicko",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",
