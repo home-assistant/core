@@ -1,5 +1,6 @@
 """Define tests for the Vodafone Station coordinator."""
 
+import logging
 from unittest.mock import AsyncMock
 
 from aiovodafone import VodafoneStationDevice
@@ -10,7 +11,7 @@ from homeassistant.components.vodafone_station.const import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import DEVICE_1_MAC, DEVICE_2_MAC
+from .const import DEVICE_1_HOST, DEVICE_2_HOST, DEVICE_2_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -21,12 +22,14 @@ async def test_coordinator_device_cleanup(
     freezer: FrozenDateTimeFactory,
     mock_vodafone_station_router: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test Device cleanup on coordinator update."""
 
+    caplog.set_level(logging.DEBUG)
     await setup_integration(hass, mock_config_entry)
 
-    device_tracker = f"device_tracker.vodafone_station_{DEVICE_1_MAC.replace(':', '_')}"
+    device_tracker = f"device_tracker.{DEVICE_1_HOST}"
 
     state = hass.states.get(device_tracker)
     assert state is not None
@@ -36,7 +39,7 @@ async def test_coordinator_device_cleanup(
             connected=True,
             connection_type="lan",
             ip_address="192.168.1.11",
-            name="LanDevice1",
+            name=DEVICE_2_HOST,
             mac=DEVICE_2_MAC,
             type="desktop",
             wifi="",
@@ -49,3 +52,4 @@ async def test_coordinator_device_cleanup(
 
     state = hass.states.get(device_tracker)
     assert state is None
+    assert f"Skipping entity {DEVICE_2_HOST}" in caplog.text

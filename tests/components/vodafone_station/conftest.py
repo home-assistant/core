@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.vodafone_station import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DEVICE_1_MAC, DEVICE_2_MAC
+from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_MAC
 
 from tests.common import (
     AsyncMock,
@@ -48,7 +48,7 @@ def mock_vodafone_station_router() -> Generator[AsyncMock]:
                 connected=True,
                 connection_type="wifi",
                 ip_address="192.168.1.10",
-                name="WifiDevice0",
+                name=DEVICE_1_HOST,
                 mac=DEVICE_1_MAC,
                 type="laptop",
                 wifi="2.4G",
