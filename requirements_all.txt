@@ -2406,7 +2406,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.10.0
+python-kasa[speedups]==0.10.1
 
 # homeassistant.components.linkplay
 python-linkplay==0.1.3
@@ -2863,7 +2863,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.0.2
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.6.6
+teslemetry-stream==0.6.10
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2935,7 +2935,7 @@ twilio==6.32.0
 twitchAPI==4.2.1
 
 # homeassistant.components.monarch_money
-typedmonarchmoney==0.3.1
+typedmonarchmoney==0.4.4
 
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
