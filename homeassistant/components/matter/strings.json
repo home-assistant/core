@@ -281,6 +281,42 @@
       },
       "current_phase": {
         "name": "Current phase"
+      },
+      "evse_fault_state": {
+        "name": "Fault state",
+        "state": {
+          "no_error": "OK",
+          "meter_failure": "Meter failure",
+          "over_voltage": "Over Voltage",
+          "under_voltage": "Under Voltage",
+          "over_current": "Over current",
+          "contact_wet_failure": "Contact wet failure",
+          "contact_dry_failure": "Contact dry failure",
+          "power_loss": "Power loss",
+          "power_quality": "Power quality",
+          "pilot_short_circuit": "Pilot short circuit",
+          "emergency_stop": "Emergency stop",
+          "ev_disconnected": "EV disconnected",
+          "wrong_power_supply": "Wrong power supply",
+          "live_neutral_swap": "Live neutral swap",
+          "over_temperature": "Over temperature",
+          "other": "Other fault"
+        }
+      },
+      "evse_circuit_capacity": {
+        "name": "Circuit capacity"
+      },
+      "evse_charge_current": {
+        "name": "Charge current"
+      },
+      "evse_min_charge_current": {
+        "name": "Min charge current"
+      },
+      "evse_max_charge_current": {
+        "name": "Max charge current"
+      },
+      "evse_user_max_charge_current": {
+        "name": "User max charge current"
       }
     },
     "switch": {
