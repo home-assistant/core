@@ -24,10 +24,16 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.weather import INTENT_GET_WEATHER
+from homeassistant.components.weather import (
+    DOMAIN as WEATHER_DOMAIN,
+    INTENT_GET_WEATHER,
+    SERVICE_GET_FORECASTS,
+)
 from homeassistant.const import (
     ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     ATTR_SERVICE,
+    ENTITY_MATCH_ALL,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED,
 )
@@ -423,6 +429,9 @@ class AssistAPI(API):
         if exposed_domains and CALENDAR_DOMAIN in exposed_domains:
             tools.append(CalendarGetEventsTool())
 
+        if exposed_domains and WEATHER_DOMAIN in exposed_domains:
+            tools.append(WeatherForecastTool(self.hass))
+
         if llm_context.assistant is not None:
             for state in self.hass.states.async_all(SCRIPT_DOMAIN):
                 if not async_should_expose(
@@ -714,7 +723,7 @@ class ActionTool(Tool):
         """Init the class."""
         self._domain = domain
         self._action = action
-        self.name = f"{domain}.{action}"
+        self.name = f"{domain}_{action}"
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )
@@ -850,3 +859,29 @@ class CalendarGetEventsTool(Tool):
         ]
 
         return {"success": True, "result": events}
+
+
+class WeatherForecastTool(ActionTool):
+    """LLM Tool wrapper for weather forecast action."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+    ) -> None:
+        """Init the class."""
+        super().__init__(hass, WEATHER_DOMAIN, SERVICE_GET_FORECASTS)
+        self.parameters = vol.Schema(
+            {
+                key: val
+                for key, val in self.parameters.schema.items()
+                if key not in cv.ENTITY_SERVICE_FIELDS
+            }
+        ).extend(
+            {
+                vol.Required(
+                    ATTR_ENTITY_ID, default=ENTITY_MATCH_ALL
+                ): selector.EntitySelector(
+                    selector.EntitySelectorConfig(domain=WEATHER_DOMAIN)
+                ),
+            }
+        )
