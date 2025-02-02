@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Generic, TypeVar
 
 from propcache.api import cached_property
 from roborock import HomeDataRoom
@@ -28,14 +29,44 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
+from .rest import RoborockRestApi
 from .roborock_storage import RoborockMapStorage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER = logging.getLogger(__name__)
 
+_DataT = TypeVar("_DataT")
 
-class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
+
+class RoborockBaseCoordinator(Generic[_DataT], DataUpdateCoordinator[_DataT]):
+    """Base class to manage fetching data from the API."""
+
+    rest_api: RoborockRestApi
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: HomeDataDevice,
+        rest_api: RoborockRestApi,
+    ) -> None:
+        """Initialize."""
+        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        self._device = device
+        self.rest_api = rest_api
+
+    @cached_property
+    def duid(self) -> str:
+        """Get the unique id of the device as specified by Roborock."""
+        return self._device.duid
+
+    @cached_property
+    def duid_slug(self) -> str:
+        """Get the slug of the duid."""
+        return slugify(self.duid)
+
+
+class RoborockDataUpdateCoordinator(RoborockBaseCoordinator[DeviceProp]):
     """Class to manage fetching data from the API."""
 
     config_entry: ConfigEntry
@@ -48,9 +79,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         product_info: HomeDataProduct,
         cloud_api: RoborockMqttClientV1,
         home_data_rooms: list[HomeDataRoom],
+        rest_api: RoborockRestApi,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(hass, device, rest_api)
         self.roborock_device_info = RoborockHassDeviceInfo(
             device,
             device_networking,
@@ -168,19 +200,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             for room in room_mapping or ()
         }
 
-    @cached_property
-    def duid(self) -> str:
-        """Get the unique id of the device as specified by Roborock."""
-        return self.roborock_device_info.device.duid
-
-    @cached_property
-    def duid_slug(self) -> str:
-        """Get the slug of the duid."""
-        return slugify(self.duid)
-
 
 class RoborockDataUpdateCoordinatorA01(
-    DataUpdateCoordinator[
+    RoborockBaseCoordinator[
         dict[RoborockDyadDataProtocol | RoborockZeoProtocol, StateType]
     ]
 ):
@@ -192,9 +214,10 @@ class RoborockDataUpdateCoordinatorA01(
         device: HomeDataDevice,
         product_info: HomeDataProduct,
         api: RoborockClientA01,
+        rest_api: RoborockRestApi,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(hass, device, rest_api)
         self.api = api
         self.device_info = DeviceInfo(
             name=device.name,
@@ -235,13 +258,3 @@ class RoborockDataUpdateCoordinatorA01(
         """Shutdown the coordinator on config entry unload."""
         await super().async_shutdown()
         await self.api.async_release()
-
-    @cached_property
-    def duid(self) -> str:
-        """Get the unique id of the device as specified by Roborock."""
-        return self.roborock_device_info.device.duid
-
-    @cached_property
-    def duid_slug(self) -> str:
-        """Get the slug of the duid."""
-        return slugify(self.duid)

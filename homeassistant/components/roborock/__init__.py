@@ -28,6 +28,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .rest import RoborockRestApi
 from .roborock_storage import async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -95,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
         *build_setup_functions(
-            hass, device_map, user_data, product_info, home_data.rooms
+            hass, device_map, user_data, product_info, home_data.rooms, api_client
         ),
         return_exceptions=True,
     )
@@ -146,6 +147,7 @@ def build_setup_functions(
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> list[
     Coroutine[
         Any,
@@ -156,7 +158,12 @@ def build_setup_functions(
     """Create a list of setup functions that can later be called asynchronously."""
     return [
         setup_device(
-            hass, user_data, device, product_info[device.product_id], home_data_rooms
+            hass,
+            user_data,
+            device,
+            product_info[device.product_id],
+            home_data_rooms,
+            api_client,
         )
         for device in device_map.values()
     ]
@@ -168,14 +175,15 @@ async def setup_device(
     device: HomeDataDevice,
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
     """Set up a coordinator for a given device."""
     if device.pv == "1.0":
         return await setup_device_v1(
-            hass, user_data, device, product_info, home_data_rooms
+            hass, user_data, device, product_info, home_data_rooms, api_client
         )
     if device.pv == "A01":
-        return await setup_device_a01(hass, user_data, device, product_info)
+        return await setup_device_a01(hass, user_data, device, product_info, api_client)
     _LOGGER.warning(
         "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
@@ -191,6 +199,7 @@ async def setup_device_v1(
     device: HomeDataDevice,
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = await hass.async_add_executor_job(
@@ -211,8 +220,9 @@ async def setup_device_v1(
         _LOGGER.debug(err)
         await mqtt_client.async_release()
         raise
+    rest_api = RoborockRestApi(device, api_client, user_data)
     coordinator = RoborockDataUpdateCoordinator(
-        hass, device, networking, product_info, mqtt_client, home_data_rooms
+        hass, device, networking, product_info, mqtt_client, home_data_rooms, rest_api
     )
     try:
         await coordinator.async_config_entry_first_refresh()
@@ -249,12 +259,16 @@ async def setup_device_a01(
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinatorA01 | None:
     """Set up a A01 protocol device."""
     mqtt_client = RoborockMqttClientA01(
         user_data, DeviceData(device, product_info.name), product_info.category
     )
-    coord = RoborockDataUpdateCoordinatorA01(hass, device, product_info, mqtt_client)
+    rest_api = RoborockRestApi(device, api_client, user_data)
+    coord = RoborockDataUpdateCoordinatorA01(
+        hass, device, product_info, mqtt_client, rest_api
+    )
     await coord.async_config_entry_first_refresh()
     return coord
 
