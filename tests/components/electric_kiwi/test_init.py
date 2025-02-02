@@ -1,10 +1,11 @@
 """Test the Electric Kiwi init."""
 
 import http
-from unittest.mock import patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import RequestInfo
 from aiohttp.client_exceptions import ClientResponseError
+from electrickiwi_api.exceptions import ApiException
 import pytest
 
 from homeassistant.components.electric_kiwi.const import DOMAIN
@@ -102,3 +103,22 @@ async def test_unique_id_migration(
     new_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert new_entry.minor_version == 2
     assert new_entry.unique_id == "123456"
+
+
+async def test_unique_id_migration_failure(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    component_setup: ComponentSetup,
+    electrickiwi_api: Mock,
+) -> None:
+    """Test that the unique ID is migrated to the customer number."""
+    with patch.object(
+        electrickiwi_api,
+        "get_active_session",
+        new_callable=AsyncMock,
+        side_effect=ApiException(),
+    ):
+        await component_setup()
+        new_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+        assert new_entry.minor_version == 1
+        assert new_entry.unique_id == DOMAIN

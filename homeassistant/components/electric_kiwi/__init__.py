@@ -94,11 +94,13 @@ async def async_migrate_entry(
                 aiohttp_client.async_get_clientsession(hass), session
             )
         )
-
-        ek_session = await ek_api.get_active_session()
-        unique_id = str(ek_session.data.customer_number)
-        hass.config_entries.async_update_entry(
-            config_entry, unique_id=unique_id, minor_version=2
-        )
+        try:
+            ek_session = await ek_api.get_active_session()
+            unique_id = str(ek_session.data.customer_number)
+            hass.config_entries.async_update_entry(
+                config_entry, unique_id=unique_id, minor_version=2
+            )
+        except ApiException:
+            return False
 
     return True
