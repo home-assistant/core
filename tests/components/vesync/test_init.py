@@ -151,7 +151,7 @@ async def test_migrate_config_entry(
     )
 
     assert switch.unique_id == "switch"
-    assert switch_old_id_config_entry.version == 1
+    assert switch_old_id_config_entry.minor_version == 1
     assert humidifer.unique_id == "humidifer"
 
     await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)

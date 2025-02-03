@@ -165,6 +165,7 @@ async def switch_old_id_config_entry(
         domain=DOMAIN,
         data=config[DOMAIN],
         version=1,
+        minor_version=1,
     )
     entry.add_to_hass(hass)
 
