@@ -62,4 +62,7 @@ async def test_coordinator_device_cleanup(
     state = hass.states.get(device_tracker)
     assert state is None
     assert f"Skipping entity {DEVICE_2_HOST}" in caplog.text
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE_1_MAC)})
+    assert device is None
     assert f"Removing device: {DEVICE_1_HOST}" in caplog.text
