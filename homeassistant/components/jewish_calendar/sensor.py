@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from datetime import date as Date
+import datetime as dt
 import logging
-from typing import Any, cast
+from typing import Any
 
-from hdate import HDate, HebrewDate, htables
-from hdate.zmanim import Zmanim
+from hdate import HDate, Zmanim
+from hdate.holidays import HolidayDatabase
+from hdate.parasha import Parasha
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -212,7 +213,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = HDate(today, diaspora=self._diaspora, hebrew=self._hebrew)
+        daytime_date = HDate(today, diaspora=self._diaspora, language=self._language)
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area
@@ -238,14 +239,14 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             "New value for %s: %s", self.entity_description.key, self._attr_native_value
         )
 
-    def make_zmanim(self, date: Date) -> Zmanim:
+    def make_zmanim(self, date: dt.date) -> Zmanim:
         """Create a Zmanim object."""
         return Zmanim(
             date=date,
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
             havdalah_offset=self._havdalah_offset,
-            hebrew=self._hebrew,
+            language=self._language,
         )
 
     @property
@@ -260,37 +261,34 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
         if self.entity_description.key == "date":
-            hdate = cast(HebrewDate, after_shkia_date.hdate)
-            month = htables.MONTHS[hdate.month.value - 1]
+            hdate = after_shkia_date.hdate
+            hdate.month.set_language(self._language)
             self._attrs = {
-                "hebrew_year": hdate.year,
-                "hebrew_month_name": month.hebrew if self._hebrew else month.english,
-                "hebrew_day": hdate.day,
+                "hebrew_year": str(hdate.year),
+                "hebrew_month_name": str(hdate.month),
+                "hebrew_day": str(hdate.day),
             }
-            return after_shkia_date.hebrew_date
+            return after_shkia_date.hdate
         if self.entity_description.key == "weekly_portion":
-            self._attr_options = [
-                (p.hebrew if self._hebrew else p.english) for p in htables.PARASHAOT
-            ]
+            parashot = list(Parasha)
+            for parasha in parashot:
+                parasha.set_language(self._language)
+            self._attr_options = [str(parasha) for parasha in parashot]
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
-            _id = _type = _type_id = ""
-            _holiday_type = after_shkia_date.holiday_type
-            if isinstance(_holiday_type, list):
-                _id = ", ".join(after_shkia_date.holiday_name)
-                _type = ", ".join([_htype.name for _htype in _holiday_type])
-                _type_id = ", ".join([str(_htype.value) for _htype in _holiday_type])
-            else:
-                _id = after_shkia_date.holiday_name
-                _type = _holiday_type.name
-                _type_id = _holiday_type.value
-            self._attrs = {"id": _id, "type": _type, "type_id": _type_id}
-            self._attr_options = htables.get_all_holidays(self._language)
-
-            return after_shkia_date.holiday_description
+            _id = _type = ""
+            _holidays = after_shkia_date.holidays
+            _id = ", ".join(holiday.name for holiday in _holidays)
+            _type = ", ".join([str(_holiday.type) for _holiday in _holidays])
+            self._attrs = {"id": _id, "type": _type}
+            self._attr_options = [
+                str(holiday)
+                for holiday in HolidayDatabase.get_all_holiday_names(self._language)
+            ]
+            return ", ".join(str(holiday) for holiday in _holidays)
         if self.entity_description.key == "omer_count":
-            return after_shkia_date.omer_day
+            return after_shkia_date.omer
         if self.entity_description.key == "daf_yomi":
             return daytime_date.daf_yomi
 
@@ -325,5 +323,5 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
             )
             return times.havdalah
 
-        times = self.make_zmanim(dt_util.now()).zmanim
-        return times[self.entity_description.key]
+        times = self.make_zmanim(dt.date.today())
+        return times.zmanim[self.entity_description.key]

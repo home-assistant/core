@@ -2,7 +2,8 @@
 
 from datetime import datetime as dt, timedelta
 
-from hdate import htables
+from hdate.holidays import HolidayDatabase
+from hdate.parasha import Parasha
 import pytest
 
 from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
@@ -93,7 +94,7 @@ TEST_PARAMS = [
             "id": "rosh_hashana_i",
             "type": "YOM_TOV",
             "type_id": 1,
-            "options": htables.get_all_holidays("english"),
+            "options": HolidayDatabase.get_all_holiday_names("english"),
         },
     ),
     (
@@ -112,7 +113,7 @@ TEST_PARAMS = [
             "id": "chanukah, rosh_chodesh",
             "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
             "type_id": "4, 10",
-            "options": htables.get_all_holidays("english"),
+            "options": HolidayDatabase.get_all_holiday_names("english"),
         },
     ),
     (
@@ -128,7 +129,7 @@ TEST_PARAMS = [
             "device_class": "enum",
             "friendly_name": "Jewish Calendar Parshat Hashavua",
             "icon": "mdi:book-open-variant",
-            "options": [p.hebrew for p in htables.PARASHAOT],
+            "options": list(Parasha),
         },
     ),
     (

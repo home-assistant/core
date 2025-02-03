@@ -42,18 +42,18 @@ BINARY_SENSORS: tuple[JewishCalendarBinarySensorEntityDescription, ...] = (
         key="issur_melacha_in_effect",
         name="Issur Melacha in Effect",
         icon="mdi:power-plug-off",
-        is_on=lambda state: bool(state.issur_melacha_in_effect),
+        is_on=lambda state: bool(state.issur_melacha_in_effect()),
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="erev_shabbat_hag",
         name="Erev Shabbat/Hag",
-        is_on=lambda state: bool(state.erev_shabbat_chag),
+        is_on=lambda state: bool(state.erev_shabbat_chag()),
         entity_registry_enabled_default=False,
     ),
     JewishCalendarBinarySensorEntityDescription(
         key="motzei_shabbat_hag",
         name="Motzei Shabbat/Hag",
-        is_on=lambda state: bool(state.motzei_shabbat_chag),
+        is_on=lambda state: bool(state.motzei_shabbat_chag()),
         entity_registry_enabled_default=False,
     ),
 )
@@ -93,7 +93,7 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
             location=self._location,
             candle_lighting_offset=self._candle_lighting_offset,
             havdalah_offset=self._havdalah_offset,
-            hebrew=self._hebrew,
+            language=self._language,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -119,7 +119,7 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
         """Schedule the next update of the sensor."""
         now = dt_util.now()
         zmanim = self._get_zmanim()
-        update = zmanim.zmanim["sunrise"] + dt.timedelta(days=1)
+        update = zmanim.zmanim["sunrise"].local + dt.timedelta(days=1)
         candle_lighting = zmanim.candle_lighting
         if candle_lighting is not None and now < candle_lighting < update:
             update = candle_lighting
