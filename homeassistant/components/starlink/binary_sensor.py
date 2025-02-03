@@ -65,6 +65,7 @@ BINARY_SENSORS = [
         key="currently_obstructed",
         translation_key="currently_obstructed",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status["currently_obstructed"],
     ),
     StarlinkBinarySensorEntityDescription(
