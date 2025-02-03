@@ -1602,6 +1602,9 @@ pyfritzhome==0.6.12
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.gryfsmart
+pygryfsmart==0.1.6
+
 # homeassistant.components.hvv_departures
 pygti==0.9.4
 

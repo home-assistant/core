@@ -1,0 +1,13 @@
+{
+  "domain": "gryfsmart",
+  "name": "Gryf Smart",
+  "codeowners": ["@karlowiczpl"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/gryfsmart",
+  "homekit": {},
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["pygryfsmart==0.1.6"],
+  "ssdp": [],
+  "zeroconf": []
+}

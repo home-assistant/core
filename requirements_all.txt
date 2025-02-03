@@ -1970,6 +1970,9 @@ pyfttt==0.3
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
+# homeassistant.components.gryfsmart
+pygryfsmart==0.1.6
+
 # homeassistant.components.gtfs
 pygtfs==0.1.9
 

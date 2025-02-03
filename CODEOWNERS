@@ -590,6 +590,8 @@ build.json @home-assistant/supervisor
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
 /tests/components/group/ @home-assistant/core
+/homeassistant/components/gryfsmart/ @karlowiczpl
+/tests/components/gryfsmart/ @karlowiczpl
 /homeassistant/components/guardian/ @bachya
 /tests/components/guardian/ @bachya
 /homeassistant/components/habitica/ @tr4nt0r
