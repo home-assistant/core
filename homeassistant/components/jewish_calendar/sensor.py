@@ -319,4 +319,4 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
             return times.havdalah
 
         times = self.make_zmanim(dt.date.today())
-        return times.zmanim[self.entity_description.key]
+        return times.zmanim[self.entity_description.key].local
