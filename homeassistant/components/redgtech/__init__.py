@@ -32,15 +32,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data = await response.json()
             _LOGGER.debug("Received data from API: %s", data)
 
-            entities = [
-                {
-                    "id": item.get('endpointId', ''),
-                    "name": item.get("name", f"Entity {item.get('endpointId', '')}"),
-                    "state": "on" if item.get("value", False) else "off",
+            entities = []
+            for item in data.get("boards", []):
+                entity_id = item.get('endpointId', '')
+                entity_name = item.get("name", f"Entity {entity_id}")
+                entity_value = item.get("value", False)
+                entity_state = "on" if entity_value else "off"
+                _LOGGER.debug("Processing entity: id=%s, name=%s, value=%s, state=%s", entity_id, entity_name, entity_value, entity_state)
+
+                entities.append({
+                    "id": entity_id,
+                    "name": entity_name,
+                    "state": entity_state,
                     "type": 'switch'
-                }
-                for item in data.get("boards", [])
-            ]
+                })
+
             hass.data[DOMAIN][entry.entry_id]["entities"] = entities
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
