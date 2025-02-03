@@ -283,13 +283,6 @@ RPC_SENSORS: Final = {
         sub_key="mute",
         name="Mute",
     ),
-    "error": RpcBinarySensorDescription(
-        key="flood",
-        sub_key="errors",
-        name="Error",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
 }
 
 
