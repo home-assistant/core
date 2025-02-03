@@ -23,6 +23,7 @@ async def test_get_no_holdings(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     mock_config_api: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test holding services."""
     await setup_integration(hass, mock_config_entry)
@@ -35,7 +36,7 @@ async def test_get_no_holdings(
         return_response=True,
     )
 
-    assert response == {"sensor.rando_employer_investments_401_k_data_age": "{}"}
+    assert response == snapshot
 
 
 async def test_get_holdings(
