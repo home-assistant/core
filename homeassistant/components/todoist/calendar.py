@@ -541,9 +541,8 @@ class TodoistProjectData:
             return None
 
         # All task Labels (optional parameter).
-        task[LABELS] = [
-            label.name for label in self._labels if label.name in data.labels
-        ]
+        labels = data.labels or []
+        task[LABELS] = [label.name for label in self._labels if label.name in labels]
         if self._label_whitelist and (
             not any(label in task[LABELS] for label in self._label_whitelist)
         ):
