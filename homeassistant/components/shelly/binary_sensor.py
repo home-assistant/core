@@ -282,6 +282,7 @@ RPC_SENSORS: Final = {
         key="flood",
         sub_key="mute",
         name="Mute",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
 
