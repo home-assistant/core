@@ -485,7 +485,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             errors,
         ):
             if is_reconfigure:
-                update_password_from_user_input(
+                validated_user_input = update_password_from_user_input(
                     reconfigure_entry.data.get(CONF_PASSWORD), validated_user_input
                 )
 

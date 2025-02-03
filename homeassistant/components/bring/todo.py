@@ -12,6 +12,7 @@ from bring_api import (
     BringNotificationType,
     BringRequestException,
 )
+from bring_api.types import BringList
 import voluptuous as vol
 
 from homeassistant.components.todo import (
@@ -20,7 +21,7 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -45,14 +46,23 @@ async def async_setup_entry(
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data
+    lists_added: set[str] = set()
 
-    async_add_entities(
-        BringTodoListEntity(
-            coordinator,
-            bring_list=bring_list,
-        )
-        for bring_list in coordinator.data.values()
-    )
+    @callback
+    def add_entities() -> None:
+        """Add or remove todo list entities."""
+        nonlocal lists_added
+
+        if new_lists := {lst.listUuid for lst in coordinator.lists} - lists_added:
+            async_add_entities(
+                BringTodoListEntity(coordinator, bring_list)
+                for bring_list in coordinator.lists
+                if bring_list.listUuid in new_lists
+            )
+            lists_added |= new_lists
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
     platform = entity_platform.async_get_current_platform()
 
@@ -81,7 +91,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     )
 
     def __init__(
-        self, coordinator: BringDataUpdateCoordinator, bring_list: BringData
+        self, coordinator: BringDataUpdateCoordinator, bring_list: BringList
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, bring_list)
