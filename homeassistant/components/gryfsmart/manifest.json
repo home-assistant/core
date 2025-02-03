@@ -7,7 +7,7 @@
   "homekit": {},
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["pygryfsmart==0.1.6"],
+  "requirements": ["pygryfsmart==0.1.7"],
   "ssdp": [],
   "zeroconf": []
 }
