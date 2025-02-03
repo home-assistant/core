@@ -63,7 +63,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
-        """Return entity specific state attributes."""
+        """Return the evohome-specific state attributes."""
         return {"status": self._device_state_attrs}
 
     async def async_added_to_hass(self) -> None:
