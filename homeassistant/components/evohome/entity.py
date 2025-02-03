@@ -16,7 +16,7 @@ from .coordinator import EvoDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-class EvoEntity(CoordinatorEntity):
+class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     """Base for any evohome-compatible entity (controller, DHW, zone).
 
     This includes the controller, (1 to 12) heating zones and (optionally) a
