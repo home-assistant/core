@@ -30,7 +30,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
@@ -58,6 +58,8 @@ from .models import (
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
+
+PARALLEL_UPDATES = 0
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"

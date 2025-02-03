@@ -23,7 +23,7 @@ class NYTGamesData:
 
     wordle: Wordle
     spelling_bee: SpellingBee | None
-    connections: Connections
+    connections: Connections | None
 
 
 class NYTGamesCoordinator(DataUpdateCoordinator[NYTGamesData]):

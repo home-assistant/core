@@ -44,7 +44,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
     FritzDeviceClimateMock,
@@ -273,20 +273,20 @@ async def test_update_error(hass: HomeAssistant, fritz: Mock) -> None:
 @pytest.mark.parametrize(
     ("service_data", "expected_call_args"),
     [
-        ({ATTR_TEMPERATURE: 23}, [call(23)]),
+        ({ATTR_TEMPERATURE: 23}, [call(23, True)]),
         (
             {
                 ATTR_HVAC_MODE: HVACMode.OFF,
                 ATTR_TEMPERATURE: 23,
             },
-            [call(0)],
+            [call(0, True)],
         ),
         (
             {
                 ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 23,
             },
-            [call(23)],
+            [call(23, True)],
         ),
     ],
 )
@@ -313,12 +313,24 @@ async def test_set_temperature(
 
 
 @pytest.mark.parametrize(
-    ("service_data", "target_temperature", "expected_call_args"),
+    ("service_data", "target_temperature", "current_preset", "expected_call_args"),
     [
-        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, [call(0)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, [call(22)]),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 18, []),
-        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, []),
+        # mode off always sets target temperature to 0
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 22, PRESET_COMFORT, [call(0, True)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, PRESET_ECO, [call(0, True)]),
+        ({ATTR_HVAC_MODE: HVACMode.OFF}, 16, None, [call(0, True)]),
+        # mode heat sets target temperature based on current scheduled preset,
+        # when not already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_COMFORT, [call(22, True)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, PRESET_ECO, [call(16, True)]),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 0.0, None, [call(22, True)]),
+        # mode heat does not set target temperature, when already in mode heat
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 16, None, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_COMFORT, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, PRESET_ECO, []),
+        ({ATTR_HVAC_MODE: HVACMode.HEAT}, 22, None, []),
     ],
 )
 async def test_set_hvac_mode(
@@ -326,11 +338,20 @@ async def test_set_hvac_mode(
     fritz: Mock,
     service_data: dict,
     target_temperature: float,
+    current_preset: str,
     expected_call_args: list[_Call],
 ) -> None:
     """Test setting hvac mode."""
     device = FritzDeviceClimateMock()
     device.target_temperature = target_temperature
+
+    if current_preset is PRESET_COMFORT:
+        device.nextchange_temperature = device.eco_temperature
+    elif current_preset is PRESET_ECO:
+        device.nextchange_temperature = device.comfort_temperature
+    else:
+        device.nextchange_endperiod = 0
+
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
@@ -359,7 +380,7 @@ async def test_set_preset_mode_comfort(hass: HomeAssistant, fritz: Mock) -> None
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_COMFORT},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(22)]
+    assert device.set_target_temperature.call_args_list == [call(22, True)]
 
 
 async def test_set_preset_mode_eco(hass: HomeAssistant, fritz: Mock) -> None:
@@ -375,7 +396,7 @@ async def test_set_preset_mode_eco(hass: HomeAssistant, fritz: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
         True,
     )
-    assert device.set_target_temperature.call_args_list == [call(16)]
+    assert device.set_target_temperature.call_args_list == [call(16, True)]
 
 
 async def test_preset_mode_update(hass: HomeAssistant, fritz: Mock) -> None:

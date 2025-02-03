@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections import defaultdict
 from dataclasses import dataclass
-from functools import cached_property
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -16,6 +15,7 @@ from doorbirdpy import (
     DoorBirdScheduleEntryOutput,
     DoorBirdScheduleEntrySchedule,
 )
+from propcache.api import cached_property
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant

@@ -6,7 +6,6 @@ from typing import Any
 
 from eufylife_ble_client import MODEL_TO_NAME
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth import async_address_present
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -20,19 +19,18 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
-from .const import DOMAIN
-from .models import EufyLifeData
+from .models import EufyLifeConfigEntry, EufyLifeData
 
 IGNORED_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: EufyLifeConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the EufyLife sensors."""
-    data: EufyLifeData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entities = [
         EufyLifeWeightSensorEntity(data),

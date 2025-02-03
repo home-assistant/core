@@ -24,6 +24,7 @@ from tests.typing import ClientSessionGenerator
 GUEST_WIFI_ENABLED: dict[str, dict] = {
     "WLANConfiguration0": {},
     "WLANConfiguration1": {
+        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": True,
             "NewStatus": "Up",
@@ -43,6 +44,7 @@ GUEST_WIFI_ENABLED: dict[str, dict] = {
 GUEST_WIFI_CHANGED: dict[str, dict] = {
     "WLANConfiguration0": {},
     "WLANConfiguration1": {
+        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": True,
             "NewStatus": "Up",
@@ -62,6 +64,7 @@ GUEST_WIFI_CHANGED: dict[str, dict] = {
 GUEST_WIFI_DISABLED: dict[str, dict] = {
     "WLANConfiguration0": {},
     "WLANConfiguration1": {
+        "GetBeaconAdvertisement": {"NewBeaconAdvertisementEnabled": 1},
         "GetInfo": {
             "NewEnable": False,
             "NewStatus": "Up",

@@ -10,7 +10,6 @@ from aioswitcher.api import (
     DeviceState,
     SwitcherApi,
     SwitcherBaseResponse,
-    SwitcherType2Api,
     ThermostatSwing,
 )
 from aioswitcher.api.remotes import SwitcherBreezeRemote
@@ -128,7 +127,7 @@ class SwitcherThermostatButtonEntity(SwitcherEntity, ButtonEntity):
         error = None
 
         try:
-            async with SwitcherType2Api(
+            async with SwitcherApi(
                 self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,

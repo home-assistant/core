@@ -17,8 +17,6 @@ from .common import (
 )
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.usefixtures("matter_devices")
 async def test_sensors(
     hass: HomeAssistant,
@@ -29,8 +27,6 @@ async def test_sensors(
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["flow_sensor"])
 async def test_sensor_null_value(
     hass: HomeAssistant,
@@ -50,8 +46,6 @@ async def test_sensor_null_value(
     assert state.state == "unknown"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["flow_sensor"])
 async def test_flow_sensor(
     hass: HomeAssistant,
@@ -71,8 +65,6 @@ async def test_flow_sensor(
     assert state.state == "2.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["humidity_sensor"])
 async def test_humidity_sensor(
     hass: HomeAssistant,
@@ -92,8 +84,6 @@ async def test_humidity_sensor(
     assert state.state == "40.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["light_sensor"])
 async def test_light_sensor(
     hass: HomeAssistant,
@@ -113,8 +103,6 @@ async def test_light_sensor(
     assert state.state == "2.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["temperature_sensor"])
 async def test_temperature_sensor(
     hass: HomeAssistant,
@@ -134,8 +122,6 @@ async def test_temperature_sensor(
     assert state.state == "25.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["eve_contact_sensor"])
 async def test_battery_sensor(
     hass: HomeAssistant,
@@ -162,8 +148,6 @@ async def test_battery_sensor(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["eve_contact_sensor"])
 async def test_battery_sensor_voltage(
     hass: HomeAssistant,
@@ -190,8 +174,32 @@ async def test_battery_sensor_voltage(
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.parametrize("node_fixture", ["smoke_detector"])
+async def test_battery_sensor_description(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test battery replacement description sensor."""
+    state = hass.states.get("sensor.smoke_sensor_battery_type")
+    assert state
+    assert state.state == "CR123A"
+
+    set_node_attribute(matter_node, 1, 47, 19, "CR2032")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.smoke_sensor_battery_type")
+    assert state
+    assert state.state == "CR2032"
+
+    # case with a empty string to check if the attribute is indeed ignored
+    set_node_attribute(matter_node, 1, 47, 19, "")
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.smoke_sensor_battery_type") is None
+
+
 @pytest.mark.parametrize("node_fixture", ["eve_thermo"])
 async def test_eve_thermo_sensor(
     hass: HomeAssistant,
@@ -211,9 +219,19 @@ async def test_eve_thermo_sensor(
     assert state
     assert state.state == "0"
 
+    # LocalTemperature
+    state = hass.states.get("sensor.eve_thermo_temperature")
+    assert state
+    assert state.state == "21.0"
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+    set_node_attribute(matter_node, 1, 513, 0, 1800)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.eve_thermo_temperature")
+    assert state
+    assert state.state == "18.0"
+
+
 @pytest.mark.parametrize("node_fixture", ["pressure_sensor"])
 async def test_pressure_sensor(
     hass: HomeAssistant,
@@ -252,8 +270,6 @@ async def test_eve_weather_sensor_custom_cluster(
     assert state.state == "800.0"
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 @pytest.mark.parametrize("node_fixture", ["air_quality_sensor"])
 async def test_air_quality_sensor(
     hass: HomeAssistant,
@@ -316,7 +332,7 @@ async def test_operational_state_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test dishwasher sensor."""
+    """Test Operational State sensor, using a dishwasher fixture."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
@@ -335,3 +351,51 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
+
+
+@pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
+async def test_draft_electrical_measurement_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Draft Electrical Measurement cluster sensors, using Yandex Smart Socket fixture."""
+    state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "70.0"
+
+    # AcPowerDivisor
+    set_node_attribute(matter_node, 1, 2820, 1541, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "unknown"
+
+    # ActivePower
+    set_node_attribute(matter_node, 1, 2820, 1291, None)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_list_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Matter List sensor."""
+    # OperationalState Cluster / CurrentPhase attribute (1/96/1)
+    state = hass.states.get("sensor.laundrywasher_current_phase")
+    assert state
+    assert state.state == "pre-soak"
+
+    set_node_attribute(matter_node, 1, 96, 1, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.laundrywasher_current_phase")
+    assert state
+    assert state.state == "rinse"

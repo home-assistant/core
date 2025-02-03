@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock
 
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
     EventData,
@@ -18,9 +19,9 @@ from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt as dt_util
+from homeassistant.util.json import json_loads
 
 
 def test_from_event_to_db_event() -> None:
@@ -39,6 +40,18 @@ def test_from_event_to_db_event() -> None:
     db_event.event_data = EventData.shared_data_bytes_from_event(event, dialect)
     db_event.event_type = event.event_type
     assert event.as_dict() == db_event.to_native().as_dict()
+
+
+def test_from_event_to_db_event_with_null() -> None:
+    """Test converting event to EventData with a null with PostgreSQL."""
+    event = ha.Event(
+        "test_event",
+        {"some_data": "withnull\0terminator"},
+    )
+    dialect = SupportedDialect.POSTGRESQL
+    event_data = EventData.shared_data_bytes_from_event(event, dialect)
+    decoded = json_loads(event_data)
+    assert decoded["some_data"] == "withnull"
 
 
 def test_from_event_to_db_state() -> None:
@@ -76,6 +89,21 @@ def test_from_event_to_db_state_attributes() -> None:
         event, dialect
     )
     assert db_attrs.to_native() == attrs
+
+
+def test_from_event_to_db_state_attributes_with_null() -> None:
+    """Test converting a state to StateAttributes with a null with PostgreSQL."""
+    attrs = {"this_attr": "withnull\0terminator"}
+    state = ha.State("sensor.temperature", "18", attrs)
+    event = ha.Event(
+        EVENT_STATE_CHANGED,
+        {"entity_id": "sensor.temperature", "old_state": None, "new_state": state},
+        context=state.context,
+    )
+    dialect = SupportedDialect.POSTGRESQL
+    shared_attrs = StateAttributes.shared_attrs_bytes_from_event(event, dialect)
+    decoded = json_loads(shared_attrs)
+    assert decoded["this_attr"] == "withnull"
 
 
 def test_repr() -> None:
@@ -297,6 +325,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         state="off",
         attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
+        last_reported_ts=now.timestamp(),
         last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
     )
     lstate = LazyState(
@@ -311,6 +340,7 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
     }
     assert lstate.last_updated.timestamp() == row.last_updated_ts
     assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_updated_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -318,6 +348,9 @@ async def test_lazy_state_handles_different_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_updated_ts
 
 
 async def test_lazy_state_handles_same_last_updated_and_last_changed(
@@ -331,6 +364,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         attributes='{"shared":true}',
         last_updated_ts=now.timestamp(),
         last_changed_ts=now.timestamp(),
+        last_reported_ts=None,
     )
     lstate = LazyState(
         row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
@@ -344,6 +378,7 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
     }
     assert lstate.last_updated.timestamp() == row.last_updated_ts
     assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_updated_ts
     assert lstate.as_dict() == {
         "attributes": {"shared": True},
         "entity_id": "sensor.valid",
@@ -351,3 +386,37 @@ async def test_lazy_state_handles_same_last_updated_and_last_changed(
         "last_updated": "2021-06-12T03:04:01.000323+00:00",
         "state": "off",
     }
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_updated_ts
+
+
+async def test_lazy_state_handles_different_last_reported(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that the LazyState handles last_reported different from last_updated."""
+    now = datetime(2021, 6, 12, 3, 4, 1, 323, tzinfo=dt_util.UTC)
+    row = PropertyMock(
+        entity_id="sensor.valid",
+        state="off",
+        attributes='{"shared":true}',
+        last_updated_ts=(now - timedelta(seconds=60)).timestamp(),
+        last_reported_ts=now.timestamp(),
+        last_changed_ts=(now - timedelta(seconds=60)).timestamp(),
+    )
+    lstate = LazyState(
+        row, {}, None, row.entity_id, row.state, row.last_updated_ts, False
+    )
+    assert lstate.as_dict() == {
+        "attributes": {"shared": True},
+        "entity_id": "sensor.valid",
+        "last_changed": "2021-06-12T03:03:01.000323+00:00",
+        "last_updated": "2021-06-12T03:03:01.000323+00:00",
+        "state": "off",
+    }
+    assert lstate.last_updated.timestamp() == row.last_updated_ts
+    assert lstate.last_changed.timestamp() == row.last_changed_ts
+    assert lstate.last_reported.timestamp() == row.last_reported_ts
+    assert lstate.last_changed_timestamp == row.last_changed_ts
+    assert lstate.last_updated_timestamp == row.last_updated_ts
+    assert lstate.last_reported_timestamp == row.last_reported_ts

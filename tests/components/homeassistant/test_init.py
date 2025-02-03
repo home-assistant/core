@@ -6,7 +6,7 @@ import pytest
 import voluptuous as vol
 import yaml
 
-from homeassistant import config
+from homeassistant import config, core as ha
 from homeassistant.components.homeassistant import (
     ATTR_ENTRY_ID,
     ATTR_SAFE_MODE,
@@ -30,7 +30,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers import entity, entity_registry as er
@@ -38,6 +37,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
+    MockEntityPlatform,
     MockUser,
     async_capture_events,
     async_mock_service,
@@ -90,6 +90,8 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.entity_id = "test.entity"
     ent.hass = hass
+    platform = MockEntityPlatform(hass, domain="test", platform_name="test")
+    await platform.async_add_entities([ent])
     ent.async_write_ha_state()
 
     state = hass.states.get("test.entity")
@@ -127,7 +129,7 @@ async def test_reload_core_conf(hass: HomeAssistant) -> None:
 
 @patch("homeassistant.config.os.path.isfile", Mock(return_value=True))
 @patch("homeassistant.components.homeassistant._LOGGER.error")
-@patch("homeassistant.config.async_process_ha_core_config")
+@patch("homeassistant.core_config.async_process_ha_core_config")
 async def test_reload_core_with_wrong_conf(
     mock_process, mock_error, hass: HomeAssistant
 ) -> None:
@@ -184,6 +186,7 @@ async def test_turn_on_skips_domains_without_service(
     # because by mocking out the call service method, we mock out all
     # So we mimic how the service registry calls services
     service_call = ha.ServiceCall(
+        hass,
         "homeassistant",
         "turn_on",
         {"entity_id": ["light.test", "sensor.bla", "binary_sensor.blub", "light.bla"]},
@@ -242,7 +245,7 @@ async def test_setting_location(hass: HomeAssistant) -> None:
     assert elevation != 50
     await hass.services.async_call(
         "homeassistant",
-        "set_location",
+        SERVICE_SET_LOCATION,
         {"latitude": 30, "longitude": 40},
         blocking=True,
     )
@@ -253,11 +256,23 @@ async def test_setting_location(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         "homeassistant",
-        "set_location",
+        SERVICE_SET_LOCATION,
         {"latitude": 30, "longitude": 40, "elevation": 50},
         blocking=True,
     )
+    assert hass.config.latitude == 30
+    assert hass.config.longitude == 40
     assert hass.config.elevation == 50
+
+    await hass.services.async_call(
+        "homeassistant",
+        SERVICE_SET_LOCATION,
+        {"latitude": 30, "longitude": 40, "elevation": 0},
+        blocking=True,
+    )
+    assert hass.config.latitude == 30
+    assert hass.config.longitude == 40
+    assert hass.config.elevation == 0
 
 
 async def test_require_admin(

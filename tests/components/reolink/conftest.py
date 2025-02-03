@@ -1,13 +1,19 @@
 """Setup the Reolink tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 import pytest
 from reolink_aio.api import Chime
+from reolink_aio.baichuan import Baichuan
+from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
+from homeassistant.components.reolink.const import (
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -41,6 +47,7 @@ TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
 TEST_CAM_MODEL = "RLC-123"
 TEST_DUO_MODEL = "Reolink Duo PoE"
+TEST_PRIVACY = True
 
 
 @pytest.fixture
@@ -63,6 +70,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock = host_mock_class.return_value
         host_mock.get_host_data.return_value = None
         host_mock.get_states.return_value = None
+        host_mock.supported.return_value = True
         host_mock.check_new_firmware.return_value = False
         host_mock.unsubscribe.return_value = True
         host_mock.logout.return_value = True
@@ -80,9 +88,11 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.protocol = "rtsp"
         host_mock.channels = [0]
         host_mock.stream_channels = [0]
+        host_mock.new_devices = False
         host_mock.sw_version_update_required = False
         host_mock.hardware_version = "IPC_00000"
         host_mock.sw_version = "v1.0.0.0.0.0000"
+        host_mock.sw_upload_progress.return_value = 100
         host_mock.manufacturer = "Reolink"
         host_mock.model = TEST_HOST_MODEL
         host_mock.item_number = TEST_ITEM_NUMBER
@@ -92,6 +102,7 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
         host_mock.camera_sw_version_update_required.return_value = False
         host_mock.camera_uid.return_value = TEST_UID_CAM
+        host_mock.camera_online.return_value = True
         host_mock.channel_for_uid.return_value = 0
         host_mock.get_encoding.return_value = "h264"
         host_mock.firmware_update_available.return_value = False
@@ -108,6 +119,9 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.capabilities = {"Host": ["RTSP"], "0": ["motion_detection"]}
         host_mock.checked_api_versions = {"GetEvents": 1}
         host_mock.abilities = {"abilityChn": [{"aiTrack": {"permit": 0, "ver": 0}}]}
+        host_mock.get_raw_host_data.return_value = (
+            "{'host':'TEST_RESPONSE','channel':'TEST_RESPONSE'}"
+        )
 
         # enums
         host_mock.whiteled_mode.return_value = 1
@@ -116,6 +130,14 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.doorbell_led_list.return_value = ["stayoff", "auto"]
         host_mock.auto_track_method.return_value = 3
         host_mock.daynight_state.return_value = "Black&White"
+
+        # Baichuan
+        host_mock.baichuan = create_autospec(Baichuan)
+        # Disable tcp push by default for tests
+        host_mock.baichuan.events_active = False
+        host_mock.baichuan.privacy_mode.return_value = False
+        host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
+
         yield host_mock_class
 
 
@@ -146,6 +168,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_PORT: TEST_PORT,
             CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,

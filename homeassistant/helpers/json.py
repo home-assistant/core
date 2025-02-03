@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (  # noqa: F401
+from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS as _JSON_DECODE_EXCEPTIONS,
     JSON_ENCODE_EXCEPTIONS as _JSON_ENCODE_EXCEPTIONS,
     SerializationError,
@@ -162,13 +162,17 @@ def json_dumps(data: Any) -> str:
     return json_bytes(data).decode("utf-8")
 
 
+json_bytes_sorted = partial(
+    orjson.dumps,
+    option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
+    default=json_encoder_default,
+)
+"""Dump json bytes with keys sorted."""
+
+
 def json_dumps_sorted(data: Any) -> str:
     """Dump json string with keys sorted."""
-    return orjson.dumps(
-        data,
-        option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
-        default=json_encoder_default,
-    ).decode("utf-8")
+    return json_bytes_sorted(data).decode("utf-8")
 
 
 JSON_DUMP: Final = json_dumps

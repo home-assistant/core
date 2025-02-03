@@ -1,6 +1,11 @@
 {
   "config": {
     "step": {
+      "reconfigure": {
+        "data": {
+          "filename": "[%key:component::bryant_evolution::config::step::user::data::filename%]"
+        }
+      },
       "user": {
         "data": {
           "filename": "Serial port filename"
@@ -13,7 +18,8 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "exceptions": {

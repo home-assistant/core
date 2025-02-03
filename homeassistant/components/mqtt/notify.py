@@ -9,7 +9,7 @@ from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
@@ -19,6 +19,8 @@ from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT notify"
 

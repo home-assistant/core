@@ -7,7 +7,6 @@ from typing import Any
 
 from homeassistant.components.network import async_get_source_ip
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -18,7 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import (
-    DATA_FRITZ,
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
@@ -28,7 +26,9 @@ from .const import (
     MeshRoles,
 )
 from .coordinator import (
+    FRITZ_DATA_KEY,
     AvmWrapper,
+    FritzConfigEntry,
     FritzData,
     FritzDevice,
     SwitchInfo,
@@ -46,9 +46,7 @@ async def _async_deflection_entities_list(
 
     _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_DEFLECTION)
 
-    if (
-        call_deflections := avm_wrapper.data.get("call_deflections")
-    ) is None or not isinstance(call_deflections, dict):
+    if not (call_deflections := avm_wrapper.data["call_deflections"]):
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
@@ -72,7 +70,7 @@ async def _async_port_entities_list(
     # Query port forwardings and setup a switch for each forward for the current device
     resp = await avm_wrapper.async_get_num_port_mapping(avm_wrapper.device_conn_type)
     if not resp:
-        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
+        _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_PORTFORWARD)
         return []
 
     port_forwards_count: int = resp["NewPortMappingNumberOfEntries"]
@@ -222,12 +220,14 @@ async def async_all_entities_list(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FritzConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
     _LOGGER.debug("Setting up switches")
-    avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
-    data_fritz: FritzData = hass.data[DATA_FRITZ]
+    avm_wrapper = entry.runtime_data
+    data_fritz = hass.data[FRITZ_DATA_KEY]
 
     _LOGGER.debug("Fritzbox services: %s", avm_wrapper.connection.services)
 

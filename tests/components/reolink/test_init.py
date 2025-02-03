@@ -1,13 +1,18 @@
 """Test the Reolink init."""
 
 import asyncio
+from collections.abc import Callable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from reolink_aio.api import Chime
-from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
+from reolink_aio.exceptions import (
+    CredentialsInvalidError,
+    LoginPrivacyModeError,
+    ReolinkError,
+)
 
 from homeassistant.components.reolink import (
     DEVICE_UPDATE_INTERVAL,
@@ -15,10 +20,16 @@ from homeassistant.components.reolink import (
     NUM_CRED_ERRORS,
 )
 from homeassistant.components.reolink.const import DOMAIN
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
+from homeassistant.const import (
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
@@ -31,6 +42,7 @@ from .conftest import (
     TEST_HOST_MODEL,
     TEST_MAC,
     TEST_NVR_NAME,
+    TEST_PORT,
     TEST_UID,
     TEST_UID_CAM,
 )
@@ -468,6 +480,116 @@ async def test_migrate_entity_ids(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+async def test_migrate_with_already_existing_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device ids that need to be migrated while the new ids already exist."""
+    original_dev_id = f"{TEST_MAC}_ch0"
+    new_dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return True
+        if capability == "UID":
+            return True
+        return True
+
+    reolink_connect.channels = [0]
+    reolink_connect.supported = mock_supported
+
+    device_registry.async_get_or_create(
+        identifiers={(DOMAIN, new_dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    device_registry.async_get_or_create(
+        identifiers={(DOMAIN, original_dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, original_dev_id)})
+        is None
+    )
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
+
+
+async def test_migrate_with_already_existing_entity(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test entity ids that need to be migrated while the new ids already exist."""
+    original_id = f"{TEST_UID}_0_record_audio"
+    new_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
+    dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
+    domain = Platform.SWITCH
+
+    def mock_supported(ch, capability):
+        if capability == "UID" and ch is None:
+            return True
+        if capability == "UID":
+            return True
+        return True
+
+    reolink_connect.channels = [0]
+    reolink_connect.supported = mock_supported
+
+    dev_entry = device_registry.async_get_or_create(
+        identifiers={(DOMAIN, dev_id)},
+        config_entry_id=config_entry.entry_id,
+        disabled_by=None,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=new_id,
+        config_entry=config_entry,
+        suggested_object_id=new_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    entity_registry.async_get_or_create(
+        domain=domain,
+        platform=DOMAIN,
+        unique_id=original_id,
+        config_entry=config_entry,
+        suggested_object_id=original_id,
+        disabled_by=None,
+        device_id=dev_entry.id,
+    )
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id)
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+
+    # setup CH 0 and host entities/device
+    with patch("homeassistant.components.reolink.PLATFORMS", [domain]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, original_id) is None
+    assert entity_registry.async_get_entity_id(domain, DOMAIN, new_id)
+
+
 async def test_no_repair_issue(
     hass: HomeAssistant, config_entry: MockConfigEntry, issue_registry: ir.IssueRegistry
 ) -> None:
@@ -600,3 +722,167 @@ async def test_firmware_repair_issue(
     await hass.async_block_till_done()
 
     assert (DOMAIN, "firmware_update_host") in issue_registry.issues
+
+
+async def test_new_device_discovered(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the entry is reloaded when a new camera or chime is detected."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_connect.logout.reset_mock()
+
+    assert reolink_connect.logout.call_count == 0
+    reolink_connect.new_devices = True
+
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_connect.logout.call_count == 1
+
+
+async def test_port_changed(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test config_entry port update when it has changed during initial login."""
+    assert config_entry.data[CONF_PORT] == TEST_PORT
+    reolink_connect.port = 4567
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_PORT] == 4567
+
+
+async def test_privacy_mode_on(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test successful setup even when privacy mode is turned on."""
+    reolink_connect.baichuan.privacy_mode.return_value = True
+    reolink_connect.get_states = AsyncMock(
+        side_effect=LoginPrivacyModeError("Test error")
+    )
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    reolink_connect.baichuan.privacy_mode.return_value = False
+
+
+async def test_LoginPrivacyModeError(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test normal update when get_states returns a LoginPrivacyModeError."""
+    reolink_connect.baichuan.privacy_mode.return_value = False
+    reolink_connect.get_states = AsyncMock(
+        side_effect=LoginPrivacyModeError("Test error")
+    )
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    reolink_connect.baichuan.check_subscribe_events.reset_mock()
+    assert reolink_connect.baichuan.check_subscribe_events.call_count == 0
+
+    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_connect.baichuan.check_subscribe_events.call_count >= 1
+
+
+async def test_privacy_mode_change_callback(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    config_entry: MockConfigEntry,
+    reolink_connect: MagicMock,
+) -> None:
+    """Test privacy mode changed callback."""
+
+    class callback_mock_class:
+        callback_func = None
+
+        def register_callback(
+            self, callback_id: str, callback: Callable[[], None], *args, **key_args
+        ) -> None:
+            if callback_id == "privacy_mode_change":
+                self.callback_func = callback
+
+    callback_mock = callback_mock_class()
+
+    reolink_connect.model = TEST_HOST_MODEL
+    reolink_connect.baichuan.events_active = True
+    reolink_connect.baichuan.subscribe_events.reset_mock(side_effect=True)
+    reolink_connect.baichuan.register_callback = callback_mock.register_callback
+    reolink_connect.baichuan.privacy_mode.return_value = True
+    reolink_connect.audio_record.return_value = True
+    reolink_connect.get_states = AsyncMock()
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # simulate a TCP push callback signaling a privacy mode change
+    reolink_connect.baichuan.privacy_mode.return_value = False
+    assert callback_mock.callback_func is not None
+    callback_mock.callback_func()
+
+    # check that a coordinator update was scheduled.
+    reolink_connect.get_states.reset_mock()
+    assert reolink_connect.get_states.call_count == 0
+
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_connect.get_states.call_count >= 1
+    assert hass.states.get(entity_id).state == STATE_ON
+
+    # test cleanup during unloading, first reset to privacy mode ON
+    reolink_connect.baichuan.privacy_mode.return_value = True
+    callback_mock.callback_func()
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    # now fire the callback again, but unload before refresh took place
+    reolink_connect.baichuan.privacy_mode.return_value = False
+    callback_mock.callback_func()
+    await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_remove(
+    hass: HomeAssistant,
+    reolink_connect: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test removing of the reolink integration."""
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_remove(config_entry.entry_id)

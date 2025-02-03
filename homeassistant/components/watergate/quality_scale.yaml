@@ -1,0 +1,44 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: todo
+  entity-unavailable: done
+  action-exceptions: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: todo
+  docs-configuration-parameters: todo

@@ -25,7 +25,4 @@ async def test_async_setup_entry(
     with patch("homeassistant.components.nextcloud.PLATFORMS", [Platform.SENSOR]):
         entry = await init_integration(hass, VALID_CONFIG, NC_DATA)
 
-    states = hass.states.async_all()
-    assert len(states) == 80
-
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

@@ -3,8 +3,8 @@
 from dataclasses import dataclass
 from typing import Any
 
-from lmcloud.const import FirmwareType
-from lmcloud.exceptions import RequestNotSuccessful
+from pylamarzocco.const import FirmwareType
+from pylamarzocco.exceptions import RequestNotSuccessful
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -17,9 +17,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LaMarzoccoConfigEntry
 from .const import DOMAIN
+from .coordinator import LaMarzoccoConfigEntry
 from .entity import LaMarzoccoEntity, LaMarzoccoEntityDescription
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,7 +59,7 @@ async def async_setup_entry(
 ) -> None:
     """Create update entities."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.firmware_coordinator
     async_add_entities(
         LaMarzoccoUpdateEntity(coordinator, description)
         for description in ENTITIES

@@ -29,8 +29,11 @@ from zwave_js_server.util.node import (
 from homeassistant.const import ATTR_AREA_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.group import expand_entity_ids
 
@@ -488,10 +491,7 @@ class ZWaveServices:
             )
         if nodes_without_endpoints and _LOGGER.isEnabledFor(logging.WARNING):
             _LOGGER.warning(
-                (
-                    "The following nodes do not have endpoint %x and will be "
-                    "skipped: %s"
-                ),
+                "The following nodes do not have endpoint %x and will be skipped: %s",
                 endpoint,
                 nodes_without_endpoints,
             )
@@ -529,8 +529,15 @@ class ZWaveServices:
             for node_or_endpoint, result in get_valid_responses_from_results(
                 nodes_or_endpoints_list, _results
             ):
-                zwave_value = result[0]
-                cmd_status = result[1]
+                if value_size is None:
+                    # async_set_config_parameter still returns (Value, SetConfigParameterResult)
+                    zwave_value = result[0]
+                    cmd_status = result[1]
+                else:
+                    # async_set_raw_config_parameter_value now returns just SetConfigParameterResult
+                    cmd_status = result
+                    zwave_value = f"parameter {property_or_property_name}"
+
                 if cmd_status.status == CommandStatus.ACCEPTED:
                     msg = "Set configuration parameter %s on Node %s with value %s"
                 else:

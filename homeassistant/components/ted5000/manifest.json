@@ -4,5 +4,6 @@
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/ted5000",
   "iot_class": "local_polling",
+  "quality_scale": "legacy",
   "requirements": ["xmltodict==0.13.0"]
 }

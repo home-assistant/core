@@ -20,6 +20,7 @@ async def async_init_integration(
     mobile_devices_fixture = "tado/mobile_devices.json"
     me_fixture = "tado/me.json"
     weather_fixture = "tado/weather.json"
+    home_fixture = "tado/home.json"
     home_state_fixture = "tado/home_state.json"
     zones_fixture = "tado/zones.json"
     zone_states_fixture = "tado/zone_states.json"
@@ -64,6 +65,10 @@ async def async_init_integration(
         m.get(
             "https://my.tado.com/api/v2/me",
             text=load_fixture(me_fixture),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/",
+            text=load_fixture(home_fixture),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/weather",
@@ -183,3 +188,8 @@ async def async_init_integration(
         if not skip_setup:
             await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
+
+        # For a first refresh
+        await entry.runtime_data.coordinator.async_refresh()
+        await entry.runtime_data.mobile_coordinator.async_refresh()
+        await hass.async_block_till_done()

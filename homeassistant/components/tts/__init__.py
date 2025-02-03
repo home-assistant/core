@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime
-from functools import cached_property, partial
+from functools import partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -13,6 +13,7 @@ import logging
 import mimetypes
 import os
 import re
+import secrets
 import subprocess
 import tempfile
 from typing import Any, Final, TypedDict, final
@@ -20,6 +21,7 @@ from typing import Any, Final, TypedDict, final
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
@@ -41,7 +43,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -71,23 +73,23 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 from .models import Voice
 
 __all__ = [
+    "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_FORMAT",
+    "ATTR_PREFERRED_SAMPLE_BYTES",
+    "ATTR_PREFERRED_SAMPLE_CHANNELS",
+    "ATTR_PREFERRED_SAMPLE_RATE",
+    "CONF_LANG",
+    "DEFAULT_CACHE_DIR",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "Provider",
+    "SampleFormat",
+    "TtsAudioType",
+    "Voice",
     "async_default_engine",
     "async_get_media_source_audio",
     "async_support_options",
-    "ATTR_AUDIO_OUTPUT",
-    "ATTR_PREFERRED_FORMAT",
-    "ATTR_PREFERRED_SAMPLE_RATE",
-    "ATTR_PREFERRED_SAMPLE_CHANNELS",
-    "ATTR_PREFERRED_SAMPLE_BYTES",
-    "CONF_LANG",
-    "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
-    "PLATFORM_SCHEMA_BASE",
-    "PLATFORM_SCHEMA",
-    "SampleFormat",
-    "Provider",
-    "TtsAudioType",
-    "Voice",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -539,6 +541,10 @@ class SpeechManager:
         self.file_cache: dict[str, str] = {}
         self.mem_cache: dict[str, TTSCache] = {}
 
+        # filename <-> token
+        self.filename_to_token: dict[str, str] = {}
+        self.token_to_filename: dict[str, str] = {}
+
     def _init_cache(self) -> dict[str, str]:
         """Init cache folder and fetch files."""
         try:
@@ -655,7 +661,17 @@ class SpeechManager:
                 engine_instance, cache_key, message, use_cache, language, options
             )
 
-        return f"/api/tts_proxy/{filename}"
+        # Use a randomly generated token instead of exposing the filename
+        token = self.filename_to_token.get(filename)
+        if not token:
+            # Keep extension (.mp3, etc.)
+            token = secrets.token_urlsafe(16) + os.path.splitext(filename)[1]
+
+            # Map token <-> filename
+            self.filename_to_token[filename] = token
+            self.token_to_filename[token] = filename
+
+        return f"/api/tts_proxy/{token}"
 
     async def async_get_tts_audio(
         self,
@@ -909,11 +925,15 @@ class SpeechManager:
             ),
         )
 
-    async def async_read_tts(self, filename: str) -> tuple[str | None, bytes]:
+    async def async_read_tts(self, token: str) -> tuple[str | None, bytes]:
         """Read a voice file and return binary.
 
         This method is a coroutine.
         """
+        filename = self.token_to_filename.get(token)
+        if not filename:
+            raise HomeAssistantError(f"{token} was not recognized!")
+
         if not (record := _RE_VOICE_FILE.match(filename.lower())) and not (
             record := _RE_LEGACY_VOICE_FILE.match(filename.lower())
         ):
@@ -1032,10 +1052,8 @@ class TextToSpeechUrlView(HomeAssistantView):
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
-        if (
-            not data.get("engine_id")
-            and not data.get(ATTR_PLATFORM)
-            or not data.get(ATTR_MESSAGE)
+        if (not data.get("engine_id") and not data.get(ATTR_PLATFORM)) or not data.get(
+            ATTR_MESSAGE
         ):
             return self.json_message(
                 "Must specify platform and message", HTTPStatus.BAD_REQUEST
@@ -1075,6 +1093,7 @@ class TextToSpeechView(HomeAssistantView):
     async def get(self, request: web.Request, filename: str) -> web.Response:
         """Start a get request."""
         try:
+            # filename is actually token, but we keep its name for compatibility
             content, data = await self.tts.async_read_tts(filename)
         except HomeAssistantError as err:
             _LOGGER.error("Error on load tts: %s", err)

@@ -8,6 +8,7 @@ import logging
 
 from pysiaalarm import SIAEvent
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT
 from homeassistant.core import CALLBACK_TYPE, State, callback
@@ -40,7 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 class SIARequiredKeysMixin:
     """Required keys for SIA entities."""
 
-    code_consequences: dict[str, StateType | bool]
+    code_consequences: dict[str, StateType | bool | AlarmControlPanelState]
 
 
 @dataclass(frozen=True)

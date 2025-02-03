@@ -4,16 +4,33 @@ from unittest.mock import MagicMock, call
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common import custom_clusters
+from matter_server.common.errors import MatterError
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 
-from .common import set_node_attribute, trigger_subscription_callback
+from .common import (
+    set_node_attribute,
+    snapshot_matter_entities,
+    trigger_subscription_callback,
+)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
+@pytest.mark.usefixtures("matter_devices")
+async def test_numbers(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test numbers."""
+    snapshot_matter_entities(hass, entity_registry, snapshot, Platform.NUMBER)
+
+
 @pytest.mark.parametrize("node_fixture", ["dimmable_light"])
 async def test_level_control_config_entities(
     hass: HomeAssistant,
@@ -82,3 +99,25 @@ async def test_eve_weather_sensor_altitude(
         ),
         value=500,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["dimmable_light"])
+async def test_matter_exception_on_write_attribute(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test if a MatterError gets converted to HomeAssistantError by using a dimmable_light fixture."""
+    state = hass.states.get("number.mock_dimmable_light_on_level")
+    assert state
+    matter_client.write_attribute.side_effect = MatterError("Boom")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {
+                "entity_id": "number.mock_dimmable_light_on_level",
+                "value": 500,
+            },
+            blocking=True,
+        )

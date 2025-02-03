@@ -17,7 +17,7 @@ from homeassistant.components.event import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -37,6 +37,8 @@ from .models import (
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_EVENT_TYPES = "event_types"
 
@@ -149,7 +151,7 @@ class MqttEvent(MqttEntity, EventEntity):
             )
         except KeyError:
             _LOGGER.warning(
-                ("`event_type` missing in JSON event payload, " " '%s' on topic %s"),
+                "`event_type` missing in JSON event payload, '%s' on topic %s",
                 payload,
                 msg.topic,
             )

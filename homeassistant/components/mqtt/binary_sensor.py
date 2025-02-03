@@ -26,9 +26,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, event as evt
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.event as evt
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
@@ -42,6 +41,8 @@ from .models import MqttValueTemplate, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Binary sensor"
 CONF_OFF_DELAY = "off_delay"

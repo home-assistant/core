@@ -11,12 +11,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import AsekoDataUpdateCoordinator
+from .coordinator import AsekoConfigEntry
 from .entity import AsekoEntity
 
 
@@ -38,11 +36,11 @@ BINARY_SENSORS: tuple[AsekoBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AsekoConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aseko Pool Live binary sensors."""
-    coordinator: AsekoDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     units = coordinator.data.values()
     async_add_entities(
         AsekoBinarySensorEntity(unit, coordinator, description)

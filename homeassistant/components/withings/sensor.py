@@ -9,6 +9,7 @@ from typing import Any
 
 from aiowithings import (
     Activity,
+    Device,
     Goals,
     MeasurementPosition,
     MeasurementType,
@@ -23,6 +24,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     PERCENTAGE,
     Platform,
@@ -33,8 +35,8 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -51,12 +53,13 @@ from .const import (
 from .coordinator import (
     WithingsActivityDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
+    WithingsDeviceDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
     WithingsWorkoutDataUpdateCoordinator,
 )
-from .entity import WithingsEntity
+from .entity import WithingsDeviceEntity, WithingsEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -650,6 +653,24 @@ WORKOUT_SENSORS = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class WithingsDeviceSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing withings data."""
+
+    value_fn: Callable[[Device], StateType]
+
+
+DEVICE_SENSORS = [
+    WithingsDeviceSensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        options=["low", "medium", "high"],
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda device: device.battery,
+    )
+]
+
+
 def get_current_goals(goals: Goals) -> set[str]:
     """Return a list of present goals."""
     result = set()
@@ -800,9 +821,52 @@ async def async_setup_entry(
             _async_add_workout_entities
         )
 
+    device_coordinator = withings_data.device_coordinator
+
+    current_devices: set[str] = set()
+
+    def _async_device_listener() -> None:
+        """Add device entities."""
+        received_devices = set(device_coordinator.data)
+        new_devices = received_devices - current_devices
+        old_devices = current_devices - received_devices
+        if new_devices:
+            device_registry = dr.async_get(hass)
+            for device_id in new_devices:
+                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
+                    if any(
+                        (
+                            config_entry := hass.config_entries.async_get_entry(
+                                config_entry_id
+                            )
+                        )
+                        and config_entry.state == ConfigEntryState.LOADED
+                        for config_entry_id in device.config_entries
+                    ):
+                        continue
+                async_add_entities(
+                    WithingsDeviceSensor(device_coordinator, description, device_id)
+                    for description in DEVICE_SENSORS
+                )
+                current_devices.add(device_id)
+
+        if old_devices:
+            device_registry = dr.async_get(hass)
+            for device_id in old_devices:
+                if device := device_registry.async_get_device({(DOMAIN, device_id)}):
+                    device_registry.async_update_device(
+                        device.id, remove_config_entry_id=entry.entry_id
+                    )
+                    current_devices.remove(device_id)
+
+    device_coordinator.async_add_listener(_async_device_listener)
+
+    _async_device_listener()
+
     if not entities:
         LOGGER.warning(
-            "No data found for Withings entry %s, sensors will be added when new data is available"
+            "No data found for Withings entry %s, sensors will be added when new data is available",
+            entry.title,
         )
 
     async_add_entities(entities)
@@ -923,3 +987,24 @@ class WithingsWorkoutSensor(
         if not self.coordinator.data:
             return None
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class WithingsDeviceSensor(WithingsDeviceEntity, SensorEntity):
+    """Implementation of a Withings workout sensor."""
+
+    entity_description: WithingsDeviceSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: WithingsDeviceDataUpdateCoordinator,
+        entity_description: WithingsDeviceSensorEntityDescription,
+        device_id: str,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, device_id, entity_description.key)
+        self.entity_description = entity_description
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the entity."""
+        return self.entity_description.value_fn(self.device)

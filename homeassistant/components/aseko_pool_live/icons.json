@@ -9,6 +9,9 @@
       "air_temperature": {
         "default": "mdi:thermometer-lines"
       },
+      "electrolyzer": {
+        "default": "mdi:lightning-bolt"
+      },
       "free_chlorine": {
         "default": "mdi:pool"
       },

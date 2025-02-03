@@ -17,8 +17,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.helpers import aiohttp_client
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import CONF_FILTER, CONF_REAL_TIME, CONF_STATION, DOMAIN
 from .hub import GTIHub
@@ -141,16 +140,14 @@ class HVVDeparturesConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get options flow."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(OptionsFlow):
     """Options flow handler."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self) -> None:
         """Initialize HVV Departures options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
         self.departure_filters: dict[str, Any] = {}
 
     async def async_step_init(

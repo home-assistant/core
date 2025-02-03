@@ -36,6 +36,13 @@ def freeze_the_time():
         yield
 
 
+@pytest.fixture(autouse=True)
+def mock_ulid_tools():
+    """Mock generated ULIDs for tool calls."""
+    with patch("homeassistant.helpers.llm.ulid_now", return_value="mock-tool-call"):
+        yield
+
+
 @pytest.mark.parametrize(
     "agent_id", [None, "conversation.google_generative_ai_conversation"]
 )
@@ -177,6 +184,7 @@ async def test_chat_history(
     "homeassistant.components.google_generative_ai_conversation.conversation.llm.AssistAPI._async_get_tools"
 )
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.usefixtures("mock_ulid_tools")
 async def test_function_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -208,6 +216,7 @@ async def test_function_call(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
+        mock_part.text = ""
         mock_part.function_call = FunctionCall(
             name="test_tool",
             args={
@@ -255,6 +264,7 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args={
                 "param1": ["test_value", "param1's value"],
@@ -284,8 +294,10 @@ async def test_function_call(
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
-    assert "Answer in plain text" in detail_event["data"]["prompt"]
-    assert [t.name for t in detail_event["data"]["tools"]] == ["test_tool"]
+    assert "Answer in plain text" in detail_event["data"]["messages"][0]["content"]
+    assert [
+        p["tool_name"] for p in detail_event["data"]["messages"][2]["tool_calls"]
+    ] == ["test_tool"]
 
 
 @patch(
@@ -315,6 +327,7 @@ async def test_function_call_without_parameters(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
+        mock_part.text = ""
         mock_part.function_call = FunctionCall(name="test_tool", args={})
 
         def tool_call(
@@ -356,6 +369,7 @@ async def test_function_call_without_parameters(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args={},
         ),
@@ -403,6 +417,7 @@ async def test_function_exception(
         chat_response = MagicMock()
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
+        mock_part.text = ""
         mock_part.function_call = FunctionCall(name="test_tool", args={"param1": 1})
 
         def tool_call(
@@ -444,6 +459,7 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args={"param1": 1},
         ),
@@ -543,7 +559,7 @@ async def test_invalid_llm_api(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        "Error preparing LLM API: API invalid_llm_api not found"
+        "Error preparing LLM API"
     )
 
 
@@ -598,14 +614,15 @@ async def test_template_variables(
         mock_chat.send_message_async.return_value = chat_response
         mock_part = MagicMock()
         mock_part.text = "Model response"
+        mock_part.function_call = None
         chat_response.parts = [mock_part]
         result = await conversation.async_converse(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert (
         "The user name is Test User."
         in mock_model.mock_calls[0][2]["system_instruction"]

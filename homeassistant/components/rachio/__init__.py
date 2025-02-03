@@ -83,7 +83,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not person.controllers and not person.base_stations:
         _LOGGER.error("No Rachio devices found in account %s", person.username)
         return False
-    _LOGGER.warning(
+    _LOGGER.debug(
         (
             "%d Rachio device(s) found; The url %s must be accessible from the internet"
             " in order to receive updates"

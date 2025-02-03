@@ -161,7 +161,8 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
                     "data": {"hello": "world", "test": "message", "default": "default"},
                 },
             ),
-        ]
+        ],
+        any_order=True,
     )
     send_message_mock.reset_mock()
 

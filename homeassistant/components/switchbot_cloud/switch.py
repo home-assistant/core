@@ -46,27 +46,34 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_is_on = self.coordinator.data.get("power") == PowerState.ON.value
-        self.async_write_ha_state()
 
 
 class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot switch provider by a remote."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
 
 
 class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot plug switch."""
 
     _attr_device_class = SwitchDeviceClass.OUTLET
+
+
+class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
+    """Representation of a SwitchBot relay switch."""
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if not self.coordinator.data:
+            return
+        self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
 
 
 @callback
@@ -78,4 +85,11 @@ def _async_make_entity(
         return SwitchBotCloudRemoteSwitch(api, device, coordinator)
     if "Plug" in device.device_type:
         return SwitchBotCloudPlugSwitch(api, device, coordinator)
+    if device.device_type in [
+        "Relay Switch 1PM",
+        "Relay Switch 1",
+    ]:
+        return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
+    if "Bot" in device.device_type:
+        return SwitchBotCloudSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")

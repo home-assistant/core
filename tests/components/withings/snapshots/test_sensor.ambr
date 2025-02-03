@@ -1,4 +1,62 @@
 # serializer version: 1
+# name: test_all_entities[sensor.body_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.body_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'withings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.body_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Body+ Battery',
+      'options': list([
+        'low',
+        'medium',
+        'high',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.body_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
 # name: test_all_entities[sensor.henk_active_calories_burnt_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

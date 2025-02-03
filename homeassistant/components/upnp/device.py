@@ -11,7 +11,7 @@ from urllib.parse import urlparse
 from async_upnp_client.aiohttp import AiohttpNotifyServer, AiohttpSessionRequester
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.const import AddressTupleVXType
-from async_upnp_client.exceptions import UpnpConnectionError
+from async_upnp_client.exceptions import UpnpCommunicationError
 from async_upnp_client.profiles.igd import IgdDevice, IgdStateItem
 from async_upnp_client.utils import async_get_local_ip
 from getmac import get_mac_address
@@ -206,7 +206,7 @@ class Device:
         """Subscribe to services."""
         try:
             await self._igd_device.async_subscribe_services(auto_resubscribe=True)
-        except UpnpConnectionError as ex:
+        except UpnpCommunicationError as ex:
             _LOGGER.debug(
                 "Error subscribing to services, falling back to forced polling: %s", ex
             )
@@ -214,7 +214,10 @@ class Device:
 
     async def async_unsubscribe_services(self) -> None:
         """Unsubscribe from services."""
-        await self._igd_device.async_unsubscribe_services()
+        try:
+            await self._igd_device.async_unsubscribe_services()
+        except UpnpCommunicationError as ex:
+            _LOGGER.debug("Error unsubscribing to services: %s", ex)
 
     async def async_get_data(
         self, entity_description_keys: list[str] | None

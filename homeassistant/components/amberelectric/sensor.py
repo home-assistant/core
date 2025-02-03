@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from amberelectric.model.channel import ChannelType
-from amberelectric.model.current_interval import CurrentInterval
-from amberelectric.model.forecast_interval import ForecastInterval
+from amberelectric.models.channel import ChannelType
+from amberelectric.models.current_interval import CurrentInterval
+from amberelectric.models.forecast_interval import ForecastInterval
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -52,7 +52,7 @@ class AmberSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
         self,
         coordinator: AmberUpdateCoordinator,
         description: SensorEntityDescription,
-        channel_type: ChannelType,
+        channel_type: str,
     ) -> None:
         """Initialize the Sensor."""
         super().__init__(coordinator)
@@ -73,7 +73,7 @@ class AmberPriceSensor(AmberSensor):
         """Return the current price in $/kWh."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -87,9 +87,9 @@ class AmberPriceSensor(AmberSensor):
             return data
 
         data["duration"] = interval.duration
-        data["date"] = interval.date.isoformat()
+        data["date"] = interval.var_date.isoformat()
         data["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             data["per_kwh"] = data["per_kwh"] * -1
         data["nem_date"] = interval.nem_time.isoformat()
         data["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
@@ -120,7 +120,7 @@ class AmberForecastSensor(AmberSensor):
             return None
         interval = intervals[0]
 
-        if interval.channel_type == ChannelType.FEED_IN:
+        if interval.channel_type == ChannelType.FEEDIN:
             return format_cents_to_dollars(interval.per_kwh) * -1
         return format_cents_to_dollars(interval.per_kwh)
 
@@ -142,10 +142,10 @@ class AmberForecastSensor(AmberSensor):
         for interval in intervals:
             datum = {}
             datum["duration"] = interval.duration
-            datum["date"] = interval.date.isoformat()
+            datum["date"] = interval.var_date.isoformat()
             datum["nem_date"] = interval.nem_time.isoformat()
             datum["per_kwh"] = format_cents_to_dollars(interval.per_kwh)
-            if interval.channel_type == ChannelType.FEED_IN:
+            if interval.channel_type == ChannelType.FEEDIN:
                 datum["per_kwh"] = datum["per_kwh"] * -1
             datum["spot_per_kwh"] = format_cents_to_dollars(interval.spot_per_kwh)
             datum["start_time"] = interval.start_time.isoformat()

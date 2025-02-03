@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import datetime
-from functools import cached_property
 import logging
 
 import aiohttp
@@ -16,13 +15,13 @@ from pyrainbird.async_client import (
 )
 from pyrainbird.data import ModelAndVersion, Schedule
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
+from .types import RainbirdConfigEntry
 
 UPDATE_INTERVAL = datetime.timedelta(minutes=1)
 # The calendar data requires RPCs for each program/zone, and the data rarely
@@ -141,7 +140,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
 class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
     """Coordinator for rainbird irrigation schedule calls."""
 
-    config_entry: ConfigEntry
+    config_entry: RainbirdConfigEntry
 
     def __init__(
         self,
@@ -166,36 +165,3 @@ class RainbirdScheduleUpdateCoordinator(DataUpdateCoordinator[Schedule]):
                 return await self._controller.get_schedule()
         except RainbirdApiException as err:
             raise UpdateFailed(f"Error communicating with Device: {err}") from err
-
-
-@dataclass
-class RainbirdData:
-    """Holder for shared integration data.
-
-    The coordinators are lazy since they may only be used by some platforms when needed.
-    """
-
-    hass: HomeAssistant
-    entry: ConfigEntry
-    controller: AsyncRainbirdController
-    model_info: ModelAndVersion
-
-    @cached_property
-    def coordinator(self) -> RainbirdUpdateCoordinator:
-        """Return RainbirdUpdateCoordinator."""
-        return RainbirdUpdateCoordinator(
-            self.hass,
-            name=self.entry.title,
-            controller=self.controller,
-            unique_id=self.entry.unique_id,
-            model_info=self.model_info,
-        )
-
-    @cached_property
-    def schedule_coordinator(self) -> RainbirdScheduleUpdateCoordinator:
-        """Return RainbirdScheduleUpdateCoordinator."""
-        return RainbirdScheduleUpdateCoordinator(
-            self.hass,
-            name=f"{self.entry.title} Schedule",
-            controller=self.controller,
-        )

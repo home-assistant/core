@@ -24,9 +24,18 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    import_and_test_deprecated_constant,
+    mock_integration,
+)
 
 NON_UTF8_VALUE = b"ABCDEF\x8a"
 NON_ASCII_KEY = b"non-ascii-key\x8a"
@@ -1467,7 +1476,7 @@ async def test_zeroconf_removed(hass: HomeAssistant) -> None:
 async def test_zeroconf_rediscover(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
 ) -> None:
     """Test we reinitiate flows when an ignored config entry is removed."""
@@ -1583,7 +1592,7 @@ async def test_zeroconf_rediscover(
 async def test_zeroconf_rediscover_no_match(
     hass: HomeAssistant,
     entry_domain: str,
-    entry_discovery_keys: tuple,
+    entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
     entry_source: str,
     entry_unique_id: str,
 ) -> None:
@@ -1655,3 +1664,35 @@ async def test_zeroconf_rediscover_no_match(
 
         assert len(mock_service_browser.mock_calls) == 1
         assert len(mock_config_flow.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("constant_name", "replacement_name", "replacement"),
+    [
+        (
+            "ATTR_PROPERTIES_ID",
+            "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
+            ATTR_PROPERTIES_ID,
+        ),
+        (
+            "ZeroconfServiceInfo",
+            "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
+            ZeroconfServiceInfo,
+        ),
+    ],
+)
+def test_deprecated_constants(
+    caplog: pytest.LogCaptureFixture,
+    constant_name: str,
+    replacement_name: str,
+    replacement: Any,
+) -> None:
+    """Test deprecated automation constants."""
+    import_and_test_deprecated_constant(
+        caplog,
+        zeroconf,
+        constant_name,
+        replacement_name,
+        replacement,
+        "2026.2",
+    )

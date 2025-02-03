@@ -47,7 +47,6 @@ class ZhaFan(FanEntity, ZHAEntity):
     """Representation of a ZHA fan."""
 
     _attr_translation_key: str = "fan"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, entity_data: EntityData) -> None:
         """Initialize the ZHA fan."""

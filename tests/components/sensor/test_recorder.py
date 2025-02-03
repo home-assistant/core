@@ -40,7 +40,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockSensor
@@ -57,7 +57,7 @@ from tests.components.recorder.common import (
 )
 from tests.typing import (
     MockHAClientWebSocket,
-    RecorderInstanceGenerator,
+    RecorderInstanceContextManager,
     WebSocketGenerator,
 )
 
@@ -102,7 +102,7 @@ KW_SENSOR_ATTRIBUTES = {
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder patches."""
 
@@ -117,15 +117,6 @@ def disable_mariadb_issue() -> None:
     """Disable creating issue about outdated MariaDB version."""
     with patch(
         "homeassistant.components.recorder.util._async_create_mariadb_range_index_regression_issue"
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def disable_sqlite_issue() -> None:
-    """Disable creating issue about outdated SQLite version."""
-    with patch(
-        "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
     ):
         yield
 
@@ -227,6 +218,8 @@ async def assert_validation_result(
     ),
     [
         (None, "%", "%", "%", "unitless", 13.050847, -10, 30),
+        ("area", "m²", "m²", "m²", "area", 13.050847, -10, 30),
+        ("area", "mi²", "mi²", "mi²", "area", 13.050847, -10, 30),
         ("battery", "%", "%", "%", "unitless", 13.050847, -10, 30),
         ("battery", None, None, None, "unitless", 13.050847, -10, 30),
         ("distance", "m", "m", "m", "distance", 13.050847, -10, 30),
@@ -914,6 +907,8 @@ async def test_compile_hourly_statistics_wrong_unit(
         "factor",
     ),
     [
+        (US_CUSTOMARY_SYSTEM, "area", "m²", "m²", "m²", "area", 1),
+        (US_CUSTOMARY_SYSTEM, "area", "mi²", "mi²", "mi²", "area", 1),
         (US_CUSTOMARY_SYSTEM, "distance", "m", "m", "m", "distance", 1),
         (US_CUSTOMARY_SYSTEM, "distance", "mi", "mi", "mi", "distance", 1),
         (US_CUSTOMARY_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
@@ -926,6 +921,8 @@ async def test_compile_hourly_statistics_wrong_unit(
         (US_CUSTOMARY_SYSTEM, "volume", "ft³", "ft³", "ft³", "volume", 1),
         (US_CUSTOMARY_SYSTEM, "weight", "g", "g", "g", "mass", 1),
         (US_CUSTOMARY_SYSTEM, "weight", "oz", "oz", "oz", "mass", 1),
+        (METRIC_SYSTEM, "area", "m²", "m²", "m²", "area", 1),
+        (METRIC_SYSTEM, "area", "mi²", "mi²", "mi²", "area", 1),
         (METRIC_SYSTEM, "distance", "m", "m", "m", "distance", 1),
         (METRIC_SYSTEM, "distance", "mi", "mi", "mi", "distance", 1),
         (METRIC_SYSTEM, "energy", "kWh", "kWh", "kWh", "energy", 1),
@@ -2228,6 +2225,8 @@ async def test_compile_hourly_energy_statistics_multiple(
     [
         ("battery", "%", 30),
         ("battery", None, 30),
+        ("area", "m²", 30),
+        ("area", "mi²", 30),
         ("distance", "m", 30),
         ("distance", "mi", 30),
         ("humidity", "%", 30),
@@ -2336,6 +2335,8 @@ async def test_compile_hourly_statistics_partially_unavailable(
     [
         ("battery", "%", 30),
         ("battery", None, 30),
+        ("area", "m²", 30),
+        ("area", "mi²", 30),
         ("distance", "m", 30),
         ("distance", "mi", 30),
         ("humidity", "%", 30),
@@ -2438,6 +2439,10 @@ async def test_compile_hourly_statistics_fails(
         "statistic_type",
     ),
     [
+        ("measurement", "area", "m²", "m²", "m²", "area", "mean"),
+        ("measurement", "area", "mi²", "mi²", "mi²", "area", "mean"),
+        ("total", "area", "m²", "m²", "m²", "area", "sum"),
+        ("total", "area", "mi²", "mi²", "mi²", "area", "sum"),
         ("measurement", "battery", "%", "%", "%", "unitless", "mean"),
         ("measurement", "battery", None, None, None, "unitless", "mean"),
         ("measurement", "distance", "m", "m", "m", "distance", "mean"),
@@ -4233,8 +4238,14 @@ async def async_record_states(
 @pytest.mark.parametrize(
     ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
-        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "GW, MW, TW, W, kW, mW",
+        ),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -4332,6 +4343,26 @@ async def test_validate_unit_change_convertible(
     }
     await assert_validation_result(hass, client, expected, {"units_changed"})
 
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unavailable",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unknown",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
     # Valid state - empty response
     hass.states.async_set(
         "sensor.test",
@@ -4425,8 +4456,14 @@ async def test_validate_statistics_unit_ignore_device_class(
 @pytest.mark.parametrize(
     ("units", "attributes", "unit", "unit2", "supported_unit"),
     [
-        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
-        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "W, kW"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            POWER_SENSOR_ATTRIBUTES,
+            "W",
+            "kW",
+            "GW, MW, TW, W, kW, mW",
+        ),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W", "kW", "GW, MW, TW, W, kW, mW"),
         (
             US_CUSTOMARY_SYSTEM,
             TEMPERATURE_SENSOR_ATTRIBUTES,
@@ -4531,6 +4568,26 @@ async def test_validate_statistics_unit_change_no_device_class(
     }
     await assert_validation_result(hass, client, expected, {"units_changed"})
 
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unavailable",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unknown",
+        attributes={**attributes, "unit_of_measurement": "dogs"},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
     # Valid state - empty response
     hass.states.async_set(
         "sensor.test",
@@ -4626,6 +4683,79 @@ async def test_validate_statistics_state_class_removed(
         ],
     }
     await assert_validation_result(hass, client, expected, {"state_class_removed"})
+
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test", "unavailable", attributes=_attributes, timestamp=now.timestamp()
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test", "unknown", attributes=_attributes, timestamp=now.timestamp()
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+
+@pytest.mark.parametrize(
+    ("units", "attributes", "unit"),
+    [
+        (US_CUSTOMARY_SYSTEM, POWER_SENSOR_ATTRIBUTES, "W"),
+    ],
+)
+async def test_validate_statistics_state_class_removed_issue_cleaned_up(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    units,
+    attributes,
+    unit,
+) -> None:
+    """Test validate_statistics."""
+    now = get_start_time(dt_util.utcnow())
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    client = await hass_ws_client()
+
+    # No statistics, no state - empty response
+    await assert_validation_result(hass, client, {}, {})
+
+    # No statistics, valid state - empty response
+    hass.states.async_set(
+        "sensor.test", 10, attributes=attributes, timestamp=now.timestamp()
+    )
+    await hass.async_block_till_done()
+    await assert_validation_result(hass, client, {}, {})
+
+    # Statistics has run, empty response
+    do_adhoc_statistics(hass, start=now)
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # State update with invalid state class, expect error
+    _attributes = dict(attributes)
+    _attributes.pop("state_class")
+    hass.states.async_set(
+        "sensor.test", 12, attributes=_attributes, timestamp=now.timestamp()
+    )
+    await hass.async_block_till_done()
+    expected = {
+        "sensor.test": [
+            {
+                "data": {"statistic_id": "sensor.test"},
+                "type": "state_class_removed",
+            }
+        ],
+    }
+    await assert_validation_result(hass, client, expected, {"state_class_removed"})
+
+    # Remove the statistics - empty response
+    get_instance(hass).async_clear_statistics(["sensor.test"])
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
 
 
 @pytest.mark.parametrize(
@@ -4870,6 +5000,26 @@ async def test_validate_statistics_unit_change_no_conversion(
         ],
     }
     await assert_validation_result(hass, client, expected, {"units_changed"})
+
+    # Unavailable state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unavailable",
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
+
+    # Unknown state - empty response
+    hass.states.async_set(
+        "sensor.test",
+        "unknown",
+        attributes={**attributes, "unit_of_measurement": unit2},
+        timestamp=now.timestamp(),
+    )
+    await async_recorder_block_till_done(hass)
+    await assert_validation_result(hass, client, {}, {})
 
     # Original unit - empty response
     hass.states.async_set(
@@ -5297,3 +5447,62 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert len(states) == 1
     assert ATTR_OPTIONS not in states[0].attributes
     assert ATTR_FRIENDLY_NAME in states[0].attributes
+
+
+@pytest.mark.parametrize(
+    "ignore_translations",
+    [
+        [
+            "component.test.issues..title",
+            "component.test.issues..description",
+            "component.sensor.issues..title",
+            "component.sensor.issues..description",
+        ]
+    ],
+)
+async def test_clean_up_repairs(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test cleaning up repairs."""
+    await async_setup_component(hass, "sensor", {})
+    issue_registry = ir.async_get(hass)
+    client = await hass_ws_client()
+
+    # Create some issues
+    def create_issue(domain: str, issue_id: str, data: dict | None) -> None:
+        ir.async_create_issue(
+            hass,
+            domain,
+            issue_id,
+            data=data,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="",
+        )
+
+    create_issue("test", "test_issue", None)
+    create_issue(DOMAIN, "test_issue_1", None)
+    create_issue(DOMAIN, "test_issue_2", {"issue_type": "another_issue"})
+    create_issue(DOMAIN, "test_issue_3", {"issue_type": "state_class_removed"})
+    create_issue(DOMAIN, "test_issue_4", {"issue_type": "units_changed"})
+
+    # Check the issues
+    assert set(issue_registry.issues) == {
+        ("test", "test_issue"),
+        ("sensor", "test_issue_1"),
+        ("sensor", "test_issue_2"),
+        ("sensor", "test_issue_3"),
+        ("sensor", "test_issue_4"),
+    }
+
+    # Request update of issues
+    await client.send_json_auto_id({"type": "recorder/update_statistics_issues"})
+    response = await client.receive_json()
+    assert response["success"]
+
+    # Check the issues
+    assert set(issue_registry.issues) == {
+        ("test", "test_issue"),
+        ("sensor", "test_issue_1"),
+        ("sensor", "test_issue_2"),
+    }

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 from typing import Any
 
@@ -91,6 +90,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         self._coordinator = DataUpdateCoordinator(
             hass,
             _LOGGER,
+            config_entry=None,
             name=name,
         )
 
@@ -105,7 +105,7 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         if state:
             self._attr_native_value = state.native_value
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update the state of the sensor."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval

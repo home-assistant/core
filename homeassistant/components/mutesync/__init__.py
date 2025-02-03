@@ -45,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_coordinator.DataUpdateCoordinator(
             hass,
             logging.getLogger(__name__),
+            config_entry=entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL_NOT_IN_MEETING,
             update_method=update_data,

@@ -97,8 +97,7 @@ async def test_airzone_create_climates(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_MAX_TEMP] == 30
     assert state.attributes[ATTR_MIN_TEMP] == 15
     assert state.attributes[ATTR_TARGET_TEMP_STEP] == API_DEFAULT_TEMP_STEP
-    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 22.0
-    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 18.0
+    assert state.attributes.get(ATTR_TEMPERATURE) == 22.0
 
     # Groups
     state = hass.states.get("climate.group")
@@ -589,6 +588,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
             SERVICE_SET_TEMPERATURE,
             {
                 ATTR_ENTITY_ID: "climate.bron_pro",
+                ATTR_HVAC_MODE: HVACMode.HEAT_COOL,
                 ATTR_TARGET_TEMP_HIGH: 25.0,
                 ATTR_TARGET_TEMP_LOW: 20.0,
             },
@@ -596,7 +596,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
         )
 
     state = hass.states.get("climate.bron_pro")
-    assert state.state == HVACMode.HEAT
+    assert state.state == HVACMode.HEAT_COOL
     assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25.0
     assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 20.0
 

@@ -37,7 +37,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import db_schema_0
 
@@ -428,14 +428,6 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
     return f"tests.components.recorder.db_schema_{schema_version_postfix}"
 
 
-@dataclass(slots=True)
-class MockMigrationTask(migration.MigrationTask):
-    """Mock migration task which does nothing."""
-
-    def run(self, instance: Recorder) -> None:
-        """Run migration task."""
-
-
 @contextmanager
 def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
@@ -445,16 +437,14 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
 
     with (
         patch.object(recorder, "db_schema", old_db_schema),
-        patch.object(
-            recorder.migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION
-        ),
+        patch.object(migration, "SCHEMA_VERSION", old_db_schema.SCHEMA_VERSION),
+        patch.object(migration, "non_live_data_migration_needed", return_value=False),
         patch.object(core, "StatesMeta", old_db_schema.StatesMeta),
         patch.object(core, "EventTypes", old_db_schema.EventTypes),
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
         patch.object(core, "StateAttributes", old_db_schema.StateAttributes),
-        patch.object(migration.EntityIDMigration, "task", MockMigrationTask),
         patch(
             CREATE_ENGINE_TARGET,
             new=partial(

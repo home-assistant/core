@@ -1,0 +1,1459 @@
+# serializer version: 1
+# name: test_ctl_set_hvac_mode[default]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[h032585]
+  list([
+    tuple(
+      'Off',
+    ),
+    tuple(
+      'Heat',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[h099625]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[minimal]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_set_hvac_mode[sys_004]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[default]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[h032585]
+  list([
+    tuple(
+      'Off',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[h099625]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[minimal]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_off[sys_004]
+  list([
+    tuple(
+      'HeatingOff',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[default]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[h032585]
+  list([
+    tuple(
+      'Heat',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[h099625]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[minimal]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_ctl_turn_on[sys_004]
+  list([
+    tuple(
+      'Auto',
+    ),
+  ])
+# ---
+# name: test_setup_platform[botched][climate.bathroom_dn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Bathroom Dn',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 16.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 20.0,
+        }),
+        'zone_id': '3432579',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 16.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bathroom_dn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.dead_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Dead Zone',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': False,
+        }),
+        'zone_id': '3432521',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.dead_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.front_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Front Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'temporary',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+          dict({
+            'faultType': 'TempZoneActuatorLowBattery',
+            'since': '2022-03-02T04:50:20',
+          }),
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'TemporaryOverride',
+          'target_heat_temperature': 21.0,
+          'until': '2022-03-07T20:00:00+01:00',
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.0,
+        }),
+        'zone_id': '3432577',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.front_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.kids_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Kids Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.5,
+        }),
+        'zone_id': '3449703',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kids_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Kitchen',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 20.0,
+        }),
+        'zone_id': '3432578',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.main_bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.0,
+      'friendly_name': 'Main Bedroom',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 16.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 21.0,
+        }),
+        'zone_id': '3432580',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 16.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Main Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'permanent',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+          dict({
+            'faultType': 'TempZoneActuatorCommunicationLost',
+            'since': '2022-03-02T15:56:01',
+          }),
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'PermanentOverride',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.0,
+        }),
+        'zone_id': '3432576',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[botched][climate.my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.7,
+      'friendly_name': 'My Home',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'eco',
+      'preset_modes': list([
+        'Reset',
+        'eco',
+        'away',
+        'home',
+        'Custom',
+      ]),
+      'status': dict({
+        'active_system_faults': list([
+        ]),
+        'system_id': '3432522',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'AutoWithEco',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.bathroom_dn-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Bathroom Dn',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 16.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 20.0,
+        }),
+        'zone_id': '3432579',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 16.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.bathroom_dn',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.dead_zone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': None,
+      'friendly_name': 'Dead Zone',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': False,
+        }),
+        'zone_id': '3432521',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.dead_zone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.front_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Front Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'temporary',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'TemporaryOverride',
+          'target_heat_temperature': 21.0,
+          'until': '2022-03-07T20:00:00+01:00',
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.0,
+        }),
+        'zone_id': '3432577',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.front_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.kids_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Kids Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.5,
+        }),
+        'zone_id': '3449703',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kids_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.kitchen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 20.0,
+      'friendly_name': 'Kitchen',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 20.0,
+        }),
+        'zone_id': '3432578',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.kitchen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.main_bedroom-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.0,
+      'friendly_name': 'Main Bedroom',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 16.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 21.0,
+        }),
+        'zone_id': '3432580',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 16.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_bedroom',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Main Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'permanent',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'PermanentOverride',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.0,
+        }),
+        'zone_id': '3432576',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.7,
+      'friendly_name': 'My Home',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'eco',
+      'preset_modes': list([
+        'Reset',
+        'eco',
+        'away',
+        'home',
+        'Custom',
+      ]),
+      'status': dict({
+        'active_system_faults': list([
+        ]),
+        'system_id': '3432522',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'AutoWithEco',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[default][climate.spare_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Spare Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'permanent',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'PermanentOverride',
+          'target_heat_temperature': 14.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.5,
+        }),
+        'zone_id': '3450733',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 14.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.spare_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h032585][climate.my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'My Home',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'status': dict({
+        'active_system_faults': list([
+        ]),
+        'system_id': '416856',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'Heat',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 384>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h032585][climate.thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'THERMOSTAT',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 32.0,
+      'min_temp': 4.5,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 21.5,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 21.5,
+        }),
+        'zone_id': '416856',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h099625][climate.my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'My Home',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'eco',
+        'away',
+      ]),
+      'status': dict({
+        'active_system_faults': list([
+        ]),
+        'system_id': '8557535',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'Auto',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h099625][climate.thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'THERMOSTAT',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 21.5,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+03:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+03:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 21.5,
+        }),
+        'zone_id': '8557539',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[h099625][climate.thermostat_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.5,
+      'friendly_name': 'THERMOSTAT',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 21.5,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+03:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+03:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 21.5,
+        }),
+        'zone_id': '8557541',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.thermostat_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[minimal][climate.main_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'Main Room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'FollowSchedule',
+          'target_heat_temperature': 17.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.0,
+        }),
+        'zone_id': '3432576',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 17.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.main_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[minimal][climate.my_home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.0,
+      'friendly_name': 'My Home',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'eco',
+      'preset_modes': list([
+        'Reset',
+        'eco',
+        'away',
+        'home',
+        'Custom',
+      ]),
+      'status': dict({
+        'active_system_faults': list([
+        ]),
+        'system_id': '3432522',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'AutoWithEco',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.my_home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[sys_004][climate.living_room-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Living room',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'icon': 'mdi:thermostat',
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'eco',
+        'away',
+      ]),
+      'status': dict({
+        'active_system_faults': list([
+        ]),
+        'system_id': '4187769',
+        'system_mode_status': dict({
+          'is_permanent': True,
+          'mode': 'Auto',
+        }),
+      }),
+      'supported_features': <ClimateEntityFeature: 400>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.living_room',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_setup_platform[sys_004][climate.thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 19.5,
+      'friendly_name': 'Thermostat',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'permanent',
+      'preset_modes': list([
+        'none',
+        'temporary',
+        'permanent',
+      ]),
+      'status': dict({
+        'active_faults': list([
+        ]),
+        'setpoint_status': dict({
+          'setpoint_mode': 'PermanentOverride',
+          'target_heat_temperature': 15.0,
+        }),
+        'setpoints': dict({
+          'next_sp_from': '2024-07-10T22:10:00+02:00',
+          'next_sp_temp': 18.6,
+          'this_sp_from': '2024-07-10T08:00:00+02:00',
+          'this_sp_temp': 16.0,
+        }),
+        'temperature_status': dict({
+          'is_available': True,
+          'temperature': 19.5,
+        }),
+        'zone_id': '4187768',
+      }),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 15.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_zone_set_hvac_mode[default]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[h032585]
+  list([
+    tuple(
+      4.5,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[h099625]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[minimal]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_hvac_mode[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_set_preset_mode[default]
+  list([
+    tuple(
+      17.0,
+    ),
+    tuple(
+      17.0,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[h032585]
+  list([
+    tuple(
+      21.5,
+    ),
+    tuple(
+      21.5,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[h099625]
+  list([
+    tuple(
+      21.5,
+    ),
+    tuple(
+      21.5,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[minimal]
+  list([
+    tuple(
+      17.0,
+    ),
+    tuple(
+      17.0,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_preset_mode[sys_004]
+  list([
+    tuple(
+      15.0,
+    ),
+    tuple(
+      15.0,
+    ),
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[default]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[h032585]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[h099625]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[minimal]
+  list([
+    dict({
+      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+    }),
+  ])
+# ---
+# name: test_zone_set_temperature[sys_004]
+  list([
+    dict({
+      'until': None,
+    }),
+  ])
+# ---
+# name: test_zone_turn_off[default]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[h032585]
+  list([
+    tuple(
+      4.5,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[h099625]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[minimal]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---
+# name: test_zone_turn_off[sys_004]
+  list([
+    tuple(
+      5.0,
+    ),
+  ])
+# ---

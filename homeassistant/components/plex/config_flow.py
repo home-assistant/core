@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import copy
+from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -36,9 +36,8 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     AUTH_CALLBACK_NAME,
@@ -385,7 +384,7 @@ class PlexOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize Plex options flow."""
-        self.options = copy.deepcopy(dict(config_entry.options))
+        self.options = deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:

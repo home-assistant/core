@@ -14,14 +14,10 @@ from samsungtvws.exceptions import (
     UnauthorizedError,
 )
 from websockets import frames
-from websockets.exceptions import (
-    ConnectionClosedError,
-    WebSocketException,
-    WebSocketProtocolError,
-)
+from websockets.exceptions import ConnectionClosedError, WebSocketException
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, ssdp, zeroconf
+from homeassistant.components.samsungtv.config_flow import SamsungTVConfigFlow
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
     CONF_SESSION_ID,
@@ -36,13 +32,6 @@ from homeassistant.components.samsungtv.const import (
     TIMEOUT_REQUEST,
     TIMEOUT_WEBSOCKET,
 )
-from homeassistant.components.ssdp import (
-    ATTR_UPNP_FRIENDLY_NAME,
-    ATTR_UPNP_MANUFACTURER,
-    ATTR_UPNP_MODEL_NAME,
-    ATTR_UPNP_UDN,
-    SsdpServiceInfo,
-)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -56,7 +45,16 @@ from homeassistant.const import (
     CONF_TOKEN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .const import (
@@ -86,7 +84,7 @@ MOCK_IMPORT_WSDATA = {
     CONF_PORT: 8002,
 }
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
-MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="https://fake_host:12345/test",
@@ -97,7 +95,7 @@ MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
         ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172de",
     },
 )
-MOCK_SSDP_DATA_NO_MANUFACTURER = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA_NO_MANUFACTURER = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="https://fake_host:12345/test",
@@ -107,7 +105,7 @@ MOCK_SSDP_DATA_NO_MANUFACTURER = ssdp.SsdpServiceInfo(
     },
 )
 
-MOCK_SSDP_DATA_NOPREFIX = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA_NOPREFIX = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="http://fake2_host:12345/test",
@@ -118,7 +116,7 @@ MOCK_SSDP_DATA_NOPREFIX = ssdp.SsdpServiceInfo(
         ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
     },
 )
-MOCK_SSDP_DATA_WRONGMODEL = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA_WRONGMODEL = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="http://fake2_host:12345/test",
@@ -129,11 +127,11 @@ MOCK_SSDP_DATA_WRONGMODEL = ssdp.SsdpServiceInfo(
         ATTR_UPNP_UDN: "uuid:0d1cef00-00dc-1000-9c80-4844f7b172df",
     },
 )
-MOCK_DHCP_DATA = dhcp.DhcpServiceInfo(
+MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="fake_host", macaddress="aabbccddeeff", hostname="fake_hostname"
 )
 EXISTING_IP = "192.168.40.221"
-MOCK_ZEROCONF_DATA = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_DATA = ZeroconfServiceInfo(
     ip_address=ip_address("127.0.0.1"),
     ip_addresses=[ip_address("127.0.0.1")],
     hostname="mock_hostname",
@@ -400,7 +398,7 @@ async def test_user_websocket_not_supported(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote.open",
-            side_effect=WebSocketProtocolError("Boom"),
+            side_effect=WebSocketException("Boom"),
         ),
     ):
         # websocket device not supported
@@ -783,12 +781,12 @@ async def test_ssdp_websocket_cannot_connect(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-            side_effect=WebSocketProtocolError("Boom"),
+            side_effect=WebSocketException("Boom"),
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVWSAsyncRemote",
         ) as remotews,
-        patch.object(remotews, "open", side_effect=WebSocketProtocolError("Boom")),
+        patch.object(remotews, "open", side_effect=WebSocketException("Boom")),
     ):
         # device not supported
         result = await hass.config_entries.flow.async_init(
@@ -980,6 +978,78 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE43LS003"
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
+
+
+@pytest.mark.usefixtures("remotews", "rest_api_non_ssl_only", "remoteencws_failing")
+@pytest.mark.parametrize(
+    ("source1", "data1", "source2", "data2", "is_matching_result"),
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            MOCK_DHCP_DATA,
+            config_entries.SOURCE_DHCP,
+            MOCK_DHCP_DATA,
+            True,
+        ),
+        (
+            config_entries.SOURCE_DHCP,
+            MOCK_DHCP_DATA,
+            config_entries.SOURCE_ZEROCONF,
+            MOCK_ZEROCONF_DATA,
+            False,
+        ),
+        (
+            config_entries.SOURCE_ZEROCONF,
+            MOCK_ZEROCONF_DATA,
+            config_entries.SOURCE_DHCP,
+            MOCK_DHCP_DATA,
+            False,
+        ),
+        (
+            config_entries.SOURCE_ZEROCONF,
+            MOCK_ZEROCONF_DATA,
+            config_entries.SOURCE_ZEROCONF,
+            MOCK_ZEROCONF_DATA,
+            True,
+        ),
+    ],
+)
+async def test_dhcp_zeroconf_already_in_progress(
+    hass: HomeAssistant,
+    source1: str,
+    data1: BaseServiceInfo,
+    source2: str,
+    data2: BaseServiceInfo,
+    is_matching_result: bool,
+) -> None:
+    """Test starting a flow from dhcp or zeroconf when already in progress."""
+    # confirm to add the entry
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": source1}, data=data1
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    real_is_matching = SamsungTVConfigFlow.is_matching
+    return_values = []
+
+    def is_matching(self, other_flow) -> bool:
+        return_values.append(real_is_matching(self, other_flow))
+        return return_values[-1]
+
+    with patch.object(
+        SamsungTVConfigFlow, "is_matching", wraps=is_matching, autospec=True
+    ):
+        # confirm to add the entry
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source2}, data=data2
+        )
+        await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == RESULT_ALREADY_IN_PROGRESS
+    # Ensure the is_matching method returned the expected value
+    assert return_values == [is_matching_result]
 
 
 @pytest.mark.usefixtures("remotews", "rest_api", "remoteencws_failing")
@@ -1635,7 +1705,7 @@ async def test_update_legacy_missing_mac_from_dhcp(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
         ),
     )
@@ -1666,13 +1736,13 @@ async def test_update_legacy_missing_mac_from_dhcp_no_unique_id(
         ),
         patch(
             "homeassistant.components.samsungtv.bridge.SamsungTVEncryptedWSAsyncRemote.start_listening",
-            side_effect=WebSocketProtocolError("Boom"),
+            side_effect=WebSocketException("Boom"),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip=EXISTING_IP, macaddress="aabbccddeeff", hostname="fake_hostname"
             ),
         )

@@ -27,8 +27,6 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_commission(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -65,8 +63,6 @@ async def test_commission(
     matter_client.commission_with_code.assert_called_once_with("12345678", False)
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_commission_on_network(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -103,8 +99,6 @@ async def test_commission_on_network(
     matter_client.commission_on_network.assert_called_once_with(1234, "1.2.3.4")
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_set_thread_dataset(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -145,8 +139,6 @@ async def test_set_thread_dataset(
     matter_client.set_thread_operational_dataset.assert_called_once_with("test_dataset")
 
 
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 async def test_set_wifi_credentials(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -196,8 +188,6 @@ async def test_set_wifi_credentials(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
 @pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_node_diagnostics(
@@ -267,8 +257,6 @@ async def test_node_diagnostics(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
 @pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_ping_node(
@@ -324,8 +312,6 @@ async def test_ping_node(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
 @pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_open_commissioning_window(
@@ -387,8 +373,6 @@ async def test_open_commissioning_window(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
 @pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_remove_matter_fabric(
@@ -440,8 +424,6 @@ async def test_remove_matter_fabric(
 
 
 @pytest.mark.usefixtures("matter_node")
-# This tests needs to be adjusted to remove lingering tasks
-@pytest.mark.parametrize("expected_lingering_tasks", [True])
 # setup (mock) integration with a random node fixture
 @pytest.mark.parametrize("node_fixture", ["onoff_light"])
 async def test_interview_node(

@@ -133,6 +133,29 @@ def polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     )
 
 
+@pytest.fixture
+def second_polling_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
+    """Create Withings entry in Home Assistant."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Not Henk",
+        unique_id="54321",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "status": 0,
+                "userid": "54321",
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": ",".join(scopes),
+            },
+            "profile": TITLE,
+            "webhook_id": WEBHOOK_ID,
+        },
+    )
+
+
 @pytest.fixture(name="withings")
 def mock_withings():
     """Mock withings."""

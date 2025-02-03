@@ -17,7 +17,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_a
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -463,7 +463,7 @@ async def ignore_config_flow(
         )
         return
 
-    context = {"source": config_entries.SOURCE_IGNORE}
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_IGNORE)
     if "discovery_key" in flow["context"]:
         context["discovery_key"] = flow["context"]["discovery_key"]
     await hass.config_entries.flow.async_init(

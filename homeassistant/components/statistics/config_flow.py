@@ -57,9 +57,9 @@ async def get_state_characteristics(handler: SchemaCommonFlowHandler) -> vol.Sch
         split_entity_id(handler.options[CONF_ENTITY_ID])[0] == BINARY_SENSOR_DOMAIN
     )
     if is_binary:
-        options = STATS_BINARY_SUPPORT
+        options = list(STATS_BINARY_SUPPORT)
     else:
-        options = STATS_NUMERIC_SUPPORT
+        options = list(STATS_NUMERIC_SUPPORT)
 
     return vol.Schema(
         {
@@ -169,8 +169,8 @@ class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         vol.Required("user_input"): dict,
     }
 )
-@callback
-def ws_start_preview(
+@websocket_api.async_response
+async def ws_start_preview(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -234,6 +234,6 @@ def ws_start_preview(
     preview_entity.hass = hass
 
     connection.send_result(msg["id"])
-    connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(
+    connection.subscriptions[msg["id"]] = await preview_entity.async_start_preview(
         async_preview_updated
     )
