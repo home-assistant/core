@@ -23,8 +23,6 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     DHW controller.
     """
 
-    coordinator: EvoDataUpdateCoordinator
-
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
 
