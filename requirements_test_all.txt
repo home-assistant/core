@@ -2321,7 +2321,7 @@ thinqconnect==1.0.2
 tilt-ble==0.2.3
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.2
+todoist-api-python==2.1.7
 
 # homeassistant.components.tolo
 tololib==1.1.0
