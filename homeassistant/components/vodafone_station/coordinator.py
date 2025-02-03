@@ -42,6 +42,8 @@ class UpdateCoordinatorDataType:
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -63,10 +65,11 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
+            config_entry=config_entry,
         )
         device_reg = dr.async_get(self.hass)
         device_list = dr.async_entries_for_config_entry(
-            device_reg, config_entry.entry_id
+            device_reg, self.config_entry.entry_id
         )
 
         self.previous_devices = {
@@ -147,7 +150,6 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             _LOGGER.debug(
                 "Found %s stale devices: %s", len(stale_devices), stale_devices
             )
-            assert self.config_entry
             await cleanup_device_tracker(self.hass, self.config_entry, data_devices)
 
         self.previous_devices = current_devices
