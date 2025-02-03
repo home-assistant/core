@@ -1360,11 +1360,40 @@ async def test_reader_writer_create_partial_backup_error(
     assert supervisor_client.backups.partial_backup.call_count == 1
 
 
+@pytest.mark.parametrize(
+    "supervisor_event",
+    [
+        # Missing backup reference
+        {
+            "event": "job",
+            "data": {
+                "done": True,
+                "uuid": TEST_JOB_ID,
+            },
+        },
+        # Errors
+        {
+            "event": "job",
+            "data": {
+                "done": True,
+                "errors": [
+                    {
+                        "type": "BackupMountDownError",
+                        "message": "test_mount is down, cannot back-up to it",
+                    }
+                ],
+                "uuid": TEST_JOB_ID,
+                "reference": "test_slug",
+            },
+        },
+    ],
+)
 @pytest.mark.usefixtures("hassio_client", "setup_integration")
 async def test_reader_writer_create_missing_reference_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
+    supervisor_event: dict[str, Any],
 ) -> None:
     """Test missing reference error when generating a backup."""
     client = await hass_ws_client(hass)
@@ -1395,13 +1424,7 @@ async def test_reader_writer_create_missing_reference_error(
     assert supervisor_client.backups.partial_backup.call_count == 1
 
     await client.send_json_auto_id(
-        {
-            "type": "supervisor/event",
-            "data": {
-                "event": "job",
-                "data": {"done": True, "uuid": TEST_JOB_ID},
-            },
-        }
+        {"type": "supervisor/event", "data": supervisor_event}
     )
     response = await client.receive_json()
     assert response["success"]

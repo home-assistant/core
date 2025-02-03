@@ -1206,9 +1206,6 @@ motioneye-client==0.3.14
 # homeassistant.components.bang_olufsen
 mozart-api==4.1.1.116.4
 
-# homeassistant.components.onedrive
-msgraph-sdk==1.16.0
-
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
@@ -1305,6 +1302,9 @@ omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
+
+# homeassistant.components.onedrive
+onedrive-personal-sdk==0.0.2
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1933,7 +1933,7 @@ python-fullykiosk==0.0.14
 python-google-drive-api==0.0.2
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.8.1
+python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v8.3.2
@@ -1982,7 +1982,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.9.7
+python-roborock==2.11.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2321,7 +2321,7 @@ thinqconnect==1.0.2
 tilt-ble==0.2.3
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.2
+todoist-api-python==2.1.7
 
 # homeassistant.components.tolo
 tololib==1.1.0
