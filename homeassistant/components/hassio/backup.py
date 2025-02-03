@@ -517,17 +517,22 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             raise HomeAssistantError(message) from err
 
         restore_complete = asyncio.Event()
+        restore_errors: list[dict[str, str]] = []
 
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup restore progress."""
             if data.get("done") is True:
                 restore_complete.set()
+                restore_errors.extend(data.get("errors", []))
 
         unsub = self._async_listen_job_events(job.job_id, on_job_progress)
         try:
             await self._get_job_state(job.job_id, on_job_progress)
             await restore_complete.wait()
+            if restore_errors:
+                # We should add more specific error handling here in the future
+                raise BackupReaderWriterError(f"Restore failed: {restore_errors}")
         finally:
             unsub()
 
@@ -554,11 +559,23 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 )
                 return
 
-            on_progress(
-                RestoreBackupEvent(
-                    reason="", stage=None, state=RestoreBackupState.COMPLETED
+            restore_errors = data.get("errors", [])
+            if restore_errors:
+                _LOGGER.warning("Restore backup failed: %s", restore_errors)
+                # We should add more specific error handling here in the future
+                on_progress(
+                    RestoreBackupEvent(
+                        reason="unknown_error",
+                        stage=None,
+                        state=RestoreBackupState.FAILED,
+                    )
                 )
-            )
+            else:
+                on_progress(
+                    RestoreBackupEvent(
+                        reason="", stage=None, state=RestoreBackupState.COMPLETED
+                    )
+                )
             on_progress(IdleEvent())
             unsub()
 
