@@ -270,10 +270,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             }
             return after_shkia_date.hdate
         if self.entity_description.key == "weekly_portion":
-            parashot = list(Parasha)
-            for parasha in parashot:
-                parasha.set_language(self._language)
-            self._attr_options = [str(parasha) for parasha in parashot]
+            self._attr_options = list(Parasha)
             # Compute the weekly portion based on the upcoming shabbat.
             return after_tzais_date.upcoming_shabbat.parasha
         if self.entity_description.key == "holiday":
