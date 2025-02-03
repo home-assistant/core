@@ -274,6 +274,10 @@ class AssistSatelliteEntity(entity.Entity):
 
         try:
             await self.async_start_conversation(announcement)
+        except Exception:
+            # Clear prompt on error
+            self._extra_system_prompt = None
+            raise
         finally:
             self._is_announcing = False
 
