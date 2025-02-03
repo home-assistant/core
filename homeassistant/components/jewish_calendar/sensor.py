@@ -280,7 +280,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             _id = _type = ""
             _holidays = after_shkia_date.holidays
             _id = ", ".join(holiday.name for holiday in _holidays)
-            _type = ", ".join([str(_holiday.type) for _holiday in _holidays])
+            _type = ", ".join([_holiday.type.name for _holiday in _holidays])
             self._attrs = {"id": _id, "type": _type}
             self._attr_options = [
                 str(holiday)
@@ -288,7 +288,7 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             ]
             return ", ".join(str(holiday) for holiday in _holidays)
         if self.entity_description.key == "omer_count":
-            return after_shkia_date.omer
+            return after_shkia_date.omer.total_days if after_shkia_date.omer else 0
         if self.entity_description.key == "daf_yomi":
             return daytime_date.daf_yomi
 
