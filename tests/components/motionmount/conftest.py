@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from homeassistant.components.motionmount.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 
 from . import HOST, PORT, ZEROCONF_MAC, ZEROCONF_NAME
 
@@ -20,6 +20,17 @@ def mock_config_entry() -> MockConfigEntry:
         title=ZEROCONF_NAME,
         domain=DOMAIN,
         data={CONF_HOST: HOST, CONF_PORT: PORT},
+        unique_id=ZEROCONF_MAC,
+    )
+
+
+@pytest.fixture
+def mock_config_entry_with_pin() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title=ZEROCONF_NAME,
+        domain=DOMAIN,
+        data={CONF_HOST: HOST, CONF_PORT: PORT, CONF_PIN: 1234},
         unique_id=ZEROCONF_MAC,
     )
 
