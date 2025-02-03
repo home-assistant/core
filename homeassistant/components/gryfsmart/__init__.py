@@ -80,7 +80,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id] = entry
     return True
 
 

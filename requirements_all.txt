@@ -1971,7 +1971,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gryfsmart
-pygryfsmart==0.1.6
+pygryfsmart==0.1.7
 
 # homeassistant.components.gtfs
 pygtfs==0.1.9
