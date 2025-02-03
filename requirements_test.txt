@@ -21,7 +21,7 @@ pipdeptree==2.25.0
 pytest-asyncio==0.24.0
 pytest-aiohttp==1.0.5
 pytest-cov==6.0.0
-pytest-freezer==0.4.8
+pytest-freezer==0.4.9
 pytest-github-actions-annotate-failures==0.2.0
 pytest-socket==0.7.0
 pytest-sugar==1.0.0
