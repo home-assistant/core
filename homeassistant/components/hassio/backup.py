@@ -354,6 +354,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         """Wait for a backup to complete."""
         backup_complete = asyncio.Event()
         backup_id: str | None = None
+        create_errors: list[dict[str, str]] = []
 
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
@@ -361,6 +362,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             nonlocal backup_id
             if data.get("done") is True:
                 backup_id = data.get("reference")
+                create_errors.extend(data.get("errors", []))
                 backup_complete.set()
 
         unsub = self._async_listen_job_events(backup.job_id, on_job_progress)
@@ -369,8 +371,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             await backup_complete.wait()
         finally:
             unsub()
-        if not backup_id:
-            raise BackupReaderWriterError("Backup failed")
+        if not backup_id or create_errors:
+            # We should add more specific error handling here in the future
+            raise BackupReaderWriterError(f"Backup failed: {create_errors}")
 
         async def open_backup() -> AsyncIterator[bytes]:
             try:
