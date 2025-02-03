@@ -373,7 +373,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             unsub()
         if not backup_id or create_errors:
             # We should add more specific error handling here in the future
-            raise BackupReaderWriterError(f"Backup failed: {create_errors}")
+            raise BackupReaderWriterError(
+                f"Backup failed: {create_errors or 'no backup_id'}"
+            )
 
         async def open_backup() -> AsyncIterator[bytes]:
             try:
