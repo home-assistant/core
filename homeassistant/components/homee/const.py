@@ -1,6 +1,7 @@
 """Constants for the homee integration."""
 
 from homeassistant.const import (
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
@@ -32,6 +33,7 @@ HOMEE_UNIT_TO_HA_UNIT = {
     "W": UnitOfPower.WATT,
     "m/s": UnitOfSpeed.METERS_PER_SECOND,
     "km/h": UnitOfSpeed.KILOMETERS_PER_HOUR,
+    "°": DEGREE,
     "°F": UnitOfTemperature.FAHRENHEIT,
     "°C": UnitOfTemperature.CELSIUS,
     "K": UnitOfTemperature.KELVIN,
@@ -51,7 +53,7 @@ OPEN_CLOSE_MAP_REVERSED = {
     0.0: "closed",
     1.0: "open",
     2.0: "partial",
-    3.0: "cosing",
+    3.0: "closing",
     4.0: "opening",
 }
 WINDOW_MAP = {
