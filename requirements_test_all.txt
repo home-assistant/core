@@ -1304,7 +1304,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.1
+onedrive-personal-sdk==0.0.2
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1982,7 +1982,7 @@ python-picnic-api==1.1.0
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==2.9.7
+python-roborock==2.11.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2321,7 +2321,7 @@ thinqconnect==1.0.2
 tilt-ble==0.2.3
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.2
+todoist-api-python==2.1.7
 
 # homeassistant.components.tolo
 tololib==1.1.0

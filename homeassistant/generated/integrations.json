@@ -2521,6 +2521,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "heicko": {
+      "name": "Heicko",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",
@@ -5812,6 +5817,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "smart_rollos": {
+      "name": "Smart Rollos",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "smarther": {
       "name": "Smarther",
       "integration_type": "virtual",
@@ -6746,6 +6756,11 @@
       "name": "Ubiwizz",
       "integration_type": "virtual",
       "supported_by": "overkiz"
+    },
+    "ublockout": {
+      "name": "Ublockout",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
     },
     "uk_transport": {
       "name": "UK Transport",
