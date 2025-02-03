@@ -224,7 +224,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterOvenMode",
-            translation_key="mode",
+            translation_key="oven_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -238,7 +238,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterLaundryWasherMode",
-            translation_key="mode",
+            translation_key="laundry_washer_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -252,7 +252,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterRefrigeratorAndTemperatureControlledCabinetMode",
-            translation_key="mode",
+            translation_key="temperature_controlled_cabinet_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -280,7 +280,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterDishwasherMode",
-            translation_key="mode",
+            translation_key="dishwasher_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -294,7 +294,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterEnergyEvseMode",
-            translation_key="mode",
+            translation_key="energy_evse_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -308,7 +308,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterDeviceEnergyManagementMode",
-            translation_key="mode",
+            translation_key="device_energy_management_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(

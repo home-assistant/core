@@ -183,6 +183,18 @@
       "mode": {
         "name": "Mode"
       },
+      "device_energy_management_mode": {
+        "name": "Device Energy Management mode"
+      },
+      "dishwasher_mode": {
+        "name": "Dishwasher mode"
+      },
+      "energy_evse_mode": {
+        "name": "Energy EVSE mode"
+      },
+      "laundry_washer_mode": {
+        "name": "Laundry washer mode"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {
@@ -205,6 +217,12 @@
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"
+      },
+      "temperature_controlled_cabinet_mode": {
+        "name": "Temperature controlled cabinet mode"
+      },
+      "oven_mode": {
+        "name": "Oven mode"
       },
       "laundry_washer_number_of_rinses": {
         "name": "Number of rinses",
