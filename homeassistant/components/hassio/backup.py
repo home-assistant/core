@@ -531,6 +531,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             await self._get_job_state(job.job_id, on_job_progress)
             await restore_complete.wait()
             if restore_errors:
+                # We should add more specific error handling here in the future
                 raise BackupReaderWriterError(f"Restore failed: {restore_errors}")
         finally:
             unsub()
@@ -561,6 +562,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             restore_errors = data.get("errors", [])
             if restore_errors:
                 _LOGGER.warning("Restore backup failed: %s", restore_errors)
+                # We should add more specific error handling here in the future
                 on_progress(
                     RestoreBackupEvent(
                         reason="unknown_error",
