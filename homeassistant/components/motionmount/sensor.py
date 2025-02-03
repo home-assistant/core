@@ -48,7 +48,7 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         """Return error status."""
         status = self.mm.system_status
 
-        errorMessages = {
+        error_messages = {
             MotionMountSystemError.MotorError: "motor",
             MotionMountSystemError.ObstructionDetected: "obstruction",
             MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
@@ -56,7 +56,7 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
             MotionMountSystemError.InternalError: "internal",
         }
 
-        for error, message in errorMessages.items():
+        for error, message in error_messages.items():
             if error in status:
                 return message
 
