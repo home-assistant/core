@@ -442,8 +442,8 @@ SHABBAT_PARAMS = [
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
-            "english_holiday": "Shmini Atzeret",
-            "hebrew_holiday": "שמיני עצרת",
+            "english_holiday": "Shmini Atzeret, Simchat Torah",
+            "hebrew_holiday": "שמיני עצרת, שמחת תורה",
         },
     ),
     make_jerusalem_test_params(
