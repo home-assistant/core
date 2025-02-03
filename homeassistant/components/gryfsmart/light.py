@@ -1,6 +1,5 @@
 """Handle the Gryf Smart light platform functionality."""
 
-import logging
 from typing import Any
 
 from pygryfsmart.device import _GryfDevice, _GryfOutput, _GryfPwm
@@ -14,8 +13,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import CONF_API, CONF_DEVICES, CONF_ID, CONF_NAME, CONF_PWM, DOMAIN
 from .entity import GryfConfigFlowEntity, GryfYamlEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -59,9 +56,8 @@ async def async_setup_entry(
     """Config flow for Light platform."""
     lights = []
     pwm = []
-    light_config = config_entry.data[CONF_DEVICES]
 
-    for conf in light_config:
+    for conf in config_entry.data[CONF_DEVICES]:
         if conf.get(CONF_TYPE) == Platform.LIGHT:
             device = _GryfOutput(
                 conf.get(CONF_NAME),
