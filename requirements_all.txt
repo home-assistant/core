@@ -2202,7 +2202,7 @@ pypalazzetti==0.1.19
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.3
+pypck==0.8.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
