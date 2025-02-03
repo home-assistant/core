@@ -36,6 +36,8 @@ from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
+BASE_FILENAME = "Automatic_backup_2025.2.0.dev0-2025-01-09_20-14-35"
+
 
 class MockStreamReaderChunked(MockStreamReader):
     """Mock a stream reader with simulated chunked data."""
@@ -46,14 +48,14 @@ class MockStreamReaderChunked(MockStreamReader):
 
 
 async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
-    if filename == "abcd12ef_meta.json":
+    if filename == f"{BASE_FILENAME}_meta.json":
         return MockStreamReader(
             b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
             b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
             b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
             b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
         )
-    if filename == "abcd12ef.tar":
+    if filename == f"{BASE_FILENAME}.tar":
         return MockStreamReaderChunked(b"backup data")
     raise MockStreamReaderChunked(b"")
 
@@ -61,22 +63,22 @@ async def _mock_download_file(path: str, filename: str) -> MockStreamReader:
 async def _mock_download_file_meta_ok_tar_missing(
     path: str, filename: str
 ) -> MockStreamReader:
-    if filename == "abcd12ef_meta.json":
+    if filename == f"{BASE_FILENAME}_meta.json":
         return MockStreamReader(
             b'{"addons":[],"backup_id":"abcd12ef","date":"2025-01-09T20:14:35.457323+01:00",'
             b'"database_included":true,"extra_metadata":{"instance_id":"36b3b7e984da43fc89f7bafb2645fa36",'
             b'"with_automatic_settings":true},"folders":[],"homeassistant_included":true,'
             b'"homeassistant_version":"2025.2.0.dev0","name":"Automatic backup 2025.2.0.dev0","protected":true,"size":13916160}'
         )
-    if filename == "abcd12ef.tar":
-        raise SynologyDSMAPIErrorException("api", "404", "not found")
+    if filename == f"{BASE_FILENAME}.tar":
+        raise SynologyDSMAPIErrorException("api", "900", [{"code": 408}])
     raise MockStreamReaderChunked(b"")
 
 
 async def _mock_download_file_meta_defect(path: str, filename: str) -> MockStreamReader:
-    if filename == "abcd12ef_meta.json":
+    if filename == f"{BASE_FILENAME}_meta.json":
         return MockStreamReader(b"im not a json")
-    if filename == "abcd12ef.tar":
+    if filename == f"{BASE_FILENAME}.tar":
         return MockStreamReaderChunked(b"backup data")
     raise MockStreamReaderChunked(b"")
 
@@ -84,7 +86,6 @@ async def _mock_download_file_meta_defect(path: str, filename: str) -> MockStrea
 @pytest.fixture
 def mock_dsm_with_filestation():
     """Mock a successful service with filestation support."""
-
     with patch("homeassistant.components.synology_dsm.common.SynologyDSM") as dsm:
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
@@ -115,14 +116,14 @@ def mock_dsm_with_filestation():
                     SynoFileFile(
                         additional=None,
                         is_dir=False,
-                        name="abcd12ef_meta.json",
-                        path="/ha_backup/my_backup_path/abcd12ef_meta.json",
+                        name=f"{BASE_FILENAME}_meta.json",
+                        path=f"/ha_backup/my_backup_path/{BASE_FILENAME}_meta.json",
                     ),
                     SynoFileFile(
                         additional=None,
                         is_dir=False,
-                        name="abcd12ef.tar",
-                        path="/ha_backup/my_backup_path/abcd12ef.tar",
+                        name=f"{BASE_FILENAME}.tar",
+                        path=f"/ha_backup/my_backup_path/{BASE_FILENAME}.tar",
                     ),
                 ]
             ),
@@ -522,6 +523,7 @@ async def test_agents_upload(
         protected=True,
         size=0,
     )
+    base_filename = "Test-1970-01-01_00-00-00"
 
     with (
         patch(
@@ -544,9 +546,9 @@ async def test_agents_upload(
     assert f"Uploading backup {backup_id}" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
     assert len(mock.mock_calls) == 2
-    assert mock.call_args_list[0].kwargs["filename"] == "test-backup.tar"
+    assert mock.call_args_list[0].kwargs["filename"] == f"{base_filename}.tar"
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
-    assert mock.call_args_list[1].kwargs["filename"] == "test-backup_meta.json"
+    assert mock.call_args_list[1].kwargs["filename"] == f"{base_filename}_meta.json"
     assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
 
 
@@ -572,6 +574,7 @@ async def test_agents_upload_error(
         protected=True,
         size=0,
     )
+    base_filename = "Test-1970-01-01_00-00-00"
 
     # fail to upload the tar file
     with (
@@ -599,7 +602,7 @@ async def test_agents_upload_error(
     assert "Failed to upload backup" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
     assert len(mock.mock_calls) == 1
-    assert mock.call_args_list[0].kwargs["filename"] == "test-backup.tar"
+    assert mock.call_args_list[0].kwargs["filename"] == f"{base_filename}.tar"
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
 
     # fail to upload the meta json file
@@ -630,9 +633,9 @@ async def test_agents_upload_error(
     assert "Failed to upload backup" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.upload_file
     assert len(mock.mock_calls) == 3
-    assert mock.call_args_list[1].kwargs["filename"] == "test-backup.tar"
+    assert mock.call_args_list[1].kwargs["filename"] == f"{base_filename}.tar"
     assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
-    assert mock.call_args_list[2].kwargs["filename"] == "test-backup_meta.json"
+    assert mock.call_args_list[2].kwargs["filename"] == f"{base_filename}_meta.json"
     assert mock.call_args_list[2].kwargs["path"] == "/ha_backup/my_backup_path"
 
 
@@ -657,9 +660,9 @@ async def test_agents_delete(
     assert response["result"] == {"agent_errors": {}}
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 2
-    assert mock.call_args_list[0].kwargs["filename"] == "abcd12ef.tar"
+    assert mock.call_args_list[0].kwargs["filename"] == f"{BASE_FILENAME}.tar"
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"
-    assert mock.call_args_list[1].kwargs["filename"] == "abcd12ef_meta.json"
+    assert mock.call_args_list[1].kwargs["filename"] == f"{BASE_FILENAME}_meta.json"
     assert mock.call_args_list[1].kwargs["path"] == "/ha_backup/my_backup_path"
 
 
@@ -672,6 +675,9 @@ async def test_agents_delete_not_existing(
     client = await hass_ws_client(hass)
     backup_id = "ef34ab12"
 
+    setup_dsm_with_filestation.file.download_file = (
+        _mock_download_file_meta_ok_tar_missing
+    )
     setup_dsm_with_filestation.file.delete_file = AsyncMock(
         side_effect=SynologyDSMAPIErrorException(
             "api",
@@ -740,5 +746,5 @@ async def test_agents_delete_error(
     assert f"Failed to delete backup: {expected_log}" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 1
-    assert mock.call_args_list[0].kwargs["filename"] == "abcd12ef.tar"
+    assert mock.call_args_list[0].kwargs["filename"] == f"{BASE_FILENAME}.tar"
     assert mock.call_args_list[0].kwargs["path"] == "/ha_backup/my_backup_path"

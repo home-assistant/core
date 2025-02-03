@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.json import json_dumps
+from homeassistant.util.dt import parse_datetime
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import (
@@ -26,6 +27,16 @@ from .const import (
 from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
+
+
+def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
+    """Suggest filenames for the backup.
+
+    returns a tuple of tar_filename and meta_filename
+    """
+    date = parse_datetime(backup.date, raise_on_error=True)
+    base_name = "_".join(f"{backup.name}-{date.strftime('%Y-%m-%d_%H-%M-%S')}".split())
+    return (f"{base_name}.tar", f"{base_name}_meta.json")
 
 
 async def async_get_backup_agents(
@@ -95,6 +106,19 @@ class SynologyDSMBackupAgent(BackupAgent):
             assert self.api.file_station
         return self.api.file_station
 
+    async def _async_suggested_filenames(
+        self,
+        backup_id: str,
+    ) -> tuple[str, str]:
+        """Suggest filenames for the backup.
+
+        :param backup_id: The ID of the backup that was returned in async_list_backups.
+        :return: A tuple of tar_filename and meta_filename
+        """
+        if (backup := await self.async_get_backup(backup_id)) is None:
+            raise BackupAgentError("Backup not found")
+        return suggested_filenames(backup)
+
     async def async_download_backup(
         self,
         backup_id: str,
@@ -105,10 +129,12 @@ class SynologyDSMBackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         :return: An async iterator that yields bytes.
         """
+        (filename_tar, _) = await self._async_suggested_filenames(backup_id)
+
         try:
             resp = await self._file_station.download_file(
                 path=self.path,
-                filename=f"{backup_id}.tar",
+                filename=filename_tar,
             )
         except SynologyDSMAPIErrorException as err:
             raise BackupAgentError("Failed to download backup") from err
@@ -131,11 +157,13 @@ class SynologyDSMBackupAgent(BackupAgent):
         :param backup: Metadata about the backup that should be uploaded.
         """
 
+        (filename_tar, filename_meta) = suggested_filenames(backup)
+
         # upload backup.tar file first
         try:
             await self._file_station.upload_file(
                 path=self.path,
-                filename=f"{backup.backup_id}.tar",
+                filename=filename_tar,
                 source=await open_stream(),
                 create_parents=True,
             )
@@ -146,7 +174,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         try:
             await self._file_station.upload_file(
                 path=self.path,
-                filename=f"{backup.backup_id}_meta.json",
+                filename=filename_meta,
                 source=json_dumps(backup.as_dict()).encode(),
             )
         except SynologyDSMAPIErrorException as err:
@@ -161,7 +189,15 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        for filename in (f"{backup_id}.tar", f"{backup_id}_meta.json"):
+        try:
+            (filename_tar, filename_meta) = await self._async_suggested_filenames(
+                backup_id
+            )
+        except BackupAgentError:
+            # backup meta data could not be found, so we can't delete the backup
+            return
+
+        for filename in (filename_tar, filename_meta):
             try:
                 await self._file_station.delete_file(path=self.path, filename=filename)
             except SynologyDSMAPIErrorException as err:
