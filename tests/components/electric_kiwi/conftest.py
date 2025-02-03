@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Generator
 from time import time
 from unittest.mock import AsyncMock, patch
 
@@ -22,9 +22,6 @@ from tests.common import MockConfigEntry, load_json_value_fixture
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 REDIRECT_URI = "https://example.com/auth/external/callback"
-
-type YieldFixture = Generator[AsyncMock]
-type ComponentSetup = Callable[[], Awaitable[bool]]
 
 
 @pytest.fixture(autouse=True)
@@ -148,7 +145,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="ek_auth")
-def electric_kiwi_auth() -> YieldFixture:
+def electric_kiwi_auth() -> Generator[AsyncMock]:
     """Patch access to electric kiwi access token."""
     with patch(
         "homeassistant.components.electric_kiwi.api.ConfigEntryElectricKiwiAuth"
