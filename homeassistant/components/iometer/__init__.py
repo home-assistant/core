@@ -24,7 +24,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IOmeterConfigEntry) -> b
     try:
         await client.get_current_status()
     except IOmeterConnectionError as err:
-        client.close()
         raise ConfigEntryNotReady from err
 
     coordinator = IOMeterCoordinator(hass, client)
