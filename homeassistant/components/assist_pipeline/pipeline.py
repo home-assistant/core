@@ -1063,11 +1063,11 @@ class PipelineRun:
                 agent_id=self.intent_agent,
                 extra_system_prompt=conversation_extra_system_prompt,
             )
-            processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
-            agent_id = user_input.agent_id
+            agent_id = self.intent_agent
+            processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
             intent_response: intent.IntentResponse | None = None
-            if user_input.agent_id != conversation.HOME_ASSISTANT_AGENT:
+            if not processed_locally:
                 # Sentence triggers override conversation agent
                 if (
                     trigger_response_text
@@ -1105,7 +1105,6 @@ class PipelineRun:
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    assert agent_id is not None
                     async for _ in chat_log.async_add_assistant_content(
                         conversation.AssistantContent(
                             agent_id=agent_id,
