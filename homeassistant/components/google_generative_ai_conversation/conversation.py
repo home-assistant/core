@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import codecs
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from google.api_core.exceptions import GoogleAPIError
 import google.generativeai as genai
@@ -165,13 +165,15 @@ def _create_google_tool_response_content(
     )
 
 
-def _convert_content(content: conversation.Content) -> genai_types.ContentDict:
+def _convert_content(
+    content: conversation.UserContent
+    | conversation.AssistantContent
+    | conversation.SystemContent,
+) -> genai_types.ContentDict:
     """Convert HA content to Google content."""
-    assert content.role != "tool_result"
-
     if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
         role = "model" if content.role == "assistant" else content.role
-        return {"role": role, "parts": content.content}  # type: ignore[union-attr]
+        return {"role": role, "parts": content.content}
 
     # Handle the Assistant content with tool calls.
     assert type(content) is conversation.AssistantContent
@@ -296,14 +298,24 @@ class GoogleGenerativeAIConversationEntity(
 
         for chat_content in chat_log.content[1:]:
             if chat_content.role == "tool_result":
-                tool_results.append(chat_content)  # type: ignore[arg-type]
+                # mypy doesn't like picking a type based on checking shared property 'role'
+                tool_results.append(cast(conversation.ToolResultContent, chat_content))
+                continue
 
-            elif tool_results:
+            if tool_results:
                 messages.append(_create_google_tool_response_content(tool_results))
                 tool_results.clear()
 
-            else:
-                messages.append(_convert_content(chat_content))
+            messages.append(
+                _convert_content(
+                    cast(
+                        conversation.UserContent
+                        | conversation.SystemContent
+                        | conversation.AssistantContent,
+                        chat_content,
+                    )
+                )
+            )
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
