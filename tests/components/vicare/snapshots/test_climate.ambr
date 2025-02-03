@@ -200,7 +200,7 @@
     'previous_unique_id': None,
     'supported_features': <ClimateEntityFeature: 1>,
     'translation_key': 'trv',
-    'unique_id': 'gateway1_deviceId1-trv',
+    'unique_id': 'gateway1_zigbee_048727fffe196e03-trv',
     'unit_of_measurement': None,
   })
 # ---
