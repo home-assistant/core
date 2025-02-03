@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 GAMUT = color_util.GamutType(
     color_util.XYPoint(0.704, 0.296),

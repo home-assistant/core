@@ -8,10 +8,18 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from kasa import AuthenticationError, DeviceConfig, Feature, KasaException, Module
+from kasa import (
+    AuthenticationError,
+    Device,
+    DeviceConfig,
+    DeviceType,
+    Feature,
+    KasaException,
+    Module,
+)
+from kasa.iot import IotStrip
 import pytest
 
-from homeassistant import setup
 from homeassistant.components import tplink
 from homeassistant.components.tplink.const import (
     CONF_AES_KEYS,
@@ -59,7 +67,9 @@ from .const import (
     DEVICE_ID,
     DEVICE_ID_MAC,
     IP_ADDRESS,
+    IP_ADDRESS3,
     MAC_ADDRESS,
+    MAC_ADDRESS3,
     MODEL,
 )
 
@@ -153,7 +163,7 @@ async def test_dimmer_switch_unique_id_fix_original_entity_still_exists(
         _patch_single_discovery(device=dimmer),
         _patch_connect(device=dimmer),
     ):
-        await setup.async_setup_component(hass, DOMAIN, {})
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     migrated_dimmer_entity_reg = entity_registry.async_get_or_create(
@@ -236,7 +246,6 @@ async def test_config_entry_with_stored_credentials(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
     config = DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict())
-    config.uses_http = False
     config.http_client = "Foo"
     assert config.credentials != stored_credentials
     config.credentials = stored_credentials
@@ -365,7 +374,7 @@ async def test_update_attrs_fails_in_init(
     assert entity
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
-    assert "Unable to read data for MockLight None:" in caplog.text
+    assert f"Unable to read data for MockLight {entity_id}:" in caplog.text
 
 
 async def test_update_attrs_fails_on_update(
@@ -752,7 +761,6 @@ async def test_credentials_hash_auth_error(
     expected_config = DeviceConfig.from_dict(
         {**DEVICE_CONFIG_DICT_KLAP, "credentials_hash": "theHash"}
     )
-    expected_config.uses_http = False
     expected_config.http_client = "Foo"
     connect_mock.assert_called_with(config=expected_config)
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -784,13 +792,20 @@ async def test_migrate_remove_device_config(
     As async_setup_entry will succeed the hash on the parent is updated
     from the device.
     """
+    old_device_config = {
+        k: v for k, v in device_config.to_dict().items() if k != "credentials"
+    }
+    device_config_dict = {
+        **old_device_config,
+        "uses_http": device_config.connection_type.encryption_type
+        is not Device.EncryptionType.Xor,
+    }
+
     OLD_CREATE_ENTRY_DATA = {
         CONF_HOST: expected_entry_data[CONF_HOST],
         CONF_ALIAS: ALIAS,
         CONF_MODEL: MODEL,
-        CONF_DEVICE_CONFIG: {
-            k: v for k, v in device_config.to_dict().items() if k != "credentials"
-        },
+        CONF_DEVICE_CONFIG: device_config_dict,
     }
 
     entry = MockConfigEntry(
@@ -827,3 +842,390 @@ async def test_migrate_remove_device_config(
     assert entry.data == expected_entry_data
 
     assert "Migration to version 1.5 complete" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("parent_device_type"),
+    [
+        (Device),
+        (IotStrip),
+    ],
+)
+@pytest.mark.parametrize(
+    ("platform", "feature_id", "translated_name"),
+    [
+        pytest.param("switch", "led", "led", id="switch"),
+        pytest.param(
+            "sensor", "current_consumption", "current_consumption", id="sensor"
+        ),
+        pytest.param("binary_sensor", "overheated", "overheated", id="binary_sensor"),
+        pytest.param("number", "smooth_transition_on", "smooth_on", id="number"),
+        pytest.param("select", "light_preset", "light_preset", id="select"),
+        pytest.param("button", "reboot", "restart", id="button"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_automatic_feature_device_addition_and_removal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+    feature_id: str,
+    translated_name: str,
+    parent_device_type: type,
+) -> None:
+    """Test for automatic device with features addition and removal."""
+
+    children = {
+        f"child{index}": _mocked_device(
+            alias=f"child {index}",
+            features=[feature_id],
+            device_type=DeviceType.StripSocket,
+            device_id=f"child{index}",
+        )
+        for index in range(1, 5)
+    }
+
+    mock_device = _mocked_device(
+        alias="hub",
+        children=[children["child1"], children["child2"]],
+        features=[feature_id],
+        device_type=DeviceType.Hub,
+        spec=parent_device_type,
+        device_id="hub_parent",
+    )
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    for child_id in (1, 2):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    parent_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "hub_parent")}
+    )
+    assert parent_device
+
+    for device_id in ("child1", "child2"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
+
+    # Remove one of the devices
+    mock_device.children = [children["child1"]]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    entity_id = f"{platform}.child_2_{translated_name}"
+    state = hass.states.get(entity_id)
+    assert state is None
+    assert entity_registry.async_get(entity_id) is None
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
+
+    # Re-dd the previously removed child device
+    mock_device.children = [
+        children["child1"],
+        children["child2"],
+    ]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 2):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child2"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
+
+    # Add child devices
+    mock_device.children = [children["child1"], children["child3"], children["child4"]]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 3, 4):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child3", "child4"):
+        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+
+    # Add the previously removed child device
+    mock_device.children = [
+        children["child1"],
+        children["child2"],
+        children["child3"],
+        children["child4"],
+    ]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 2, 3, 4):
+        entity_id = f"{platform}.child_{child_id}_{translated_name}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child2", "child3", "child4"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
+
+
+@pytest.mark.parametrize(
+    ("platform", "modules", "features", "translated_name", "child_device_type"),
+    [
+        pytest.param(
+            "camera", [Module.Camera], [], "live_view", DeviceType.Camera, id="camera"
+        ),
+        pytest.param("fan", [Module.Fan], [], None, DeviceType.Fan, id="fan"),
+        pytest.param("siren", [Module.Alarm], [], None, DeviceType.Camera, id="siren"),
+        pytest.param("light", [Module.Light], [], None, DeviceType.Camera, id="light"),
+        pytest.param(
+            "light",
+            [Module.Light, Module.LightEffect],
+            [],
+            None,
+            DeviceType.Camera,
+            id="light_effect",
+        ),
+        pytest.param(
+            "climate",
+            [Module.Thermostat],
+            ["temperature", "target_temperature"],
+            None,
+            DeviceType.Thermostat,
+            id="climate",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_automatic_module_device_addition_and_removal(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+    platform: str,
+    modules: list[str],
+    features: list[str],
+    translated_name: str | None,
+    child_device_type: DeviceType,
+) -> None:
+    """Test for automatic device with modules addition and removal."""
+
+    children = {
+        f"child{index}": _mocked_device(
+            alias=f"child {index}",
+            modules=modules,
+            features=features,
+            device_type=child_device_type,
+            device_id=f"child{index}",
+        )
+        for index in range(1, 5)
+    }
+
+    mock_device = _mocked_device(
+        alias="hub",
+        children=[children["child1"], children["child2"]],
+        features=["ssid"],
+        device_type=DeviceType.Hub,
+        device_id="hub_parent",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    # Set the parent property for the dynamic children as mock_device only sets
+    # it on initialization
+    for child in children.values():
+        child.parent = mock_device
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        mock_camera_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_camera_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    for child_id in (1, 2):
+        sub_id = f"_{translated_name}" if translated_name else ""
+        entity_id = f"{platform}.child_{child_id}{sub_id}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    parent_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "hub_parent")}
+    )
+    assert parent_device
+
+    for device_id in ("child1", "child2"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
+
+    # Remove one of the devices
+    mock_device.children = [children["child1"]]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    sub_id = f"_{translated_name}" if translated_name else ""
+    entity_id = f"{platform}.child_2{sub_id}"
+    state = hass.states.get(entity_id)
+    assert state is None
+    assert entity_registry.async_get(entity_id) is None
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "child2")}) is None
+
+    # Re-dd the previously removed child device
+    mock_device.children = [
+        children["child1"],
+        children["child2"],
+    ]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 2):
+        sub_id = f"_{translated_name}" if translated_name else ""
+        entity_id = f"{platform}.child_{child_id}{sub_id}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child2"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
+
+    # Add child devices
+    mock_device.children = [children["child1"], children["child3"], children["child4"]]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 3, 4):
+        sub_id = f"_{translated_name}" if translated_name else ""
+        entity_id = f"{platform}.child_{child_id}{sub_id}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child3", "child4"):
+        assert device_registry.async_get_device(identifiers={(DOMAIN, device_id)})
+
+    # Add the previously removed child device
+    mock_device.children = [
+        children["child1"],
+        children["child2"],
+        children["child3"],
+        children["child4"],
+    ]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    for child_id in (1, 2, 3, 4):
+        sub_id = f"_{translated_name}" if translated_name else ""
+        entity_id = f"{platform}.child_{child_id}{sub_id}"
+        state = hass.states.get(entity_id)
+        assert state
+        assert entity_registry.async_get(entity_id)
+
+    for device_id in ("child1", "child2", "child3", "child4"):
+        device_entry = device_registry.async_get_device(
+            identifiers={(DOMAIN, device_id)}
+        )
+        assert device_entry
+        assert device_entry.via_device_id == parent_device.id
+
+
+async def test_automatic_device_addition_does_not_remove_disabled_default(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    mock_connect: AsyncMock,
+    mock_discovery: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test for automatic device addition does not remove disabled default entities."""
+
+    features = ["ssid", "signal_level"]
+    children = {
+        f"child{index}": _mocked_device(
+            alias=f"child {index}",
+            features=features,
+            device_id=f"child{index}",
+        )
+        for index in range(1, 5)
+    }
+
+    mock_device = _mocked_device(
+        alias="hub",
+        children=[children["child1"], children["child2"]],
+        features=features,
+        device_type=DeviceType.Hub,
+        device_id="hub_parent",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+    )
+    # Set the parent property for the dynamic children as mock_device only sets
+    # it on initialization
+    for child in children.values():
+        child.parent = mock_device
+
+    with override_side_effect(mock_connect["connect"], lambda *_, **__: mock_device):
+        mock_camera_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_camera_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    def check_entities(entity_id_device):
+        entity_id = f"sensor.{entity_id_device}_signal_level"
+        state = hass.states.get(entity_id)
+        assert state
+        reg_ent = entity_registry.async_get(entity_id)
+        assert reg_ent
+        assert reg_ent.disabled is False
+
+        entity_id = f"sensor.{entity_id_device}_ssid"
+        state = hass.states.get(entity_id)
+        assert state is None
+        reg_ent = entity_registry.async_get(entity_id)
+        assert reg_ent
+        assert reg_ent.disabled is True
+        assert reg_ent.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    check_entities("hub")
+    for child_id in (1, 2):
+        check_entities(f"child_{child_id}")
+
+    # Add child devices
+    mock_device.children = [children["child1"], children["child2"], children["child3"]]
+    freezer.tick(5)
+    async_fire_time_changed(hass)
+
+    check_entities("hub")
+    for child_id in (1, 2, 3):
+        check_entities(f"child_{child_id}")

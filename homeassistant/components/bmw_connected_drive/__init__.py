@@ -9,11 +9,11 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
+    config_validation as cv,
     device_registry as dr,
     discovery,
     entity_registry as er,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import ATTR_VIN, CONF_READ_ONLY, DOMAIN
 from .coordinator import BMWConfigEntry, BMWDataUpdateCoordinator

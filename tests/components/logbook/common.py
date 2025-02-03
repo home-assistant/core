@@ -16,7 +16,7 @@ from homeassistant.components.recorder.models import (
 from homeassistant.core import Context
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 IDX_TO_NAME = dict(enumerate(EventAsRow._fields))
 

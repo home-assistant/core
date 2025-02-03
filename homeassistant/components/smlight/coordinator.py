@@ -144,11 +144,15 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
+        esp_firmware = None
+        zb_firmware = None
 
-        return SmFwData(
-            info=info,
-            esp_firmware=await self.client.get_firmware_version(info.fw_channel),
-            zb_firmware=await self.client.get_firmware_version(
+        try:
+            esp_firmware = await self.client.get_firmware_version(info.fw_channel)
+            zb_firmware = await self.client.get_firmware_version(
                 info.fw_channel, device=info.model, mode="zigbee"
-            ),
-        )
+            )
+        except SmlightConnectionError as err:
+            self.async_set_update_error(err)
+
+        return SmFwData(info=info, esp_firmware=esp_firmware, zb_firmware=zb_firmware)
