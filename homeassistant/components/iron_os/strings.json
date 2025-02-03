@@ -29,6 +29,14 @@
         "name": "Soldering tip"
       }
     },
+    "button": {
+      "settings_save": {
+        "name": "Save settings"
+      },
+      "settings_reset": {
+        "name": "Restore default settings"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "name": "Setpoint temperature"
@@ -128,8 +136,8 @@
       "temp_unit": {
         "name": "Temperature display unit",
         "state": {
-          "celsius": "Celsius (C°)",
-          "fahrenheit": "Fahrenheit (F°)"
+          "celsius": "Celsius (°C)",
+          "fahrenheit": "Fahrenheit (°F)"
         }
       },
       "desc_scroll_speed": {
@@ -157,6 +165,13 @@
           "seconds_4": "4 second",
           "seconds_5": "5 second",
           "loop": "Loop"
+        }
+      },
+      "usb_pd_mode": {
+        "name": "Power Delivery 3.1 EPR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
         }
       }
     },
@@ -213,6 +228,29 @@
       },
       "estimated_power": {
         "name": "Estimated power"
+      }
+    },
+    "switch": {
+      "animation_loop": {
+        "name": "Animation loop"
+      },
+      "cooling_temp_blink": {
+        "name": "Cool down screen flashing"
+      },
+      "idle_screen_details": {
+        "name": "Detailed idle screen"
+      },
+      "solder_screen_details": {
+        "name": "Detailed solder screen"
+      },
+      "invert_buttons": {
+        "name": "Swap +/- buttons"
+      },
+      "display_invert": {
+        "name": "Invert screen"
+      },
+      "calibrate_cjc": {
+        "name": "Calibrate CJC"
       }
     }
   },

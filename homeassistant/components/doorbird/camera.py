@@ -10,7 +10,7 @@ import aiohttp
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .entity import DoorBirdEntity
 from .models import DoorBirdConfigEntry, DoorBirdData

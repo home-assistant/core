@@ -6,7 +6,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Final, Self, cast
+from typing import Any, Final, Protocol, Self, cast
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -47,7 +47,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, EventStateChangedData, State
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS,
     json_loads,
@@ -77,7 +77,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 47
+SCHEMA_VERSION = 48
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,10 +233,14 @@ CONTEXT_BINARY_TYPE = LargeBinary(CONTEXT_ID_BIN_MAX_LENGTH).with_variant(
 TIMESTAMP_TYPE = DOUBLE_TYPE
 
 
+class _LiteralProcessorType(Protocol):
+    def __call__(self, value: Any) -> str: ...
+
+
 class JSONLiteral(JSON):
     """Teach SA how to literalize json."""
 
-    def literal_processor(self, dialect: Dialect) -> Callable[[Any], str]:
+    def literal_processor(self, dialect: Dialect) -> _LiteralProcessorType:
         """Processor to convert a value to JSON."""
 
         def process(value: Any) -> str:

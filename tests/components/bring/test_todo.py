@@ -4,10 +4,11 @@ from collections.abc import Generator
 import re
 from unittest.mock import AsyncMock, patch
 
-from bring_api import BringItemOperation, BringRequestException
+from bring_api import BringItemOperation, BringItemsResponse, BringRequestException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bring.const import DOMAIN
 from homeassistant.components.todo import (
     ATTR_DESCRIPTION,
     ATTR_ITEM,
@@ -21,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, load_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -40,9 +41,13 @@ async def test_todo(
     bring_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_bring_client: AsyncMock,
 ) -> None:
     """Snapshot test states of todo platform."""
-
+    mock_bring_client.get_list.side_effect = [
+        BringItemsResponse.from_json(load_fixture("items.json", DOMAIN)),
+        BringItemsResponse.from_json(load_fixture("items2.json", DOMAIN)),
+    ]
     bring_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(bring_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -27,6 +27,7 @@ from homeassistant.helpers.typing import StateType
 
 from .bridge import RefossDataUpdateCoordinator
 from .const import (
+    _LOGGER,
     CHANNEL_DISPLAY_NAME,
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
@@ -143,6 +144,7 @@ async def async_setup_entry(
             for channel in device.channels
             for description in descriptions
         )
+        _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)

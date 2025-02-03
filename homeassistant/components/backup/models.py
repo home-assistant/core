@@ -6,6 +6,8 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Any, Self
 
+from homeassistant.exceptions import HomeAssistantError
+
 
 @dataclass(frozen=True, kw_only=True)
 class AddonInfo:
@@ -26,7 +28,7 @@ class Folder(StrEnum):
 
 
 @dataclass(frozen=True, kw_only=True)
-class AgentBackup:
+class BaseBackup:
     """Base backup class."""
 
     addons: list[AddonInfo]
@@ -38,18 +40,24 @@ class AgentBackup:
     homeassistant_included: bool
     homeassistant_version: str | None  # None if homeassistant_included is False
     name: str
-    protected: bool
-    size: int
-
-    def as_dict(self) -> dict:
-        """Return a dict representation of this backup."""
-        return asdict(self)
 
     def as_frontend_json(self) -> dict:
         """Return a dict representation of this backup for sending to frontend."""
         return {
             key: val for key, val in asdict(self).items() if key != "extra_metadata"
         }
+
+
+@dataclass(frozen=True, kw_only=True)
+class AgentBackup(BaseBackup):
+    """Agent backup class."""
+
+    protected: bool
+    size: int
+
+    def as_dict(self) -> dict:
+        """Return a dict representation of this backup."""
+        return asdict(self)
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self:
@@ -67,3 +75,15 @@ class AgentBackup:
             protected=data["protected"],
             size=data["size"],
         )
+
+
+class BackupError(HomeAssistantError):
+    """Base class for backup errors."""
+
+    error_code = "unknown"
+
+
+class BackupManagerError(BackupError):
+    """Backup manager error."""
+
+    error_code = "backup_manager_error"
