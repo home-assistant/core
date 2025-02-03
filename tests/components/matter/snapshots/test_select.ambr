@@ -1550,7 +1550,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Device Energy Management Mode',
+    'original_name': 'Device Energy Management mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1562,7 +1562,7 @@
 # name: test_selects[silabs_evse_charging][select.evse_device_energy_management_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Device Energy Management Mode',
+      'friendly_name': 'evse Device Energy Management mode',
       'options': list([
         'No energy management (forecast only)',
         'Device optimizes (no local or grid control)',
@@ -1610,7 +1610,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Energy EVSE Mode',
+    'original_name': 'Energy EVSE mode',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1622,7 +1622,7 @@
 # name: test_selects[silabs_evse_charging][select.evse_energy_evse_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Energy EVSE Mode',
+      'friendly_name': 'evse Energy EVSE mode',
       'options': list([
         'Manual',
         'Auto-scheduled',
