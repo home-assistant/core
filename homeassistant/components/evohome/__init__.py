@@ -122,6 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await coordinator.async_register_shutdown()
+
     await coordinator.async_first_refresh()  # get initial state via _async_setup
 
     if not coordinator.last_update_success:
