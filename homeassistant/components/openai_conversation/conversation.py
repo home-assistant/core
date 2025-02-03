@@ -97,28 +97,31 @@ def _convert_message_to_param(
 
 
 def _convert_content_to_param(
-    message: conversation.Content,
+    content: conversation.Content,
 ) -> ChatCompletionMessageParam:
     """Convert any native chat message for this agent to the native format."""
-    if message.role == "tool_result":
+    if content.role == "tool_result":
+        assert type(content) is conversation.ToolResultContent
         return ChatCompletionToolMessageParam(
             role="tool",
-            tool_call_id=message.tool_call_id,
-            content=json.dumps(message.tool_result),
+            tool_call_id=content.tool_call_id,
+            content=json.dumps(content.tool_result),
         )
-    if message.role != "assistant":
-        role = message.role
+    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
+        role = content.role
         if role == "system":
             role = "developer"
         return cast(
             ChatCompletionMessageParam,
-            {"role": message.role, "content": message.content},
+            {"role": content.role, "content": content.content},  # type: ignore[union-attr]
         )
 
-    # Handle the Assistant content. Including tool calls.
-    tool_calls: list[ChatCompletionMessageToolCallParam] = []
-    if message.tool_calls:
-        tool_calls = [
+    # Handle the Assistant content including tool calls.
+    assert type(content) is conversation.AssistantContent
+    return ChatCompletionAssistantMessageParam(
+        role="assistant",
+        content=content.content,
+        tool_calls=[
             ChatCompletionMessageToolCallParam(
                 id=tool_call.id,
                 function=Function(
@@ -127,15 +130,9 @@ def _convert_content_to_param(
                 ),
                 type="function",
             )
-            for tool_call in message.tool_calls
-        ]
-    param = ChatCompletionAssistantMessageParam(
-        role=message.role,
-        content=message.content,
+            for tool_call in content.tool_calls
+        ],
     )
-    if tool_calls:
-        param["tool_calls"] = tool_calls
-    return param
 
 
 class OpenAIConversationEntity(
