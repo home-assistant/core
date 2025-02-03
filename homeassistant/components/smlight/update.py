@@ -21,7 +21,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from . import SmConfigEntry, get_radio
 from .const import LOGGER
@@ -33,7 +32,7 @@ from .entity import SmEntity
 class SmUpdateEntityDescription(UpdateEntityDescription):
     """Describes SMLIGHT SLZB-06 update entity."""
 
-    installed_version: Callable[[Info, int], StateType]
+    installed_version: Callable[[Info, int], str | None]
     latest_version: Callable[[list[Firmware], int | None], Firmware | None]
     fw_list: Callable[[SmFwData, int], list[Firmware] | None]
 
@@ -110,8 +109,7 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         """Version installed.."""
         data = self.coordinator.data
 
-        version = self.entity_description.installed_version(data.info, self.idx)
-        return str(version) if version is not None and version != "-1" else None
+        return self.entity_description.installed_version(data.info, self.idx)
 
     @property
     def latest_version(self) -> str | None:
