@@ -63,8 +63,8 @@ class VeSyncBaseSwitch(VeSyncBaseEntity, SwitchEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        self.device.turn_on()
-        self.schedule_update_ha_state()
+        if self.device.turn_on():
+            self.schedule_update_ha_state()
 
     @property
     def is_on(self) -> bool:
@@ -73,8 +73,8 @@ class VeSyncBaseSwitch(VeSyncBaseEntity, SwitchEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.device.turn_off()
-        self.schedule_update_ha_state()
+        if self.device.turn_off():
+            self.schedule_update_ha_state()
 
 
 class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
