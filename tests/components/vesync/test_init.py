@@ -134,8 +134,6 @@ async def test_migrate_config_entry(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test migration of config entry. Only migrates switches to a new unique_id."""
-    entity_registry = er.async_get(hass)
-
     switch: er.RegistryEntry = entity_registry.async_get_or_create(
         domain="switch",
         platform="vesync",
@@ -159,7 +157,7 @@ async def test_migrate_config_entry(
     await hass.config_entries.async_setup(switch_old_id_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert switch_old_id_config_entry.version == 2
+    assert switch_old_id_config_entry.minor_version == 2
 
     migrated_switch = entity_registry.async_get(switch.entity_id)
     assert migrated_switch is not None

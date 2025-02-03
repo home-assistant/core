@@ -23,7 +23,8 @@ DATA_SCHEMA = vol.Schema(
 class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 2
+    VERSION = 1
+    MINOR_VERSION = 2
 
     @callback
     def _show_form(self, errors: dict[str, str] | None = None) -> ConfigFlowResult:
