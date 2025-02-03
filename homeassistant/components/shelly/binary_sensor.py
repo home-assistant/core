@@ -290,7 +290,6 @@ RPC_SENSORS: Final = {
         name="Error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        extra_state_attributes=lambda value: {"error": value},
     ),
 }
 
