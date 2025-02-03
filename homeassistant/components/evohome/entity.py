@@ -26,7 +26,6 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
-    _device_state_attrs: dict[str, Any]
 
     def __init__(
         self,
@@ -61,6 +60,11 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
         """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any]:
+        """Return entity specific state attributes."""
+        return {"status": self._device_state_attrs}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -114,12 +118,6 @@ class EvoChild(EvoEntity):
         """
 
         return self._setpoints
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-
-        return {"status": self._device_state_attrs}
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
