@@ -50,10 +50,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None:
-            return self.async_create_entry(
-                title=f"IOmeter {self._meter_number}",
-                data={CONF_HOST: self._host},
-            )
+            return await self._async_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(
@@ -68,8 +65,9 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._host = user_input[CONF_HOST]
             session = async_get_clientsession(self.hass)
-            client = IOmeterClient(host=user_input[CONF_HOST], session=session)
+            client = IOmeterClient(host=self._host, session=session)
             try:
                 status = await client.get_current_status()
             except IOmeterConnectionError:
@@ -78,12 +76,16 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._meter_number = status.meter.number
                 await self.async_set_unique_id(status.device.id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=f"IOmeter {self._meter_number}",
-                    data={CONF_HOST: user_input[CONF_HOST]},
-                )
+                return await self._async_create_entry()
         return self.async_show_form(
             step_id="user",
             data_schema=CONFIG_SCHEMA,
             errors=errors,
+        )
+
+    async def _async_create_entry(self) -> ConfigFlowResult:
+        """Create entry."""
+        return self.async_create_entry(
+            title=f"IOmeter {self._meter_number}",
+            data={CONF_HOST: self._host},
         )
