@@ -1,6 +1,7 @@
 """Support for MotionMount sensors."""
 
 import motionmount
+from motionmount import MotionMountSystemError
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
@@ -48,11 +49,11 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         status = self.mm.system_status
 
         errorMessages = {
-            motionmount.MotionMountSystemError.MotorError: "motor",
-            motionmount.MotionMountSystemError.ObstructionDetected: "obstruction",
-            motionmount.MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
-            motionmount.MotionMountSystemError.HDMICECError: "hdmi_cec",
-            motionmount.MotionMountSystemError.InternalError: "internal",
+            MotionMountSystemError.MotorError: "motor",
+            MotionMountSystemError.ObstructionDetected: "obstruction",
+            MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
+            MotionMountSystemError.HDMICECError: "hdmi_cec",
+            MotionMountSystemError.InternalError: "internal",
         }
 
         for error, message in errorMessages.items():
