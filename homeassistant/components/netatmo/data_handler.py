@@ -367,7 +367,7 @@ class NetatmoDataHandler:
                         DOOR_TAG,
                     ),
                 )
-            
+
     def setup_modules(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up modules."""
         netatmo_type_signal_map = {
@@ -398,11 +398,11 @@ class NetatmoDataHandler:
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
                 _LOGGER.debug(
-                    "Module %s dispatched as %s category by %s to publisher %s", 
-                    module.name, 
-                    module.device_category, 
-                    signal, 
-                    signal_home
+                    "Module %s dispatched as %s category by %s to publisher %s",
+                    module.name,
+                    module.device_category,
+                    signal,
+                    signal_home,
                 )
                 async_dispatcher_send(
                     self.hass,
@@ -416,9 +416,9 @@ class NetatmoDataHandler:
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
                 _LOGGER.debug(
-                    "Module %s dispatched as weather category to publisher %s", 
-                    module.name, 
-                    WEATHER
+                    "Module %s dispatched as weather category to publisher %s",
+                    module.name,
+                    WEATHER,
                 )
                 async_dispatcher_send(
                     self.hass,
@@ -432,9 +432,9 @@ class NetatmoDataHandler:
                 )
             if module.device_category is NetatmoDeviceCategory.opening:
                 _LOGGER.debug(
-                    "Module %s dispatched as opening category to publisher %s", 
-                    module.name, 
-                    DOOR_TAG
+                    "Module %s dispatched as opening category to publisher %s",
+                    module.name,
+                    DOOR_TAG,
                 )
                 async_dispatcher_send(
                     self.hass,
