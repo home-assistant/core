@@ -5,7 +5,7 @@ from typing import Any
 
 from pygryfsmart.device import _GryfDevice, _GryfOutput
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
@@ -67,6 +67,7 @@ class GryfLightBase(LightEntity):
 
     _is_on = False
     _device: _GryfDevice
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     @property
     def is_on(self):
