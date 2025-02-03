@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 _LOGGER = logging.getLogger(__name__)
 
 
-class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator):
+class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Custom coordinator for Actron Air Neo integration."""
 
     def __init__(
