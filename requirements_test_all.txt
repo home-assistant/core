@@ -1795,7 +1795,7 @@ pyownet==0.10.0.post1
 pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
-pypck==0.8.3
+pypck==0.8.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
