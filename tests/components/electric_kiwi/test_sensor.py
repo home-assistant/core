@@ -20,7 +20,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import dt as dt_util
 
-from .conftest import ComponentSetup, YieldFixture
+from . import init_integration
+from .conftest import YieldFixture
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +51,6 @@ async def test_hop_sensors(
     electrickiwi_api: Mock,
     ek_auth: AsyncMock,
     entity_registry: EntityRegistry,
-    component_setup: ComponentSetup,
     sensor: str,
     sensor_state: str,
 ) -> None:
@@ -61,7 +61,7 @@ async def test_hop_sensors(
     sensor state should be set to today at 4pm or if now is past 4pm,
     then tomorrow at 4pm.
     """
-    assert await component_setup()
+    await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity = entity_registry.async_get(sensor)
@@ -107,10 +107,9 @@ async def test_hop_sensors(
 async def test_account_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    electrickiwi_api: Mock,
+    electrickiwi_api: AsyncMock,
     ek_auth: YieldFixture,
     entity_registry: EntityRegistry,
-    component_setup: ComponentSetup,
     sensor: str,
     sensor_state: str,
     device_class: str,
@@ -118,7 +117,7 @@ async def test_account_sensors(
 ) -> None:
     """Test Account sensors for the Electric Kiwi integration."""
 
-    assert await component_setup()
+    await init_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity = entity_registry.async_get(sensor)
@@ -132,7 +131,7 @@ async def test_account_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) == state_class
 
 
-async def test_check_and_move_time(electrickiwi_api: Mock) -> None:
+async def test_check_and_move_time(electrickiwi_api: AsyncMock) -> None:
     """Test correct time is returned depending on time of day."""
     hop = await electrickiwi_api.get_hop()
 

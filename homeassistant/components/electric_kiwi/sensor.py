@@ -171,8 +171,8 @@ class ElectricKiwiAccountEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
-            f"_{coordinator._ek_api.electricity.identifier}_{description.key}"  # noqa: SLF001
+            f"{coordinator.ek_api.customer_number}"
+            f"_{coordinator.ek_api.electricity.identifier}_{description.key}"
         )
         self.entity_description = description
 
@@ -200,8 +200,8 @@ class ElectricKiwiHOPEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
-            f"_{coordinator._ek_api.electricity.identifier}_{description.key}"  # noqa: SLF001
+            f"{coordinator.ek_api.customer_number}"
+            f"_{coordinator.ek_api.electricity.identifier}_{description.key}"
         )
         self.entity_description = description
 

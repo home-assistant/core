@@ -1,7 +1,7 @@
 """Test the Electric Kiwi init."""
 
 import http
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from aiohttp import RequestInfo
 from aiohttp.client_exceptions import ClientResponseError
@@ -12,13 +12,13 @@ from homeassistant.components.electric_kiwi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import ComponentSetup, init_integration
+from . import init_integration
 
 from tests.common import MockConfigEntry
 
 
 async def test_async_setup_entry(
-    hass: HomeAssistant, config_entry: MockConfigEntry, component_setup: ComponentSetup
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test a successful setup entry and unload of entry."""
     await init_integration(hass, config_entry)
@@ -30,20 +30,17 @@ async def test_async_setup_entry(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN)
 
 
 async def test_async_setup_multiple_entries(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     config_entry2: MockConfigEntry,
-    component_setup: ComponentSetup,
 ) -> None:
     """Test a successful setup and unload of multiple entries."""
 
     for entry in (config_entry, config_entry2):
         await init_integration(hass, entry)
-        assert config_entry.state is ConfigEntryState.LOADED
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
 
@@ -52,8 +49,6 @@ async def test_async_setup_multiple_entries(
         await hass.async_block_till_done()
 
         assert entry.state is ConfigEntryState.NOT_LOADED
-
-    assert not hass.data.get(DOMAIN)
 
 
 @pytest.mark.parametrize(
@@ -75,7 +70,6 @@ async def test_refresh_token_validity_failures(
     config_entry: MockConfigEntry,
     status: http.HTTPStatus,
     expected_state: ConfigEntryState,
-    component_setup: ComponentSetup,
 ) -> None:
     """Test token refresh failure status."""
     with patch(
@@ -94,31 +88,22 @@ async def test_refresh_token_validity_failures(
 
 
 async def test_unique_id_migration(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    component_setup: ComponentSetup,
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test that the unique ID is migrated to the customer number."""
-    await component_setup()
+    await init_integration(hass, config_entry)
     new_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert new_entry.minor_version == 2
     assert new_entry.unique_id == "123456"
 
 
 async def test_unique_id_migration_failure(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    component_setup: ComponentSetup,
-    electrickiwi_api: Mock,
+    hass: HomeAssistant, config_entry: MockConfigEntry, electrickiwi_api: AsyncMock
 ) -> None:
     """Test that the unique ID is migrated to the customer number."""
-    with patch.object(
-        electrickiwi_api,
-        "get_active_session",
-        new_callable=AsyncMock,
-        side_effect=ApiException(),
-    ):
-        await component_setup()
-        new_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-        assert new_entry.minor_version == 1
-        assert new_entry.unique_id == DOMAIN
+    electrickiwi_api.get_active_session.side_effect = ApiException()
+    await init_integration(hass, config_entry)
+
+    assert config_entry.minor_version == 1
+    assert config_entry.unique_id == DOMAIN
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR

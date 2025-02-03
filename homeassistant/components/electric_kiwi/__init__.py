@@ -96,11 +96,11 @@ async def async_migrate_entry(
         )
         try:
             ek_session = await ek_api.get_active_session()
-            unique_id = str(ek_session.data.customer_number)
-            hass.config_entries.async_update_entry(
-                config_entry, unique_id=unique_id, minor_version=2
-            )
         except ApiException:
             return False
+        unique_id = str(ek_session.data.customer_number)
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=unique_id, minor_version=2
+        )
 
     return True
