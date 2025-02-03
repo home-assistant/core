@@ -28,31 +28,36 @@ from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
 
+def zigbee_latest_version(data: SmFwData, idx: int) -> Firmware | None:
+    """Get the latest Zigbee firmware version."""
+
+    if idx < len(data.zb_firmware):
+        firmware_list = data.zb_firmware[idx]
+        if firmware_list:
+            return firmware_list[0]
+    return None
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmUpdateEntityDescription(UpdateEntityDescription):
     """Describes SMLIGHT SLZB-06 update entity."""
 
     installed_version: Callable[[Info, int], str | None]
-    latest_version: Callable[[list[Firmware], int | None], Firmware | None]
-    fw_list: Callable[[SmFwData, int], list[Firmware] | None]
+    latest_version: Callable[[SmFwData, int], Firmware | None]
 
 
 CORE_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="core_update",
     translation_key="core_update",
     installed_version=lambda x, idx: x.sw_version,
-    latest_version=lambda fw_list, fw_type: next((f for f in fw_list), None),
-    fw_list=lambda x, idx: x.esp_firmware,
+    latest_version=lambda x, idx: x.esp_firmware[0] if x.esp_firmware else None,
 )
 
 ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
     key="zigbee_update",
     translation_key="zigbee_update",
     installed_version=lambda x, idx: get_radio(x, idx).zb_version,
-    latest_version=lambda fw_list, fw_type: next(
-        (f for f in fw_list if f.type == fw_type), None
-    ),
-    fw_list=lambda x, idx: x.zb_firmware2 if idx else x.zb_firmware,
+    latest_version=zigbee_latest_version,
 )
 
 
@@ -115,21 +120,12 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         data = self.coordinator.data
-        fw: Firmware | None = None
 
         if self.coordinator.legacy_api == 2:
             return None
 
-        fw_list = self.entity_description.fw_list(data, self.idx)
-        if fw_list:
-            zb_type = data.info.radios[self.idx].zb_type  # type: ignore[index]
-            fw = self.entity_description.latest_version(fw_list, zb_type)
-
-        if fw:
-            self._firmware = fw
-            return fw.ver
-
-        return None
+        self._firmware = self.entity_description.latest_version(data, self.idx)
+        return self._firmware.ver if self._firmware else None
 
     def register_callbacks(self) -> None:
         """Register callbacks for SSE update events."""
