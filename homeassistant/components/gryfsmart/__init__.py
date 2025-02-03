@@ -21,7 +21,7 @@ CONFIG_SCHEMA = SCHEMA
 _PLATFORMS: list[Platform] = [
     Platform.LIGHT,
     # Platform.BINARY_SENSOR,
-    # Platform.SENSOR
+    Platform.SENSOR,
     # Platform.CLIMATE,
     # Platform.COVER,
     # Platform.SWITCH,
@@ -51,6 +51,7 @@ async def async_setup(
     hass.data[DOMAIN][CONF_API] = api
 
     await async_load_platform(hass, Platform.LIGHT, DOMAIN, None, config)
+    await async_load_platform(hass, Platform.SENSOR, DOMAIN, None, config)
 
     return True
 
