@@ -143,6 +143,15 @@ class ChatLog:
         """Add user content to the log."""
         self.content.append(content)
 
+    @callback
+    def async_add_assistant_content_without_tools(
+        self, content: AssistantContent
+    ) -> None:
+        """Add assistant content to the log."""
+        if content.tool_calls is not None:
+            raise ValueError("Tool calls not allowed")
+        self.content.append(content)
+
     async def async_add_assistant_content(
         self, content: AssistantContent
     ) -> AsyncGenerator[ToolResultContent]:
