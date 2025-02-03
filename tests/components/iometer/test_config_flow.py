@@ -14,9 +14,12 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+IP_ADDRESS = "10.0.0.2"
+IOMETER_DEVICE_ID = "658c2b34-2017-45f2-a12b-731235f8bb97"
+
 ZEROCONF_DISCOVERY = zeroconf.ZeroconfServiceInfo(
-    ip_address=ip_address("10.0.0.2"),
-    ip_addresses=[ip_address("10.0.0.2")],
+    ip_address=ip_address(IP_ADDRESS),
+    ip_addresses=[ip_address(IP_ADDRESS)],
     hostname="IOmeter-EC63E8.local.",
     name="IOmeter-EC63E8",
     port=80,
@@ -25,10 +28,9 @@ ZEROCONF_DISCOVERY = zeroconf.ZeroconfServiceInfo(
 )
 
 
-async def test_full_flow(
+async def test_user_flow(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -50,13 +52,12 @@ async def test_full_flow(
     assert result["data"] == {
         CONF_HOST: "10.0.0.2",
     }
-    assert result["result"].unique_id == "658c2b34-2017-45f2-a12b-731235f8bb97"
+    assert result["result"].unique_id == IOMETER_DEVICE_ID
 
 
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -78,7 +79,7 @@ async def test_zeroconf_flow(
     assert result["data"] == {
         CONF_HOST: "10.0.0.2",
     }
-    assert result["result"].unique_id == "658c2b34-2017-45f2-a12b-731235f8bb97"
+    assert result["result"].unique_id == IOMETER_DEVICE_ID
 
 
 async def test_zeroconf_flow_abort_duplicate(
@@ -96,7 +97,7 @@ async def test_zeroconf_flow_abort_duplicate(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_flow_error(
+async def test_zeroconf_flow_connection_error(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
 ) -> None:
@@ -112,7 +113,7 @@ async def test_zeroconf_flow_error(
     assert result["reason"] == "cannot_connect"
 
 
-async def test_flow_errors(
+async def test_user_flow_connection_error(
     hass: HomeAssistant,
     mock_iometer_client: AsyncMock,
     mock_setup_entry: AsyncMock,
