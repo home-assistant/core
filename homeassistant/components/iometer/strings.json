@@ -49,7 +49,7 @@
         "name": "Meter number"
       },
       "pin_status": {
-        "name": "Pin status",
+        "name": "PIN status",
         "state": {
           "entered": "Entered",
           "pending": "Pending",
@@ -65,16 +65,16 @@
         }
       },
       "total_consumption": {
-        "name": "Total Consumption"
+        "name": "Total consumption"
       },
       "total_production": {
-        "name": "Total Production"
+        "name": "Total production"
       },
       "core_bridge_rssi": {
-        "name": "Signal Strength Core/Bridge"
+        "name": "Signal strength Core/Bridge"
       },
       "wifi_rssi": {
-        "name": "Signal Strength Wifi"
+        "name": "Signal strength Wi-Fi"
       }
     }
   }
