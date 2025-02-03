@@ -16,7 +16,7 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from tests.common import MockConfigEntry
 
@@ -127,9 +127,9 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id="conversation.claude"
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert "The user name is Test User." in mock_create.mock_calls[1][2]["system"]
     assert "The user id is 12345." in mock_create.mock_calls[1][2]["system"]
 
@@ -236,6 +236,7 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
@@ -373,6 +374,7 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
@@ -472,7 +474,7 @@ async def test_conversation_id(
 
     assert result.conversation_id == conversation_id
 
-    unknown_id = ulid.ulid()
+    unknown_id = ulid_util.ulid()
 
     result = await conversation.async_converse(
         hass, "hello", unknown_id, None, agent_id="conversation.claude"

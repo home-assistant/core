@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 from aiolookin import Climate, Device, Remote
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 DEVICE_ID = "98F33163"
 MODULE = "homeassistant.components.lookin"

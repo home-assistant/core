@@ -522,6 +522,11 @@ ZEROCONF = {
             "domain": "homekit",
         },
     ],
+    "_homewizard._tcp.local.": [
+        {
+            "domain": "homewizard",
+        },
+    ],
     "_hscp._tcp.local.": [
         {
             "domain": "apple_tv",
@@ -727,6 +732,11 @@ ZEROCONF = {
     "_octoprint._tcp.local.": [
         {
             "domain": "octoprint",
+        },
+    ],
+    "_owserver._tcp.local.": [
+        {
+            "domain": "onewire",
         },
     ],
     "_plexmediasvr._tcp.local.": [

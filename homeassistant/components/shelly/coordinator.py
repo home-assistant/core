@@ -18,8 +18,9 @@ from aioshelly.exceptions import (
     RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice, RpcUpdateType
-from propcache import cached_property
+from propcache.api import cached_property
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -30,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .bluetooth import async_connect_scanner
@@ -697,13 +698,17 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         )
         if ble_scanner_mode == BLEScannerMode.DISABLED and self.connected:
             await async_stop_scanner(self.device)
+            async_remove_scanner(self.hass, format_mac(self.mac).upper())
             return
         if await async_ensure_ble_enabled(self.device):
             # BLE enable required a reboot, don't bother connecting
             # the scanner since it will be disconnected anyway
             return
+        assert self.device_id is not None
         self._disconnected_callbacks.append(
-            await async_connect_scanner(self.hass, self, ble_scanner_mode)
+            await async_connect_scanner(
+                self.hass, self, ble_scanner_mode, self.device_id
+            )
         )
 
     @callback

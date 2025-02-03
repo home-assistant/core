@@ -47,7 +47,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -78,6 +78,7 @@ from .const import (
     CONF_VIDEO_CODEC,
     CONF_VIDEO_MAP,
     CONF_VIDEO_PACKET_SIZE,
+    CONF_VIDEO_PROFILE_NAMES,
     DEFAULT_AUDIO_CODEC,
     DEFAULT_AUDIO_MAP,
     DEFAULT_AUDIO_PACKET_SIZE,
@@ -90,6 +91,7 @@ from .const import (
     DEFAULT_VIDEO_CODEC,
     DEFAULT_VIDEO_MAP,
     DEFAULT_VIDEO_PACKET_SIZE,
+    DEFAULT_VIDEO_PROFILE_NAMES,
     DOMAIN,
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
@@ -163,6 +165,9 @@ CAMERA_SCHEMA = BASIC_INFO_SCHEMA.extend(
         vol.Optional(CONF_VIDEO_CODEC, default=DEFAULT_VIDEO_CODEC): vol.In(
             VALID_VIDEO_CODECS
         ),
+        vol.Optional(CONF_VIDEO_PROFILE_NAMES, default=DEFAULT_VIDEO_PROFILE_NAMES): [
+            cv.string
+        ],
         vol.Optional(
             CONF_AUDIO_PACKET_SIZE, default=DEFAULT_AUDIO_PACKET_SIZE
         ): cv.positive_int,
@@ -643,7 +648,8 @@ def state_needs_accessory_mode(state: State) -> bool:
         state.domain == MEDIA_PLAYER_DOMAIN
         and state.attributes.get(ATTR_DEVICE_CLASS)
         in (MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.RECEIVER)
-        or state.domain == REMOTE_DOMAIN
+    ) or (
+        state.domain == REMOTE_DOMAIN
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
@@ -655,3 +661,14 @@ def state_changed_event_is_same_state(event: Event[EventStateChangedData]) -> bo
     old_state = event_data["old_state"]
     new_state = event_data["new_state"]
     return bool(new_state and old_state and new_state.state == old_state.state)
+
+
+def get_min_max(value1: float, value2: float) -> tuple[float, float]:
+    """Return the minimum and maximum of two values.
+
+    HomeKit will go unavailable if the min and max are reversed
+    so we make sure the min is always the min and the max is always the max
+    as any mistakes made in integrations will cause the entire
+    bridge to go unavailable.
+    """
+    return min(value1, value2), max(value1, value2)

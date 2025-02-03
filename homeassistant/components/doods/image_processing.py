@@ -25,8 +25,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
@@ -266,7 +265,7 @@ class Doods(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                box_label = f'{label} {instance["score"]:.1f}%'
+                box_label = f"{label} {instance['score']:.1f}%"
                 # Already scaled, use 1 for width and height
                 draw_box(
                     draw,

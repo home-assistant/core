@@ -34,7 +34,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
     get_instance,
     session_scope,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (
@@ -927,10 +927,7 @@ def filter_unique_constraint_integrity_error(
 
         if ignore:
             _LOGGER.warning(
-                (
-                    "Blocked attempt to insert duplicated %s rows, please report"
-                    " at %s"
-                ),
+                "Blocked attempt to insert duplicated %s rows, please report at %s",
                 row_type,
                 "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+recorder%22",
                 exc_info=err,
