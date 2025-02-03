@@ -184,24 +184,27 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.logger.debug("Status (high-res temps) = %s", self.temps)
 
-    async def _update_v2_api_state(self, *args: Any) -> bool:
+    async def _update_v2_api_state(self, *args: Any) -> None:
         """Get the latest modes, temperatures, setpoints of a Location."""
 
         try:
             status = await self.loc.update()
 
         except ec2.ApiRequestFailedError as err:
-            if err.status == HTTPStatus.TOO_MANY_REQUESTS:
-                self.logger.warning(
-                    "The vendor's API rate limit has been exceeded. "  # noqa: G004
-                    f"Consider increasing the {CONF_SCAN_INTERVAL}."
-                )
-            else:
-                self.logger.error(err)
-            return False
+            if err.status != HTTPStatus.TOO_MANY_REQUESTS:
+                raise UpdateFailed(err) from err
+
+            raise UpdateFailed(
+                f"""
+                    The vendor's API rate limit has been exceeded.
+                    Consider increasing the {CONF_SCAN_INTERVAL}
+                """
+            ) from err
+
+        except ec2.EvohomeError as err:
+            raise UpdateFailed(err) from err
 
         self.logger.debug("Status = %s", status)
-        return True
 
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
@@ -211,8 +214,8 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         Zones, DHW controller).
         """
 
-        if await self._update_v2_api_state():
-            if self.client_v1:
-                await self._update_v1_api_temps()
+        await self._update_v2_api_state()  # may raise UpdateFailed
+        if self.client_v1:
+            await self._update_v1_api_temps()  # will never raise UpdateFailed
 
         return self.loc.status
