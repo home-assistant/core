@@ -15,7 +15,7 @@ from homeassistant.components.conversation import (
     ToolResultContent,
     async_get_chat_log,
 )
-from homeassistant.components.conversation.session import DATA_CHAT_HISTORY
+from homeassistant.components.conversation.chat_log import DATA_CHAT_HISTORY
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, llm
@@ -40,7 +40,7 @@ def mock_conversation_input(hass: HomeAssistant) -> ConversationInput:
 @pytest.fixture
 def mock_ulid() -> Generator[Mock]:
     """Mock the ulid library."""
-    with patch("homeassistant.util.ulid.ulid_now") as mock_ulid_now:
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
         mock_ulid_now.return_value = "mock-ulid"
         yield mock_ulid_now
 
@@ -297,8 +297,7 @@ async def test_tool_call(
     mock_tool.async_call.return_value = "Test response"
 
     with patch(
-        "homeassistant.components.conversation.session.llm.AssistAPI._async_get_tools",
-        return_value=[],
+        "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
     ) as mock_get_tools:
         mock_get_tools.return_value = [mock_tool]
 
@@ -352,8 +351,7 @@ async def test_tool_call_exception(
     mock_tool.async_call.side_effect = HomeAssistantError("Test error")
 
     with patch(
-        "homeassistant.components.conversation.session.llm.AssistAPI._async_get_tools",
-        return_value=[],
+        "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
     ) as mock_get_tools:
         mock_get_tools.return_value = [mock_tool]
 
