@@ -256,8 +256,21 @@ class AssistSatelliteEntity(entity.Entity):
             self._extra_system_prompt = extra_system_prompt
         else:
             self._extra_system_prompt = start_message or None
-        # Force a new conversation ID with no chat history
-        self._conversation_id = None
+
+        with (
+            # Not passing in a conversation ID will force a new one to be created
+            chat_session.async_get_chat_session(self.hass) as session,
+            conversation.async_get_chat_log(self.hass, session) as chat_log,
+        ):
+            self._conversation_id = session.conversation_id
+
+            if start_message:
+                async for _tool_response in chat_log.async_add_assistant_content(
+                    conversation.AssistantContent(
+                        agent_id=self.entity_id, content=start_message
+                    )
+                ):
+                    pass  # no tool responses.
 
         try:
             await self.async_start_conversation(announcement)
