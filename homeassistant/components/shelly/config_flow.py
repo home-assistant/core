@@ -7,7 +7,12 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
+from aioshelly.const import (
+    BLOCK_GENERATIONS,
+    DEFAULT_HTTP_PORT,
+    MODELS_NOT_SUPPORTING_BT_PROXY,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -41,7 +46,6 @@ from .const import (
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
-    MODEL_WALL_DISPLAY,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon
@@ -112,7 +116,7 @@ async def validate_input(
         return {
             "title": rpc_device.name,
             CONF_SLEEP_PERIOD: sleep_period,
-            "model": rpc_device.xmodinfo.get("p") or rpc_device.model,
+            "model": rpc_device.xmod_info.get("p") or rpc_device.model,
             CONF_GEN: gen,
         }
 
@@ -460,7 +464,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
+            and config_entry.data.get("model") not in MODELS_NOT_SUPPORTING_BT_PROXY
         )
 
 
