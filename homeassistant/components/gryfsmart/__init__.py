@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API, CONF_COMMUNICATION, CONF_PORT, DOMAIN
+from .const import CONF_API, CONF_COMMUNICATION, CONF_DEVICE_DATA, CONF_PORT, DOMAIN
 from .schema import CONFIG_SCHEMA as SCHEMA
 
 CONFIG_SCHEMA = SCHEMA
@@ -37,47 +37,54 @@ async def async_setup(
 ) -> bool:
     """Set up the Gryf Smart Integration."""
 
-    hass.data[DOMAIN] = config.get(DOMAIN)
-
     if config.get(DOMAIN) is None:
         return True
 
-    _LOGGER.debug("%s", config.get(DOMAIN))
-
     try:
-        api = GryfApi(config[DOMAIN][CONF_COMMUNICATION][CONF_PORT])
-        await api.start_connection()
-    except ConnectionError:
-        raise ConfigEntryNotReady("Unable to connect with device") from ConnectionError
-
-    hass.data[DOMAIN][CONF_API] = api
-
-    lights_config = config.get(Platform.LIGHT, {})
-
-    await async_load_platform(hass, Platform.LIGHT, DOMAIN, lights_config, config)
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Config flow for Gryf Smart Integration."""
-    try:
-        api = GryfApi(entry.data[CONF_COMMUNICATION][CONF_PORT])
+        api = GryfApi(config[DOMAIN][CONF_PORT])
         await api.start_connection()
     except ConnectionError:
         _LOGGER.error("Unable to connect: %s", ConnectionError)
         return False
 
-    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN] = config.get(DOMAIN)
     hass.data[DOMAIN][CONF_API] = api
-    entry.runtime_data = api
+
+    await async_load_platform(hass, Platform.LIGHT, DOMAIN, None, config)
+
+    return True
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+) -> bool:
+    """Config flow for Gryf Smart Integration."""
+
+    try:
+        api = GryfApi(entry.data[CONF_COMMUNICATION][CONF_PORT])
+        await api.start_connection()
+    except ConnectionError:
+        raise ConfigEntryNotReady("Unable to connect with device") from ConnectionError
+
+    entry.runtime_data = {}
+    entry.runtime_data[CONF_API] = api
+    entry.runtime_data[CONF_DEVICE_DATA] = {
+        "identifiers": {(DOMAIN, "Gryf Smart", entry.unique_id)},
+        "name": f"Gryf Smart {entry.unique_id}",
+        "manufacturer": "Gryf Smart",
+        "model": "serial",
+        "sw_version": "1.0.0",
+        "hw_version": "1.0.0",
+    }
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    hass.data[DOMAIN][entry.entry_id] = entry
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
