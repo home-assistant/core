@@ -37,3 +37,5 @@ WEEKDAY_TO_CONF: Final = {
     5: CONF_SATURDAY,
     6: CONF_SUNDAY,
 }
+
+SERVICE_GET: Final = "get_schedule"
