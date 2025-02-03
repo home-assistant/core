@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LetPotConfigEntry
 from .coordinator import LetPotDeviceCoordinator
-from .entity import LetPotEntity
+from .entity import LetPotEntity, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
 # pending changes to avoid overwriting, but try to avoid a lot of parallelism.
@@ -86,6 +86,7 @@ class LetPotTimeEntity(LetPotEntity, TimeEntity):
         """Return the time."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @exception_handler
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         await self.entity_description.set_value_fn(

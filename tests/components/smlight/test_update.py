@@ -81,7 +81,7 @@ async def test_update_setup(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test setup of SMLIGHT switches."""
+    """Test setup of SMLIGHT update entities."""
     entry = await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)

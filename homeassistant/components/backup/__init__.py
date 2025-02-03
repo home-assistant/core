@@ -26,13 +26,16 @@ from .manager import (
     BackupReaderWriterError,
     CoreBackupReaderWriter,
     CreateBackupEvent,
+    IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupState,
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
+from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
@@ -47,12 +50,17 @@ __all__ = [
     "BackupReaderWriterError",
     "CreateBackupEvent",
     "Folder",
+    "IdleEvent",
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
     "NewBackup",
     "RestoreBackupEvent",
+    "RestoreBackupState",
     "WrittenBackup",
+    "async_get_manager",
+    "suggested_filename",
+    "suggested_filename_from_name_date",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_current_platform,
 )
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from . import KNXModule
 from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, ColorTempModes

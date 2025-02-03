@@ -33,7 +33,7 @@ from homeassistant.components.tts import (
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent
+from homeassistant.helpers import chat_session, intent
 from homeassistant.helpers.collection import (
     CHANGE_UPDATED,
     CollectionError,
@@ -1063,11 +1063,11 @@ class PipelineRun:
                 agent_id=self.intent_agent,
                 extra_system_prompt=conversation_extra_system_prompt,
             )
-            processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
-            agent_id = user_input.agent_id
+            agent_id = self.intent_agent
+            processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
             intent_response: intent.IntentResponse | None = None
-            if user_input.agent_id != conversation.HOME_ASSISTANT_AGENT:
+            if not processed_locally:
                 # Sentence triggers override conversation agent
                 if (
                     trigger_response_text
@@ -1094,22 +1094,27 @@ class PipelineRun:
 
             # It was already handled, create response and add to chat history
             if intent_response is not None:
-                async with conversation.async_get_chat_session(
-                    self.hass, user_input
-                ) as chat_session:
+                with (
+                    chat_session.async_get_chat_session(
+                        self.hass, user_input.conversation_id
+                    ) as session,
+                    conversation.async_get_chat_log(
+                        self.hass, session, user_input
+                    ) as chat_log,
+                ):
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    chat_session.async_add_message(
-                        conversation.Content(
-                            role="assistant",
+                    async for _ in chat_log.async_add_assistant_content(
+                        conversation.AssistantContent(
                             agent_id=agent_id,
                             content=speech,
                         )
-                    )
+                    ):
+                        pass
                     conversation_result = conversation.ConversationResult(
                         response=intent_response,
-                        conversation_id=chat_session.conversation_id,
+                        conversation_id=session.conversation_id,
                     )
 
             else:
@@ -1122,6 +1127,7 @@ class PipelineRun:
                     context=user_input.context,
                     language=user_input.language,
                     agent_id=user_input.agent_id,
+                    extra_system_prompt=user_input.extra_system_prompt,
                 )
                 speech = conversation_result.response.speech.get("plain", {}).get(
                     "speech", ""
