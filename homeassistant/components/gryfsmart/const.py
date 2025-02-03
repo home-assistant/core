@@ -18,6 +18,7 @@ CONF_RECONFIGURE = "reconfigure"
 CONF_COMMUNICATION = "communication"
 CONF_API = "api"
 CONF_DEVICE_DATA = "device_data"
+CONF_INPUTS = "input"
 
 PLATFORM_PWM = "pwm"
 PLATFORM_TEMPERATURE = "temperature"
@@ -41,6 +42,7 @@ DEVICE_TYPES = {
     Platform.CLIMATE: "Thermostat",
     PLATFORM_PWM: "PWM",
     PLATFORM_TEMPERATURE: "Termometr",
+    CONF_INPUTS: "Input",
 }
 
 CONF_TILT = "tilt"
