@@ -311,7 +311,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
         await super().async_update()
 
         for attr in self._evo_state_attr_names:
-            self._attr_extra_state_attributes[attr] = getattr(self._evo_device, attr)
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
 
 class EvoController(EvoClimateEntity):
@@ -442,9 +442,9 @@ class EvoController(EvoClimateEntity):
         """Get the latest state data for a Controller."""
         await super().async_update()
 
-        self._attr_extra_state_attributes["active_system_faults"] = (
+        self._device_state_attrs["active_system_faults"] = (
             self._evo_device.active_faults
         )
 
         for attr in self._evo_state_attr_names:
-            self._attr_extra_state_attributes[attr] = getattr(self._evo_device, attr)
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)

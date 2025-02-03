@@ -147,4 +147,4 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
         await super().async_update()
 
         for attr in self._evo_state_attr_names:
-            self._attr_extra_state_attributes[attr] = getattr(self._evo_device, attr)
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
