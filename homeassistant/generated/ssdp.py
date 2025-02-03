@@ -211,6 +211,12 @@ SSDP = {
         {
             "st": "nanoleaf:nl52",
         },
+        {
+            "st": "nanoleaf:nl69",
+        },
+        {
+            "st": "inanoleaf:nl81",
+        },
     ],
     "netgear": [
         {
