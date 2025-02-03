@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import aiohttp
 from electrickiwi_api import ElectricKiwiApi
-from electrickiwi_api.exceptions import ApiException
+from electrickiwi_api.exceptions import ApiException, AuthException
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -59,6 +59,8 @@ async def async_setup_entry(
         await ek_api.set_active_session()
         await hop_coordinator.async_config_entry_first_refresh()
         await account_coordinator.async_config_entry_first_refresh()
+    except AuthException as err:
+        raise ConfigEntryAuthFailed from err
     except ApiException as err:
         raise ConfigEntryNotReady from err
 
@@ -99,12 +101,15 @@ async def async_migrate_entry(
             )
         )
         try:
-            ek_session = await ek_api.get_active_old_session()
+            await ek_api.set_active_session()
+            connection_details = await ek_api.get_connection_details()
+        except AuthException:
+            config_entry.async_start_reauth(hass)
+            return False
         except ApiException:
             return False
-        unique_id = str(ek_session.customer[0].customer_number)
-        connection_id = str(ek_session.customer[0].connection.connection_id)
-        identifier = ek_session.customer[0].connection.identifier
+        unique_id = str(ek_api.customer_number)
+        identifier = ek_api.electricity.identifier
         hass.config_entries.async_update_entry(
             config_entry, unique_id=unique_id, minor_version=2
         )
@@ -118,7 +123,7 @@ async def async_migrate_entry(
             entity_registry.async_update_entity(
                 entity.entity_id,
                 new_unique_id=entity.unique_id.replace(
-                    f"{unique_id}_{connection_id}", f"{unique_id}_{identifier}"
+                    f"{unique_id}_{connection_details.id}", f"{unique_id}_{identifier}"
                 ),
             )
 
