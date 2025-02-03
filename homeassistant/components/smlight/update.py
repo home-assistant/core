@@ -66,6 +66,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the SMLIGHT update entities."""
     coordinator = entry.runtime_data.firmware
+
+    # updates not available for legacy API, user will get repair to update externally
+    if coordinator.legacy_api == 2:
+        return
+
     entities = [SmUpdateEntity(coordinator, CORE_UPDATE_ENTITY)]
     radios = coordinator.data.info.radios
     assert radios is not None
@@ -133,9 +138,6 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-
-        if self.coordinator.legacy_api == 2:
-            return None
 
         return self._firmware.ver if self._firmware else None
 
