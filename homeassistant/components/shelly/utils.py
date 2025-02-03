@@ -316,8 +316,8 @@ def get_model_name(info: dict[str, Any]) -> str:
 
 def get_deviceinfo_model(device: BlockDevice | RpcDevice) -> str:
     """Return the device model for deviceinfo."""
-    if hasattr(device, "xmodinfo") and device.xmodinfo != {}:
-        return cast(str, device.xmodinfo["n"])
+    if hasattr(device, "xmod_info") and device.xmod_info != {}:
+        return cast(str, device.xmod_info["n"])
 
     return cast(str, MODEL_NAMES.get(device.model))
 
