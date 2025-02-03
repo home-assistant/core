@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-import logging
 from typing import Any, NotRequired, TypedDict
 
 from evohomeasync.auth import (
@@ -17,8 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 
 from .const import STORAGE_KEY, STORAGE_VER
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class _SessionIdEntryT(TypedDict):
