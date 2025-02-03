@@ -212,7 +212,7 @@ async def test_evse_sensor(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.EnergyEvse.Commands.Disable,
+        command=clusters.EnergyEvse.Commands.Disable(),
         timed_request_timeout_ms=3000,
     )
     await hass.services.async_call(
@@ -221,7 +221,7 @@ async def test_evse_sensor(
         {"entity_id": "switch.evse_evse_charging"},
         blocking=True,
     )
-    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.send_device_command.call_count == 2
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
