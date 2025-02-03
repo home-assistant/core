@@ -23,13 +23,13 @@ class AxionDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name="Axion Light",
-            update_interval=timedelta(seconds=5),
+            update_interval=timedelta(seconds=30),
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the API endpoint."""
         try:
             # Return data in dictionary form
-            return await self.api.get_level(self.channel)
+            return await self.api.get_level(self.channel - 1)
         except RequestException as err:
             raise UpdateFailed("Error communicating with API") from err

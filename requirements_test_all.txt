@@ -1052,7 +1052,7 @@ led-ble==1.0.2
 lektricowifi==0.0.41
 
 # homeassistant.components.axion_dmx
-libaxion_dmx==1.0.3
+libaxion_dmx==1.0.6
 
 # homeassistant.components.foscam
 libpyfoscam==1.2.2

@@ -9,8 +9,9 @@ from libaxion_dmx import AxionDmxApi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_CHANNEL, CONF_HOST, CONF_PASSWORD
+from .const import _LOGGER, CONF_CHANNEL, CONF_HOST, CONF_PASSWORD
 from .coordinator import AxionDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -35,7 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AxionConfigEntry) -> boo
 
     # Validate the API connection (and authentication)
     if not await api.authenticate():
-        return False
+        _LOGGER.exception("Unable to connect to device at %s", entry.data[CONF_HOST])
+        raise ConfigEntryNotReady("Unable to connect")
 
     # Create coordinator instance
     coordinator = AxionDataUpdateCoordinator(hass, api, entry.data[CONF_CHANNEL])

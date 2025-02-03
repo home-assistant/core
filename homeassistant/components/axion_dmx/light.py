@@ -44,7 +44,16 @@ async def async_setup_entry(
     channel = config_entry.data[CONF_CHANNEL]
     light_type = config_entry.data[CONF_LIGHT_TYPE]
 
-    async_add_entities([AxionDMXLight(coordinator, api, channel, light_type)], True)
+    # Fetch the device name before creating the entity
+    try:
+        device_name = (await api.get_name()).strip()
+    except Exception as e:  # noqa: BLE001
+        _LOGGER.error(f"Failed to get device name: {e}")
+        device_name = "Unknown"
+
+    light = AxionDMXLight(coordinator, api, channel, light_type, device_name)
+
+    async_add_entities([light], True)
 
 
 class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
@@ -59,6 +68,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         api: AxionDmxApi,
         channel: int,
         light_type: str,
+        device_name: str,
     ) -> None:
         """Initialize an Axion Light."""
         super().__init__(coordinator)
@@ -66,7 +76,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         self._channel = channel - 1
         self._light_type = light_type
         self._name = f"Axion Light {channel}"
-        self._attr_unique_id = f"axion_dmx_light_{channel}"
+        self._attr_unique_id = f"axion_dmx_light_{device_name}_{channel}"
         self._attr_is_on = False
         self._attr_brightness = 255
         self._attr_hs_color = (0, 0)  # Default to white
@@ -87,19 +97,19 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
             model=AXION_MODEL_NAME,
         )
 
-        if light_type == "RGB":
+        if light_type == "rgb":
             self._attr_color_mode = ColorMode.HS
             self._attr_supported_color_modes.add(ColorMode.HS)
 
-        if light_type == "RGBW":
+        if light_type == "rgbw":
             self._attr_color_mode = ColorMode.RGBW
             self._attr_supported_color_modes.add(ColorMode.RGBW)
 
-        if light_type == "RGBWW":
+        if light_type == "rgbww":
             self._attr_color_mode = ColorMode.RGBWW
             self._attr_supported_color_modes.add(ColorMode.RGBWW)
 
-        if light_type == "Tunable White":
+        if light_type == "tunable_white":
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
 
@@ -107,6 +117,11 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
     def color_temp(self) -> int:
         """Return the color temperature of the light."""
         return color_util.color_temperature_kelvin_to_mired(self._color_temp)
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.last_update_success
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -158,7 +173,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         cold_white_level = 0
         warm_white_level = 0
 
-        if self._light_type in ["RGB", "RGBW", "RGBWW"]:
+        if self._light_type in ["rgb", "rgbw", "rgbww"]:
             if ATTR_HS_COLOR in kwargs:
                 self._attr_color_mode = ColorMode.HS
                 self._attr_hs_color = kwargs[ATTR_HS_COLOR]
@@ -201,7 +216,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
             else:
                 _LOGGER.debug("No color is specified, use the last known color")
                 # If no color is specified, use the last known color
-                if self._light_type == "RGB":
+                if self._light_type == "rgb":
                     _LOGGER.debug(f"Using the last RGB - {self._last_hs_color}")
                     if self._last_hs_color is not None:
                         rgb = color_util.color_hs_to_RGB(*self._last_hs_color)
@@ -210,7 +225,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
                             scale_brightness(c, self._attr_brightness, 255) for c in rgb
                         ]
                     await self.api.set_color(self._channel, scaled_rgb)
-                elif self._light_type == "RGBW":
+                elif self._light_type == "rgbw":
                     _LOGGER.debug(f"Using the last RGBW - {self._last_rgbw}")
                     rgbw = self._last_rgbw
                     if rgbw is not None:
@@ -219,7 +234,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
                             for c in rgbw
                         ]
                     await self.api.set_rgbw(self._channel, scaled_rgbw)
-                elif self._light_type == "RGBWW":
+                elif self._light_type == "rgbww":
                     _LOGGER.debug(f"Using the last RGBWW - {self._last_rgbww}")
                     rgbww = self._last_rgbww
                     if rgbww is not None:
@@ -228,7 +243,7 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
                             for c in rgbww
                         ]
                     await self.api.set_rgbww(self._channel, scaled_rgbww)
-        elif self._light_type == "Tunable White":
+        elif self._light_type == "tunable_white":
             if ATTR_COLOR_TEMP in kwargs:
                 self._attr_color_mode = ColorMode.COLOR_TEMP
                 self._color_temp = color_util.color_temperature_mired_to_kelvin(
@@ -266,22 +281,22 @@ class AxionDMXLight(CoordinatorEntity[AxionDataUpdateCoordinator], LightEntity):
         self._attr_is_on = False
 
         # Only set the first channel to 0 for White or Tunable White
-        if self._light_type in ["White", "Tunable White"]:
+        if self._light_type in ["white", "tunable_white"]:
             await self.api.set_level(self._channel, 0)
 
-        if self._light_type == "RGB":
+        if self._light_type == "rgb":
             self._last_hs_color = self._attr_hs_color
             await self.api.set_color(self._channel, (0, 0, 0))
 
-        elif self._light_type == "RGBW":
+        elif self._light_type == "rgbw":
             self._last_rgbw = self._attr_rgbw_color
             await self.api.set_rgbw(self._channel, (0, 0, 0, 0))
 
-        elif self._light_type == "RGBWW":
+        elif self._light_type == "rgbww":
             self._last_rgbww = self._attr_rgbww_color
             await self.api.set_rgbww(self._channel, (0, 0, 0, 0, 0))
 
-        elif self._light_type == "Tunable White":
+        elif self._light_type == "tunable_white":
             # Turn off the second channel
             await self.api.set_level(self._channel + 1, 0)
 

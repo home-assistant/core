@@ -53,6 +53,8 @@ class AxionConfigFlow(ConfigFlow, domain=DOMAIN):
             # Validate the user input and authenticate
             try:
                 await api.authenticate()
+                device_name = await api.get_name()
+                unique_id = f"{device_name}_{user_input[CONF_CHANNEL]}"
             except AxionDmxConnectionError:
                 errors["base"] = "cannot_connect"
             except AxionDmxAuthError:
@@ -62,6 +64,8 @@ class AxionConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 # Return the validated entry data
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=f"Axion DMX Light - Channel {user_input[CONF_CHANNEL]}",
                     data=user_input,

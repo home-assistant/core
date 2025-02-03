@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/axion_dmx",
   "iot_class": "local_polling",
-  "requirements": ["libaxion_dmx==1.0.3"]
+  "requirements": ["libaxion_dmx==1.0.6"]
 }

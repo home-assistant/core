@@ -3,7 +3,10 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.axion_dmx.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.axion_dmx.config_flow import (
+    AxionDmxAuthError,
+    AxionDmxConnectionError,
+)
 from homeassistant.components.axion_dmx.const import (
     CONF_CHANNEL,
     CONF_LIGHT_TYPE,
@@ -22,9 +25,15 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.axion_dmx.AxionDmxApi.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.axion_dmx.AxionDmxApi._send_tcp_command",
+            return_value="OK",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -32,7 +41,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
                 CONF_HOST: "1.1.1.1",
                 CONF_PASSWORD: "test-password",
                 CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "RGB",
+                CONF_LIGHT_TYPE: "rgb",
             },
         )
         await hass.async_block_till_done()
@@ -43,7 +52,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
         CONF_CHANNEL: 1,
-        CONF_LIGHT_TYPE: "RGB",
+        CONF_LIGHT_TYPE: "rgb",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -58,7 +67,7 @@ async def test_form_invalid_auth(
 
     with patch(
         "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        side_effect=InvalidAuth,
+        side_effect=AxionDmxAuthError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -66,16 +75,22 @@ async def test_form_invalid_auth(
                 CONF_HOST: "1.1.1.1",
                 CONF_PASSWORD: "test-password",
                 CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "RGB",
+                CONF_LIGHT_TYPE: "rgb",
             },
         )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
 
-    with patch(
-        "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.axion_dmx.AxionDmxApi.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.axion_dmx.AxionDmxApi._send_tcp_command",
+            return_value="OK",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -83,7 +98,7 @@ async def test_form_invalid_auth(
                 CONF_HOST: "1.1.1.1",
                 CONF_PASSWORD: "test-password",
                 CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "RGB",
+                CONF_LIGHT_TYPE: "rgb",
             },
         )
         await hass.async_block_till_done()
@@ -94,7 +109,7 @@ async def test_form_invalid_auth(
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
         CONF_CHANNEL: 1,
-        CONF_LIGHT_TYPE: "RGB",
+        CONF_LIGHT_TYPE: "rgb",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -109,7 +124,7 @@ async def test_form_cannot_connect(
 
     with patch(
         "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        side_effect=CannotConnect,
+        side_effect=AxionDmxConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -117,16 +132,22 @@ async def test_form_cannot_connect(
                 CONF_HOST: "1.1.1.1",
                 CONF_PASSWORD: "test-password",
                 CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "RGB",
+                CONF_LIGHT_TYPE: "rgb",
             },
         )
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "homeassistant.components.axion_dmx.config_flow.AxionDmxApi.authenticate",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.axion_dmx.AxionDmxApi.authenticate",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.axion_dmx.AxionDmxApi._send_tcp_command",
+            return_value="OK",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -134,7 +155,7 @@ async def test_form_cannot_connect(
                 CONF_HOST: "1.1.1.1",
                 CONF_PASSWORD: "test-password",
                 CONF_CHANNEL: 1,
-                CONF_LIGHT_TYPE: "RGB",
+                CONF_LIGHT_TYPE: "rgbw",
             },
         )
         await hass.async_block_till_done()
@@ -145,6 +166,6 @@ async def test_form_cannot_connect(
         CONF_HOST: "1.1.1.1",
         CONF_PASSWORD: "test-password",
         CONF_CHANNEL: 1,
-        CONF_LIGHT_TYPE: "RGB",
+        CONF_LIGHT_TYPE: "rgbw",
     }
     assert len(mock_setup_entry.mock_calls) == 1
