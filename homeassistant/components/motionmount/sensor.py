@@ -47,14 +47,16 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         """Return error status."""
         status = self.mm.system_status
 
-        if motionmount.MotionMountSystemError.MotorError in status:
-            return "motor"
-        if motionmount.MotionMountSystemError.ObstructionDetected in status:
-            return "obstruction"
-        if motionmount.MotionMountSystemError.TVWidthConstraintError in status:
-            return "tv_width_constraint"
-        if motionmount.MotionMountSystemError.HDMICECError in status:
-            return "hdmi_cec"
-        if motionmount.MotionMountSystemError.InternalError in status:
-            return "internal"
+        errorMessages = {
+            motionmount.MotionMountSystemError.MotorError: "motor",
+            motionmount.MotionMountSystemError.ObstructionDetected: "obstruction",
+            motionmount.MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
+            motionmount.MotionMountSystemError.HDMICECError: "hdmi_cec",
+            motionmount.MotionMountSystemError.InternalError: "internal",
+        }
+
+        for error, message in errorMessages.items():
+            if error in status:
+                return message
+
         return "none"
