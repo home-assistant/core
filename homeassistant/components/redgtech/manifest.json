@@ -7,6 +7,6 @@
     "logo": "/brands/redgtech/logo.png",
     "integration_type": "service",
     "config_flow": true,
-    "quality_scale": "bronze",
-    "requirements": ["redgtech-api==0.1.0"]
+    "quality_scale": "silver",
+    "requirements": ["redgtech-api==0.1.2"]
 }
