@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util import dt as dt_util
 
 from . import init_integration
-from .conftest import YieldFixture
 
 from tests.common import MockConfigEntry
 
@@ -108,7 +107,7 @@ async def test_account_sensors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     electrickiwi_api: AsyncMock,
-    ek_auth: YieldFixture,
+    ek_auth: AsyncMock,
     entity_registry: EntityRegistry,
     sensor: str,
     sensor_state: str,

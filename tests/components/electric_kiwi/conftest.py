@@ -6,7 +6,7 @@ from collections.abc import Generator
 from time import time
 from unittest.mock import AsyncMock, patch
 
-from electrickiwi_api.model import AccountSummary, Hop, HopIntervals, Session
+from electrickiwi_api.model import AccountSummary, Hop, HopIntervals, Service, Session
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -50,7 +50,12 @@ def electrickiwi_api() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.customer_number = 123456
-        client.connection_id = 123456
+        client.electricity = Service(
+            identifier="123456",
+            service="electricity",
+            service_status="Y",
+            is_primary_service=True,
+        )
         client.get_active_session.return_value = Session.from_dict(
             load_json_value_fixture("session.json", DOMAIN)
         )
