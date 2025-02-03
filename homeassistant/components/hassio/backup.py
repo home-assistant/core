@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import logging
 import os
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any, cast
 from uuid import UUID
 
@@ -33,16 +33,20 @@ from homeassistant.components.backup import (
     Folder,
     IdleEvent,
     IncorrectPasswordError,
+    ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
     RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
+    suggested_filename as suggested_backup_filename,
+    suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
@@ -51,6 +55,8 @@ LOCATION_CLOUD_BACKUP = ".cloud_backup"
 LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
+# Set on backups automatically created when updating an addon
+TAG_ADDON_UPDATE = "supervisor.addon_update"
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -113,12 +119,15 @@ def _backup_details_to_agent_backup(
         AddonInfo(name=addon.name, slug=addon.slug, version=addon.version)
         for addon in details.addons
     ]
+    extra_metadata = details.extra or {}
     location = location or LOCATION_LOCAL
     return AgentBackup(
         addons=addons,
         backup_id=details.slug,
         database_included=database_included,
-        date=details.date.isoformat(),
+        date=extra_metadata.get(
+            "supervisor.backup_request_date", details.date.isoformat()
+        ),
         extra_metadata=details.extra or {},
         folders=[Folder(folder) for folder in details.folders],
         homeassistant_included=homeassistant_included,
@@ -174,7 +183,8 @@ class SupervisorBackupAgent(BackupAgent):
             return
         stream = await open_stream()
         upload_options = supervisor_backups.UploadBackupOptions(
-            location={self.location}
+            location={self.location},
+            filename=PurePath(suggested_backup_filename(backup)),
         )
         await self._client.backups.upload_backup(
             stream,
@@ -301,6 +311,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             locations = []
         locations = locations or [LOCATION_CLOUD_BACKUP]
 
+        date = dt_util.now().isoformat()
+        extra_metadata = extra_metadata | {"supervisor.backup_request_date": date}
+        filename = suggested_filename_from_name_date(backup_name, date)
         try:
             backup = await self._client.backups.partial_backup(
                 supervisor_backups.PartialBackupOptions(
@@ -314,6 +327,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                     homeassistant_exclude_database=not include_database,
                     background=True,
                     extra=extra_metadata,
+                    filename=PurePath(filename),
                 )
             )
         except SupervisorError as err:
@@ -503,17 +517,22 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             raise HomeAssistantError(message) from err
 
         restore_complete = asyncio.Event()
+        restore_errors: list[dict[str, str]] = []
 
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup restore progress."""
             if data.get("done") is True:
                 restore_complete.set()
+                restore_errors.extend(data.get("errors", []))
 
         unsub = self._async_listen_job_events(job.job_id, on_job_progress)
         try:
             await self._get_job_state(job.job_id, on_job_progress)
             await restore_complete.wait()
+            if restore_errors:
+                # We should add more specific error handling here in the future
+                raise BackupReaderWriterError(f"Restore failed: {restore_errors}")
         finally:
             unsub()
 
@@ -540,11 +559,23 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 )
                 return
 
-            on_progress(
-                RestoreBackupEvent(
-                    reason="", stage=None, state=RestoreBackupState.COMPLETED
+            restore_errors = data.get("errors", [])
+            if restore_errors:
+                _LOGGER.warning("Restore backup failed: %s", restore_errors)
+                # We should add more specific error handling here in the future
+                on_progress(
+                    RestoreBackupEvent(
+                        reason="unknown_error",
+                        stage=None,
+                        state=RestoreBackupState.FAILED,
+                    )
                 )
-            )
+            else:
+                on_progress(
+                    RestoreBackupEvent(
+                        reason="", stage=None, state=RestoreBackupState.COMPLETED
+                    )
+                )
             on_progress(IdleEvent())
             unsub()
 
@@ -614,10 +645,20 @@ async def backup_addon_before_update(
     else:
         password = None
 
+    def addon_update_backup_filter(
+        backups: dict[str, ManagerBackup],
+    ) -> dict[str, ManagerBackup]:
+        """Return addon update backups."""
+        return {
+            backup_id: backup
+            for backup_id, backup in backups.items()
+            if backup.extra_metadata.get(TAG_ADDON_UPDATE) == addon
+        }
+
     try:
         await backup_manager.async_create_backup(
             agent_ids=[await _default_agent(client)],
-            extra_metadata={"supervisor.addon_update": addon},
+            extra_metadata={TAG_ADDON_UPDATE: addon},
             include_addons=[addon],
             include_all_addons=False,
             include_database=False,
@@ -628,6 +669,14 @@ async def backup_addon_before_update(
         )
     except BackupManagerError as err:
         raise HomeAssistantError(f"Error creating backup: {err}") from err
+    else:
+        try:
+            await backup_manager.async_delete_filtered_backups(
+                include_filter=addon_update_backup_filter,
+                delete_filter=lambda backups: backups,
+            )
+        except BackupManagerError as err:
+            raise HomeAssistantError(f"Error deleting old backups: {err}") from err
 
 
 async def backup_core_before_update(hass: HomeAssistant) -> None:
