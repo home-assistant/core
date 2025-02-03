@@ -41,13 +41,6 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         value_fn=lambda data: data.status.meter.number,
     ),
     IOmeterEntityDescription(
-        key="connection_status",
-        translation_key="connection_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=["connected", "disconnected"],
-        value_fn=lambda data: data.status.device.core.connection_status,
-    ),
-    IOmeterEntityDescription(
         key="wifi_rssi",
         translation_key="wifi_rssi",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
@@ -79,14 +72,6 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.status.device.core.battery_level,
-    ),
-    IOmeterEntityDescription(
-        key="attachment_status",
-        translation_key="attachment_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=["attached", "detached", "unknown"],
-        value_fn=lambda data: data.status.device.core.attachment_status
-        or STATE_UNKNOWN,
     ),
     IOmeterEntityDescription(
         key="pin_status",
