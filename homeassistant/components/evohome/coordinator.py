@@ -78,12 +78,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             log_failures=False, raise_on_auth_failed=True, raise_on_entry_error=True
         )
 
-    def _async_unsub_shutdown(self) -> None:
-        """Cancel any scheduled call."""
-        if self._unsub_shutdown:
-            self._unsub_shutdown()
-            self._unsub_shutdown = None
-
     async def _async_setup(self) -> None:
         """Set up the coordinator.
 
