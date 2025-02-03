@@ -7,11 +7,12 @@ from aiovodafone import VodafoneStationDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.vodafone_station.const import SCAN_INTERVAL
+from homeassistant.components.vodafone_station.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import DEVICE_1_HOST, DEVICE_2_HOST, DEVICE_2_MAC
+from .const import DEVICE_1_HOST, DEVICE_1_MAC, DEVICE_2_HOST, DEVICE_2_MAC
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -23,11 +24,19 @@ async def test_coordinator_device_cleanup(
     mock_vodafone_station_router: AsyncMock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test Device cleanup on coordinator update."""
 
     caplog.set_level(logging.DEBUG)
     await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, DEVICE_1_MAC)},
+        name=DEVICE_1_HOST,
+    )
+    assert device is not None
 
     device_tracker = f"device_tracker.{DEVICE_1_HOST}"
 
@@ -53,3 +62,4 @@ async def test_coordinator_device_cleanup(
     state = hass.states.get(device_tracker)
     assert state is None
     assert f"Skipping entity {DEVICE_2_HOST}" in caplog.text
+    assert f"Removing device: {DEVICE_1_HOST}" in caplog.text
