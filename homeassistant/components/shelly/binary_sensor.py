@@ -281,8 +281,7 @@ RPC_SENSORS: Final = {
     "mute": RpcBinarySensorDescription(
         key="flood",
         sub_key="mute",
-        value=lambda status, _: not status["mute"],
-        name="Alarm sound",
+        name="Mute",
     ),
     "error": RpcBinarySensorDescription(
         key="flood",
