@@ -8,13 +8,16 @@ from typing import Any
 from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
 
 from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
+from .helpers import cleanup_device_tracker
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
@@ -39,6 +42,8 @@ class UpdateCoordinatorDataType:
 class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     """Queries router running Vodafone Station firmware."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -61,6 +66,17 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
+        device_reg = dr.async_get(self.hass)
+        device_list = dr.async_entries_for_config_entry(
+            device_reg, self.config_entry.entry_id
+        )
+
+        self.previous_devices = {
+            connection[1].upper()
+            for device in device_list
+            for connection in device.connections
+            if connection[0] == dr.CONNECTION_NETWORK_MAC
+        }
 
     def _calculate_update_time_and_consider_home(
         self, device: VodafoneStationDevice, utc_point_in_time: datetime
@@ -125,6 +141,18 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             )
             for dev_info in (raw_data_devices).values()
         }
+        current_devices = set(data_devices)
+        _LOGGER.debug(
+            "Loaded current %s devices: %s", len(current_devices), current_devices
+        )
+        if stale_devices := self.previous_devices - current_devices:
+            _LOGGER.debug(
+                "Found %s stale devices: %s", len(stale_devices), stale_devices
+            )
+            await cleanup_device_tracker(self.hass, self.config_entry, data_devices)
+
+        self.previous_devices = current_devices
+
         return UpdateCoordinatorDataType(data_devices, data_sensors)
 
     @property
