@@ -189,6 +189,12 @@
       "mode": {
         "name": "Mode"
       },
+      "device_energy_management_mode": {
+        "name": "Device Energy Management Mode"
+      },
+      "energy_evse_mode": {
+        "name": "Energy EVSE Mode"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {

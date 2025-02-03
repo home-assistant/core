@@ -294,7 +294,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterEnergyEvseMode",
-            translation_key="mode",
+            translation_key="energy_evse_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
@@ -308,7 +308,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterDeviceEnergyManagementMode",
-            translation_key="mode",
+            translation_key="device_energy_management_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
