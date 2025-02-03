@@ -109,6 +109,20 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
         self._unload: list[Callable] = []
         self.idx = idx
 
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self.async_on_remove(self.coordinator.async_add_listener(self._update_listener))
+        self._update_listener()
+
+    @callback
+    def _update_listener(self) -> None:
+        """Handle update callbacks."""
+        self._firmware = self.entity_description.latest_version(
+            self.coordinator.data, self.idx
+        )
+        self._firmware and self.async_write_ha_state()
+
     @property
     def installed_version(self) -> str | None:
         """Version installed.."""
@@ -119,12 +133,10 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
-        data = self.coordinator.data
 
         if self.coordinator.legacy_api == 2:
             return None
 
-        self._firmware = self.entity_description.latest_version(data, self.idx)
         return self._firmware.ver if self._firmware else None
 
     def register_callbacks(self) -> None:
