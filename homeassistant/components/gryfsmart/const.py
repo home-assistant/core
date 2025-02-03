@@ -17,6 +17,7 @@ CONF_DEVICES = "devices"
 CONF_RECONFIGURE = "reconfigure"
 CONF_COMMUNICATION = "communication"
 CONF_API = "api"
+CONF_DEVICE_DATA = "device_data"
 
 PLATFORM_PWM = "pwm"
 PLATFORM_TEMPERATURE = "temperature"

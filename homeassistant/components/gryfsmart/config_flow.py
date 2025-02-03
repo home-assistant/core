@@ -84,7 +84,7 @@ class GryfSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return await self.async_step_device_menu()
 
-        await self.async_set_unique_id(str(uuid.uuid4()))
+        await self.async_set_unique_id(str(uuid.uuid4())[:8])
         self._abort_if_unique_id_configured()
 
         return self.async_show_form(
