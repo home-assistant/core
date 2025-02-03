@@ -82,8 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if config_entry.entry_id in hass.data[DOMAIN]:
         return False
 
-    await async_migrate_entities(hass, config_entry)
-
     settings = {
         "SK_NUM_TRIES": config_entry.data[CONF_SK_NUM_TRIES],
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[config_entry.data[CONF_DIM_MODE]],
@@ -185,6 +183,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 ].get(CONF_TARGET_VALUE_LOCKED, -1)
 
         new_data[CONF_ENTITIES] = new_entities_data
+
+        # migrate climate and scene unique ids
+        await async_migrate_entities(hass, config_entry)
 
     hass.config_entries.async_update_entry(
         config_entry, data=new_data, minor_version=1, version=3
