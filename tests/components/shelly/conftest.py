@@ -180,6 +180,7 @@ MOCK_CONFIG = {
         "xcounts": {"expr": None, "unit": None},
         "xfreq": {"expr": None, "unit": None},
     },
+    "flood:0": {"id": 0, "name": "Test name"},
     "light:0": {"name": "test light_0"},
     "light:1": {"name": "test light_1"},
     "light:2": {"name": "test light_2"},
@@ -326,6 +327,7 @@ MOCK_STATUS_RPC = {
     "em1:1": {"act_power": 123.3},
     "em1data:0": {"total_act_energy": 123456.4},
     "em1data:1": {"total_act_energy": 987654.3},
+    "flood:0": {"id": 0, "alarm": False, "mute": False},
     "thermostat:0": {
         "id": 0,
         "enable": True,

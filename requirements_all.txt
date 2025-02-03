@@ -600,7 +600,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.6.0
+bleak-esphome==2.7.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.8.0
@@ -741,7 +741,7 @@ datadog==0.15.0
 datapoint==0.9.9
 
 # homeassistant.components.bluetooth
-dbus-fast==2.31.0
+dbus-fast==2.32.0
 
 # homeassistant.components.debugpy
 debugpy==1.8.11
@@ -1437,9 +1437,6 @@ motioneye-client==0.3.14
 # homeassistant.components.bang_olufsen
 mozart-api==4.1.1.116.4
 
-# homeassistant.components.onedrive
-msgraph-sdk==1.16.0
-
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
 
@@ -1560,6 +1557,9 @@ omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
+
+# homeassistant.components.onedrive
+onedrive-personal-sdk==0.0.1
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -2205,7 +2205,7 @@ pypalazzetti==0.1.19
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.8.3
+pypck==0.8.5
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
@@ -2313,7 +2313,7 @@ pysmarty2==0.10.1
 pysml==0.0.12
 
 # homeassistant.components.smlight
-pysmlight==0.2.1
+pysmlight==0.2.2
 
 # homeassistant.components.snmp
 pysnmp==6.2.6
@@ -2391,7 +2391,7 @@ python-gitlab==1.6.0
 python-google-drive-api==0.0.2
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.8.1
+python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v8.3.2
@@ -2516,7 +2516,7 @@ pyvera==0.3.15
 pyversasense==0.0.6
 
 # homeassistant.components.vesync
-pyvesync==2.1.16
+pyvesync==2.1.17
 
 # homeassistant.components.vizio
 pyvizio==0.1.61

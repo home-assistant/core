@@ -29,7 +29,7 @@ certifi>=2021.5.30
 ciso8601==2.3.2
 cronsim==2.6
 cryptography==44.0.0
-dbus-fast==2.31.0
+dbus-fast==2.32.0
 fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
@@ -53,7 +53,7 @@ psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
 PyNaCl==1.5.0
-pyOpenSSL==24.3.0
+pyOpenSSL==25.0.0
 pyserial==3.5
 pyspeex-noise==1.0.2
 python-slugify==8.0.4
