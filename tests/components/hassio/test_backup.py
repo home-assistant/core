@@ -334,7 +334,10 @@ TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
     errors=[
         supervisor_jobs.JobError(
             type="BackupInvalidError",
-            message="Backup was made on supervisor version 2025.02.2.dev3105, can't restore on 2025.01.2.dev3105",
+            message=(
+                "Backup was made on supervisor version 2025.02.2.dev3105, "
+                "can't restore on 2025.01.2.dev3105"
+            ),
         )
     ],
     child_jobs=[],
