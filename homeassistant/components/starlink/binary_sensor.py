@@ -65,6 +65,7 @@ BINARY_SENSORS = [
         key="currently_obstructed",
         translation_key="currently_obstructed",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status["currently_obstructed"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -113,5 +114,10 @@ BINARY_SENSORS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_unexpected_location"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="connection",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda data: data.status["state"] == "CONNECTED",
     ),
 ]
