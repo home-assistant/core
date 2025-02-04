@@ -161,15 +161,20 @@ class SynologyDSMBackupAgent(BackupAgent):
 
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
-        try:
-            await self._file_station.delete_file(
-                path=self.path, filename=f"{backup_id}.tar"
-            )
-            await self._file_station.delete_file(
-                path=self.path, filename=f"{backup_id}_meta.json"
-            )
-        except SynologyDSMAPIErrorException as err:
-            raise BackupAgentError("Failed to delete the backup") from err
+        for filename in (f"{backup_id}.tar", f"{backup_id}_meta.json"):
+            try:
+                await self._file_station.delete_file(path=self.path, filename=filename)
+            except SynologyDSMAPIErrorException as err:
+                err_args: dict = err.args[0]
+                if int(err_args.get("code", 0)) != 900 or (
+                    (err_details := err_args.get("details")) is not None
+                    and isinstance(err_details, list)
+                    and isinstance(err_details[0], dict)
+                    and int(err_details[0].get("code", 0))
+                    != 408  # No such file or directory
+                ):
+                    LOGGER.error("Failed to delete backup: %s", err)
+                    raise BackupAgentError("Failed to delete backup") from err
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
