@@ -862,7 +862,7 @@ class CalendarGetEventsTool(Tool):
         return {"success": True, "result": events}
 
 
-class WeatherForecastTool(ActionTool):
+class WeatherForecastTool(Tool):
     """LLM Tool wrapper for weather forecast action."""
 
     def __init__(
@@ -870,22 +870,20 @@ class WeatherForecastTool(ActionTool):
         hass: HomeAssistant,
     ) -> None:
         """Init the class."""
-        super().__init__(hass, WEATHER_DOMAIN, SERVICE_GET_FORECASTS)
+        self.name = f"{WEATHER_DOMAIN}_{SERVICE_GET_FORECASTS}"
+        self.description = "Get weather forecasts"
         self.parameters = vol.Schema(
             {
-                key: val
-                for key, val in self.parameters.schema.items()
-                if key not in cv.ENTITY_SERVICE_FIELDS
+                vol.Required("type"): vol.In(("daily", "hourly", "twice_daily")),
+                vol.Optional(ATTR_NAME, description="Weather entity name"): cv.string,
             }
-        ).extend(
-            {vol.Optional(ATTR_NAME, description="Weather entity name"): cv.string}
         )
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
         """Get the forecast."""
-        data = tool_input.tool_args.copy()
+        data = self.parameters(tool_input.tool_args)
         if ATTR_NAME in data:
             result = intent.async_match_targets(
                 hass,
@@ -896,15 +894,15 @@ class WeatherForecastTool(ActionTool):
                 ),
             )
             if not result.is_match:
-                return {"success": False, "error": "Calendar not found"}
+                return {"success": False, "error": "Weather entity not found"}
             data.pop(ATTR_NAME)
             data[ATTR_ENTITY_ID] = [state.entity_id for state in result.states]
         else:
             data[ATTR_ENTITY_ID] = ENTITY_MATCH_ALL
 
         result = await hass.services.async_call(
-            self._domain,
-            self._action,
+            WEATHER_DOMAIN,
+            SERVICE_GET_FORECASTS,
             data,
             context=llm_context.context,
             blocking=True,
