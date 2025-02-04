@@ -25,8 +25,6 @@ type CclConfigEntry = ConfigEntry[CCLDevice]
 
 async def async_setup_entry(hass: HomeAssistant, entry: CclConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
-    if CONF_WEBHOOK_ID is None:
-        return False
     new_device = CCLDevice(entry.data[CONF_WEBHOOK_ID])
     CCLServer.register(new_device)
 
