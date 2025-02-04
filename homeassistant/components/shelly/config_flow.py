@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final, cast
+from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import (
-    BLOCK_GENERATIONS,
-    DEFAULT_HTTP_PORT,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -477,9 +472,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and cast(bool, config_entry.data.get(CONF_SCRIPT))
-            # Needed for devices configured before introducing CONF_SCRIPT
-            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
+            and config_entry.data.get(CONF_SCRIPT, True)
         )
 
 
