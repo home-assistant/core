@@ -71,7 +71,7 @@ SWITCH_DESCRIPTIONS: dict[AttributeType, HomeeSwitchEntityDescription] = {
         key="open_partial_impulse"
     ),
     AttributeType.ON_OFF: HomeeSwitchEntityDescription(
-        key="on_off", device_class_fn=get_device_class
+        key="on_off", device_class_fn=get_device_class, name=None
     ),
     AttributeType.PERMANENTLY_OPEN_IMPULSE: HomeeSwitchEntityDescription(
         key="permanently_open_impulse"
@@ -106,7 +106,12 @@ async def async_setup_entry(
         devices.extend(
             HomeeSwitch(attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
             for attribute in node.attributes
-            if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
+            if (
+                attribute.type in SWITCH_DESCRIPTIONS
+                and attribute.editable
+                and attribute.maximum == 1
+                and attribute.step_value == 1
+            )
             and not (
                 attribute.type == AttributeType.ON_OFF
                 and node.profile in LIGHT_PROFILES
@@ -135,7 +140,11 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
         super().__init__(attribute, entry)
         self.entity_description = description
         self._attr_is_on = bool(attribute.current_value)
-        self._attr_translation_key = description.key
+        if not (
+            (attribute.type in [AttributeType.ON_OFF, AttributeType.IMPULSE])
+            and (attribute.instance == 0)
+        ):
+            self._attr_translation_key = description.key
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
