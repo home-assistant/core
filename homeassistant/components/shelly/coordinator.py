@@ -674,8 +674,9 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         This will be executed on connect or when the config entry
         is updated.
         """
-        if not self.sleep_period and self.entry.data.get(CONF_SCRIPT):
-            await self._async_connect_ble_scanner()
+        if not self.sleep_period:
+            if self.entry.data.get(CONF_SCRIPT):
+                await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
 
