@@ -33,6 +33,7 @@ from .manager import (
     ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
 )
@@ -61,6 +62,7 @@ __all__ = [
     "ManagerBackup",
     "NewBackup",
     "RestoreBackupEvent",
+    "RestoreBackupStage",
     "RestoreBackupState",
     "WrittenBackup",
     "async_get_manager",

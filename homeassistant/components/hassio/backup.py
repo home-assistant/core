@@ -39,6 +39,7 @@ from homeassistant.components.backup import (
     ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
@@ -548,6 +549,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup restore progress."""
+            if not (stage := try_parse_enum(RestoreBackupStage, data.get("stage"))):
+                _LOGGER.debug("Unknown restore stage: %s", data.get("stage"))
+            else:
+                on_progress(
+                    RestoreBackupEvent(
+                        reason=None, stage=stage, state=RestoreBackupState.IN_PROGRESS
+                    )
+                )
             if data.get("done") is True:
                 restore_complete.set()
                 restore_errors.extend(data.get("errors", []))
@@ -574,15 +583,26 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         _LOGGER.debug("Found restore job ID %s in environment", restore_job_id)
 
+        sent_event = False
+
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup restore progress."""
+            nonlocal sent_event
+
+            if not (stage := try_parse_enum(RestoreBackupStage, data.get("stage"))):
+                _LOGGER.debug("Unknown restore stage: %s", data.get("stage"))
+
             if data.get("done") is not True:
-                on_progress(
-                    RestoreBackupEvent(
-                        reason="", stage=None, state=RestoreBackupState.IN_PROGRESS
+                if stage or not sent_event:
+                    sent_event = True
+                    on_progress(
+                        RestoreBackupEvent(
+                            reason=None,
+                            stage=stage,
+                            state=RestoreBackupState.IN_PROGRESS,
+                        )
                     )
-                )
                 return
 
             restore_errors = data.get("errors", [])
@@ -592,14 +612,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 on_progress(
                     RestoreBackupEvent(
                         reason="unknown_error",
-                        stage=None,
+                        stage=stage,
                         state=RestoreBackupState.FAILED,
                     )
                 )
             else:
                 on_progress(
                     RestoreBackupEvent(
-                        reason="", stage=None, state=RestoreBackupState.COMPLETED
+                        reason=None, stage=stage, state=RestoreBackupState.COMPLETED
                     )
                 )
             on_progress(IdleEvent())
