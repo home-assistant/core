@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
         def handle_webhook(
             hass: HomeAssistant, webhook_id: str, request: web.Request
         ) -> Any:
-            """Handle incoming webhook from CCL devices."""
+            """Handle incoming requests from CCL devices."""
             return CCLServer.handler(request)
 
         webhook_url = webhook.async_generate_url(
