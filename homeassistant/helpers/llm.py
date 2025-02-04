@@ -895,7 +895,7 @@ class WeatherForecastTool(Tool):
         else:
             data[ATTR_ENTITY_ID] = ENTITY_MATCH_ALL
 
-        result = await hass.services.async_call(
+        service_result = await hass.services.async_call(
             WEATHER_DOMAIN,
             SERVICE_GET_FORECASTS,
             data,
@@ -904,4 +904,4 @@ class WeatherForecastTool(Tool):
             return_response=True,
         )
 
-        return {"success": True, "result": result}
+        return {"success": True, "result": service_result}
