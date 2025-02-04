@@ -226,11 +226,11 @@ async def test_error_on_global_update(
     [
         (
             RingTimeout,
-            "Error fetching devices data: Timeout communicating with Ring API for device Front",
+            "Error fetching devices data: Timeout communicating with Ring API",
         ),
         (
             RingError,
-            "Error fetching devices data: Error communicating with Ring API for device Front",
+            "Error fetching devices data: Error communicating with Ring API",
         ),
     ],
     ids=["timeout-error", "other-error"],

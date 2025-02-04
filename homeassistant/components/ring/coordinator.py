@@ -71,11 +71,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         self,
         target: Callable[[*_Ts], Coroutine[Any, Any, _R]],
         *args: *_Ts,
-        func_name: str,
-        device_name: str | None = None,
     ) -> _R:
-        device_placeholder = {"device": device_name} if device_name else {}
-        translation_prefix = "device_api_" if device_name else "api_"
         try:
             return await target(*args)
         except AuthenticationError as err:
@@ -83,26 +79,17 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
             # and start a config flow with SOURCE_REAUTH (async_step_reauth)
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key=f"{translation_prefix}authentication",
-                translation_placeholders={
-                    **device_placeholder,
-                },
+                translation_key="api_authentication",
             ) from err
         except RingTimeout as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key=f"{translation_prefix}timeout",
-                translation_placeholders={
-                    **device_placeholder,
-                },
+                translation_key="api_timeout",
             ) from err
         except RingError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key=f"{translation_prefix}error",
-                translation_placeholders={
-                    **device_placeholder,
-                },
+                translation_key="api_error",
             ) from err
 
     async def _async_update_data(self) -> RingDevices:
@@ -110,9 +97,7 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
         update_method: str = (
             "async_update_data" if self.first_call else "async_update_devices"
         )
-        await self._call_api(
-            getattr(self.ring_api, update_method), func_name=update_method
-        )
+        await self._call_api(getattr(self.ring_api, update_method))
         self.first_call = False
         devices: RingDevices = self.ring_api.devices()
         subscribed_device_ids = set(self.async_contexts())
@@ -127,15 +112,11 @@ class RingDataCoordinator(DataUpdateCoordinator[RingDevices]):
                                 self._call_api(
                                     lambda device: device.async_history(limit=10),
                                     device,
-                                    func_name="async_history",
-                                    device_name=device.name,
                                 )
                             )
                         tg.create_task(
                             self._call_api(
                                 device.async_update_health_data,
-                                func_name="async_update_health_data",
-                                device_name=device.name,
                             )
                         )
                 except ExceptionGroup as eg:
