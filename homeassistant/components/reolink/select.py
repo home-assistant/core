@@ -80,6 +80,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="day_night_mode",
         cmd_key="GetIsp",
+        cmd_id=26,
         translation_key="day_night_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=[mode.name for mode in DayNightEnum],
