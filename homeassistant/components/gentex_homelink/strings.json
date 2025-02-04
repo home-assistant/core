@@ -6,8 +6,8 @@
       },
       "user": {
         "data": {
-          "email": "Email Address",
-          "password": "Password"
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
           "email": "Email address associated with your HomeLink account",
