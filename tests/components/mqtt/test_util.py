@@ -52,7 +52,7 @@ async def test_canceling_debouncer_on_shutdown(
         assert not mock_debouncer.is_set()
         mqtt_client_mock.subscribe.assert_not_called()
 
-        # Note thet the broker connection will not be disconnected gracefully
+        # Note that the broker connection will not be disconnected gracefully
         await hass.async_block_till_done()
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
         await asyncio.sleep(0)
