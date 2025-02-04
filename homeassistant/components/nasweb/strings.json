@@ -53,7 +53,7 @@
           "fault": "Fault",
           "tamper": "Tamper",
           "undefined": "Undefined",
-          "vigil": "Vigil",
+          "vigil": "Ready",
           "violation": "Violation"
         }
       }
