@@ -810,6 +810,37 @@ class DefaultAgent(ConversationEntity):
         elif intent_response.unmatched_states:
             state1 = intent_response.unmatched_states[0]
 
+        state1_translated = ""
+        if state1 is not None:
+            device_class = state1.attributes.get("device_class", "_")
+            state_translations = await translation.async_get_translations(
+                self.hass, language, "state", {state1.domain}
+            )
+            entity_component_translations = await translation.async_get_translations(
+                self.hass, language, "entity_component", {state1.domain}
+            )
+
+            state_key = f"component.{state1.domain}.state.{device_class}.{state1.state}"
+            entity_component_key = f"component.{state1.domain}.entity_component.{device_class}.state.{state1.state}"
+
+            state_translation = state_translations.get(state_key)
+            entity_component_translation = entity_component_translations.get(
+                entity_component_key, state_translation
+            )
+
+            if (not state_translation) and entity_component_translation:
+                # Missing "state._" translation
+                state1_translated = entity_component_translation
+            elif state_translation and (not entity_component_translation):
+                # Missing "entity_component._.state" translation
+                state1_translated = state_translation
+            if state_translation and (
+                state_translation != entity_component_translation
+            ):
+                # Prefer "state._" translation since English is the fallback
+                # language and doesn't necessarily have it.
+                state1_translated = state_translation
+
         # Render response template
         speech_slots = {
             entity_name: entity_value.text or entity_value.value
@@ -827,6 +858,7 @@ class DefaultAgent(ConversationEntity):
                     if state1 is not None
                     else None
                 ),
+                "state_translated": state1_translated,
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
