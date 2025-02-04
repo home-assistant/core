@@ -597,7 +597,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.7.0
+bleak-esphome==2.7.1
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.8.0
