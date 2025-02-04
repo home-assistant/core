@@ -37,8 +37,12 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
-  reauthentication-flow: todo
+  parallel-updates:
+    status: exempt
+    comment: This integration polls data using a coordinator, there is no need for parallel updates.
+  reauthentication-flow:
+    status: exempt
+    comment: This integration requires no authentication.
   test-coverage: todo
 
   # Gold
