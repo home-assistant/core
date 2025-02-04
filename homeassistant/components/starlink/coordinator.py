@@ -14,8 +14,11 @@ from starlink_grpc import (
     GrpcError,
     LocationDict,
     ObstructionDict,
+    PowerDict,
     StatusDict,
+    UsageDict,
     get_sleep_config,
+    history_stats,
     location_data,
     reboot,
     set_sleep_config,
@@ -39,6 +42,8 @@ class StarlinkData:
     status: StatusDict
     obstruction: ObstructionDict
     alert: AlertDict
+    usage: UsageDict
+    consumption: PowerDict
 
 
 class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
@@ -47,6 +52,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     def __init__(self, hass: HomeAssistant, name: str, url: str) -> None:
         """Initialize an UpdateCoordinator for a group of sensors."""
         self.channel_context = ChannelContext(target=url)
+        self.history_stats_start = None
         self.timezone = ZoneInfo(hass.config.time_zone)
         super().__init__(
             hass,
@@ -57,11 +63,26 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
 
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
-        channel_context = self.channel_context
-        status = status_data(channel_context)
-        location = location_data(channel_context)
-        sleep = get_sleep_config(channel_context)
-        return StarlinkData(location, sleep, *status)
+        context = self.channel_context
+        status = status_data(context)
+        location = location_data(context)
+        sleep = get_sleep_config(context)
+        status, obstruction, alert = status_data(context)
+        index, _, _, _, _, usage, consumption, *_ = history_stats(
+            parse_samples=-1, start=self.history_stats_start, context=context
+        )
+        self.history_stats_start = index["end_counter"]
+        if self.data:
+            if index["samples"] > 0:
+                usage["download_usage"] += self.data.usage["download_usage"]
+                usage["upload_usage"] += self.data.usage["upload_usage"]
+                consumption["total_energy"] += self.data.consumption["total_energy"]
+            else:
+                usage = self.data.usage
+                consumption = self.data.consumption
+        return StarlinkData(
+            location, sleep, status, obstruction, alert, usage, consumption
+        )
 
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):

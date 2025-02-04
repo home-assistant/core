@@ -89,7 +89,7 @@ from .helpers import (
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
-from .helpers.system_info import async_get_system_info, is_official_image
+from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
     # _setup_started is marked as protected to make it clear
@@ -106,10 +106,16 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
     # Ensure anyio backend is imported to avoid it being imported in the event loop
     from anyio._backends import _asyncio  # noqa: F401
+
+with contextlib.suppress(ImportError):
+    # httpx will import trio if it is installed which does
+    # blocking I/O in the event loop. We want to avoid that.
+    import trio  # noqa: F401
 
 
 if TYPE_CHECKING:
@@ -155,6 +161,16 @@ FRONTEND_INTEGRATIONS = {
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
+    # Hassio is an after dependency of backup, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here. Hassio needs to be setup before backup, otherwise
+    # the backup integration will think we are a container/core install
+    # when using HAOS or Supervised install.
+    "hassio",
+    # Backup is an after dependency of frontend, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here.
+    "backup",
 }
 RECORDER_INTEGRATIONS = {
     # Setup after frontend
@@ -252,6 +268,7 @@ PRELOAD_STORAGE = [
     "assist_pipeline.pipelines",
     "core.analytics",
     "auth_module.totp",
+    "backup",
 ]
 
 

@@ -7,7 +7,7 @@ from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
-from homeassistant import config as hass_config
+from homeassistant import config as hass_config, core as ha
 from homeassistant.components.history_stats.const import (
     CONF_END,
     CONF_START,
@@ -27,12 +27,11 @@ from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_UNKNOWN,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
 from tests.components.recorder.common import async_wait_recording_done
@@ -1463,6 +1462,105 @@ async def test_measure_cet(recorder_mock: Recorder, hass: HomeAssistant) -> None
     assert 0.499 < float(hass.states.get("sensor.sensor2").state) < 0.501
     assert hass.states.get("sensor.sensor3").state == "2"
     assert hass.states.get("sensor.sensor4").state == "50.0"
+
+
+async def test_state_change_during_window_rollover(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+) -> None:
+    """Test when the tracked sensor and the start/end window change during the same update."""
+    await hass.config.async_set_time_zone("UTC")
+    utcnow = dt_util.utcnow()
+    start_time = utcnow.replace(hour=23, minute=0, second=0, microsecond=0)
+
+    def _fake_states(*args, **kwargs):
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "on",
+                    last_changed=start_time - timedelta(hours=11),
+                    last_updated=start_time - timedelta(hours=11),
+                ),
+            ]
+        }
+
+    # The test begins at 23:00, and queries from the database that the sensor has been on since 12:00.
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states,
+        ),
+        freeze_time(start_time),
+    ):
+        await async_setup_component(
+            hass,
+            "sensor",
+            {
+                "sensor": [
+                    {
+                        "platform": "history_stats",
+                        "entity_id": "binary_sensor.state",
+                        "name": "sensor1",
+                        "state": "on",
+                        "start": "{{ today_at() }}",
+                        "end": "{{ now() }}",
+                        "type": "time",
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+        await async_update_entity(hass, "sensor.sensor1")
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "11.0"
+
+    # Advance 59 minutes, to record the last minute update just before midnight, just like a real system would do.
+    t2 = start_time + timedelta(minutes=59, microseconds=300)
+    with freeze_time(t2):
+        async_fire_time_changed(hass, t2)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "11.98"
+
+    # One minute has passed and the time has now rolled over into a new day, resetting the recorder window. The sensor will then query the database for updates,
+    # and will see that the sensor is ON starting from midnight.
+    t3 = t2 + timedelta(minutes=1)
+
+    def _fake_states_t3(*args, **kwargs):
+        return {
+            "binary_sensor.state": [
+                ha.State(
+                    "binary_sensor.state",
+                    "on",
+                    last_changed=t3.replace(hour=0, minute=0, second=0, microsecond=0),
+                    last_updated=t3.replace(hour=0, minute=0, second=0, microsecond=0),
+                ),
+            ]
+        }
+
+    with (
+        patch(
+            "homeassistant.components.recorder.history.state_changes_during_period",
+            _fake_states_t3,
+        ),
+        freeze_time(t3),
+    ):
+        # The sensor turns off around this time, before the sensor does its normal polled update.
+        hass.states.async_set("binary_sensor.state", "off")
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.sensor1").state == "0.0"
+
+    # More time passes, and the history stats does a polled update again. It should be 0 since the sensor has been off since midnight.
+    t4 = t3 + timedelta(minutes=10)
+    with freeze_time(t4):
+        async_fire_time_changed(hass, t4)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.sensor1").state == "0.0"
 
 
 @pytest.mark.parametrize("time_zone", ["Europe/Berlin", "America/Chicago", "US/Hawaii"])

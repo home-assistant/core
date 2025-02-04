@@ -23,6 +23,9 @@ from .entity import PlugwiseEntity
 
 SEVERITIES = ["other", "info", "warning", "error"]
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True)
 class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):

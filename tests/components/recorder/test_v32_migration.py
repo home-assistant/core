@@ -17,20 +17,22 @@ from homeassistant.components.recorder.queries import select_event_type_ids
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, EventOrigin, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import async_wait_recording_done
 from .conftest import instrument_migration
 
 from tests.common import async_test_home_assistant
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 CREATE_ENGINE_TARGET = "homeassistant.components.recorder.core.create_engine"
 SCHEMA_MODULE_30 = "tests.components.recorder.db_schema_30"
 SCHEMA_MODULE_32 = "tests.components.recorder.db_schema_32"
 
 
-def _create_engine_test(schema_module: str) -> Callable:
+def _create_engine_test(
+    schema_module: str, *, initial_version: int | None = None
+) -> Callable:
     """Test version of create_engine that initializes with old schema.
 
     This simulates an existing db with the old schema.
@@ -49,6 +51,10 @@ def _create_engine_test(schema_module: str) -> Callable:
             session.add(
                 recorder.db_schema.StatisticsRuns(start=statistics.get_start_time())
             )
+            if initial_version is not None:
+                session.add(
+                    recorder.db_schema.SchemaChanges(schema_version=initial_version)
+                )
             session.add(
                 recorder.db_schema.SchemaChanges(
                     schema_version=old_db_schema.SCHEMA_VERSION
@@ -67,10 +73,13 @@ def _create_engine_test(schema_module: str) -> Callable:
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_times(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test we can migrate times in the events and states tables."""
+    """Test we can migrate times in the events and states tables.
+
+    Also tests entity id post migration.
+    """
     importlib.import_module(SCHEMA_MODULE_30)
     old_db_schema = sys.modules[SCHEMA_MODULE_30]
     now = dt_util.utcnow()
@@ -122,7 +131,13 @@ async def test_migrate_times(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_30)),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=_create_engine_test(
+                SCHEMA_MODULE_30,
+                initial_version=27,  # Set to 27 for the entity id post migration to run
+            ),
+        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -225,7 +240,7 @@ async def test_migrate_times(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_entity_id_post_migration(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -274,7 +289,13 @@ async def test_migrate_can_resume_entity_id_post_migration(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=_create_engine_test(
+                SCHEMA_MODULE_32,
+                initial_version=27,  # Set to 27 for the entity id post migration to run
+            ),
+        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -330,7 +351,7 @@ async def test_migrate_can_resume_entity_id_post_migration(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_migrate_can_resume_ix_states_event_id_removed(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -394,7 +415,13 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=_create_engine_test(
+                SCHEMA_MODULE_32,
+                initial_version=27,  # Set to 27 for the entity id post migration to run
+            ),
+        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -463,7 +490,7 @@ async def test_migrate_can_resume_ix_states_event_id_removed(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_out_of_disk_space_while_rebuild_states_table(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -527,7 +554,13 @@ async def test_out_of_disk_space_while_rebuild_states_table(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=_create_engine_test(
+                SCHEMA_MODULE_32,
+                initial_version=27,  # Set to 27 for the entity id post migration to run
+            ),
+        ),
     ):
         async with (
             async_test_home_assistant() as hass,
@@ -637,7 +670,7 @@ async def test_out_of_disk_space_while_rebuild_states_table(
 @pytest.mark.parametrize("persistent_database", [True])
 @pytest.mark.usefixtures("hass_storage")  # Prevent test hass from writing to storage
 async def test_out_of_disk_space_while_removing_foreign_key(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     caplog: pytest.LogCaptureFixture,
     recorder_db_url: str,
 ) -> None:
@@ -705,7 +738,13 @@ async def test_out_of_disk_space_while_removing_foreign_key(
         patch.object(core, "EventData", old_db_schema.EventData),
         patch.object(core, "States", old_db_schema.States),
         patch.object(core, "Events", old_db_schema.Events),
-        patch(CREATE_ENGINE_TARGET, new=_create_engine_test(SCHEMA_MODULE_32)),
+        patch(
+            CREATE_ENGINE_TARGET,
+            new=_create_engine_test(
+                SCHEMA_MODULE_32,
+                initial_version=27,  # Set to 27 for the entity id post migration to run
+            ),
+        ),
     ):
         async with (
             async_test_home_assistant() as hass,

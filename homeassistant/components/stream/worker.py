@@ -15,6 +15,7 @@ from typing import Any, Self, cast
 import av
 import av.audio
 import av.container
+from av.container import InputContainer
 import av.stream
 
 from homeassistant.core import HomeAssistant
@@ -29,6 +30,7 @@ from .const import (
     PACKETS_TO_WAIT_FOR_AUDIO,
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
+    StreamClientError,
 )
 from .core import (
     STREAM_SETTINGS_NON_LL_HLS,
@@ -39,15 +41,12 @@ from .core import (
     StreamSettings,
 )
 from .diagnostics import Diagnostics
+from .exceptions import StreamEndedError, StreamWorkerError
 from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
 NEGATIVE_INF = float("-inf")
-
-
-class StreamWorkerError(Exception):
-    """An exception thrown while processing a stream."""
 
 
 def redact_av_error_string(err: av.FFmpegError) -> str:
@@ -56,10 +55,6 @@ def redact_av_error_string(err: av.FFmpegError) -> str:
     if err.filename:
         parts.append(redact_credentials(err.filename))
     return ", ".join(parts)
-
-
-class StreamEndedError(StreamWorkerError):
-    """Raised when the stream is complete, exposed for facilitating testing."""
 
 
 class StreamState:
@@ -465,7 +460,7 @@ class TimestampValidator:
         if packet.dts is None:
             if self._missing_dts >= MAX_MISSING_DTS:  # type: ignore[unreachable]
                 raise StreamWorkerError(
-                    f"No dts in {MAX_MISSING_DTS+1} consecutive packets"
+                    f"No dts in {MAX_MISSING_DTS + 1} consecutive packets"
                 )
             self._missing_dts += 1
             return False
@@ -512,6 +507,47 @@ def get_audio_bitstream_filter(
     return None
 
 
+def try_open_stream(
+    source: str,
+    pyav_options: dict[str, str],
+) -> InputContainer:
+    """Try to open a stream.
+
+    Will raise StreamOpenClientError if an http client error is encountered.
+    """
+
+    try:
+        return av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
+    except av.HTTPBadRequestError as err:
+        raise StreamWorkerError(
+            f"Bad Request Error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.BadRequest,
+        ) from err
+
+    except av.HTTPUnauthorizedError as err:
+        raise StreamWorkerError(
+            f"Unauthorized error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.Unauthorized,
+        ) from err
+
+    except av.HTTPForbiddenError as err:
+        raise StreamWorkerError(
+            f"Forbidden error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.Forbidden,
+        ) from err
+
+    except av.HTTPNotFoundError as err:
+        raise StreamWorkerError(
+            f"Not Found error opening stream ({redact_av_error_string(err)})",
+            error_code=StreamClientError.NotFound,
+        ) from err
+
+    except av.FFmpegError as err:
+        raise StreamWorkerError(
+            f"Error opening stream ({redact_av_error_string(err)})"
+        ) from err
+
+
 def stream_worker(
     source: str,
     pyav_options: dict[str, str],
@@ -526,12 +562,7 @@ def stream_worker(
         # the stimeout option was renamed to timeout as of ffmpeg 5.0
         pyav_options["timeout"] = pyav_options["stimeout"]
         del pyav_options["stimeout"]
-    try:
-        container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
-    except av.FFmpegError as err:
-        raise StreamWorkerError(
-            f"Error opening stream ({redact_av_error_string(err)})"
-        ) from err
+    container = try_open_stream(source, pyav_options)
     try:
         video_stream = container.streams.video[0]
     except (KeyError, IndexError) as ex:

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from fjaraskupan import COMMAND_LIGHT_ON_OFF
-
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -62,7 +60,6 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
         if self.is_on:
             async with self.coordinator.async_connect_and_update() as device:
                 await device.send_dim(0)
-                await device.send_command(COMMAND_LIGHT_ON_OFF)
 
     @property
     def is_on(self) -> bool:

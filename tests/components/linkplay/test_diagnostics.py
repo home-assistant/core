@@ -31,8 +31,10 @@ async def test_diagnostics(
         patch.object(LinkPlayMultiroom, "update_status", return_value=None),
     ):
         endpoints = [
-            LinkPlayApiEndpoint(protocol="https", endpoint=HOST, session=None),
-            LinkPlayApiEndpoint(protocol="http", endpoint=HOST, session=None),
+            LinkPlayApiEndpoint(
+                protocol="https", port=443, endpoint=HOST, session=None
+            ),
+            LinkPlayApiEndpoint(protocol="http", port=80, endpoint=HOST, session=None),
         ]
         for endpoint in endpoints:
             mock_session.get(

@@ -19,7 +19,6 @@ from pydeconz.utils import (
 )
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
     ConfigEntry,
@@ -28,9 +27,10 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -49,15 +49,6 @@ from .hub import DeconzHub
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
 CONF_MANUAL_INPUT = "Manually define gateway"
-
-
-@callback
-def get_master_hub(hass: HomeAssistant) -> DeconzHub:
-    """Return the gateway which is marked as master."""
-    for hub in hass.data[DOMAIN].values():
-        if hub.master:
-            return cast(DeconzHub, hub)
-    raise ValueError
 
 
 class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -220,13 +211,13 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_link()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered deCONZ bridge."""
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
 
-        self.bridge_id = normalize_bridge_id(discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL])
+        self.bridge_id = normalize_bridge_id(discovery_info.upnp[ATTR_UPNP_SERIAL])
         parsed_url = urlparse(discovery_info.ssdp_location)
 
         entry = await self.async_set_unique_id(self.bridge_id)

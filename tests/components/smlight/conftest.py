@@ -18,7 +18,8 @@ from tests.common import (
     load_json_object_fixture,
 )
 
-MOCK_HOST = "slzb-06.local"
+MOCK_DEVICE_NAME = "slzb-06"
+MOCK_HOST = "192.168.1.161"
 MOCK_USERNAME = "test-user"
 MOCK_PASSWORD = "test-pass"
 

@@ -50,11 +50,13 @@ from .const import (
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
     GEN1_RELEASE_URL,
+    GEN2_BETA_RELEASE_URL,
     GEN2_RELEASE_URL,
     LOGGER,
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
+    SHELLY_EMIT_EVENT_PATTERN,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS_MAP,
@@ -137,7 +139,7 @@ def get_block_channel_name(device: BlockDevice, block: Block | None) -> str:
     else:
         base = ord("1")
 
-    return f"{entity_name} channel {chr(int(block.channel)+base)}"
+    return f"{entity_name} channel {chr(int(block.channel) + base)}"
 
 
 def is_block_momentary_input(
@@ -200,7 +202,7 @@ def get_block_input_triggers(
         subtype = "button"
     else:
         assert block.channel
-        subtype = f"button{int(block.channel)+1}"
+        subtype = f"button{int(block.channel) + 1}"
 
     if device.settings["device"]["type"] in SHBTN_MODELS:
         trigger_types = SHBTN_INPUTS_EVENTS_TYPES
@@ -409,7 +411,7 @@ def get_rpc_input_triggers(device: RpcDevice) -> list[tuple[str, str]]:
             continue
 
         for trigger_type in RPC_INPUTS_EVENTS_TYPES:
-            subtype = f"button{id_+1}"
+            subtype = f"button{id_ + 1}"
             triggers.append((trigger_type, subtype))
 
     return triggers
@@ -453,8 +455,13 @@ def mac_address_from_name(name: str) -> str | None:
 
 def get_release_url(gen: int, model: str, beta: bool) -> str | None:
     """Return release URL or None."""
-    if beta or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
+    if (
+        beta and gen in BLOCK_GENERATIONS
+    ) or model in DEVICES_WITHOUT_FIRMWARE_CHANGELOG:
         return None
+
+    if beta:
+        return GEN2_BETA_RELEASE_URL
 
     return GEN1_RELEASE_URL if gen in BLOCK_GENERATIONS else GEN2_RELEASE_URL
 
@@ -592,3 +599,10 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
+
+
+async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
+    """Return a list of event types for a specific script."""
+    code_response = await device.script_getcode(id)
+    matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
+    return sorted([*{str(event_type.group(1)) for event_type in matches}])

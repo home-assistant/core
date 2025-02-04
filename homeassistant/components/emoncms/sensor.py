@@ -38,8 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -317,7 +316,7 @@ async def async_setup_entry(
             EmonCmsSensor(
                 coordinator,
                 unique_id,
-                elem["unit"],
+                elem.get("unit"),
                 name,
                 idx,
             )
@@ -353,6 +352,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             self.entity_description = description
         else:
             self._attr_native_unit_of_measurement = unit_of_measurement
+            self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._update_attributes(elem)
 
     def _update_attributes(self, elem: dict[str, Any]) -> None:
