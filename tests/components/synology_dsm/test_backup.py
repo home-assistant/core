@@ -290,6 +290,12 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [],
+            "agents": {
+                "synology_dsm.mocked_syno_dsm_entry": {
+                    "protected": True,
+                    "size": 13916160,
+                }
+            },
             "backup_id": "abcd12ef",
             "date": "2025-01-09T20:14:35.457323+01:00",
             "database_included": True,
@@ -297,9 +303,6 @@ async def test_agents_list_backups(
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.0.dev0",
             "name": "Automatic backup 2025.2.0.dev0",
-            "protected": True,
-            "size": 13916160,
-            "agent_ids": ["synology_dsm.mocked_syno_dsm_entry"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -329,8 +332,10 @@ async def test_agents_list_backups_error(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
 
@@ -355,6 +360,12 @@ async def test_agents_list_backups_disabled_filestation(
             "abcd12ef",
             {
                 "addons": [],
+                "agents": {
+                    "synology_dsm.mocked_syno_dsm_entry": {
+                        "protected": True,
+                        "size": 13916160,
+                    }
+                },
                 "backup_id": "abcd12ef",
                 "date": "2025-01-09T20:14:35.457323+01:00",
                 "database_included": True,
@@ -362,9 +373,6 @@ async def test_agents_list_backups_disabled_filestation(
                 "homeassistant_included": True,
                 "homeassistant_version": "2025.2.0.dev0",
                 "name": "Automatic backup 2025.2.0.dev0",
-                "protected": True,
-                "size": 13916160,
-                "agent_ids": ["synology_dsm.mocked_syno_dsm_entry"],
                 "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },
@@ -665,7 +673,11 @@ async def test_agents_delete_not_existing(
     backup_id = "ef34ab12"
 
     setup_dsm_with_filestation.file.delete_file = AsyncMock(
-        side_effect=SynologyDSMAPIErrorException("api", "404", "not found")
+        side_effect=SynologyDSMAPIErrorException(
+            "api",
+            "900",
+            [{"code": 408, "path": f"/ha_backup/my_backup_path/{backup_id}.tar"}],
+        )
     )
 
     await client.send_json_auto_id(
@@ -677,26 +689,40 @@ async def test_agents_delete_not_existing(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agent_errors": {
-            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete the backup"
-        }
-    }
+    assert response["result"] == {"agent_errors": {}}
 
 
+@pytest.mark.parametrize(
+    ("error", "expected_log"),
+    [
+        (
+            SynologyDSMAPIErrorException("api", "100", "Unknown error"),
+            "{'api': 'api', 'code': '100', 'reason': 'Unknown', 'details': 'Unknown error'}",
+        ),
+        (
+            SynologyDSMAPIErrorException("api", "900", [{"code": 407}]),
+            "{'api': 'api', 'code': '900', 'reason': 'Unknown', 'details': [{'code': 407}]",
+        ),
+        (
+            SynologyDSMAPIErrorException("api", "900", [{"code": 417}]),
+            "{'api': 'api', 'code': '900', 'reason': 'Unknown', 'details': [{'code': 417}]",
+        ),
+    ],
+)
 async def test_agents_delete_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
     setup_dsm_with_filestation: MagicMock,
+    error: SynologyDSMAPIErrorException,
+    expected_log: str,
 ) -> None:
     """Test error while delete backup."""
     client = await hass_ws_client(hass)
 
     # error while delete
     backup_id = "abcd12ef"
-    setup_dsm_with_filestation.file.delete_file.side_effect = (
-        SynologyDSMAPIErrorException("api", "404", "not found")
-    )
+    setup_dsm_with_filestation.file.delete_file.side_effect = error
     await client.send_json_auto_id(
         {
             "type": "backup/delete",
@@ -708,9 +734,10 @@ async def test_agents_delete_error(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete the backup"
+            "synology_dsm.mocked_syno_dsm_entry": "Failed to delete backup"
         }
     }
+    assert f"Failed to delete backup: {expected_log}" in caplog.text
     mock: AsyncMock = setup_dsm_with_filestation.file.delete_file
     assert len(mock.mock_calls) == 1
     assert mock.call_args_list[0].kwargs["filename"] == "abcd12ef.tar"

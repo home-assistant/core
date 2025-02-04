@@ -18,7 +18,7 @@ from homeassistant.const import SUN_EVENT_SUNSET, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.sun import get_astral_event_date
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 

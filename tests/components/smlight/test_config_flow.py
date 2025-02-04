@@ -8,19 +8,20 @@ from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import pytest
 
 from homeassistant.components.smlight.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .conftest import MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
+from .conftest import MOCK_DEVICE_NAME, MOCK_HOST, MOCK_PASSWORD, MOCK_USERNAME
 
 from tests.common import MockConfigEntry
 
 DISCOVERY_INFO = ZeroconfServiceInfo(
-    ip_address=ip_address("127.0.0.1"),
-    ip_addresses=[ip_address("127.0.0.1")],
+    ip_address=ip_address("192.168.1.161"),
+    ip_addresses=[ip_address("192.168.1.161")],
     hostname="slzb-06.local.",
     name="mock_name",
     port=6638,
@@ -29,8 +30,8 @@ DISCOVERY_INFO = ZeroconfServiceInfo(
 )
 
 DISCOVERY_INFO_LEGACY = ZeroconfServiceInfo(
-    ip_address=ip_address("127.0.0.1"),
-    ip_addresses=[ip_address("127.0.0.1")],
+    ip_address=ip_address("192.168.1.161"),
+    ip_addresses=[ip_address("192.168.1.161")],
     hostname="slzb-06.local.",
     name="mock_name",
     port=6638,
@@ -52,7 +53,7 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_HOST: MOCK_HOST,
+            CONF_HOST: "slzb-06p7.local",
         },
     )
 
@@ -76,7 +77,7 @@ async def test_zeroconf_flow(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -113,7 +114,7 @@ async def test_zeroconf_flow_auth(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -167,7 +168,7 @@ async def test_zeroconf_unsupported_abort(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm_discovery"
 
@@ -259,6 +260,44 @@ async def test_user_device_exists_abort(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_user_flow_can_override_discovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test manual user flow can override discovery in progress."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=DISCOVERY_INFO
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == SOURCE_USER
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["context"]["source"] == SOURCE_USER
+    assert result2["data"] == {
+        CONF_HOST: MOCK_HOST,
+    }
+    assert result2["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_smlight_client")
@@ -451,7 +490,7 @@ async def test_zeroconf_legacy_mac(
         data=DISCOVERY_INFO_LEGACY,
     )
 
-    assert result["description_placeholders"] == {"host": MOCK_HOST}
+    assert result["description_placeholders"] == {"host": MOCK_DEVICE_NAME}
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -467,6 +506,76 @@ async def test_zeroconf_legacy_mac(
 
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_smlight_client.get_info.mock_calls) == 3
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_zeroconf_updates_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test zeroconf discovery updates host ip."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = DISCOVERY_INFO
+    service_info.ip_address = ip_address("192.168.1.164")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.164"
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_dhcp_discovery_updates_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery updates host ip."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = DhcpServiceInfo(
+        ip="192.168.1.164",
+        hostname="slzb-06",
+        macaddress="aabbccddeeff",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.164"
+
+
+@pytest.mark.usefixtures("mock_smlight_client")
+async def test_dhcp_discovery_aborts(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test dhcp discovery updates host ip."""
+    mock_config_entry.add_to_hass(hass)
+
+    service_info = DhcpServiceInfo(
+        ip="192.168.1.161",
+        hostname="slzb-06",
+        macaddress="000000000000",
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.161"
 
 
 async def test_reauth_flow(

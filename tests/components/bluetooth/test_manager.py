@@ -426,7 +426,7 @@ async def test_restore_history_from_dbus(
         address: AdvertisementHistory(
             ble_device,
             generate_advertisement_data(local_name="name"),
-            HCI0_SOURCE_ADDRESS,
+            "hci0",
         )
     }
 
@@ -438,6 +438,8 @@ async def test_restore_history_from_dbus(
         await hass.async_block_till_done()
 
     assert bluetooth.async_ble_device_from_address(hass, address) is ble_device
+    info = bluetooth.async_last_service_info(hass, address, False)
+    assert info.source == "00:00:00:00:00:01"
 
 
 @pytest.mark.usefixtures("one_adapter")

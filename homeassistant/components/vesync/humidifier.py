@@ -121,6 +121,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
                 self._available_modes.append(ha_mode)
                 self._ha_to_vs_mode_map[ha_mode] = vs_mode
 
+        self._available_modes.sort()
+
     def _get_vs_mode(self, ha_mode: str) -> str | None:
         return self._ha_to_vs_mode_map.get(ha_mode)
 
@@ -128,6 +130,11 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     def available_modes(self) -> list[str]:
         """Return the available mist modes."""
         return self._available_modes
+
+    @property
+    def current_humidity(self) -> int:
+        """Return the current humidity."""
+        return self.device.humidity
 
     @property
     def target_humidity(self) -> int:
