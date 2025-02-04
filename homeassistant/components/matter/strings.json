@@ -184,7 +184,7 @@
         "name": "Mode"
       },
       "device_energy_management_mode": {
-        "name": "Device Energy Management mode"
+        "name": "Device energy management mode"
       },
       "dishwasher_mode": {
         "name": "Dishwasher mode"
