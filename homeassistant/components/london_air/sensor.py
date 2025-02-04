@@ -54,6 +54,8 @@ AUTHORITIES = [
     "Tower Hamlets",
     "Wandsworth",
     "Westminster",
+    "Hounslow",
+    "Hammersmith and Fulham",
 ]
 
 URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
