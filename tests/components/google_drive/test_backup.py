@@ -47,6 +47,7 @@ TEST_AGENT_BACKUP_RESULT = {
     "backup_id": "test-backup",
     "database_included": True,
     "date": "2025-01-01T01:23:45.678Z",
+    "extra_metadata": {},
     "folders": [],
     "homeassistant_included": True,
     "homeassistant_version": "2024.12.0",
