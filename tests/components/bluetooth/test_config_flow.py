@@ -20,7 +20,7 @@ from homeassistant.components.bluetooth.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import FakeRemoteScanner, MockBleakClient, _get_manager
@@ -537,7 +537,9 @@ async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> 
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_async_step_integration_discovery_remote_adapter(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test remote adapter configuration via integration discovery."""
     entry = MockConfigEntry(domain="test")
@@ -547,10 +549,12 @@ async def test_async_step_integration_discovery_remote_adapter(
     )
     scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
     manager = _get_manager()
+    area_entry = area_registry.async_get_or_create("test")
     cancel_scanner = manager.async_register_scanner(scanner)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+        suggested_area=area_entry.id,
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -585,6 +589,7 @@ async def test_async_step_integration_discovery_remote_adapter(
     )
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
+    assert ble_device_entry.area_id == area_entry.id
 
     await hass.config_entries.async_unload(new_entry.entry_id)
     await hass.config_entries.async_unload(entry.entry_id)
