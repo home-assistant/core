@@ -8,7 +8,6 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
-from .agent import BackupNotFound
 from .config import Day, ScheduleRecurrence
 from .const import DATA_MANAGER, LOGGER
 from .manager import (
@@ -16,7 +15,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerStateEvent,
 )
-from .models import Folder
+from .models import BackupNotFound, Folder
 
 
 @callback

@@ -18,9 +18,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import slugify
 
 from . import util
-from .agent import BackupAgent, BackupNotFound
+from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
+from .models import BackupNotFound
 
 
 @callback

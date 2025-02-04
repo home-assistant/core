@@ -83,6 +83,12 @@ class BackupError(HomeAssistantError):
     error_code = "unknown"
 
 
+class BackupAgentError(BackupError):
+    """Base class for backup agent errors."""
+
+    error_code = "backup_agent_error"
+
+
 class BackupManagerError(BackupError):
     """Backup manager error."""
 
@@ -93,3 +99,9 @@ class BackupReaderWriterError(BackupError):
     """Backup reader/writer error."""
 
     error_code = "backup_reader_writer_error"
+
+
+class BackupNotFound(BackupAgentError, BackupManagerError):
+    """Raised when a backup is not found."""
+
+    error_code = "backup_not_found"
