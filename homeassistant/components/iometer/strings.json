@@ -26,24 +26,8 @@
   },
   "entity": {
     "sensor": {
-      "attachment_status": {
-        "name": "Connection to meter",
-        "state": {
-          "attached": "Attached",
-          "detached": "Detached",
-          "unknown": "Unknown"
-        }
-      },
       "battery_level": {
         "name": "Battery level"
-      },
-      "connection_status": {
-        "name": "Connection Core/Bridge",
-        "state": {
-          "connected": "Connected",
-          "disconnected": "Disconnected",
-          "unknown": "Unknown"
-        }
       },
       "meter_number": {
         "name": "Meter number"

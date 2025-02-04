@@ -43,15 +43,13 @@ async def test_user_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "10.0.0.2"},
+        user_input={CONF_HOST: IP_ADDRESS},
     )
 
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IOmeter 1ISK0000000000"
-    assert result["data"] == {
-        CONF_HOST: "10.0.0.2",
-    }
+    assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["result"].unique_id == IOMETER_DEVICE_ID
 
 
@@ -76,9 +74,7 @@ async def test_zeroconf_flow(
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IOmeter 1ISK0000000000"
-    assert result["data"] == {
-        CONF_HOST: "10.0.0.2",
-    }
+    assert result["data"] == {CONF_HOST: IP_ADDRESS}
     assert result["result"].unique_id == IOMETER_DEVICE_ID
 
 
@@ -131,7 +127,7 @@ async def test_user_flow_connection_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "10.0.0.2"},
+        {CONF_HOST: IP_ADDRESS},
     )
     await hass.async_block_till_done()
 
@@ -142,7 +138,7 @@ async def test_user_flow_connection_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "10.0.0.2"},
+        {CONF_HOST: IP_ADDRESS},
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -167,7 +163,7 @@ async def test_flow_abort_duplicate(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "10.0.0.2"},
+        {CONF_HOST: IP_ADDRESS},
     )
     await hass.async_block_till_done()
 
