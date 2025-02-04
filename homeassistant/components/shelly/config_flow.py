@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
@@ -13,6 +13,7 @@ from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
     MacAddressMismatchError,
+    RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
@@ -38,10 +39,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
-    MODEL_WALL_DISPLAY,
     BLEScannerMode,
 )
 from .coordinator import async_reconnect_soon
@@ -75,6 +76,15 @@ BLE_SCANNER_OPTIONS = [
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
 
 
+async def async_script_supported(device: RpcDevice) -> bool:
+    """Check if the device supports scripts."""
+    try:
+        await device.script_list()
+    except RpcCallError:
+        return False
+    return True
+
+
 async def validate_input(
     hass: HomeAssistant,
     host: str,
@@ -105,6 +115,7 @@ async def validate_input(
         )
         try:
             await rpc_device.initialize()
+            script_supported = await async_script_supported(rpc_device)
             sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
         finally:
             await rpc_device.shutdown()
@@ -114,6 +125,7 @@ async def validate_input(
             CONF_SLEEP_PERIOD: sleep_period,
             "model": rpc_device.shelly.get("model"),
             CONF_GEN: gen,
+            CONF_SCRIPT: script_supported,
         }
 
     # Gen1
@@ -460,7 +472,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
+            and cast(bool, config_entry.data.get(CONF_SCRIPT))
         )
 
 

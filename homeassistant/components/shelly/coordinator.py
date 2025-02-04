@@ -42,6 +42,7 @@ from .const import (
     ATTR_GENERATION,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     CONF_BLE_SCANNER_MODE,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     DUAL_MODE_LIGHT_MODELS,
@@ -673,7 +674,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         This will be executed on connect or when the config entry
         is updated.
         """
-        if not self.sleep_period:
+        if not self.sleep_period and self.entry.data.get(CONF_SCRIPT):
             await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
