@@ -68,7 +68,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {"sip_port": 5060}
+    assert config_entry.options == {"sip_port": 5060, "sip_user": None}
 
     # Manual
     result = await hass.config_entries.options.async_init(
@@ -79,36 +79,15 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         user_input={"sip_port": 5061},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {"sip_port": 5061}
+    assert config_entry.options == {"sip_port": 5061, "sip_user": None}
 
-    # Manual with advanced options default user
+    # Manual with user
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id,
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={"sip_port": 5061, "enable_advanced": True},
-    )
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={},
+        user_input={"sip_port": 5061, "sip_user": "HA"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"sip_port": 5061, "sip_user": "HA"}
-
-    # Manual with advanced options
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id,
-    )
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"sip_port": 5061, "enable_advanced": True},
-    )
-    assert result["type"] is FlowResultType.FORM
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"sip_user": "test"},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options == {"sip_port": 5061, "sip_user": "test"}
