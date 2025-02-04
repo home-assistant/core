@@ -48,7 +48,7 @@ def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     field_data = sensor.data.get(field) if sensor.data is not None else None
     if field_data is None:
         return None
-    value = field_data["values"][-1]["s"]
+    value = field_data["spot"]["value"]
     try:
         value = float(value)
     except ValueError:
@@ -175,6 +175,9 @@ async def async_setup_entry(
                 )
 
                 _LOGGER.warning(message)
+                continue
+
+            if sensor.data is None:
                 continue
 
             # if the API returns a different unit of measurement from the description, update it
