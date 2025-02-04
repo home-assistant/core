@@ -2375,7 +2375,7 @@ ultraheat-api==0.5.7
 unifi-discovery==1.2.0
 
 # homeassistant.components.upb
-upb-lib==0.5.9
+upb-lib==0.6.0
 
 # homeassistant.components.upcloud
 upcloud-api==2.6.0
