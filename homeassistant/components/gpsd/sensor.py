@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ATTR_LATITUDE,
@@ -39,10 +40,29 @@ ATTR_CLIMB = "climb"
 ATTR_ELEVATION = "elevation"
 ATTR_GPS_TIME = "gps_time"
 ATTR_SPEED = "speed"
+ATTR_TOTAL_SATELLITES = "total_satellites"
+ATTR_USED_SATELLITES = "used_satellites"
 
 DEFAULT_NAME = "GPS"
 
 _MODE_VALUES = {2: "2d_fix", 3: "3d_fix"}
+
+
+def count_total_satellites_fn(agps_thread: AGPS3mechanism) -> int | None:
+    """Count the number of used satellites."""
+    satellites = agps_thread.data_stream.satellites
+    return None if satellites == "n/a" else len(satellites)
+
+
+def count_used_satellites_fn(agps_thread: AGPS3mechanism) -> int | None:
+    """Count the number of used satellites."""
+    satellites = agps_thread.data_stream.satellites
+    if satellites == "n/a":
+        return None
+
+    return sum(
+        1 for sat in satellites if isinstance(sat, dict) and sat.get("used", False)
+    )
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -114,6 +134,24 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.METERS_PER_SECOND,
         value_fn=lambda agps_thread: agps_thread.data_stream.climb,
         suggested_display_precision=2,
+        entity_registry_enabled_default=False,
+    ),
+    GpsdSensorDescription(
+        key=ATTR_TOTAL_SATELLITES,
+        translation_key=ATTR_TOTAL_SATELLITES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="satellites",
+        value_fn=count_total_satellites_fn,
+        entity_registry_enabled_default=False,
+    ),
+    GpsdSensorDescription(
+        key=ATTR_USED_SATELLITES,
+        translation_key=ATTR_USED_SATELLITES,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="satellites",
+        value_fn=count_used_satellites_fn,
         entity_registry_enabled_default=False,
     ),
 )
