@@ -20,10 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type CclConfigEntry = ConfigEntry[CCLDevice]
+type CCLConfigEntry = ConfigEntry[CCLDevice]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: CclConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Set up a config entry for a single CCL device."""
     new_device = CCLDevice(entry.data[CONF_WEBHOOK_ID])
     CCLServer.register(new_device)
@@ -68,7 +68,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CclConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: CclConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: CCLConfigEntry) -> bool:
     """Unload a config entry."""
     webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     CCLServer.devices.pop(entry.data[CONF_WEBHOOK_ID], None)

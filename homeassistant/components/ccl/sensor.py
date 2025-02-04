@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CclConfigEntry
+from . import CCLConfigEntry
 from .entity import CCLEntity
 
 PARALLEL_UPDATES = 0
@@ -173,7 +173,7 @@ CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: CclConfigEntry,
+    entry: CCLConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add sensors for passed config entry in HA."""
