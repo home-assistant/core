@@ -63,6 +63,9 @@
       },
       "domestic_hot_water_pump": {
         "name": "DHW pump"
+      },
+      "one_time_charge": {
+        "name": "One-time charge"
       }
     },
     "button": {
