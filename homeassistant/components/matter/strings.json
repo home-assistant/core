@@ -287,9 +287,9 @@
         "state": {
           "no_error": "OK",
           "meter_failure": "Meter failure",
-          "over_voltage": "Over Voltage",
-          "under_voltage": "Under Voltage",
-          "over_current": "Over current",
+          "over_voltage": "Overvoltage",
+          "under_voltage": "Undervoltage",
+          "over_current": "Overcurrent",
           "contact_wet_failure": "Contact wet failure",
           "contact_dry_failure": "Contact dry failure",
           "power_loss": "Power loss",
@@ -299,7 +299,7 @@
           "ev_disconnected": "EV disconnected",
           "wrong_power_supply": "Wrong power supply",
           "live_neutral_swap": "Live neutral swap",
-          "over_temperature": "Over temperature",
+          "over_temperature": "Overtemperature",
           "other": "Other fault"
         }
       },
