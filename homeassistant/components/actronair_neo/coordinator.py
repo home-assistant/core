@@ -29,12 +29,13 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         self.api = api
         self.serial_number = serial_number
         self.local_state = {"full_update": None, "last_event_id": None}
-
-        # Fetch system details and set up the AC Unit
-        self.system = api.get_ac_systems()
+        self.system = None
 
     async def _async_update_data(self) -> dict:
         """Fetch updates and merge incremental changes into the full state."""
+        if self.system is None:
+            self.system = await self.api.get_ac_systems()
+
         if self.local_state["full_update"] is None:
             try:
                 return await self._fetch_full_update()

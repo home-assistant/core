@@ -2,13 +2,15 @@
 
 from typing import Any
 
+from actron_neo_api import ActronNeoAPI
+
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -47,46 +49,6 @@ AC_ZONE_SUPPORTED_FEATURES = (
 )
 
 
-class ActronAirNeoACUnit:
-    """Representation of an Actron Neo Air Conditioner device."""
-
-    def __init__(
-        self,
-        coordinator: ActronNeoDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the air conditioner device."""
-        self._status = coordinator.data
-        self._serial_number = coordinator.serial_number
-        self._manufacturer = "Actron Air"
-        self._name = coordinator.system["_embedded"]["ac-system"][0]["description"]
-        self._firmware_version = self._status.get("AirconSystem", {}).get(
-            "MasterWCFirmwareVersion"
-        )
-        self._model_name = self._status.get("AirconSystem", {}).get("MasterWCModel")
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, self._serial_number)},
-            "name": self._name,
-            "manufacturer": self._manufacturer,
-            "model": self._model_name,
-            "sw_version": self._firmware_version,
-            "serial_number": self._serial_number,
-        }
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        return f"{DOMAIN}_{self._serial_number}"
-
-    @property
-    def manufacturer(self) -> str:
-        """Return the manufacturer name."""
-        return self._manufacturer
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ActronConfigEntry,
@@ -95,11 +57,10 @@ async def async_setup_entry(
     """Set up Actron Air Neo climate entities."""
     # Get the API and coordinator from the integration
     coordinator = entry.runtime_data
-    ac_unit = ActronAirNeoACUnit(coordinator)
 
     # Add system-wide climate entity
     entities: list[ClimateEntity] = []
-    entities.append(ActronSystemClimate(coordinator, ac_unit))
+    entities.append(ActronSystemClimate(coordinator))
 
     # Add all switches
     async_add_entities(entities)
@@ -109,33 +70,41 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
     """Representation of the Actron Air Neo system."""
 
     _attr_has_entity_name = True
-    _attr_translation_key = "ac_unit"
     _attr_fan_modes = ["auto", "low", "medium", "high"]
 
     def __init__(
         self,
         coordinator: ActronNeoDataUpdateCoordinator,
-        ac_unit: ActronAirNeoACUnit,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
-        self._coordinator = coordinator
-        self._api = coordinator.api
-        self._serial_number = coordinator.serial_number
-        self._ac_unit = ac_unit
-        self._attr_translation_placeholders = {"serial_number": self._serial_number}
-        self._attr_name = f"AC Unit {self._serial_number}"
-        self._attr_unique_id = self._serial_number
-
-    @property
-    def _status(self):
-        """Shortcut to coordinator data."""
-        return self._coordinator.data
+        self._coordinator: ActronNeoDataUpdateCoordinator = coordinator
+        self._api: ActronNeoAPI = coordinator.api
+        self._serial_number: str = coordinator.serial_number
+        self._attr_unique_id: str = self._serial_number
+        self._status = coordinator.data
+        self._manufacturer: str = "Actron Air"
+        assert coordinator.system is not None
+        self._name: str = coordinator.system["_embedded"]["ac-system"][0]["description"]
+        self._attr_name: str = "AC Unit"
+        self._firmware_version: str = self._status.get("AirconSystem", {}).get(
+            "MasterWCFirmwareVersion"
+        )
+        self._model_name: str = self._status.get("AirconSystem", {}).get(
+            "MasterWCModel"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return self._ac_unit.device_info
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._serial_number)},
+            "name": self._name,
+            "manufacturer": self._manufacturer,
+            "model": self._model_name,
+            "sw_version": self._firmware_version,
+            "serial_number": self._serial_number,
+        }
 
     @property
     def hvac_mode(self) -> HVACMode:
