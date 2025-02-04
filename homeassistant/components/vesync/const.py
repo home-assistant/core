@@ -37,9 +37,6 @@ VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
 """Humidifier device types"""
 
-VeSyncFanDevice = VeSyncAirBypass | VeSyncAir131
-"""Humidifier device types"""
-
 DEV_TYPE_TO_HA = {
     "wifi-switch-1.3": "outlet",
     "ESW03-USA": "outlet",
