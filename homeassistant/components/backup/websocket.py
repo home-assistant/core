@@ -57,7 +57,7 @@ async def handle_info(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backups": [backup.as_frontend_json() for backup in backups.values()],
+            "backups": list(backups.values()),
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
             "last_non_idle_event": manager.last_non_idle_event,
@@ -91,7 +91,7 @@ async def handle_details(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backup": backup.as_frontend_json() if backup else None,
+            "backup": backup,
         },
     )
 
