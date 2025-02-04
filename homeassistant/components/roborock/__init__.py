@@ -28,7 +28,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BASE_URL, CONF_USER_DATA, DOMAIN, PLATFORMS
 from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
-from .rest import RoborockRestApi
 from .roborock_storage import async_remove_map_storage
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -220,9 +219,15 @@ async def setup_device_v1(
         _LOGGER.debug(err)
         await mqtt_client.async_release()
         raise
-    rest_api = RoborockRestApi(device, api_client, user_data)
     coordinator = RoborockDataUpdateCoordinator(
-        hass, device, networking, product_info, mqtt_client, home_data_rooms, rest_api
+        hass,
+        device,
+        networking,
+        product_info,
+        mqtt_client,
+        home_data_rooms,
+        api_client,
+        user_data,
     )
     try:
         await coordinator.async_config_entry_first_refresh()

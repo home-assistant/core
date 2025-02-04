@@ -22,7 +22,7 @@ async def _setup_coordinator(
 ) -> list[SceneEntity]:
     return [
         RoborockSceneEntity(coordinator, scene)
-        for scene in await coordinator.rest_api.get_scenes()
+        for scene in await coordinator.get_scenes()
     ]
 
 
@@ -64,7 +64,7 @@ class RoborockSceneEntity(RoborockEntity, SceneEntity):
             coordinator.api,
         )
         self._scene_id = scene.id
-        self._rest_api = coordinator.rest_api
+        self._coordinator = coordinator
         self.entity_description = EntityDescription(
             key=str(scene.id),
             name=scene.name,
@@ -72,4 +72,4 @@ class RoborockSceneEntity(RoborockEntity, SceneEntity):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._rest_api.execute_scene(self._scene_id)
+        await self._coordinator.execute_scene(self._scene_id)
