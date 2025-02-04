@@ -157,10 +157,14 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Set the mode of the device."""
         if mode not in self.available_modes:
             raise HomeAssistantError(
-                "{mode} is not one of the valid available modes: {self.available_modes}"
+                f"{mode} is not one of the valid available modes: {self.available_modes}"
             )
         if not self.device.set_humidity_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
+
+        if mode == MODE_SLEEP:
+            # We successfully changed the mode. Consider it a success even if display operation fails.
+            self.device.set_display(False)
 
         # Changing mode while humidifier is off actually turns it on, as per the app. But
         # the library does not seem to update the device_status. It is also possible that
