@@ -7,17 +7,15 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import ActronConfigEntry
 from .const import DOMAIN
 from .coordinator import ActronNeoDataUpdateCoordinator
-
-type ActronConfigEntry = ConfigEntry[ActronNeoDataUpdateCoordinator]
 
 DEFAULT_TEMP_MIN = 16.0
 DEFAULT_TEMP_MAX = 32.0
