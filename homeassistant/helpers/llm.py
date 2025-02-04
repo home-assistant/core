@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
@@ -36,6 +36,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
+from homeassistant.util.ulid import ulid_now
 
 from . import (
     area_registry as ar,
@@ -139,6 +140,8 @@ class ToolInput:
 
     tool_name: str
     tool_args: dict[str, Any]
+    # Using lambda for default to allow patching in tests
+    id: str = dc_field(default_factory=lambda: ulid_now())  # pylint: disable=unnecessary-lambda
 
 
 class Tool:
@@ -326,12 +329,21 @@ class AssistAPI(API):
     def _async_get_api_prompt(
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
-        """Return the prompt for the API."""
         if not exposed_entities:
             return (
                 "Only if the user wants to control a device, tell them to expose entities "
                 "to their voice assistant in Home Assistant."
             )
+        return "\n".join(
+            [
+                *self._async_get_preable(llm_context),
+                *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
+            ]
+        )
+
+    @callback
+    def _async_get_preable(self, llm_context: LLMContext) -> list[str]:
+        """Return the prompt for the API."""
 
         prompt = [
             (
@@ -371,13 +383,22 @@ class AssistAPI(API):
         ):
             prompt.append("This device is not able to start timers.")
 
+        return prompt
+
+    @callback
+    def _async_get_exposed_entities_prompt(
+        self, llm_context: LLMContext, exposed_entities: dict | None
+    ) -> list[str]:
+        """Return the prompt for the API for exposed entities."""
+        prompt = []
+
         if exposed_entities:
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
             prompt.append(yaml_util.dump(list(exposed_entities.values())))
 
-        return "\n".join(prompt)
+        return prompt
 
     @callback
     def _async_get_tools(

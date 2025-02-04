@@ -2,8 +2,9 @@
 
 import asyncio
 import base64
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -33,6 +34,14 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_ulid() -> Generator[Mock]:
+    """Mock the ulid of chat sessions."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-ulid"
+        yield mock_ulid_now
 
 
 @pytest.mark.parametrize(

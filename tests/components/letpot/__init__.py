@@ -2,7 +2,7 @@
 
 import datetime
 
-from letpot.models import AuthenticationInfo, LetPotDeviceStatus
+from letpot.models import AuthenticationInfo, LetPotDeviceErrors, LetPotDeviceStatus
 
 from homeassistant.core import HomeAssistant
 
@@ -26,6 +26,7 @@ AUTHENTICATION = AuthenticationInfo(
 )
 
 STATUS = LetPotDeviceStatus(
+    errors=LetPotDeviceErrors(low_water=False),
     light_brightness=500,
     light_mode=1,
     light_schedule_end=datetime.time(12, 10),
@@ -38,5 +39,4 @@ STATUS = LetPotDeviceStatus(
     raw=[77, 0, 1, 18, 98, 1, 0, 0, 1, 1, 1, 0, 1, 12, 0, 12, 10, 1, 244, 0, 0, 0],
     system_on=True,
     system_sound=False,
-    system_state=0,
 )

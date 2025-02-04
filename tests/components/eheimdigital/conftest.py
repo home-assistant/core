@@ -34,6 +34,7 @@ def classic_led_ctrl_mock():
     )
     classic_led_ctrl_mock.name = "Mock classicLEDcontrol+e"
     classic_led_ctrl_mock.aquarium_name = "Mock Aquarium"
+    classic_led_ctrl_mock.sw_version = "1.0.0_1.0.0"
     classic_led_ctrl_mock.light_mode = LightMode.DAYCL_MODE
     classic_led_ctrl_mock.light_level = (10, 39)
     return classic_led_ctrl_mock
@@ -47,6 +48,7 @@ def heater_mock():
     heater_mock.device_type = EheimDeviceType.VERSION_EHEIM_EXT_HEATER
     heater_mock.name = "Mock Heater"
     heater_mock.aquarium_name = "Mock Aquarium"
+    heater_mock.sw_version = "1.0.0_1.0.0"
     heater_mock.temperature_unit = HeaterUnit.CELSIUS
     heater_mock.current_temperature = 24.2
     heater_mock.target_temperature = 25.5

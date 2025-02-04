@@ -35,6 +35,7 @@ from .manager import (
     WrittenBackup,
 )
 from .models import AddonInfo, AgentBackup, Folder
+from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
 __all__ = [
@@ -58,6 +59,8 @@ __all__ = [
     "RestoreBackupState",
     "WrittenBackup",
     "async_get_manager",
+    "suggested_filename",
+    "suggested_filename_from_name_date",
 ]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
