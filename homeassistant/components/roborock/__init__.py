@@ -22,7 +22,7 @@ from roborock.version_a01_apis import RoborockMqttClientA01
 from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
@@ -118,13 +118,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         )
     valid_coordinators = RoborockCoordinators(v1_coords, a01_coords)
 
-    async def on_unload() -> None:
-        release_tasks = set()
-        for coordinator in valid_coordinators.values():
-            release_tasks.add(coordinator.release())
-        await asyncio.gather(*release_tasks)
+    async def on_stop(_: Any) -> None:
+        _LOGGER.debug("Shutting down roborock")
+        await asyncio.gather(
+            *(
+                coordinator.async_shutdown()
+                for coordinator in valid_coordinators.values()
+            )
+        )
 
-    entry.async_on_unload(on_unload)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP,
+            on_stop,
+        )
+    )
     entry.runtime_data = valid_coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -209,7 +217,7 @@ async def setup_device_v1(
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as ex:
-        await coordinator.release()
+        await coordinator.async_shutdown()
         if isinstance(coordinator.api, RoborockMqttClientV1):
             _LOGGER.warning(
                 "Not setting up %s because the we failed to get data for the first time using the online client. "

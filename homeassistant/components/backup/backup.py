@@ -14,7 +14,7 @@ from homeassistant.helpers.hassio import is_hassio
 from .agent import BackupAgent, BackupNotFound, LocalBackupAgent
 from .const import DOMAIN, LOGGER
 from .models import AgentBackup
-from .util import read_backup
+from .util import read_backup, suggested_filename
 
 
 async def async_get_backup_agents(
@@ -123,7 +123,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
     def get_new_backup_path(self, backup: AgentBackup) -> Path:
         """Return the local path to a new backup."""
-        return self._backup_dir / f"{backup.backup_id}.tar"
+        return self._backup_dir / suggested_filename(backup)
 
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup file."""

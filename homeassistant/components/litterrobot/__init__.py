@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import itertools
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -46,6 +48,9 @@ async def async_remove_config_entry_device(
         identifier
         for identifier in device_entry.identifiers
         if identifier[0] == DOMAIN
-        for robot in entry.runtime_data.account.robots
-        if robot.serial == identifier[1]
+        for _id in itertools.chain(
+            (robot.serial for robot in entry.runtime_data.account.robots),
+            (pet.id for pet in entry.runtime_data.account.pets),
+        )
+        if _id == identifier[1]
     )

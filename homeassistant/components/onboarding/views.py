@@ -378,7 +378,7 @@ class BackupInfoView(BackupOnboardingView):
         backups, _ = await manager.async_get_backups()
         return self.json(
             {
-                "backups": [backup.as_frontend_json() for backup in backups.values()],
+                "backups": list(backups.values()),
                 "state": manager.state,
                 "last_non_idle_event": manager.last_non_idle_event,
             }

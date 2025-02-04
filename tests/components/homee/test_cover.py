@@ -2,6 +2,10 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from websockets import frames
+from websockets.exceptions import ConnectionClosed
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -9,6 +13,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.homee.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
@@ -20,6 +25,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import build_mock_node, setup_integration
 
@@ -253,3 +259,28 @@ async def test_reversed_cover(
     await hass.async_block_till_done()
 
     assert hass.states.get("cover.test_cover").state == CoverState.CLOSED
+
+
+async def test_send_error(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test failed set_value command."""
+    mock_homee.nodes = [build_mock_node("cover_without_position.json")]
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_homee.set_value.side_effect = ConnectionClosed(
+        rcvd=frames.Close(1002, "Protocol Error"), sent=None
+    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test_cover"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "connection_closed"
