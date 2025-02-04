@@ -34,6 +34,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import CclConfigEntry
 from .entity import CCLEntity
 
+PARALLEL_UPDATES = 0
+
 CCL_SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     CCLSensorTypes.PRESSURE: SensorEntityDescription(
         key="PRESSURE",
