@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from time import sleep
 from typing import Any
 
 from gps3.agps3threaded import AGPS3mechanism
@@ -119,12 +120,24 @@ SENSOR_TYPES: tuple[GpsdSensorDescription, ...] = (
 )
 
 
+async def fetch_version_info(hass: HomeAssistant, agps_thread: AGPS3mechanism) -> None:
+    """Fetch version info in the background."""
+
+    def fetch_data() -> None:
+        while agps_thread.data_stream.release == "n/a":
+            sleep(0.2)
+
+    await hass.async_add_executor_job(fetch_data)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: GPSDConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the GPSD component."""
+    await fetch_version_info(hass, config_entry.runtime_data)
+
     async_add_entities(
         [
             GpsdSensor(
@@ -152,13 +165,15 @@ class GpsdSensor(SensorEntity):
     ) -> None:
         """Initialize the GPSD sensor."""
         self.entity_description = description
+        self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
+        self.agps_thread = agps_thread
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
             entry_type=DeviceEntryType.SERVICE,
+            manufacturer=DOMAIN,
+            sw_version=agps_thread.data_stream.release,
         )
-        self._attr_unique_id = f"{unique_id}-{self.entity_description.key}"
-
-        self.agps_thread = agps_thread
 
     @property
     def native_value(self) -> StateType | datetime:
