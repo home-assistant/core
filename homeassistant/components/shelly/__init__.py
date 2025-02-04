@@ -6,7 +6,7 @@ from typing import Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
+from aioshelly.const import DEFAULT_COAP_PORT, MODEL_WALL_DISPLAY, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -16,7 +16,13 @@ from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import async_remove_scanner
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -33,6 +39,7 @@ from .const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -232,6 +239,13 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         device_mac=entry.unique_id,
         port=get_http_port(entry.data),
     )
+
+    if entry.data.get(CONF_MODEL) == MODEL_WALL_DISPLAY and not entry.data.get(
+        CONF_SCRIPT
+    ):
+        data = {**entry.data}
+        data[CONF_SCRIPT] = False
+        hass.config_entries.async_update_entry(entry, data=data)
 
     ws_context = await get_ws_context(hass)
 

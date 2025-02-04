@@ -7,7 +7,12 @@ from typing import Any, Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
+from aioshelly.const import (
+    BLOCK_GENERATIONS,
+    DEFAULT_HTTP_PORT,
+    MODEL_WALL_DISPLAY,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -78,6 +83,12 @@ INTERNAL_WIFI_AP_IP = "192.168.33.1"
 
 async def async_script_supported(device: RpcDevice) -> bool:
     """Check if the device supports scripts."""
+
+    # Model Wall Display does not support scripts
+    # even if Script.List method is available
+    if device.model == MODEL_WALL_DISPLAY:
+        return False
+
     try:
         await device.script_list()
     except RpcCallError:
