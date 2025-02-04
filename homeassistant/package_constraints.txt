@@ -19,9 +19,9 @@ audioop-lts==0.2.1;python_version>='3.13'
 av==13.1.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
-bleak-retry-connector==3.8.0
+bleak-retry-connector==3.8.1
 bleak==0.22.3
-bluetooth-adapters==0.21.1
+bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.4.2
 bluetooth-data-tools==1.23.3
 cached-ipaddress==0.8.0
@@ -33,7 +33,7 @@ dbus-fast==2.32.0
 fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.21.0
+habluetooth==3.21.1
 hass-nabucasa==0.89.0
 hassil==2.2.0
 home-assistant-bluetooth==1.13.1
