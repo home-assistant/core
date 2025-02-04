@@ -74,6 +74,12 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    "threshold_level": AranetSensorEntityDescription(
+        key="status",
+        name="Threshold Level",
+        device_class=SensorDeviceClass.ENUM,
+        options=["green", "yellow", "red"],
+    ),
     "co2": AranetSensorEntityDescription(
         key="co2",
         name="Carbon Dioxide",
