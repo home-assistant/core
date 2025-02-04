@@ -431,7 +431,7 @@ class AssistAPI(API):
             tools.append(CalendarGetEventsTool())
 
         if exposed_domains and WEATHER_DOMAIN in exposed_domains:
-            tools.append(WeatherForecastTool(self.hass))
+            tools.append(WeatherForecastTool())
 
         if llm_context.assistant is not None:
             for state in self.hass.states.async_all(SCRIPT_DOMAIN):
@@ -865,19 +865,14 @@ class CalendarGetEventsTool(Tool):
 class WeatherForecastTool(Tool):
     """LLM Tool wrapper for weather forecast action."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-    ) -> None:
-        """Init the class."""
-        self.name = f"{WEATHER_DOMAIN}_{SERVICE_GET_FORECASTS}"
-        self.description = "Get weather forecasts"
-        self.parameters = vol.Schema(
-            {
-                vol.Required("type"): vol.In(("daily", "hourly", "twice_daily")),
-                vol.Optional(ATTR_NAME, description="Weather entity name"): cv.string,
-            }
-        )
+    name = f"{WEATHER_DOMAIN}_{SERVICE_GET_FORECASTS}"
+    description = "Get weather forecasts"
+    parameters = vol.Schema(
+        {
+            vol.Required("type"): vol.In(("daily", "hourly", "twice_daily")),
+            vol.Optional(ATTR_NAME, description="Weather entity name"): cv.string,
+        }
+    )
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
