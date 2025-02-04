@@ -63,7 +63,9 @@ rules:
   exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues: todo
+  repair-issues:
+    status: exempt
+    comment: Integration does not need user intervention
   stale-devices:
     status: exempt
     comment: Integration does not support dynamic devices
