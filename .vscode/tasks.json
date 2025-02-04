@@ -148,7 +148,7 @@
     {
       "label": "Install all Test Requirements",
       "type": "shell",
-      "command": "uv pip install -r requirements_test_all.txt && uv pip uninstall types-paho-mqtt==1.6.0.20240321",
+      "command": "uv pip install -r requirements_test_all.txt",
       "group": {
         "kind": "build",
         "isDefault": true
