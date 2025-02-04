@@ -582,22 +582,29 @@ async def test_agent_download(
     )
 
 
+@pytest.mark.parametrize(
+    ("backup_info", "backup_id", "agent_id"),
+    [
+        (TEST_BACKUP_DETAILS_3, "unknown", "hassio.local"),
+        (TEST_BACKUP_DETAILS_3, TEST_BACKUP_DETAILS_3.slug, "hassio.local"),
+        (TEST_BACKUP_DETAILS, TEST_BACKUP_DETAILS_3.slug, "hassio.local"),
+    ],
+)
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_download_unavailable_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     supervisor_client: AsyncMock,
+    agent_id: str,
+    backup_id: str,
+    backup_info: supervisor_backups.BackupComplete,
 ) -> None:
     """Test agent download backup which does not exist."""
     client = await hass_client()
-    backup_id = "abc123"
-    supervisor_client.backups.list.return_value = [TEST_BACKUP_3]
-    supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_3
-    supervisor_client.backups.download_backup.return_value.__aiter__.return_value = (
-        iter((b"backup data",))
-    )
+    supervisor_client.backups.backup_info.return_value = backup_info
+    supervisor_client.backups.download_backup.side_effect = SupervisorNotFoundError
 
-    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=hassio.local")
+    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id={agent_id}")
     assert resp.status == 404
 
 
@@ -2126,14 +2133,22 @@ async def test_reader_writer_restore_report_progress(
 
 
 @pytest.mark.parametrize(
-    ("supervisor_error_string", "expected_error_code", "expected_reason"),
+    ("supervisor_error", "expected_error_code", "expected_reason"),
     [
-        ("Invalid password for backup", "password_incorrect", "password_incorrect"),
         (
-            "Backup was made on supervisor version 2025.12.0, can't restore on 2024.12.0. Must update supervisor first.",
+            SupervisorBadRequestError("Invalid password for backup"),
+            "password_incorrect",
+            "password_incorrect",
+        ),
+        (
+            SupervisorBadRequestError(
+                "Backup was made on supervisor version 2025.12.0, can't "
+                "restore on 2024.12.0. Must update supervisor first."
+            ),
             "home_assistant_error",
             "unknown_error",
         ),
+        (SupervisorNotFoundError(), "backup_not_found", "backup_not_found"),
     ],
 )
 @pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
@@ -2141,15 +2156,13 @@ async def test_reader_writer_restore_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     supervisor_client: AsyncMock,
-    supervisor_error_string: str,
+    supervisor_error: Exception,
     expected_error_code: str,
     expected_reason: str,
 ) -> None:
     """Test restoring a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_restore.side_effect = SupervisorBadRequestError(
-        supervisor_error_string
-    )
+    supervisor_client.backups.partial_restore.side_effect = supervisor_error
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 

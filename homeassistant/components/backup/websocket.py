@@ -8,6 +8,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 
+from .agent import BackupNotFound
 from .config import Day, ScheduleRecurrence
 from .const import DATA_MANAGER, LOGGER
 from .manager import (
@@ -151,6 +152,8 @@ async def handle_restore(
             restore_folders=msg.get("restore_folders"),
             restore_homeassistant=msg["restore_homeassistant"],
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     else:
@@ -179,6 +182,8 @@ async def handle_can_decrypt_on_download(
             agent_id=msg["agent_id"],
             password=msg.get("password"),
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     except DecryptOnDowloadNotSupported:

@@ -11,7 +11,7 @@ from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
 
-from .models import AgentBackup, BackupError
+from .models import AgentBackup, BackupError, BackupManagerError
 
 
 class BackupAgentError(BackupError):
@@ -27,7 +27,7 @@ class BackupAgentUnreachableError(BackupAgentError):
     _message = "The backup agent is unreachable."
 
 
-class BackupNotFound(BackupAgentError):
+class BackupNotFound(BackupAgentError, BackupManagerError):
     """Raised when a backup is not found."""
 
     error_code = "backup_not_found"

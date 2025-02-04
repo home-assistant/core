@@ -87,3 +87,9 @@ class BackupManagerError(BackupError):
     """Backup manager error."""
 
     error_code = "backup_manager_error"
+
+
+class BackupReaderWriterError(BackupError):
+    """Backup reader/writer error."""
+
+    error_code = "backup_reader_writer_error"

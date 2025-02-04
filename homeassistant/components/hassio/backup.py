@@ -27,6 +27,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupManagerError,
+    BackupNotFound,
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
@@ -162,10 +163,15 @@ class SupervisorBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        return await self._client.backups.download_backup(
-            backup_id,
-            options=supervisor_backups.DownloadBackupOptions(location=self.location),
-        )
+        try:
+            return await self._client.backups.download_backup(
+                backup_id,
+                options=supervisor_backups.DownloadBackupOptions(
+                    location=self.location
+                ),
+            )
+        except SupervisorNotFoundError as err:
+            raise BackupNotFound from err
 
     async def async_upload_backup(
         self,
@@ -528,6 +534,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                     location=restore_location,
                 ),
             )
+        except SupervisorNotFoundError as err:
+            raise BackupNotFound from err
         except SupervisorBadRequestError as err:
             # Supervisor currently does not transmit machine parsable error types
             message = err.args[0]
