@@ -17,13 +17,14 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
 )
-from .coordinator import HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
@@ -243,37 +244,42 @@ EVENT_SENSORS = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return [
+        *[
+            HomeConnectEventSensor(entry.runtime_data, appliance, description)
+            for description in EVENT_SENSORS
+            if description.appliance_types
+            and appliance.info.type in description.appliance_types
+        ],
+        *[
+            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
+            for desc in BSH_PROGRAM_SENSORS
+            if desc.appliance_types and appliance.info.type in desc.appliance_types
+        ],
+        *[
+            HomeConnectSensor(entry.runtime_data, appliance, description)
+            for description in SENSORS
+            if description.key in appliance.status
+        ],
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect sensor."""
-
-    entities: list[SensorEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectEventSensor(
-                entry.runtime_data,
-                appliance,
-                description,
-            )
-            for description in EVENT_SENSORS
-            if description.appliance_types
-            and appliance.info.type in description.appliance_types
-        )
-        entities.extend(
-            HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
-            for desc in BSH_PROGRAM_SENSORS
-            if desc.appliance_types and appliance.info.type in desc.appliance_types
-        )
-        entities.extend(
-            HomeConnectSensor(entry.runtime_data, appliance, description)
-            for description in SENSORS
-            if description.key in appliance.status
-        )
-
-    async_add_entities(entities)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):

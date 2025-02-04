@@ -31,7 +31,7 @@ dependencies    = [
     "aiohttp==3.11.11",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
-    "aiohttp-asyncmdnsresolver==0.0.2",
+    "aiohttp-asyncmdnsresolver==0.0.3",
     "aiozoneinfo==0.2.1",
     "astral==2.2",
     "async-interrupt==1.2.0",
@@ -59,7 +59,7 @@ dependencies    = [
     "cryptography==44.0.0",
     "Pillow==11.1.0",
     "propcache==0.2.1",
-    "pyOpenSSL==24.3.0",
+    "pyOpenSSL==25.0.0",
     "orjson==3.10.12",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
@@ -67,7 +67,7 @@ dependencies    = [
     "PyYAML==6.0.2",
     "requests==2.32.3",
     "securetar==2025.1.4",
-    "SQLAlchemy==2.0.36",
+    "SQLAlchemy==2.0.37",
     "standard-aifc==3.13.0;python_version>='3.13'",
     "standard-telnetlib==3.13.0;python_version>='3.13'",
     "typing-extensions>=4.12.2,<5.0",
@@ -76,13 +76,13 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.5.21",
+    "uv==0.5.27",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.142.0"
+    "zeroconf==0.143.0"
 ]
 
 [project.urls]
