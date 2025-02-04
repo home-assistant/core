@@ -157,11 +157,15 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         if schedule_refresh:
             self._schedule_refresh()
 
-        return partial(self._async_remove_listener, self._listener_id)
+        return partial(self._async_remove_listener_internal, self._listener_id)
 
     @callback
-    def _async_remove_listener(self, listener_id: int) -> None:
-        """Remove a listener."""
+    def _async_remove_listener_internal(self, listener_id: int) -> None:
+        """Remove a listener.
+
+        This is an internal function that is not to be overridden
+        in subclasses as it may change in the future.
+        """
         self._listeners.pop(listener_id)
         if not self._listeners:
             self._unschedule_refresh()
