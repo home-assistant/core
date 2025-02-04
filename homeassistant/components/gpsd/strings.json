@@ -52,10 +52,12 @@
         }
       },
       "total_satellites": {
-        "name": "Total satellites"
+        "name": "Total satellites",
+        "unit_of_measurement": "satellites"
       },
       "used_satellites": {
-        "name": "Used satellites"
+        "name": "Used satellites",
+        "unit_of_measurement": "satellites"
       }
     }
   }
