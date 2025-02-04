@@ -189,8 +189,6 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
-    # Ensure supervisor is available
-    "hassio",
 }
 DEFAULT_INTEGRATIONS = {
     # These integrations are set up unless recovery mode is activated.
