@@ -2,8 +2,6 @@
 
 from typing import Any
 
-from actron_neo_api import ActronNeoAPI
-
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
@@ -14,16 +12,12 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ActronNeoDataUpdateCoordinator
-from .models import ActronAirNeoData
 
-type ActronConfigEntry = ConfigEntry[ActronAirNeoData]
+type ActronConfigEntry = ConfigEntry[ActronNeoDataUpdateCoordinator]
 
 DEFAULT_TEMP_MIN = 16.0
 DEFAULT_TEMP_MAX = 32.0
@@ -60,13 +54,12 @@ class ActronAirNeoACUnit:
 
     def __init__(
         self,
-        serial_number: str,
         system: dict,
         coordinator: ActronNeoDataUpdateCoordinator,
     ) -> None:
         """Initialize the air conditioner device."""
-        self._serial_number = serial_number
         self._status = coordinator.data
+        self._serial_number = coordinator.serial_number
         self._manufacturer = "Actron Air"
         self._name = system["_embedded"]["ac-system"][0]["description"]
         self._firmware_version = self._status.get("AirconSystem", {}).get(
@@ -104,18 +97,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up Actron Air Neo climate entities."""
     # Get the API and coordinator from the integration
-    instance = entry.runtime_data
-    api = instance.api
-    coordinator = instance.coordinator
-    serial_number = instance.serial_number
+    coordinator = entry.runtime_data
+    api = coordinator.api
 
     # Fetch system details and set up the AC Unit
     system = await api.get_ac_systems()
-    ac_unit = ActronAirNeoACUnit(serial_number, system, coordinator)
+    ac_unit = ActronAirNeoACUnit(system, coordinator)
 
     # Add system-wide climate entity
     entities: list[ClimateEntity] = []
-    entities.append(ActronSystemClimate(coordinator, api, ac_unit, serial_number))
+    entities.append(ActronSystemClimate(coordinator, ac_unit))
 
     # Add all switches
     async_add_entities(entities)
@@ -130,16 +121,14 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
-        api: ActronNeoAPI,
+        coordinator: ActronNeoDataUpdateCoordinator,
         ac_unit: ActronAirNeoACUnit,
-        serial_number: str,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
         self._coordinator = coordinator
-        self._api = api
-        self._serial_number = serial_number
+        self._api = coordinator.api
+        self._serial_number = coordinator.serial_number
         self._ac_unit = ac_unit
         self._attr_translation_placeholders = {"serial_number": self._serial_number}
         self._attr_name = f"AC Unit {self._serial_number}"
