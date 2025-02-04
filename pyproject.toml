@@ -59,7 +59,7 @@ dependencies    = [
     "cryptography==44.0.0",
     "Pillow==11.1.0",
     "propcache==0.2.1",
-    "pyOpenSSL==24.3.0",
+    "pyOpenSSL==25.0.0",
     "orjson==3.10.12",
     "packaging>=23.1",
     "psutil-home-assistant==0.0.1",
@@ -76,7 +76,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.5.21",
+    "uv==0.5.27",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",

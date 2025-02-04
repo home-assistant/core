@@ -31,7 +31,7 @@ PyJWT==2.10.1
 cryptography==44.0.0
 Pillow==11.1.0
 propcache==0.2.1
-pyOpenSSL==24.3.0
+pyOpenSSL==25.0.0
 orjson==3.10.12
 packaging>=23.1
 psutil-home-assistant==0.0.1
@@ -45,7 +45,7 @@ standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.2.0
 urllib3>=1.26.5,<2
-uv==0.5.21
+uv==0.5.27
 voluptuous==0.15.2
 voluptuous-serialize==2.6.0
 voluptuous-openapi==0.0.6
