@@ -122,8 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await coordinator.async_register_shutdown()
-
-    await coordinator.async_first_refresh()  # get initial state via _async_setup
+    await coordinator.async_first_refresh()
 
     if not coordinator.last_update_success:
         _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
