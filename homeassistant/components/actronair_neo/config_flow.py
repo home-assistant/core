@@ -56,29 +56,28 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors=errors,
                 )
 
-            if self.api:
-                try:
-                    await self.api.request_pairing_token(
-                        "HomeAssistant", "ha-instance-id"
-                    )
-                    await self.api.refresh_token()
-                except ActronNeoAPIError:
-                    errors["base"] = ERROR_API_ERROR
+            assert self.api is not None
 
-                systems = await self.api.get_ac_systems()
-                self.ac_systems = systems.get("_embedded", {}).get("ac-system", [])
+            try:
+                await self.api.request_pairing_token("HomeAssistant", "ha-instance-id")
+                await self.api.refresh_token()
+            except ActronNeoAPIError:
+                errors["base"] = ERROR_API_ERROR
 
-                for system in self.ac_systems:
-                    serial_number = system["serial"]
-                    await self.async_set_unique_id(serial_number)
-                    self._abort_if_unique_id_configured()
-                    return self.async_create_entry(
-                        title=system["description"],
-                        data={
-                            CONF_API_TOKEN: self.api.pairing_token,
-                            CONF_DEVICE_ID: serial_number,
-                        },
-                    )
+            systems = await self.api.get_ac_systems()
+            self.ac_systems = systems.get("_embedded", {}).get("ac-system", [])
+
+            for system in self.ac_systems:
+                serial_number = system["serial"]
+                await self.async_set_unique_id(serial_number)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(
+                    title=system["description"],
+                    data={
+                        CONF_API_TOKEN: self.api.pairing_token,
+                        CONF_DEVICE_ID: serial_number,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
