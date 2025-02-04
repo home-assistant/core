@@ -117,16 +117,16 @@ class SmUpdateEntity(SmEntity, UpdateEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self.async_on_remove(self.coordinator.async_add_listener(self._update_listener))
-        self._update_listener()
+        self._handle_coordinator_update()
 
     @callback
-    def _update_listener(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle coordinator update callbacks."""
         self._firmware = self.entity_description.latest_version(
             self.coordinator.data, self.idx
         )
-        self._firmware and self.async_write_ha_state()
+        if self._firmware:
+            self.async_write_ha_state()
 
     @property
     def installed_version(self) -> str | None:
