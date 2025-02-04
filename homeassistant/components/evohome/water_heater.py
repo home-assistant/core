@@ -58,9 +58,11 @@ async def async_setup_platform(
         tcs.hotwater.id,
     )
 
-    new_entity = EvoDHW(coordinator, tcs.hotwater)
+    entity = EvoDHW(coordinator, tcs.hotwater)
 
-    async_add_entities([new_entity], update_before_add=True)
+    async_add_entities([entity])
+
+    await entity.update_attrs()
 
 
 class EvoDHW(EvoChild, WaterHeaterEntity):
@@ -116,7 +118,7 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
             await self.coordinator.call_client_api(self._evo_device.reset())
         else:
             await self._update_schedule()
-            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
+            until = self.setpoints.get("next_sp_from")
             until = dt_util.as_utc(until) if until else None
 
             if operation_mode == STATE_ON:
@@ -141,10 +143,3 @@ class EvoDHW(EvoChild, WaterHeaterEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off."""
         await self.coordinator.call_client_api(self._evo_device.off())
-
-    async def async_update(self) -> None:
-        """Get the latest state data for a DHW controller."""
-        await super().async_update()
-
-        for attr in self._evo_state_attr_names:
-            self._device_state_attrs[attr] = getattr(self._evo_device, attr)

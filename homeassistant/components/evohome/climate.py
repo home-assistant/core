@@ -12,7 +12,6 @@ from evohomeasync2.const import (
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-    SZ_UNTIL,
 )
 from evohomeasync2.schemas.const import (
     SystemMode as EvoSystemMode,
@@ -31,7 +30,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -94,7 +93,7 @@ async def async_setup_platform(
         loc_idx,
     )
 
-    entities: list[EvoClimateEntity] = [EvoController(coordinator, tcs)]
+    entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
 
     for zone in tcs.zones:
         if (
@@ -124,7 +123,10 @@ async def async_setup_platform(
                 zone.name,
             )
 
-    async_add_entities(entities, update_before_add=True)
+    async_add_entities(entities)
+
+    for entity in entities:
+        await entity.update_attrs()
 
 
 class EvoClimateEntity(EvoEntity, ClimateEntity):
@@ -184,7 +186,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
             duration: timedelta = data[ATTR_DURATION_UNTIL]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
-                until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
+                until = self.setpoints.get("next_sp_from")
             else:
                 until = dt_util.now() + data[ATTR_DURATION_UNTIL]
         else:
@@ -242,18 +244,14 @@ class EvoZone(EvoChild, EvoClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set a new target temperature."""
 
-        assert self._evo_device.setpoint_status is not None  # mypy check
-
         temperature = kwargs["temperature"]
 
         if (until := kwargs.get("until")) is None:
+            if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
+                until = self._evo_device.until
             if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
                 await self._update_schedule()
-                until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
-            elif self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
-                until = dt_util.parse_datetime(
-                    self._evo_device.setpoint_status[SZ_UNTIL]
-                )
+                until = self.setpoints.get("next_sp_from")
 
         until = dt_util.as_utc(until) if until else None
         await self.coordinator.call_client_api(
@@ -294,7 +292,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         if evo_preset_mode == EvoZoneMode.TEMPORARY_OVERRIDE:
             await self._update_schedule()
-            until = dt_util.parse_datetime(self.setpoints.get("next_sp_from", ""))
+            until = self.setpoints.get("next_sp_from")
         else:  # EvoZoneMode.PERMANENT_OVERRIDE
             until = None
 
@@ -305,13 +303,6 @@ class EvoZone(EvoChild, EvoClimateEntity):
         await self.coordinator.call_client_api(
             self._evo_device.set_temperature(temperature, until=until)
         )
-
-    async def async_update(self) -> None:
-        """Get the latest state data for a Zone."""
-        await super().async_update()
-
-        for attr in self._evo_state_attr_names:
-            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
 
 class EvoController(EvoClimateEntity):
@@ -438,13 +429,17 @@ class EvoController(EvoClimateEntity):
         """Set the preset mode; if None, then revert to 'Auto' mode."""
         await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode, EvoSystemMode.AUTO))
 
-    async def async_update(self) -> None:
-        """Get the latest state data for a Controller."""
-        await super().async_update()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
 
         self._device_state_attrs["active_system_faults"] = (
-            self._evo_device.active_faults
+            self._evo_device.active_faults + self._evo_device.gateway.active_faults
         )
 
-        for attr in self._evo_state_attr_names:
-            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+        super().async_write_ha_state()
+
+    async def update_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
+        self._handle_coordinator_update()

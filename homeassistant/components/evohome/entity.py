@@ -8,6 +8,7 @@ from typing import Any
 import evohomeasync2 as evo
 from evohomeasync2.const import SZ_ACTIVE_FAULTS
 
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -26,6 +27,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
     _evo_device: evo.ControlSystem | evo.HotWater | evo.Zone
     _evo_id_attr: str
+    _evo_state_attr_names: tuple[str, ...]
 
     def __init__(
         self,
@@ -33,7 +35,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         evo_device: evo.ControlSystem | evo.HotWater | evo.Zone,
     ) -> None:
         """Initialize an evohome-compatible entity (TCS, DHW, zone)."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context=evo_device.id)
         self._evo_device = evo_device
 
         self._device_state_attrs: dict[str, Any] = {}
@@ -72,11 +74,14 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
 
         async_dispatcher_connect(self.hass, DOMAIN, self.process_signal)
 
-    async def async_update(self) -> None:
-        """Get the latest state data."""
-        await super().async_update()
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
         self._device_state_attrs = {self._evo_id_attr: self._evo_device.id}
+
+        for attr in self._evo_state_attr_names:
+            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
 
 class EvoChild(EvoEntity):
@@ -96,7 +101,7 @@ class EvoChild(EvoEntity):
 
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: dict[str, Any] = {}
+        self._schedule: dict[str, Any] | None = None
         self._setpoints: dict[str, Any] = {}
 
     @property
@@ -117,54 +122,65 @@ class EvoChild(EvoEntity):
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
 
-        return self._setpoints
-
-    async def _update_schedule(self) -> None:
-        """Get the latest schedule, if any."""
-
-        try:
-            schedule = await self.coordinator.call_client_api(
-                self._evo_device.get_schedule(),  # type: ignore[arg-type]
-                update_state=False,
-            )
-        except evo.InvalidScheduleError as err:
-            _LOGGER.warning(
-                "%s: Unable to retrieve a valid schedule: %s",
-                self._evo_device,
-                err,
-            )
-            self._schedule = {}
-        else:
-            self._schedule = schedule or {}
-
-        _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
-
-    async def async_update(self) -> None:
-        """Get the latest state data."""
-        await super().async_update()
-
-        self._device_state_attrs[SZ_ACTIVE_FAULTS] = self._evo_device.active_faults
-
-        if not self._schedule:
-            await self._update_schedule()
-
-            if not self._schedule:  # some systems have no schedule
-                self._device_state_attrs["setpoints"] = {}
-                return
-
-        elif self._evo_device.next_switchpoint[0] < datetime.now(tz=UTC):
-            await self._update_schedule()
-
         this_sp_dtm, this_sp_val = self._evo_device.this_switchpoint
         next_sp_dtm, next_sp_val = self._evo_device.next_switchpoint
 
         key = "temp" if isinstance(self._evo_device, evo.Zone) else "state"
 
         self._setpoints = {
-            "this_sp_from": this_sp_dtm.isoformat(),
+            "this_sp_from": this_sp_dtm,
             f"this_sp_{key}": this_sp_val,
-            "next_sp_from": next_sp_dtm.isoformat(),
+            "next_sp_from": next_sp_dtm,
             f"next_sp_{key}": next_sp_val,
         }
 
-        self._device_state_attrs["setpoints"] = self.setpoints
+        return self._setpoints
+
+    async def _update_schedule(self, force_refresh: bool = False) -> None:
+        """Get the latest schedule, if any."""
+
+        async def get_schedule() -> None:
+            try:
+                schedule = await self.coordinator.call_client_api(
+                    self._evo_device.get_schedule(),  # type: ignore[arg-type]
+                    request_refresh=False,
+                )
+            except evo.InvalidScheduleError as err:
+                _LOGGER.warning(
+                    "%s: Unable to retrieve a valid schedule: %s",
+                    self._evo_device,
+                    err,
+                )
+                self._schedule = {}
+                return
+            else:
+                self._schedule = schedule or {}  # mypy hint
+
+            _LOGGER.debug("Schedule['%s'] = %s", self.name, schedule)
+
+        if (
+            force_refresh
+            or self._schedule is None
+            or (
+                (until := self._setpoints.get("next_sp_from")) is not None
+                and until < datetime.now(UTC)
+            )
+        ):  # must use self._setpoints, not self.setpoints
+            await get_schedule()
+
+        _ = self.setpoints  # update the setpoints attr
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        super()._handle_coordinator_update()
+
+        self._device_state_attrs[SZ_ACTIVE_FAULTS] = self._evo_device.active_faults
+        self._device_state_attrs["setpoints"] = self._setpoints
+
+        super().async_write_ha_state()
+
+    async def update_attrs(self) -> None:
+        """Update the entity's extra state attrs."""
+        await self._update_schedule()
+        self._handle_coordinator_update()

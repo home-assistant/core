@@ -63,10 +63,13 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
 
+        self._first_refresh_done = False  # get schedules only after first refresh
+
+    # our version of async_config_entry_first_refresh()...
     async def async_first_refresh(self) -> None:
         """Refresh data for the first time when integration is setup.
 
-        This integration does not yet have config flow, so it is inappropriate to
+        This integration does not have config flow, so it is inappropriate to
         invoke `async_config_entry_first_refresh()`.
         """
 
@@ -85,9 +88,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         """
 
         try:
-            await self.client.update(
-                dont_update_status=True
-            )  # only need config for now
+            await self.client.update(dont_update_status=True)  # only config for now
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
@@ -127,7 +128,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     async def call_client_api(
         self,
         client_api: Awaitable[dict[str, Any] | None],
-        update_state: bool = True,
+        request_refresh: bool = True,
     ) -> dict[str, Any] | None:
         """Call a client API and update the Coordinator state if required."""
 
@@ -138,7 +139,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self.logger.error(err)
             return None
 
-        if update_state:  # wait a moment for system to quiesce before updating state
+        if request_refresh:  # wait a moment for system to quiesce before updating state
             await self.async_request_refresh()  # hass.async_create_task() won't help
 
         return result
@@ -200,6 +201,13 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.logger.debug("Status = %s", status)
 
+    async def _update_v2_schedules(self) -> None:
+        for zone in self.tcs.zones:
+            await zone.get_schedule()
+
+        if dhw := self.tcs.hotwater:
+            await dhw.get_schedule()
+
     async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
 
@@ -211,5 +219,12 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         await self._update_v2_api_state()  # may raise UpdateFailed
         if self.client_v1:
             await self._update_v1_api_temps()  # will never raise UpdateFailed
+
+        # to speed up HA startup, don't update entity schedules during initial
+        # async_first_refresh(), only during subsequent async_refresh()...
+        if self._first_refresh_done:
+            await self._update_v2_schedules()
+        else:
+            self._first_refresh_done = True
 
         return self.loc.status

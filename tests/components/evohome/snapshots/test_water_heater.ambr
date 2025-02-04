@@ -2,10 +2,10 @@
 # name: test_set_operation_mode[default]
   list([
     dict({
-      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
     }),
     dict({
-      'until': datetime.datetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
@@ -29,9 +29,9 @@
         ),
         'dhw_id': '3933910',
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T13:00:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_state': 'Off',
-          'this_sp_from': '2024-07-10T12:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_state': 'On',
         }),
         'state_status': dict({
@@ -76,9 +76,9 @@
         ),
         'dhw_id': '3933910',
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T13:00:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 13, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_state': 'Off',
-          'this_sp_from': '2024-07-10T12:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 12, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_state': 'On',
         }),
         'state_status': dict({
