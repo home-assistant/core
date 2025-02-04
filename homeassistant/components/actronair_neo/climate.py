@@ -52,14 +52,13 @@ class ActronAirNeoACUnit:
 
     def __init__(
         self,
-        system: dict,
         coordinator: ActronNeoDataUpdateCoordinator,
     ) -> None:
         """Initialize the air conditioner device."""
         self._status = coordinator.data
         self._serial_number = coordinator.serial_number
         self._manufacturer = "Actron Air"
-        self._name = system["_embedded"]["ac-system"][0]["description"]
+        self._name = coordinator.system["_embedded"]["ac-system"][0]["description"]
         self._firmware_version = self._status.get("AirconSystem", {}).get(
             "MasterWCFirmwareVersion"
         )
@@ -96,11 +95,7 @@ async def async_setup_entry(
     """Set up Actron Air Neo climate entities."""
     # Get the API and coordinator from the integration
     coordinator = entry.runtime_data
-    api = coordinator.api
-
-    # Fetch system details and set up the AC Unit
-    system = await api.get_ac_systems()
-    ac_unit = ActronAirNeoACUnit(system, coordinator)
+    ac_unit = ActronAirNeoACUnit(coordinator)
 
     # Add system-wide climate entity
     entities: list[ClimateEntity] = []
