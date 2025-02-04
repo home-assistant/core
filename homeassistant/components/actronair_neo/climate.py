@@ -130,7 +130,7 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
         self._ac_unit = ac_unit
         self._attr_translation_placeholders = {"serial_number": self._serial_number}
         self._attr_name = f"AC Unit {self._serial_number}"
-        self._attr_unique_id = f"{DOMAIN}_{self._serial_number}_climate"
+        self._attr_unique_id = self._serial_number
 
     @property
     def _status(self):
