@@ -5,16 +5,51 @@ from unittest.mock import Mock, patch
 import pytest
 from tololib import ToloCommunicationError
 
-from homeassistant.components.tolo.const import DOMAIN
+from homeassistant.components.tolo.const import (
+    CONF_ACCESSORIES,
+    CONF_ACCESSORY_AROMA_THERAPY,
+    CONF_ACCESSORY_AROMA_THERAPY_TYPE,
+    CONF_ACCESSORY_FAN,
+    CONF_ACCESSORY_LIGHT,
+    CONF_ACCESSORY_SALT_BATH,
+    CONF_EXPERT,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from tests.common import MockConfigEntry
+
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"
 )
+
+
+@pytest.fixture(name="config_entry")
+async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a MockConfigEntry for testing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TOLO Steam Bath",
+        entry_id="1",
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_ACCESSORIES: {
+                CONF_ACCESSORY_FAN: True,
+                CONF_ACCESSORY_LIGHT: True,
+                CONF_ACCESSORY_SALT_BATH: True,
+                CONF_ACCESSORY_AROMA_THERAPY: True,
+                CONF_ACCESSORY_AROMA_THERAPY_TYPE: "dual",
+            },
+            CONF_EXPERT: {},
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    return config_entry
 
 
 @pytest.fixture(name="toloclient")
@@ -66,7 +101,17 @@ async def test_user_walkthrough(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.2"},
+        user_input={
+            CONF_HOST: "127.0.0.2",
+            CONF_ACCESSORIES: {
+                CONF_ACCESSORY_FAN: True,
+                CONF_ACCESSORY_LIGHT: True,
+                CONF_ACCESSORY_SALT_BATH: True,
+                CONF_ACCESSORY_AROMA_THERAPY: True,
+                CONF_ACCESSORY_AROMA_THERAPY_TYPE: "dual",
+            },
+            CONF_EXPERT: {},
+        },
     )
 
     assert result2["type"] is FlowResultType.FORM
@@ -77,12 +122,52 @@ async def test_user_walkthrough(
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.1"},
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_ACCESSORIES: {
+                CONF_ACCESSORY_FAN: True,
+                CONF_ACCESSORY_LIGHT: True,
+                CONF_ACCESSORY_SALT_BATH: True,
+                CONF_ACCESSORY_AROMA_THERAPY: True,
+                CONF_ACCESSORY_AROMA_THERAPY_TYPE: "dual",
+            },
+            CONF_EXPERT: {},
+        },
     )
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "TOLO Sauna"
+    assert result3["title"] == "TOLO Steam Bath"
     assert result3["data"][CONF_HOST] == "127.0.0.1"
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    toloclient: Mock,
+    coordinator_toloclient: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow."""
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_ACCESSORIES: {
+                CONF_ACCESSORY_FAN: True,
+                CONF_ACCESSORY_LIGHT: False,
+                CONF_ACCESSORY_SALT_BATH: True,
+                CONF_ACCESSORY_AROMA_THERAPY: False,
+                CONF_ACCESSORY_AROMA_THERAPY_TYPE: "dual",
+            },
+            CONF_EXPERT: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
 
 
 async def test_dhcp(
@@ -95,16 +180,26 @@ async def test_dhcp(
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={},
+        user_input={
+            CONF_HOST: "127.0.0.1",
+            CONF_ACCESSORIES: {
+                CONF_ACCESSORY_FAN: True,
+                CONF_ACCESSORY_LIGHT: True,
+                CONF_ACCESSORY_SALT_BATH: True,
+                CONF_ACCESSORY_AROMA_THERAPY: True,
+                CONF_ACCESSORY_AROMA_THERAPY_TYPE: "dual",
+            },
+            CONF_EXPERT: {},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "TOLO Sauna"
-    assert result["data"][CONF_HOST] == "127.0.0.2"
+    assert result["title"] == "TOLO Steam Bath"
+    assert result["data"][CONF_HOST] == "127.0.0.1"
     assert result["result"].unique_id == "00:11:22:33:44:55"
 
 

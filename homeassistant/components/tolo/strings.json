@@ -3,9 +3,30 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Enter the hostname or IP address of your TOLO Sauna device.",
+        "description": "Enter the hostname or IP address of your TOLO device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        },
+        "sections": {
+          "accessories": {
+            "name": "Connected Accessories",
+            "description": "Provide information about your connected accessories to show/hide relevant entities.",
+            "data": {
+              "fan": "Fan",
+              "light": "Light",
+              "salt_bath": "Salt Bath",
+              "aroma_therapy": "Aroma Therapy",
+              "aroma_therapy_type": "Aroma Therapy Type"
+            }
+          },
+          "expert": {
+            "name": "Expert Settings",
+            "description": "Please only modify these settings if you know what you are doing.",
+            "data": {
+              "retry_timeout": "Retry Timeout",
+              "retry_count": "Retry Count"
+            }
+          }
         }
       },
       "confirm": {
@@ -16,7 +37,16 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    }
+  },
+  "selector": {
+    "aroma_therapy_type": {
+      "options": {
+        "single": "Single",
+        "dual": "Dual"
+      }
     }
   },
   "entity": {
