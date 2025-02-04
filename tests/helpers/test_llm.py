@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import calendar
+from homeassistant.components import calendar, weather
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script.config import ScriptConfig
@@ -1257,4 +1257,148 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         "entity_id": ["calendar.test_calendar"],
         "start_date_time": now,
         "end_date_time": dt_util.start_of_local_day() + timedelta(days=7),
+    }
+
+
+async def test_weather_forecast_tool(hass: HomeAssistant) -> None:
+    """Test the weather forecast tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    hass.states.async_set(
+        "weather.test_weather",
+        "cloudy",
+        {"friendly_name": "Home", "supported_features": 3},
+    )
+    async_expose_entity(hass, "conversation", "weather.test_weather", True)
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        user_prompt="test_text",
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    assert [tool for tool in api.tools if tool.name == "weather_get_forecasts"]
+
+    forecast = {
+        "weather.test_weather": {
+            "forecast": [
+                {
+                    "condition": "cloudy",
+                    "datetime": dt_util.start_of_local_day().isoformat(),
+                    "wind_bearing": 200.1,
+                    "uv_index": 0.0,
+                    "temperature": -0.4,
+                    "templow": -0.7,
+                    "wind_speed": 6.5,
+                    "precipitation": 0.0,
+                    "humidity": 76,
+                },
+                {
+                    "condition": "partlycloudy",
+                    "datetime": (
+                        dt_util.start_of_local_day() + timedelta(days=1)
+                    ).isoformat(),
+                    "wind_bearing": 206.0,
+                    "uv_index": 0.6,
+                    "temperature": 1.1,
+                    "templow": -2.6,
+                    "wind_speed": 8.3,
+                    "precipitation": 0.0,
+                    "humidity": 73,
+                },
+                {
+                    "condition": "cloudy",
+                    "datetime": (
+                        dt_util.start_of_local_day() + timedelta(days=2)
+                    ).isoformat(),
+                    "wind_bearing": 54.7,
+                    "uv_index": 0.6,
+                    "temperature": 0.2,
+                    "templow": -2.5,
+                    "wind_speed": 16.2,
+                    "precipitation": 0.0,
+                    "humidity": 75,
+                },
+                {
+                    "condition": "cloudy",
+                    "datetime": (
+                        dt_util.start_of_local_day() + timedelta(days=3)
+                    ).isoformat(),
+                    "wind_bearing": 81.0,
+                    "uv_index": 0.7,
+                    "temperature": 0.1,
+                    "templow": -1.7,
+                    "wind_speed": 8.3,
+                    "precipitation": 0.0,
+                    "humidity": 76,
+                },
+                {
+                    "condition": "sunny",
+                    "datetime": (
+                        dt_util.start_of_local_day() + timedelta(days=4)
+                    ).isoformat(),
+                    "wind_bearing": 76.6,
+                    "temperature": -1.0,
+                    "templow": -4.4,
+                    "wind_speed": 12.2,
+                    "precipitation": 0.0,
+                    "humidity": 54,
+                },
+                {
+                    "condition": "sunny",
+                    "datetime": (
+                        dt_util.start_of_local_day() + timedelta(days=5)
+                    ).isoformat(),
+                    "wind_bearing": 87.7,
+                    "temperature": -1.2,
+                    "templow": -7.4,
+                    "wind_speed": 9.0,
+                    "precipitation": 0.0,
+                    "humidity": 52,
+                },
+            ]
+        }
+    }
+
+    calls = async_mock_service(
+        hass,
+        domain=weather.DOMAIN,
+        service=weather.SERVICE_GET_FORECASTS,
+        schema=cv.make_entity_service_schema(
+            {vol.Required("type"): vol.In(("daily", "hourly", "twice_daily"))}
+        ),
+        response=forecast,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    tool_input = llm.ToolInput(
+        tool_name="weather_get_forecasts",
+        tool_args={"type": "daily", "name": "Home"},
+    )
+    response = await api.async_call_tool(tool_input)
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == weather.DOMAIN
+    assert call.service == weather.SERVICE_GET_FORECASTS
+    assert call.data == {
+        "entity_id": ["weather.test_weather"],
+        "type": "daily",
+    }
+
+    assert response == {
+        "success": True,
+        "result": forecast,
+    }
+
+    tool_input.tool_args.pop("name")
+    response = await api.async_call_tool(tool_input)
+
+    assert len(calls) == 2
+    call = calls[1]
+    assert call.data == {
+        "entity_id": "all",
+        "type": "daily",
     }

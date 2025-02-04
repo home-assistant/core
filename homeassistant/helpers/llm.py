@@ -32,6 +32,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
+    ATTR_NAME,
     ATTR_SERVICE,
     ENTITY_MATCH_ALL,
     EVENT_HOMEASSISTANT_CLOSE,
@@ -877,11 +878,37 @@ class WeatherForecastTool(ActionTool):
                 if key not in cv.ENTITY_SERVICE_FIELDS
             }
         ).extend(
-            {
-                vol.Required(
-                    ATTR_ENTITY_ID, default=ENTITY_MATCH_ALL
-                ): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain=WEATHER_DOMAIN)
-                ),
-            }
+            {vol.Optional(ATTR_NAME, description="Weather entity name"): cv.string}
         )
+
+    async def async_call(
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
+    ) -> JsonObjectType:
+        """Get the forecast."""
+        data = tool_input.tool_args.copy()
+        if ATTR_NAME in data:
+            result = intent.async_match_targets(
+                hass,
+                intent.MatchTargetsConstraints(
+                    name=data[ATTR_NAME],
+                    domains=[WEATHER_DOMAIN],
+                    assistant=llm_context.assistant,
+                ),
+            )
+            if not result.is_match:
+                return {"success": False, "error": "Calendar not found"}
+            data.pop(ATTR_NAME)
+            data[ATTR_ENTITY_ID] = [state.entity_id for state in result.states]
+        else:
+            data[ATTR_ENTITY_ID] = ENTITY_MATCH_ALL
+
+        result = await hass.services.async_call(
+            self._domain,
+            self._action,
+            data,
+            context=llm_context.context,
+            blocking=True,
+            return_response=True,
+        )
+
+        return {"success": True, "result": result}
