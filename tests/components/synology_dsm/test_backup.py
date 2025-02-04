@@ -2,7 +2,7 @@
 
 from io import StringIO
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from synology_dsm.api.file_station.models import SynoFileFile, SynoFileSharedFolder
@@ -299,6 +299,7 @@ async def test_agents_list_backups(
             "backup_id": "abcd12ef",
             "date": "2025-01-09T20:14:35.457323+01:00",
             "database_included": True,
+            "extra_metadata": {"instance_id": ANY, "with_automatic_settings": True},
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2025.2.0.dev0",
@@ -369,6 +370,7 @@ async def test_agents_list_backups_disabled_filestation(
                 "backup_id": "abcd12ef",
                 "date": "2025-01-09T20:14:35.457323+01:00",
                 "database_included": True,
+                "extra_metadata": {"instance_id": ANY, "with_automatic_settings": True},
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2025.2.0.dev0",
