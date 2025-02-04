@@ -614,6 +614,11 @@ ZEROCONF = {
             "domain": "homewizard",
         },
     ],
+    "_iometer._tcp.local.": [
+        {
+            "domain": "iometer",
+        },
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp",

@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "sensor": {
+      "attachment_status": {
+        "default": "mdi:eye",
+        "state": {
+          "attached": "mdi:check-bold",
+          "detached": "mdi:close",
+          "unknown": "mdi:help"
+        }
+      },
+      "connection_status": {
+        "default": "mdi:eye",
+        "state": {
+          "connected": "mdi:check-bold",
+          "disconnected": "mdi:close",
+          "unknown": "mdi:help"
+        }
+      },
+      "pin_status": {
+        "default": "mdi:eye",
+        "state": {
+          "entered": "mdi:lock-open",
+          "pending": "mdi:lock-clock",
+          "missing": "mdi:lock",
+          "unknown": "mdi:help"
+        }
+      },
+      "power_status": {
+        "default": "mdi:eye",
+        "state": {
+          "battery": "mdi:battery",
+          "wired": "mdi:power-plug"
+        }
+      }
+    }
+  }
+}
