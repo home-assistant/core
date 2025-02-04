@@ -170,16 +170,15 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [],
+            "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
             "backup_id": "23e64aec",
             "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "extra_metadata": {},
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
-            "protected": False,
-            "size": 34519040,
-            "agent_ids": ["cloud.cloud"],
             "failed_agent_ids": [],
             "with_automatic_settings": None,
         }
@@ -207,8 +206,10 @@ async def test_agents_list_backups_fail_cloud(
         "backups": [],
         "last_attempted_automatic_backup": None,
         "last_completed_automatic_backup": None,
+        "last_non_idle_event": None,
         "next_automatic_backup": None,
         "next_automatic_backup_additional": False,
+        "state": "idle",
     }
 
 
@@ -219,16 +220,15 @@ async def test_agents_list_backups_fail_cloud(
             "23e64aec",
             {
                 "addons": [],
+                "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
                 "backup_id": "23e64aec",
                 "date": "2024-11-22T11:48:48.727189+01:00",
                 "database_included": True,
+                "extra_metadata": {},
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0.dev0",
                 "name": "Core 2024.12.0.dev0",
-                "protected": False,
-                "size": 34519040,
-                "agent_ids": ["cloud.cloud"],
                 "failed_agent_ids": [],
                 "with_automatic_settings": None,
             },

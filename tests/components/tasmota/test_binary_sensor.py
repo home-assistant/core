@@ -13,6 +13,7 @@ from hatasmota.utils import (
 )
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -22,9 +23,8 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     Platform,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .test_common import (
     DEFAULT_CONFIG,

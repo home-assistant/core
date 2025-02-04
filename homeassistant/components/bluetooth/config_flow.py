@@ -37,6 +37,7 @@ from .const import (
     CONF_PASSIVE,
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
@@ -194,6 +195,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SOURCE_MODEL: user_input[CONF_SOURCE_MODEL],
             CONF_SOURCE_DOMAIN: user_input[CONF_SOURCE_DOMAIN],
             CONF_SOURCE_CONFIG_ENTRY_ID: user_input[CONF_SOURCE_CONFIG_ENTRY_ID],
+            CONF_SOURCE_DEVICE_ID: user_input[CONF_SOURCE_DEVICE_ID],
         }
         self._abort_if_unique_id_configured(updates=data)
         manager = get_manager()
@@ -211,10 +213,16 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> SchemaOptionsFlowHandler | RemoteAdapterOptionsFlowHandler:
+    ) -> (
+        SchemaOptionsFlowHandler
+        | RemoteAdapterOptionsFlowHandler
+        | LocalNoPassiveOptionsFlowHandler
+    ):
         """Get the options flow for this handler."""
         if CONF_SOURCE in config_entry.data:
             return RemoteAdapterOptionsFlowHandler()
+        if not (manager := get_manager()) or not manager.supports_passive_scan:
+            return LocalNoPassiveOptionsFlowHandler()
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
     @classmethod
@@ -232,3 +240,13 @@ class RemoteAdapterOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         return self.async_abort(reason="remote_adapters_not_supported")
+
+
+class LocalNoPassiveOptionsFlowHandler(OptionsFlow):
+    """Handle a option flow for local adapters with no passive support."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        return self.async_abort(reason="local_adapters_no_passive_support")
