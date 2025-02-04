@@ -1228,6 +1228,9 @@ insteon-frontend-home-assistant==0.5.0
 # homeassistant.components.intellifire
 intellifire4py==4.1.9
 
+# homeassistant.components.iometer
+iometer==0.1.0
+
 # homeassistant.components.iotty
 iottycloud==0.3.0
 
