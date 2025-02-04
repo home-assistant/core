@@ -35,7 +35,7 @@ dependencies    = [
     "aiozoneinfo==0.2.1",
     "astral==2.2",
     "async-interrupt==1.2.0",
-    "attrs==24.2.0",
+    "attrs==25.1.0",
     "atomicwrites-homeassistant==1.4.1",
     "audioop-lts==0.2.1;python_version>='3.13'",
     "awesomeversion==24.6.0",
@@ -46,7 +46,7 @@ dependencies    = [
     "fnv-hash-fast==1.2.2",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.88.1",
+    "hass-nabucasa==0.89.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.28.1",
@@ -76,7 +76,7 @@ dependencies    = [
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
     "urllib3>=1.26.5,<2",
-    "uv==0.5.21",
+    "uv==0.5.27",
     "voluptuous==0.15.2",
     "voluptuous-serialize==2.6.0",
     "voluptuous-openapi==0.0.6",

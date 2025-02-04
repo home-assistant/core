@@ -14,7 +14,7 @@ astral==2.2
 async-interrupt==1.2.0
 async-upnp-client==0.43.0
 atomicwrites-homeassistant==1.4.1
-attrs==24.2.0
+attrs==25.1.0
 audioop-lts==0.2.1;python_version>='3.13'
 av==13.1.0
 awesomeversion==24.6.0
@@ -34,10 +34,10 @@ fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
 habluetooth==3.21.0
-hass-nabucasa==0.88.1
+hass-nabucasa==0.89.0
 hassil==2.2.0
 home-assistant-bluetooth==1.13.0
-home-assistant-frontend==20250131.0
+home-assistant-frontend==20250203.0
 home-assistant-intents==2025.1.28
 httpx==0.28.1
 ifaddr==0.2.0
@@ -67,7 +67,7 @@ standard-telnetlib==3.13.0;python_version>='3.13'
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.2.0
 urllib3>=1.26.5,<2
-uv==0.5.21
+uv==0.5.27
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
