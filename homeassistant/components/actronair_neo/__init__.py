@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, PLATFORM
+from .const import PLATFORM
 from .coordinator import ActronNeoDataUpdateCoordinator
 from .models import ActronAirNeoData
 
