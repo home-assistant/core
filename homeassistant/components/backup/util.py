@@ -122,7 +122,7 @@ def read_backup(backup_path: Path) -> AgentBackup:
 def suggested_filename_from_name_date(name: str, date_str: str) -> str:
     """Suggest a filename for the backup."""
     date = dt_util.parse_datetime(date_str, raise_on_error=True)
-    return "_".join(f"{name} - {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split())
+    return "_".join(f"{name}-{date.strftime('%Y-%m-%d %H-%M-%S')}.tar".split())
 
 
 def suggested_filename(backup: AgentBackup) -> str:

@@ -36,7 +36,7 @@ from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
-BASE_FILENAME = "Automatic_backup_2025.2.0.dev0_-_2025-01-09_20.14_35457323"
+BASE_FILENAME = "Automatic_backup_2025.2.0.dev0-2025-01-09_20-14-35"
 
 
 class MockStreamReaderChunked(MockStreamReader):
@@ -525,7 +525,7 @@ async def test_agents_upload(
         protected=True,
         size=0,
     )
-    base_filename = "Test_-_1970-01-01_00.00_00000000"
+    base_filename = "Test-1970-01-01_00-00-00"
 
     with (
         patch(
@@ -576,7 +576,7 @@ async def test_agents_upload_error(
         protected=True,
         size=0,
     )
-    base_filename = "Test_-_1970-01-01_00.00_00000000"
+    base_filename = "Test-1970-01-01_00-00-00"
 
     # fail to upload the tar file
     with (

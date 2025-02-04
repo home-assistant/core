@@ -880,7 +880,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         "supervisor.backup_request_date": "2025-01-30T05:42:12.345678-08:00",
         "with_automatic_settings": False,
     },
-    filename=PurePath("Test_-_2025-01-30_05.42_12345678.tar"),
+    filename=PurePath("Test-2025-01-30_05-42-12.tar"),
     folders={"ssl"},
     homeassistant_exclude_database=False,
     homeassistant=True,
@@ -1393,7 +1393,7 @@ async def test_reader_writer_create_per_agent_encryption(
         upload_locations
     )
     for call in supervisor_client.backups.upload_backup.mock_calls:
-        assert call.args[1].filename == PurePath("Test_-_2025-01-30_05.42_12345678.tar")
+        assert call.args[1].filename == PurePath("Test-2025-01-30_05-42-12.tar")
         upload_call_locations: set = call.args[1].location
         assert len(upload_call_locations) == 1
         assert upload_call_locations.pop() in upload_locations

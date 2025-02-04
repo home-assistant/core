@@ -529,10 +529,10 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("name", "resulting_filename"),
     [
-        ("test", "test_-_2025-01-30_13.42_12345678.tar"),
-        ("  leading spaces", "leading_spaces_-_2025-01-30_13.42_12345678.tar"),
-        ("trailing spaces  ", "trailing_spaces_-_2025-01-30_13.42_12345678.tar"),
-        ("double  spaces  ", "double_spaces_-_2025-01-30_13.42_12345678.tar"),
+        ("test", "test-2025-01-30_13-42-12.tar"),
+        ("  leading spaces", "leading_spaces-2025-01-30_13-42-12.tar"),
+        ("trailing spaces  ", "trailing_spaces_-2025-01-30_13-42-12.tar"),
+        ("double  spaces  ", "double_spaces_-2025-01-30_13-42-12.tar"),
     ],
 )
 def test_suggested_filename(name: str, resulting_filename: str) -> None:
