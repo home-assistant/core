@@ -30,6 +30,8 @@ from homeassistant.components.backup import (
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
+    CreateBackupStage,
+    CreateBackupState,
     Folder,
     IdleEvent,
     IncorrectPasswordError,
@@ -336,6 +338,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             self._async_wait_for_backup(
                 backup,
                 locations,
+                on_progress=on_progress,
                 remove_after_upload=locations == [LOCATION_CLOUD_BACKUP],
             ),
             name="backup_manager_create_backup",
@@ -349,6 +352,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup: supervisor_backups.NewBackup,
         locations: list[str | None],
         *,
+        on_progress: Callable[[CreateBackupEvent], None],
         remove_after_upload: bool,
     ) -> WrittenBackup:
         """Wait for a backup to complete."""
@@ -360,6 +364,16 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             nonlocal backup_id
+            try:
+                stage = CreateBackupStage(data.get("stage"))  # type: ignore[arg-type]
+            except ValueError:
+                _LOGGER.debug("Unknown create stage: %s", data.get("stage"))
+            else:
+                on_progress(
+                    CreateBackupEvent(
+                        reason=None, stage=stage, state=CreateBackupState.IN_PROGRESS
+                    )
+                )
             if data.get("done") is True:
                 backup_id = data.get("reference")
                 create_errors.extend(data.get("errors", []))
