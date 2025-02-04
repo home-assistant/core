@@ -132,11 +132,6 @@ class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
         """Shortcut to coordinator data."""
         return self._coordinator.data
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
