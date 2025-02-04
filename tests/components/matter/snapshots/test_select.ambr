@@ -1852,7 +1852,7 @@
     'state': 'No energy management (forecast only)',
   })
 # ---
-# name: test_selects[silabs_water_heater][select.water_heater_mode_2-entry]
+# name: test_selects[silabs_water_heater][select.water_heater_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1870,7 +1870,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.water_heater_mode_2',
+    'entity_id': 'select.water_heater_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1882,19 +1882,19 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Mode',
+    'original_name': None,
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'mode',
+    'translation_key': 'water_heater_mode',
     'unique_id': '00000000000004D2-0000000000000019-MatterNodeDevice-2-MatterWaterHeaterMode-158-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_selects[silabs_water_heater][select.water_heater_mode_2-state]
+# name: test_selects[silabs_water_heater][select.water_heater_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Water Heater Mode',
+      'friendly_name': 'Water Heater None',
       'options': list([
         'Off',
         'Manual',
@@ -1902,7 +1902,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.water_heater_mode_2',
+    'entity_id': 'select.water_heater_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
