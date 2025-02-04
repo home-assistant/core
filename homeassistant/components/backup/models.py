@@ -41,12 +41,6 @@ class BaseBackup:
     homeassistant_version: str | None  # None if homeassistant_included is False
     name: str
 
-    def as_frontend_json(self) -> dict:
-        """Return a dict representation of this backup for sending to frontend."""
-        return {
-            key: val for key, val in asdict(self).items() if key != "extra_metadata"
-        }
-
 
 @dataclass(frozen=True, kw_only=True)
 class AgentBackup(BaseBackup):
