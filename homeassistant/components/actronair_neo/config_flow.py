@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.helpers import instance_id
 
 from .const import DOMAIN, ERROR_API_ERROR, ERROR_INVALID_AUTH
 
@@ -59,7 +60,8 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
             assert self.api is not None
 
             try:
-                await self.api.request_pairing_token("HomeAssistant", "ha-instance-id")
+                instance_uuid = await instance_id.async_get(self.hass)
+                await self.api.request_pairing_token("HomeAssistant", instance_uuid)
                 await self.api.refresh_token()
             except ActronNeoAPIError:
                 errors["base"] = ERROR_API_ERROR
