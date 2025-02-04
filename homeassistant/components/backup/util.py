@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
-from concurrent.futures import Future
+from concurrent.futures import CancelledError, Future
 import copy
 from dataclasses import dataclass, replace
 from io import BytesIO
@@ -198,7 +198,7 @@ class AsyncIteratorReader:
                     raise AbortCipher
                 try:
                     self._buffer = self._next_future.result()
-                except asyncio.CancelledError as err:
+                except CancelledError as err:
                     raise AbortCipher from err
                 self._pos = 0
             if not self._buffer:
@@ -257,7 +257,7 @@ class AsyncIteratorWriter:
             raise AbortCipher
         try:
             self._write_future.result()
-        except asyncio.CancelledError as err:
+        except CancelledError as err:
             raise AbortCipher from err
         self._pos += len(s)
         return len(s)
