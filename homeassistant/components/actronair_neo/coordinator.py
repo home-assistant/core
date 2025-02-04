@@ -10,6 +10,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=15)
+
 
 class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Custom coordinator for Actron Air Neo integration."""
