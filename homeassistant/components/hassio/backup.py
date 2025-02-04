@@ -49,6 +49,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
@@ -364,9 +365,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             nonlocal backup_id
-            try:
-                stage = CreateBackupStage(data.get("stage"))  # type: ignore[arg-type]
-            except ValueError:
+            if not (stage := try_parse_enum(CreateBackupStage, data.get("stage"))):
                 _LOGGER.debug("Unknown create stage: %s", data.get("stage"))
             else:
                 on_progress(
