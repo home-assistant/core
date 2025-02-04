@@ -73,7 +73,7 @@ ISY_CONTROL_TO_DEVICE_CLASS = {
     "CV": SensorDeviceClass.VOLTAGE,
     "DEWPT": SensorDeviceClass.TEMPERATURE,
     "DISTANC": SensorDeviceClass.DISTANCE,
-    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,
+    "ETO": SensorDeviceClass.PRECIPITATION_INTENSITY,  # codespell:ignore eto
     "FATM": SensorDeviceClass.WEIGHT,
     "FREQ": SensorDeviceClass.FREQUENCY,
     "MUSCLEM": SensorDeviceClass.WEIGHT,
