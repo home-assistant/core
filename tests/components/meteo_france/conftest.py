@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from meteofrance_api.model import Forecast
+from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
 import pytest
 
 from homeassistant.components.meteo_france.const import CONF_CITY, DOMAIN
@@ -16,12 +16,17 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 @pytest.fixture(autouse=True)
 def patch_requests():
     """Stub out services that makes requests."""
-    patch_client = patch("homeassistant.components.meteo_france.MeteoFranceClient")
-    raw_forecast = load_json_object_fixture("raw_forecast.json", DOMAIN)
-
-    with patch_client as mock_data:
+    with patch("homeassistant.components.meteo_france.MeteoFranceClient") as mock_data:
         mock_data = mock_data.return_value
-        mock_data.get_forecast.return_value = Forecast(raw_forecast)
+        mock_data.get_forecast.return_value = Forecast(
+            load_json_object_fixture("raw_forecast.json", DOMAIN)
+        )
+        mock_data.get_rain.return_value = Rain(
+            load_json_object_fixture("raw_rain.json", DOMAIN)
+        )
+        mock_data.get_warning_current_phenomenoms.return_value = CurrentPhenomenons(
+            load_json_object_fixture("raw_warning_current_phenomenoms.json", DOMAIN)
+        )
         yield mock_data
 
 

@@ -1,4 +1,58 @@
 # serializer version: 1
+# name: test_sensor[sensor.32_weather_alert-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.32_weather_alert',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:weather-cloudy-alert',
+    'original_name': '32 Weather alert',
+    'platform': 'meteo_france',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '32 Weather alert',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.32_weather_alert-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'Canicule': 'Vert',
+      'Inondation': 'Vert',
+      'Neige-verglas': 'Orange',
+      'Orages': 'Jaune',
+      'Pluie-inondation': 'Vert',
+      'Vent violent': 'Vert',
+      'attribution': 'Data provided by Météo-France',
+      'friendly_name': '32 Weather alert',
+      'icon': 'mdi:weather-cloudy-alert',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.32_weather_alert',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Orange',
+  })
+# ---
 # name: test_sensor[sensor.la_clusaz_cloud_cover-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -648,7 +702,7 @@
     'state': '29',
   })
 # ---
-# name: test_sensor[sensor.magicmock_name_meteofranceclient_get_rain_position_getitem_id_124620826535856_next_rain-entry]
+# name: test_sensor[sensor.meudon_next_rain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -660,7 +714,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.magicmock_name_meteofranceclient_get_rain_position_getitem_id_124620826535856_next_rain',
+    'entity_id': 'sensor.meudon_next_rain',
     'has_entity_name': False,
     'hidden_by': None,
     'icon': None,
@@ -672,78 +726,39 @@
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
-    'original_name': "<MagicMock name='MeteoFranceClient().get_rain().position.__getitem__()' id='124620826535856'> Next rain",
+    'original_name': 'Meudon Next rain',
     'platform': 'meteo_france',
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': "<MagicMock name='MeteoFranceClient().get_rain().position.__getitem__()' id='124620826535856'>,<MagicMock name='MeteoFranceClient().get_rain().position.__getitem__()' id='124620826535856'>_next_rain",
+    'unique_id': '48.807166,2.239895_next_rain',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.magicmock_name_meteofranceclient_get_rain_position_getitem_id_124620826535856_next_rain-state]
+# name: test_sensor[sensor.meudon_next_rain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       '1_hour_forecast': dict({
+        '0 min': 'Temps sec',
+        '10 min': 'Temps sec',
+        '15 min': 'Pluie faible',
+        '20 min': 'Pluie modérée',
+        '25 min': 'Pluie faible',
+        '35 min': 'Temps sec',
+        '45 min': 'Temps sec',
+        '5 min': 'Temps sec',
+        '55 min': 'Temps sec',
       }),
       'attribution': 'Data provided by Météo-France',
       'device_class': 'timestamp',
-      'forecast_time_ref': '1970-01-01T00:00:01+00:00',
-      'friendly_name': "<MagicMock name='MeteoFranceClient().get_rain().position.__getitem__()' id='124620826535856'> Next rain",
+      'forecast_time_ref': '2020-05-20T17:35:00+00:00',
+      'friendly_name': 'Meudon Next rain',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.magicmock_name_meteofranceclient_get_rain_position_getitem_id_124620826535856_next_rain',
+    'entity_id': 'sensor.meudon_next_rain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensor[sensor.magicmock_name_meteofranceclient_get_warning_current_phenomenoms_domain_id_id_124620826528800_weather_alert-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.magicmock_name_meteofranceclient_get_warning_current_phenomenoms_domain_id_id_124620826528800_weather_alert',
-    'has_entity_name': False,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': 'mdi:weather-cloudy-alert',
-    'original_name': "<MagicMock name='MeteoFranceClient().get_warning_current_phenomenoms().domain_id' id='124620826528800'> Weather alert",
-    'platform': 'meteo_france',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': "<MagicMock name='MeteoFranceClient().get_warning_current_phenomenoms().domain_id' id='124620826528800'> Weather alert",
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_sensor[sensor.magicmock_name_meteofranceclient_get_warning_current_phenomenoms_domain_id_id_124620826528800_weather_alert-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Météo-France',
-      'friendly_name': "<MagicMock name='MeteoFranceClient().get_warning_current_phenomenoms().domain_id' id='124620826528800'> Weather alert",
-      'icon': 'mdi:weather-cloudy-alert',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.magicmock_name_meteofranceclient_get_warning_current_phenomenoms_domain_id_id_124620826528800_weather_alert',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'Vert',
+    'state': '2020-05-20T17:50:00+00:00',
   })
 # ---
