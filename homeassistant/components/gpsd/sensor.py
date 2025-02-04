@@ -49,7 +49,7 @@ _MODE_VALUES = {2: "2d_fix", 3: "3d_fix"}
 
 
 def count_total_satellites_fn(agps_thread: AGPS3mechanism) -> int | None:
-    """Count the number of used satellites."""
+    """Count the number of total satellites."""
     satellites = agps_thread.data_stream.satellites
     return None if satellites == "n/a" else len(satellites)
 
