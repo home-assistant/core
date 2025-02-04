@@ -24,7 +24,7 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             hass,
             _LOGGER,
             name="Actron Neo Status",
-            update_interval=timedelta(seconds=30),
+            update_interval=SCAN_INTERVAL,
         )
         self.api = api
         self.serial_number = serial_number
