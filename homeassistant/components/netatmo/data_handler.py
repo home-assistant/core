@@ -334,6 +334,7 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
+        await self.unsubscribe(DOOR_TAG, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""
@@ -354,16 +355,13 @@ class NetatmoDataHandler:
         """Set up home door_tag modules."""
         for module in self.account.modules.values():
             if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug(
-                    "Module %s dispatched as opening category (door_tag)", module.name
-                )
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_DOOR_TAG,
                     NetatmoDevice(
                         self,
                         module,
-                        BINARY_SENSOR,
+                        DOOR_TAG,
                         DOOR_TAG,
                     ),
                 )
