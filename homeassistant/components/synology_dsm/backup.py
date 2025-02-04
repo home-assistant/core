@@ -10,12 +10,16 @@ from aiohttp import StreamReader
 from synology_dsm.api.file_station import SynoFileStation
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
-from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
+from homeassistant.components.backup import (
+    AgentBackup,
+    BackupAgent,
+    BackupAgentError,
+    suggested_filename,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.json import json_dumps
-from homeassistant.util.dt import parse_datetime
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import (
@@ -34,8 +38,7 @@ def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
 
     returns a tuple of tar_filename and meta_filename
     """
-    date = parse_datetime(backup.date, raise_on_error=True)
-    base_name = "_".join(f"{backup.name}-{date.strftime('%Y-%m-%d_%H-%M-%S')}".split())
+    base_name = suggested_filename(backup).rsplit(".", 1)[0]
     return (f"{base_name}.tar", f"{base_name}_meta.json")
 
 
