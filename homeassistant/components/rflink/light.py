@@ -101,7 +101,7 @@ def entity_class_for_type(entity_type):
     entity_device_mapping = {
         # sends only 'dim' commands not compatible with on/off switches
         TYPE_DIMMABLE: DimmableRflinkLight,
-        # sends only 'on/off' commands not advices with dimmers and signal
+        # sends only 'on/off' commands not advised with dimmers and signal
         # repetition
         TYPE_SWITCHABLE: RflinkLight,
         # sends 'dim' and 'on' command to support both dimmers and on/off
