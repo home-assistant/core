@@ -183,7 +183,7 @@ async def setup_device(
             hass, user_data, device, product_info, home_data_rooms, api_client
         )
     if device.pv == "A01":
-        return await setup_device_a01(hass, user_data, device, product_info, api_client)
+        return await setup_device_a01(hass, user_data, device, product_info)
     _LOGGER.warning(
         "Not adding device %s because its protocol version %s or category %s is not supported",
         device.duid,
@@ -259,16 +259,12 @@ async def setup_device_a01(
     user_data: UserData,
     device: HomeDataDevice,
     product_info: HomeDataProduct,
-    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinatorA01 | None:
     """Set up a A01 protocol device."""
     mqtt_client = RoborockMqttClientA01(
         user_data, DeviceData(device, product_info.name), product_info.category
     )
-    rest_api = RoborockRestApi(device, api_client, user_data)
-    coord = RoborockDataUpdateCoordinatorA01(
-        hass, device, product_info, mqtt_client, rest_api
-    )
+    coord = RoborockDataUpdateCoordinatorA01(hass, device, product_info, mqtt_client)
     await coord.async_config_entry_first_refresh()
     return coord
 

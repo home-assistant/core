@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
 from typing import Any
 
 from roborock.containers import HomeDataScene
@@ -14,30 +13,17 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockEntity
 
 
 async def _setup_coordinator(
-    coordinator: RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01,
+    coordinator: RoborockDataUpdateCoordinator,
 ) -> list[SceneEntity]:
-    scenes = await coordinator.rest_api.get_scenes()
-    return [RoborockSceneEntity(coordinator, scene) for scene in scenes]
-
-
-def _build_setup_functions(
-    coordinators: list[
-        RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01
-    ],
-) -> list[
-    Coroutine[
-        Any,
-        Any,
-        list[SceneEntity],
+    return [
+        RoborockSceneEntity(coordinator, scene)
+        for scene in await coordinator.rest_api.get_scenes()
     ]
-]:
-    """Create a list of setup functions that can later be called asynchronously."""
-    return [_setup_coordinator(coordinator) for coordinator in coordinators]
 
 
 async def async_setup_entry(
@@ -47,7 +33,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up scene platform."""
     coordinator_entities = await asyncio.gather(
-        *_build_setup_functions(config_entry.runtime_data.values()),
+        *[
+            _setup_coordinator(coordinator)
+            for coordinator in config_entry.runtime_data.v1
+        ],
         return_exceptions=True,
     )
     async_add_entities(
@@ -65,19 +54,19 @@ class RoborockSceneEntity(RoborockEntity, SceneEntity):
 
     def __init__(
         self,
-        coordinator: RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01,
+        coordinator: RoborockDataUpdateCoordinator,
         scene: HomeDataScene,
     ) -> None:
         """Create a scene entity."""
         super().__init__(
-            f"{scene.name}_{coordinator.duid_slug}",
+            f"{scene.id}_{coordinator.duid_slug}",
             coordinator.device_info,
             coordinator.api,
         )
         self._scene_id = scene.id
         self._rest_api = coordinator.rest_api
         self.entity_description = EntityDescription(
-            key=scene.name,
+            key=str(scene.id),
             name=scene.name,
         )
 

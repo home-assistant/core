@@ -29,15 +29,7 @@ class RoborockRestApi:
 
     async def get_scenes(self) -> list[HomeDataScene]:
         """Get scenes."""
-        try:
-            return await self._api_client.get_scenes(self._user_data, self._device.duid)
-        except RoborockException as err:
-            _LOGGER.warning(
-                "Failed getting scenes of %s",
-                self._device.name,
-            )
-            _LOGGER.debug(err)
-            return []
+        return await self._api_client.get_scenes(self._user_data, self._device.duid)
 
     async def execute_scene(self, scene_id: int) -> None:
         """Execute scene."""

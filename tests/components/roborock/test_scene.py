@@ -18,37 +18,6 @@ def platforms() -> list[Platform]:
     return [Platform.SCENE]
 
 
-@pytest.fixture
-def bypass_api_client_get_scenes_fixture(bypass_api_fixture) -> None:
-    """Fixture to raise when getting scenes."""
-    with (
-        patch(
-            "homeassistant.components.roborock.RoborockApiClient.get_scenes",
-            side_effect=RoborockException(),
-        ),
-    ):
-        yield
-
-
-@pytest.mark.parametrize(
-    ("entity_id"),
-    [
-        ("scene.roborock_s7_maxv_sc1"),
-        ("scene.roborock_s7_maxv_sc2"),
-    ],
-)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_get_scenes_failure(
-    hass: HomeAssistant,
-    bypass_api_client_get_scenes_fixture,
-    setup_entry: MockConfigEntry,
-    entity_id: str,
-) -> None:
-    """Test activating the scene entities."""
-    # Ensure that the entity does not exist
-    assert hass.states.get(entity_id) is None
-
-
 @pytest.mark.parametrize(
     ("entity_id", "scene_id"),
     [
