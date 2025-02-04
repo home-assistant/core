@@ -531,7 +531,7 @@ bimmer-connected[china]==0.17.2
 bleak-esphome==2.7.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.8.0
+bleak-retry-connector==3.8.1
 
 # homeassistant.components.bluetooth
 bleak==0.22.3
@@ -549,7 +549,7 @@ bluecurrent-api==1.2.3
 bluemaestro-ble==0.2.3
 
 # homeassistant.components.bluetooth
-bluetooth-adapters==0.21.1
+bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
 bluetooth-auto-recovery==1.4.2
@@ -944,7 +944,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.4
 
 # homeassistant.components.bluetooth
-habluetooth==3.21.0
+habluetooth==3.21.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.89.0
