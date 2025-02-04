@@ -15,7 +15,6 @@ type ActronConfigEntry = ConfigEntry[ActronAirNeoData]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bool:
     """Set up Actron Air Neo integration from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     pairing_token = entry.data[CONF_API_TOKEN]
     serial_number = entry.data[CONF_DEVICE_ID]
