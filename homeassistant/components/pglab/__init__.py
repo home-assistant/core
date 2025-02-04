@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 from .discovery import PGLabDiscovery
@@ -27,17 +26,6 @@ from .discovery import PGLabDiscovery
 type PGLABConfigEntry = ConfigEntry[PGLabDiscovery]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up PG LAB Electronics integration."""
-
-    # Make sure MQTT integration is enabled and the client is available
-    if not await mqtt.async_wait_for_mqtt_client(hass):
-        LOGGER.error("MQTT integration is not available")
-        return False
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PGLABConfigEntry) -> bool:
