@@ -30,12 +30,15 @@ from homeassistant.components.backup import (
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
+    CreateBackupStage,
+    CreateBackupState,
     Folder,
     IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
     NewBackup,
     RestoreBackupEvent,
+    RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
     async_get_manager as async_get_backup_manager,
@@ -47,6 +50,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
+from homeassistant.util.enum import try_parse_enum
 
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
@@ -336,6 +340,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             self._async_wait_for_backup(
                 backup,
                 locations,
+                on_progress=on_progress,
                 remove_after_upload=locations == [LOCATION_CLOUD_BACKUP],
             ),
             name="backup_manager_create_backup",
@@ -349,18 +354,29 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         backup: supervisor_backups.NewBackup,
         locations: list[str | None],
         *,
+        on_progress: Callable[[CreateBackupEvent], None],
         remove_after_upload: bool,
     ) -> WrittenBackup:
         """Wait for a backup to complete."""
         backup_complete = asyncio.Event()
         backup_id: str | None = None
+        create_errors: list[dict[str, str]] = []
 
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup progress."""
             nonlocal backup_id
+            if not (stage := try_parse_enum(CreateBackupStage, data.get("stage"))):
+                _LOGGER.debug("Unknown create stage: %s", data.get("stage"))
+            else:
+                on_progress(
+                    CreateBackupEvent(
+                        reason=None, stage=stage, state=CreateBackupState.IN_PROGRESS
+                    )
+                )
             if data.get("done") is True:
                 backup_id = data.get("reference")
+                create_errors.extend(data.get("errors", []))
                 backup_complete.set()
 
         unsub = self._async_listen_job_events(backup.job_id, on_job_progress)
@@ -369,8 +385,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             await backup_complete.wait()
         finally:
             unsub()
-        if not backup_id:
-            raise BackupReaderWriterError("Backup failed")
+        if not backup_id or create_errors:
+            # We should add more specific error handling here in the future
+            raise BackupReaderWriterError(
+                f"Backup failed: {create_errors or 'no backup_id'}"
+            )
 
         async def open_backup() -> AsyncIterator[bytes]:
             try:
@@ -522,6 +541,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup restore progress."""
+            if not (stage := try_parse_enum(RestoreBackupStage, data.get("stage"))):
+                _LOGGER.debug("Unknown restore stage: %s", data.get("stage"))
+            else:
+                on_progress(
+                    RestoreBackupEvent(
+                        reason=None, stage=stage, state=RestoreBackupState.IN_PROGRESS
+                    )
+                )
             if data.get("done") is True:
                 restore_complete.set()
                 restore_errors.extend(data.get("errors", []))
@@ -548,15 +575,26 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
         _LOGGER.debug("Found restore job ID %s in environment", restore_job_id)
 
+        sent_event = False
+
         @callback
         def on_job_progress(data: Mapping[str, Any]) -> None:
             """Handle backup restore progress."""
+            nonlocal sent_event
+
+            if not (stage := try_parse_enum(RestoreBackupStage, data.get("stage"))):
+                _LOGGER.debug("Unknown restore stage: %s", data.get("stage"))
+
             if data.get("done") is not True:
-                on_progress(
-                    RestoreBackupEvent(
-                        reason="", stage=None, state=RestoreBackupState.IN_PROGRESS
+                if stage or not sent_event:
+                    sent_event = True
+                    on_progress(
+                        RestoreBackupEvent(
+                            reason=None,
+                            stage=stage,
+                            state=RestoreBackupState.IN_PROGRESS,
+                        )
                     )
-                )
                 return
 
             restore_errors = data.get("errors", [])
@@ -566,14 +604,14 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
                 on_progress(
                     RestoreBackupEvent(
                         reason="unknown_error",
-                        stage=None,
+                        stage=stage,
                         state=RestoreBackupState.FAILED,
                     )
                 )
             else:
                 on_progress(
                     RestoreBackupEvent(
-                        reason="", stage=None, state=RestoreBackupState.COMPLETED
+                        reason=None, stage=stage, state=RestoreBackupState.COMPLETED
                     )
                 )
             on_progress(IdleEvent())

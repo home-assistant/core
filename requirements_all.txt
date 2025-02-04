@@ -1106,7 +1106,7 @@ habiticalib==0.3.4
 habluetooth==3.21.0
 
 # homeassistant.components.cloud
-hass-nabucasa==0.88.1
+hass-nabucasa==0.89.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1146,7 +1146,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250131.0
+home-assistant-frontend==20250203.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -1405,7 +1405,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.2
+millheater==0.12.3
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -1433,9 +1433,6 @@ motioneye-client==0.3.14
 
 # homeassistant.components.bang_olufsen
 mozart-api==4.1.1.116.4
-
-# homeassistant.components.onedrive
-msgraph-sdk==1.16.0
 
 # homeassistant.components.mullvad
 mullvad-api==1.0.0
@@ -1489,7 +1486,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.3.9
+nhc==0.4.4
 
 # homeassistant.components.nibe_heatpump
 nibe==2.14.0
@@ -1557,6 +1554,9 @@ omnilogic==0.4.5
 
 # homeassistant.components.ondilo_ico
 ondilo==0.5.0
+
+# homeassistant.components.onedrive
+onedrive-personal-sdk==0.0.3
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -2190,7 +2190,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.15.5
+pyoverkiz==1.16.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2388,7 +2388,7 @@ python-gitlab==1.6.0
 python-google-drive-api==0.0.2
 
 # homeassistant.components.analytics_insights
-python-homeassistant-analytics==0.8.1
+python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
 python-homewizard-energy==v8.3.2
@@ -2449,7 +2449,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==2.9.7
+python-roborock==2.11.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
@@ -2854,7 +2854,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.2
+tesla-fleet-api==0.9.6
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2893,7 +2893,7 @@ tilt-ble==0.2.3
 tmb==0.0.4
 
 # homeassistant.components.todoist
-todoist-api-python==2.1.2
+todoist-api-python==2.1.7
 
 # homeassistant.components.tolo
 tololib==1.1.0

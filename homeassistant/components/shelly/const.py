@@ -116,6 +116,10 @@ BATTERY_DEVICES_WITH_PERMANENT_CONNECTION: Final = [
 # Button/Click events for Block & RPC devices
 EVENT_SHELLY_CLICK: Final = "shelly.click"
 
+SHELLY_EMIT_EVENT_PATTERN: Final = re.compile(
+    r"(?:Shelly\s*\.\s*emitEvent\s*\(\s*[\"'`])(\w*)"
+)
+
 ATTR_CLICK_TYPE: Final = "click_type"
 ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
