@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.ccl.const import DOMAIN
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
@@ -32,5 +33,5 @@ async def test_create_entry(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "CCL Weather Station"
-    assert len(result["data"]["passkey"]) == 21
+    assert len(result["data"][CONF_WEBHOOK_ID]) == 8
     assert len(mock_setup_entry.mock_calls) == 1
