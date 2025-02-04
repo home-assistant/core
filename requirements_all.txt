@@ -1146,7 +1146,7 @@ hole==0.8.0
 holidays==0.65
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250131.0
+home-assistant-frontend==20250203.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.1.28
@@ -1405,7 +1405,7 @@ microBeesPy==0.3.5
 mill-local==0.3.0
 
 # homeassistant.components.mill
-millheater==0.12.2
+millheater==0.12.3
 
 # homeassistant.components.minio
 minio==7.1.12
@@ -2854,7 +2854,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.2
+tesla-fleet-api==0.9.6
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
