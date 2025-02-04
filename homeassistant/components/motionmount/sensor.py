@@ -10,6 +10,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import MotionMountConfigEntry
 from .entity import MotionMountEntity
 
+error_messages = {
+    MotionMountSystemError.MotorError: "motor",
+    MotionMountSystemError.ObstructionDetected: "obstruction",
+    MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
+    MotionMountSystemError.HDMICECError: "hdmi_cec",
+    MotionMountSystemError.InternalError: "internal",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,14 +55,6 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
     def native_value(self) -> str:
         """Return error status."""
         status = self.mm.system_status
-
-        error_messages = {
-            MotionMountSystemError.MotorError: "motor",
-            MotionMountSystemError.ObstructionDetected: "obstruction",
-            MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
-            MotionMountSystemError.HDMICECError: "hdmi_cec",
-            MotionMountSystemError.InternalError: "internal",
-        }
 
         for error, message in error_messages.items():
             if error in status:
