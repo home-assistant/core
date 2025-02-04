@@ -1556,7 +1556,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.2
+onedrive-personal-sdk==0.0.3
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -2190,7 +2190,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.15.5
+pyoverkiz==1.16.0
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
