@@ -82,6 +82,16 @@
         }
       }
     },
+    "set_dehumidify_setpoint": {
+      "name": "Set dehumidify set point",
+      "description": "Sets the target humidity.",
+      "fields": {
+        "humidity": {
+          "name": "Humidity",
+          "description": "The dehumidification setpoint."
+        }
+      }
+    },
     "set_hvac_run_mode": {
       "name": "Set hvac run mode",
       "description": "Sets the HVAC operation mode.",

@@ -53,13 +53,18 @@ PARALLEL_UPDATES = 1  # keep data in sync with only one connection at a time
 
 SERVICE_SET_AIRCLEANER_MODE = "set_aircleaner_mode"
 SERVICE_SET_HUMIDIFY_SETPOINT = "set_humidify_setpoint"
+SERVICE_SET_DEHUMIDIFY_SETPOINT = "set_dehumidify_setpoint"
 SERVICE_SET_HVAC_RUN_MODE = "set_hvac_run_mode"
 
 SET_AIRCLEANER_SCHEMA: VolDictType = {
     vol.Required(ATTR_AIRCLEANER_MODE): cv.string,
 }
 
-SET_HUMIDITY_SCHEMA: VolDictType = {
+SET_HUMIDIFY_SCHEMA: VolDictType = {
+    vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=10, max=45)),
+}
+
+SET_DEHUMIDIFY_SCHEMA: VolDictType = {
     vol.Required(ATTR_HUMIDITY): vol.All(vol.Coerce(int), vol.Range(min=35, max=65)),
 }
 
@@ -126,8 +131,13 @@ async def async_setup_entry(
 
     platform.async_register_entity_service(
         SERVICE_SET_HUMIDIFY_SETPOINT,
-        SET_HUMIDITY_SCHEMA,
+        SET_HUMIDIFY_SCHEMA,
         f"async_{SERVICE_SET_HUMIDIFY_SETPOINT}",
+    )
+    platform.async_register_entity_service(
+        SERVICE_SET_DEHUMIDIFY_SETPOINT,
+        SET_DEHUMIDIFY_SCHEMA,
+        f"async_{SERVICE_SET_DEHUMIDIFY_SETPOINT}",
     )
     platform.async_register_entity_service(
         SERVICE_SET_AIRCLEANER_MODE,
