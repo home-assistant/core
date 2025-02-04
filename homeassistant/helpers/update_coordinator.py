@@ -105,12 +105,12 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         )
 
         self._listeners: dict[int, tuple[CALLBACK_TYPE, object | None]] = {}
+        self._last_listener_id: int = 0
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._unsub_shutdown: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
         self.last_update_success = True
         self.last_exception: Exception | None = None
-        self._listener_id: int = 0
 
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
@@ -150,14 +150,14 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
-        self._listener_id += 1
-        self._listeners[self._listener_id] = (update_callback, context)
+        self._last_listener_id += 1
+        self._listeners[self._last_listener_id] = (update_callback, context)
 
         # This is the first listener, set up interval.
         if schedule_refresh:
             self._schedule_refresh()
 
-        return partial(self.__async_remove_listener_internal, self._listener_id)
+        return partial(self.__async_remove_listener_internal, self._last_listener_id)
 
     @callback
     def __async_remove_listener_internal(self, listener_id: int) -> None:
