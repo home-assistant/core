@@ -36,7 +36,7 @@ from .manager import (
     RestoreBackupState,
     WrittenBackup,
 )
-from .models import AddonInfo, AgentBackup, Folder
+from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
 from .util import suggested_filename, suggested_filename_from_name_date
 from .websocket import async_register_websocket_handlers
 
@@ -47,6 +47,7 @@ __all__ = [
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
     "BackupManagerError",
+    "BackupNotFound",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",
