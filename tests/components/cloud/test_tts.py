@@ -72,6 +72,13 @@ def test_all_languages_have_default() -> None:
     assert set(DEFAULT_VOICES).difference(SUPPORT_LANGUAGES) == set()
 
 
+@pytest.mark.parametrize(("language", "voice"), DEFAULT_VOICES.items())
+def test_default_voice_is_valid(language: str, voice: str) -> None:
+    """Test that the default voice is valid."""
+    assert language in TTS_VOICES
+    assert voice in TTS_VOICES[language]
+
+
 def test_schema() -> None:
     """Test schema."""
     assert "nl-NL" in SUPPORT_LANGUAGES
