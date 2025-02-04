@@ -26,7 +26,6 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
         )
         self.api = api
         self.serial_number = serial_number
-        self.local_state = {"full_update": None, "last_event_id": None}
         self.system = None
 
     async def _async_update_data(self) -> dict:
