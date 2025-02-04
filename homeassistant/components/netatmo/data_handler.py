@@ -61,6 +61,7 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
+DOOR_TAG = "opening"
 EVENT = "event"
 
 PUBLISHERS = {
@@ -69,6 +70,7 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
+    DOOR_TAG: "async_update_weater_stations",
     EVENT: "async_update_events",
 }
 
@@ -83,6 +85,7 @@ DEFAULT_INTERVALS = {
     WEATHER: 600,
     AIR_CARE: 300,
     PUBLIC: 600,
+    DOOR_TAG: 60,
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
@@ -309,6 +312,7 @@ class NetatmoDataHandler:
         """Dispatch the creation of entities."""
         await self.subscribe(WEATHER, WEATHER, None)
         await self.subscribe(AIR_CARE, AIR_CARE, None)
+        await self.subscribe(DOOR_TAG, DOOR_TAG, None)
 
         self.setup_air_care()
 
@@ -328,6 +332,7 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
+        await self.unsubscribe(DOOR_TAG, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""
@@ -344,6 +349,20 @@ class NetatmoDataHandler:
                     ),
                 )
 
+    def setup_door_tag(self) -> None:
+        """Set up home door_tag modules."""
+        for module in self.account.modules.values():
+            if module.device_category is NetatmoDeviceCategory.opening:
+                async_dispatcher_send(
+                    self.hass,
+                    NETATMO_CREATE_DOOR_TAG,
+                    NetatmoDevice(
+                        self,
+                        module,
+                        DOOR_TAG,
+                        DOOR_TAG,
+                    ),
+                )
     def setup_modules(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up modules."""
         netatmo_type_signal_map = {
@@ -383,7 +402,7 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
-                _LOGGER.debug("Module %s dispatched as weather category", module.signal_name, signal)
+                _LOGGER.debug("Module %s dispatched as weather category", module.signal_name)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_WEATHER_SENSOR,
