@@ -1556,7 +1556,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.3
+onedrive-personal-sdk==0.0.4
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -2959,7 +2959,7 @@ unifiled==0.11
 universal-silabs-flasher==0.0.25
 
 # homeassistant.components.upb
-upb-lib==0.5.9
+upb-lib==0.6.0
 
 # homeassistant.components.upcloud
 upcloud-api==2.6.0
