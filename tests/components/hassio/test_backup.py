@@ -106,7 +106,7 @@ TEST_BACKUP_2 = supervisor_backups.Backup(
     compressed=False,
     content=supervisor_backups.BackupContent(
         addons=["ssl"],
-        folders=["share"],
+        folders=[supervisor_backups.Folder.SHARE],
         homeassistant=False,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
@@ -136,7 +136,7 @@ TEST_BACKUP_DETAILS_2 = supervisor_backups.BackupComplete(
     compressed=TEST_BACKUP_2.compressed,
     date=TEST_BACKUP_2.date,
     extra=None,
-    folders=["share"],
+    folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=False,
     homeassistant=None,
     location=TEST_BACKUP_2.location,
@@ -156,7 +156,7 @@ TEST_BACKUP_3 = supervisor_backups.Backup(
     compressed=False,
     content=supervisor_backups.BackupContent(
         addons=["ssl"],
-        folders=["share"],
+        folders=[supervisor_backups.Folder.SHARE],
         homeassistant=True,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
@@ -186,7 +186,7 @@ TEST_BACKUP_DETAILS_3 = supervisor_backups.BackupComplete(
     compressed=TEST_BACKUP_3.compressed,
     date=TEST_BACKUP_3.date,
     extra=None,
-    folders=["share"],
+    folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=False,
     homeassistant=None,
     location=TEST_BACKUP_3.location,
@@ -207,7 +207,7 @@ TEST_BACKUP_4 = supervisor_backups.Backup(
     compressed=False,
     content=supervisor_backups.BackupContent(
         addons=["ssl"],
-        folders=["share"],
+        folders=[supervisor_backups.Folder.SHARE],
         homeassistant=True,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
@@ -234,23 +234,23 @@ TEST_BACKUP_DETAILS_4 = supervisor_backups.BackupComplete(
             version="9.14.0",
         )
     ],
-    compressed=TEST_BACKUP.compressed,
-    date=TEST_BACKUP.date,
+    compressed=TEST_BACKUP_4.compressed,
+    date=TEST_BACKUP_4.date,
     extra=None,
-    folders=["share"],
+    folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=True,
     homeassistant="2024.12.0",
-    location=TEST_BACKUP.location,
-    location_attributes=TEST_BACKUP.location_attributes,
-    locations=TEST_BACKUP.locations,
-    name=TEST_BACKUP.name,
-    protected=TEST_BACKUP.protected,
+    location=TEST_BACKUP_4.location,
+    location_attributes=TEST_BACKUP_4.location_attributes,
+    locations=TEST_BACKUP_4.locations,
+    name=TEST_BACKUP_4.name,
+    protected=TEST_BACKUP_4.protected,
     repositories=[],
-    size=TEST_BACKUP.size,
-    size_bytes=TEST_BACKUP.size_bytes,
-    slug=TEST_BACKUP.slug,
+    size=TEST_BACKUP_4.size,
+    size_bytes=TEST_BACKUP_4.size_bytes,
+    slug=TEST_BACKUP_4.slug,
     supervisor_version="2024.11.2",
-    type=TEST_BACKUP.type,
+    type=TEST_BACKUP_4.type,
 )
 
 TEST_BACKUP_5 = supervisor_backups.Backup(
@@ -364,7 +364,7 @@ async def hassio_enabled(
 
 
 @pytest.fixture
-async def setup_integration(
+async def setup_backup_integration(
     hass: HomeAssistant, hassio_enabled: None, supervisor_client: AsyncMock
 ) -> None:
     """Set up Backup integration."""
@@ -494,7 +494,7 @@ async def test_agent_info(
     }
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("backup", "backup_details", "expected_response"),
     [
@@ -560,7 +560,7 @@ async def test_agent_list_backups(
     assert response["result"]["backups"] == [expected_response]
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -584,7 +584,7 @@ async def test_agent_download(
     )
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_download_unavailable_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -603,7 +603,7 @@ async def test_agent_download_unavailable_backup(
     assert resp.status == 404
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -652,7 +652,7 @@ async def test_agent_upload(
     supervisor_client.backups.remove_backup.assert_not_called()
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_get_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -694,7 +694,7 @@ async def test_agent_get_backup(
     supervisor_client.backups.backup_info.assert_called_once_with(backup_id)
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("backup_info_side_effect", "expected_response"),
     [
@@ -738,7 +738,7 @@ async def test_agent_get_backup_with_error(
     supervisor_client.backups.backup_info.assert_called_once_with(backup_id)
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_delete_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -763,7 +763,7 @@ async def test_agent_delete_backup(
     )
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("remove_side_effect", "expected_response"),
     [
@@ -809,7 +809,7 @@ async def test_agent_delete_with_error(
     )
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("event_data", "mount_info_calls"),
     [
@@ -890,7 +890,7 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
 )
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("extra_generate_options", "expected_supervisor_options"),
     [
@@ -1005,7 +1005,7 @@ async def test_reader_writer_create(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_report_progress(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1112,7 +1112,7 @@ async def test_reader_writer_create_report_progress(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_job_done(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1403,7 +1403,7 @@ async def test_reader_writer_create_per_agent_encryption(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("side_effect", "error_code", "error_message", "expected_reason"),
     [
@@ -1498,7 +1498,7 @@ async def test_reader_writer_create_partial_backup_error(
         },
     ],
 )
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_missing_reference_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1557,7 +1557,7 @@ async def test_reader_writer_create_missing_reference_error(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 @pytest.mark.parametrize(
     ("method", "download_call_count", "remove_call_count"),
@@ -1651,7 +1651,7 @@ async def test_reader_writer_create_download_remove_error(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize("exception", [SupervisorError("Boom!"), Exception("Boom!")])
 async def test_reader_writer_create_info_error(
     hass: HomeAssistant,
@@ -1728,7 +1728,7 @@ async def test_reader_writer_create_info_error(
     assert response["event"] == {"manager_state": "idle"}
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_create_remote_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -1812,7 +1812,7 @@ async def test_reader_writer_create_remote_backup(
     )
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 @pytest.mark.parametrize(
     ("extra_generate_options", "expected_error"),
     [
@@ -1882,7 +1882,7 @@ async def test_reader_writer_create_wrong_parameters(
     supervisor_client.backups.partial_backup.assert_not_called()
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_agent_receive_remote_backup(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -1958,7 +1958,7 @@ async def test_agent_receive_remote_backup(
         ),
     ],
 )
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -2036,7 +2036,7 @@ async def test_reader_writer_restore(
         ),
     ],
 )
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -2097,7 +2097,7 @@ async def test_reader_writer_restore_error(
     assert response["error"]["code"] == expected_error_code
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_late_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -2211,7 +2211,7 @@ async def test_reader_writer_restore_late_error(
         ),
     ],
 )
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_wrong_parameters(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
