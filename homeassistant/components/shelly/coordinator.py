@@ -675,7 +675,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         is updated.
         """
         if not self.sleep_period:
-            if self.entry.data.get(CONF_SCRIPT):
+            if self.entry.data.get(CONF_SCRIPT, True):
                 await self._async_connect_ble_scanner()
         else:
             await self._async_setup_outbound_websocket()
