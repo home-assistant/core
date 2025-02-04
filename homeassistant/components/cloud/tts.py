@@ -336,7 +336,10 @@ class CloudTTSEntity(TextToSpeechEntity):
         """Load TTS from Home Assistant Cloud."""
         gender: Gender | str | None = options.get(ATTR_GENDER)
         gender = handle_deprecated_gender(self.hass, gender)
-        original_voice: str = options.get(ATTR_VOICE, DEFAULT_VOICES[language])
+        original_voice: str = options.get(
+            ATTR_VOICE,
+            self._voice if language == self._language else DEFAULT_VOICES[language],
+        )
         voice = handle_deprecated_voice(self.hass, original_voice)
         if voice not in TTS_VOICES[language]:
             default_voice = DEFAULT_VOICES[language]
@@ -414,7 +417,10 @@ class CloudProvider(Provider):
         assert self.hass is not None
         gender: Gender | str | None = options.get(ATTR_GENDER)
         gender = handle_deprecated_gender(self.hass, gender)
-        original_voice: str | None = options.get(ATTR_VOICE, DEFAULT_VOICES[language])
+        original_voice: str = options.get(
+            ATTR_VOICE,
+            self._voice if language == self._language else DEFAULT_VOICES[language],
+        )
         voice = handle_deprecated_voice(self.hass, original_voice)
         if voice not in TTS_VOICES[language]:
             default_voice = DEFAULT_VOICES[language]
