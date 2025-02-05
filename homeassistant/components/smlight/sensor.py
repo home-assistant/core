@@ -206,8 +206,8 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
 
         self.entity_description = description
         self.idx = idx
-        sensor = description.key + (f"_{idx}" if idx else "")
-        self._attr_unique_id = f"{coordinator.unique_id}_{sensor}"
+        sensor = f"_{idx}" if idx else ""
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}{sensor}"
 
     @property
     def native_value(self) -> StateType:
