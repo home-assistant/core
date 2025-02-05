@@ -31,8 +31,8 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for evohome integration/client."""
 
     # These will not be None after _async_setup())
-    loc: ec2.Location = None  # type: ignore[assignment]
-    tcs: ec2.ControlSystem = None  # type: ignore[assignment]
+    loc: ec2.Location
+    tcs: ec2.ControlSystem
 
     def __init__(
         self,
