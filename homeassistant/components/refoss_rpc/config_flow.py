@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, Final
+from typing import Any
 
 from aiorefoss.common import (
     ConnectionOptions,
@@ -29,17 +29,10 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import DOMAIN, LOGGER
 from .coordinator import async_reconnect_soon
 
-CONFIG_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(CONF_HOST): str,
-    }
-)
-
-
 INTERNAL_WIFI_AP_IP = "10.10.10.1"
 
 
-async def validate_input(
+async def async_validate_input(
     hass: HomeAssistant,
     host: str,
     info: dict[str, Any],
@@ -98,7 +91,9 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_credentials()
 
                 try:
-                    device_info = await validate_input(self.hass, host, self.info, {})
+                    device_info = await async_validate_input(
+                        self.hass, host, self.info, {}
+                    )
                 except DeviceConnectionError:
                     errors["base"] = "cannot_connect"
                 except MacAddressMismatchError:
@@ -115,8 +110,11 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
                         )
                     errors["base"] = "firmware_not_fully_supported"
 
+        schema = {
+            vol.Required(CONF_HOST): str,
+        }
         return self.async_show_form(
-            step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
+            step_id="user", data_schema=vol.Schema(schema), errors=errors
         )
 
     async def async_step_credentials(
@@ -127,7 +125,7 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_USERNAME] = "admin"
             try:
-                device_info = await validate_input(
+                device_info = await async_validate_input(
                     self.hass, self.host, self.info, user_input
                 )
             except InvalidAuthError:
@@ -181,7 +179,7 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
 
             user_input[CONF_USERNAME] = "admin"
             try:
-                await validate_input(self.hass, host, info, user_input)
+                await async_validate_input(self.hass, host, info, user_input)
             except (DeviceConnectionError, InvalidAuthError):
                 return self.async_abort(reason="reauth_unsuccessful")
             except MacAddressMismatchError:
@@ -227,7 +225,9 @@ class RefossConfigFlow(ConfigFlow, domain=DOMAIN):
         if get_info_auth(self.info):
             return await self.async_step_credentials()
         try:
-            self.device_info = await validate_input(self.hass, self.host, self.info, {})
+            self.device_info = await async_validate_input(
+                self.hass, self.host, self.info, {}
+            )
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
 

@@ -20,10 +20,13 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import LOGGER
 from .coordinator import (
     RefossConfigEntry,
     RefossCoordinator,
@@ -44,14 +47,8 @@ PLATFORMS: Final = [
 async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
     """Set up Refoss RPC from a config entry."""
     if not entry.data.get(CONF_HOST):
-        LOGGER.warning(
-            (
-                "The config entry %s probably comes from a custom integration, please"
-                " remove it if you want to use core Refoss RPC integration"
-            ),
-            entry.title,
-        )
-        return False
+        raise ConfigEntryError("Invalid Host, please try again")
+
     options = ConnectionOptions(
         entry.data.get(CONF_HOST),
         entry.data.get(CONF_USERNAME),

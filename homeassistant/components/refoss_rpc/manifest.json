@@ -1,7 +1,6 @@
 {
   "domain": "refoss_rpc",
   "name": "Refoss RPC",
-  "after_dependencies": ["zeroconf"],
   "codeowners": ["@ashionky"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/refoss_rpc",
