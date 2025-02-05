@@ -351,7 +351,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'EVSE Charging',
+    'original_name': 'EVSE charging',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -363,7 +363,7 @@
 # name: test_switches[silabs_evse_charging][switch.evse_evse_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse EVSE Charging',
+      'friendly_name': 'evse EVSE charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.evse_evse_charging',
