@@ -383,7 +383,7 @@ aioslimproto==3.0.0
 aiosolaredge==0.2.0
 
 # homeassistant.components.steamist
-aiosteamist==1.0.0
+aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
 aiostreammagic==2.10.0
