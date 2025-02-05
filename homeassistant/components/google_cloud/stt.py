@@ -114,9 +114,9 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             )
         )
 
-        async def request_generator() -> (
-            AsyncGenerator[speech_v1.StreamingRecognizeRequest]
-        ):
+        async def request_generator() -> AsyncGenerator[
+            speech_v1.StreamingRecognizeRequest
+        ]:
             # The first request must only contain a streaming_config
             yield speech_v1.StreamingRecognizeRequest(streaming_config=streaming_config)
             # All subsequent requests must only contain audio_content

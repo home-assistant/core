@@ -4,7 +4,6 @@ from dataclasses import dataclass
 import logging
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage, EventType
 from google_nest_sdm.traits import TraitType
 
@@ -13,11 +12,9 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
 from .events import (
     EVENT_CAMERA_MOTION,
@@ -26,6 +23,7 @@ from .events import (
     EVENT_DOORBELL_CHIME,
     EVENT_NAME_MAP,
 )
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,16 +66,12 @@ ENTITY_DESCRIPTIONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the sensors."""
-
-    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
     async_add_entities(
         NestTraitEventEntity(desc, device)
-        for device in device_manager.devices.values()
+        for device in entry.runtime_data.device_manager.devices.values()
         for desc in ENTITY_DESCRIPTIONS
         if any(trait in device.traits for trait in desc.trait_types)
     )

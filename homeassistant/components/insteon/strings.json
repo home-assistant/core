@@ -112,7 +112,7 @@
   "services": {
     "add_all_link": {
       "name": "Add all link",
-      "description": "Tells the Insteom Modem (IM) start All-Linking mode. Once the IM is in All-Linking mode, press the link button on the device to complete All-Linking.",
+      "description": "Tells the Insteon Modem (IM) start All-Linking mode. Once the IM is in All-Linking mode, press the link button on the device to complete All-Linking.",
       "fields": {
         "group": {
           "name": "Group",
@@ -164,7 +164,7 @@
     },
     "x10_all_units_off": {
       "name": "X10 all units off",
-      "description": "[%key:component::insteon::services::add_all_link::description%]",
+      "description": "Sends X10 'All units off' command.",
       "fields": {
         "housecode": {
           "name": "Housecode",
@@ -174,7 +174,7 @@
     },
     "x10_all_lights_on": {
       "name": "X10 all lights on",
-      "description": "Sends X10 All Lights On command.",
+      "description": "Sends X10 'All lights on' command.",
       "fields": {
         "housecode": {
           "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",
@@ -184,7 +184,7 @@
     },
     "x10_all_lights_off": {
       "name": "X10 all lights off",
-      "description": "Sends X10 All Lights Off command.",
+      "description": "Sends X10 'All lights off' command.",
       "fields": {
         "housecode": {
           "name": "[%key:component::insteon::services::x10_all_units_off::fields::housecode::name%]",

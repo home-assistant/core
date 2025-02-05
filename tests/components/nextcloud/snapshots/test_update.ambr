@@ -36,6 +36,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/nextcloud/icon.png',
       'friendly_name': 'my.nc_url.local None',
       'in_progress': False,
@@ -46,6 +47,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 0>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.my_nc_url_local_none',

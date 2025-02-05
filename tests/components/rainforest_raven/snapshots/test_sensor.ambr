@@ -1,0 +1,257 @@
+# serializer version: 1
+# name: test_sensors[sensor.raven_device_meter_power_demand-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raven_device_meter_power_demand',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Meter power demand',
+    'platform': 'rainforest_raven',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_demand',
+    'unique_id': '1234567890abcdef.InstantaneousDemand.demand',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_sensors[sensor.raven_device_meter_power_demand-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'RAVEn Device Meter power demand',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raven_device_meter_power_demand',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.2345',
+  })
+# ---
+# name: test_sensors[sensor.raven_device_meter_price-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raven_device_meter_price',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meter price',
+    'platform': 'rainforest_raven',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_price',
+    'unique_id': '1234567890abcdef.PriceCluster.price',
+    'unit_of_measurement': 'USD/kWh',
+  })
+# ---
+# name: test_sensors[sensor.raven_device_meter_price-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RAVEn Device Meter price',
+      'rate_label': 'Set by user',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'tier': 3,
+      'unit_of_measurement': 'USD/kWh',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raven_device_meter_price',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.10',
+  })
+# ---
+# name: test_sensors[sensor.raven_device_meter_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.raven_device_meter_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Meter signal strength',
+    'platform': 'rainforest_raven',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'signal_strength',
+    'unique_id': 'abcdef0123456789.NetworkInfo.link_strength',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[sensor.raven_device_meter_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'channel': 13,
+      'friendly_name': 'RAVEn Device Meter signal strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raven_device_meter_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100',
+  })
+# ---
+# name: test_sensors[sensor.raven_device_total_meter_energy_delivered-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raven_device_total_meter_energy_delivered',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total meter energy delivered',
+    'platform': 'rainforest_raven',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_delivered',
+    'unique_id': '1234567890abcdef.CurrentSummationDelivered.summation_delivered',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.raven_device_total_meter_energy_delivered-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'RAVEn Device Total meter energy delivered',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raven_device_total_meter_energy_delivered',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23456.7890',
+  })
+# ---
+# name: test_sensors[sensor.raven_device_total_meter_energy_received-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raven_device_total_meter_energy_received',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total meter energy received',
+    'platform': 'rainforest_raven',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy_received',
+    'unique_id': '1234567890abcdef.CurrentSummationDelivered.summation_received',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_sensors[sensor.raven_device_total_meter_energy_received-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'RAVEn Device Total meter energy received',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raven_device_total_meter_energy_received',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '00000.0000',
+  })
+# ---

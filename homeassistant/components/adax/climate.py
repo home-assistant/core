@@ -75,7 +75,6 @@ class AdaxDevice(ClimateEntity):
     )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, heater_data: dict[str, Any], adax_data_handler: Adax) -> None:
         """Initialize the heater."""

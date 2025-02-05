@@ -1,0 +1,73 @@
+# serializer version: 1
+# name: test_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'bluetooth',
+        'aa:bb:cc:dd:ee:ff',
+      ),
+      tuple(
+        'mac',
+        '00:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lamarzocco',
+        'GS012345',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'La Marzocco',
+    'model': <MachineModel.GS3_AV: 'GS3 AV'>,
+    'model_id': <MachineModel.GS3_AV: 'GS3 AV'>,
+    'name': 'GS012345',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'GS012345',
+    'suggested_area': None,
+    'sw_version': '1.40',
+    'via_device_id': None,
+  })
+# ---
+# name: test_scale_device[Linea Mini]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'lamarzocco',
+        '44:b7:d0:74:5f:90',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Acaia',
+    'model': 'Lunar',
+    'model_id': 'Y.301',
+    'name': 'LMZ-123A45',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---

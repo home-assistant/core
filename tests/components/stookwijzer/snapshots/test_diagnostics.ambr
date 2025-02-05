@@ -1,0 +1,8 @@
+# serializer version: 1
+# name: test_get_diagnostics
+  dict({
+    'advice': 'code_yellow',
+    'air_quality_index': 2,
+    'windspeed_ms': 2.5,
+  })
+# ---

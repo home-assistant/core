@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import MealieConfigEntry, MealieStatisticsCoordinator
 from .entity import MealieEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MealieStatisticsSensorEntityDescription(SensorEntityDescription):
@@ -28,31 +30,26 @@ class MealieStatisticsSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: tuple[MealieStatisticsSensorEntityDescription, ...] = (
     MealieStatisticsSensorEntityDescription(
         key="recipes",
-        native_unit_of_measurement="recipes",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda statistics: statistics.total_recipes,
     ),
     MealieStatisticsSensorEntityDescription(
         key="users",
-        native_unit_of_measurement="users",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda statistics: statistics.total_users,
     ),
     MealieStatisticsSensorEntityDescription(
         key="categories",
-        native_unit_of_measurement="categories",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda statistics: statistics.total_categories,
     ),
     MealieStatisticsSensorEntityDescription(
         key="tags",
-        native_unit_of_measurement="tags",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda statistics: statistics.total_tags,
     ),
     MealieStatisticsSensorEntityDescription(
         key="tools",
-        native_unit_of_measurement="tools",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda statistics: statistics.total_tools,
     ),

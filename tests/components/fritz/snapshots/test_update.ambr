@@ -36,6 +36,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
@@ -46,6 +47,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 1>,
       'title': 'FRITZ!OS',
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.mock_title_fritz_os',
@@ -92,6 +94,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
@@ -102,6 +105,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 1>,
       'title': 'FRITZ!OS',
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.mock_title_fritz_os',
@@ -148,6 +152,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/fritz/icon.png',
       'friendly_name': 'Mock Title FRITZ!OS',
       'in_progress': False,
@@ -158,6 +163,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 1>,
       'title': 'FRITZ!OS',
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.mock_title_fritz_os',

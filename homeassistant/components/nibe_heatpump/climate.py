@@ -74,7 +74,6 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
     _attr_target_temperature_step = 0.5
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

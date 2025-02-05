@@ -23,6 +23,9 @@ from .const import (
 )
 from .entity import MastodonEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MastodonSensorEntityDescription(SensorEntityDescription):
@@ -35,21 +38,18 @@ ENTITY_DESCRIPTIONS = (
     MastodonSensorEntityDescription(
         key="followers",
         translation_key="followers",
-        native_unit_of_measurement="accounts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_FOLLOWERS_COUNT),
     ),
     MastodonSensorEntityDescription(
         key="following",
         translation_key="following",
-        native_unit_of_measurement="accounts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_FOLLOWING_COUNT),
     ),
     MastodonSensorEntityDescription(
         key="posts",
         translation_key="posts",
-        native_unit_of_measurement="posts",
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.get(ACCOUNT_STATUSES_COUNT),
     ),

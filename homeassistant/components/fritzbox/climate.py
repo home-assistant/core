@@ -88,7 +88,6 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -142,7 +141,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_hvac_mode(hvac_mode)
         elif target_temp is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, target_temp
+                self.data.set_target_temperature, target_temp, True
             )
         else:
             return

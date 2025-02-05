@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from collections.abc import Generator
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from aiohttp.test_utils import TestClient
@@ -12,12 +13,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
 from homeassistant.components.config import config_entries
-from homeassistant.config_entries import HANDLERS, ConfigFlow
+from homeassistant.config_entries import HANDLERS, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_flow, config_validation as cv
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -255,9 +257,7 @@ async def test_get_entries(hass: HomeAssistant, client: TestClient) -> None:
 
 async def test_remove_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     resp = await client.delete(f"/api/config/config_entries/entry/{entry.entry_id}")
     assert resp.status == HTTPStatus.OK
@@ -268,11 +268,9 @@ async def test_remove_entry(hass: HomeAssistant, client: TestClient) -> None:
 
 async def test_reload_entry(hass: HomeAssistant, client: TestClient) -> None:
     """Test reloading an entry via the API."""
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
-    hass.config.components.add("kitchen_sink")
+    hass.config.components.add("test")
     resp = await client.post(
         f"/api/config/config_entries/entry/{entry.entry_id}/reload"
     )
@@ -409,7 +407,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
                     "show_advanced_options": self.show_advanced_options,
@@ -733,27 +731,62 @@ async def test_get_progress_index(
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 5
 
-        async def async_step_hassio(self, discovery_info):
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
             return await self.async_step_account()
 
-        async def async_step_account(self, user_input=None):
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
             return self.async_show_form(step_id="account")
 
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        form = await hass.config_entries.flow.async_init(
+        form_hassio = await hass.config_entries.flow.async_init(
             "test", context={"source": core_ce.SOURCE_HASSIO}
         )
+        form_user = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_USER}
+        )
+        form_reconfigure = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"}
+        )
+
+    for form in (form_hassio, form_user, form_reconfigure):
+        assert form["type"] == data_entry_flow.FlowResultType.FORM
+        assert form["step_id"] == "account"
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
     response = await ws_client.receive_json()
 
     assert response["success"]
+
+    # Active flows with SOURCE_USER and SOURCE_RECONFIGURE should be filtered out
     assert response["result"] == [
         {
-            "flow_id": form["flow_id"],
+            "flow_id": form_hassio["flow_id"],
             "handler": "test",
             "step_id": "account",
             "context": {"source": core_ce.SOURCE_HASSIO},
@@ -792,7 +825,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -830,7 +863,7 @@ async def test_get_progress_flow_unauth(
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 errors={"username": "Should be unique."},
             )
 
@@ -862,7 +895,7 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
                     schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=schema,
+                        data_schema=vol.Schema(schema),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1157,11 +1190,9 @@ async def test_update_prefrences(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
-    hass.config.components.add("kitchen_sink")
+    hass.config.components.add("test")
 
     assert entry.pref_disable_new_entities is False
     assert entry.pref_disable_polling is False
@@ -1257,12 +1288,10 @@ async def test_disable_entry(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    entry = MockConfigEntry(
-        domain="kitchen_sink", state=core_ce.ConfigEntryState.LOADED
-    )
+    entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     assert entry.disabled_by is None
-    hass.config.components.add("kitchen_sink")
+    hass.config.components.add("test")
 
     # Disable
     await ws_client.send_json(

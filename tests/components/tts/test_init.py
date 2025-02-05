@@ -22,9 +22,8 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DEFAULT_LANG,
@@ -45,6 +44,7 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache,
+    reset_translation_cache,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -63,7 +63,6 @@ async def test_default_entity_attributes() -> None:
     entity = DefaultEntity()
 
     assert entity.hass is None
-    assert entity.name is UNDEFINED
     assert entity.default_language == DEFAULT_LANG
     assert entity.supported_languages == SUPPORT_LANGUAGES
     assert entity.supported_options is None
@@ -204,18 +203,20 @@ async def test_service(
         blocking=True,
     )
 
-    assert len(calls) == 1
-    assert calls[0].data[ATTR_MEDIA_ANNOUNCE] is True
-    assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_en-us_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
-    ).is_file()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_ANNOUNCE] is True
+        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -266,17 +267,20 @@ async def test_service_default_language(
     )
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / (
+                f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -327,15 +331,18 @@ async def test_service_default_special_language(
     )
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_en-us_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -384,15 +391,18 @@ async def test_service_language(
     )
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_-_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -497,18 +507,21 @@ async def test_service_options(
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 class MockProviderWithDefaults(MockTTSProvider):
@@ -578,18 +591,21 @@ async def test_service_default_options(
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -649,18 +665,21 @@ async def test_merge_default_service_options(
 
     assert len(calls) == 1
     assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-        f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-    )
-    await hass.async_block_till_done()
-    assert (
-        mock_tts_cache_dir
-        / (
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
-        )
-    ).is_file()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
+        assert (
+            mock_tts_cache_dir
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_{opt_hash}_{expected_url_suffix}.mp3"
+            )
+        ).is_file()
 
 
 @pytest.mark.parametrize(
@@ -1065,10 +1084,14 @@ async def test_setup_legacy_cache_dir(
     )
 
     assert len(calls) == 1
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_test.mp3"
-    )
-    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize("mock_tts_entity", [MockEntityBoom(DEFAULT_LANG)])
@@ -1100,10 +1123,13 @@ async def test_setup_cache_dir(
     )
 
     assert len(calls) == 1
-    assert await get_media_source_url(hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]) == (
-        "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
-    )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        assert await get_media_source_url(
+            hass, calls[0].data[ATTR_MEDIA_CONTENT_ID]
+        ) == ("/api/tts_proxy/test_token.mp3")
+        await hass.async_block_till_done()
 
 
 class MockProviderEmpty(MockTTSProvider):
@@ -1176,13 +1202,13 @@ async def test_service_get_tts_error(
     )
 
 
-async def test_load_cache_legacy_retrieve_without_mem_cache(
+async def test_legacy_cannot_retrieve_without_token(
     hass: HomeAssistant,
     mock_provider: MockTTSProvider,
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Set up component and load cache and get without mem cache."""
+    """Verify that a TTS cannot be retrieved by filename directly."""
     tts_data = b""
     cache_file = (
         mock_tts_cache_dir / "42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
@@ -1196,17 +1222,16 @@ async def test_load_cache_legacy_retrieve_without_mem_cache(
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en_-_test.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTPStatus.OK
-    assert await req.read() == tts_data
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
-async def test_load_cache_retrieve_without_mem_cache(
+async def test_cannot_retrieve_without_token(
     hass: HomeAssistant,
     mock_tts_entity: MockTTSEntity,
     mock_tts_cache_dir: Path,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Set up component and load cache and get without mem cache."""
+    """Verify that a TTS cannot be retrieved by filename directly."""
     tts_data = b""
     cache_file = mock_tts_cache_dir / (
         "42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
@@ -1220,45 +1245,37 @@ async def test_load_cache_retrieve_without_mem_cache(
     url = "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_tts.test.mp3"
 
     req = await client.get(url)
-    assert req.status == HTTPStatus.OK
-    assert await req.read() == tts_data
+    assert req.status == HTTPStatus.NOT_FOUND
 
 
 @pytest.mark.parametrize(
-    ("setup", "data", "expected_url_suffix"),
+    ("setup", "data"),
     [
-        ("mock_setup", {"platform": "test"}, "test"),
-        ("mock_setup", {"engine_id": "test"}, "test"),
-        ("mock_config_entry_setup", {"engine_id": "tts.test"}, "tts.test"),
+        ("mock_setup", {"platform": "test"}),
+        ("mock_setup", {"engine_id": "test"}),
+        ("mock_config_entry_setup", {"engine_id": "tts.test"}),
     ],
     indirect=["setup"],
 )
 async def test_web_get_url(
-    hass_client: ClientSessionGenerator,
-    setup: str,
-    data: dict[str, Any],
-    expected_url_suffix: str,
+    hass_client: ClientSessionGenerator, setup: str, data: dict[str, Any]
 ) -> None:
     """Set up a TTS platform and receive file from web."""
     client = await hass_client()
 
-    url = "/api/tts_get_url"
-    data |= {"message": "There is someone at the door."}
+    with patch(
+        "homeassistant.components.tts.secrets.token_urlsafe", return_value="test_token"
+    ):
+        url = "/api/tts_get_url"
+        data |= {"message": "There is someone at the door."}
 
-    req = await client.post(url, json=data)
-    assert req.status == HTTPStatus.OK
-    response = await req.json()
-    assert response == {
-        "url": (
-            "http://example.local:8123/api/tts_proxy/"
-            "42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_-_{expected_url_suffix}.mp3"
-        ),
-        "path": (
-            "/api/tts_proxy/42f18378fd4393d18c8dd11d03fa9563c1e54491"
-            f"_en-us_-_{expected_url_suffix}.mp3"
-        ),
-    }
+        req = await client.post(url, json=data)
+        assert req.status == HTTPStatus.OK
+        response = await req.json()
+        assert response == {
+            "url": ("http://example.local:8123/api/tts_proxy/test_token.mp3"),
+            "path": ("/api/tts_proxy/test_token.mp3"),
+        }
 
 
 @pytest.mark.parametrize(
@@ -1970,3 +1987,6 @@ async def test_default_engine_prefer_cloud_entity(
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
+
+    # Reset the `cloud` translations cache to avoid flaky translation checks
+    reset_translation_cache(hass, ["cloud"])

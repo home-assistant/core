@@ -30,34 +30,32 @@ class SerializationError(HomeAssistantError):
     """Error serializing the data to JSON."""
 
 
-def json_loads(__obj: bytes | bytearray | memoryview | str) -> JsonValueType:
+def json_loads(obj: bytes | bytearray | memoryview | str, /) -> JsonValueType:
     """Parse JSON data.
 
     This adds a workaround for orjson not handling subclasses of str,
     https://github.com/ijl/orjson/issues/445.
     """
     # Avoid isinstance overhead for the common case
-    if type(__obj) not in (bytes, bytearray, memoryview, str) and isinstance(
-        __obj, str
-    ):
-        return orjson.loads(str(__obj))  # type:ignore[no-any-return]
-    return orjson.loads(__obj)  # type:ignore[no-any-return]
+    if type(obj) not in (bytes, bytearray, memoryview, str) and isinstance(obj, str):
+        return orjson.loads(str(obj))  # type:ignore[no-any-return]
+    return orjson.loads(obj)  # type:ignore[no-any-return]
 
 
-def json_loads_array(__obj: bytes | bytearray | memoryview | str) -> JsonArrayType:
+def json_loads_array(obj: bytes | bytearray | memoryview | str, /) -> JsonArrayType:
     """Parse JSON data and ensure result is a list."""
-    value: JsonValueType = json_loads(__obj)
+    value: JsonValueType = json_loads(obj)
     # Avoid isinstance overhead as we are not interested in list subclasses
-    if type(value) is list:  # noqa: E721
+    if type(value) is list:
         return value
     raise ValueError(f"Expected JSON to be parsed as a list got {type(value)}")
 
 
-def json_loads_object(__obj: bytes | bytearray | memoryview | str) -> JsonObjectType:
+def json_loads_object(obj: bytes | bytearray | memoryview | str, /) -> JsonObjectType:
     """Parse JSON data and ensure result is a dictionary."""
-    value: JsonValueType = json_loads(__obj)
+    value: JsonValueType = json_loads(obj)
     # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # noqa: E721
+    if type(value) is dict:
         return value
     raise ValueError(f"Expected JSON to be parsed as a dict got {type(value)}")
 
@@ -97,7 +95,7 @@ def load_json_array(
         default = []
     value: JsonValueType = load_json(filename, default=default)
     # Avoid isinstance overhead as we are not interested in list subclasses
-    if type(value) is list:  # noqa: E721
+    if type(value) is list:
         return value
     _LOGGER.exception(
         "Expected JSON to be parsed as a list got %s in: %s", {type(value)}, filename
@@ -117,7 +115,7 @@ def load_json_object(
         default = {}
     value: JsonValueType = load_json(filename, default=default)
     # Avoid isinstance overhead as we are not interested in dict subclasses
-    if type(value) is dict:  # noqa: E721
+    if type(value) is dict:
         return value
     _LOGGER.exception(
         "Expected JSON to be parsed as a dict got %s in: %s", {type(value)}, filename

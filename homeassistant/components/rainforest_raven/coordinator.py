@@ -82,20 +82,6 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         )
 
     @property
-    def device_fw_version(self) -> str | None:
-        """Return the firmware version of the device."""
-        if self._device_info:
-            return self._device_info.fw_version
-        return None
-
-    @property
-    def device_hw_version(self) -> str | None:
-        """Return the hardware version of the device."""
-        if self._device_info:
-            return self._device_info.hw_version
-        return None
-
-    @property
     def device_mac_address(self) -> str | None:
         """Return the MAC address of the device."""
         if self._device_info and self._device_info.device_mac_id:
@@ -103,35 +89,19 @@ class RAVEnDataCoordinator(DataUpdateCoordinator):
         return None
 
     @property
-    def device_manufacturer(self) -> str | None:
-        """Return the manufacturer of the device."""
-        if self._device_info:
-            return self._device_info.manufacturer
-        return None
-
-    @property
-    def device_model(self) -> str | None:
-        """Return the model of the device."""
-        if self._device_info:
-            return self._device_info.model_id
-        return None
-
-    @property
-    def device_name(self) -> str:
-        """Return the product name of the device."""
-        return "RAVEn Device"
-
-    @property
     def device_info(self) -> DeviceInfo | None:
         """Return device info."""
-        if self._device_info and self.device_mac_address:
+        if (device_info := self._device_info) and (
+            mac_address := self.device_mac_address
+        ):
             return DeviceInfo(
-                identifiers={(DOMAIN, self.device_mac_address)},
-                manufacturer=self.device_manufacturer,
-                model=self.device_model,
-                name=self.device_name,
-                sw_version=self.device_fw_version,
-                hw_version=self.device_hw_version,
+                identifiers={(DOMAIN, mac_address)},
+                manufacturer=device_info.manufacturer,
+                model=device_info.model_id,
+                model_id=device_info.model_id,
+                name="RAVEn Device",
+                sw_version=device_info.fw_version,
+                hw_version=device_info.hw_version,
             )
         return None
 

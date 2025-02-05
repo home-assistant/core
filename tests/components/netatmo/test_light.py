@@ -12,7 +12,7 @@ from homeassistant.components.light import (
 from homeassistant.components.netatmo import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .common import (
     FAKE_WEBHOOK_ACTIVATION,

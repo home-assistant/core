@@ -24,6 +24,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
+    UnitOfArea,
     UnitOfLength,
     UnitOfMass,
     UnitOfPrecipitationDepth,
@@ -49,7 +50,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import UnitSystem
 
@@ -61,6 +62,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
     hass.config.units = UnitSystem(
         "custom",
         accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+        area=UnitOfArea.SQUARE_METERS,
         conversions={},
         length=UnitOfLength.METERS,
         mass=UnitOfMass.GRAMS,
@@ -1968,7 +1970,7 @@ def test_is_state(hass: HomeAssistant) -> None:
 
 def test_is_state_attr(hass: HomeAssistant) -> None:
     """Test is_state_attr method."""
-    hass.states.async_set("test.object", "available", {"mode": "on"})
+    hass.states.async_set("test.object", "available", {"mode": "on", "exists": None})
     tpl = template.Template(
         """
 {% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
@@ -2000,6 +2002,22 @@ def test_is_state_attr(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "test.object"
+
+    tpl = template.Template(
+        """
+{% if is_state_attr("test.object", "exists", None) %}yes{% else %}no{% endif %}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{% if is_state_attr("test.object", "noexist", None) %}yes{% else %}no{% endif %}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == "no"
 
 
 def test_state_attr(hass: HomeAssistant) -> None:
@@ -2108,6 +2126,7 @@ async def test_state_translated(
     hass.states.async_set("domain.is_unknown", "unknown", attributes={})
 
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         "light",
         "hue",
@@ -4549,7 +4568,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     hass.states.async_set("cover.office_window", "closed")
     hass.states.async_set("cover.office_skylight", "open")
     hass.states.async_set("cover.x_skylight", "open")
-    hass.states.async_set("binary_sensor.door", "open")
+    hass.states.async_set("binary_sensor.door", "on")
     await hass.async_block_till_done()
 
     info = render_to_info(hass, template_complex_str)
@@ -4559,7 +4578,7 @@ async def test_async_render_to_info_with_wildcard_matching_state(
     assert info.all_states is True
     assert info.rate_limit == template.ALL_STATES_RATE_LIMIT
 
-    hass.states.async_set("binary_sensor.door", "closed")
+    hass.states.async_set("binary_sensor.door", "off")
     info = render_to_info(hass, template_complex_str)
 
     assert not info.domains

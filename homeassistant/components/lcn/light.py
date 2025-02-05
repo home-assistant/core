@@ -90,7 +90,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
         self.output = pypck.lcn_defs.OutputPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
 
         self._transition = pypck.lcn_defs.time_to_ramp_value(
-            config[CONF_DOMAIN_DATA][CONF_TRANSITION]
+            config[CONF_DOMAIN_DATA][CONF_TRANSITION] * 1000.0
         )
         self.dimmable = config[CONF_DOMAIN_DATA][CONF_DIMMABLE]
 

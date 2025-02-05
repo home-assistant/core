@@ -204,6 +204,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirVisualConfigEntry) ->
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=async_get_geography_id(entry.data),
         # We give a placeholder update interval in order to create the coordinator;
         # then, below, we use the coordinator's presence (along with any other

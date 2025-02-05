@@ -89,6 +89,21 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
     return require_authentication
 
 
+def _validate(wallbox: Wallbox) -> None:
+    """Authenticate using Wallbox API."""
+    try:
+        wallbox.authenticate()
+    except requests.exceptions.HTTPError as wallbox_connection_error:
+        if wallbox_connection_error.response.status_code == 403:
+            raise InvalidAuth from wallbox_connection_error
+        raise ConnectionError from wallbox_connection_error
+
+
+async def async_validate_input(hass: HomeAssistant, wallbox: Wallbox) -> None:
+    """Get new sensor data for Wallbox component."""
+    await hass.async_add_executor_job(_validate, wallbox)
+
+
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Wallbox Coordinator class."""
 
@@ -107,19 +122,6 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def authenticate(self) -> None:
         """Authenticate using Wallbox API."""
         self._wallbox.authenticate()
-
-    def _validate(self) -> None:
-        """Authenticate using Wallbox API."""
-        try:
-            self._wallbox.authenticate()
-        except requests.exceptions.HTTPError as wallbox_connection_error:
-            if wallbox_connection_error.response.status_code == 403:
-                raise InvalidAuth from wallbox_connection_error
-            raise ConnectionError from wallbox_connection_error
-
-    async def async_validate_input(self) -> None:
-        """Get new sensor data for Wallbox component."""
-        await self.hass.async_add_executor_job(self._validate)
 
     @_require_authentication
     def _get_data(self) -> dict[str, Any]:

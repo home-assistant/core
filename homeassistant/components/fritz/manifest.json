@@ -1,7 +1,7 @@
 {
   "domain": "fritz",
   "name": "AVM FRITZ!Box Tools",
-  "codeowners": ["@mammuth", "@AaronDavidSchneider", "@chemelli74", "@mib1185"],
+  "codeowners": ["@AaronDavidSchneider", "@chemelli74", "@mib1185"],
   "config_flow": true,
   "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/fritz",

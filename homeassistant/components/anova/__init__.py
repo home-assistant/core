@@ -13,7 +13,7 @@ from anova_wifi import (
     WebsocketFailure,
 )
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
@@ -71,3 +71,25 @@ async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bo
         # Disconnect from WS
         await entry.runtime_data.api.disconnect_websocket()
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
+    """Migrate entry."""
+    _LOGGER.debug("Migrating from version %s:%s", entry.version, entry.minor_version)
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1 and entry.minor_version == 1:
+        new_data = {**entry.data}
+        if CONF_DEVICES in new_data:
+            new_data.pop(CONF_DEVICES)
+
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
+
+    _LOGGER.debug(
+        "Migration to version %s:%s successful", entry.version, entry.minor_version
+    )
+
+    return True

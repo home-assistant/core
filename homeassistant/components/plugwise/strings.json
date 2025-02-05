@@ -1,17 +1,31 @@
 {
   "config": {
     "step": {
+      "reconfigure": {
+        "description": "Update configuration for {title}.",
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::plugwise::config::step::user::data_description::host%]",
+          "port": "[%key:component::plugwise::config::step::user::data_description::port%]"
+        }
+      },
       "user": {
         "title": "Connect to the Smile",
         "description": "Please enter",
         "data": {
-          "password": "Smile ID",
           "host": "[%key:common::config_flow::data::ip%]",
+          "password": "Smile ID",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "Smile Username"
         },
         "data_description": {
-          "host": "Leave empty if using Auto Discovery"
+          "password": "The Smile ID printed on the label on the back of your Adam, Smile-T, or P1.",
+          "host": "The hostname or IP-address of your Smile. You can find it in your router or the Plugwise App.",
+          "port": "By default your Smile uses port 80, normally you should not have to change this.",
+          "username": "Default is `smile`, or `stretch` for the legacy Stretch."
         }
       }
     },
@@ -25,14 +39,13 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna"
+      "anna_with_adam": "Both Anna and Adam detected. Add your Adam instead of your Anna",
+      "not_the_same_smile": "The configured Smile ID does not match the Smile ID on the requested IP address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
     "binary_sensor": {
-      "low_battery": {
-        "name": "Battery state"
-      },
       "compressor_state": {
         "name": "Compressor state"
       },
@@ -283,6 +296,29 @@
       "relay": {
         "name": "Relay"
       }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "data_incomplete_or_missing": {
+      "message": "Data incomplete or missing."
+    },
+    "error_communicating_with_api": {
+      "message": "Error communicating with API: {error}."
+    },
+    "failed_to_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "invalid_xml_data": {
+      "message": "[%key:component::plugwise::config::error::response_error%]"
+    },
+    "unsupported_firmware": {
+      "message": "[%key:component::plugwise::config::error::unsupported%]"
+    },
+    "unsupported_hvac_mode_requested": {
+      "message": "Unsupported mode {hvac_mode} requested, valid modes are: {hvac_modes}."
     }
   }
 }

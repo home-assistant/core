@@ -53,7 +53,6 @@ class ISYFanEntity(ISYNodeEntity, FanEntity):
         | FanEntityFeature.TURN_OFF
         | FanEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def percentage(self) -> int | None:

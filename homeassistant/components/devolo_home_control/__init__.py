@@ -18,7 +18,7 @@ from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import CONF_MYDEVOLO, DEFAULT_MYDEVOLO, GATEWAY_SERIAL_PATTERN, PLATFORMS
+from .const import GATEWAY_SERIAL_PATTERN, PLATFORMS
 
 type DevoloHomeControlConfigEntry = ConfigEntry[list[HomeControl]]
 
@@ -102,5 +102,4 @@ def configure_mydevolo(conf: dict[str, Any] | MappingProxyType[str, Any]) -> Myd
     mydevolo = Mydevolo()
     mydevolo.user = conf[CONF_USERNAME]
     mydevolo.password = conf[CONF_PASSWORD]
-    mydevolo.url = conf.get(CONF_MYDEVOLO, DEFAULT_MYDEVOLO)
     return mydevolo

@@ -8,14 +8,13 @@ import logging
 from typing import Any, final
 
 import aiohttp
-from universal_silabs_flasher.const import ApplicationType
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
     HassioAPIError,
     async_get_yellow_settings,
-    async_reboot_host,
     async_set_yellow_settings,
+    get_supervisor_client,
 )
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     BaseFirmwareConfigFlow,
@@ -25,13 +24,14 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     OptionsFlowHandler as MultiprotocolOptionsFlowHandler,
     SerialPortSettings as MultiprotocolSerialPortSettings,
 )
+from homeassistant.components.homeassistant_hardware.util import ApplicationType
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
     ConfigEntry,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import discovery_flow, selector
 
 from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, ZHA_DOMAIN, ZHA_HW_DISCOVERY_DATA
@@ -67,11 +67,12 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     ) -> OptionsFlow:
         """Return the options flow."""
         firmware_type = ApplicationType(config_entry.data[FIRMWARE])
+        hass = async_get_hass()
 
         if firmware_type is ApplicationType.CPC:
-            return HomeAssistantYellowMultiPanOptionsFlowHandler(config_entry)
+            return HomeAssistantYellowMultiPanOptionsFlowHandler(hass, config_entry)
 
-        return HomeAssistantYellowOptionsFlowHandler(config_entry)
+        return HomeAssistantYellowOptionsFlowHandler(hass, config_entry)
 
     async def async_step_system(
         self, data: dict[str, Any] | None = None
@@ -106,6 +107,11 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
     """Base Home Assistant Yellow options flow shared between firmware and multi-PAN."""
 
     _hw_settings: dict[str, bool] | None = None
+
+    def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
+        """Instantiate options flow."""
+        super().__init__(*args, **kwargs)
+        self._supervisor_client = get_supervisor_client(hass)
 
     @abstractmethod
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
@@ -172,7 +178,7 @@ class BaseHomeAssistantYellowOptionsFlow(OptionsFlow, ABC):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reboot now."""
-        await async_reboot_host(self.hass)
+        await self._supervisor_client.host.reboot()
         return self.async_create_entry(data={})
 
     async def async_step_reboot_later(
@@ -251,9 +257,9 @@ class HomeAssistantYellowOptionsFlowHandler(
 ):
     """Handle a firmware options flow for Home Assistant Yellow."""
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
-        super().__init__(*args, **kwargs)
+        super().__init__(hass, *args, **kwargs)
 
         self._hardware_name = BOARD_NAME
         self._device = RADIO_DEVICE

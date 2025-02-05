@@ -38,7 +38,6 @@ from homeassistant.components.smartthings.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -47,6 +46,7 @@ from homeassistant.const import (
     CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry

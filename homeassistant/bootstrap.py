@@ -70,6 +70,7 @@ from .const import (
     REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
+from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
@@ -88,7 +89,7 @@ from .helpers import (
 )
 from .helpers.dispatcher import async_dispatcher_send_internal
 from .helpers.storage import get_internal_store_manager
-from .helpers.system_info import async_get_system_info, is_official_image
+from .helpers.system_info import async_get_system_info
 from .helpers.typing import ConfigType
 from .setup import (
     # _setup_started is marked as protected to make it clear
@@ -105,10 +106,16 @@ from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.logging import async_activate_log_queue_handler
 from .util.package import async_get_user_site, is_docker_env, is_virtual_env
+from .util.system_info import is_official_image
 
 with contextlib.suppress(ImportError):
     # Ensure anyio backend is imported to avoid it being imported in the event loop
     from anyio._backends import _asyncio  # noqa: F401
+
+with contextlib.suppress(ImportError):
+    # httpx will import trio if it is installed which does
+    # blocking I/O in the event loop. We want to avoid that.
+    import trio  # noqa: F401
 
 
 if TYPE_CHECKING:
@@ -154,6 +161,16 @@ FRONTEND_INTEGRATIONS = {
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
+    # Hassio is an after dependency of backup, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here. Hassio needs to be setup before backup, otherwise
+    # the backup integration will think we are a container/core install
+    # when using HAOS or Supervised install.
+    "hassio",
+    # Backup is an after dependency of frontend, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here.
+    "backup",
 }
 RECORDER_INTEGRATIONS = {
     # Setup after frontend
@@ -251,6 +268,7 @@ PRELOAD_STORAGE = [
     "assist_pipeline.pipelines",
     "core.analytics",
     "auth_module.totp",
+    "backup",
 ]
 
 
@@ -479,7 +497,7 @@ async def async_from_config_dict(
     core_config = config.get(core.DOMAIN, {})
 
     try:
-        await conf_util.async_process_ha_core_config(hass, core_config)
+        await async_process_ha_core_config(hass, core_config)
     except vol.Invalid as config_err:
         conf_util.async_log_schema_error(config_err, core.DOMAIN, core_config, hass)
         async_notify_setup_error(hass, core.DOMAIN)
@@ -514,7 +532,7 @@ async def async_from_config_dict(
         issue_registry.async_create_issue(
             hass,
             core.DOMAIN,
-            "python_version",
+            f"python_version_{required_python_version}",
             is_fixable=False,
             severity=issue_registry.IssueSeverity.WARNING,
             breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,

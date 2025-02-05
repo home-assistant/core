@@ -3,11 +3,6 @@
   "name": "Awair",
   "codeowners": ["@ahayworth", "@danielsjf"],
   "config_flow": true,
-  "dhcp": [
-    {
-      "macaddress": "70886B1*"
-    }
-  ],
   "documentation": "https://www.home-assistant.io/integrations/awair",
   "iot_class": "local_polling",
   "loggers": ["python_awair"],

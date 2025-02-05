@@ -42,6 +42,10 @@
             'parts': 'Ok',
             'role': 'model',
           }),
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -102,6 +106,10 @@
             'parts': '1st model response',
             'role': 'model',
           }),
+          dict({
+            'parts': '2nd user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -150,6 +158,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -202,6 +214,10 @@
             'parts': '1st model response',
             'role': 'model',
           }),
+          dict({
+            'parts': '2nd user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -250,6 +266,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -298,6 +318,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -347,6 +371,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -396,6 +424,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -482,6 +514,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'Please call the test function',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -558,6 +594,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'Please call the test function',
+            'role': 'user',
+          }),
         ]),
       }),
     ),

@@ -1,18 +1,27 @@
 """Tests for the HTTP API for the cloud component."""
 
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from hass_nabucasa import thingtalk
-from hass_nabucasa.auth import Unauthenticated, UnknownError
+from hass_nabucasa.auth import (
+    InvalidTotpCode,
+    MFARequired,
+    Unauthenticated,
+    UnknownError,
+)
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.remote import CertificateStatus
 from hass_nabucasa.voice import TTS_VOICES
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=hass-component-root-import
@@ -25,8 +34,10 @@ from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
 
+from tests.common import mock_platform
 from tests.components.google_assistant import MockConfig
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -107,8 +118,8 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
                 "cognito_client_id": "cognito_client_id",
                 "user_pool_id": "user_pool_id",
                 "region": "region",
-                "alexa_server": "alexa-api.nabucasa.com",
                 "relayer_server": "relayer",
+                "acme_server": "cert-server",
                 "accounts_server": "api-test.hass.io",
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
@@ -376,6 +387,128 @@ async def test_login_view_invalid_credentials(
     )
 
     assert req.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_login_view_mfa_required(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when MFA is required."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired(mfa_tokens={"session": "tokens"})
+
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+
+async def test_login_view_mfa_required_tokens_missing(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when MFA is required, code is provided, but session tokens are missing."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired(mfa_tokens={})
+
+    # Login with password and get MFA required error
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+    # Login with TOTP code and get MFA expired error
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.BAD_REQUEST
+    res = await req.json()
+    assert res["code"] == "mfaexpiredornotstarted"
+
+
+async def test_login_view_mfa_password_and_totp_provided(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when password and TOTP code provided at once."""
+    cloud_client = await hass_client()
+
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "password": "my_password", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_login_view_invalid_totp_code(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in when MFA is required and invalid code is provided."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired(mfa_tokens={"session": "tokens"})
+    cloud.login_verify_totp.side_effect = InvalidTotpCode
+
+    # Login with password and get MFA required error
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+    # Login with TOTP code and get invalid TOTP code error
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.BAD_REQUEST
+    res = await req.json()
+    assert res["code"] == "invalidtotpcode"
+
+
+async def test_login_view_valid_totp_provided(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test logging in with valid TOTP code."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = MFARequired(mfa_tokens={"session": "tokens"})
+
+    # Login with password and get MFA required error
+    req = await cloud_client.post(
+        "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+    )
+
+    assert req.status == HTTPStatus.UNAUTHORIZED
+    res = await req.json()
+    assert res["code"] == "mfarequired"
+
+    # Login with TOTP code and get success response
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={"email": "my_username", "code": "123346"},
+    )
+
+    assert req.status == HTTPStatus.OK
+    result = await req.json()
+    assert result == {"success": True, "cloud_pipeline": None}
 
 
 async def test_login_view_unknown_error(
@@ -784,6 +917,7 @@ async def test_websocket_status(
             "google_report_state": True,
             "remote_allow_remote_enable": True,
             "remote_enabled": False,
+            "cloud_ice_servers_enabled": True,
             "tts_default_voice": ["en-US", "JennyNeural"],
         },
         "alexa_entities": {
@@ -903,6 +1037,7 @@ async def test_websocket_update_preferences(
     assert cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin is None
     assert cloud.client.prefs.remote_allow_remote_enable is True
+    assert cloud.client.prefs.cloud_ice_servers_enabled is True
 
     client = await hass_ws_client(hass)
 
@@ -914,6 +1049,7 @@ async def test_websocket_update_preferences(
             "google_secure_devices_pin": "1234",
             "tts_default_voice": ["en-GB", "RyanNeural"],
             "remote_allow_remote_enable": False,
+            "cloud_ice_servers_enabled": False,
         }
     )
     response = await client.receive_json()
@@ -923,6 +1059,7 @@ async def test_websocket_update_preferences(
     assert not cloud.client.prefs.alexa_enabled
     assert cloud.client.prefs.google_secure_devices_pin == "1234"
     assert cloud.client.prefs.remote_allow_remote_enable is False
+    assert cloud.client.prefs.cloud_ice_servers_enabled is False
     assert cloud.client.prefs.tts_default_voice == ("en-GB", "RyanNeural")
 
 
@@ -1688,3 +1825,138 @@ async def test_api_calls_require_admin(
     resp = await client.post(endpoint, json=data)
 
     assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_login_view_dispatch_event(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test dispatching event while logging in."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, DOMAIN, {"cloud": {}})
+    await hass.async_block_till_done()
+
+    cloud_client = await hass_client()
+
+    with patch(
+        "homeassistant.components.cloud.http_api.async_dispatcher_send"
+    ) as async_dispatcher_send_mock:
+        await cloud_client.post(
+            "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
+        )
+
+    assert async_dispatcher_send_mock.call_count == 1
+    assert async_dispatcher_send_mock.mock_calls[0][1][1] == "cloud_event"
+    assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "login"}
+
+
+async def test_logout_view_dispatch_event(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test dispatching event while logging out."""
+    cloud_client = await hass_client()
+
+    with patch(
+        "homeassistant.components.cloud.http_api.async_dispatcher_send"
+    ) as async_dispatcher_send_mock:
+        await cloud_client.post("/api/cloud/logout")
+
+    assert async_dispatcher_send_mock.call_count == 1
+    assert async_dispatcher_send_mock.mock_calls[0][1][1] == "cloud_event"
+    assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "logout"}
+
+
+async def test_download_support_package(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test downloading a support package file."""
+    aioclient_mock.get("https://cloud.bla.com/status", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
+    aioclient_mock.get(
+        "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
+        exc=aiohttp.ClientError,
+    )
+
+    def async_register_mock_platform(
+        hass: HomeAssistant, register: system_health.SystemHealthRegistration
+    ) -> None:
+        async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {}
+
+        register.async_register_info(mock_empty_info, "/config/mock_integration")
+
+    mock_platform(
+        hass,
+        "mock_no_info_integration.system_health",
+        MagicMock(async_register=async_register_mock_platform),
+    )
+    hass.config.components.add("mock_no_info_integration")
+
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
+        hexmock.return_value = "12345678901234567890"
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "user_pool_id": "AAAA",
+                    "region": "us-east-1",
+                    "acme_server": "cert-server",
+                    "relayer_server": "cloud.bla.com",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    cloud.remote.snitun_server = "us-west-1"
+    cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
+
+    await cloud.client.async_system_message({"region": "xx-earth-616"})
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
+    )
+
+    cloud_client = await hass_client()
+    with (
+        patch.object(hass.config, "config_dir", new="config"),
+        patch(
+            "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Core",
+                "version": "2025.2.0",
+                "dev": False,
+                "hassio": False,
+                "virtualenv": False,
+                "python_version": "3.13.1",
+                "docker": False,
+                "arch": "x86_64",
+                "timezone": "US/Pacific",
+                "os_name": "Linux",
+                "os_version": "6.12.9",
+                "user": "hass",
+            },
+        ),
+    ):
+        req = await cloud_client.get("/api/cloud/support_package")
+    assert req.status == HTTPStatus.OK
+    assert await req.text() == snapshot

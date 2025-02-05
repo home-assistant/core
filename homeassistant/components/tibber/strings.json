@@ -119,6 +119,9 @@
     }
   },
   "exceptions": {
+    "invalid_date": {
+      "message": "Invalid datetime provided {date}"
+    },
     "send_message_timeout": {
       "message": "Timeout sending message with Tibber"
     }

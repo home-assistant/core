@@ -57,7 +57,7 @@ def _rssi_convert(value: int | None) -> str | None:
     """Rssi is given as dBm value."""
     if value is None:
         return None
-    return f"{value*8-120}"
+    return f"{value * 8 - 120}"
 
 
 @dataclass(frozen=True)
@@ -182,13 +182,11 @@ SENSOR_TYPES = (
         key="Count",
         translation_key="count",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Counter value",
         translation_key="counter_value",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement="count",
     ),
     RfxtrxSensorEntityDescription(
         key="Chill",
