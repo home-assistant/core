@@ -204,10 +204,10 @@ aiobotocore==2.13.1
 aiocomelit==0.10.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.0.3
+aiodhcpwatcher==1.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.1.0
+aiodiscover==2.2.2
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
