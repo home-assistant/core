@@ -67,7 +67,7 @@ class MatterSwitch(MatterEntity, SwitchEntity):
         )
 
 
-class MatterGenericCommandSwitch(MatterEntity, SwitchEntity):
+class MatterGenericCommandSwitch(MatterSwitch):
     """Representation of a Matter switch."""
 
     entity_description: MatterGenericCommandSwitchEntityDescription
