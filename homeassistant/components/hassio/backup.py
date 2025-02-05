@@ -20,6 +20,7 @@ from aiohasupervisor.models import (
     backups as supervisor_backups,
     mounts as supervisor_mounts,
 )
+from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 
 from homeassistant.components.backup import (
     DATA_MANAGER,
@@ -56,8 +57,6 @@ from homeassistant.util.enum import try_parse_enum
 from .const import DOMAIN, EVENT_SUPERVISOR_EVENT
 from .handler import get_supervisor_client
 
-LOCATION_CLOUD_BACKUP = ".cloud_backup"
-LOCATION_LOCAL = ".local"
 MOUNT_JOBS = ("mount_manager_create_mount", "mount_manager_remove_mount")
 RESTORE_JOB_ID_ENV = "SUPERVISOR_RESTORE_JOB_ID"
 # Set on backups automatically created when updating an addon
@@ -72,7 +71,9 @@ async def async_get_backup_agents(
     """Return the hassio backup agents."""
     client = get_supervisor_client(hass)
     mounts = await client.mounts.info()
-    agents: list[BackupAgent] = [SupervisorBackupAgent(hass, "local", None)]
+    agents: list[BackupAgent] = [
+        SupervisorBackupAgent(hass, "local", LOCATION_LOCAL_STORAGE)
+    ]
     for mount in mounts.mounts:
         if mount.usage is not supervisor_mounts.MountUsage.BACKUP:
             continue
@@ -112,7 +113,7 @@ def async_register_backup_agents_listener(
 
 
 def _backup_details_to_agent_backup(
-    details: supervisor_backups.BackupComplete, location: str | None
+    details: supervisor_backups.BackupComplete, location: str
 ) -> AgentBackup:
     """Convert a supervisor backup details object to an agent backup."""
     homeassistant_included = details.homeassistant is not None
@@ -125,7 +126,6 @@ def _backup_details_to_agent_backup(
         for addon in details.addons
     ]
     extra_metadata = details.extra or {}
-    location = location or LOCATION_LOCAL
     return AgentBackup(
         addons=addons,
         backup_id=details.slug,
@@ -148,7 +148,7 @@ class SupervisorBackupAgent(BackupAgent):
 
     domain = DOMAIN
 
-    def __init__(self, hass: HomeAssistant, name: str, location: str | None) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, location: str) -> None:
         """Initialize the backup agent."""
         super().__init__()
         self._hass = hass
@@ -206,7 +206,7 @@ class SupervisorBackupAgent(BackupAgent):
         backup_list = await self._client.backups.list()
         result = []
         for backup in backup_list:
-            if not backup.locations or self.location not in backup.locations:
+            if self.location not in backup.location_attributes:
                 continue
             details = await self._client.backups.backup_info(backup.slug)
             result.append(_backup_details_to_agent_backup(details, self.location))
@@ -222,7 +222,7 @@ class SupervisorBackupAgent(BackupAgent):
             details = await self._client.backups.backup_info(backup_id)
         except SupervisorNotFoundError:
             return None
-        if self.location not in details.locations:
+        if self.location not in details.location_attributes:
             return None
         return _backup_details_to_agent_backup(details, self.location)
 
@@ -295,8 +295,8 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         # will be handled by async_upload_backup.
         # If the lists are the same length, it does not matter which one we send,
         # we send the encrypted list to have a well defined behavior.
-        encrypted_locations: list[str | None] = []
-        decrypted_locations: list[str | None] = []
+        encrypted_locations: list[str] = []
+        decrypted_locations: list[str] = []
         agents_settings = manager.config.data.agents
         for hassio_agent in hassio_agents:
             if password is not None:
@@ -353,12 +353,12 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             eager_start=False,  # To ensure the task is not started before we return
         )
 
-        return (NewBackup(backup_job_id=backup.job_id), backup_task)
+        return (NewBackup(backup_job_id=backup.job_id.hex), backup_task)
 
     async def _async_wait_for_backup(
         self,
         backup: supervisor_backups.NewBackup,
-        locations: list[str | None],
+        locations: list[str],
         *,
         on_progress: Callable[[CreateBackupEvent], None],
         remove_after_upload: bool,
@@ -508,7 +508,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             else None
         )
 
-        restore_location: str | None
+        restore_location: str
         if manager.backup_agents[agent_id].domain != DOMAIN:
             # Download the backup to the supervisor. Supervisor will clean up the backup
             # two days after the restore is done.
@@ -577,10 +577,11 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
     ) -> None:
         """Check restore status after core restart."""
-        if not (restore_job_id := os.environ.get(RESTORE_JOB_ID_ENV)):
+        if not (restore_job_str := os.environ.get(RESTORE_JOB_ID_ENV)):
             _LOGGER.debug("No restore job ID found in environment")
             return
 
+        restore_job_id = UUID(restore_job_str)
         _LOGGER.debug("Found restore job ID %s in environment", restore_job_id)
 
         sent_event = False
@@ -634,7 +635,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
 
     @callback
     def _async_listen_job_events(
-        self, job_id: str, on_event: Callable[[Mapping[str, Any]], None]
+        self, job_id: UUID, on_event: Callable[[Mapping[str, Any]], None]
     ) -> Callable[[], None]:
         """Listen for job events."""
 
@@ -649,7 +650,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             if (
                 data.get("event") != "job"
                 or not (event_data := data.get("data"))
-                or event_data.get("uuid") != job_id
+                or event_data.get("uuid") != job_id.hex
             ):
                 return
             on_event(event_data)
@@ -660,10 +661,10 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         return unsub
 
     async def _get_job_state(
-        self, job_id: str, on_event: Callable[[Mapping[str, Any]], None]
+        self, job_id: UUID, on_event: Callable[[Mapping[str, Any]], None]
     ) -> None:
         """Poll a job for its state."""
-        job = await self._client.jobs.get_job(UUID(job_id))
+        job = await self._client.jobs.get_job(job_id)
         _LOGGER.debug("Job state: %s", job)
         on_event(job.to_dict())
 
