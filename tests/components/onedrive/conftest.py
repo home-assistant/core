@@ -67,8 +67,8 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     )
 
 
-@pytest.fixture(autouse=True)
-def mock_onedrive_client() -> Generator[MagicMock]:
+@pytest.fixture
+def mock_onedrive_client_init() -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     with (
         patch(
@@ -80,19 +80,25 @@ def mock_onedrive_client() -> Generator[MagicMock]:
             new=onedrive_client,
         ),
     ):
-        client = onedrive_client.return_value
-        client.get_approot.return_value = MOCK_APPROOT
-        client.create_folder.return_value = MOCK_BACKUP_FOLDER
-        client.list_drive_items.return_value = [MOCK_BACKUP_FILE]
-        client.get_drive_item.return_value = MOCK_BACKUP_FILE
+        yield onedrive_client
 
-        class MockStreamReader:
-            async def iter_chunked(self, chunk_size: int) -> AsyncIterator[bytes]:
-                yield b"backup data"
 
-        client.download_drive_item.return_value = MockStreamReader()
+@pytest.fixture(autouse=True)
+def mock_onedrive_client(mock_onedrive_client_init: MagicMock) -> Generator[MagicMock]:
+    """Return a mocked GraphServiceClient."""
+    client = mock_onedrive_client_init.return_value
+    client.get_approot.return_value = MOCK_APPROOT
+    client.create_folder.return_value = MOCK_BACKUP_FOLDER
+    client.list_drive_items.return_value = [MOCK_BACKUP_FILE]
+    client.get_drive_item.return_value = MOCK_BACKUP_FILE
 
-        yield client
+    class MockStreamReader:
+        async def iter_chunked(self, chunk_size: int) -> AsyncIterator[bytes]:
+            yield b"backup data"
+
+    client.download_drive_item.return_value = MockStreamReader()
+
+    return client
 
 
 @pytest.fixture
