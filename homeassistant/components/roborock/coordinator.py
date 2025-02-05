@@ -75,7 +75,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.cloud_api = cloud_api
         self.device_info = DeviceInfo(
             name=self.roborock_device_info.device.name,
-            identifiers={(DOMAIN, self.roborock_device_info.device.duid)},
+            identifiers={(DOMAIN, self.duid)},
             manufacturer="Roborock",
             model=self.roborock_device_info.product.model,
             model_id=self.roborock_device_info.product.model,
@@ -122,7 +122,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             except RoborockException:
                 _LOGGER.warning(
                     "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
-                    self.roborock_device_info.device.duid,
+                    self.duid,
                 )
                 await self.api.async_disconnect()
                 # We use the cloud api if the local api fails to connect.
@@ -183,9 +183,17 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
 
     async def get_scenes(self) -> list[HomeDataScene]:
         """Get scenes."""
-        return await self._api_client.get_scenes(
-            self._user_data, self.roborock_device_info.device.duid
-        )
+        try:
+            return await self._api_client.get_scenes(self._user_data, self.duid)
+        except RoborockException as err:
+            _LOGGER.error("Failed to get scenes %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "get_scenes",
+                },
+            ) from err
 
     async def execute_scene(self, scene_id: int) -> None:
         """Execute scene."""
