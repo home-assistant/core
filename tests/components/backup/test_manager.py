@@ -46,6 +46,7 @@ from homeassistant.components.backup.manager import (
     RestoreBackupState,
     WrittenBackup,
 )
+from homeassistant.components.backup.util import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -3142,17 +3143,21 @@ async def test_restore_backup_file_error(
 
 
 @pytest.mark.parametrize(
-    ("commands", "password", "protected_backup"),
+    ("commands", "agent_ids", "password", "protected_backup", "inner_tar_key"),
     [
         (
             [],
+            ["backup.local", "test.remote"],
             None,
             {"backup.local": False, "test.remote": False},
+            None,
         ),
         (
             [],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
+            password_to_key("hunter2"),
         ),
         (
             [
@@ -3164,8 +3169,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": False, "test.remote": False},
+            None,  # None of the agents are protected
         ),
         (
             [
@@ -3177,8 +3184,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": False, "test.remote": True},
+            None,  # Local agent is not protected
         ),
         (
             [
@@ -3190,8 +3199,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": False},
+            password_to_key("hunter2"),  # Local agent is protected
         ),
         (
             [
@@ -3203,8 +3214,10 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             "hunter2",
             {"backup.local": True, "test.remote": True},
+            password_to_key("hunter2"),
         ),
         (
             [
@@ -3216,8 +3229,40 @@ async def test_restore_backup_file_error(
                     },
                 }
             ],
+            ["backup.local", "test.remote"],
             None,
             {"backup.local": False, "test.remote": False},
+            None,  # No password supplied
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": True},
+                    },
+                }
+            ],
+            ["test.remote"],
+            "hunter2",
+            {"test.remote": True},
+            password_to_key("hunter2"),
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "agents": {
+                        "backup.local": {"protected": False},
+                        "test.remote": {"protected": False},
+                    },
+                }
+            ],
+            ["test.remote"],
+            "hunter2",
+            {"test.remote": False},
+            password_to_key("hunter2"),  # Temporary backup protected when password set
         ),
     ],
 )
@@ -3226,13 +3271,15 @@ async def test_initiate_backup_per_agent_encryption(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
+    mocked_tarfile: Mock,
     path_glob: MagicMock,
     commands: dict[str, Any],
+    agent_ids: list[str],
     password: str | None,
     protected_backup: dict[str, bool],
+    inner_tar_key: bytes | None,
 ) -> None:
     """Test generate backup where encryption is selectively set on agents."""
-    agent_ids = ["backup.local", "test.remote"]
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
     remote_agent = BackupAgentTest("remote", backups=[])
 
@@ -3307,6 +3354,10 @@ async def test_initiate_backup_per_agent_encryption(
         assert backup_id == generate_backup_id.return_value
 
         await hass.async_block_till_done()
+
+    mocked_tarfile.return_value.create_inner_tar.assert_called_once_with(
+        ANY, gzip=True, key=inner_tar_key
+    )
 
     result = await ws_client.receive_json()
     assert result["event"] == {
